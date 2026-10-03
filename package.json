@@ -1,0 +1,27 @@
+{
+  "name": "mepcity-crm",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "test": "vitest run && tsx scripts/e2e.ts",
+    "test:unit": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "test:e2e": "tsx scripts/e2e.ts",
+    "check": "biome check . && node scripts/typecheck.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "verify": "biome check . && node scripts/typecheck.mjs && vitest run && tsx scripts/e2e.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@crm/db": "workspace:*",
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

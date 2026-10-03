@@ -1,0 +1,30 @@
+import { defineConfig } from "vitest/config";
+
+const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: "unit",
+          include: ["{apps,packages,scripts}/**/*.test.ts"],
+          exclude: [...exclude, "**/*.int.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "integration",
+          include: ["{apps,packages,scripts}/**/*.int.test.ts"],
+          exclude,
+          globalSetup: ["./packages/db/src/vitest-global-setup.ts"],
+          setupFiles: ["./packages/db/src/vitest-setup.ts"],
+          maxWorkers: 2,
+          sequence: { groupOrder: 1 },
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+        },
+      },
+    ],
+  },
+});
