@@ -8,6 +8,11 @@
 
 Goal: test whether an agent team can rebuild a working CRM with feature parity to the reference CRM setup we use, for our own internal use.
 
+## Delivery model — module by module (board directive)
+- We never copy reference CRM all at once. Each module goes through research → spec → implementation → QA → board approval before the next module starts.
+- Order: Leads (with the minimal app shell) → Contacts → Accounts → Deals + pipeline → Activities → notes/attachments, CSV → customization → automation → reports → integrations. The board may reorder.
+- ref-captures run one at a time (the capture tool enforces a lock); no bulk crawling.
+
 ## Language
 - Comments to the board (the user) in Paperclip: Turkish.
 - Code, commit messages, specs and ADRs: English.
