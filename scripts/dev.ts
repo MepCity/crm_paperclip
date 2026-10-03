@@ -97,12 +97,14 @@ async function main(): Promise<number> {
     console.log(`dev: migrations applied: ${applied.length}, already applied: ${skipped.length}`);
 
     const port = await pickAppPort();
+    const appUrl = `http://127.0.0.1:${port}`;
     next = spawn("next", ["dev", "--hostname", "127.0.0.1", "--port", String(port)], {
       cwd: webDir,
       stdio: "inherit",
       env: {
         ...process.env,
         DATABASE_URL: databaseUrl,
+        APP_URL: appUrl,
         PATH: `${webDir}/node_modules/.bin:${root}node_modules/.bin:${process.env.PATH}`,
       },
     });

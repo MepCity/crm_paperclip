@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pickFreePort } from "@crm/db/ports";
 import { createTemplateDatabase, createWorkerDatabase, startTestPostgres } from "@crm/db/testing";
@@ -37,7 +38,13 @@ async function main(): Promise<number> {
     await createTemplateDatabase(postgres.adminUrl);
     const database = await createWorkerDatabase(postgres.adminUrl, "e2e");
     const port = await pickFreePort();
-    const env = { ...baseEnv, DATABASE_URL: database.url, E2E_PORT: String(port) };
+    const env = {
+      ...baseEnv,
+      DATABASE_URL: database.url,
+      APP_URL: `http://127.0.0.1:${port}`,
+      APP_SECRET: randomBytes(32).toString("hex"),
+      E2E_PORT: String(port),
+    };
 
     // No-op when Chromium is already installed.
     if ((await run("playwright", ["install", "chromium"], env)) !== 0) return 1;
