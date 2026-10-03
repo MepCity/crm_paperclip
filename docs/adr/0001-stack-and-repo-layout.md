@@ -13,7 +13,8 @@ Constraints that shape the architecture:
 
 - Internal use, small team. The app must start locally with one command and must not depend on a paid external service.
 - Later phases change the data model at runtime: custom fields and modules, layouts, picklists (Phase 3), workflow rules (Phase 4), reports (Phase 5), REST API and webhooks (Phase 6). The Phase 3 exit criterion is that our reference CRM customization can be recreated **without code changes**.
-- The data model follows `~/Desktop/mepcity-research/metadata/`. That export is not on `main` yet, so this ADR does not design CRM module tables.
+- The data model follows `~/Desktop/mepcity-research/metadata/`. The export landed on `main` while this ADR was being written (42 modules, about 1,050 fields, 27 field types) and is not audited yet. CRM module tables are out of scope here and are designed in ADR 0002.
+- A first look at the export shows core modules close to reference CRM's defaults: no custom modules and a single custom field. Runtime extensibility is therefore required by the roadmap (Phase 3) more than by today's setup. ADR 0002 must weigh that.
 - Every issue is built in its own git worktree, often by several agents on one machine. Dev servers and test runs in different worktrees must not interfere.
 - Docker is installed on the team machine but its daemon is not running, so agents cannot rely on it.
 
@@ -86,7 +87,7 @@ Conventions: primary keys are UUIDv7 (`uuidv7()` is native in PostgreSQL 18); ti
 
 ### 5. Designing for runtime extensibility
 
-These rules are binding from the first CRM issue. The physical storage of records is decided in ADR 0002, after the metadata export is on `main`.
+These rules are binding from the first CRM issue. The physical storage of records is decided in ADR 0002, after the metadata export is audited.
 
 1. **Metadata is data.** Modules, fields, picklists, layouts, related lists and views are organization-scoped rows. Standard modules are seeded from `~/Desktop/mepcity-research/metadata/`; custom ones are created at runtime in the same tables. No module gets hand-written tables, forms or list screens.
 2. **One write path.** Every record change goes through one service: validate against metadata, authorize, write, append a domain event — in one transaction. Server actions, REST handlers, CSV import and workflow actions all call it.
@@ -155,8 +156,8 @@ Verified on the team machine: embedded PostgreSQL 18.4 initialises a cluster in 
 
 | Decision | When |
 | --- | --- |
-| Record storage, row-level security policies, runtime database role (ADR 0002) | After the metadata export is on `main` |
-| Roles, profiles and sharing rules | After the metadata export is on `main` |
+| Record storage, row-level security policies, runtime database role (ADR 0002) | After the metadata export is audited |
+| Roles, profiles and sharing rules | After the metadata export is audited |
 | Headless component primitives; UI language and localization | With the first Phase 2 screens and specs |
 | Job queue library; worker process | Phase 4 |
 | File storage for attachments | Phase 2 |
