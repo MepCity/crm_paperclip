@@ -17,8 +17,10 @@ Goal: test whether an agent team can rebuild a working CRM with feature parity t
 - Raw captures live in `~/Desktop/mepcity-research/captures/<slug>/` (screenshot.png, page.txt, aria.yml, network.json, meta.json).
 - They come from our live reference CRM account and may show real customer names. **Never copy screenshots, raw page text or record values into the repo, issues or comments.** Refer to captures by path and describe structure only.
 
-## reference CRM access rules (CRM Analyst only)
-- Access reference CRM only through `node ~/Desktop/mepcity-research/tools/capture/capture.mjs` with the dedicated read-only reference CRM user's browser profile.
+## reference CRM access rules (CRM Analyst and CTO)
+- Our live CRM: <reference-crm-url> (data center: `com`).
+- The capture browser is logged in with the **board's own reference CRM account, which has full permissions** (there is no separate read-only user). Treat every action as if it could change real customer data.
+- Access reference CRM only through `node <repo-root>/node ~/Desktop/mepcity-research/tools/capture/capture.mjs` (it blocks write requests and dangerous clicks). Never use any other browser, API client or the user's own Chrome for reference CRM.
 - Read-only: never create, edit, delete, convert, merge, import/export records, never send emails or messages, never run mass actions, never change settings.
 - Stay on reference CRM domains. If the login page appears, stop and ask the board to log in again (`capture.mjs login`).
 - Capture what a screen does and what data it needs (layout, fields, actions, filters, flows, request shapes) — not its exact visual assets. Our UI uses our own design system and branding.
