@@ -1,6 +1,6 @@
 # MepCity CRM
 
-Internal CRM built by an agent team as an experiment: can we reach feature parity with the **reference CRM** we use today, for our own internal use?
+Internal CRM built by an agent team as an experiment: can we rebuild the **reference CRM** we use today, for our own internal use, **one-to-one in behaviour and design**? Same screens, layouts, navigation, flows, field behaviour, validation, empty/error states and interactions, and the same look. Recreate it in our own code and design tokens; never copy the reference's logo, image, icon or font files. Deviate only with the board's approval; when unsure, match the reference and record the doubt as an open question.
 
 > ## ⛔ ABSOLUTE RULES
 > 1. **Never write the reference CRM vendor's or product's name anywhere in this repository** — code, comments, identifiers, file or folder names, branch names, commit messages, docs, specs, test data, fixtures or URLs. Always say **"reference CRM"**. Git hooks reject commits and pushes that contain it; if you are blocked, reword — never bypass a hook (`--no-verify` is forbidden).
