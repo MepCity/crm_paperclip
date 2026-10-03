@@ -8,6 +8,13 @@
       "when": 1791059877154,
       "tag": "0000_cultured_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791063498607,
+      "tag": "0001_military_patriot",
+      "breakpoints": true
     }
   ]
 }

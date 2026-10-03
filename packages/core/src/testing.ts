@@ -1,5 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { getSession, handleAuthRequest, type SessionUser } from "./auth";
+import {
+  acceptInvitation,
+  createInvitation,
+  createOrganization,
+  type OrgContext,
+  requireOrgContext,
+} from "./tenancy";
 
 type Overrides = Partial<{ name: string; email: string; password: string }>;
 
@@ -26,4 +33,19 @@ export async function createTestUser(
   const session = await getSession(headers);
   if (!session) throw new Error("Test sign-up did not create a session");
   return { user: session.user, headers };
+}
+
+export async function createTestOrganization(user?: { user: SessionUser; headers: Headers }) {
+  const admin = user ?? (await createTestUser());
+  const slug = `test-${randomBytes(8).toString("hex")}`;
+  const org = await createOrganization(admin.user, { name: "Test Organization", slug });
+  const ctx = await requireOrgContext(admin.headers, slug);
+  return { org, ctx, admin };
+}
+
+export async function addTestMember(ctx: OrgContext, role: "admin" | "member") {
+  const { user, headers } = await createTestUser();
+  const { token } = await createInvitation(ctx, { email: user.email, role });
+  await acceptInvitation(user, { token });
+  return { user, headers, ctx: await requireOrgContext(headers, ctx.orgSlug) };
 }
