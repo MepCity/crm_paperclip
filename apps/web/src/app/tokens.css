@@ -1,0 +1,20 @@
+/* Design tokens. Components read these variables instead of hard-coded values. */
+:root {
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1b1f27;
+  --color-text-muted: #5b6472;
+  --color-border: #d9dde4;
+  --color-primary: #2f5bea;
+  --color-primary-text: #ffffff;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+}
