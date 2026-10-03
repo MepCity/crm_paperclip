@@ -11,6 +11,18 @@ export default function LinkDemo() {
       <Link href="#link3" variant="secondary">
         Secondary Link
       </Link>
+      <Link href="#ghost" variant="ghost">
+        Ghost Link
+      </Link>
+      <Link href="#danger" variant="danger">
+        Danger Link
+      </Link>
+      <Link href="#small" variant="primary" size="sm">
+        Small Link
+      </Link>
+      <Link href="#disabled" isDisabled>
+        Disabled Link
+      </Link>
     </div>
   );
 }

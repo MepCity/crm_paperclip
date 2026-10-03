@@ -2,6 +2,7 @@
 @import "./tokens.css";
 
 @theme inline {
+  --color-overlay: var(--color-overlay);
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
   --color-text: var(--color-text);
@@ -36,6 +37,7 @@
   --text-lg: var(--text-lg);
   --text-xl: var(--text-xl);
   --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);

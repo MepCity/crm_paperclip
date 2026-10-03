@@ -1,54 +1,54 @@
 "use client";
 
 import NextLink, { type LinkProps as NextLinkProps } from "next/link";
-import type { ReactNode } from "react";
+import {
+  Link as AriaLink,
+  type LinkProps as AriaLinkProps,
+  composeRenderProps,
+} from "react-aria-components";
+import { buttonSizes, buttonStyles } from "./button";
 
-export interface LinkProps extends NextLinkProps {
-  className?: string;
-  variant?: "text" | "primary" | "secondary" | "ghost" | "danger";
-  size?: "sm" | "md";
-  children?: ReactNode;
+export interface LinkProps extends Omit<AriaLinkProps, "render"> {
+  href: string;
+  variant?: "text" | keyof typeof buttonStyles;
+  size?: keyof typeof buttonSizes;
+  prefetch?: NextLinkProps["prefetch"];
+  replace?: boolean;
+  scroll?: boolean;
 }
+
+const linkBase =
+  "outline-none transition-colors data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
+  "data-focus-visible:ring-offset-2 data-disabled:opacity-50 data-disabled:cursor-not-allowed";
 
 export function Link({
   variant = "text",
   size = "md",
-  className = "",
-  children,
+  className,
+  prefetch,
+  replace,
+  scroll,
   ...props
 }: LinkProps) {
-  if (variant === "text") {
-    const classes =
-      "text-primary outline-none transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed ";
-    return (
-      <NextLink className={classes + className} {...props}>
-        {children}
-      </NextLink>
-    );
-  }
-
-  let classes =
-    "inline-flex items-center justify-center font-medium rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ";
-
-  // Size
-  if (size === "sm") classes += "text-sm px-3 py-1.5 ";
-  else classes += "text-base px-4 py-2 ";
-
-  // Variants
-  if (variant === "primary") {
-    classes += "bg-primary text-primary-text hover:bg-primary-hover active:bg-primary-pressed ";
-  } else if (variant === "secondary") {
-    classes +=
-      "bg-surface text-text border border-border shadow-sm hover:bg-surface-hover active:bg-surface-pressed ";
-  } else if (variant === "ghost") {
-    classes += "bg-transparent text-text hover:bg-surface-hover active:bg-surface-pressed ";
-  } else if (variant === "danger") {
-    classes += "bg-danger text-danger-text hover:bg-danger-hover active:bg-danger-pressed ";
-  }
+  const variantClasses =
+    variant === "text"
+      ? "text-primary rounded-sm data-hovered:underline"
+      : `inline-flex items-center justify-center font-medium rounded-md ${buttonStyles[variant]} ${buttonSizes[size]}`;
 
   return (
-    <NextLink className={classes + className} {...props}>
-      {children}
-    </NextLink>
+    <AriaLink
+      {...props}
+      className={composeRenderProps(
+        className,
+        (extra) => `${linkBase} ${variantClasses} ${extra ?? ""}`,
+      )}
+      render={(domProps) =>
+        "href" in domProps ? (
+          <NextLink {...domProps} prefetch={prefetch} replace={replace} scroll={scroll} />
+        ) : (
+          <span {...domProps} />
+        )
+      }
+    />
   );
 }

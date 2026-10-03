@@ -10,25 +10,26 @@
   --color-primary-hover: #1d4ed8;
   --color-primary-pressed: #1e40af;
 
-  --color-danger: #dc2626;
+  --color-danger: #b91c1c;
   --color-danger-text: #ffffff;
-  --color-danger-hover: #b91c1c;
-  --color-danger-pressed: #991b1b;
+  --color-danger-hover: #991b1b;
+  --color-danger-pressed: #7f1d1d;
 
-  --color-success: #059669;
+  --color-success: #047857;
   --color-success-text: #ffffff;
-  --color-success-hover: #047857;
-  --color-success-pressed: #065f46;
+  --color-success-hover: #065f46;
+  --color-success-pressed: #064e3b;
 
-  --color-warning: #d97706;
+  --color-warning: #92400e;
   --color-warning-text: #ffffff;
-  --color-warning-hover: #b45309;
-  --color-warning-pressed: #92400e;
+  --color-warning-hover: #78350f;
+  --color-warning-pressed: #652b0d;
 
   --color-surface-hover: #f3f4f6;
   --color-surface-pressed: #e5e7eb;
 
-  --color-focus-ring: #93c5fd;
+  --color-focus-ring: #2563eb;
+  --color-overlay: #111827;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
@@ -39,6 +40,7 @@
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
 
   --radius-sm: 0.125rem;
   --radius-md: 0.25rem;

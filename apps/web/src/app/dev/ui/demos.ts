@@ -4,6 +4,7 @@ import ButtonDemo from "@/components/ui/button.demo";
 import CardDemo from "@/components/ui/card.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
 import FormDemo from "@/components/ui/form.demo";
+import IconDemo from "@/components/ui/icon.demo";
 import LinkDemo from "@/components/ui/link.demo";
 import MenuDemo from "@/components/ui/menu.demo";
 import SelectDemo from "@/components/ui/select.demo";
@@ -12,6 +13,7 @@ import TableDemo from "@/components/ui/table.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  icon: IconDemo,
   button: ButtonDemo,
   link: LinkDemo,
   badge: BadgeDemo,

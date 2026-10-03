@@ -10,7 +10,12 @@ export default function FormDemo() {
 
   return (
     <div className="max-w-sm">
-      <Form action={formAction} actionState={state} validationBehavior="aria">
+      <Form
+        action={formAction}
+        actionState={state}
+        validationBehavior="aria"
+        aria-label="Demo sign-in form"
+      >
         <TextField name="email" label="Email" type="email" />
         <TextField name="password" label="Password" type="password" />
         <SubmitButton>Sign In</SubmitButton>

@@ -11,6 +11,8 @@ export default function TextFieldDemo() {
         isInvalid
         errorMessage="This field is required"
       />
+      <TextField name="demo-email" label="Email address" type="email" />
+      <TextField name="demo-password" label="Secret" type="password" />
       <TextField name="demo-disabled" label="Disabled" isDisabled />
     </div>
   );

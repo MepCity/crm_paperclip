@@ -31,10 +31,10 @@ export function Alert({
 
   return (
     <div className={classes} role="alert">
-      <Icon className="w-5 h-5 shrink-0" />
+      <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
       <div>
         {title && <h3 className="font-medium mb-1">{title}</h3>}
-        <div className="text-sm opacity-90">{children}</div>
+        <div className="text-sm">{children}</div>
       </div>
     </div>
   );

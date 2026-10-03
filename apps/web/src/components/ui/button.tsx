@@ -1,61 +1,55 @@
 "use client";
 
-import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
+import {
+  Button as AriaButton,
+  type ButtonProps as AriaButtonProps,
+  composeRenderProps,
+} from "react-aria-components";
 import { Spinner } from "./spinner";
 
+export const buttonStyles = {
+  primary:
+    "bg-primary text-primary-text data-hovered:bg-primary-hover data-pressed:bg-primary-pressed",
+  secondary:
+    "bg-surface text-text border border-border shadow-sm data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
+  ghost: "bg-transparent text-text data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
+  danger: "bg-danger text-danger-text data-hovered:bg-danger-hover data-pressed:bg-danger-pressed",
+};
+
+export const buttonSizes = {
+  sm: "text-sm px-3 py-1.5",
+  md: "text-base px-4 py-2",
+};
+
+const buttonBase =
+  "inline-flex items-center justify-center font-medium rounded-md outline-none transition-colors " +
+  "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-focus-visible:ring-offset-2 " +
+  "data-disabled:opacity-50 data-disabled:cursor-not-allowed " +
+  "data-pending:opacity-50 data-pending:cursor-wait";
+
 export interface ButtonProps extends AriaButtonProps {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-  size?: "sm" | "md";
+  variant?: keyof typeof buttonStyles;
+  size?: keyof typeof buttonSizes;
 }
 
 export function Button({
   variant = "primary",
   size = "md",
-  isPending,
+  className,
   children,
   ...props
 }: ButtonProps) {
   return (
     <AriaButton
       {...props}
-      isPending={isPending}
-      className={({ isFocusVisible, isHovered, isPressed, isDisabled }) => {
-        let classes =
-          "inline-flex items-center justify-center font-medium rounded-md outline-none transition-colors ";
-
-        // Size
-        if (size === "sm") classes += "text-sm px-3 py-1.5 ";
-        else classes += "text-base px-4 py-2 ";
-
-        // Variants
-        if (variant === "primary") {
-          classes += "bg-primary text-primary-text ";
-          if (isHovered && !isDisabled) classes += "bg-primary-hover ";
-          if (isPressed && !isDisabled) classes += "bg-primary-pressed ";
-        } else if (variant === "secondary") {
-          classes += "bg-surface text-text border border-border shadow-sm ";
-          if (isHovered && !isDisabled) classes += "bg-surface-hover ";
-          if (isPressed && !isDisabled) classes += "bg-surface-pressed ";
-        } else if (variant === "ghost") {
-          classes += "bg-transparent text-text ";
-          if (isHovered && !isDisabled) classes += "bg-surface-hover ";
-          if (isPressed && !isDisabled) classes += "bg-surface-pressed ";
-        } else if (variant === "danger") {
-          classes += "bg-danger text-danger-text ";
-          if (isHovered && !isDisabled) classes += "bg-danger-hover ";
-          if (isPressed && !isDisabled) classes += "bg-danger-pressed ";
-        }
-
-        // States
-        if (isFocusVisible) classes += "ring-2 ring-focus-ring ring-offset-2 ";
-        if (isDisabled || isPending) classes += "opacity-50 cursor-not-allowed ";
-
-        return classes.trim();
-      }}
+      className={composeRenderProps(
+        className,
+        (extra) => `${buttonBase} ${buttonStyles[variant]} ${buttonSizes[size]} ${extra ?? ""}`,
+      )}
     >
       {(renderProps) => (
         <>
-          {renderProps.isPending && <Spinner className="w-4 h-4 mr-2" />}
+          {renderProps.isPending && <Spinner className="mr-2 h-4 w-4" aria-hidden />}
           {typeof children === "function" ? children(renderProps) : children}
         </>
       )}
