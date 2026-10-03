@@ -8,10 +8,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-Bu dizin depo kökündeki `AGENTS.md` kurallarına tabidir:
-- **reference CRM salt-okunurdur.** reference CRM'da hiçbir şeyi değiştirme; yalnızca
-  `node ~/Desktop/mepcity-research/tools/capture/capture.mjs` ile incele.
-- Commit standardı: `<type>(<scope>): <summary>` (İngilizce, ≤72 karakter),
-  gövdede `Refs: MEP-<n>`; imza trailer'larını elle yazma.
+# Repository rules apply here
 
-Kök dosya: `../../AGENTS.md`
+This directory is governed by the repository root [`AGENTS.md`](../../AGENTS.md). Read it before working here. In particular:
+
+- **reference CRM is read-only.** Never change anything in reference CRM; inspect it only through `node ~/Desktop/mepcity-research/tools/capture/capture.mjs`.
+- Commit standard: `<type>(<scope>): <summary>` (English, at most 72 characters), with `Refs: MEP-<n>` in the body. Do not write the signature trailers yourself.
