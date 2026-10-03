@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./errors": "./src/errors.ts",
+    "./format": "./src/format/index.ts",
     "./testing": "./src/testing.ts"
   },
   "dependencies": {
