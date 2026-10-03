@@ -18,7 +18,7 @@ describe("initial auth migration", () => {
     const url = withDatabase(adminUrl, name);
     try {
       const first = await runMigrations(url);
-      expect(first.applied).toHaveLength(1);
+      expect(first.applied).toContain("0000_cultured_doorman.sql");
       expect((await runMigrations(url)).skipped).toEqual(first.applied);
       const client = new pg.Client({ connectionString: url });
       await client.connect();

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@crm/db": "workspace:*",
+    "drizzle-orm": "^0.45.3",
     "better-auth": "^1.7.7",
     "zod": "^4.6.5"
   }
