@@ -1,0 +1,4 @@
+#!/bin/sh
+# Author every new commit as the repository owner (see owner-identity.sh).
+sh "$(dirname "$0")/owner-identity.sh" commit
+exit 0

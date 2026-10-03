@@ -1,7 +1,8 @@
 #!/bin/sh
 # Reject commits whose staged paths or added lines contain banned terms.
-ROOT=$(git rev-parse --show-toplevel)
-BANNED=$(sh "$ROOT/.githooks/banned.sh")
+HOOK_DIR=$(cd "$(dirname "$0")" && pwd)
+sh "$HOOK_DIR/maintenance-lock.sh" || exit 1
+BANNED=$(sh "$HOOK_DIR/banned.sh")
 HITS_PATHS=$(git diff --cached --name-only --diff-filter=ACMR | grep -Ei "$BANNED")
 HITS_LINES=$(git diff --cached -U0 --diff-filter=ACMR --no-ext-diff -- . ':(exclude).githooks/banned.sh' | grep -E '^\+[^+]' | grep -Ei "$BANNED" | head -5)
 if [ -n "$HITS_PATHS$HITS_LINES" ]; then

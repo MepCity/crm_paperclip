@@ -1,0 +1,4 @@
+#!/bin/sh
+# Merges wait while repository maintenance holds the lock.
+sh "$(dirname "$0")/maintenance-lock.sh" || exit 1
+exit 0

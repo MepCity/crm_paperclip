@@ -1,8 +1,8 @@
 #!/bin/sh
 # MepCity commit standard: validate the subject line and sign with agent + model.
 MSG_FILE="$1"
-ROOT=$(git rev-parse --show-toplevel)
-BANNED=$(sh "$ROOT/.githooks/banned.sh")
+HOOK_DIR=$(cd "$(dirname "$0")" && pwd)
+BANNED=$(sh "$HOOK_DIR/banned.sh")
 if grep -v '^#' "$MSG_FILE" | grep -Eqi "$BANNED"; then
   echo "commit-msg: BLOCKED — the message contains a banned term (see AGENTS.md absolute rule 1)." >&2
   exit 1
@@ -25,7 +25,7 @@ case "$SUBJECT" in
 esac
 # Fallback: resolve name/model from the Paperclip agent id when the env vars are missing.
 if [ -z "$MEP_AGENT_NAME" ] && [ -n "$PAPERCLIP_AGENT_ID" ]; then
-  MAP="$(git rev-parse --show-toplevel)/.githooks/agents.tsv"
+  MAP="$HOOK_DIR/agents.tsv"
   if [ -f "$MAP" ]; then
     MEP_AGENT_NAME=$(awk -F'\t' -v id="$PAPERCLIP_AGENT_ID" '$1==id {print $2}' "$MAP")
     MEP_AGENT_MODEL=$(awk -F'\t' -v id="$PAPERCLIP_AGENT_ID" '$1==id {print $3}' "$MAP")
