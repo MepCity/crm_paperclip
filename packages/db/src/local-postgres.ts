@@ -1,0 +1,157 @@
+import type { ChildProcess } from "node:child_process";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import EmbeddedPostgres from "embedded-postgres";
+import pg from "pg";
+import { isPortFree, pickFreePort } from "./ports";
+
+const USER = "postgres";
+const PASSWORD = "postgres";
+const HOST = "127.0.0.1";
+
+export type LocalPostgresOptions = {
+  /** Cluster data directory. Created and initialised on first use. */
+  dataDir: string;
+  /** Fixed port. Default: a free port chosen by the OS. */
+  port?: number;
+  /** Extra `-c name=value` server settings. */
+  settings?: Record<string, string>;
+  /** Receives server and initdb output. Default: discarded (kept for error messages). */
+  onLog?: (line: string) => void;
+};
+
+export type LocalPostgres = {
+  port: number;
+  /** True when a server already running on the data directory was reused. */
+  adopted: boolean;
+  /** Connection string for a database on this cluster. */
+  urlFor(database: string): string;
+  stop(): Promise<void>;
+};
+
+export function connectionUrl(port: number, database: string): string {
+  return `postgres://${USER}:${PASSWORD}@${HOST}:${port}/${encodeURIComponent(database)}`;
+}
+
+/** Parses the first lines of `postmaster.pid`: line 1 is the PID, line 4 the port. */
+export function parsePostmasterPid(contents: string): { pid: number; port: number } | null {
+  const lines = contents.split("\n");
+  const pid = Number.parseInt(lines[0] ?? "", 10);
+  const port = Number.parseInt(lines[3] ?? "", 10);
+  if (!Number.isInteger(pid) || pid <= 0 || !Number.isInteger(port) || port <= 0) return null;
+  return { pid, port };
+}
+
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
+
+async function waitForExit(pid: number, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (isAlive(pid)) {
+    if (Date.now() > deadline) throw new Error(`postgres process ${pid} did not stop in time`);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+async function runningServer(dataDir: string): Promise<{ pid: number; port: number } | null> {
+  const pidFile = join(dataDir, "postmaster.pid");
+  if (!existsSync(pidFile)) return null;
+  const parsed = parsePostmasterPid(await readFile(pidFile, "utf8"));
+  return parsed && isAlive(parsed.pid) ? parsed : null;
+}
+
+/**
+ * Starts (or re-attaches to) an embedded PostgreSQL server on `dataDir`.
+ * Each call owns its own data directory; use different directories for parallel servers.
+ */
+export async function startLocalPostgres(options: LocalPostgresOptions): Promise<LocalPostgres> {
+  const { dataDir } = options;
+
+  const existing = await runningServer(dataDir);
+  if (existing) {
+    return {
+      port: existing.port,
+      adopted: true,
+      urlFor: (database) => connectionUrl(existing.port, database),
+      async stop() {
+        process.kill(existing.pid, "SIGINT");
+        await waitForExit(existing.pid, 30_000);
+      },
+    };
+  }
+
+  const tail: string[] = [];
+  const onLog = (message: string) => {
+    for (const line of message.split("\n")) {
+      if (line.trim() === "") continue;
+      tail.push(line);
+      if (tail.length > 20) tail.shift();
+      options.onLog?.(line);
+    }
+  };
+
+  const port = options.port ?? (await pickFreePort());
+  if (options.port !== undefined && !(await isPortFree(port))) {
+    throw new Error(`port ${port} is already in use`);
+  }
+
+  const flags = Object.entries({ listen_addresses: HOST, ...options.settings }).flatMap(
+    ([name, value]) => ["-c", `${name}=${value}`],
+  );
+  const server = new EmbeddedPostgres({
+    databaseDir: dataDir,
+    port,
+    user: USER,
+    password: PASSWORD,
+    persistent: true,
+    postgresFlags: flags,
+    onLog,
+    onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
+  });
+
+  try {
+    if (!existsSync(join(dataDir, "PG_VERSION"))) await server.initialise();
+    await server.start();
+  } catch (error) {
+    await server.stop().catch(() => undefined);
+    const reason = error instanceof Error ? error.message : "server exited during start";
+    throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}`);
+  }
+
+  return {
+    port,
+    adopted: false,
+    urlFor: (database) => connectionUrl(port, database),
+    async stop() {
+      // A Ctrl+C reaches the server directly (same process group) and it exits on its own;
+      // embedded-postgres would then wait forever for an exit event it already missed.
+      const child = (server as unknown as { process?: ChildProcess }).process;
+      if (child && (child.exitCode !== null || child.signalCode !== null)) {
+        (server as unknown as { process?: ChildProcess }).process = undefined;
+        return;
+      }
+      await server.stop();
+    },
+  };
+}
+
+/** Creates the database when it does not exist yet. */
+export async function ensureDatabase(adminUrl: string, name: string): Promise<void> {
+  const client = new pg.Client({ connectionString: adminUrl });
+  await client.connect();
+  try {
+    const found = await client.query("select 1 from pg_database where datname = $1", [name]);
+    if (found.rowCount === 0) {
+      await client.query(`create database ${client.escapeIdentifier(name)}`);
+    }
+  } finally {
+    await client.end();
+  }
+}
