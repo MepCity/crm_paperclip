@@ -5,10 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./testing": "./src/testing.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",
+    "better-auth": "^1.7.7",
     "zod": "^4.6.5"
   }
 }
