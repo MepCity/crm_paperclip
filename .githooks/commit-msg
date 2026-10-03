@@ -17,6 +17,14 @@ case "$SUBJECT" in
     fi
     ;;
 esac
+# Fallback: resolve name/model from the Paperclip agent id when the env vars are missing.
+if [ -z "$MEP_AGENT_NAME" ] && [ -n "$PAPERCLIP_AGENT_ID" ]; then
+  MAP="$(git rev-parse --show-toplevel)/.githooks/agents.tsv"
+  if [ -f "$MAP" ]; then
+    MEP_AGENT_NAME=$(awk -F'\t' -v id="$PAPERCLIP_AGENT_ID" '$1==id {print $2}' "$MAP")
+    MEP_AGENT_MODEL=$(awk -F'\t' -v id="$PAPERCLIP_AGENT_ID" '$1==id {print $3}' "$MAP")
+  fi
+fi
 if [ -n "$MEP_AGENT_NAME" ]; then
   git interpret-trailers --in-place --if-exists replace --trailer "Agent: $MEP_AGENT_NAME" "$MSG_FILE"
   if [ -n "$MEP_AGENT_MODEL" ]; then
