@@ -27,6 +27,7 @@ Goal: test whether an agent team can rebuild a working CRM with feature parity t
 - Our live CRM: <reference-crm-url> (data center: `com`).
 - The capture browser is logged in with the **board's own reference CRM account, which has full permissions** (there is no separate read-only user). Treat every action as if it could change real customer data.
 - Access reference CRM only through `node <repo-root>/node ~/Desktop/mepcity-research/tools/capture/capture.mjs` (it blocks write requests and dangerous clicks). Never use any other browser, API client or the user's own Chrome for reference CRM.
+- The capture tool works in its own tab inside the **shared, always-open reference CRM window** (LaunchAgent `com.mepcity.ref-browser`). Never close that window or its existing tabs, never kill Chrome, and never log out — re-logins require the board's phone verification.
 - Read-only: never create, edit, delete, convert, merge, import/export records, never send emails or messages, never run mass actions, never change settings.
 - Stay on reference CRM domains. If the login page appears, stop and ask the board to log in again (`capture.mjs login`).
 - Capture what a screen does and what data it needs (layout, fields, actions, filters, flows, request shapes) — not its exact visual assets. Our UI uses our own design system and branding.
