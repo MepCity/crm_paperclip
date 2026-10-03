@@ -15,25 +15,63 @@ describe("auth client", () => {
     expect(fetch.mock.calls[1]?.[0]).toBe("/api/auth/sign-out");
   });
 
-  it("maps field and general errors", async () => {
+  it.each([
+    ["PASSWORD_TOO_SHORT", "password", "Password must be at least 10 characters."],
+    ["PASSWORD_TOO_LONG", "password", "Password must be at most 128 characters."],
+    ["INVALID_EMAIL", "email", "Enter a valid email address."],
+    [
+      "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+      "email",
+      "An account with this email already exists.",
+    ],
+  ])("maps %s to a user-facing %s error", async (code, field, message) => {
     vi.stubGlobal(
       "fetch",
       vi
         .fn()
-        .mockResolvedValueOnce(
-          Response.json(
-            { message: "Check the form.", fieldErrors: { email: ["Invalid email."] } },
-            { status: 400 },
-          ),
-        )
-        .mockResolvedValueOnce(Response.json({ message: "Please retry." }, { status: 500 })),
+        .mockResolvedValue(
+          Response.json({ code, message: "Raw library message" }, { status: 400 }),
+        ),
     );
     expect(await signUp({ name: "Test", email: "bad", password: "long-password" })).toEqual({
       ok: false,
-      message: "Check the form.",
-      fieldErrors: { email: ["Invalid email."] },
+      message,
+      fieldErrors: { [field]: [message] },
     });
-    expect(await signOut()).toEqual({ ok: false, message: "Please retry." });
+  });
+
+  it("maps the installed server's email validation response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json(
+            { code: "VALIDATION_ERROR", message: "[body.email] Invalid email address" },
+            { status: 400 },
+          ),
+        ),
+    );
+    expect(await signUp({ name: "Test", email: "bad", password: "long-password" })).toEqual({
+      ok: false,
+      message: "Enter a valid email address.",
+      fieldErrors: { email: ["Enter a valid email address."] },
+    });
+  });
+
+  it("uses a general message for an unknown error code", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json({ code: "UNKNOWN", message: "Raw error" }, { status: 500 }),
+        ),
+    );
+    expect(await signOut()).toEqual({
+      ok: false,
+      message: "The request failed. Please try again.",
+    });
   });
 
   it("uses the same message for unknown email and wrong password", async () => {

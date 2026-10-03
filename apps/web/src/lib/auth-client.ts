@@ -6,6 +6,17 @@ type SignUpInput = { name: string; email: string; password: string };
 type SignInInput = { email: string; password: string };
 
 const INVALID_CREDENTIALS = "Invalid email or password.";
+const GENERAL_ERROR = "The request failed. Please try again.";
+
+const FIELD_ERRORS: Record<string, { field: string; message: string }> = {
+  PASSWORD_TOO_SHORT: { field: "password", message: "Password must be at least 10 characters." },
+  PASSWORD_TOO_LONG: { field: "password", message: "Password must be at most 128 characters." },
+  INVALID_EMAIL: { field: "email", message: "Enter a valid email address." },
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: {
+    field: "email",
+    message: "An account with this email already exists.",
+  },
+};
 
 async function post(path: string, input?: SignUpInput | SignInInput): Promise<AuthResult> {
   try {
@@ -25,17 +36,20 @@ async function post(path: string, input?: SignUpInput | SignInInput): Promise<Au
     ) {
       return { ok: false, message: INVALID_CREDENTIALS };
     }
-    const fieldErrors = error.fieldErrors;
-    return {
-      ok: false,
-      message:
-        typeof error.message === "string" && error.message
-          ? error.message
-          : "The request failed. Please try again.",
-      ...(fieldErrors && typeof fieldErrors === "object" && !Array.isArray(fieldErrors)
-        ? { fieldErrors: fieldErrors as Record<string, string[]> }
-        : {}),
-    };
+    const fieldError =
+      code === "VALIDATION_ERROR" &&
+      typeof error.message === "string" &&
+      error.message.startsWith("[body.email]")
+        ? FIELD_ERRORS.INVALID_EMAIL
+        : FIELD_ERRORS[code];
+    if (fieldError) {
+      return {
+        ok: false,
+        message: fieldError.message,
+        fieldErrors: { [fieldError.field]: [fieldError.message] },
+      };
+    }
+    return { ok: false, message: GENERAL_ERROR };
   } catch {
     return { ok: false, message: "Network error. Please try again." };
   }

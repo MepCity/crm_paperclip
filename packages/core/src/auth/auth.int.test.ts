@@ -53,7 +53,8 @@ describe("authentication", () => {
       email: `unknown-${crypto.randomUUID()}@example.test`,
       password: "wrong-password",
     });
-    expect(wrong.status).toBe(unknown.status);
+    expect(wrong.status).toBe(401);
+    expect(unknown.status).toBe(401);
     expect(await wrong.text()).toBe(await unknown.text());
     const after = await getDb().select().from(schema.sessions);
     expect(after).toHaveLength(before.length);
@@ -66,13 +67,41 @@ describe("authentication", () => {
       email: user.email.toUpperCase(),
       password: "long-password-for-test",
     });
-    expect(duplicate.ok).toBe(false);
+    expect(duplicate.status).toBe(422);
+    expect(await duplicate.json()).toMatchObject({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" });
+    const matchingUsers = await getDb()
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, user.email));
+    expect(matchingUsers).toHaveLength(1);
     const short = await post("sign-up/email", {
       name: "Short",
       email: `short-${crypto.randomUUID()}@example.test`,
       password: "123456789",
     });
-    expect(short.ok).toBe(false);
+    expect(short.status).toBe(400);
+    expect(await short.json()).toMatchObject({ code: "PASSWORD_TOO_SHORT" });
+  });
+
+  it("returns stable codes for invalid email and long password", async () => {
+    const invalidEmail = await post("sign-up/email", {
+      name: "Invalid",
+      email: "not-an-email",
+      password: "long-password-for-test",
+    });
+    expect(invalidEmail.status).toBe(400);
+    expect(await invalidEmail.json()).toMatchObject({
+      code: "VALIDATION_ERROR",
+      message: "[body.email] Invalid email address",
+    });
+
+    const longPassword = await post("sign-up/email", {
+      name: "Long",
+      email: `long-${crypto.randomUUID()}@example.test`,
+      password: "x".repeat(129),
+    });
+    expect(longPassword.status).toBe(400);
+    expect(await longPassword.json()).toMatchObject({ code: "PASSWORD_TOO_LONG" });
   });
 
   it("revokes a signed-out session", async () => {
