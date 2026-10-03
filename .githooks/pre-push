@@ -5,7 +5,8 @@ BANNED=$(sh "$ROOT/.githooks/banned.sh")
 ZERO=0000000000000000000000000000000000000000
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ "$local_sha" = "$ZERO" ] && continue
-  if [ "$remote_sha" = "$ZERO" ]; then RANGE="$local_sha --not --remotes=origin"; else RANGE="$remote_sha..$local_sha"; fi
+  # New branch, or remote tip unknown locally (e.g. after a history rewrite): check everything not already on origin.
+  if [ "$remote_sha" = "$ZERO" ] || ! git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then RANGE="$local_sha --not --remotes=origin"; else RANGE="$remote_sha..$local_sha"; fi
   for c in $(git rev-list $RANGE); do
     if git show --format=fuller "$c" -- . ':(exclude).githooks/banned.sh' | grep -Eqi "$BANNED"; then
       echo "pre-push: BLOCKED — commit $(git log -1 --format='%h %s' "$c") contains a banned term." >&2
