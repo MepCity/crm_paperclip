@@ -27,6 +27,7 @@ ADR 0001 deferred two UI decisions: the headless component primitives and the UI
 
 - Interactive behaviour comes from **React Aria Components**. It is imported only inside `components/ui`, so it can be replaced.
 - Outside `components/ui` there are no raw interactive elements (`<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`) and no hand-written widgets. A missing primitive is added to `components/ui` first.
+- Icons come from one set, Lucide (`lucide-react`), re-exported by `components/ui/icon.tsx`. Feature code imports icons from that file only.
 - `@/` is the import alias for `apps/web/src`.
 
 ### 2. Styling
