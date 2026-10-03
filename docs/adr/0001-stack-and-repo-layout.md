@@ -79,7 +79,7 @@ Conventions: primary keys are UUIDv7 (`uuidv7()` is native in PostgreSQL 18); ti
 
 ### 4. Authentication
 
-- Better Auth provides identity only: email and password sign-up, sign-in, sign-out, and database-backed sessions in an `httpOnly`, `SameSite=Lax` cookie (`Secure` in production). Sessions are revocable; no JWT sessions.
+- Better Auth provides identity only: email and password sign-up, sign-in, sign-out, and database-backed sessions in an `httpOnly`, `SameSite=Lax` cookie. The cookie is `Secure` whenever the app's public URL (`APP_URL`) is HTTPS, so the production build still works over plain HTTP on localhost. Sessions are revocable; no JWT sessions.
 - Its tables (`users`, `sessions`, `accounts`, `verifications`) live in our Drizzle schema and are migrated like every other table.
 - Organizations, memberships and permissions are our own tables and code. We do not use Better Auth's organization plugin, because the permission model has to become reference CRM's roles, profiles and sharing rules.
 - The rest of the code calls `@crm/core` (`getSession`, `requireUser`, `requireOrgContext`), never the library directly.
@@ -121,6 +121,7 @@ Prerequisite: Node.js 24 with Corepack enabled. No Docker, no system PostgreSQL.
 | `pnpm verify` | `check` + `test`; the merge gate |
 
 - If `DATABASE_URL` is set, it is used instead of the embedded server (any PostgreSQL 18).
+- `APP_URL` is the app's public URL. `pnpm dev` and the end-to-end run set it from the port they pick; a deployment sets it explicitly.
 - Migrations are generated SQL files committed in `packages/db/migrations`. They are forward-only; an applied migration is never edited; `drizzle-kit push` is not used.
 - Local secrets are generated into a git-ignored `.env.local` on first run. `.env.example` documents every variable.
 
