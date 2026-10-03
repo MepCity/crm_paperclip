@@ -1,0 +1,26 @@
+#!/bin/sh
+# MepCity commit standard: validate the subject line and sign with agent + model.
+MSG_FILE="$1"
+SUBJECT=$(grep -v '^#' "$MSG_FILE" | sed -n '1p')
+case "$SUBJECT" in
+  "Merge "*|"Revert "*) ;;
+  *)
+    if ! printf '%s\n' "$SUBJECT" | grep -Eq '^(feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert)(\([a-z0-9._/-]+\))?!?: [^ ]'; then
+      echo "commit-msg: subject must be '<type>(<scope>): <summary>'" >&2
+      echo "  types: feat fix refactor perf test docs build ci chore style revert" >&2
+      echo "  got:   $SUBJECT" >&2
+      exit 1
+    fi
+    if [ "$(printf '%s' "$SUBJECT" | wc -m | tr -d ' ')" -gt 72 ]; then
+      echo "commit-msg: subject is longer than 72 characters" >&2
+      exit 1
+    fi
+    ;;
+esac
+if [ -n "$MEP_AGENT_NAME" ]; then
+  git interpret-trailers --in-place --if-exists replace --trailer "Agent: $MEP_AGENT_NAME" "$MSG_FILE"
+  if [ -n "$MEP_AGENT_MODEL" ]; then
+    git interpret-trailers --in-place --if-exists replace --trailer "Model: $MEP_AGENT_MODEL" "$MSG_FILE"
+  fi
+fi
+exit 0
