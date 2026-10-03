@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
@@ -10,6 +11,17 @@ export default defineConfig({
           name: "unit",
           include: ["{apps,packages,scripts}/**/*.test.ts"],
           exclude: [...exclude, "**/*.int.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "component",
+          include: ["apps/web/**/*.test.tsx"],
+          exclude,
+          environment: "jsdom",
+          alias: {
+            "@": path.resolve(__dirname, "./apps/web/src"),
+          },
         },
       },
       {
