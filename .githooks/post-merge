@@ -1,0 +1,4 @@
+#!/bin/sh
+# Author the merge commit just created as the repository owner (see owner-identity.sh).
+sh "$(dirname "$0")/owner-identity.sh" merge
+exit 0
