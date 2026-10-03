@@ -1,6 +1,12 @@
 #!/bin/sh
 # MepCity commit standard: validate the subject line and sign with agent + model.
 MSG_FILE="$1"
+ROOT=$(git rev-parse --show-toplevel)
+BANNED=$(sh "$ROOT/.githooks/banned.sh")
+if grep -v '^#' "$MSG_FILE" | grep -Eqi "$BANNED"; then
+  echo "commit-msg: BLOCKED — the message contains a banned term (see AGENTS.md absolute rule 1)." >&2
+  exit 1
+fi
 SUBJECT=$(grep -v '^#' "$MSG_FILE" | sed -n '1p')
 case "$SUBJECT" in
   "Merge "*|"Revert "*) ;;
