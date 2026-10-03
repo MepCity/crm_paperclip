@@ -42,8 +42,8 @@ export function Link({
         className,
         (extra) => `${linkBase} ${variantClasses} ${extra ?? ""}`,
       )}
-      render={(domProps) =>
-        "href" in domProps ? (
+      render={(domProps, renderProps) =>
+        "href" in domProps && !renderProps.isDisabled ? (
           <NextLink {...domProps} prefetch={prefetch} replace={replace} scroll={scroll} />
         ) : (
           <span {...domProps} />

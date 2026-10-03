@@ -51,7 +51,7 @@ test("Link takes keyboard focus and marks it as visible", async () => {
   expect(first.getAttribute("data-focus-visible")).toBe("true");
 });
 
-test("Link in the disabled state ignores presses", async () => {
+test("Link in the disabled state renders no anchor and ignores presses", async () => {
   const user = userEvent.setup();
   let presses = 0;
   render(
@@ -60,10 +60,12 @@ test("Link in the disabled state ignores presses", async () => {
     </Link>,
   );
 
-  const link = screen.getByRole("link", { name: "Disabled link" });
-  expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-disabled")).toBe("true");
+  // React Aria keeps the link role on a span so the disabled state is announced.
+  const element = screen.getByRole("link", { name: "Disabled link" });
+  expect(element.tagName).toBe("SPAN");
+  expect(element.getAttribute("aria-disabled")).toBe("true");
+  expect(element.getAttribute("data-disabled")).toBe("true");
 
-  await user.click(link);
+  await user.click(element);
   expect(presses).toBe(0);
 });
