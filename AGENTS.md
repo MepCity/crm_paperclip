@@ -34,4 +34,4 @@ Internal CRM built by an agent team as an experiment: can we reach feature parit
 - `Agent:` and `Model:` signature trailers are added automatically by the `.githooks/commit-msg` hook. Do not write or edit them yourself.
 
 ## GitHub
-- Remote `origin`: MepCity/crm_paperclip (private). `main` and `mep/*` branches are pushed automatically every 30 minutes; the pre-push hook re-checks every outgoing commit. Never force-push or rewrite `main`.
+- Remote `origin`: MepCity/crm_paperclip (private). `main` and `mep/*` branches are pushed automatically every 5 minutes (new issue branches start from `origin/main`, so the CTO also pushes right after each merge); the pre-push hook re-checks every outgoing commit. Never force-push or rewrite `main`.
