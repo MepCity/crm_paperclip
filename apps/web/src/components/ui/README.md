@@ -239,6 +239,24 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
 
+### Typeface
+
+The board selected **Figtree** on 2026-10-04 (MEP-66). We serve our chosen open-license
+font from its official source; we never copy the reference CRM's font files.
+
+- Official file: https://github.com/erikdkennedy/figtree/raw/master/fonts/variable/Figtree%5Bwght%5D.ttf
+- Embedded version: `Version 2.001`; variable `wght` axis 300–900, normal style.
+- File: `apps/web/src/app/fonts/figtree/figtree-variable.ttf`, unchanged bytes.
+- SHA-256: `c8d9e77bb970c18f7b55fd2d8c91f86c9e9cc42696da9c3e7bc4fffba1d3ef5a`.
+- License: SIL OFL 1.1, unchanged `OFL.txt` beside the font.
+- Official license: https://github.com/erikdkennedy/figtree/raw/master/OFL.txt
+- License SHA-256: `140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268`.
+
+To replace the typeface, update `--font-sans`, the single `@font-face` in `tokens.css`,
+and the font folder with the official file and license. Then refit the size and weight
+measurements in `typography.md`, update the tokens and this table, and verify the checksums,
+rendered widths and weight axis. Components inherit `--font-sans` and need no family edits.
+
 ### Measured values that carry no token
 
 These are in the Visual layout section but are not tokens, with the reason for each. They are not
