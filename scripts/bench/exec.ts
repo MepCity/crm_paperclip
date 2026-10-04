@@ -3,6 +3,7 @@ import {
   countQuery,
   type FullRecord,
   fullQuery,
+  type JsonEquality,
   type ListKind,
   type ListParams,
   type ListRow,
@@ -24,8 +25,9 @@ export async function executeList(
   option: Option,
   kind: ListKind,
   params: ListParams,
+  equality: JsonEquality = "containment",
 ): Promise<ListRow[]> {
-  const query = listQuery(option, kind, params);
+  const query = listQuery(option, kind, params, equality);
   const result = await client.query(query.text, query.values);
   return result.rows.map((row) => mapListRow(row as Row));
 }
@@ -36,8 +38,9 @@ export async function executeCount(
   kind: "s2" | "s4",
   params: ListParams,
   capped: boolean,
+  equality: JsonEquality = "containment",
 ): Promise<number> {
-  const query = countQuery(option, kind, params, capped);
+  const query = countQuery(option, kind, params, capped, equality);
   const result = await client.query<{ n: number }>(query.text, query.values);
   return result.rows[0]?.n ?? 0;
 }

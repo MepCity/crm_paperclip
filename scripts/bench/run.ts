@@ -16,6 +16,7 @@ import {
   countQuery,
   cursorQuery,
   fullQuery,
+  type JsonEquality,
   type ListKind,
   type ListParams,
   listQuery,
@@ -26,14 +27,18 @@ import {
   type BenchReport,
   collectNotes,
   type LoadRow,
+  type PlanNode,
   percentile,
   renderMarkdown,
+  type Selectivity,
   type SizeSnapshot,
+  summarizePlan,
   type TimingRow,
   type WriteRow,
 } from "./report";
 import {
   applyStatements,
+  checkpoint,
   configureClient,
   createTables,
   currentLsn,
@@ -48,6 +53,7 @@ import {
   relationSizes,
   roleUrl,
   type Stage,
+  searchIndexNames,
   searchStatements,
   serverInfo,
   setRls,
@@ -112,6 +118,7 @@ function makeParams(
   contactIds: string[],
   cursor: Cursor | null,
   searchLike: string,
+  prefixQuery: string = SEARCH_TERMS.prefixQuery,
 ): ListParams {
   const owner = world.usersA[index % world.usersA.length];
   const contact = contactIds[index % Math.max(contactIds.length, 1)] ?? world.orgA;
@@ -129,40 +136,20 @@ function makeParams(
     cursorCompany: cursor?.company ?? null,
     cursorId: cursor?.id ?? "ffffffff-ffff-ffff-ffff-ffffffffffff",
     searchLike,
-    prefixQuery: SEARCH_TERMS.prefixQuery,
+    prefixQuery,
     offset: 5000,
   };
 }
 
-type PlanNode = {
-  "Node Type": string;
-  "Index Name"?: string;
-  "Relation Name"?: string;
-  Plans?: PlanNode[];
-  "Shared Hit Blocks"?: number;
-  "Shared Read Blocks"?: number;
-};
-
-function summarizePlan(plan: PlanNode): { summary: string; buffers: number; sharedRead: number } {
-  const scans: string[] = [];
-  let buffers = 0;
-  let sharedRead = 0;
-  const walk = (node: PlanNode): void => {
-    buffers += (node["Shared Hit Blocks"] ?? 0) + (node["Shared Read Blocks"] ?? 0);
-    sharedRead += node["Shared Read Blocks"] ?? 0;
-    if (node["Node Type"].includes("Scan")) {
-      const index = node["Index Name"];
-      scans.push(
-        index
-          ? `${node["Node Type"]} ${index}`
-          : `${node["Node Type"]} ${node["Relation Name"] ?? ""}`.trim(),
-      );
-    }
-    for (const child of node.Plans ?? []) walk(child);
-  };
-  walk(plan);
-  return { summary: scans.join("; ") || plan["Node Type"], buffers, sharedRead };
+function equalityFor(option: Option, stage: string): JsonEquality {
+  if (option !== "A") return "containment";
+  return stage === "A2" || stage === "rls-on" || stage === "rls-off" ? "expression" : "containment";
 }
+
+type ExplainDocument = {
+  Plan: PlanNode;
+  JIT?: { Timing?: { Total?: number } };
+};
 
 async function explainQuery(
   client: pg.Client,
@@ -170,10 +157,10 @@ async function explainQuery(
   values: unknown[],
 ): Promise<{ summary: string; buffers: number; sharedRead: number }> {
   const result = await client.query(`explain (analyze, buffers, format json) ${text}`, values);
-  const raw = result.rows[0]?.["QUERY PLAN"] as Array<{ Plan: PlanNode }> | undefined;
-  const plan = raw?.[0]?.Plan;
-  if (!plan) return { summary: "no plan", buffers: 0, sharedRead: 0 };
-  return summarizePlan(plan);
+  const raw = result.rows[0]?.["QUERY PLAN"] as ExplainDocument[] | undefined;
+  const document = raw?.[0];
+  if (!document?.Plan) return { summary: "no plan", buffers: 0, sharedRead: 0 };
+  return summarizePlan(document.Plan, document.JIT?.Timing?.Total);
 }
 
 async function timeQuery(
@@ -256,12 +243,40 @@ function setsFor(
   count: number,
   build: (params: ListParams) => unknown[],
   searchLike = searchLikes()[0] ?? "%xqz%",
+  prefixQuery: string = SEARCH_TERMS.prefixQuery,
 ): unknown[][] {
   return Array.from({ length: count }, (_, index) => {
-    const probe = makeParams(world, index, contactIds, null, searchLike);
+    const probe = makeParams(world, index, contactIds, null, searchLike, prefixQuery);
     const cursor = cursors.get(probe.leadStatus) ?? null;
-    return build(makeParams(world, index, contactIds, cursor, searchLike));
+    return build(makeParams(world, index, contactIds, cursor, searchLike, prefixQuery));
   });
+}
+
+function keysetMeasurement(
+  option: Option,
+  world: Universe,
+  contactIds: string[],
+  cursors: Map<string, Cursor>,
+  count: number,
+  equality: JsonEquality,
+): { text: string; values: unknown[][] } {
+  const entries = [...cursors.entries()];
+  const present = entries.filter((entry) => entry[1].company !== null);
+  const chosen = present.length > 0 ? present : entries;
+  const first = chosen[0];
+  if (!first) throw new Error("missing keyset cursor");
+  const paramsFor = (status: string, cursor: Cursor, index: number): ListParams => {
+    const base = makeParams(world, index, contactIds, cursor, "%xqz%");
+    return { ...base, leadStatus: status };
+  };
+  const sample = paramsFor(first[0], first[1], 0);
+  const query = listQuery(option, "s2-keyset", sample, equality);
+  const values = Array.from({ length: count }, (_, index) => {
+    const entry = chosen[index % chosen.length];
+    if (!entry) throw new Error("missing keyset cursor");
+    return listQuery(option, "s2-keyset", paramsFor(entry[0], entry[1], index), equality).values;
+  });
+  return { text: query.text, values };
 }
 
 async function assertEquivalent(
@@ -299,6 +314,18 @@ async function assertEquivalent(
     assertSame(`${kind} A/B`, rows[0], rows[1]);
     assertSame(`${kind} A/C`, rows[0], rows[2]);
   }
+  for (const kind of ["s2", "s4", "s5", "s11", "s2-keyset"] as const) {
+    const expressed = await executeList(client, "A", kind, params, "expression");
+    assertSame(`${kind} expression`, expressed, await executeList(client, "B", kind, params));
+  }
+  const selective = { ...params, prefixQuery: SEARCH_TERMS.prefixSelective };
+  const selectiveRows = [
+    await executeList(client, "A", "s7-prefix", selective),
+    await executeList(client, "B", "s7-prefix", selective),
+    await executeList(client, "C", "s7-prefix", selective),
+  ];
+  assertSame("s7 selective A/B", selectiveRows[0], selectiveRows[1]);
+  assertSame("s7 selective A/C", selectiveRows[0], selectiveRows[2]);
   for (const kind of ["s2", "s4"] as const) {
     for (const capped of [false, true]) {
       const counts = [
@@ -341,6 +368,7 @@ async function measureReadsForStage(
   progress: Progress,
 ): Promise<TimingRow[]> {
   const rows: TimingRow[] = [];
+  const equality = equalityFor(option, stage);
   const remember = async (scenario: string, text: string, valueSets: unknown[][]) => {
     progress(`${stage} ${option} ${scenario}`);
     rows.push(
@@ -349,13 +377,23 @@ async function measureReadsForStage(
   };
 
   for (const kind of READ_KINDS) {
-    const query = listQuery(option, kind, makeParams(world, 0, contactIds, null, "%xqz%"));
+    if (kind === "s2-keyset") {
+      const keyset = keysetMeasurement(option, world, contactIds, cursors, measure, equality);
+      await remember("S2-KEYSET", keyset.text, keyset.values);
+      continue;
+    }
+    const query = listQuery(
+      option,
+      kind,
+      makeParams(world, 0, contactIds, null, "%xqz%"),
+      equality,
+    );
     const values = setsFor(
       world,
       contactIds,
       cursors,
       measure,
-      (params) => listQuery(option, kind, params).values,
+      (params) => listQuery(option, kind, params, equality).values,
     );
     await remember(kind.toUpperCase(), query.text, values);
   }
@@ -363,13 +401,13 @@ async function measureReadsForStage(
   for (const kind of ["s2", "s4"] as const) {
     for (const capped of [false, true]) {
       const sample = makeParams(world, 0, contactIds, null, "%xqz%");
-      const query = countQuery(option, kind, sample, capped);
+      const query = countQuery(option, kind, sample, capped, equality);
       const values = setsFor(
         world,
         contactIds,
         cursors,
         measure,
-        (params) => countQuery(option, kind, params, capped).values,
+        (params) => countQuery(option, kind, params, capped, equality).values,
       );
       await remember(`${kind.toUpperCase()} ${capped ? "capped" : "count"}`, query.text, values);
     }
@@ -405,7 +443,7 @@ async function measureSearch(
   warmup: number,
   measure: number,
   progress: Progress,
-  kinds: Array<{ id: string; kind: ListKind; like?: string }>,
+  kinds: Array<{ id: string; kind: ListKind; like?: string; prefix?: string }>,
 ): Promise<TimingRow[]> {
   const rows: TimingRow[] = [];
   for (const option of OPTIONS) {
@@ -413,7 +451,8 @@ async function measureSearch(
     if (!optionCursors) throw new Error(`missing cursors for ${option}`);
     for (const item of kinds) {
       const like = item.like ?? `%${SEARCH_TERMS.common3}%`;
-      const sample = makeParams(world, 0, contactIds, null, like);
+      const prefix = item.prefix ?? SEARCH_TERMS.prefixQuery;
+      const sample = makeParams(world, 0, contactIds, null, like, prefix);
       const query = listQuery(option, item.kind, sample);
       const values = setsFor(
         world,
@@ -422,6 +461,7 @@ async function measureSearch(
         measure,
         (params) => listQuery(option, item.kind, params).values,
         like,
+        prefix,
       );
       progress(`${stage} ${option} ${item.id}`);
       rows.push(
@@ -433,55 +473,59 @@ async function measureSearch(
 }
 
 async function measureWrites(
-  client: pg.Client,
+  session: pg.Client,
+  meter: pg.Client,
   option: Option,
   stage: string,
   rls: string,
   operations: number,
   world: Universe,
-  leadIds: string[],
+  ids: { update1: string[]; update5: string[] },
   orgForRls: string | null,
   progress: Progress,
 ): Promise<{ rows: WriteRow[]; inserted: string[] }> {
   const actor = world.usersA[0];
   if (!actor) throw new Error("missing actor");
+  if (ids.update1.length < operations || ids.update5.length < operations) {
+    throw new Error(`not enough lead ids for ${stage} ${option} ${rls}`);
+  }
   const inserted: string[] = [];
   const rows: WriteRow[] = [];
   const kinds = ["insert", "update1", "update5"] as const;
   for (const kind of kinds) {
     progress(`${stage} ${option} S9 ${kind} rls=${rls}`);
+    await checkpoint(meter);
+    const startLsn = await currentLsn(meter);
     const samples: number[] = [];
-    let wal = 0;
     for (let index = 0; index < operations; index++) {
-      const lsn = await currentLsn(client);
       const started = performance.now();
-      await client.query("begin");
+      await session.query("begin");
       try {
-        if (orgForRls) await client.query("select set_config('app.org_id', $1, true)", [orgForRls]);
+        if (orgForRls)
+          await session.query("select set_config('app.org_id', $1, true)", [orgForRls]);
         const eventId = nextEventId(eventSeq);
         eventSeq += 1;
         if (kind === "insert") {
           const record = syntheticLead(world, 20_000_000 + eventSeq);
-          await insertRecord(client, option, record, eventId);
+          await insertRecord(session, option, record, eventId);
           inserted.push(record.id);
         } else if (kind === "update1") {
-          const recordId = leadIds[index % leadIds.length];
+          const recordId = ids.update1[index];
           if (!recordId) throw new Error("missing lead id");
           await updateStatus(
-            client,
+            session,
             option,
             recordId,
             world.orgA,
             picklistValue("lead_status", 9, index),
             actor,
-            "bench update",
             eventId,
           );
         } else {
-          const recordId = leadIds[index % leadIds.length];
+          const recordId = ids.update5[index];
           if (!recordId) throw new Error("missing lead id");
           await updateFive(
-            client,
+            session,
             option,
             recordId,
             world.orgA,
@@ -493,18 +537,17 @@ async function measureWrites(
               cfText: `bench ${index}`,
             },
             actor,
-            "bench update five",
             eventId,
           );
         }
-        await client.query("commit");
+        await session.query("commit");
       } catch (error) {
-        await client.query("rollback");
+        await session.query("rollback");
         throw error;
       }
       samples.push(performance.now() - started);
-      wal += await walBytes(client, lsn);
     }
+    const wal = await walBytes(meter, startLsn);
     const totalMs = samples.reduce((sum, sample) => sum + sample, 0);
     rows.push({
       scenario: `S9 ${kind}`,
@@ -541,6 +584,15 @@ export async function runBench(
   const writes: WriteRow[] = [];
   const sizes: SizeSnapshot[] = [];
   const loads: LoadRow[] = [];
+  const selectivity: Selectivity = { leadStatusShare: 0, emailOptOutFalseShare: 0 };
+  let leadCursor = 0;
+  let leadIdsSlice = (_start: number, _count: number): string[] => [];
+  const takeWriteIds = (count: number): { update1: string[]; update5: string[] } => {
+    const update1 = leadIdsSlice(leadCursor, count);
+    const update5 = leadIdsSlice(leadCursor + count, count);
+    leadCursor += count * 2;
+    return { update1, update5 };
+  };
   try {
     server = await startLocalPostgres({ dataDir });
     client = new pg.Client({ connectionString: server.urlFor("bench") });
@@ -572,6 +624,7 @@ export async function runBench(
         loads,
         checks,
         alter,
+        selectivity,
         notes: [],
       };
       partial.notes = collectNotes(partial);
@@ -590,6 +643,35 @@ export async function runBench(
     loads.push({ phase: "copy B", ms: loaded.copyMs.B });
     loads.push({ phase: "copy C", ms: loaded.copyMs.C });
     const leadIds = loaded.orgALeadIds;
+    leadIdsSlice = (start, count) => {
+      const slice = leadIds.slice(start, start + count);
+      if (slice.length < count) {
+        throw new Error(`need ${count} lead ids at ${start}, have ${leadIds.length}`);
+      }
+      return slice;
+    };
+    const selectivityRow = await client.query<{
+      live: string;
+      status_avg: string;
+      opt_false: string;
+    }>(
+      `with live as (
+         select lead_status, email_opt_out
+         from bench_b.leads
+         where organization_id = $1::uuid and module_id = $2::uuid and deleted_at is null
+       )
+       select (select count(*) from live) as live,
+         (select count(*) from live where email_opt_out = false) as opt_false,
+         (select avg(n)::float8 from (
+            select count(*) as n from live where lead_status is not null group by lead_status
+          ) s) as status_avg`,
+      [world.orgA, world.moduleLeads],
+    );
+    const live = Number(selectivityRow.rows[0]?.live ?? 0);
+    if (live > 0) {
+      selectivity.leadStatusShare = Number(selectivityRow.rows[0]?.status_avg ?? 0) / live;
+      selectivity.emailOptOutFalseShare = Number(selectivityRow.rows[0]?.opt_false ?? 0) / live;
+    }
     const firstLead = leadIds[0];
     if (!firstLead) throw new Error("dataset produced no org A leads");
     const contactIds = loaded.lookupContactIds.length > 0 ? loaded.lookupContactIds : [world.orgA];
@@ -676,6 +758,9 @@ export async function runBench(
     const trgm = await applyStatements(client, searchStatements("trgm"));
     loads.push({ phase: "index trgm", ms: trgm });
     await vacuumAnalyze(client, ["bench_a.records", "bench_b.leads", "bench_c.records"]);
+    for (const size of await relationSizes(client)) {
+      if (size.name.endsWith("_trgm")) sizes.push({ stage: "trgm", ...size });
+    }
     timings.push(
       ...(await measureSearch(
         client,
@@ -692,6 +777,9 @@ export async function runBench(
     const tsv = await applyStatements(client, searchStatements("tsv"));
     loads.push({ phase: "index tsv", ms: tsv });
     await vacuumAnalyze(client, ["bench_a.records", "bench_b.leads", "bench_c.records"]);
+    for (const size of await relationSizes(client)) {
+      if (size.name.endsWith("_tsv")) sizes.push({ stage: "tsv", ...size });
+    }
     timings.push(
       ...(await measureSearch(
         client,
@@ -702,7 +790,10 @@ export async function runBench(
         protocol.warmup,
         protocol.measure,
         progress,
-        [{ id: "S7b prefix", kind: "s7-prefix" }],
+        [
+          { id: "S7b selective", kind: "s7-prefix", prefix: SEARCH_TERMS.prefixSelective },
+          { id: "S7b common", kind: "s7-prefix", prefix: SEARCH_TERMS.prefixQuery },
+        ],
       )),
     );
     await publish();
@@ -725,18 +816,37 @@ export async function runBench(
       for (const option of ["A", "B"] as const) {
         const optionCursors = cursors.get(option);
         if (!optionCursors) throw new Error(`missing cursors for ${option}`);
+        const equality = equalityFor(option, stage);
         for (const item of rlsScenarios) {
           const like = item.like ?? "%xqz%";
-          const sample = makeParams(world, 0, contactIds, null, like);
-          const query = listQuery(option, item.kind, sample);
-          const values = setsFor(
-            world,
-            contactIds,
-            optionCursors,
-            protocol.measure,
-            (params) => listQuery(option, item.kind, params).values,
-            like,
-          );
+          const measured =
+            item.kind === "s2-keyset"
+              ? keysetMeasurement(
+                  option,
+                  world,
+                  contactIds,
+                  optionCursors,
+                  protocol.measure,
+                  equality,
+                )
+              : {
+                  text: listQuery(
+                    option,
+                    item.kind,
+                    makeParams(world, 0, contactIds, null, like),
+                    equality,
+                  ).text,
+                  values: setsFor(
+                    world,
+                    contactIds,
+                    optionCursors,
+                    protocol.measure,
+                    (params) => listQuery(option, item.kind, params, equality).values,
+                    like,
+                  ),
+                };
+          const query = { text: measured.text };
+          const values = measured.values;
           progress(`${stage} ${option} ${item.id}`);
           const first = values[0];
           if (!first) throw new Error("missing parameters");
@@ -800,115 +910,68 @@ export async function runBench(
 
     await publish();
     await setRls(client, false);
+    await dropStatements(client, [...searchIndexNames("trgm"), ...searchIndexNames("tsv")]);
+    if (!client) throw new Error("missing database connection");
+    const meter = client;
+    const runWrite = async (
+      session: pg.Client,
+      option: Option,
+      stage: string,
+      rls: string,
+      orgForRls: string | null,
+    ) => {
+      const batch = await measureWrites(
+        session,
+        meter,
+        option,
+        stage,
+        rls,
+        protocol.writes,
+        world,
+        takeWriteIds(protocol.writes),
+        orgForRls,
+        progress,
+      );
+      writes.push(...batch.rows);
+      await deleteInserted(meter, option, batch.inserted);
+    };
     await dropStatements(client, ["bench_a.a_data_gin", ...expressionIndexNames("A")]);
-    const a0Writes = await measureWrites(
-      client,
-      "A",
-      "A0",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...a0Writes.rows);
-    await deleteInserted(client, "A", a0Writes.inserted);
+    await runWrite(client, "A", "A0", "n/a", null);
     const a1Ms = await applyStatements(client, stageStatements("A1", world.moduleLeads));
     loads.push({ phase: "rebuild A1", ms: a1Ms });
-    const a1Writes = await measureWrites(
-      client,
-      "A",
-      "A1",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...a1Writes.rows);
-    await deleteInserted(client, "A", a1Writes.inserted);
+    await runWrite(client, "A", "A1", "n/a", null);
     const a2Ms = await applyStatements(client, stageStatements("A2", world.moduleLeads));
     loads.push({ phase: "rebuild A2", ms: a2Ms });
-    const a2Writes = await measureWrites(
-      client,
-      "A",
-      "A2",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...a2Writes.rows);
-    await deleteInserted(client, "A", a2Writes.inserted);
+    await runWrite(client, "A", "A2", "n/a", null);
 
     await dropStatements(client, expressionIndexNames("B"));
-    const b0Writes = await measureWrites(
-      client,
-      "B",
-      "B0",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...b0Writes.rows);
-    await deleteInserted(client, "B", b0Writes.inserted);
+    await runWrite(client, "B", "B0", "n/a", null);
     const b1Rebuild = await applyStatements(client, stageStatements("B1", world.moduleLeads));
     loads.push({ phase: "rebuild B1", ms: b1Rebuild });
-    const b1Writes = await measureWrites(
-      client,
-      "B",
-      "B1",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...b1Writes.rows);
-    await deleteInserted(client, "B", b1Writes.inserted);
+    await runWrite(client, "B", "B1", "n/a", null);
+    await runWrite(client, "C", "C0", "n/a", null);
 
-    const cWrites = await measureWrites(
-      client,
-      "C",
-      "C0",
-      "n/a",
-      protocol.writes,
-      world,
-      leadIds,
-      null,
-      progress,
-    );
-    writes.push(...cWrites.rows);
-    await deleteInserted(client, "C", cWrites.inserted);
-
+    if (!app) throw new Error("missing application connection");
+    const application = app;
     for (const enabled of [false, true]) {
       await setRls(client, enabled);
       const label = enabled ? "on" : "off";
       for (const option of ["A", "B"] as const) {
         const stage = option === "A" ? "A2" : "B1";
-        const batch = await measureWrites(
-          app,
-          option,
-          stage,
-          label,
-          protocol.writes,
-          world,
-          leadIds,
-          world.orgA,
-          progress,
-        );
-        writes.push(...batch.rows);
-        await deleteInserted(client, option, batch.inserted);
+        await runWrite(application, option, stage, label, world.orgA);
       }
     }
+    await setRls(client, false);
+    const trgmWrites = await applyStatements(client, searchStatements("trgm"));
+    loads.push({ phase: "rebuild trgm", ms: trgmWrites });
+    await runWrite(client, "A", "A2+trgm", "n/a", null);
+    await runWrite(client, "B", "B1+trgm", "n/a", null);
+    await dropStatements(client, searchIndexNames("trgm"));
+    const tsvWrites = await applyStatements(client, searchStatements("tsv"));
+    loads.push({ phase: "rebuild tsv", ms: tsvWrites });
+    await runWrite(client, "A", "A2+tsv", "n/a", null);
+    await runWrite(client, "B", "B1+tsv", "n/a", null);
+    await dropStatements(client, searchIndexNames("tsv"));
 
     const checks = await verifyRls(client, app, world, firstLead);
     progress("alter table");
@@ -938,6 +1001,7 @@ export async function runBench(
         ...alter,
         rows: leadCount.rows[0]?.n ?? 0,
       },
+      selectivity,
       notes: [],
     };
     report.notes = collectNotes(report);

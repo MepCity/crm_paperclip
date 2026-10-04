@@ -2,7 +2,7 @@
 
 Client-side timings. Each measured query uses bind parameters. Partial expression indexes are planned with session `plan_cache_mode=force_custom_plan` so a bound `module_id` still matches the index predicate. Other server settings stay at their defaults.
 
-Storage C keeps the same system indexes as A0 on the record header, plus the value indexes named in the scenario. Search indexes (trigram and `simple` tsvector) are identical on every option and stay in place for the write scenarios.
+Storage C keeps the same system indexes as A0 on the record header, plus the value indexes named in the scenario. Search indexes are identical on every option. S7a and S7b run with those indexes. Storage-stage writes run without them; `+trgm` and `+tsv` write rows add one search index family on top of A2 or B1.
 
 Full-scale protocol: 5 warmup runs and 30 measured runs; 2000 writes of each kind.
 
@@ -21,219 +21,238 @@ Full-scale protocol: 5 warmup runs and 30 measured runs; 2000 writes of each kin
 | warmup | 5 |
 | measured_runs | 30 |
 | writes_per_kind | 2000 |
+| s2_status_share | 0.0667 |
+| s4_opt_out_false_share | 0.9009 |
 
 ## Load
 
 | phase | ms |
 | --- | --- |
-| generate | 56059.68 |
-| copy A | 22353.18 |
-| copy B | 10096.52 |
-| copy C | 94371.70 |
-| index A0 | 2134.19 |
-| index B0 | 4298.26 |
-| index C0 | 83487.70 |
-| index A1 | 14058.06 |
-| index A2 | 7701.77 |
-| index B1 | 4421.19 |
-| index trgm | 102818.87 |
-| index tsv | 59761.12 |
-| rebuild A1 | 17203.94 |
-| rebuild A2 | 5950.23 |
-| rebuild B1 | 5251.54 |
+| generate | 32337.93 |
+| copy A | 11071.98 |
+| copy B | 6706.28 |
+| copy C | 79656.03 |
+| index A0 | 6570.37 |
+| index B0 | 2499.14 |
+| index C0 | 71791.04 |
+| index A1 | 12686.85 |
+| index A2 | 5881.42 |
+| index B1 | 3923.28 |
+| index trgm | 73362.67 |
+| index tsv | 49784.74 |
+| rebuild A1 | 12626.93 |
+| rebuild A2 | 4628.38 |
+| rebuild B1 | 3898.01 |
+| rebuild trgm | 70953.38 |
+| rebuild tsv | 48804.22 |
 
 ## Queries
 
 | scenario | option | stage | median_ms | p95_ms | plan | buffers | shared_read |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| S1 | A | A0 | 0.60 | 0.69 | Index Scan a_created_idx | 729 | 159 |
-| S2 | A | A0 | 110.79 | 163.34 | Seq Scan records | 1032048 | 217348 |
-| S2-KEYSET | A | A0 | 152.24 | 179.21 | Seq Scan records | 1016580 | 180436 |
-| S2-OFFSET | A | A0 | 163.64 | 227.36 | Seq Scan records | 1032048 | 180436 |
-| S3 | A | A0 | 75.53 | 89.06 | Bitmap Heap Scan records; Bitmap Index Scan a_owner_idx | 90527 | 49055 |
-| S4 | A | A0 | 397.55 | 427.50 | Seq Scan records | 3701064 | 209894 |
-| S5 | A | A0 | 142.60 | 443.95 | Seq Scan records | 791712 | 180452 |
-| S11 | A | A0 | 140.39 | 169.62 | Seq Scan records | 785892 | 180457 |
-| S2 count | A | A0 | 168.52 | 193.86 | Seq Scan records | 785316 | 180456 |
-| S2 capped | A | A0 | 134.56 | 215.50 | Seq Scan records | 679816 | 179544 |
-| S4 count | A | A0 | 180.84 | 208.76 | Seq Scan records | 785316 | 180412 |
-| S4 capped | A | A0 | 11.65 | 14.22 | Seq Scan records | 27336 | 7005 |
-| S8 | A | A0 | 0.37 | 0.87 | Index Scan records_pkey | 4 | 4 |
-| S10 source | A | A0 | 251.30 | 344.37 | Seq Scan records | 352173 | 180714 |
-| S10 owner | A | A0 | 298.17 | 391.92 | Seq Scan records | 461863 | 208421 |
-| S1 | A | A1 | 0.52 | 0.73 | Index Scan a_created_idx | 729 | 225 |
-| S2 | A | A1 | 104.90 | 115.17 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 247466 | 43606 |
-| S2-KEYSET | A | A1 | 98.97 | 106.32 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 235865 | 39519 |
-| S2-OFFSET | A | A1 | 117.06 | 146.68 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 247466 | 39513 |
-| S3 | A | A1 | 54.54 | 55.96 | Bitmap Heap Scan records; Bitmap Index Scan a_owner_idx | 90527 | 52856 |
-| S4 | A | A1 | 520.91 | 1235.02 | Seq Scan records | 3701064 | 204723 |
-| S5 | A | A1 | 10.87 | 25.49 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 7849 | 1590 |
-| S11 | A | A1 | 0.98 | 1.75 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 316 | 47 |
-| S2 count | A | A1 | 116.76 | 361.62 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 41918 | 24192 |
-| S2 capped | A | A1 | 120.61 | 930.59 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 48326 | 25627 |
-| S4 count | A | A1 | 152.40 | 211.28 | Seq Scan records | 785316 | 194704 |
-| S4 capped | A | A1 | 10.01 | 37.81 | Seq Scan records | 26532 | 6906 |
-| S8 | A | A1 | 0.43 | 0.99 | Index Scan records_pkey | 4 | 3 |
-| S10 source | A | A1 | 268.57 | 358.88 | Seq Scan records | 352173 | 180714 |
-| S10 owner | A | A1 | 375.16 | 530.96 | Seq Scan records | 461863 | 208421 |
-| S1 | A | A2 | 0.75 | 0.92 | Index Scan a_created_idx | 705 | 162 |
-| S2 | A | A2 | 2.55 | 3.11 | Index Scan a_x_company | 7071 | 801 |
-| S2-KEYSET | A | A2 | 215.88 | 286.98 | Index Scan a_x_company | 424284 | 117306 |
-| S2-OFFSET | A | A2 | 137.18 | 154.00 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 247466 | 34287 |
-| S3 | A | A2 | 7.84 | 8.22 | Bitmap Heap Scan records; Bitmap Index Scan a_x_cf_datetime_1 | 31515 | 20193 |
-| S4 | A | A2 | 0.74 | 0.80 | Index Scan a_x_last_name | 630 | 234 |
-| S5 | A | A2 | 4.65 | 5.07 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 7849 | 1626 |
-| S11 | A | A2 | 0.57 | 0.65 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 316 | 44 |
-| S2 count | A | A2 | 53.37 | 75.56 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 41918 | 24058 |
-| S2 capped | A | A2 | 50.06 | 69.67 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 48326 | 26538 |
-| S4 count | A | A2 | 167.57 | 228.17 | Seq Scan records | 785316 | 193504 |
-| S4 capped | A | A2 | 11.66 | 42.31 | Seq Scan records | 26583 | 6909 |
-| S8 | A | A2 | 0.46 | 0.79 | Index Scan records_pkey | 4 | 3 |
-| S10 source | A | A2 | 234.98 | 360.96 | Seq Scan records | 352173 | 180774 |
-| S10 owner | A | A2 | 328.12 | 417.53 | Seq Scan records | 461863 | 208421 |
-| S1 | B | B0 | 0.41 | 1.06 | Index Scan bl_created_idx | 165 | 162 |
-| S2 | B | B0 | 50.06 | 103.70 | Seq Scan leads | 153848 | 152264 |
-| S2-KEYSET | B | B0 | 85.81 | 115.51 | Seq Scan leads | 153848 | 112660 |
-| S2-OFFSET | B | B0 | 108.04 | 164.80 | Seq Scan leads | 153848 | 89448 |
-| S3 | B | B0 | 52.54 | 56.57 | Bitmap Heap Scan leads; Bitmap Index Scan bl_owner_idx | 45581 | 30350 |
-| S4 | B | B0 | 148.20 | 178.94 | Seq Scan leads | 153848 | 89591 |
-| S5 | B | B0 | 90.77 | 153.63 | Seq Scan leads | 153944 | 89500 |
-| S11 | B | B0 | 135.31 | 164.28 | Seq Scan leads | 153776 | 89476 |
-| S2 count | B | B0 | 84.88 | 150.47 | Seq Scan leads | 153656 | 89524 |
-| S2 capped | B | B0 | 75.39 | 78.65 | Seq Scan leads | 94038 | 66429 |
-| S4 count | B | B0 | 87.76 | 112.04 | Seq Scan leads | 153488 | 89428 |
-| S4 capped | B | B0 | 6.04 | 18.41 | Seq Scan leads | 5469 | 5235 |
-| S8 | B | B0 | 0.50 | 0.66 | Index Scan leads_pkey | 4 | 4 |
-| S10 source | B | B0 | 64.50 | 86.91 | Seq Scan leads | 192040 | 112264 |
-| S10 owner | B | B0 | 63.66 | 69.48 | Seq Scan leads | 230536 | 134316 |
-| S1 | B | B1 | 0.46 | 0.60 | Index Scan bl_created_idx | 165 | 75 |
-| S2 | B | B1 | 1.02 | 1.23 | Index Scan bl_x_company | 3276 | 633 |
-| S2-KEYSET | B | B1 | 118.75 | 142.24 | Index Scan bl_x_company | 166704 | 68898 |
-| S2-OFFSET | B | B1 | 47.71 | 50.82 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 41069 | 28481 |
-| S3 | B | B1 | 8.62 | 9.01 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_cf_datetime_1 | 24984 | 16422 |
-| S4 | B | B1 | 0.47 | 0.90 | Index Scan bl_x_last_name | 261 | 162 |
-| S5 | B | B1 | 1.88 | 2.75 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_country | 1749 | 1053 |
-| S11 | B | B1 | 0.51 | 0.73 | Index Scan bl_x_cf_lookup_1 | 48 | 33 |
-| S2 count | B | B1 | 22.91 | 27.15 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 27413 | 19195 |
-| S2 capped | B | B1 | 15.50 | 17.51 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 25403 | 17653 |
-| S4 count | B | B1 | 63.17 | 94.53 | Seq Scan leads | 153488 | 90248 |
-| S4 capped | B | B1 | 6.84 | 19.00 | Seq Scan leads | 5433 | 5091 |
-| S8 | B | B1 | 0.52 | 0.65 | Index Scan leads_pkey | 4 | 3 |
-| S10 source | B | B1 | 68.07 | 113.48 | Seq Scan leads | 192040 | 112932 |
-| S10 owner | B | B1 | 64.73 | 82.96 | Seq Scan leads | 230536 | 134316 |
-| S1 | C | C0 | 5.00 | 5.08 | Index Scan c_created_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 6418 | 926 |
-| S2 | C | C0 | 348.91 | 1579.85 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 2094109 | 338450 |
-| S2-KEYSET | C | C0 | 220.45 | 373.85 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1694291 | 325275 |
-| S2-OFFSET | C | C0 | 259.70 | 283.77 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 2094109 | 331585 |
-| S3 | C | C0 | 39.03 | 41.69 | Index Only Scan c_value_num_idx; Index Only Scan c_value_ts_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 745244 | 51222 |
-| S4 | C | C0 | 160.13 | 293.32 | Index Only Scan c_value_text_idx; Seq Scan records; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1736870 | 246382 |
-| S5 | C | C0 | 17.21 | 23.08 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Only Scan c_value_text_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 73688 | 17894 |
-| S11 | C | C0 | 8.42 | 9.25 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 2322 | 326 |
-| S2 count | C | C0 | 41.47 | 48.17 | Index Only Scan c_value_text_idx; Index Scan records_pkey | 222339 | 32163 |
-| S2 capped | C | C0 | 33.09 | 35.15 | Index Only Scan c_value_text_idx; Index Scan records_pkey | 240696 | 16832 |
-| S4 count | C | C0 | 458.63 | 912.13 | Bitmap Heap Scan record_values; Bitmap Index Scan c_value_ts_idx; Index Only Scan c_updated_idx | 409217 | 408840 |
-| S4 capped | C | C0 | 48.04 | 168.77 | Seq Scan record_values; Index Scan records_pkey | 218452 | 26122 |
-| S8 | C | C0 | 0.39 | 0.57 | Index Scan records_pkey; Bitmap Heap Scan record_values; Bitmap Index Scan record_values_pkey | 19 | 8 |
-| S10 source | C | C0 | 75.04 | 79.41 | Index Only Scan c_value_text_idx; Index Only Scan c_value_num_idx; Index Only Scan c_created_idx | 683592 | 16403 |
-| S10 owner | C | C0 | 84.51 | 329.27 | Index Only Scan c_value_num_idx; Index Only Scan c_value_text_idx; Seq Scan records | 993022 | 83470 |
-| S7c common3 | A | no-search-index | 24.45 | 27.68 | Index Scan a_updated_idx | 33870 | 18264 |
-| S7c rare3 | A | no-search-index | 515.52 | 739.43 | Seq Scan records | 217704 | 185758 |
-| S7c common8 | A | no-search-index | 23.61 | 24.52 | Index Scan a_updated_idx | 32670 | 564 |
-| S7c rare8 | A | no-search-index | 455.58 | 782.82 | Seq Scan records | 215616 | 147556 |
-| S7c common3 | B | no-search-index | 21.57 | 23.76 | Index Scan bl_updated_idx | 18318 | 16770 |
-| S7c rare3 | B | no-search-index | 51.65 | 58.09 | Index Scan bl_updated_idx | 49443 | 22731 |
-| S7c common8 | B | no-search-index | 18.89 | 20.29 | Index Scan bl_updated_idx | 18306 | 0 |
-| S7c rare8 | B | no-search-index | 392.42 | 577.79 | Seq Scan leads | 153776 | 101444 |
-| S7c common3 | C | no-search-index | 7.27 | 7.47 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7367 | 2032 |
-| S7c rare3 | C | no-search-index | 355.79 | 411.32 | Seq Scan records; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 316397 | 231329 |
-| S7c common8 | C | no-search-index | 6.61 | 7.88 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7962 | 841 |
-| S7c rare8 | C | no-search-index | 286.44 | 307.02 | Seq Scan records; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 299069 | 124905 |
-| S7a common3 | A | trgm | 23.46 | 24.85 | Index Scan a_updated_idx | 33870 | 17607 |
-| S7a rare3 | A | trgm | 4.79 | 4.91 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 9234 | 2234 |
-| S7a common8 | A | trgm | 23.12 | 24.57 | Index Scan a_updated_idx | 32670 | 357 |
-| S7a rare8 | A | trgm | 4.36 | 4.66 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 7395 | 1897 |
-| S7a common3 | B | trgm | 19.80 | 22.43 | Index Scan bl_updated_idx | 18318 | 16800 |
-| S7a rare3 | B | trgm | 3.46 | 4.02 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_trgm | 2268 | 1916 |
-| S7a common8 | B | trgm | 19.09 | 23.71 | Index Scan bl_updated_idx | 18306 | 0 |
-| S7a rare8 | B | trgm | 3.09 | 3.28 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_trgm | 1995 | 1683 |
-| S7a common3 | C | trgm | 6.06 | 6.29 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7367 | 2032 |
-| S7a rare3 | C | trgm | 9.79 | 11.11 | Bitmap Heap Scan records; Bitmap Index Scan c_search_trgm; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 90789 | 19675 |
-| S7a common8 | C | trgm | 6.96 | 7.12 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7962 | 1089 |
-| S7a rare8 | C | trgm | 73.89 | 85.10 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 166203 | 103427 |
-| S7b prefix | A | tsv | 261.46 | 309.48 | Index Scan a_updated_idx | 41301 | 17799 |
-| S7b prefix | B | tsv | 256.88 | 282.74 | Index Scan bl_updated_idx | 18297 | 16752 |
-| S7b prefix | C | tsv | 11.88 | 12.83 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7055 | 1655 |
-| S1 | A | rls-off | 0.90 | 0.97 | Index Scan a_created_idx | 792 | 28 |
-| S2 | A | rls-off | 2.48 | 2.92 | Index Scan a_x_company | 7085 | 1634 |
-| S2-KEYSET | A | rls-off | 209.66 | 230.66 | Index Scan a_x_company | 424284 | 124338 |
-| S2-OFFSET | A | rls-off | 172.79 | 424.66 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 247466 | 34287 |
-| S7a common3 | A | rls-off | 68.75 | 192.70 | Index Scan a_updated_idx | 33870 | 13482 |
-| S7a rare3 | A | rls-off | 16.34 | 28.99 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 9234 | 1883 |
-| S7a common8 | A | rls-off | 27.25 | 77.58 | Index Scan a_updated_idx | 32670 | 228 |
-| S7a rare8 | A | rls-off | 145.31 | 218.81 | Index Scan a_updated_idx | 63504 | 32871 |
-| S8 | A | rls-off | 0.78 | 1.08 | Index Scan records_pkey | 4 | 3 |
-| S1 | B | rls-off | 0.85 | 1.25 | Index Scan bl_created_idx | 165 | 162 |
-| S2 | B | rls-off | 1.41 | 1.79 | Index Scan bl_x_company | 3276 | 1224 |
-| S2-KEYSET | B | rls-off | 119.50 | 203.46 | Index Scan bl_x_company | 166704 | 83157 |
-| S2-OFFSET | B | rls-off | 47.41 | 63.85 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 41069 | 28610 |
-| S7a common3 | B | rls-off | 19.41 | 20.66 | Index Scan bl_updated_idx | 18318 | 11112 |
-| S7a rare3 | B | rls-off | 53.23 | 58.62 | Index Scan bl_updated_idx | 49443 | 18315 |
-| S7a common8 | B | rls-off | 20.23 | 21.02 | Index Scan bl_updated_idx | 18306 | 0 |
-| S7a rare8 | B | rls-off | 3.38 | 3.46 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_trgm | 1995 | 1195 |
-| S8 | B | rls-off | 0.86 | 1.02 | Index Scan leads_pkey | 4 | 3 |
-| S1 | A | rls-on | 0.89 | 0.96 | Index Scan a_created_idx | 760 | 279 |
-| S2 | A | rls-on | 1.79 | 2.03 | Index Scan a_x_company | 7220 | 2264 |
-| S2-KEYSET | A | rls-on | 186.86 | 224.94 | Index Scan a_x_company | 488300 | 160840 |
-| S2-OFFSET | A | rls-on | 162.68 | 251.69 | Seq Scan records | 1084102 | 237778 |
-| S7a common3 | A | rls-on | 23.26 | 29.82 | Index Scan a_updated_idx | 39976 | 19164 |
-| S7a rare3 | A | rls-on | 57.27 | 60.37 | Index Scan a_updated_idx | 66572 | 33551 |
-| S7a common8 | A | rls-on | 455.47 | 1425.51 | Seq Scan records | 876336 | 219519 |
-| S7a rare8 | A | rls-on | 355.66 | 493.50 | Seq Scan records | 267432 | 208279 |
-| S8 | A | rls-on | 0.99 | 1.28 | Index Scan records_pkey | 4 | 4 |
-| S1 | B | rls-on | 1.08 | 1.26 | Index Scan bl_created_idx | 220 | 216 |
-| S2 | B | rls-on | 1.53 | 1.78 | Index Scan bl_x_company | 4368 | 1632 |
-| S2-KEYSET | B | rls-on | 126.32 | 146.21 | Index Scan bl_x_company | 222272 | 110868 |
-| S2-OFFSET | B | rls-on | 46.30 | 49.73 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 54725 | 38137 |
-| S7a common3 | B | rls-on | 19.92 | 22.52 | Index Scan bl_updated_idx | 24424 | 14812 |
-| S7a rare3 | B | rls-on | 54.81 | 64.86 | Index Scan bl_updated_idx | 65924 | 24432 |
-| S7a common8 | B | rls-on | 268.71 | 338.67 | Seq Scan leads | 192148 | 112883 |
-| S7a rare8 | B | rls-on | 320.58 | 688.00 | Seq Scan leads | 192148 | 111905 |
-| S8 | B | rls-on | 1.15 | 1.74 | Index Scan leads_pkey | 4 | 4 |
+| S1 | A | A0 | 0.54 | 0.62 | Index Scan a_created_idx | 243 | 52 |
+| S2 | A | A0 | 120.40 | 156.02 | Seq Scan records | 258042 | 54669 |
+| S2-KEYSET | A | A0 | 339.12 | 359.32 | Subquery Scan; Seq Scan records; Subquery Scan; Seq Scan records | 445202 | 90280 |
+| S2-OFFSET | A | A0 | 155.06 | 207.86 | Seq Scan records | 258042 | 45116 |
+| S3 | A | A0 | 57.20 | 62.54 | Bitmap Heap Scan records; Bitmap Index Scan a_owner_idx | 30169 | 16345 |
+| S4 | A | A0 | 526.29 | 611.07 | Seq Scan records | 925296 | 52682 |
+| S5 | A | A0 | 176.67 | 489.86 | Seq Scan records | 197928 | 45113 |
+| S11 | A | A0 | 131.53 | 148.33 | Seq Scan records | 196497 | 45115 |
+| S2 count | A | A0 | 130.28 | 142.97 | Seq Scan records | 196329 | 45114 |
+| S2 capped | A | A0 | 116.92 | 152.27 | Seq Scan records | 170783 | 44950 |
+| S4 count | A | A0 | 132.32 | 145.51 | Seq Scan records | 196329 | 45103 |
+| S4 capped | A | A0 | 10.07 | 37.92 | Seq Scan records | 8807 | 2303 |
+| S8 | A | A0 | 0.40 | 0.83 | Index Scan records_pkey | 4 | 3 |
+| S10 source | A | A0 | 269.33 | 350.85 | Seq Scan records | 109626 | 45180 |
+| S10 owner | A | A0 | 221.03 | 278.72 | Seq Scan records | 109642 | 41685 |
+| S1 | A | A1 | 0.51 | 0.63 | Index Scan a_created_idx | 243 | 75 |
+| S2 | A | A1 | 105.14 | 108.11 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 82362 | 14410 |
+| S2-KEYSET | A | A1 | 124.64 | 139.47 | Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx; Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 91722 | 17663 |
+| S2-OFFSET | A | A1 | 112.79 | 115.31 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 82362 | 10131 |
+| S3 | A | A1 | 53.76 | 54.48 | Bitmap Heap Scan records; Bitmap Index Scan a_owner_idx | 30169 | 17659 |
+| S4 | A | A1 | 304.02 | 308.85 | Seq Scan records | 925296 | 51236 |
+| S5 | A | A1 | 4.40 | 5.43 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 2615 | 531 |
+| S11 | A | A1 | 0.48 | 0.54 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin | 104 | 13 |
+| S2 count | A | A1 | 51.18 | 52.79 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 20769 | 11968 |
+| S2 capped | A | A1 | 41.97 | 42.88 | Bitmap Heap Scan records; Bitmap Index Scan a_data_gin; Bitmap Index Scan a_owner_idx | 15982 | 8046 |
+| S4 count | A | A1 | 159.63 | 179.75 | Seq Scan records | 196329 | 48633 |
+| S4 capped | A | A1 | 11.41 | 38.78 | Seq Scan records | 8826 | 2294 |
+| S8 | A | A1 | 0.42 | 1.16 | Index Scan records_pkey | 4 | 3 |
+| S10 source | A | A1 | 219.95 | 308.07 | Seq Scan records | 109626 | 45180 |
+| S10 owner | A | A1 | 229.98 | 305.68 | Seq Scan records | 109642 | 41685 |
+| S1 | A | A2 | 0.57 | 0.61 | Index Scan a_created_idx | 235 | 50 |
+| S2 | A | A2 | 86.54 | 109.03 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 75880 | 13864 |
+| S2-KEYSET | A | A2 | 197.34 | 201.95 | Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status; Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_company | 139942 | 66961 |
+| S2-OFFSET | A | A2 | 97.39 | 100.34 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 75880 | 16506 |
+| S3 | A | A2 | 7.19 | 7.49 | Bitmap Heap Scan records; Bitmap Index Scan a_x_cf_datetime_1 | 10479 | 7060 |
+| S4 | A | A2 | 1262.96 | 1319.12 | Index Scan a_x_email_opt_out | 950534 | 193362 |
+| S5 | A | A2 | 2.77 | 3.04 | Bitmap Heap Scan records; Bitmap Index Scan a_x_country | 1548 | 468 |
+| S11 | A | A2 | 0.59 | 0.83 | Bitmap Heap Scan records; Bitmap Index Scan a_x_cf_lookup_1 | 88 | 15 |
+| S2 count | A | A2 | 23.75 | 30.70 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 14287 | 12402 |
+| S2 capped | A | A2 | 18.20 | 18.68 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 8847 | 7051 |
+| S4 count | A | A2 | 619.91 | 653.39 | Index Scan a_x_email_opt_out | 221687 | 160097 |
+| S4 capped | A | A2 | 3.68 | 3.74 | Index Scan a_x_email_opt_out | 12624 | 9149 |
+| S8 | A | A2 | 0.43 | 0.84 | Index Scan records_pkey | 4 | 4 |
+| S10 source | A | A2 | 220.05 | 275.54 | Seq Scan records | 109626 | 47143 |
+| S10 owner | A | A2 | 296.58 | 357.92 | Seq Scan records | 109642 | 41685 |
+| S1 | B | B0 | 0.37 | 0.45 | Index Scan bl_created_idx | 55 | 54 |
+| S2 | B | B0 | 49.21 | 74.48 | Seq Scan leads | 38492 | 38066 |
+| S2-KEYSET | B | B0 | 62.33 | 68.84 | Subquery Scan; Seq Scan leads; Subquery Scan; Index Scan leads_pkey | 41171 | 30160 |
+| S2-OFFSET | B | B0 | 67.50 | 86.60 | Seq Scan leads | 38492 | 22382 |
+| S3 | B | B0 | 33.56 | 38.59 | Bitmap Heap Scan leads; Bitmap Index Scan bl_owner_idx | 15187 | 10080 |
+| S4 | B | B0 | 119.92 | 136.02 | Seq Scan leads | 38492 | 22401 |
+| S5 | B | B0 | 68.79 | 85.26 | Seq Scan leads | 38510 | 22377 |
+| S11 | B | B0 | 70.80 | 80.31 | Seq Scan leads | 38468 | 22370 |
+| S2 count | B | B0 | 58.45 | 64.52 | Seq Scan leads | 38414 | 22381 |
+| S2 capped | B | B0 | 76.01 | 79.28 | Seq Scan leads | 31346 | 22143 |
+| S4 count | B | B0 | 80.30 | 85.32 | Seq Scan leads | 38372 | 22357 |
+| S4 capped | B | B0 | 6.31 | 19.61 | Seq Scan leads | 1821 | 1782 |
+| S8 | B | B0 | 0.55 | 0.71 | Index Scan leads_pkey | 4 | 4 |
+| S10 source | B | B0 | 54.38 | 73.91 | Seq Scan leads | 38432 | 22575 |
+| S10 owner | B | B0 | 51.18 | 57.11 | Seq Scan leads | 38448 | 22386 |
+| S1 | B | B1 | 0.45 | 0.61 | Index Scan bl_created_idx | 55 | 25 |
+| S2 | B | B1 | 1.00 | 1.15 | Index Scan bl_x_company | 1092 | 211 |
+| S2-KEYSET | B | B1 | 1.12 | 1.59 | Subquery Scan; Index Scan bl_x_company; Subquery Scan; Index Scan bl_x_lead_status | 388 | 318 |
+| S2-OFFSET | B | B1 | 45.37 | 50.92 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 13656 | 8472 |
+| S3 | B | B1 | 7.51 | 7.70 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_cf_datetime_1 | 8312 | 5458 |
+| S4 | B | B1 | 0.50 | 0.54 | Index Scan bl_x_last_name | 87 | 54 |
+| S5 | B | B1 | 1.79 | 1.88 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_country | 581 | 349 |
+| S11 | B | B1 | 0.30 | 0.35 | Index Scan bl_x_cf_lookup_1 | 16 | 11 |
+| S2 count | B | B1 | 21.07 | 22.15 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 13656 | 9547 |
+| S2 capped | B | B1 | 15.13 | 15.65 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 8434 | 5851 |
+| S4 count | B | B1 | 50.16 | 52.44 | Seq Scan leads | 38372 | 22562 |
+| S4 capped | B | B1 | 6.07 | 17.03 | Seq Scan leads | 1841 | 1713 |
+| S8 | B | B1 | 0.51 | 0.67 | Index Scan leads_pkey | 4 | 4 |
+| S10 source | B | B1 | 39.03 | 41.94 | Seq Scan leads | 38432 | 22454 |
+| S10 owner | B | B1 | 38.90 | 48.59 | Seq Scan leads | 38448 | 22386 |
+| S1 | C | C0 | 4.98 | 5.05 | Index Scan c_created_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1152 | 123 |
+| S2 | C | C0 | 321.44 | 1600.16 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 313684 | 42278 |
+| S2-KEYSET | C | C0 | 366.58 | 463.46 | Subquery Scan; Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Subquery Scan; Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 361441 | 70382 |
+| S2-OFFSET | C | C0 | 278.50 | 496.39 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 313684 | 41259 |
+| S3 | C | C0 | 38.14 | 42.53 | Index Only Scan c_value_num_idx; Index Only Scan c_value_ts_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 78326 | 5660 |
+| S4 | C | C0 | 162.33 | 182.53 | Index Only Scan c_value_text_idx; Seq Scan records; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 156464 | 20794 |
+| S5 | C | C0 | 17.94 | 20.82 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Only Scan c_value_text_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 7545 | 1693 |
+| S11 | C | C0 | 8.34 | 8.68 | Index Only Scan c_value_text_idx; Index Scan records_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 325 | 35 |
+| S2 count | C | C0 | 40.28 | 44.12 | Index Only Scan c_value_text_idx; Index Scan records_pkey | 74113 | 10720 |
+| S2 capped | C | C0 | 32.72 | 35.43 | Index Only Scan c_value_text_idx; Index Scan records_pkey | 60174 | 4207 |
+| S4 count | C | C0 | 292.06 | 343.22 | Bitmap Heap Scan record_values; Bitmap Index Scan c_value_ts_idx; Index Only Scan c_created_idx | 81056 | 80987 |
+| S4 capped | C | C0 | 46.83 | 163.81 | Seq Scan record_values; Index Scan records_pkey | 44407 | 5941 |
+| S8 | C | C0 | 0.38 | 0.49 | Index Scan records_pkey; Bitmap Heap Scan record_values; Bitmap Index Scan record_values_pkey | 8 | 3 |
+| S10 source | C | C0 | 74.04 | 75.20 | Index Only Scan c_value_text_idx; Index Only Scan c_value_num_idx; Index Only Scan c_created_idx | 136663 | 3131 |
+| S10 owner | C | C0 | 83.40 | 97.31 | Index Only Scan c_value_num_idx; Index Only Scan c_value_text_idx; Seq Scan records | 158169 | 10411 |
+| S7c common3 | A | no-search-index | 22.53 | 23.70 | Index Scan a_updated_idx | 11290 | 6088 |
+| S7c rare3 | A | no-search-index | 55.26 | 57.72 | Index Scan a_updated_idx | 16697 | 8215 |
+| S7c common8 | A | no-search-index | 22.36 | 26.31 | Index Scan a_updated_idx | 10890 | 199 |
+| S7c rare8 | A | no-search-index | 274.13 | 278.32 | Seq Scan records | 53928 | 38299 |
+| S7c common3 | B | no-search-index | 18.47 | 18.81 | Index Scan bl_updated_idx | 6106 | 5590 |
+| S7c rare3 | B | no-search-index | 237.40 | 268.90 | Seq Scan leads | 38468 | 32842 |
+| S7c common8 | B | no-search-index | 18.59 | 18.83 | Index Scan bl_updated_idx | 6102 | 0 |
+| S7c rare8 | B | no-search-index | 272.81 | 425.96 | Seq Scan leads | 38468 | 22690 |
+| S7c common3 | C | no-search-index | 6.25 | 7.17 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1272 | 261 |
+| S7c rare3 | C | no-search-index | 53.97 | 59.23 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 17455 | 10650 |
+| S7c common8 | C | no-search-index | 6.37 | 7.60 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1344 | 62 |
+| S7c rare8 | C | no-search-index | 65.13 | 74.36 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 21128 | 1414 |
+| S7a common3 | A | trgm | 22.60 | 24.01 | Index Scan a_updated_idx | 11290 | 5886 |
+| S7a rare3 | A | trgm | 4.79 | 4.84 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 3077 | 735 |
+| S7a common8 | A | trgm | 22.26 | 22.97 | Index Scan a_updated_idx | 10890 | 111 |
+| S7a rare8 | A | trgm | 4.30 | 4.39 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 2455 | 638 |
+| S7a common3 | B | trgm | 18.57 | 20.08 | Index Scan bl_updated_idx | 6106 | 5601 |
+| S7a rare3 | B | trgm | 3.19 | 3.26 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_trgm | 755 | 638 |
+| S7a common8 | B | trgm | 18.70 | 19.75 | Index Scan bl_updated_idx | 6102 | 0 |
+| S7a rare8 | B | trgm | 71.53 | 74.00 | Index Scan bl_updated_idx | 20934 | 9974 |
+| S7a common3 | C | trgm | 6.55 | 6.70 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1272 | 261 |
+| S7a rare3 | C | trgm | 55.46 | 59.07 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 17455 | 10650 |
+| S7a common8 | C | trgm | 6.28 | 6.40 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1344 | 62 |
+| S7a rare8 | C | trgm | 8.70 | 9.24 | Bitmap Heap Scan records; Bitmap Index Scan c_search_trgm; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 11370 | 1600 |
+| S7b selective | A | tsv | 2.37 | 2.47 | Bitmap Heap Scan records; Bitmap Index Scan a_search_tsv | 2429 | 674 |
+| S7b common | A | tsv | 260.08 | 267.59 | Index Scan a_updated_idx | 13767 | 5891 |
+| S7b selective | B | tsv | 1.21 | 2.10 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_tsv | 629 | 624 |
+| S7b common | B | tsv | 253.65 | 256.56 | Index Scan bl_updated_idx | 6099 | 5508 |
+| S7b selective | C | tsv | 10.68 | 11.20 | Bitmap Heap Scan records; Bitmap Index Scan c_search_tsv; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1773 | 779 |
+| S7b common | C | tsv | 11.79 | 12.00 | Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey | 1234 | 211 |
+| S1 | A | rls-off | 0.88 | 1.70 | Index Scan a_created_idx | 267 | 14 |
+| S2 | A | rls-off | 86.89 | 92.46 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 75884 | 15967 |
+| S2-KEYSET | A | rls-off | 191.60 | 196.02 | Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status; Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_company | 139945 | 66982 |
+| S2-OFFSET | A | rls-off | 102.23 | 109.56 | Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status | 75880 | 16506 |
+| S7a common3 | A | rls-off | 23.72 | 24.39 | Index Scan a_updated_idx | 11290 | 4836 |
+| S7a rare3 | A | rls-off | 5.09 | 5.83 | Bitmap Heap Scan records; Bitmap Index Scan a_search_trgm | 3077 | 620 |
+| S7a common8 | A | rls-off | 23.53 | 24.27 | Index Scan a_updated_idx | 10890 | 87 |
+| S7a rare8 | A | rls-off | 102.79 | 113.38 | Index Scan a_updated_idx | 21168 | 11193 |
+| S8 | A | rls-off | 0.65 | 1.39 | Index Scan records_pkey | 4 | 3 |
+| S1 | B | rls-off | 0.70 | 0.79 | Index Scan bl_created_idx | 55 | 54 |
+| S2 | B | rls-off | 1.28 | 1.55 | Index Scan bl_x_company | 1092 | 408 |
+| S2-KEYSET | B | rls-off | 1.44 | 3.93 | Subquery Scan; Index Scan bl_x_company; Subquery Scan; Index Scan bl_x_lead_status | 388 | 384 |
+| S2-OFFSET | B | rls-off | 47.27 | 53.36 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 13656 | 12549 |
+| S7a common3 | B | rls-off | 19.06 | 21.34 | Index Scan bl_updated_idx | 6106 | 3704 |
+| S7a rare3 | B | rls-off | 55.37 | 57.90 | Index Scan bl_updated_idx | 16481 | 6106 |
+| S7a common8 | B | rls-off | 19.59 | 21.02 | Index Scan bl_updated_idx | 6102 | 0 |
+| S7a rare8 | B | rls-off | 3.42 | 3.54 | Bitmap Heap Scan leads; Bitmap Index Scan bl_search_trgm | 655 | 390 |
+| S8 | B | rls-off | 0.81 | 1.04 | Index Scan leads_pkey | 4 | 3 |
+| S1 | A | rls-on | 0.87 | 2.72 | Index Scan a_created_idx | 235 | 75 |
+| S2 | A | rls-on | 1.77 | 2.02 | Index Scan a_x_company | 1889 | 566 |
+| S2-KEYSET | A | rls-on | 271.56 | 303.62 | Subquery Scan; Index Scan a_x_company; Subquery Scan; Seq Scan records | 338206 | 84889 |
+| S2-OFFSET | A | rls-on | 137.90 | 160.68 | Seq Scan records | 229181 | 43393 |
+| S7a common3 | A | rls-on | 22.70 | 23.44 | Index Scan a_updated_idx | 11290 | 5502 |
+| S7a rare3 | A | rls-on | 51.26 | 57.99 | Index Scan a_updated_idx | 16697 | 8456 |
+| S7a common8 | A | rls-on | 307.41 | 410.12 | Seq Scan records | 206120 | 45005 |
+| S7a rare8 | A | rls-on | 232.94 | 275.84 | Seq Scan records | 53894 | 41662 |
+| S8 | A | rls-on | 0.75 | 2.16 | Index Scan records_pkey | 4 | 3 |
+| S1 | B | rls-on | 0.86 | 1.10 | Index Scan bl_created_idx | 55 | 54 |
+| S2 | B | rls-on | 1.37 | 1.67 | Index Scan bl_x_company | 1092 | 408 |
+| S2-KEYSET | B | rls-on | 1.52 | 2.19 | Subquery Scan; Index Scan bl_x_company; Subquery Scan; Index Scan bl_x_lead_status | 388 | 384 |
+| S2-OFFSET | B | rls-on | 46.09 | 51.41 | Bitmap Heap Scan leads; Bitmap Index Scan bl_x_lead_status | 13656 | 12549 |
+| S7a common3 | B | rls-on | 18.52 | 19.23 | Index Scan bl_updated_idx | 6106 | 3704 |
+| S7a rare3 | B | rls-on | 52.47 | 57.08 | Index Scan bl_updated_idx | 16481 | 6100 |
+| S7a common8 | B | rls-on | 218.94 | 314.23 | Seq Scan leads | 38468 | 22581 |
+| S7a rare8 | B | rls-on | 223.07 | 245.99 | Seq Scan leads | 38468 | 22381 |
+| S8 | B | rls-on | 0.88 | 1.06 | Index Scan leads_pkey | 4 | 4 |
 
 ## Writes
 
 | scenario | option | stage | rls | ops | total_ms | median_ms | p95_ms | wal_bytes_per_op |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S9 insert | A | A0 | n/a | 2000 | 10198.16 | 1.36 | 2.47 | 103264 |
-| S9 update1 | A | A0 | n/a | 2000 | 1670.44 | 0.76 | 1.48 | 8948 |
-| S9 update5 | A | A0 | n/a | 2000 | 1481.22 | 0.67 | 1.11 | 5786 |
-| S9 insert | A | A1 | n/a | 2000 | 10606.70 | 1.23 | 3.03 | 119636 |
-| S9 update1 | A | A1 | n/a | 2000 | 2087.58 | 0.95 | 1.82 | 15989 |
-| S9 update5 | A | A1 | n/a | 2000 | 1355.66 | 0.58 | 1.01 | 6501 |
-| S9 insert | A | A2 | n/a | 2000 | 19383.76 | 2.34 | 16.67 | 199581 |
-| S9 update1 | A | A2 | n/a | 2000 | 3227.79 | 1.30 | 3.19 | 37940 |
-| S9 update5 | A | A2 | n/a | 2000 | 1796.48 | 0.81 | 1.43 | 5153 |
-| S9 insert | B | B0 | n/a | 2000 | 28273.79 | 2.50 | 16.80 | 90019 |
-| S9 update1 | B | B0 | n/a | 2000 | 5950.64 | 1.69 | 8.16 | 6128 |
-| S9 update5 | B | B0 | n/a | 2000 | 2608.79 | 0.62 | 4.43 | 3031 |
-| S9 insert | B | B1 | n/a | 2000 | 13577.91 | 2.33 | 5.32 | 135880 |
-| S9 update1 | B | B1 | n/a | 2000 | 2318.40 | 1.03 | 2.08 | 10965 |
-| S9 update5 | B | B1 | n/a | 2000 | 2533.76 | 0.83 | 2.24 | 4256 |
-| S9 insert | C | C0 | n/a | 2000 | 86676.37 | 26.32 | 89.93 | 704218 |
-| S9 update1 | C | C0 | n/a | 2000 | 4788.68 | 1.81 | 4.11 | 26206 |
-| S9 update5 | C | C0 | n/a | 2000 | 5033.32 | 1.66 | 5.35 | 29787 |
-| S9 insert | A | A2 | off | 2000 | 25609.89 | 3.25 | 7.05 | 253229 |
-| S9 update1 | A | A2 | off | 2000 | 4619.00 | 1.92 | 4.18 | 48518 |
-| S9 update5 | A | A2 | off | 2000 | 2244.27 | 0.82 | 1.62 | 4045 |
-| S9 insert | B | B1 | off | 2000 | 15868.58 | 3.02 | 9.40 | 97346 |
-| S9 update1 | B | B1 | off | 2000 | 2636.08 | 1.15 | 2.33 | 18119 |
-| S9 update5 | B | B1 | off | 2000 | 3696.07 | 0.66 | 2.24 | 5075 |
-| S9 insert | A | A2 | on | 2000 | 16117.45 | 3.02 | 6.65 | 120141 |
-| S9 update1 | A | A2 | on | 2000 | 33762.09 | 2.91 | 17.01 | 128451 |
-| S9 update5 | A | A2 | on | 2000 | 4020.57 | 1.35 | 4.57 | 17482 |
-| S9 insert | B | B1 | on | 2000 | 51372.32 | 5.09 | 24.07 | 269416 |
-| S9 update1 | B | B1 | on | 2000 | 3617.77 | 1.50 | 3.31 | 63853 |
-| S9 update5 | B | B1 | on | 2000 | 11246.33 | 2.49 | 10.49 | 111994 |
+| S9 insert | A | A0 | n/a | 2000 | 2145.80 | 0.96 | 1.86 | 17405 |
+| S9 update1 | A | A0 | n/a | 2000 | 1648.85 | 0.79 | 1.11 | 12821 |
+| S9 update5 | A | A0 | n/a | 2000 | 1482.97 | 0.70 | 1.08 | 13180 |
+| S9 insert | A | A1 | n/a | 2000 | 1430.86 | 0.66 | 1.04 | 17156 |
+| S9 update1 | A | A1 | n/a | 2000 | 1524.19 | 0.72 | 1.12 | 15848 |
+| S9 update5 | A | A1 | n/a | 2000 | 1641.39 | 0.79 | 1.09 | 13900 |
+| S9 insert | A | A2 | n/a | 2000 | 5598.07 | 1.18 | 1.88 | 127795 |
+| S9 update1 | A | A2 | n/a | 2000 | 2736.86 | 1.21 | 2.12 | 55357 |
+| S9 update5 | A | A2 | n/a | 2000 | 2210.54 | 1.06 | 1.42 | 50926 |
+| S9 insert | B | B0 | n/a | 2000 | 2182.04 | 0.98 | 1.76 | 15569 |
+| S9 update1 | B | B0 | n/a | 2000 | 1759.18 | 0.82 | 1.17 | 10949 |
+| S9 update5 | B | B0 | n/a | 2000 | 1391.59 | 0.67 | 1.03 | 11151 |
+| S9 insert | B | B1 | n/a | 2000 | 1957.50 | 0.97 | 1.25 | 54021 |
+| S9 update1 | B | B1 | n/a | 2000 | 2320.40 | 1.13 | 1.47 | 51093 |
+| S9 update5 | B | B1 | n/a | 2000 | 2236.67 | 1.06 | 1.38 | 46745 |
+| S9 insert | C | C0 | n/a | 2000 | 35338.30 | 16.74 | 31.46 | 487448 |
+| S9 update1 | C | C0 | n/a | 2000 | 3312.78 | 1.52 | 2.54 | 28372 |
+| S9 update5 | C | C0 | n/a | 2000 | 3879.16 | 1.69 | 3.23 | 59857 |
+| S9 insert | A | A2 | off | 2000 | 2262.89 | 1.08 | 1.48 | 57287 |
+| S9 update1 | A | A2 | off | 2000 | 5820.89 | 1.20 | 1.53 | 128825 |
+| S9 update5 | A | A2 | off | 2000 | 4876.36 | 1.91 | 4.33 | 52281 |
+| S9 insert | B | B1 | off | 2000 | 2608.29 | 1.10 | 2.59 | 54387 |
+| S9 update1 | B | B1 | off | 2000 | 4266.78 | 1.67 | 3.96 | 52804 |
+| S9 update5 | B | B1 | off | 2000 | 2450.18 | 1.17 | 1.48 | 48303 |
+| S9 insert | A | A2 | on | 2000 | 2301.30 | 1.06 | 1.41 | 58426 |
+| S9 update1 | A | A2 | on | 2000 | 6014.07 | 1.34 | 1.75 | 131394 |
+| S9 update5 | A | A2 | on | 2000 | 2495.08 | 1.21 | 1.58 | 53830 |
+| S9 insert | B | B1 | on | 2000 | 2134.51 | 1.04 | 1.32 | 55852 |
+| S9 update1 | B | B1 | on | 2000 | 2851.61 | 1.27 | 1.90 | 61640 |
+| S9 update5 | B | B1 | on | 2000 | 2589.34 | 1.22 | 1.73 | 54804 |
+| S9 insert | A | A2+trgm | n/a | 2000 | 5281.00 | 1.10 | 1.50 | 133000 |
+| S9 update1 | A | A2+trgm | n/a | 2000 | 5618.37 | 1.33 | 2.16 | 131031 |
+| S9 update5 | A | A2+trgm | n/a | 2000 | 6170.77 | 1.34 | 1.89 | 116012 |
+| S9 insert | B | B1+trgm | n/a | 2000 | 5854.97 | 1.27 | 3.31 | 109164 |
+| S9 update1 | B | B1+trgm | n/a | 2000 | 7657.63 | 1.63 | 5.12 | 110407 |
+| S9 update5 | B | B1+trgm | n/a | 2000 | 9629.89 | 1.80 | 5.98 | 102406 |
+| S9 insert | A | A2+tsv | n/a | 2000 | 5707.96 | 1.08 | 1.60 | 135564 |
+| S9 update1 | A | A2+tsv | n/a | 2000 | 3718.27 | 1.25 | 1.65 | 85438 |
+| S9 update5 | A | A2+tsv | n/a | 2000 | 3592.46 | 1.23 | 1.59 | 78654 |
+| S9 insert | B | B1+tsv | n/a | 2000 | 2324.54 | 1.13 | 1.57 | 58717 |
+| S9 update1 | B | B1+tsv | n/a | 2000 | 3821.78 | 1.25 | 1.59 | 79815 |
+| S9 update5 | B | B1+tsv | n/a | 2000 | 3621.04 | 1.25 | 1.57 | 73630 |
 
 ## Sizes
 
@@ -322,14 +341,22 @@ Table bytes are `pg_table_size` (heap, toast, free space). Index bytes are `pg_r
 | C0 | bench_c | record_values_pkey | index | 400056320 |
 | C0 | bench_c | records | table | 178724864 |
 | C0 | bench_c | records_pkey | index | 11649024 |
+| trgm | bench_a | a_search_trgm | index | 232783872 |
+| trgm | bench_b | bc_search_trgm | index | 7249920 |
+| trgm | bench_b | bl_search_trgm | index | 221429760 |
+| trgm | bench_c | c_search_trgm | index | 208420864 |
+| tsv | bench_a | a_search_tsv | index | 154583040 |
+| tsv | bench_b | bc_search_tsv | index | 7626752 |
+| tsv | bench_b | bl_search_tsv | index | 148889600 |
+| tsv | bench_c | c_search_tsv | index | 146489344 |
 
 ## Alter on the typed leads table
 
 | operation | ms | rows |
 | --- | --- | --- |
-| add column (no default) | 2.87 | 250000 |
-| add column (constant default) | 4.76 | 250000 |
-| create index concurrently | 761.13 | 250000 |
+| add column (no default) | 0.73 | 250000 |
+| add column (constant default) | 2.63 | 250000 |
+| create index concurrently | 583.62 | 250000 |
 
 ## RLS isolation
 
@@ -346,4 +373,14 @@ Table bytes are `pg_table_size` (heap, toast, free space). Index bytes are `pg_r
 
 ## Notes
 
-- none
+- S2 lead_status equality matches about 6.7% of non-deleted org A leads. The field is optional (about 40% empty), so one filled value is about one ninth of the filled rows, not 11% of the table. S4 email_opt_out = false matches about 90.1%.
+- Buffers are the root plan node's shared hit blocks plus shared read blocks. Child nodes already roll into that total.
+- A2 equality predicates use the expression-index form. A0 and A1 keep jsonb containment.
+- S2 keyset seeks with a row comparison on (sort expression, id). Rows with a null sort key are a second branch, union all, then ordered outside the limit. A null cursor continues with sort expression is null and id greater than the cursor.
+- Storage-stage writes run without search indexes. Each stage, write kind, and RLS setting updates its own record range. A checkpoint runs before each batch. WAL per operation is the batch LSN delta divided by the operation count. +trgm and +tsv rows are the same writes with one search index family added on A2 and B1.
+- S7b measures two prefixes: zzrare:* (prefix of the rare 8-character token) and alpha:* (about one row in three). The plan summary appends JIT total time when JIT ran.
+- Update writes rebuild the record's search text from the stored searchable fields with the changed values applied. Search maintenance is part of the write, not a constant placeholder.
+- S7b did not use the tsvector GIN for: A S7b common median 260.1 ms (Index Scan a_updated_idx); B S7b common median 253.7 ms (Index Scan bl_updated_idx); C S7b common median 11.8 ms (Index Scan c_updated_idx; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey; Index Scan record_values_pkey). A common prefix matches about one row in three, so the planner can walk updated_at instead. A and B heap tuples are wider than C's header row, so the same plan costs more there. JIT time is in the plan summary when JIT ran.
+- S2 keyset on A A2 took 197.3 ms and 139942 buffers (first page 86.5 ms / 75880 buffers; offset 5000 97.4 ms / 75880 buffers). Plan: Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_lead_status; Subquery Scan; Bitmap Heap Scan records; Bitmap Index Scan a_x_company.
+- S2 keyset on A rls-on took 271.6 ms and 338206 buffers (first page 1.8 ms / 1889 buffers; offset 5000 137.9 ms / 229181 buffers). Plan: Subquery Scan; Index Scan a_x_company; Subquery Scan; Seq Scan records.
+- S4 on A2 used Index Scan a_x_email_opt_out (1263.0 ms, 950534 buffers) while B1 used Index Scan bl_x_last_name (0.5 ms, 87 buffers). Both filters are boolean equality with last_name order. The expression-index plan walks the low-selectivity boolean index; the typed plan walks last_name and stops after 50 rows.

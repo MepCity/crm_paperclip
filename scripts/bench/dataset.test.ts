@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  composeSearch,
   generateDataset,
   LEAD_FIELDS,
   SEARCH_TERMS,
@@ -12,6 +13,23 @@ describe("scaleCounts", () => {
   it("scales the other populations with the lead row count", () => {
     expect(scaleCounts(200_000)).toEqual({ leadsA: 200_000, contactsA: 50_000, leadsB: 50_000 });
     expect(scaleCounts(2000)).toEqual({ leadsA: 2000, contactsA: 500, leadsB: 500 });
+  });
+});
+
+describe("composeSearch", () => {
+  it("replaces the changed field and keeps the other searchable text", () => {
+    const texts = {
+      last_name: "Lane",
+      lead_status: "lead_status_0",
+      company: "Company 000001",
+    };
+    const before = composeSearch("Lane", texts);
+    const after = composeSearch("Lane", { ...texts, lead_status: "lead_status_1" });
+    expect(before).toContain("lead_status_0");
+    expect(before).toContain("company 000001");
+    expect(after).toContain("lead_status_1");
+    expect(after).not.toContain("lead_status_0");
+    expect(after).toContain("company 000001");
   });
 });
 

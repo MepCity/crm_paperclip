@@ -15,7 +15,10 @@ export const SEARCH_TERMS = {
   common8: "commonwd",
   rare8: "zzrarexx",
   prefixWord: "alphaone",
+  /** Matches about one row in three. Too common for a tsvector index. */
   prefixQuery: "alpha:*",
+  /** Prefix of the rare 8-character token. Selective enough to use the tsvector index. */
+  prefixSelective: "zzrare:*",
 } as const;
 
 export type FieldType =
@@ -346,19 +349,34 @@ function plantTokens(index: number): string[] {
   return tokens;
 }
 
+/** Lower-cased name plus searchable field text, in field-list order. Empty fields are skipped. */
+export function composeSearch(
+  name: string,
+  texts: Readonly<Record<string, string | null>>,
+  defs: readonly FieldDef[] = LEAD_FIELDS,
+): string {
+  const parts = [name.toLowerCase()];
+  for (const field of defs) {
+    if (!SEARCHABLE_TYPES.has(field.type)) continue;
+    const text = texts[field.key];
+    if (!text) continue;
+    parts.push(text.toLowerCase());
+  }
+  return parts.join(" ");
+}
+
+export function searchableLeadKeys(): readonly string[] {
+  return LEAD_FIELDS.filter((field) => SEARCHABLE_TYPES.has(field.type)).map((field) => field.key);
+}
+
 function buildSearch(
   name: string,
   fields: Record<string, StoredValue>,
   defs: readonly FieldDef[],
 ): string {
-  const parts = [name.toLowerCase()];
-  for (const field of defs) {
-    if (!SEARCHABLE_TYPES.has(field.type)) continue;
-    const value = fields[field.key];
-    if (!value?.text) continue;
-    parts.push(value.text.toLowerCase());
-  }
-  return parts.join(" ");
+  const texts: Record<string, string | null> = {};
+  for (const field of defs) texts[field.key] = fields[field.key]?.text ?? null;
+  return composeSearch(name, texts, defs);
 }
 
 function dataJson(defs: readonly FieldDef[], fields: Record<string, StoredValue>): string {

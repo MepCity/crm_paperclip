@@ -10,6 +10,9 @@ import {
 
 export type Option = "A" | "B" | "C";
 
+/** A0/A1 keep jsonb containment. A2 equality matches the expression indexes. */
+export type JsonEquality = "containment" | "expression";
+
 export type Query = {
   text: string;
   values: unknown[];
@@ -180,36 +183,32 @@ function orderBy(option: Option, kind: ListKind): string {
   }
 }
 
-function keyset(option: Option, params: Params, input: ListParams): string {
-  const company = params.add(input.cursorCompany);
-  const id = params.add(input.cursorId);
-  const expr =
-    option === "A"
-      ? `(data->>'company') collate "und-x-icu"`
-      : option === "B"
-        ? `company`
-        : `co.value_text`;
-  const idExpr = option === "C" ? "r.id" : "id";
-  const typedCompany = `${company}::text collate "und-x-icu"`;
-  return `(
-    (${company}::text is not null and (
-      ${expr} > ${typedCompany}
-      or (${expr} = ${typedCompany} and ${idExpr} > ${id}::uuid)
-      or (${expr} is null)
-    ))
-    or (${company}::text is null and ${expr} is null and ${idExpr} > ${id}::uuid)
-  )`;
+function companyExpr(option: Option): string {
+  if (option === "A") return `((data->>'company') collate "und-x-icu")`;
+  if (option === "B") return `(company collate "und-x-icu")`;
+  return `(co.value_text collate "und-x-icu")`;
 }
 
-function filters(option: Option, kind: ListKind, params: Params, input: ListParams): string {
+function tableId(option: Option): string {
+  if (option === "A") return "bench_a.records.id";
+  if (option === "B") return "bench_b.leads.id";
+  return "r.id";
+}
+
+function filters(
+  option: Option,
+  kind: ListKind,
+  params: Params,
+  input: ListParams,
+  equality: JsonEquality,
+): string {
   const parts: string[] = [];
-  if (kind === "s2" || kind === "s2-keyset" || kind === "s2-offset") {
-    parts.push(statusFilter(option, params, input.leadStatus));
+  if (kind === "s2" || kind === "s2-offset") {
+    parts.push(statusFilter(option, params, input.leadStatus, equality));
   }
-  if (kind === "s2-keyset") parts.push(keyset(option, params, input));
   if (kind === "s3") parts.push(s3Filter(option, params, input));
-  if (kind === "s4") parts.push(optOutFilter(option, params));
-  if (kind === "s5") parts.push(s5Filter(option, params, input));
+  if (kind === "s4") parts.push(optOutFilter(option, params, equality));
+  if (kind === "s5") parts.push(s5Filter(option, params, input, equality));
   if (kind === "s7-like") {
     const like = params.add(input.searchLike);
     const column = option === "C" ? "r.search" : "search";
@@ -220,19 +219,33 @@ function filters(option: Option, kind: ListKind, params: Params, input: ListPara
     const column = option === "C" ? "r.search" : "search";
     parts.push(`to_tsvector('simple', ${column}) @@ to_tsquery('simple', ${query})`);
   }
-  if (kind === "s11") parts.push(lookupFilter(option, params, input.contactId));
+  if (kind === "s11") parts.push(lookupFilter(option, params, input.contactId, equality));
   return parts.length > 0 ? ` and ${parts.join(" and ")}` : "";
 }
 
-function statusFilter(option: Option, params: Params, status: string): string {
-  if (option === "A")
+function textEquals(key: string, slot: string): string {
+  return `((data->>'${key}') collate "und-x-icu") = ${slot}`;
+}
+
+function statusFilter(
+  option: Option,
+  params: Params,
+  status: string,
+  equality: JsonEquality,
+): string {
+  if (option === "A") {
+    if (equality === "expression") return textEquals("lead_status", params.add(status));
     return `data @> ${params.add(JSON.stringify({ lead_status: status }))}::jsonb`;
+  }
   if (option === "B") return `lead_status = ${params.add(status)}`;
   return `st.value_text = ${params.add(status)}`;
 }
 
-function optOutFilter(option: Option, params: Params): string {
+function optOutFilter(option: Option, params: Params, equality: JsonEquality): string {
   if (option === "A") {
+    if (equality === "expression") {
+      return `((data->>'email_opt_out')) = ${params.add("false")}`;
+    }
     return `data @> ${params.add(JSON.stringify({ email_opt_out: false }))}::jsonb`;
   }
   if (option === "B") return `email_opt_out = ${params.add(false)}::boolean`;
@@ -262,8 +275,19 @@ function s3Filter(option: Option, params: Params, input: ListParams): string {
     and rev.value_num >= ${revenue}::numeric`;
 }
 
-function s5Filter(option: Option, params: Params, input: ListParams): string {
+function s5Filter(
+  option: Option,
+  params: Params,
+  input: ListParams,
+  equality: JsonEquality,
+): string {
   if (option === "A") {
+    if (equality === "expression") {
+      const industries = params.add(input.industries);
+      const rating = params.add(input.rating);
+      const country = params.add(input.country);
+      return `((${textEquals("industry", `any(${industries}::text[])`)} or ${textEquals("rating", rating)}) and ${textEquals("country", country)})`;
+    }
     const industries = input.industries.map((value) =>
       params.add(JSON.stringify({ industry: value })),
     );
@@ -299,8 +323,14 @@ function s5Filter(option: Option, params: Params, input: ListParams): string {
     ))`;
 }
 
-function lookupFilter(option: Option, params: Params, contactId: string): string {
+function lookupFilter(
+  option: Option,
+  params: Params,
+  contactId: string,
+  equality: JsonEquality,
+): string {
   if (option === "A") {
+    if (equality === "expression") return textEquals("cf_lookup_1", params.add(contactId));
     return `data @> ${params.add(JSON.stringify({ cf_lookup_1: contactId }))}::jsonb`;
   }
   if (option === "B") return `cf_lookup_1 = ${params.add(contactId)}::uuid`;
@@ -359,10 +389,43 @@ function selectList(option: Option, kind: ListKind): string {
     ${cJoins(kind)}`;
 }
 
-export function listQuery(option: Option, kind: ListKind, input: ListParams): Query {
+function keysetQuery(option: Option, input: ListParams, equality: JsonEquality): Query {
+  const params = new Params();
+  const where = `${baseWhere(option, params, input)} and ${statusFilter(option, params, input.leadStatus, equality)}`;
+  const select = selectList(option, "s2");
+  const company = companyExpr(option);
+  const id = tableId(option);
+  if (input.cursorCompany === null) {
+    const idSlot = params.add(input.cursorId);
+    return {
+      text: `${select} where ${where} and ${company} is null and ${id} > ${idSlot}::uuid order by ${id} asc limit ${LIMIT}`,
+      values: params.values,
+    };
+  }
+  const companySlot = params.add(input.cursorCompany);
+  const idSlot = params.add(input.cursorId);
+  const after = `(${company}, ${id}) > (${companySlot}::text collate "und-x-icu", ${idSlot}::uuid)`;
+  const head = `${select} where ${where} and ${after} order by ${company} asc, ${id} asc limit ${LIMIT}`;
+  const tail = `${select} where ${where} and ${company} is null order by ${id} asc limit ${LIMIT}`;
+  return {
+    text: `select id, last_name, company, email, phone, lead_status, owner_id, created_at, annual_revenue
+      from ((${head}) union all (${tail})) page
+      order by company collate "und-x-icu" asc nulls last, id asc
+      limit ${LIMIT}`,
+    values: params.values,
+  };
+}
+
+export function listQuery(
+  option: Option,
+  kind: ListKind,
+  input: ListParams,
+  equality: JsonEquality = "containment",
+): Query {
+  if (kind === "s2-keyset") return keysetQuery(option, input, equality);
   const params = new Params();
   const where = baseWhere(option, params, input);
-  const extra = filters(option, kind, params, input);
+  const extra = filters(option, kind, params, input, equality);
   const order = orderBy(option, kind);
   const offset = kind === "s2-offset" ? ` offset ${params.add(input.offset)}::int` : "";
   return {
@@ -372,10 +435,14 @@ export function listQuery(option: Option, kind: ListKind, input: ListParams): Qu
 }
 
 /** Company/id cursor at offset 4949 for the S2 keyset (page 100). */
-export function cursorQuery(option: Option, input: ListParams): Query {
+export function cursorQuery(
+  option: Option,
+  input: ListParams,
+  equality: JsonEquality = "containment",
+): Query {
   const params = new Params();
   const where = baseWhere(option, params, input);
-  const status = statusFilter(option, params, input.leadStatus);
+  const status = statusFilter(option, params, input.leadStatus, equality);
   const company =
     option === "A"
       ? `(data->>'company') collate "und-x-icu"`
@@ -395,10 +462,15 @@ export function cursorQuery(option: Option, input: ListParams): Query {
   };
 }
 
-function countBody(option: Option, kind: "s2" | "s4", input: ListParams): Query {
+function countBody(
+  option: Option,
+  kind: "s2" | "s4",
+  input: ListParams,
+  equality: JsonEquality,
+): Query {
   const params = new Params();
   const where = baseWhere(option, params, input);
-  const extra = filters(option, kind, params, input);
+  const extra = filters(option, kind, params, input, equality);
   const from =
     option === "A"
       ? "bench_a.records"
@@ -413,8 +485,9 @@ export function countQuery(
   kind: "s2" | "s4",
   input: ListParams,
   capped: boolean,
+  equality: JsonEquality = "containment",
 ): Query {
-  const body = countBody(option, kind, input);
+  const body = countBody(option, kind, input, equality);
   if (!capped) {
     return { text: `select count(*)::int as n from (${body.text}) s`, values: body.values };
   }

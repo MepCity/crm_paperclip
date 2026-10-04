@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type pg from "pg";
 import {
+  composeSearch,
   contactFields,
   type FieldDef,
   fieldByKey,
@@ -13,6 +14,7 @@ import {
   generateDataset,
   INDEXED_LEAD_KEYS,
   LEAD_FIELDS,
+  searchableLeadKeys,
   type Universe,
   uuidV7,
 } from "./dataset";
@@ -199,6 +201,12 @@ export function stageStatements(stage: Stage, moduleLeads: string): string[] {
     default:
       return [];
   }
+}
+
+export function searchIndexNames(kind: "trgm" | "tsv"): string[] {
+  return ["bench_a.a_search", "bench_b.bl_search", "bench_b.bc_search", "bench_c.c_search"].map(
+    (name) => `${name}_${kind}`,
+  );
 }
 
 export function searchStatements(kind: "trgm" | "tsv"): string[] {
@@ -520,6 +528,76 @@ export async function insertRecord(
   await insertEvent(client, schema, eventId, record, "record.insert", { source: "bench" });
 }
 
+async function searchableState(
+  client: pg.Client,
+  option: "A" | "B" | "C",
+  recordId: string,
+): Promise<{ name: string; texts: Record<string, string | null> }> {
+  const keys = searchableLeadKeys();
+  const texts: Record<string, string | null> = {};
+  for (const key of keys) texts[key] = null;
+  if (option === "A") {
+    const result = await client.query<{ name: string; data: Record<string, unknown> | string }>(
+      "select name, data from bench_a.records where id = $1::uuid",
+      [recordId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("missing record for search refresh");
+    const data =
+      typeof row.data === "string" ? (JSON.parse(row.data) as Record<string, unknown>) : row.data;
+    for (const key of keys) {
+      const raw = data[key];
+      texts[key] = typeof raw === "string" ? raw : null;
+    }
+    return { name: row.name, texts };
+  }
+  if (option === "B") {
+    const columns = keys.map((key) => assertKey(key)).join(", ");
+    const result = await client.query<Record<string, string | null>>(
+      `select name, ${columns} from bench_b.leads where id = $1::uuid`,
+      [recordId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("missing record for search refresh");
+    for (const key of keys) {
+      const raw = row[key];
+      texts[key] = raw === null || raw === undefined ? null : String(raw);
+    }
+    return { name: String(row.name), texts };
+  }
+  const ids = keys.map((key) => fieldId(key));
+  const result = await client.query<{
+    name: string;
+    field_id: number | null;
+    value_text: string | null;
+  }>(
+    `select r.name, v.field_id, v.value_text
+     from bench_c.records r
+     left join bench_c.record_values v on v.record_id = r.id and v.field_id = any($2::int[])
+     where r.id = $1::uuid`,
+    [recordId, ids],
+  );
+  const first = result.rows[0];
+  if (!first) throw new Error("missing record for search refresh");
+  const byId = new Map(keys.map((key) => [fieldId(key), key]));
+  for (const row of result.rows) {
+    if (row.field_id === null) continue;
+    const key = byId.get(Number(row.field_id));
+    if (key) texts[key] = row.value_text;
+  }
+  return { name: first.name, texts };
+}
+
+async function refreshedSearch(
+  client: pg.Client,
+  option: "A" | "B" | "C",
+  recordId: string,
+  patch: Record<string, string>,
+): Promise<string> {
+  const current = await searchableState(client, option, recordId);
+  return composeSearch(current.name, { ...current.texts, ...patch }, LEAD_FIELDS);
+}
+
 export async function updateStatus(
   client: pg.Client,
   option: "A" | "B" | "C",
@@ -527,9 +605,9 @@ export async function updateStatus(
   organizationId: string,
   status: string,
   actorId: string,
-  search: string,
   eventId: string,
 ): Promise<void> {
+  const search = await refreshedSearch(client, option, recordId, { lead_status: status });
   if (option === "A") {
     await client.query(
       `update bench_a.records
@@ -581,9 +659,14 @@ export async function updateFive(
   organizationId: string,
   patch: FivePatch,
   actorId: string,
-  search: string,
   eventId: string,
 ): Promise<void> {
+  const search = await refreshedSearch(client, option, recordId, {
+    lead_status: patch.leadStatus,
+    company: patch.company,
+    city: patch.city,
+    cf_text_1: patch.cfText,
+  });
   if (option === "A") {
     await client.query(
       `update bench_a.records set
@@ -675,6 +758,10 @@ export async function deleteInserted(
     ]);
   }
   await client.query(`delete from ${table} where id = any($1::uuid[])`, [ids]);
+}
+
+export async function checkpoint(client: pg.Client): Promise<void> {
+  await client.query("checkpoint");
 }
 
 export async function walBytes(client: pg.Client, startLsn: string): Promise<number> {

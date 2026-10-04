@@ -2,7 +2,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SEARCH_TERMS, universe } from "./dataset";
 import { assertSame, executeCount, executeFull, executeList, executeReport } from "./exec";
-import type { ListKind, ListParams } from "./queries";
+import type { JsonEquality, ListKind, ListParams, ListRow } from "./queries";
 import {
   configureClient,
   createTables,
@@ -99,26 +99,55 @@ describe("storage options", () => {
       assertSame(`${kind} A/C`, rows[0], rows[2]);
     }
 
-    const first = await executeList(admin, "A", "s2", input);
-    const last = first.at(-1);
-    if (last) {
+    for (const kind of ["s2", "s4", "s5", "s11"] as const) {
+      const expressed = [
+        await executeList(admin, "A", kind, input, "expression"),
+        await executeList(admin, "B", kind, input),
+        await executeList(admin, "C", kind, input),
+      ];
+      assertSame(`${kind} expression A/B`, expressed[0], expressed[1]);
+      assertSame(`${kind} expression A/C`, expressed[0], expressed[2]);
+      const contained = await executeList(admin, "A", kind, input, "containment");
+      assertSame(`${kind} A forms`, contained, expressed[0]);
+    }
+
+    const expectKeyset = async (cursor: ListRow, offset: number, equality: JsonEquality) => {
       const next = params({
-        offset: first.length,
-        cursorCompany: last.company,
-        cursorId: last.id,
+        offset,
+        cursorCompany: cursor.company,
+        cursorId: cursor.id,
       });
       for (const option of ["A", "B", "C"] as const) {
-        const byOffset = await executeList(admin, option, "s2-offset", next);
-        const byKey = await executeList(admin, option, "s2-keyset", next);
-        assertSame(`${option} keyset`, byOffset, byKey);
+        const byOffset = await executeList(admin, option, "s2-offset", next, equality);
+        const byKey = await executeList(admin, option, "s2-keyset", next, equality);
+        assertSame(`${equality} ${option} keyset@${offset}`, byOffset, byKey);
       }
       const across = [
-        await executeList(admin, "A", "s2-keyset", next),
-        await executeList(admin, "B", "s2-keyset", next),
-        await executeList(admin, "C", "s2-keyset", next),
+        await executeList(admin, "A", "s2-keyset", next, equality),
+        await executeList(admin, "B", "s2-keyset", next, equality),
+        await executeList(admin, "C", "s2-keyset", next, equality),
       ];
-      assertSame("keyset A/B", across[0], across[1]);
-      assertSame("keyset A/C", across[0], across[2]);
+      assertSame(`${equality} keyset A/B`, across[0], across[1]);
+      assertSame(`${equality} keyset A/C`, across[0], across[2]);
+    };
+
+    const opening = await executeList(admin, "B", "s2", input);
+    const openingRow = opening[0];
+    if (openingRow?.company) {
+      await expectKeyset(openingRow, 1, "containment");
+      await expectKeyset(openingRow, 1, "expression");
+    }
+    let offset = 0;
+    let previous: ListRow | undefined;
+    for (let page = 0; page < 20; page++) {
+      const rows = await executeList(admin, "B", "s2-offset", params({ offset }));
+      if (previous) {
+        await expectKeyset(previous, offset, "containment");
+        await expectKeyset(previous, offset, "expression");
+      }
+      previous = rows.at(-1);
+      if (!previous || rows.length < 50) break;
+      offset += rows.length;
     }
 
     for (const kind of ["s2", "s4"] as const) {
