@@ -26,8 +26,10 @@ search height, a decorative magnifier, control border and placeholder tokens) an
 separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
-Visual layout → Filter content, Surface and line colors, Selected / disabled. Gaps that
-open question 12 still leaves unmeasured use the existing scale.
+Visual layout → Filter content, Surface and line colors, Selected / disabled.
+The vertical gaps and search-field width measured in Filter content are not applied yet
+and use the existing scale; open question 17 records the uncaptured closed group and
+checked checkbox.
 
 ## Token sources
 
@@ -206,7 +208,7 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
-| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "placeholder about 34 px high" | from spec |
+| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
 | `--size-list-filter-search-icon-inset` | `11.5px` | list-views.md › Filter content › "starting 11.5 px inside the field's outer left edge" | from spec |
 | `--size-list-filter-search-padding` | `31px` | list-views.md › Filter content › "the placeholder text starting 32 px inside that edge". Padding is that inset minus the 1 px border | from spec |
