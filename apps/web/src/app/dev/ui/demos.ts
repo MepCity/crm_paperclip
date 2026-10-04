@@ -1,3 +1,4 @@
+import RecordTableDemo from "@/components/records/list/record-table.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -49,6 +50,7 @@ export const demos: Record<string, React.ComponentType> = {
   dialog: DialogDemo,
   menu: MenuDemo,
   table: TableDemo,
+  "record-table": RecordTableDemo,
   spinner: SpinnerDemo,
   tabs: TabsDemo,
   tooltip: TooltipDemo,
