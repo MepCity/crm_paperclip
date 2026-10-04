@@ -2,6 +2,8 @@ import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { type BenchArgs, markdownFor, resolveProtocol, runBench } from "./run";
 
+import { renderSlotsMarkdown, runSlotsBench } from "./slots";
+
 function readArg(argv: string[], name: string): string | undefined {
   const index = argv.indexOf(name);
   if (index < 0) return undefined;
@@ -13,7 +15,7 @@ function readArg(argv: string[], name: string): string | undefined {
 function parseArgs(argv: string[]): BenchArgs {
   if (argv.includes("--help")) {
     console.log(
-      "pnpm bench:storage [--rows N] [--seed N] [--warmup N] [--measure N] [--writes N] [--json file] [--out file]",
+      "pnpm bench:storage [--slots] [--rows N] [--seed N] [--warmup N] [--measure N] [--writes N] [--json file] [--out file]",
     );
     process.exit(0);
   }
@@ -26,6 +28,7 @@ function parseArgs(argv: string[]): BenchArgs {
     return parsed;
   };
   const known = new Set([
+    "--slots",
     "--rows",
     "--seed",
     "--warmup",
@@ -39,9 +42,10 @@ function parseArgs(argv: string[]): BenchArgs {
     const token = argv[index];
     if (!token?.startsWith("--")) throw new Error(`unexpected argument ${token}`);
     if (!known.has(token)) throw new Error(`unknown argument ${token}`);
-    index += 1;
+    if (token !== "--slots") index += 1;
   }
   return {
+    slots: argv.includes("--slots"),
     rows: number("--rows"),
     seed: number("--seed"),
     warmup: number("--warmup"),
@@ -60,9 +64,11 @@ async function main(): Promise<void> {
   );
   if (args.outPath) await mkdir(dirname(args.outPath), { recursive: true });
   if (args.jsonPath) await mkdir(dirname(args.jsonPath), { recursive: true });
-  const report = await runBench(args, (message) => console.error(message));
-  process.stdout.write(markdownFor(report));
-  if (!markdownFor(report).endsWith("\n")) process.stdout.write("\n");
+  const markdown = args.slots
+    ? renderSlotsMarkdown(await runSlotsBench(args, (message) => console.error(message)))
+    : markdownFor(await runBench(args, (message) => console.error(message)));
+  process.stdout.write(markdown);
+  if (!markdown.endsWith("\n")) process.stdout.write("\n");
 }
 
 main().catch((error: unknown) => {
