@@ -27,7 +27,7 @@ separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbo
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled. Gaps that
-open question 12 still leaves unmeasured use the existing scale.
+open question 17 still leaves unmeasured use the existing scale.
 
 ## Token sources
 
