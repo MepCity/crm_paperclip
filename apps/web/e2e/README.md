@@ -17,7 +17,7 @@ test("screen name", async ({ page }) => {
 
 ## Helpers
 
-- `expectNoA11yViolations(page, options?)` in `support/a11y.ts` runs WCAG 2.1 A and AA (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`). A violation fails the test with the rule id, impact, affected selectors, and help URL.
+- `expectNoA11yViolations(page, options?)` in `support/a11y.ts` settles finite animations at their end state, then runs WCAG 2.1 A and AA (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`). A fade still in progress can fail colour contrast even when the resting colours pass. Infinite animations are left running. A violation fails the test with the rule id, impact, affected selectors, and help URL.
 - `options.exclude` skips selectors. Every call site must comment why those selectors are left out.
 - Console and page errors are collected automatically by the `test` fixture. Specs do not opt in.
 
