@@ -18,28 +18,42 @@ components import types from `@crm/core/records` and format datetimes through
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
 | `wrapText` | Wrap cell text and grow the row. When false, the cell truncates. |
-| `emptyMessage` | Centered message when `records` is empty. |
-| `settings` | Content of the trailing 40px header cell. Omit it to leave the cell empty. |
+| `emptyMessage` | Message in the first body band when `records` is empty. |
+| `settings` | Content of the header-only 40px View Settings overlay. Omit it to leave the cell empty. |
 | `ownerNames` | User id → display name, passed through to `CellValue`. |
 | `format` | Locale and time zone for datetime cells. |
 | `footer` | Props for `RecordTableFooter`, rendered inside the same card. |
 
 Header order when rows exist: an unlabeled leading cell and a selection cell
 (together `--size-list-leading-pair-width`), a badge strip
-(`--size-list-badge-width`), one data column per field
-(`--size-list-column-width`), then the settings cell
-(`--size-list-settings-width`). The data columns scroll. The leading pair, the
-badge strip and the settings cell stay pinned.
+(`--size-list-badge-width`), then one data column per field
+(`--size-list-column-width`). The data columns scroll. The leading pair and the
+badge strip stay pinned. View Settings is not a column: a
+`--size-list-settings-width` overlay sits on the header's right edge, with a
+1px left border, and body rows have no cell there.
 
 The header checkbox selects or clears every row on the page. A row checkbox
 selects that row. Nothing else changes: there is no selection toolbar.
 
 The badge strip is an empty placeholder. No activity ribbon is drawn.
 
+A single-line row is `--size-list-row-pad`, one `--size-list-line-height` line
+and `--size-list-row-pad` again. There is no minimum row height: each extra
+text line adds one line height, and cell content stays top-aligned. A 1px
+separator follows the row. Each data header has a short divider on its right
+edge; the first data column has none on its left, and body rows have no
+vertical dividers.
+
+The selection box's right edge sits `--size-list-checkbox-inset` inside the
+leading pair. In the header it is centred; in a body row its top is
+`--size-list-checkbox-offset` below the row.
+
 Empty `records`: the header and footer stay, the badge strip and the checkboxes
 are omitted, and the two leading cells remain. The first body band shows
-`emptyMessage`, centered. The horizontal scroller is then a tab stop, because
-the empty page has no other focusable control inside it.
+`emptyMessage`, centred horizontally and inset from the top of the band. The
+horizontal scroller is then a tab stop, because the empty page has no other
+focusable control inside it, and only then does that scroller have an
+accessible name.
 
 ## CellValue
 
@@ -81,18 +95,20 @@ as its id. None of those become links.
 | `nextHref` | Address for Next. Ignored when `moreRecords` is false. |
 
 The range is `(page - 1) * pageSize + 1` through that start plus `recordCount - 1`.
-An empty page shows **0 to 0**. The endpoints and the total use
-`--font-weight-semibold`. The word "to" stays at normal weight. Previous and
-Next are links in the body colour; a disabled control is text in
-`--color-text-disabled` and is not a link. On a single page both are disabled.
+The right-hand order is previous chevron, range, next chevron. The controls are
+icon-only; Previous and Next are accessible names. The endpoints and the total
+use `--font-weight-semibold` in the body colour. The word "to" stays at normal
+weight in `--color-text-muted`. An enabled control is a link in the body
+colour; a disabled control uses `--color-text-disabled` and is not a link. On a
+single page both are disabled. A page with no records shows only the total.
 
 ## States in `/dev/ui`
 
 The `record-table` demo uses synthetic values (`Lead 001`, `example.org`):
 
-- Populated records, single page, both controls disabled.
-- Wrapped records, one long name and email, the row grows.
-- Empty records, total 0, the empty message, no badge and no checkboxes.
+- Populated records: single-line rows, one row whose company wraps, both controls disabled.
+- Wrapped records, one long name and email, the row grows past two lines.
+- Empty records, total 0, the empty message, no badge, no checkboxes, no range.
 - Later page, Previous and Next both enabled.
 
 ## Known deviations
@@ -108,17 +124,18 @@ Also:
   box sits at the trailing end of the second cell.
 - The badge strip is blank. The activity ribbon belongs to a later module.
 - The checkbox is the existing primitive. Its measured size is out of scope.
-- Footer padding uses the 12px cell inset. The gap between the range and the
-  controls uses the 12px spacing step. Neither distance is measured in the spec.
-- The empty message uses ordinary cell text. The spec does not measure that
-  line's type. The words themselves are a prop; the module-specific sentence
-  belongs to the page that composes this table.
+- The empty message words are a prop. The module-specific sentence belongs to
+  the page that composes this table.
 - Picklist display values come from the field's published options. The spec
   does not describe that formatting.
 - Phone and every type that is not a row link or an email stay plain text.
 - Footer emphasis uses `--font-weight-semibold`. The spec says "bold" and the
   type scale has no separate bold token.
-- The settings menu is not drawn. The trailing cell is a slot.
+- The enabled pagination chevron was not observed. It uses the body colour.
+- A view with fewer columns was measured near 204px. Column width stays 200px.
+- Figtree changes the measured advance of some labels. The largest recorded
+  difference is 2px (`research/specs/typography.md`).
+- The settings menu is not drawn. The header overlay is a slot.
 - A partially selected page does not draw an indeterminate header box. Partial
   selection was not observed; the header box is checked only when every row on
   the page is selected.

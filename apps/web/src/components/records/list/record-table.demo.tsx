@@ -90,6 +90,7 @@ function row(
 const shortRecords = [
   row("rec-001", "Lead 001", "Example Co"),
   row("rec-002", "Lead 002", "Example Org", "lead002@example.org"),
+  row("rec-003", "Lead 003", "Wrapped Example Trading Partners", "lead003@example.org"),
 ];
 
 const longRecords = [
@@ -105,7 +106,7 @@ export default function RecordTableDemo() {
   return (
     <div className="space-y-8">
       <section aria-label="Populated records">
-        <Demo records={shortRecords} wrapText={false} total={2} page={1} moreRecords={false} />
+        <Demo records={shortRecords} wrapText total={3} page={1} moreRecords={false} />
       </section>
       <section aria-label="Wrapped records">
         <Demo records={longRecords} wrapText total={1} page={1} moreRecords={false} />

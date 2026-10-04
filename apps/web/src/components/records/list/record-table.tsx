@@ -45,25 +45,24 @@ const badgeColumn = [
   "max-w-(--size-list-badge-width) bg-surface p-0",
 ].join(" ");
 
-const settingsColumn = [
-  "box-border w-(--size-list-settings-width) min-w-(--size-list-settings-width)",
-  "max-w-(--size-list-settings-width) bg-surface p-0",
-].join(" ");
-
 const headerBox = [
-  "h-(--size-list-header-height) overflow-hidden border-b-(length:--size-list-header-border)",
-  "border-b-panel-border text-left align-middle text-sm font-medium text-text-strong",
+  "relative h-(--size-list-header-height) overflow-hidden",
+  "border-b-(length:--size-list-header-border) border-b-panel-border",
+  "text-left align-middle text-sm font-medium text-text-strong",
 ].join(" ");
 
-const headerRule = "border-l border-l-panel-border";
-
-const bodyBox = "border-b border-b-row-separator align-middle text-sm font-normal text-text";
+const bodyBox = "border-b border-b-row-separator align-top text-sm font-normal text-text";
 
 const inset = "ps-(--size-list-cell-inset)";
 
+const cellLine = [
+  "flex w-full items-start py-(--size-list-row-pad)",
+  "leading-(--size-list-line-height)",
+].join(" ");
+
 /**
- * Module-agnostic records table: leading pair, optional badge strip, data
- * columns and a trailing settings cell. The data area scrolls horizontally.
+ * Module-agnostic records table: leading pair, optional badge strip and data
+ * columns. The data area scrolls horizontally. View Settings is a header overlay.
  */
 export function RecordTable({
   columns,
@@ -83,7 +82,7 @@ export function RecordTable({
   const selected = new Set(selectedIds);
   const pageIds = records.map((record) => record.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
-  const columnCount = 2 + (empty ? 0 : 1) + columns.length + 1;
+  const emptyColumnCount = 2 + columns.length;
 
   function changePage(checked: boolean) {
     const next = new Set(selectedIds);
@@ -104,10 +103,10 @@ export function RecordTable({
   return (
     <div
       data-part="card"
-      className="max-w-full overflow-hidden rounded-md border border-panel-border bg-surface"
+      className="relative max-w-full overflow-hidden rounded-md border border-panel-border bg-surface"
     >
       <section
-        aria-label="Records"
+        aria-label={empty ? "Records" : undefined}
         className={`overflow-x-auto ${
           empty ? "outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" : ""
         }`}
@@ -133,7 +132,7 @@ export function RecordTable({
                   data-part="leading"
                   className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-20`}
                 >
-                  <div className="flex h-full items-center justify-end pe-(--size-list-cell-inset)">
+                  <div className="flex h-full items-center justify-end pe-(--size-list-checkbox-inset)">
                     <SelectionBox
                       label="Select all rows on this page"
                       isSelected={allSelected}
@@ -156,33 +155,29 @@ export function RecordTable({
                   key={field.apiName}
                   scope="col"
                   data-part="column"
-                  className={`${dataColumn} ${headerBox} ${headerRule}`}
+                  className={`${dataColumn} ${headerBox}`}
                 >
                   <div className={`flex h-full items-center overflow-hidden ${inset}`}>
                     <span data-part="header-label" className="min-w-0 truncate">
                       {field.label}
                     </span>
                   </div>
+                  <span
+                    data-part="divider"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-(--size-list-header-rule-offset) right-0 h-(--size-list-header-rule) w-px bg-panel-border"
+                  />
                 </th>
               ))}
-              <th
-                scope="col"
-                data-part="settings"
-                className={`${settingsColumn} ${headerBox} ${headerRule} sticky right-0 z-20`}
-              >
-                <div className="flex h-full items-center justify-center">
-                  {settings ?? <span className="sr-only">View settings</span>}
-                </div>
-              </th>
             </tr>
           </thead>
           <tbody>
             {empty ? (
               <tr data-part="row">
-                <td colSpan={columnCount} className={bodyBox}>
+                <td colSpan={emptyColumnCount} className={bodyBox}>
                   <div
                     data-part="empty"
-                    className="flex min-h-(--size-list-row-height) items-center justify-center text-center"
+                    className="pt-(--size-list-empty-offset) pb-(--size-list-row-pad) text-center text-text-empty leading-(--size-list-line-height)"
                   >
                     {emptyMessage}
                   </div>
@@ -199,7 +194,7 @@ export function RecordTable({
                     data-part="leading"
                     className={`${halfLeading} ${bodyBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-10`}
                   >
-                    <div className="flex min-h-(--size-list-row-height) items-center justify-end pe-(--size-list-cell-inset)">
+                    <div className="flex justify-end pe-(--size-list-checkbox-inset) pt-(--size-list-checkbox-offset)">
                       <SelectionBox
                         label={selectionLabel(record, linkField)}
                         isSelected={selected.has(record.id)}
@@ -210,24 +205,20 @@ export function RecordTable({
                   <td
                     data-part="badge"
                     className={`${badgeColumn} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
-                  >
-                    <div className="min-h-(--size-list-row-height)" />
-                  </td>
+                  />
                   {columns.map((field) => (
                     <td
                       key={field.apiName}
                       data-part="column"
                       className={`${dataColumn} ${bodyBox}`}
                     >
-                      <div
-                        className={`flex min-h-(--size-list-row-height) w-full items-center ${inset} ${
-                          wrapText ? "" : "overflow-hidden"
-                        }`}
-                      >
+                      <div className={`${cellLine} ${inset} ${wrapText ? "" : "overflow-hidden"}`}>
                         <div
                           data-part="value"
                           className={
-                            wrapText ? "min-w-0 whitespace-normal break-words" : "min-w-0 truncate"
+                            wrapText
+                              ? "min-h-(--size-list-line-height) min-w-0 whitespace-normal break-words"
+                              : "min-h-(--size-list-line-height) min-w-0 truncate"
                           }
                         >
                           <CellValue
@@ -241,18 +232,23 @@ export function RecordTable({
                       </div>
                     </td>
                   ))}
-                  <td
-                    data-part="settings"
-                    className={`${settingsColumn} ${bodyBox} sticky right-0 z-10`}
-                  >
-                    <div className="min-h-(--size-list-row-height)" />
-                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </section>
+      <div
+        data-part="settings"
+        className={[
+          "absolute top-0 right-0 z-30 box-border flex items-center justify-center bg-surface",
+          "h-(--size-list-header-height) w-(--size-list-settings-width)",
+          "border-l border-l-panel-border",
+          "border-b-(length:--size-list-header-border) border-b-panel-border",
+        ].join(" ")}
+      >
+        {settings ?? <span className="sr-only">View settings</span>}
+      </div>
       <RecordTableFooter {...footer} />
     </div>
   );
@@ -274,8 +270,8 @@ function SelectionBox({
   onChange: (isSelected: boolean) => void;
 }) {
   return (
-    <div className="w-fit [&_.text-sm]:sr-only [&>div]:w-fit">
-      <Checkbox label={label} isSelected={isSelected} onChange={onChange} />
+    <div data-part="checkbox" className="w-fit">
+      <Checkbox hideLabel label={label} isSelected={isSelected} onChange={onChange} />
     </div>
   );
 }

@@ -20,7 +20,15 @@ function footer(overrides: Partial<RecordTableFooterProps> = {}) {
   );
 }
 
-test("shows the total and a bold range for the current page", () => {
+function parts() {
+  const footer = document.querySelector("[data-part=footer]");
+  return [
+    ...(footer?.querySelectorAll("[data-part=previous], [data-part=range], [data-part=next]") ??
+      []),
+  ].map((element) => element.getAttribute("data-part"));
+}
+
+test("shows the total and a bold range, with the previous control before the range", () => {
   footer({ total: 24, page: 2, pageSize: 10, recordCount: 10, moreRecords: true });
 
   expect(screen.getByText("Total Records")).toBeTruthy();
@@ -30,26 +38,49 @@ test("shows the total and a bold range for the current page", () => {
   const ends = range?.querySelectorAll("[data-part=range-end]") ?? [];
   expect(ends).toHaveLength(2);
   for (const end of ends) expect(end.className).toContain("font-semibold");
+  expect(document.querySelector("[data-part=range-to-word]")?.className ?? "").toContain(
+    "text-text-muted",
+  );
   expect(document.querySelector("[data-part=range-to-word]")?.className ?? "").not.toContain(
     "font-semibold",
   );
+  expect(parts()).toEqual(["previous", "range", "next"]);
+  expect(screen.queryByText("Previous")).toBeNull();
+  expect(screen.queryByText("Next")).toBeNull();
 });
 
-test("omits the number when the total has not arrived and shows an empty range", () => {
+test("omits the number, the range and the controls when nothing is on the page", () => {
   footer({ total: null, recordCount: 0 });
 
   expect(screen.getByText("Total Records")).toBeTruthy();
   expect(document.querySelector("[data-part=total-value]")).toBeNull();
-  expect(document.querySelector("[data-part=range]")?.textContent).toBe("0 to 0");
+  expect(document.querySelector("[data-part=range]")).toBeNull();
+  expect(document.querySelector("[data-part=previous]")).toBeNull();
+  expect(document.querySelector("[data-part=next]")).toBeNull();
 });
 
-test("disables both controls on a single page", () => {
+test("shows only the total when the page has no records", () => {
+  footer({ total: 0, recordCount: 0 });
+
+  expect(screen.getByText("Total Records")).toBeTruthy();
+  expect(screen.getByText("0")).toBeTruthy();
+  expect(document.querySelector("[data-part=range]")).toBeNull();
+  expect(document.querySelector("[data-part=previous]")).toBeNull();
+});
+
+test("disables both controls on a single page without visible names", () => {
   footer();
 
-  expect(screen.getByText("Previous").closest("[aria-disabled=true]")).toBeTruthy();
-  expect(screen.getByText("Next").closest("[aria-disabled=true]")).toBeTruthy();
+  const previous = document.querySelector("[data-part=previous] [data-part=chevron]");
+  const next = document.querySelector("[data-part=next] [data-part=chevron]");
+  expect(previous?.getAttribute("aria-disabled")).toBe("true");
+  expect(previous?.getAttribute("aria-label")).toBe("Previous");
+  expect(next?.getAttribute("aria-disabled")).toBe("true");
+  expect(next?.getAttribute("aria-label")).toBe("Next");
   expect(screen.queryByRole("link", { name: "Previous" })).toBeNull();
   expect(screen.queryByRole("link", { name: "Next" })).toBeNull();
+  expect(screen.queryByText("Previous")).toBeNull();
+  expect(screen.queryByText("Next")).toBeNull();
 });
 
 test("enables only the directions that have an address", () => {

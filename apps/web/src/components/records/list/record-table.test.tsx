@@ -86,6 +86,9 @@ test("exposes the table, column headers and row links", () => {
   );
 
   expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+  expect(screen.queryByRole("region", { name: "Records" })).toBeNull();
+  expect(document.querySelector("[data-part=row] [data-part=settings]")).toBeNull();
+  expect(document.querySelector("[data-part=settings]")).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
@@ -136,19 +139,23 @@ test("selects the page from the header box and one row from its box, including t
   expect(header.checked).toBe(true);
 });
 
-test("empty state keeps the header and footer, drops the badge and checkboxes, and centers the message", () => {
+test("empty state keeps the header and footer, drops the badge and checkboxes, and names the scroller", () => {
   render(<Harness records={[]} emptyMessage="No records found." />);
 
   expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(screen.getByRole("region", { name: "Records" })).toBeTruthy();
   expect(screen.getByText("Total Records")).toBeTruthy();
+  expect(screen.getByText("0")).toBeTruthy();
   expect(screen.getByText("No records found.")).toBeTruthy();
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(document.querySelector("[data-part=badge]")).toBeNull();
+  expect(document.querySelector("[data-part=range]")).toBeNull();
+  expect(document.querySelector("[data-part=previous]")).toBeNull();
   expect(document.querySelectorAll("[data-part=header] [data-part=leading]")).toHaveLength(2);
   expect(document.querySelector("[data-part=empty]")?.textContent).toBe("No records found.");
-  expect(
-    document.querySelector("[data-part=card] .overflow-x-auto")?.getAttribute("tabindex"),
-  ).toBe("0");
+  const scroller = document.querySelector("[data-part=card] .overflow-x-auto");
+  expect(scroller?.getAttribute("tabindex")).toBe("0");
+  expect(scroller?.getAttribute("aria-label")).toBe("Records");
 });
 
 test("renders the settings slot and keeps selection off the rest of the page", async () => {

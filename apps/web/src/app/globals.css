@@ -52,6 +52,7 @@
   --color-row-separator: var(--color-row-separator);
   --color-text-strong: var(--color-text-strong);
   --color-text-disabled: var(--color-text-disabled);
+  --color-text-empty: var(--color-text-empty);
 
   --color-monogram: var(--color-monogram);
   --color-avatar: var(--color-avatar);
