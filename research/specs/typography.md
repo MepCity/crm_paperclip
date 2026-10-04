@@ -177,7 +177,7 @@ The reference regular and semibold stems measure **1.46 / 1.69 CSS px**. Figtree
 | 590 | 1.90 | 0.60 | 2.00 |
 | 600 | 1.94 | 0.61 | 2.00 |
 
-At `wght` 510, Figtree’s semibold stem matches the reference to two decimals and the mean width error increases from 0.61 to 0.64 CSS px; the maximum remains 2.0 CSS px. `wght` 590 has the lowest mean width error, 0.60 CSS px, but its 1.90 CSS px stem is farther from the reference. The baseline remains 600; the implementation weight decision belongs to MEP-66.
+At `wght` 510, Figtree’s semibold stem matches the reference to two decimals and the mean width error increases from 0.61 to 0.64 CSS px; the maximum remains 2.0 CSS px. `wght` 590 has the lowest mean width error, 0.60 CSS px, but its 1.90 CSS px stem is farther from the reference. The comparison tables above use 600; the adopted weight is 510 (MEP-66, 2026-10-04).
 
 ## Recommendation
 
@@ -185,22 +185,22 @@ At `wght` 510, Figtree’s semibold stem matches the reference to two decimals a
 
 The second through fifth candidates differ in mean absolute width by only about 0.16 CSS px, below the 0.5 CSS px bitmap width step. Their backup order is therefore weakly determined by width; the score also accounts for the maximum error.
 
-Suggested Figtree values for an implementation trial (`letter-spacing: normal`):
+Adopted Figtree values (`letter-spacing: normal`). The board selected Figtree on 2026-10-04 (MEP-66). Bold weight is 510: at that weight the bold stem equals the reference's 1.69 CSS px, and the width error is 0.64 mean / 2.0 maximum CSS px.
 
 | Style | `font-size` | `font-weight` |
 | --- | ---: | ---: |
-| Product selector | 16px (provisional) | 600 |
-| Page title | 18.5px | 600 |
+| Product selector | 16px (provisional) | 510 |
+| Page title | 18.5px | 510 |
 | Rail fixed link | 14.5px | 400 |
-| Rail active link | 14.5px | 600 |
-| Teamspace selector | 16px (provisional) | 600 |
-| Group heading | 14.5px | 600 |
+| Rail active link | 14.5px | 510 |
+| Teamspace selector | 16px (provisional) | 510 |
+| Group heading | 14.5px | 510 |
 | Rail child link | 14.5px | 400 |
 | Rail Search placeholder | 14.5px | 400 |
 | Top-bar search placeholder | 13.5px | 400 |
 | Menu item | 14.5px | 400 |
 | Utility label | 8.5px | 400 |
-| Help utility label | 11.5px | 600 |
+| Help utility label | 11.5px | 510 |
 
 No font or application code is changed by this research task.
 
