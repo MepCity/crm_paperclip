@@ -68,9 +68,14 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
 
   const tooltip = page.getByRole("region", { name: "tooltip" });
   const tooltipTrigger = tooltip.getByRole("button", { name: "Account owner" });
-  // A scroll dismisses tooltips; finish scrolling before giving the trigger focus.
+  // Scrolling the trigger under a stationary pointer emits pointermove and
+  // leaves keyboard focus unable to open the tooltip. Scroll first, restore
+  // keyboard modality, then focus without scrolling again.
   await tooltipTrigger.scrollIntoViewIfNeeded();
-  await tooltipTrigger.focus();
+  await page.keyboard.press("Escape");
+  await tooltipTrigger.evaluate((element) => {
+    element.focus({ preventScroll: true });
+  });
   await expect(page.getByRole("tooltip")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("tooltip")).toBeHidden();
@@ -124,8 +129,13 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(page.getByRole("alertdialog", { name: "Record saved" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeVisible();
   await expect(danger).toBeFocused();
+  // The scan can outlast the notification lifetime. The three toasts are
+  // already visible above; requiring the first one to still be mounted
+  // afterwards races that lifetime and fails when the scan is slow.
   await expectNoA11yViolations(page);
-  await expect(page.getByRole("alertdialog", { name: "Export started" })).toBeVisible();
+  // A pointer resting on the toast pauses its timer. Park it clear of the
+  // region so auto-dismiss runs from whatever time is left.
+  await page.mouse.move(0, 0);
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeHidden({
     timeout: 7000,
   });
