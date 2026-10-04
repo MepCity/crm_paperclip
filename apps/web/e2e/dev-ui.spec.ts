@@ -65,7 +65,15 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(tabs.getByRole("tabpanel", { name: "Details" })).toBeVisible();
 
   const tooltip = page.getByRole("region", { name: "tooltip" });
-  await tooltip.getByRole("button", { name: "Account owner" }).focus();
+  const tooltipTrigger = tooltip.getByRole("button", { name: "Account owner" });
+  // Scrolling the trigger under a stationary pointer emits pointermove and
+  // leaves keyboard focus unable to open the tooltip. Scroll first, restore
+  // keyboard modality, then focus without scrolling again.
+  await tooltipTrigger.scrollIntoViewIfNeeded();
+  await page.keyboard.press("Escape");
+  await tooltipTrigger.evaluate((element) => {
+    element.focus({ preventScroll: true });
+  });
   await expect(page.getByRole("tooltip")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("tooltip")).toBeHidden();

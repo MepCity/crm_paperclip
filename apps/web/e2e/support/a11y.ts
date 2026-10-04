@@ -15,6 +15,30 @@ function formatTarget(target: AxeTarget): string {
   return target.map((part) => (typeof part === "string" ? part : part.join(" >>> "))).join(" >> ");
 }
 
+/**
+ * Contrast is read from the colours on screen. A fade still in progress
+ * composites text toward whatever sits behind it, so a resting pair that
+ * passes 4.5:1 can fail mid-animation. Infinite animations, such as a
+ * spinner, never finish and are left running.
+ */
+async function waitForFiniteAnimations(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const settling = () =>
+      document.getAnimations().filter((animation) => {
+        if (animation.playState !== "running") return false;
+        const timing = animation.effect?.getComputedTiming();
+        if (!timing || timing.iterations === Infinity) return false;
+        return typeof timing.duration !== "number" || Number.isFinite(timing.duration);
+      });
+
+    let batch = settling();
+    while (batch.length > 0) {
+      await Promise.all(batch.map((animation) => animation.finished.catch(() => undefined)));
+      batch = settling();
+    }
+  });
+}
+
 function formatViolations(violations: AxeViolations): string {
   return violations
     .map((violation) => {
@@ -37,6 +61,7 @@ export async function expectNoA11yViolations(
   page: Page,
   options?: A11yCheckOptions,
 ): Promise<void> {
+  await waitForFiniteAnimations(page);
   const builder = new AxeBuilder({ page }).withTags(WCAG_21_A_AND_AA);
   for (const selector of options?.exclude ?? []) {
     builder.exclude(selector);
