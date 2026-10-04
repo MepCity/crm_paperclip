@@ -204,6 +204,82 @@ Adopted Figtree values (`letter-spacing: normal`). The board selected Figtree on
 
 No font or application code is changed by this research task.
 
+## List and detail text roles
+
+The measurements below use only existing local captures. They extend the Method above: 2 image pixels equal 1 CSS px; the same 50% relative foreground-to-background threshold defines **visible ink**, not a DOM advance box. Cap and x-height are the vertical ink spans of isolated uppercase and x-height lowercase glyphs. Generic-label widths in the evidence column are inclusive first-to-last **ink widths in CSS px**, in label order; no DOM widths are reported. Straight lowercase `l` stems use normalized coverage averaged through the middle 45–65% of that glyph, in CSS px. Record, owner, and event values contribute heights and stems only; their strings and widths are excluded.
+
+For an estimated role, Figtree was rendered at 0.5 px size steps within the estimate ±2 px, at the estimated regular/medium/semibold starting weight (400/500/600). Sizes whose cap and x-height were each within 0.5 CSS px of the capture were eligible. Among eligible sizes, the smallest mean absolute generic-label ink-width error won; ties used summed height error, then smaller size. Where a role had no size estimate, an initial 10–23 px glyph scan located the height band, followed by three adjacent 0.5 px sizes. A value-only role has no eligible label width, so height error and then the smaller size choose its provisional size. At the selected size, `wght` 400–600 was scanned in steps of 10 and the nearest measured `l` stem chosen. A boundary value of 600 remains a lower bound when its stem is still thinner than the capture. All numeric heights, widths, and stems below are CSS px. `Suggested token` names refer to **size** tokens already present in `tokens.css`; the weight values are research recommendations, not implemented tokens.
+
+| Role | Spec estimate | Measured cap / x height | Figtree font-size | `wght` (reference → Figtree `l` stem) | Suggested token | Evidence (capture slug, generic labels / ink widths) |
+| --- | --- | --- | ---: | --- | --- | --- |
+| List view tab | ~13 / semibold | 9.5 / 7 | 13.5 | 590 (1.62 → 1.61) | `--text-sm` | `list-default`, `list-converted` (2; 54.5, 104) |
+| List toolbar Filter / Sort | ~14 / medium | 10–10.5 / 7.5 | 14.5 | 590 (1.74 → 1.74) | `--text-md` | `list-default` (2; 32, 26.5) |
+| List primary button | ~14 / unspecified | 10 / 7.5 | 14 | not measurable: no isolated `l` in label | new value needed: 14px | `list-default` (1; 77) |
+| Filter panel title | ~15 / semibold | 10 / 7.5 | 14.5 | 570 (1.69 → 1.69) | `--text-md` | `list-default` (1; 95) |
+| Filter group heading | ~14 / semibold | 11 / 8 | 15.5 | 600, scan ceiling (2.06 → 1.88) | new value needed: 15.5px | `list-default` (1 unclipped; 102); clipped heading used for height only |
+| Filter checkbox row | ~14 / regular | 10–10.5 / 7.5 | 14.5 | 410 (1.32 → 1.32) | `--text-md` | `list-default` (3; 59, 73.5, 120.5) |
+| Table column header | ~14 / medium | 10–10.5 / 7.5 | 14.5 | 400 (1.32 → 1.32) | `--text-md` | `list-default` (3; 71.5, 63, 33.5) |
+| Table cell value | ~14 / regular | 10 / 7.5 | 14 (height only) | not measurable: permitted value crop has no isolated `l` | new value needed: 14px | `list-default` (2 value crops; widths omitted) |
+| Footer fixed label | ~13 / unspecified | 10 / 7.5 | 14.5 | 400 (1.31 → 1.30) | `--text-md` | `list-default` (1; 87) |
+| Footer connector `to` | ~13 / unspecified | not measurable: no capital; adjacent endpoints enter the crop | not measurable | not measurable | not measurable | `list-default` (1 attempted) |
+| Filter search placeholder | unspecified | 10.5 / 7.5 | 14.5 | not measurable: no isolated `l` | `--text-md` | `list-default` (1; 43.5) |
+| Empty-list message | unspecified | 10 / 7.5 | 14.5 | not measurable: no isolated `l` | `--text-md` | `list-converted` (1; 103.5) |
+| Record title value | 18.5 / 600 candidate | 14.5 / 11 | 20.5 (height only) | not measurable: no safe isolated `l` in the value crop | new value needed: 20.5px | `detail-main` (1 value crop; width omitted) |
+| Record primary command | unspecified | 10.5 / 7.5 | 14.5 | 550 (1.80 → 1.84) | `--text-md` | `detail-main` (1; 71.5) |
+| Record secondary button | unspecified | 10.5 / 7.5 | 14.5 | not measurable: no isolated `l` | `--text-md` | `detail-main` (1; 52.5) |
+| Related-list rail heading | 14.5 / 600 candidate | 11 / 8 | 15.5 | 560 (1.78 → 1.78) | new value needed: 15.5px | `detail-main` (1; 81.5) |
+| Related-list rail row | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | not measurable: sampled rows have no isolated `l` | `--text-md` | `detail-main` (2; 36.5, 128.5) |
+| Selected Overview tab | unspecified | 11.5 / 8 | 15.5 | not measurable: no isolated `l` | new value needed: 15.5px | `detail-main` (1; 65.5) |
+| Inactive Timeline tab | unspecified | 11 / 8 | 15.5 | 420 (1.44 → 1.44) | new value needed: 15.5px | `detail-main` (1; 58.5) |
+| Status stage value | unspecified | 9.5 / 7 | 13.5 (height only) | not measurable: no isolated lowercase `l` | `--text-sm` | `detail-main` (1 value crop; width omitted) |
+| Business/details field label | 14.5 / 400 candidate | 10 / 7.5 | 14.5 | 420 (1.41 → 1.40) | `--text-md` | `detail-main` (2; 77, 33.5) |
+| Business/details field value | unspecified | 10 / 7.5 | 14 (height only) | not measurable: no isolated `l` in permitted value crops | new value needed: 14px | `detail-main` (2 value crops; widths omitted) |
+| Details divider heading | unspecified | 11 / 8 | 15.5 | 600, scan ceiling (2.06 → 1.89) | new value needed: 15.5px | `detail-main` (1; 84.5) |
+| Details subsection heading | unspecified | 10 / 7.5 | 15 | not measurable: no isolated `l` | new value needed: 15px | `detail-main` (1; 112.5) |
+| Header tag command | unspecified | not measurable: tag icon overlaps the available label crop | not measurable | not measurable | not measurable | `detail-main` (1 attempted) |
+| Header recency text | unspecified | 9.5 / 7 | 14 | not measurable: no isolated `l` in fixed prefix | new value needed: 14px | `detail-main` (1 fixed prefix; 76.5) |
+| Timeline active subtab | 14.5 / 600 candidate | 11 / 8.5 | 15 | not measurable: no isolated `l` | new value needed: 15px | `detail-timeline-filter` (1; 48.5) |
+| Timeline inactive subtab | 14.5 / 600 candidate | 11 / 8 | 15.5 | not measurable: no isolated `l` | new value needed: 15.5px | `detail-timeline-filter` (1; 81.5) |
+| Timeline heading | unspecified | 11 / 8 | 15.5 | 600, scan ceiling (2.01 → 1.90) | new value needed: 15.5px | `detail-timeline-filter` (1; 116) |
+| Timeline filter label | unspecified | 10–10.5 / 7.5 | 14.5 | 410 (1.32 → 1.33) | `--text-md` | `detail-timeline-filter` (2; 54, 52) |
+| Timeline filter selected text | unspecified | 10 / 7.5 | 14.5 | 400 (1.38 → 1.40) | `--text-md` | `detail-timeline-filter` (1; 74) |
+| Disabled Apply Filter button | unspecified | 10 / 7.5 | 14.5 | 400 (1.50 → 1.50) | `--text-md` | `detail-timeline-filter` (1; 74) |
+| Timeline event title value | unspecified | 10 / 7.5 | 14 (height only) | not measurable: no safe isolated `l` | new value needed: 14px | `detail-timeline-filter` (1 value crop; width omitted) |
+| Timeline date, time, byline | unspecified | not measurable: date/time lack a cap/x pair; byline mixes a clipped value and date | not measurable | not measurable | not measurable | `detail-timeline-filter` (3 attempted value crops; widths omitted) |
+| Interactions heading | unspecified | 11 / 8 | 15.5 | not measurable: no isolated `l` | new value needed: 15.5px | `detail-interactions` (1; 158.5) |
+| Interactions legend | unspecified | 9.5 / 7 | 14 | 400 (1.29 → 1.30) | new value needed: 14px | `detail-interactions` (2; 43, 73) |
+| Interactions empty text | unspecified | 9.5 / 7 | 13.5 | 400 (1.31 → 1.30) | `--text-sm` | `detail-interactions` (1; 99.5) |
+| More Options menu | 14.5 / 400 candidate | 10.5 / 7.5 | 14.5 | 460 (1.43 → 1.43) | `--text-md` | `detail-more` (2; 37.5, 36) |
+| Create form title | 18.5 / 600 candidate | 14.5 / 11 | 20.5 | not measurable: no isolated lowercase `l` | new value needed: 20.5px | `detail-create` (1; 113) |
+| Create form button | unspecified | 10–10.5 / 7.5 | 14.5 | 530 (1.59 → 1.60) | `--text-md` | `detail-create` (2; 30, 44.5) |
+| Create form section heading | 14.5 / 600 candidate | 10 / 7.5 | 14.5 | not measurable: sampled headings have no isolated lowercase `l` | `--text-md` | `detail-create` (2; 112.5, 76) |
+| Create form field label | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | 410 (1.36 → 1.38) | `--text-md` | `detail-create` (2; 62.5, 33) |
+| Filled form value | unspecified | 10 / not measurable: sampled value is uppercase | 14 (height only) | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-create` (1 value crop; width omitted) |
+| Empty form picklist text | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-create` (1; 42.5) |
+| Selected dropdown option | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-create-salutation-panel` (1; 44.5) |
+| Ordinary dropdown option value | unspecified | 10 / 7.5 | 14 (height only) | 430 (1.31 → 1.31) | new value needed: 14px | `detail-create-country` (1 value crop; width omitted) |
+| Owner picker primary value | unspecified | 10 / not measurable: uppercase only | 14 (height only) | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-create-owner-panel` (1 value crop; width omitted) |
+| Owner picker secondary value | unspecified | not measurable: clipped text overlaps the row boundary | not measurable | not measurable | not measurable | `detail-create-owner-panel` (1 attempted value crop; width omitted) |
+| Select User dialog title | unspecified | 14.5 / 11 | 21 | 600, scan ceiling (2.71 → 2.58) | new value needed: 21px | `detail-create-owner` (1; 107) |
+| Select User table header | unspecified | 10 / 7.5 | 14.5 | 530 (1.61 → 1.60) | `--text-md` | `detail-create-owner` (2; 70.5, 27.5) |
+| Select User summary label | unspecified | 10.5 / 7.5 | 14.5 | 410 (1.37 → 1.37) | `--text-md` | `detail-create-owner` (1; 92.5) |
+| Select User search placeholder | unspecified | 10.5 / 7.5 | 14 | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-create-owner` (1; 83) |
+| Select User footer button | unspecified | 10.5 / 7.5 | 14.5 | 520 (1.56 → 1.58) | `--text-md` | `detail-create-owner` (2; 34, 43.5) |
+| Related-list card heading | unspecified | 11 / 8 | 15 | not measurable: no isolated lowercase `l` | new value needed: 15px | `detail-notes-card` (1; 40.5) |
+| Related-list card action | unspecified | 9.5 / 7 | 13 | not measurable: no isolated lowercase `l` | `--text-13` | `detail-attachments-card` (1; 39.5) |
+| Related-list input placeholder | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-notes-card` (1; 69) |
+| Related-list empty message | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` | new value needed: 14px | `detail-notes-card` (1; 110.5) |
+| Related-list loading message | unspecified | 10 / 7.5 | 15 | not measurable: no isolated lowercase `l` | new value needed: 15px | `detail-notes-card` (1; 64.5) |
+
+The labels previously estimated as **medium** do not establish a distinct intermediate weight: at 14.5 px the toolbar `l` is 1.74 CSS px (Figtree 590), the semibold filter title is 1.69 CSS px (570), while the column-header `l` is 1.32 CSS px (400).
+
+### Open questions for list and detail typography
+
+- The 600 ceiling still undershoots the filter-group, details-divider, timeline-heading, and dialog-title stems by 0.11–0.18 CSS px. A wider weight scan would be needed before naming an exact weight token; 600 is only the best weight **within this task's 400–600 scan**.
+- The list footer connector and record tag command need an isolated, generic-label crop before a defensible cap/x-height and width fit. The existing captures do not separate them from adjacent content.
+- Record and owner values without an isolated lowercase `l` support height-only sizes. Their weights remain unmeasured; no customer string or width is retained here.
+- The body roles vary between 13 and 15 px and the headings between 14.5 and 21 px. A token change should use these role-specific sizes rather than the older ~13/14/15 or blanket 14.5 estimates.
+
 ## Open questions
 
 - The loaded reference family, number of source weights, and static/variable format remain not determinable from capture. A static-file listing in a JSON response is insufficient evidence of loading.
