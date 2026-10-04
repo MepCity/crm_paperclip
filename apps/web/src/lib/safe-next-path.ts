@@ -3,8 +3,9 @@
  *
  * A value is accepted only when it starts with a single "/", contains no
  * ASCII control character and no backslash, and resolves to the same origin
- * as a fixed base. The result is the resolved path, query, and hash.
- * Anything else becomes "/".
+ * as a fixed base. A resolved pathname that starts with "//" is rejected:
+ * browsers read that result as a protocol-relative URL. The result is the
+ * resolved path, query, and hash. Anything else becomes "/".
  */
 const SAFE_NEXT_BASE = "https://app.test";
 
@@ -30,7 +31,7 @@ export function safeNextPath(value: string | null | undefined): string {
   } catch {
     return "/";
   }
-  if (url.origin !== SAFE_NEXT_BASE) {
+  if (url.origin !== SAFE_NEXT_BASE || url.pathname.startsWith("//")) {
     return "/";
   }
   return `${url.pathname}${url.search}${url.hash}`;

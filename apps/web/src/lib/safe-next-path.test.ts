@@ -68,6 +68,72 @@ it("returns the resolved path rather than the raw input", () => {
   expect(safeNextPath("/dev/./ui?tab=form#menu")).toBe("/dev/ui?tab=form#menu");
 });
 
+it("rejects a resolved pathname that starts with a double slash", () => {
+  expect(safeNextPath("/.//example.org")).toBe("/");
+  expect(safeNextPath("/..//example.org")).toBe("/");
+  expect(safeNextPath("/%2e//example.org")).toBe("/");
+  expect(safeNextPath("/%2E%2e//example.org")).toBe("/");
+  expect(safeNextPath("/dev/..//example.org")).toBe("/");
+  expect(safeNextPath("/././/example.org/path?x=1")).toBe("/");
+});
+
+it("keeps a double slash that is not at the start of the resolved path", () => {
+  expect(safeNextPath("/dev//ui")).toBe("/dev//ui");
+  expect(safeNextPath("/dev/ui?from=https://example.org//a")).toBe(
+    "/dev/ui?from=https://example.org//a",
+  );
+});
+
+const nextPathInputs = [
+  "/",
+  "/dev/ui",
+  "",
+  null,
+  undefined,
+  "https://example.org",
+  "https://example.org/dev/ui",
+  "//example.org",
+  "//example.org/dev/ui",
+  "/\\example.org",
+  "/\\example.org/dev/ui",
+  "javascript:alert(1)",
+  "mailto:person@example.test",
+  "/dev/ui?tab=form#menu",
+  "/dev/ui?next=https://example.org#section",
+  "/\t/example.org",
+  "/\n/example.org",
+  "/\r/example.org",
+  "/\t\\example.org",
+  "\t/dev/ui",
+  "/dev/\tui",
+  "\n/dev/ui",
+  "/dev/\nui",
+  "\r/dev/ui",
+  "/dev/\rui",
+  "/dev/ui\\secret",
+  "/dev/\u007Fui",
+  "/dev/../ui",
+  "/dev/./ui?tab=form#menu",
+  "/.//example.org",
+  "/..//example.org",
+  "/%2e//example.org",
+  "/%2E%2e//example.org",
+  "/dev/..//example.org",
+  "/././/example.org/path?x=1",
+  "/dev//ui",
+  "/dev/ui?from=https://example.org//a",
+] as const;
+
+it("stays on this origin for every input used in this file", () => {
+  for (const input of nextPathInputs) {
+    const result = safeNextPath(input);
+    expect(result.startsWith("/")).toBe(true);
+    expect(result.startsWith("//")).toBe(false);
+    expect(new URL(result, "https://app.test").origin).toBe("https://app.test");
+    expect(safeNextPath(result)).toBe(result);
+  }
+});
+
 it("reads the first next query value and drops an unsafe one", () => {
   expect(readNextParam("/dev/ui")).toBe("/dev/ui");
   expect(readNextParam(["/dev/ui", "/sign-up"])).toBe("/dev/ui");
