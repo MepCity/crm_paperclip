@@ -14,7 +14,8 @@ is not session state. Only this wrapper, its tests and this document know that n
    organization or a user who is not a member is `404`.
 
 The handler receives `{ ctx, request, params, query }`. A query key it does not read
-is ignored. Repeated keys keep the first value.
+is ignored. Repeated keys keep the first value. Static routes receive an empty
+`params` object when Next provides no route parameters.
 
 Return `null` for `204` with no body, or any other value for `200` JSON. Throw an
 `AppError` for an expected failure. Any other error is `500` with empty `details`;
@@ -29,16 +30,19 @@ A route file is the wrapper plus one service call. Do not read the session or th
 organization header there.
 
 ```ts
-import { ValidationError } from "@crm/core/errors";
-import { apiRoute } from "./server";
-import { getRecordService } from "../records";
+import { listMembers } from "@crm/core";
+import { apiRoute } from "@/lib/api/server";
+import { operations } from "@/lib/api/wire/operations";
+import { getRecordService } from "@/lib/records";
 
-export const POST = apiRoute<{ module: string }>(async ({ ctx, params, query }) => {
-  const viewId = query.cvid;
-  if (!viewId) throw new ValidationError({ cvid: ["Choose a view."] });
-  return { count: await getRecordService(ctx).count(params.module, { viewId }) };
-});
+export const dynamic = "force-dynamic";
+
+export const POST = apiRoute(async (input) => (
+  await operations.count.run({ records: getRecordService(input.ctx), members: await listMembers(input.ctx) }, input)
+).body);
 ```
 
-`POST /crm/v2.2/{module}/actions/count` is that pattern. `cvid` is required. The
-request body is not read.
+The count route now delegates to `operations.count`. The operation validates
+`cvid` (a missing value is keyed by the port's `viewId`) and optionally reads
+JSON `{ filters?, search? }`. Paths and methods are defined only by the inventory
+in `wire/operations.ts`; the browser can use `operationPath` to build URLs.

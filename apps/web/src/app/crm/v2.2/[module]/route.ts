@@ -8,7 +8,17 @@ export const dynamic = "force-dynamic";
 export const POST = apiRoute(
   async (input) =>
     (
-      await operations.count.run(
+      await operations.create.run(
+        { records: getRecordService(input.ctx), members: await listMembers(input.ctx) },
+        input,
+      )
+    ).body,
+);
+
+export const DELETE = apiRoute(
+  async (input) =>
+    (
+      await operations.delete.run(
         { records: getRecordService(input.ctx), members: await listMembers(input.ctx) },
         input,
       )

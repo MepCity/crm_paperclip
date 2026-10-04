@@ -100,7 +100,7 @@ apps/web/src/lib/api/client/                 fetch wrapper, HTTP record service,
 - `wire/` is free of framework and database imports and is shared by server and browser. An operation takes a decoded request and a `RecordService` and returns the wire response; a route handler is the wrapper plus one operation.
 - The browser's HTTP record service implements the `RecordService` port over `fetch` and the codec. Screens and components never call `fetch` and never build an API path; they use the hooks in `client/`. Component tests pass the fixture service.
 - **TanStack Query** is the client cache (deduplication, keeping the previous page while the next loads, invalidation after a write, cancellation). It is imported only in `lib/api/client`. This replaces "no client-side data-fetching library" in ADR 0003 §3 for these screens.
-- Handlers hold no business logic and no SQL (ADR 0001 §2). The port gains one optional member, `ListQuery.fields`: the column projection the reference sends as `fields` on the list request. Without it every field is returned.
+- Handlers hold no business logic and no SQL (ADR 0001 §2). The port gains one optional member, `ListQuery.fields`: a field projection. Without it every field is returned. On the wire, the reference's `fields` parameter does not restrict a row to its names: the same value is sent for every view and the rows also carry the view's columns (`research/specs/request-shapes.md`). The list operation therefore passes the view's columns plus the names in `fields` to the port.
 
 Verification:
 
