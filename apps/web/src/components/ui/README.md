@@ -21,8 +21,9 @@ This directory contains the headless-first design system components, built on `r
 Every token declared in `apps/web/src/app/tokens.css`, in file order, with the row it comes from. The
 **Visual layout** section of a spec is the only source of token values (ADR 0003, §2). Rows are
 quoted as `Region or element › Property › Value`; the colour and type summaries at the end of that
-section are quoted as `Colour summary` and `Type summary`. Until other screen specs arrive, every
-source row is in `research/specs/app-shell.md`.
+section are quoted as `Colour summary` and `Type summary`. Source rows are in `research/specs/app-shell.md`
+and `research/specs/list-views.md`. A list row is quoted by its element name. Detail and form
+specs are not incorporated yet.
 
 `Status` is `from spec` when the value is measured in that row and `not yet measured` when the specs
 do not measure it yet — those tokens keep the value they had in the skeleton and must not be
@@ -39,31 +40,31 @@ what the "no colour constants" rule forbids.
 
 | Token | Value | Spec file and Visual layout row | Status |
 | --- | --- | --- | --- |
-| `--color-bg` | `#eef1f9` | app-shell.md › Main content › Bounds and page surface › "Leads `#EEF1F9`" | from spec |
-| `--color-surface` | `#ffffff` | app-shell.md › Colour summary › "`#FFFFFF` › Top bar, Home main surface, utility strip, menu, active text approx." | from spec |
-| `--color-text` | `#313949` | app-shell.md › Colour summary › "`#313949` › Page title/menu text approx.; search dimmer source colour" | from spec |
+| `--color-bg` | `#eef1f9` | app-shell.md › Main content › Bounds and page surface › "Leads `#EEF1F9`"; list-views.md › Leads content canvas › "pale blue-gray `#EEF1F9`"; Surface and line colors › "Main canvas `#EEF1F9`" | from spec |
+| `--color-surface` | `#ffffff` | app-shell.md › Colour summary › "`#FFFFFF` › Top bar, Home main surface, utility strip, menu, active text approx."; list-views.md › Surface and line colors › "cards `#FFFFFF`"; Records table › "white `#FFFFFF`"; Table footer › "white" | from spec |
+| `--color-text` | `#313949` | app-shell.md › Colour summary › "`#313949` › Page title/menu text approx.; search dimmer source colour"; list-views.md › Text roles › "toolbar labels about 14 px medium `#313949`"; "ordinary cells about 14 px regular `#313949`" | from spec |
 | `--color-text-muted` | `#616e88` | app-shell.md › Colour summary › "`#616E88` › Top-bar line icons, approx." | from spec |
-| `--color-text-placeholder` | `#8c91ab` | app-shell.md › Colour summary › "`#8C91AB` › Global search placeholder, approx." | from spec |
+| `--color-text-placeholder` | `#8c91ab` | app-shell.md › Colour summary › "`#8C91AB` › Global search placeholder, approx."; list-views.md › Text roles › "Placeholder and subdued text `#8C91AB`" | from spec |
 | `--color-border` | `#ced0e1` | app-shell.md › Colour summary › "`#CED0E1` › More Actions menu edge and dividers" | from spec |
-| `--color-primary` | `#5464f2` | app-shell.md › Colour summary › "`#5464F2` › Sales folder icon, quick-create border, and open search outline" | from spec |
-| `--color-primary-text` | `#ffffff` | No measured text on a primary fill | not yet measured |
-| `--color-primary-hover` | `#1d4ed8` | No hover state was captured | not yet measured |
-| `--color-primary-pressed` | `#1e40af` | No pressed state was captured | not yet measured |
-| `--color-primary-subtle` | `#f0f1ff` | app-shell.md › Colour summary › "`#F0F1FF` › Quick-create button interior" | from spec |
-| `--color-danger` | `#b91c1c` | No destructive state in the app shell spec | not yet measured |
-| `--color-danger-text` | `#ffffff` | No destructive state in the app shell spec | not yet measured |
-| `--color-danger-hover` | `#991b1b` | No destructive state in the app shell spec | not yet measured |
-| `--color-danger-pressed` | `#7f1d1d` | No destructive state in the app shell spec | not yet measured |
-| `--color-success` | `#047857` | No success state in the app shell spec | not yet measured |
-| `--color-success-text` | `#ffffff` | No success state in the app shell spec | not yet measured |
-| `--color-success-hover` | `#065f46` | No success state in the app shell spec | not yet measured |
-| `--color-success-pressed` | `#064e3b` | No success state in the app shell spec | not yet measured |
-| `--color-warning` | `#92400e` | No warning state in the app shell spec | not yet measured |
-| `--color-warning-text` | `#ffffff` | No warning state in the app shell spec | not yet measured |
-| `--color-warning-hover` | `#78350f` | No warning state in the app shell spec | not yet measured |
-| `--color-warning-pressed` | `#652b0d` | No warning state in the app shell spec | not yet measured |
-| `--color-surface-hover` | `#f0f4fc` | app-shell.md › Colour summary › "`#F0F4FC` › Highlighted More Actions row" | from spec |
-| `--color-surface-pressed` | `#e5e7eb` | No pressed surface was captured | not yet measured |
+| `--color-primary` | `#5464f2` | app-shell.md › Colour summary › "`#5464F2` › Sales folder icon, quick-create border, and open search outline"; list-views.md › Selected / disabled › "glyph `#5464F2`" | from spec |
+| `--color-primary-text` | `#ffffff` | list-views.md › Create and action buttons › "white `#FFFFFF` label" | from spec |
+| `--color-primary-hover` | `#1d4ed8` | No hover state was captured. The list spec does not measure a primary hover either | not yet measured |
+| `--color-primary-pressed` | `#1e40af` | No pressed state was captured. The list spec does not measure a primary pressed state either | not yet measured |
+| `--color-primary-subtle` | `#f0f1ff` | app-shell.md › Colour summary › "`#F0F1FF` › Quick-create button interior"; list-views.md › Selected / disabled › "with fill `#F0F1FF`" | from spec |
+| `--color-danger` | `#b91c1c` | No destructive state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-danger-text` | `#ffffff` | No destructive state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-danger-hover` | `#991b1b` | No destructive state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-danger-pressed` | `#7f1d1d` | No destructive state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-success` | `#047857` | No success state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-success-text` | `#ffffff` | No success state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-success-hover` | `#065f46` | No success state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-success-pressed` | `#064e3b` | No success state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-warning` | `#92400e` | No warning state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-warning-text` | `#ffffff` | No warning state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-warning-hover` | `#78350f` | No warning state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-warning-pressed` | `#652b0d` | No warning state in the app shell spec. The list spec does not measure one either | not yet measured |
+| `--color-surface-hover` | `#f0f4fc` | app-shell.md › Colour summary › "`#F0F4FC` › Highlighted More Actions row"; list-views.md › Selected / disabled › "highlighted settings-menu row 250 × 30 px with fill `#F0F4FC`" | from spec |
+| `--color-surface-pressed` | `#e5e7eb` | No pressed surface was captured. The list spec does not measure a pressed surface either | not yet measured |
 | `--color-focus-ring` | `#5464f2` | app-shell.md › Global search input › Footprint › "Blue `#5464F2` outline is visible" | from spec |
 | `--color-overlay` | `#313949` | app-shell.md › Global search dimmer › Area and colour › "`#313949` at approx. 50% opacity" | from spec |
 | `--color-rail-surface` | `#223458` | app-shell.md › Colour summary › "`#223458` › Rail surface and empty local Search interior" | from spec |
@@ -88,34 +89,50 @@ what the "no colour constants" rule forbids.
 | `--color-accent-purple` | `#a247ea` | app-shell.md › Colour summary › "`#A247EA` › Functional accent colours in pinned-link icons" | from spec |
 | `--color-accent-amber` | `#f18e0a` | app-shell.md › Colour summary › "`#F18E0A` › Functional accent colours in pinned-link icons" | from spec |
 | `--color-accent-yellow` | `#e7b910` | app-shell.md › Colour summary › "`#E7B910` › Functional accent colours in pinned-link icons" | from spec |
+| `--color-panel-border` | `#dcdbee` | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`"; Table header and rows › "2 px `#DCDBEE` bottom border" and "1 px `#DCDBEE` vertical dividers"; Table footer › "two 1 px `#DCDBEE` lines" | from spec |
+| `--color-row-separator` | `#edf0f4` | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`"; Table header and rows › "1 px `#EDF0F4` separator" | from spec |
+| `--color-control-border` | `#c5c4d3` | list-views.md › Surface and line colors › "filter search outline and unchecked checkbox border `#C5C4D3`"; Selected / disabled › "2 px `#C5C4D3` border" | from spec |
+| `--color-button-border` | `#d5d8e9` | list-views.md › Create and action buttons › "1 px `#D5D8E9` border" | from spec |
+| `--color-button-gradient-start` | `#fefefe` | list-views.md › Create and action buttons › "light vertical gradient fill from `#FEFEFE` at top" | from spec |
+| `--color-button-gradient-end` | `#f2f1f8` | list-views.md › Create and action buttons › "to `#F2F1F8` at bottom" | from spec |
+| `--color-primary-gradient-start` | `#5767f6` | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top" | from spec |
+| `--color-primary-gradient-end` | `#154ec5` | list-views.md › Create and action buttons › "to `#154EC5` at bottom" | from spec |
+| `--color-primary-divider` | `#c3c8f4` | list-views.md › Create and action buttons › "1 px `#C3C8F4` divider" | from spec |
+| `--color-surface-selected` | `#f0f4fc` | list-views.md › Header and tab strip › "with 6 px corners and `#F0F4FC` fill" | from spec |
+| `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
+| `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
+| `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--font-sans` | system stack | app-shell.md › Visual layout introduction › "The type has a rounded humanist sans-serif feel with ordinary tracking; the exact font is not measurable from capture" | not yet measured |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
-| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label) | from spec |
-| `--font-weight-semibold` | `600` | app-shell.md › Type summary › "semibold" (Product selector, Page title, Rail active link, Teamspace selector, Group heading, Help utility label) | from spec |
+| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular" | from spec |
+| `--font-weight-medium` | `500` | list-views.md › Text roles › "toolbar labels about 14 px medium"; "column headers about 14 px medium" | from spec |
+| `--font-weight-semibold` | `600` | app-shell.md › Type summary › "semibold" (Product selector, Page title, Rail active link, Teamspace selector, Group heading, Help utility label); list-views.md › Text roles › "View tab about 13 px semibold"; Filter content › "about 15 px semibold" and "group headings about 14 px semibold" | from spec |
 | `--text-2xs` | `0.5rem` (8px) | app-shell.md › Type summary › "Utility label › approx. 8 px / regular" | from spec |
 | `--text-xs` | `0.75rem` (12px) | app-shell.md › Type summary › "Help utility label › approx. 12 px / semibold" | from spec |
-| `--text-sm` | `0.875rem` (14px) | app-shell.md › Type summary › "Top-bar search placeholder › approx. 14 px / regular" | from spec |
-| `--text-md` | `0.9375rem` (15px) | app-shell.md › Type summary › "approx. 15 px" (Rail fixed link, Rail active link, Group heading, Rail child link, Rail Search placeholder, Menu item) | from spec |
+| `--text-13` | `0.8125rem` (13px) | list-views.md › Text roles › "View tab about 13 px semibold"; Table footer › "text about 13 px" | from spec |
+| `--text-sm` | `0.875rem` (14px) | app-shell.md › Type summary › "Top-bar search placeholder › approx. 14 px / regular"; list-views.md › Text roles › "toolbar labels about 14 px medium", "column headers about 14 px medium", "ordinary cells about 14 px regular"; Filter content › "group headings about 14 px" and "14 px text"; Table header and rows › "column text about 14 px medium" and "row text about 14 px regular" | from spec |
+| `--text-md` | `0.9375rem` (15px) | app-shell.md › Type summary › "approx. 15 px" (Rail fixed link, Rail active link, Group heading, Rail child link, Rail Search placeholder, Menu item); list-views.md › Filter content › "about 15 px semibold" | from spec |
 | `--text-base` | `1rem` (16px) | app-shell.md › Type summary › "approx. 16 px / semibold" (Product selector, Teamspace selector) | from spec |
-| `--text-lg` | `1.125rem` (18px) | No measured 18 px style | not yet measured |
+| `--text-lg` | `1.125rem` (18px) | No measured 18 px style. The list spec does not measure an 18 px style either | not yet measured |
 | `--text-xl` | `1.25rem` (20px) | app-shell.md › Type summary › "Page title › approx. 20 px / semibold" | from spec |
-| `--text-2xl` | `1.5rem` (24px) | No measured 24 px style | not yet measured |
-| `--text-3xl` | `1.875rem` (30px) | No measured 30 px style | not yet measured |
-| `--radius-sm` | `0.125rem` (2px) | No measured 2 px corner | not yet measured |
-| `--radius-md` | `0.375rem` (6px) | app-shell.md › Rail/active row › "approx. 6 px radius"; the same radius is measured on Rail/local Search, Top bar/right controls (quick create), Teamspace More Actions menu and its highlighted row, Top bar/global search, and Global search panel | from spec |
-| `--radius-lg` | `0.5rem` (8px) | No measured 8 px corner | not yet measured |
+| `--text-2xl` | `1.5rem` (24px) | No measured 24 px style. The list spec does not measure a 24 px style either | not yet measured |
+| `--text-3xl` | `1.875rem` (30px) | No measured 30 px style. The list spec does not measure a 30 px style either | not yet measured |
+| `--radius-sm` | `0.125rem` (2px) | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px with 2 px `#C5C4D3` border and 2–3 px radius". The token keeps the 2 px end of that range | from spec |
+| `--radius-md` | `0.375rem` (6px) | app-shell.md › Rail/active row › "approx. 6 px radius"; the same radius is measured on Rail/local Search, Top bar/right controls (quick create), Teamspace More Actions menu and its highlighted row, Top bar/global search, and Global search panel; list-views.md › Header and tab strip › "6 px corners"; Filter panel, Records table, Create and action buttons, View options popover, Create More / Actions menus, View Settings popover and Sort popover use the same 6 px corners | from spec |
+| `--radius-lg` | `0.5rem` (8px) | list-views.md › View edit form › "8 px corners" | from spec |
+| `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
-| `--shadow-sm` | unchanged | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**" | not yet measured |
-| `--shadow-md` | unchanged | Same two rows: shadow parameters are not measurable from capture | not yet measured |
-| `--shadow-lg` | unchanged | Same two rows: shadow parameters are not measurable from capture | not yet measured |
+| `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
+| `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
+| `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--space-1` | `0.25rem` (4px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-2` | `0.5rem` (8px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-3` | `0.75rem` (12px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-4` | `1rem` (16px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-6` | `1.5rem` (24px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-8` | `2rem` (32px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
-| `--size-rail-width` | `320px` | app-shell.md › Navigation rail › Bounds and surface › "x 0-320, y 0-807; 320 wide" | from spec |
-| `--size-topbar-height` | `50px` | app-shell.md › Top bar › Bounds and surface › "x 320-1470, y 0-50; 50 high" | from spec |
+| `--size-rail-width` | `320px` | app-shell.md › Navigation rail › Bounds and surface › "x 0-320, y 0-807; 320 wide"; list-views.md › Leads content canvas › "Starts after the 320 px shell sidebar" | from spec |
+| `--size-topbar-height` | `50px` | app-shell.md › Top bar › Bounds and surface › "x 320-1470, y 0-50; 50 high"; list-views.md › Header and tab strip › "Header about 50 px high" | from spec |
 | `--size-utility-strip-height` | `28px` | app-shell.md › Bottom utility strip › Bounds, surface, and elevation › "x 0-1470, y 807-835; 28 high" | from spec |
 | `--size-topbar-title-inset` | `16px` | app-shell.md › Top bar/page title › Position and type › "left x 336 (16 px from content edge)" | from spec |
 | `--size-rail-row-width` | `300px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "x 10-310; 300 wide x 30 high" | from spec |
@@ -148,9 +165,56 @@ what the "no colour constants" rule forbids.
 | `--size-menu-width` | `237px` | app-shell.md › Teamspace More Actions menu › Outer bounds and placement › "about 237 x 187" | from spec |
 | `--size-menu-offset` | `18px` | app-shell.md › Teamspace More Actions menu › Outer bounds and placement › "about 18 px to its right" | from spec |
 | `--size-menu-inset` | `6px` | app-shell.md › Teamspace More Actions menu › Item geometry › "inner horizontal inset 6 px" | from spec |
-| `--size-menu-item-height` | `30px` | app-shell.md › Teamspace More Actions menu › Item geometry › "first three visible bands about 30 px high" | from spec |
+| `--size-menu-item-height` | `30px` | app-shell.md › Teamspace More Actions menu › Item geometry › "first three visible bands about 30 px high"; list-views.md › View options popover › "30 px option rows"; View Settings popover › "rows around 30 px high"; Selected / disabled › "highlighted settings-menu row 250 × 30 px" | from spec |
 | `--size-menu-icon` | `16px` | app-shell.md › Teamspace More Actions menu › Item geometry › "icon approx. 16 x 16" | from spec |
 | `--size-menu-label-gap` | `12px` | app-shell.md › Teamspace More Actions menu › Item geometry › "about 12 px between icon and label" | from spec |
+| `--size-list-inset` | `16px` | list-views.md › Leads content canvas › "16 px content inset" | from spec |
+| `--size-list-tab-height` | `42px` | list-views.md › Header and tab strip › "tab strip about 42 px high" | from spec |
+| `--size-list-pill-width` | `75.5px` | list-views.md › Header and tab strip › "selected view pill 75.5 × 26 px" | from spec |
+| `--size-list-pill-height` | `26px` | list-views.md › Header and tab strip › "selected view pill 75.5 × 26 px" | from spec |
+| `--size-list-toolbar-height` | `47px` | list-views.md › Toolbar › "About 47 px high below tab strip" | from spec |
+| `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
+| `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
+| `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
+| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "placeholder about 34 px high" | from spec |
+| `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
+| `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
+| `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
+| `--size-list-header-height` | `37px` | list-views.md › Table header and rows › "Header 37 px high: 35 px white plus a 2 px `#DCDBEE` bottom border". The 37 px box includes that border | from spec |
+| `--size-list-header-border` | `2px` | list-views.md › Table header and rows › "2 px `#DCDBEE` bottom border" | from spec |
+| `--size-list-row-height` | `54px` | list-views.md › Table header and rows › "54 px plus a 1 px `#EDF0F4` separator" | from spec |
+| `--size-list-row-pitch` | `55px` | list-views.md › Table header and rows › "repeat every 55 px (54 px plus a 1 px `#EDF0F4` separator)" | from spec |
+| `--size-list-leading-width` | `240px` | list-views.md › Leading table strips › "From the table edge at x=548 to the first data column edge at x=788 (240 px)" | from spec |
+| `--size-list-leading-pair-width` | `100px` | list-views.md › Leading table strips › "The unlabeled leading cell and the selection cell together span 100 px" | from spec |
+| `--size-list-badge-width` | `140px` | list-views.md › Leading table strips › "The badge strip is 140 px" | from spec |
+| `--size-list-column-width` | `200px` | list-views.md › Data and trailing column widths › "200 px per column" | from spec |
+| `--size-list-cell-inset` | `12px` | list-views.md › Data and trailing column widths › "Header and cell text starts 12 px inside the column edge" | from spec |
+| `--size-list-settings-width` | `40px` | list-views.md › Data and trailing column widths › "View Settings occupies 40 px at the right edge" | from spec |
+| `--size-list-settings-row-width` | `250px` | list-views.md › Selected / disabled › "highlighted settings-menu row 250 × 30 px" | from spec |
+| `--size-list-footer-height` | `31px` | list-views.md › Table footer › "31 px high between two 1 px `#DCDBEE` lines". The 31 px band is between the lines; the lines are not included | from spec |
+| `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
+| `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
+| `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
+| `--size-button-split-height` | `33px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
+| `--size-button-split-primary` | `102.5px` | list-views.md › Create and action buttons › "primary segment 102.5 px" | from spec |
+| `--size-button-split-arrow` | `34px` | list-views.md › Create and action buttons › "a 34 px arrow segment" | from spec |
+| `--size-button-gap` | `8.5px` | list-views.md › Create and action buttons › "An 8.5 px gap separates it from the ellipsis button" | from spec |
+| `--size-button-ellipsis-width` | `44px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
+| `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
+| `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
+| `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
+| `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
+| `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
+| `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
+| `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
+| `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
+| `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
+| `--size-popover-settings-width` | `264px` | list-views.md › View Settings popover › "About 264 px wide" | from spec |
+| `--size-popover-sort-width` | `385px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
+| `--size-popover-sort-height` | `157px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
+| `--size-popover-sort-field-width` | `150px` | list-views.md › Sort popover › "two side-by-side selectors around 150 px wide" | from spec |
+| `--size-popover-sort-field-height` | `28px` | list-views.md › Sort popover › "28 px high" | from spec |
 
 ### Measured values that carry no token
 
@@ -188,6 +252,35 @@ gaps in the table above.
 - **Menu bands "between dividers about 40 px high"**, whose "row-box heights are **not measurable
   from capture**".
 
+The list spec (`research/specs/list-views.md`, Visual layout) also measures values that carry no
+token:
+
+- **Ranges.** Toolbar gaps are "8–12 px" (Toolbar). View edit form inner padding is "28–32 px"
+  (View edit form). The checkbox corner is "2–3 px"; `--radius-sm` keeps the 2 px end of that range
+  and the range is not a second token.
+- **Positions.** Filter-panel and table origins, column edges, the checkbox at x 623–638, the split
+  divider at x=1362, View Settings at x 1414–1454, and the ribbon's x/y are coordinates of one
+  1470 × 835 capture.
+- **The records table "width about 908 px"** (Records table). It is the visible width in that
+  viewport, not a reusable metric.
+- **The 35 px white band** inside the table header. It is the 37 px header (`--size-list-header-height`)
+  minus the 2 px bottom border (`--size-list-header-border`).
+- **The first data row at 53 px.** The repeating row is 54 px plus a 1 px separator; 53 px is a
+  single-capture exception, not a second row height.
+- **Individual widths of the two leading cells.** They "together span 100 px" and "the header shows
+  no divider between them, so their individual widths are not measurable."
+- **1 px rules in the list.** Search outline, panel and table outline, row separator, header
+  dividers, footer lines, the split divider and the ellipsis border are 1 px, which Tailwind's
+  `border` already gives. The 2 px checkbox outline and the 2 px header rule are tokenized because
+  they are not 1 px.
+- **Activity ribbon.** Pale `#FFECEC` fill, activity icon `#FF5D5A` (about 11 × 12 px), date text
+  `#F14949`, and the 72 × 24 px notched ribbon that starts 11 px inside the badge strip. The ribbon
+  component belongs to the Activities module; its colours and size become tokens then.
+- **Soft shadows without parameters.** View options, import/actions and settings popovers say only
+  "soft shadow" or "shadow".
+- **Colours stated without a hex.** "hovered row pale blue", "disabled view-menu entries are muted
+  gray", and the Manage Columns "dark translucent scrim".
+
 ### Contrast notes
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
@@ -197,13 +290,18 @@ Measured pairs that reach AA:
 
 | Pair | Ratio |
 | --- | --- |
+| `--color-text-strong` on `--color-surface` | 16.11:1 |
 | `--color-text` on `--color-surface` | 11.59:1 |
+| `--color-text` on `--color-surface-selected` | 10.51:1 |
 | `--color-text` on `--color-bg` | 10.26:1 |
+| `--color-text` on `--color-surface-active` | 10.17:1 |
 | `--color-rail-item-active-text` on `--color-rail-item-active` | 9.60:1 |
 | `--color-rail-text` on `--color-rail-surface` | 7.58:1 |
 | `--color-text-muted` on `--color-surface` | 5.13:1 |
 | `--color-primary` on `--color-surface` | 4.69:1 |
+| `--color-primary-text` on `--color-primary-gradient-end` | 7.17:1 |
 | `--color-primary-text` on `--color-primary` | 4.69:1 |
+| `--color-primary` on `--color-primary-subtle` | 4.18:1, non-text |
 | `--color-text-muted` on `--color-surface-hover` | 4.65:1 |
 | `--color-text-muted` on `--color-bg` | 4.54:1 |
 | `--color-rail-icon` on `--color-rail-surface` | 3.57:1, non-text |
@@ -218,16 +316,33 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-text-placeholder` `#8c91ab` on `--color-bg` `#eef1f9` | 2.75:1 | Top bar/global search › Footprint › "placeholder approx. 14 px regular, `#8C91AB` approx." |
 | `--color-text-placeholder` `#8c91ab` on `--color-surface` | 3.11:1 | The same placeholder token on a panel |
 | `--color-rail-placeholder` `#7a859b` on `--color-rail-surface` | 3.33:1 | Rail/local Search › Input box › "`#7A859B` approx." |
-| `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface |
+| `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface. list-views.md › Text roles measures Lead Name and Email in the body colour even when linked ("rather than the blue action color"), so there is no separate link token |
+| `--color-text-disabled` `#b5b8be` on `--color-surface` | 1.99:1 | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" |
+| `--color-primary-text` `#ffffff` on `--color-primary-gradient-start` `#5767f6` | 4.49:1 | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top to `#154EC5` at bottom, white `#FFFFFF` label". The darker end of the same gradient passes at 7.17:1 |
+| `--color-control-border` `#c5c4d3` on `--color-surface` | 1.72:1 | list-views.md › Surface and line colors › "filter search outline and unchecked checkbox border `#C5C4D3`" |
+| `--color-button-border` `#d5d8e9` on `--color-button-gradient-start` `#fefefe` | 1.40:1 | list-views.md › Create and action buttons › "1 px `#D5D8E9` border" and "from `#FEFEFE` at top" |
+| `--color-button-border` `#d5d8e9` on `--color-button-gradient-end` `#f2f1f8` | 1.26:1 | list-views.md › Create and action buttons › "to `#F2F1F8` at bottom" |
+| `--color-primary-divider` `#c3c8f4` on `--color-primary-gradient-start` `#5767f6` | 2.76:1 | list-views.md › Create and action buttons › "1 px `#C3C8F4` divider" |
+| `--color-panel-border` `#dcdbee` on `--color-surface` | 1.36:1 | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`" |
+| `--color-row-separator` `#edf0f4` on `--color-surface` | 1.14:1 | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`" |
 
 No component consumes either placeholder token yet and `text-primary` is only rendered on a panel,
 so nothing on `/dev/ui` fails AA today. The three placeholder rows fall under the ADR 0003 §8
 exception: the tokens are used only for the placeholder of a real input. The last row does not:
-primary-coloured text needs `--color-surface` behind it.
+primary-coloured text needs `--color-surface` behind it. In the list, Lead Name and Email stay on
+`--color-text` when they are links (Text roles), so `--color-primary` is not a link colour there
+either. It is the active presentation glyph on `--color-primary-subtle` (4.18:1, non-text).
 
 Separators sit below the 3:1 non-text ratio and stay as measured under the same exception:
 `--color-border` on a panel (1.53:1), `--color-topbar-border` on the top bar (1.36:1) and
 `--color-rail-border` on the rail (1.90:1). They divide regions rather than identify a control, and
 the skeleton border they replace was no darker (1.47:1). A border that outlines a control is not
 covered by the exception.
+
+The list rows in the table above are newly measured, so the placeholder and separator exceptions do
+not cover them. Their values stay as measured. `--color-panel-border` and `--color-row-separator`
+divide regions. `--color-control-border`, `--color-button-border` and `--color-primary-divider`
+outline or split a control, and `--color-text-disabled` plus the white label on
+`--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
+rule; the CTO carries the list to the module gate.
 
