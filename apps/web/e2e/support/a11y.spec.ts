@@ -108,8 +108,8 @@ test("does not wait out an infinite animation", async ({ page }) => {
     };
   });
   expect(spinAnimation).not.toBeNull();
-  expect(spinAnimation!.playState).toBe("running");
-  expect(spinAnimation!.iterations).toBe(Infinity);
+  expect(spinAnimation?.playState).toBe("running");
+  expect(spinAnimation?.iterations).toBe(Infinity);
 });
 
 test("leaves excluded selectors out of the scan", async ({ page }) => {
