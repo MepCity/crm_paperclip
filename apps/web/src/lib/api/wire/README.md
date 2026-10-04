@@ -67,8 +67,24 @@ strings, timestamps and image references retain their domain strings.
 `encodeModule`, `encodeField`, `encodeLayout` and `decodeModule` split/reassemble
 `ModuleMetadata` through the three resource envelopes. Layout section ordering,
 field ordering and picklist display/stored values are preserved. `encodeView` /
-`decodeView` preserve leaf/group criteria, columns and nullable sort; port `is`
-maps to wire `equal` (view definitions in `research/specs/list-views.md`).
+`decodeView` preserve leaf/group criteria, columns and nullable sort. Comparators
+`equal`, `contains`, `not_contains` and `less_equal` pass through unchanged
+(view definitions in `research/specs/list-views.md`).
+
+### Observed criteria tokens
+
+| Port value | Wire `value` |
+| --- | --- |
+| `{ token: "CURRENTUSER" }` | `{ "name": "${CURRENTUSER}" }` |
+| `{ token: "TODAY" }` | `"${TODAY}"` |
+| `{ token: "AGEINDAYS", offset: 31 }` | `"${AGEINDAYS}+31"` |
+| `{ token: "CATEGORY", name: "Junk" }` | `"${CATEGORY.Junk}"` |
+
+`encodeInput` / `decodeInput` carry write field values in both directions; owner
+and single-module lookup inputs use `{id}` without display names.
+`info.sort_by` and `info.sort_order` come only from `ListResult.sort`; `decodeList`
+restores that applied order. Unknown fields returned by the service in a record
+or layout are server errors, not caller validation errors.
 
 ## Interim resource behavior
 
@@ -90,10 +106,12 @@ maps to wire `equal` (view definitions in `research/specs/list-views.md`).
 - The bulk operation projects view columns union requested `fields` names.
   Without `fields`, only view columns are projected (not captured). Empty or
   unknown names are rejected, not silently removed. The port always includes ID.
-- In this delivery the port has no `ListResult.sort` (MEP-98 is not on the base).
-  Info uses query sort, then view sort, then the observed `id` / `desc` default.
-  The fixture's interim creation-order fallback remains as specified by its port;
-  MEP-98 owns the effective sort implementation/result.
+- Negative `AGEINDAYS` offsets were not observed. They encode as
+  `"${AGEINDAYS}-<n>"` and decode to the corresponding negative offset.
+- Only exact token forms decode as tokens; other strings remain plain values.
+  A plain string exactly matching `${TODAY}`, `${AGEINDAYS}+<n>`,
+  `${AGEINDAYS}-<n>` or `${CATEGORY.<name>}` consequently returns as a token.
+  The wire cannot distinguish those literal strings from token values.
 - Populated lookup keys were not captured. Single-module lookup uses `{id}`;
   connected-module lookup retains `{module,id}` to preserve domain identity.
   Null remains null. Names for non-owner references are unavailable and omitted.
@@ -110,6 +128,7 @@ maps to wire `equal` (view definitions in `research/specs/list-views.md`).
 ## Omitted resource keys
 
 Every key in the spec tables other than the emitted subset above is omitted.
+Criteria `type` and `$disrupted` have no port representation and are not emitted.
 The port has no module, field, section or layout configuration identifiers,
 permission flags, profile settings, pin/wrap/favorite settings, share/history
 metadata, record `$` properties, translations, reference display names (except

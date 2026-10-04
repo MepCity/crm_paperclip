@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { decodeView, encodeCriteria } from "./codec";
 import { encodeError } from "./errors";
 import { type OperationDeps, type OperationRequest, operationPath, operations } from "./operations";
 
@@ -14,13 +15,16 @@ const json = (value: unknown) => JSON.parse(JSON.stringify(value));
 let deps: OperationDeps;
 beforeEach(() => {
   deps = {
-    records: createFixtureRecordService({
-      orgId: randomUUID(),
-      orgSlug: "wire-test",
-      orgName: "Wire Test",
-      userId: "wire-user",
-      role: "admin",
-    }),
+    records: createFixtureRecordService(
+      {
+        orgId: randomUUID(),
+        orgSlug: "wire-test",
+        orgName: "Wire Test",
+        userId: "wire-user",
+        role: "admin",
+      },
+      { now: () => new Date("2026-10-04T12:00:00.000Z") },
+    ),
     members: [{ userId: "wire-user", name: "Wire User", email: "wire@example.test" }],
   };
 });
@@ -53,7 +57,7 @@ describe("wire operations", () => {
     expect(json(await operations.view.run(deps, input())).body.custom_views[0]).toMatchObject({
       id: "all-leads",
       fields: expect.any(Array),
-      criteria: null,
+      criteria: { field: { api_name: "Converted__s" }, comparator: "equal", value: false },
       sort_by: null,
       sort_order: null,
     });
@@ -80,7 +84,7 @@ describe("wire operations", () => {
     ).toBe(row.id);
     expect(await operations.count.run(deps, input())).toEqual({
       status: 200,
-      body: { count: 250 },
+      body: { count: 236 },
     });
     expect(json(await operations.users.run(deps, input())).body).toEqual({
       users: [{ id: "wire-user", full_name: "Wire User", email: "wire@example.test" }],
@@ -118,7 +122,7 @@ describe("wire operations", () => {
     expect(noFields).toHaveProperty("Company");
     expect(noFields).not.toHaveProperty("Annual_Revenue");
   });
-  it("uses requested sort, view sort and default info in order", async () => {
+  it("reports the port's applied sort with and without request sort", async () => {
     const body = {
       filters: { field: { api_name: "Company" }, comparator: "equal", value: "Sorting Test" },
     };
@@ -135,15 +139,97 @@ describe("wire operations", () => {
       "B",
     ]);
     expect(response.body.info).toMatchObject({ sort_by: "Last_Name", sort_order: "asc" });
+    expect(json(await operations.bulk.run(deps, input())).body.info).toMatchObject({
+      sort_by: "id",
+      sort_order: "desc",
+    });
     const getView = deps.records.getView.bind(deps.records);
     deps.records.getView = async (module, id) => ({
       ...(await getView(module, id)),
       sort: { field: "Company", order: "desc" },
     });
-    expect(json(await operations.bulk.run(deps, input())).body.info).toMatchObject({
-      sort_by: "Company",
-      sort_order: "desc",
-    });
+    const list = deps.records.list.bind(deps.records);
+    vi.spyOn(deps.records, "list").mockImplementation(async (module, query) => ({
+      ...(await list(module, query)),
+      sort: { field: "Email", order: "asc" },
+    }));
+    for (const query of [{}, { sort_by: "Last_Name", sort_order: "desc" }] as Record<
+      string,
+      string
+    >[])
+      expect(json(await operations.bulk.run(deps, input(query))).body.info).toMatchObject({
+        sort_by: "Email",
+        sort_order: "asc",
+      });
+  });
+  it.each(["My Leads", "Recently Created Leads"])(
+    "lists and counts the token criteria of %s through JSON",
+    async (name) => {
+      const view = (await deps.records.listViews("Leads")).find((view) => view.name === name);
+      if (!view?.criteria) throw new Error("Missing token view");
+      const selected = json(
+        await operations.view.run(deps, {
+          ...input(),
+          params: { module: "Leads", viewId: view.id },
+        }),
+      ).body.custom_views[0];
+      expect(decodeView(selected)).toEqual(view);
+      const filters =
+        name === "My Leads"
+          ? view.criteria
+          : {
+              groupOperator: "and" as const,
+              group: [
+                {
+                  field: "Created_Time",
+                  comparator: "less_equal" as const,
+                  value: { token: "AGEINDAYS" as const, offset: 31 },
+                },
+                { field: "Converted__s", comparator: "equal" as const, value: false },
+              ],
+            };
+      const body = json({ filters: encodeCriteria(filters) });
+      // Common_Status is absent from metadata and ignored only on saved views.
+      // Filter requests carry the token leaves on known fields.
+      const expected = await deps.records.list("Leads", {
+        viewId: view.id,
+        page: 1,
+        perPage: 100,
+      });
+      expect(expected.records.length).toBeGreaterThan(0);
+      const count = await deps.records.count("Leads", { viewId: view.id });
+      for (const request of [
+        input({ cvid: view.id, per_page: "100" }),
+        input({ per_page: "100" }, body),
+      ]) {
+        const result = json(await operations.bulk.run(deps, request));
+        expect(result.status).toBe(200);
+        expect(result.body.data.map((row: { id: string }) => row.id)).toEqual(
+          expected.records.map((row) => row.id),
+        );
+        expect(await operations.count.run(deps, request)).toEqual({ status: 200, body: { count } });
+      }
+    },
+  );
+  it("returns a filters-keyed 400 for an unknown comparator on bulk and count", async () => {
+    for (const op of [operations.bulk, operations.count]) {
+      const error = await op
+        .run(
+          deps,
+          input(
+            {},
+            {
+              filters: { field: { api_name: "Company" }, comparator: "unknown", value: "Example" },
+            },
+          ),
+        )
+        .catch((error: unknown) => error);
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(encodeError(error)).toMatchObject({
+        status: 400,
+        body: { code: "validation", details: { fields: { filters: expect.any(Array) } } },
+      });
+    }
   });
   it("combines nested filters and search for list and count", async () => {
     await deps.records.create("Leads", { Company: "Filter Test", Last_Name: "Target" });

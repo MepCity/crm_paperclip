@@ -176,7 +176,7 @@ export const operations = {
       if (!result.records.length) return empty();
       return ok({
         data: result.records.map((row) => encodeRecord(row, metadata, members)),
-        info: encodeInfo(result, result.records.length, sort ?? view.sort ?? undefined),
+        info: encodeInfo(result, result.records.length),
       });
     },
   },
