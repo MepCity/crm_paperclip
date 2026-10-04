@@ -19,6 +19,8 @@ import { Icons } from "./icon";
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
   label: string;
+  /** Keeps the accessible name and removes the label from the visual layout. */
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string;
   items: Iterable<T>;
@@ -27,6 +29,7 @@ export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, 
 
 export function Select<T extends object>({
   label,
+  hideLabel = false,
   description,
   errorMessage,
   items,
@@ -37,7 +40,7 @@ export function Select<T extends object>({
     <AriaSelect {...props} className="flex flex-col gap-1">
       {({ isInvalid }: SelectRenderProps) => (
         <>
-          <Label className="text-sm font-medium text-text">{label}</Label>
+          <Label className={hideLabel ? "sr-only" : "text-sm font-medium text-text"}>{label}</Label>
           {/* The trigger draws the border, but React Aria only reports the resolved
               invalid state (prop or Form validationErrors) on the Select root. */}
           <Button
