@@ -33,7 +33,7 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 - Subject: `<type>(<scope>): <summary>` — English, imperative, max 72 characters. Types: `feat fix refactor perf test docs build ci chore style revert`. Example: `feat(leads): add list view with saved filters`.
 - Optional body after a blank line: what and why, wrapped at 72 characters. Reference the issue: `Refs: MEP-<n>`.
 - `Agent:` and `Model:` signature trailers are added automatically by the `.githooks/commit-msg` hook. Do not write or edit them yourself.
-- Commits are authored as the repository owner automatically (post-commit hook); your agent name and model live in the trailers. Never run `git config user.*` and never pass `--author`. If git stops with `empty ident name`, rerun the same command as `env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL git commit ...`.
+- Commits are authored as the repository owner automatically (post-commit hook); your agent name and model live in the trailers. Never run `git config user.*` and never pass `--author`. Paperclip's `git` wrapper blanks the identity, so run local `commit`, `merge` and `rebase` with the real git: `env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL /usr/bin/git commit ...` (the owner identity comes from the repo config). Never push; `main` and `mep/*` are pushed automatically.
 - If a hook reports that repository maintenance is running, keep your changes, wait 3 minutes and retry the same command.
 
 ## GitHub
