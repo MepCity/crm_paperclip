@@ -1,8 +1,12 @@
 import {
   AlertCircle,
   AlertTriangle,
+  Calendar,
+  Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Info,
   Loader2,
   type LucideIcon,
@@ -17,6 +21,10 @@ export const Icons = {
   success: CheckCircle2,
   info: Info,
   warning: AlertTriangle,
+  check: Check,
+  calendar: Calendar,
   chevronDown: ChevronDown,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
   close: X,
 };
