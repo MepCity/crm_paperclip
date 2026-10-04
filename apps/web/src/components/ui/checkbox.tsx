@@ -40,11 +40,19 @@ function boxBorder(isSelected: boolean, isInvalid: boolean): BoxBorder {
 
 export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" | "value"> {
   label: string;
+  /** Keeps the accessible name and removes the label from the visual layout. */
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string;
 }
 
-export function Checkbox({ label, description, errorMessage, ...props }: CheckboxProps) {
+export function Checkbox({
+  label,
+  hideLabel = false,
+  description,
+  errorMessage,
+  ...props
+}: CheckboxProps) {
   return (
     <AriaCheckboxField {...props} value={FORM_VALUE} className={styles.field}>
       <CheckboxButton className={styles.button}>
@@ -58,7 +66,7 @@ export function Checkbox({ label, description, errorMessage, ...props }: Checkbo
             >
               {isSelected && <Icons.check className={styles.check} />}
             </span>
-            <span className={styles.label}>{label}</span>
+            <span className={hideLabel ? "sr-only" : styles.label}>{label}</span>
           </>
         )}
       </CheckboxButton>

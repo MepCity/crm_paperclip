@@ -10,6 +10,13 @@ afterEach(cleanup);
 
 const accept = () => screen.getByRole("checkbox", { name: "Accept the terms" }) as HTMLInputElement;
 
+test("Checkbox can hide its label without dropping the accessible name", () => {
+  render(<Checkbox name="accept" label="Accept the terms" hideLabel />);
+
+  expect(accept().checked).toBe(false);
+  expect(screen.getByText("Accept the terms").className).toContain("sr-only");
+});
+
 test("Checkbox is reachable by its label", () => {
   render(<Checkbox name="accept" label="Accept the terms" />);
 
