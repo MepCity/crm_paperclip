@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ValidationError } from "../errors";
 import type { Criteria, FieldValue, RecordInput } from "./contract";
 import { describeRecordServiceContract } from "./contract-suite";
@@ -24,17 +24,25 @@ const input = (extra: RecordInput = {}): RecordInput => ({
 describeRecordServiceContract("fixture", createFixtureRecordService);
 
 describe("interim fixture policies (not reference parity)", () => {
-  it("generates 250 repeatable synthetic records with a seeded generator", () => {
+  it("generates 250 repeatable synthetic records with a seeded generator", async () => {
     const records = generateFixtureLeads(68);
+    const module = await make().getModule("Leads");
+    const sources = module.fields
+      .find((field) => field.apiName === "Lead_Source")
+      ?.picklist?.map((option) => option.storedValue)
+      .filter((value) => value !== "-None-");
     expect(records).toHaveLength(250);
     expect(generateFixtureLeads(68)).toEqual(records);
     expect(generateFixtureLeads(69)).not.toEqual(records);
     expect(new Set(records.map((record) => record.id)).size).toBe(250);
+    expect(records.some((record) => record.fields.Lead_Source !== null)).toBe(true);
+    expect(records.some((record) => record.fields.Lead_Source === null)).toBe(true);
+    expect(records.some((record) => record.fields.First_Name !== null)).toBe(true);
+    expect(records.some((record) => record.fields.First_Name === null)).toBe(true);
     for (const [index, record] of records.entries()) {
       const suffix = String(index + 1).padStart(3, "0");
       expect(record.fields).toMatchObject({
         Last_Name: `Lead ${suffix}`,
-        Full_Name: `Lead ${suffix}`,
         Company: `Example Company ${suffix}`,
         Email: `lead-${suffix}@example.org`,
         Phone: `000-${suffix}`,
@@ -43,7 +51,136 @@ describe("interim fixture policies (not reference parity)", () => {
         Unsubscribed_Mode: null,
         Unsubscribed_Time: null,
       });
+      expect([...(sources ?? []), null]).toContain(record.fields.Lead_Source);
+      expect([`Sample ${suffix}`, null]).toContain(record.fields.First_Name);
+      expect(record.fields.Full_Name).toBe(
+        record.fields.First_Name ? `Sample ${suffix} Lead ${suffix}` : `Lead ${suffix}`,
+      );
+      expect(record.fields).toMatchObject({ Owner: null, Created_By: null, Modified_By: null });
       expect(JSON.parse(JSON.stringify(record))).toEqual(record);
+    }
+  });
+  it("stores empty strings as null on create/update and finds them with is null", async () => {
+    const service = make();
+    const marker = randomUUID();
+    const fields = ["First_Name", "Email", "Phone", "Description", "Lead_Source", "Country"];
+    const empty = Object.fromEntries(fields.map((field) => [field, ""]));
+    const created = await service.create("Leads", input({ Company: marker, ...empty }));
+    const populated = await service.create(
+      "Leads",
+      input({
+        Company: marker,
+        First_Name: "Sample",
+        Email: "synthetic@example.org",
+        Phone: "000-001",
+        Description: "Synthetic description",
+        Lead_Source: "OnlineStore",
+        Country: "Synthetic Option",
+      }),
+    );
+    for (const field of fields) {
+      expect((await service.get("Leads", created.id)).fields[field]).toBeNull();
+      expect(populated.fields[field]).not.toBeNull();
+    }
+    const updated = await service.update("Leads", populated.id, empty);
+    for (const field of fields) {
+      expect((await service.get("Leads", updated.id)).fields[field]).toBeNull();
+      const query = {
+        viewId: "all-leads",
+        page: 1,
+        perPage: 10,
+        filters: {
+          groupOperator: "and" as const,
+          group: [
+            { field: "Company", comparator: "is" as const, value: marker },
+            { field, comparator: "is" as const, value: null },
+          ],
+        },
+      };
+      expect((await service.list("Leads", query)).records.map((record) => record.id)).toEqual([
+        created.id,
+        updated.id,
+      ]);
+      expect(await service.count("Leads", query)).toBe(2);
+    }
+    expect(created.fields.Full_Name).toBe("Example Lead");
+    expect(updated.fields.Full_Name).toBe("Example Lead");
+    expect(empty.First_Name).toBe("");
+    for (const field of ["No_of_Employees", "Annual_Revenue", "Email_Opt_Out", "Connected_To__s"]) {
+      await expect(service.create("Leads", input({ [field]: "" }))).rejects.toMatchObject({
+        fieldErrors: { [field]: expect.any(Array) },
+      });
+      await expect(service.update("Leads", created.id, { [field]: "" })).rejects.toMatchObject({
+        fieldErrors: { [field]: expect.any(Array) },
+      });
+    }
+    for (const value of ["  ", " Sample "]) {
+      const record = await service.create("Leads", input({ First_Name: value }));
+      expect(record.fields.First_Name).toBe(value);
+      expect(
+        (await service.update("Leads", record.id, { First_Name: value })).fields.First_Name,
+      ).toBe(value);
+    }
+    for (const value of ["", "  "]) {
+      await expect(service.create("Leads", input({ Last_Name: value }))).rejects.toMatchObject({
+        fieldErrors: { Last_Name: expect.any(Array) },
+      });
+      await expect(service.update("Leads", created.id, { Last_Name: value })).rejects.toMatchObject(
+        {
+          fieldErrors: { Last_Name: expect.any(Array) },
+        },
+      );
+      expect(await service.get("Leads", created.id)).toEqual(created);
+    }
+  });
+  it("preserves organization state and ID allocation after module re-evaluation", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "synthetic",
+      orgName: "Example Organization",
+      userId: "first-user",
+      role: "admin" as const,
+    };
+    const service = createFixtureRecordService(ctx);
+    const created = await service.create("Leads", input());
+    vi.resetModules();
+    const { createFixtureRecordService: reloaded } = await import("./fixture");
+    const sameOrg = reloaded({ ...ctx, userId: "second-user" });
+    expect(await sameOrg.get("Leads", created.id)).toEqual(created);
+    expect(await sameOrg.count("Leads", { viewId: "all-leads" })).toBe(251);
+    const next = await sameOrg.create("Leads", input());
+    expect(next.id).not.toBe(created.id);
+    expect(await service.get("Leads", next.id)).toEqual(next);
+    const otherOrg = reloaded({ ...ctx, orgId: randomUUID() });
+    await expect(otherOrg.get("Leads", created.id)).rejects.toMatchObject({ code: "not_found" });
+    expect(await otherOrg.count("Leads", { viewId: "all-leads" })).toBe(250);
+  });
+  it("assigns all seeded user fields once to each organization's first bound user", async () => {
+    for (const userId of ["synthetic-first-user", "synthetic-other-user"]) {
+      const ctx = {
+        orgId: randomUUID(),
+        orgSlug: "synthetic",
+        orgName: "Example Organization",
+        userId,
+        role: "admin" as const,
+      };
+      const service = createFixtureRecordService(ctx);
+      const records = [];
+      for (let page = 1; page <= 3; page++) {
+        records.push(
+          ...(await service.list("Leads", { viewId: "all-leads", page, perPage: 100 })).records,
+        );
+      }
+      expect(records).toHaveLength(250);
+      const secondUser = createFixtureRecordService({ ...ctx, userId: "synthetic-later-user" });
+      for (const record of records) {
+        expect(record.fields).toMatchObject({
+          Owner: userId,
+          Created_By: userId,
+          Modified_By: userId,
+        });
+        expect(await secondUser.get("Leads", record.id)).toEqual(record);
+      }
     }
   });
   it("transcribes all field constraints and layout membership from the permitted spec", async () => {
@@ -379,7 +516,19 @@ describe("interim fixture policies (not reference parity)", () => {
     ).toEqual([ids[1], ids[2], ids[3], ids[0], ids[4]]);
     const seedOrder = (await service.list("Leads", { viewId: "all-leads", page: 1, perPage: 100 }))
       .records;
-    expect(seedOrder).toEqual(generateFixtureLeads().slice(0, 100));
+    expect(seedOrder).toEqual(
+      generateFixtureLeads()
+        .slice(0, 100)
+        .map((record) => ({
+          ...record,
+          fields: {
+            ...record.fields,
+            Owner: "fixture-test-user",
+            Created_By: "fixture-test-user",
+            Modified_By: "fixture-test-user",
+          },
+        })),
+    );
   });
   it("sorts booleans, numbers and module references by value and leaves empty values last", async () => {
     const service = make();
