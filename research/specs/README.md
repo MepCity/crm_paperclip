@@ -4,7 +4,7 @@ One markdown file per module or screen, written by the CRM Analyst from captures
 
 Template:
 - **Purpose** — what the user does here
-- **Layout** — regions, lists, panels, tabs
+- **Layout** — regions, lists, panels, tabs; with a **Visual layout** subsection (measured sizes, spacing, type, colours, visible states)
 - **Fields** — shown fields and their types (cross-check `~/Desktop/mepcity-research/metadata/`)
 - **Actions** — buttons/menus and what they do
 - **Filters / views / sorting / search**
