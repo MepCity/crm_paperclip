@@ -20,7 +20,7 @@ export async function createOrganizationAction(
       name: readField(formData, "name"),
       slug: readField(formData, "slug"),
     });
-    redirect(`/o/${organization.slug}`);
+    redirect(`/crm/${organization.slug}`);
   } catch (error) {
     return toActionState(error);
   }
