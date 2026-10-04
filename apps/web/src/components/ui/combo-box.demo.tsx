@@ -50,6 +50,15 @@ export default function ComboBoxDemo() {
         {AccountItem}
       </ComboBox>
       <ComboBox
+        name="demo-combo-saved-lookup"
+        label="Saved lookup"
+        description="The saved selection remains when you leave an unfinished search"
+        loadOptions={searchAccounts}
+        defaultSelectedItem={{ id: "account-3", label: "Fabrikam Inc" }}
+      >
+        {AccountItem}
+      </ComboBox>
+      <ComboBox
         name="demo-combo-error"
         label="With error"
         items={accounts}

@@ -1,13 +1,23 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ComboBox as AriaComboBox,
   type ComboBoxProps as AriaComboBoxProps,
   Button,
+  ComboBoxStateContext,
   FieldError,
   Group,
   Input,
+  type Key,
   Label,
   ListBox,
   ListBoxItem,
@@ -20,9 +30,6 @@ import { Spinner } from "./spinner";
 
 /** How long typing has to pause before a search goes out, so one request covers one pause. */
 const LOAD_DEBOUNCE_MS = 300;
-
-/** A loader already filtered the results, so the list is shown as it came back. */
-const keepEveryOption = () => true;
 
 const styles = {
   field: "flex flex-col gap-1",
@@ -56,6 +63,8 @@ export interface ComboBoxProps<T extends object>
   items?: Iterable<T>;
   /** Fetches the options for the typed text; this is how lookup fields search. */
   loadOptions?: (query: string) => Promise<T[]>;
+  /** Initial lookup selection, including its label so no search is needed to display it. */
+  defaultSelectedItem?: { id: Key; label: string };
   /** Whether the list stays open when a search came back empty, so "No results" is visible. */
   allowsEmptyCollection?: boolean;
   defaultFilter?: (textValue: string, inputValue: string) => boolean;
@@ -68,73 +77,152 @@ export function ComboBox<T extends object>({
   errorMessage,
   items,
   loadOptions,
+  defaultSelectedItem,
   allowsEmptyCollection,
   defaultFilter,
   children,
   ...props
 }: ComboBoxProps<T>) {
-  const [query, setQuery] = useState("");
+  const isAsync = loadOptions !== undefined;
+  const [selected, setSelected] = useState(() => {
+    if (defaultSelectedItem) return defaultSelectedItem;
+    const id = props.defaultValue ?? props.defaultSelectedKey;
+    return id != null && props.defaultInputValue !== undefined
+      ? { id, label: props.defaultInputValue }
+      : null;
+  });
+  const [localKey, setLocalKey] = useState<Key | null>(
+    props.defaultValue ?? props.defaultSelectedKey ?? defaultSelectedItem?.id ?? null,
+  );
+  const [localInput, setLocalInput] = useState(
+    props.defaultInputValue ?? defaultSelectedItem?.label ?? "",
+  );
+  const key =
+    props.value !== undefined
+      ? props.value
+      : props.selectedKey !== undefined
+        ? props.selectedKey
+        : localKey;
+  const inputValue = props.inputValue ?? localInput;
+  const [search, setSearch] = useState<{ query: string } | null>(null);
   const [loaded, setLoaded] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  // Numbers the searches so a slow answer cannot overwrite the result of a newer one.
+  // Invalidated immediately on edits/close, including requests already in flight.
   const searchId = useRef(0);
-  // Held in a ref so an inline loader does not restart the debounce on every parent render.
+  const selectionHandler = useRef<((key: Key | null) => void) | null>(null);
   const loader = useRef(loadOptions);
   useEffect(() => {
     loader.current = loadOptions;
   });
 
-  const isAsync = loadOptions !== undefined;
+  function stopSearch() {
+    searchId.current++;
+    setSearch(null);
+    setIsLoading(false);
+  }
+
+  function startSearch(query: string) {
+    searchId.current++;
+    setLoaded([]);
+    setHasSearched(false);
+    setIsLoading(true);
+    setSearch({ query });
+  }
+
+  function changeInput(value: string) {
+    setLocalInput(value);
+    props.onInputChange?.(value);
+  }
+
+  function changeSelection(nextKey: Key | null, label: string) {
+    setLocalKey(nextKey);
+    setSelected(nextKey === null ? null : { id: nextKey, label });
+    changeInput(label);
+    stopSearch();
+    props.onChange?.(nextKey);
+    props.onSelectionChange?.(nextKey);
+  }
 
   useEffect(() => {
-    if (!isAsync) return;
-
-    const current = ++searchId.current;
-    if (query === "") {
-      setLoaded([]);
-      setHasSearched(false);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    const timer = setTimeout(() => {
+    if (!isAsync || !search) return;
+    const current = searchId.current;
+    let active = true;
+    const timer = setTimeout(async () => {
       const load = loader.current;
       if (!load) return;
-      const settle = (result: T[]) => {
-        if (current !== searchId.current) return;
-        setLoaded(result);
-        setHasSearched(true);
-        setIsLoading(false);
-      };
-      load(query).then(settle, () => settle([]));
+      let result: T[];
+      try {
+        result = await load(search.query);
+      } catch {
+        result = [];
+      }
+      if (!active || current !== searchId.current) return;
+      setLoaded(result);
+      setHasSearched(true);
+      setIsLoading(false);
     }, LOAD_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [isAsync, query]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [isAsync, search]);
 
   const showNoResults = isAsync && !isLoading && hasSearched && loaded.length === 0;
+  const asyncProps: Partial<AriaComboBoxProps<T>> = isAsync
+    ? {
+        items: loaded,
+        value: key,
+        inputValue,
+        onChange: (nextKey) => selectionHandler.current?.(nextKey),
+        // Forward the legacy callback once from changeSelection, alongside onChange.
+        onSelectionChange: undefined,
+        // RAC calls this for edits. Selection and revert use onChange when both values are controlled.
+        onInputChange: (value) => {
+          changeInput(value);
+          if (value === "") {
+            setLocalKey(null);
+            setSelected(null);
+            props.onChange?.(null);
+            props.onSelectionChange?.(null);
+          }
+          startSearch(value);
+        },
+        onOpenChange: (open, trigger) => {
+          if (open) {
+            // Input changes already started the search; button/arrow openings need their own.
+            if (trigger !== "input") startSearch(inputValue);
+          } else {
+            stopSearch();
+          }
+          props.onOpenChange?.(open, trigger);
+        },
+      }
+    : {};
 
   return (
     <AriaComboBox
       {...props}
-      defaultFilter={isAsync ? keepEveryOption : defaultFilter}
+      {...asyncProps}
+      defaultFilter={defaultFilter}
       allowsEmptyCollection={isAsync ? true : allowsEmptyCollection}
-      onInputChange={(value) => {
-        setQuery(value);
-        props.onInputChange?.(value);
-      }}
       className={styles.field}
     >
       {({ isInvalid }) => (
         <>
+          {isAsync && (
+            <LookupSelection
+              handler={selectionHandler}
+              selected={selected}
+              onChange={changeSelection}
+            />
+          )}
           <Label className={styles.label}>{label}</Label>
           {/* The group draws the border, but React Aria reports the resolved invalid state
               (prop or Form validationErrors) only on the ComboBox root. */}
           <Group data-invalid={isInvalid || undefined} className={styles.group}>
             <Input className={styles.input} />
-            <Button slot="trigger" className={styles.trigger} aria-label="Show options">
+            <Button slot="trigger" className={styles.trigger}>
               <Icons.chevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
             </Button>
           </Group>
@@ -164,6 +252,36 @@ export function ComboBox<T extends object>({
       )}
     </AriaComboBox>
   );
+}
+
+/** Reads option text from RAC's collection without imposing a shape on loader results. */
+function LookupSelection({
+  handler,
+  selected,
+  onChange,
+}: {
+  handler: RefObject<((key: Key | null) => void) | null>;
+  selected: { id: Key; label: string } | null;
+  onChange: (key: Key | null, label: string) => void;
+}) {
+  const state = useContext(ComboBoxStateContext);
+  useLayoutEffect(() => {
+    // CollectionBuilder also renders this child without a state context.
+    if (!state) return;
+    handler.current = (key) => {
+      const label =
+        key === null
+          ? ""
+          : selected?.id === key
+            ? selected.label
+            : (state.collection.getItem(key)?.textValue ?? "");
+      onChange(key, label);
+    };
+    return () => {
+      handler.current = null;
+    };
+  }, [handler, selected, state, onChange]);
+  return null;
 }
 
 export function ComboBoxItem(props: ListBoxItemProps) {

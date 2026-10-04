@@ -89,7 +89,7 @@ test("combo box filters, searches and selects from the keyboard", async ({ page 
   await expect(staticList).toHaveValue("Contoso Ltd");
 
   // The lookup field debounces the typing and then shows what the loader returned.
-  const lookup = region.getByRole("combobox", { name: "Lookup" });
+  const lookup = region.getByRole("combobox", { name: "Lookup", exact: true });
   await lookup.click();
   await lookup.pressSequentially("fab");
   await expect(page.getByRole("option", { name: "Fabrikam Inc" })).toBeVisible();
@@ -98,4 +98,42 @@ test("combo box filters, searches and selects from the keyboard", async ({ page 
   await page.keyboard.press("Backspace");
   await lookup.pressSequentially("zzz");
   await expect(page.getByRole("status")).toHaveText("No results");
+});
+
+test("saved lookup restores its label after an unfinished search", async ({ page }) => {
+  await page.goto("/dev/ui");
+  const region = page.getByRole("region", { name: "combo box" });
+  const lookup = region.getByRole("combobox", { name: "Saved lookup" });
+  const submitted = () =>
+    region.locator('input[type="hidden"][name="demo-combo-saved-lookup"]').inputValue();
+
+  await expect(lookup).toHaveValue("Fabrikam Inc");
+  expect(await submitted()).toBe("account-3");
+  await lookup.focus();
+  await page.keyboard.press("Tab");
+  await expect(lookup).toHaveValue("Fabrikam Inc");
+
+  await lookup.focus();
+  await page.keyboard.press("ControlOrMeta+A");
+  await lookup.pressSequentially("cont");
+  await expect(page.getByRole("option", { name: "Contoso Ltd" })).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(lookup).toHaveValue("Fabrikam Inc");
+  expect(await submitted()).toBe("account-3");
+
+  await lookup.focus();
+  await page.keyboard.press("ControlOrMeta+A");
+  await lookup.pressSequentially("cont");
+  await expect(page.getByRole("option", { name: "Contoso Ltd" })).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(lookup).toHaveValue("Contoso Ltd");
+  expect(await submitted()).toBe("account-2");
+
+  await lookup.focus();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Tab");
+  await expect(lookup).toHaveValue("");
+  expect(await submitted()).toBe("");
 });
