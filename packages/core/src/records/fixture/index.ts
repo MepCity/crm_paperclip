@@ -2,7 +2,7 @@ import { NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
 import { leadsMetadata } from "./metadata";
-import { matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { fullName, generateFixtureLeads } from "./seed";
 import { validateInput } from "./validation";
 import { leadsViews } from "./views";
@@ -38,13 +38,22 @@ const normalizeInput = (input: RecordInput): RecordInput =>
     ),
   );
 
-export function createFixtureRecordService(context: OrgContext): RecordService {
+export interface FixtureRecordServiceOptions {
+  /** Clock for seed times, write timestamps and date tokens. Defaults to the system clock. */
+  now?: () => Date;
+}
+
+export function createFixtureRecordService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): RecordService {
   const ctx = { ...context };
+  const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
   if (!store) {
     store = {
       records: new Map(
-        generateFixtureLeads().map((record) => [
+        generateFixtureLeads(68, clock()).map((record) => [
           record.id,
           {
             ...record,
@@ -80,10 +89,11 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
   const matching = (module: string, query: Pick<ListQuery, "viewId" | "filters" | "search">) => {
     const view = viewFor(module, query.viewId);
     if (query.filters) validateCriteria(query.filters);
+    const runtime = { userId: ctx.userId, now: clock() };
     return [...state.records.values()].filter(
       (record) =>
-        (!view.criteria || matches(record, view.criteria)) &&
-        (!query.filters || matches(record, query.filters)) &&
+        (!view.criteria || matches(record, view.criteria, runtime)) &&
+        (!query.filters || matches(record, query.filters, runtime)) &&
         matchesSearch(record, query.search),
     );
   };
@@ -111,7 +121,8 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
       )
         errors.fields = ["Choose known field API names."];
       if (Object.keys(errors).length) throw new ValidationError(errors);
-      const rows = sortRecords(matching(module, query), query.sort ?? view.sort);
+      const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
+      const rows = sortRecords(matching(module, query), applied);
       const start = (query.page - 1) * query.perPage;
       return copy({
         records: rows.slice(start, start + query.perPage).map((record) =>
@@ -130,6 +141,7 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
         page: query.page,
         perPage: query.perPage,
         moreRecords: start + query.perPage < rows.length,
+        sort: applied,
       });
     },
     async count(module, query) {
@@ -146,14 +158,16 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
       const fields: Record<string, FieldValue> = Object.fromEntries(
         leadsMetadata.fields.map((field) => [field.apiName, null]),
       );
-      const now = new Date().toISOString();
+      const stamp = clock().toISOString();
       Object.assign(fields, normalized, {
         id,
         Owner: ctx.userId,
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
-        Created_Time: now,
-        Modified_Time: now,
+        Created_Time: stamp,
+        Modified_Time: stamp,
+        Converted__s: false,
+        Locked__s: false,
       });
       fields.Full_Name = fullName(fields);
       const record = { id, fields };
@@ -168,7 +182,7 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
         ...record.fields,
         ...normalized,
         Modified_By: ctx.userId,
-        Modified_Time: new Date().toISOString(),
+        Modified_Time: clock().toISOString(),
       };
       fields.Full_Name = fullName(fields);
       const updated = { id, fields };

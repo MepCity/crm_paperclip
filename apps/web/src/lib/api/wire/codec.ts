@@ -1,6 +1,8 @@
 import { ValidationError } from "@crm/core/errors";
 import type {
+  Comparator,
   Criteria,
+  CriteriaValue,
   FieldDefinition,
   FieldValue,
   ListResult,
@@ -8,10 +10,10 @@ import type {
   ModuleMetadata,
   RecordData,
   RecordInput,
-  SortSpec,
 } from "@crm/core/records";
 import type {
   WireCriteria,
+  WireCriteriaValue,
   WireField,
   WireInfo,
   WireLayout,
@@ -68,12 +70,24 @@ export function encodeRecord(
   for (const [name, value] of Object.entries(record.fields)) {
     if (name === "id") continue;
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
-    if (!field) invalid(name);
+    if (!field) throw new Error(`Record field is absent from metadata: ${name}`);
     Object.defineProperty(result, name, {
       value: encodeValue(field, value, members),
       enumerable: true,
       writable: true,
     });
+  }
+  return result;
+}
+export function encodeInput(
+  input: RecordInput,
+  metadata: ModuleMetadata,
+): Record<string, WireValue> {
+  const result: Record<string, WireValue> = Object.create(null);
+  for (const [name, value] of Object.entries(input)) {
+    const field = metadata.fields.find((candidate) => candidate.apiName === name);
+    if (!field) invalid(name, "Unknown field.");
+    result[name] = encodeValue(field, value, []);
   }
   return result;
 }
@@ -148,7 +162,7 @@ export function encodeLayout(metadata: ModuleMetadata): WireLayout {
       column_count: section.columnCount,
       fields: section.fields.map((name) => {
         const field = metadata.fields.find((candidate) => candidate.apiName === name);
-        if (!field) invalid(name);
+        if (!field) throw new Error(`Layout field is absent from metadata: ${name}`);
         return encodeField(field);
       }),
     })),
@@ -171,13 +185,59 @@ export function decodeModule(
     })),
   };
 }
+function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
+  if (typeof value === "object" && value !== null && "token" in value) {
+    switch (value.token) {
+      case "CURRENTUSER":
+        return { name: `\${CURRENTUSER}` };
+      case "TODAY":
+        return `\${TODAY}`;
+      case "AGEINDAYS":
+        return `\${AGEINDAYS}${value.offset < 0 ? "" : "+"}${value.offset}`;
+      case "CATEGORY":
+        return `\${CATEGORY.${value.name}}`;
+    }
+  }
+  return structuredClone(value);
+}
+function decodeCriteriaValue(value: unknown): CriteriaValue {
+  if (typeof value === "string") {
+    if (value === `\${TODAY}`) return { token: "TODAY" };
+    const age = /^\$\{AGEINDAYS\}([+-]\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/.exec(value);
+    if (age?.[0] === value && Number.isFinite(Number(age[1])))
+      return { token: "AGEINDAYS", offset: Number(age[1]) };
+    const category = /^\$\{CATEGORY\.([^{}\r\n]+)\}$/.exec(value);
+    if (category?.[0] === value) return { token: "CATEGORY", name: category[1] as string };
+    return value;
+  }
+  if (Array.isArray(value)) return value.map((entry) => readFieldValue(entry, "filters"));
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    Object.keys(value).length === 1 &&
+    "name" in value &&
+    value.name === `\${CURRENTUSER}`
+  )
+    return { token: "CURRENTUSER" };
+  return readFieldValue(value, "filters");
+}
+function comparator(value: unknown): Comparator {
+  if (
+    value === "equal" ||
+    value === "contains" ||
+    value === "not_contains" ||
+    value === "less_equal"
+  )
+    return value;
+  return invalid("filters", "Unknown comparator.");
+}
 export function encodeCriteria(criteria: Criteria): WireCriteria {
   if ("group" in criteria)
     return { group_operator: criteria.groupOperator, group: criteria.group.map(encodeCriteria) };
   return {
     field: { api_name: criteria.field },
-    comparator: "equal",
-    value: structuredClone(criteria.value),
+    comparator: comparator(criteria.comparator),
+    value: encodeCriteriaValue(criteria.value),
   };
 }
 export function decodeCriteria(value: unknown, depth = 0): Criteria {
@@ -192,13 +252,11 @@ export function decodeCriteria(value: unknown, depth = 0): Criteria {
     };
   }
   const field = object(criteria.field, "filters");
-  if (typeof field.api_name !== "string" || criteria.comparator !== "equal") invalid("filters");
+  if (typeof field.api_name !== "string") invalid("filters");
   return {
     field: field.api_name,
-    comparator: "is",
-    value: Array.isArray(criteria.value)
-      ? criteria.value.map((entry) => readFieldValue(entry, "filters"))
-      : readFieldValue(criteria.value, "filters"),
+    comparator: comparator(criteria.comparator),
+    value: decodeCriteriaValue(criteria.value),
   };
 }
 export function encodeView(view: ListView): WireView {
@@ -228,16 +286,15 @@ export function decodeView(view: WireView): ListView {
   };
 }
 export function encodeInfo(
-  page: Pick<ListResult, "page" | "perPage" | "moreRecords">,
+  page: Pick<ListResult, "page" | "perPage" | "moreRecords" | "sort">,
   count: number,
-  sort: SortSpec = { field: "id", order: "desc" },
 ): WireInfo {
   return {
     per_page: page.perPage,
     count,
     page: page.page,
-    sort_by: sort.field,
-    sort_order: sort.order,
+    sort_by: page.sort.field,
+    sort_order: page.sort.order,
     more_records: page.moreRecords,
   };
 }
@@ -251,5 +308,6 @@ export function decodeList(
     page: info.page,
     perPage: info.per_page,
     moreRecords: info.more_records,
+    sort: { field: info.sort_by, order: info.sort_order },
   };
 }

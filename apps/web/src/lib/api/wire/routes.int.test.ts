@@ -25,7 +25,12 @@ const params = { module: "Leads", viewId: "all-leads", recordId: "missing" };
 async function call(
   op: Operation,
   org?: Organization,
-  options: { recordId?: string; query?: Record<string, string>; body?: unknown } = {},
+  options: {
+    recordId?: string;
+    viewId?: string;
+    query?: Record<string, string>;
+    body?: unknown;
+  } = {},
 ) {
   const entry = handlers.find(([candidate]) => candidate === op);
   if (!entry) throw new Error("Missing handler");
@@ -37,7 +42,11 @@ async function call(
     >
   )[op.method];
   if (!handler) throw new Error("Missing method");
-  const boundParams = { ...params, recordId: options.recordId ?? params.recordId };
+  const boundParams = {
+    ...params,
+    recordId: options.recordId ?? params.recordId,
+    viewId: options.viewId ?? params.viewId,
+  };
   const routeParams = Object.fromEntries(
     Object.entries(boundParams).filter(([key]) => op.path.includes(`{${key}}`)),
   );
@@ -141,6 +150,55 @@ describe("operation routes", () => {
       expect(body.users).toContainEqual(
         expect.objectContaining({ id: a.ctx.userId, full_name: expect.any(String) }),
       );
+  });
+  it("serves observed token values and applied sort to an authenticated caller", async () => {
+    const myView = await call(operations.view, a, { viewId: "my-leads" });
+    expect(myView.status).toBe(200);
+    expect((await myView.json()).custom_views[0].criteria).toEqual({
+      group_operator: "and",
+      group: [
+        { field: { api_name: "Owner" }, comparator: "equal", value: { name: `\${CURRENTUSER}` } },
+        { field: { api_name: "Converted__s" }, comparator: "equal", value: false },
+      ],
+    });
+    const recentView = await call(operations.view, a, { viewId: "recently-created-leads" });
+    expect(recentView.status).toBe(200);
+    expect((await recentView.json()).custom_views[0].criteria.group[1]).toEqual({
+      field: { api_name: "Created_Time" },
+      comparator: "less_equal",
+      value: `\${AGEINDAYS}+31`,
+    });
+    for (const cvid of ["my-leads", "recently-created-leads"]) {
+      for (const [sort, expected] of [
+        [{}, { sort_by: "id", sort_order: "desc" }],
+        [
+          { sort_by: "Company", sort_order: "asc" },
+          { sort_by: "Company", sort_order: "asc" },
+        ],
+      ] as [Record<string, string>, Record<string, string>][]) {
+        const response = await call(operations.bulk, a, { query: { cvid, ...sort } });
+        expect(response.status).toBe(200);
+        expect((await response.json()).info).toMatchObject(expected);
+      }
+      const count = await call(operations.count, a, { query: { cvid } });
+      expect(count.status).toBe(200);
+      expect((await count.json()).count).toBeGreaterThan(0);
+    }
+  });
+  it("answers unknown comparators with a filters-keyed 400", async () => {
+    for (const op of [operations.bulk, operations.count]) {
+      const response = await call(op, a, {
+        body: {
+          filters: { field: { api_name: "Company" }, comparator: "unknown", value: "Example" },
+        },
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        code: "validation",
+        status: 400,
+        details: { fields: { filters: expect.any(Array) } },
+      });
+    }
   });
   it("enforces tenant isolation in list, count and single-record reads", async () => {
     const created = await getRecordService(a.ctx).create("Leads", {

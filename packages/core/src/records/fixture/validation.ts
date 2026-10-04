@@ -29,7 +29,7 @@ function valueLength(value: FieldValue): number | undefined {
     ? 1 - decimalPosition + integer.length + fraction.length
     : Math.max(decimalPosition, integer.length + fraction.length);
 }
-function validType(field: FieldDefinition, value: FieldValue): boolean {
+export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): boolean {
   if (value === null) return true;
   switch (field.dataType) {
     case "integer":
@@ -78,7 +78,7 @@ export function validateInput(input: RecordInput, partial: boolean): void {
     ) {
       errors[field.apiName] = ["This field is required."];
     } else if (present) {
-      if (value === undefined || !validType(field, value))
+      if (value === undefined || !acceptsFieldValue(field, value))
         errors[field.apiName] = ["Invalid field type."];
       else if (field.maxLength !== undefined && (valueLength(value) ?? 0) > field.maxLength)
         errors[field.apiName] = ["Value is too long."];
