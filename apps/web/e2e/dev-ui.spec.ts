@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectNoA11yViolations } from "./support/a11y";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
   const errors: string[] = [];
@@ -56,5 +57,6 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
     "data-invalid",
   );
 
+  await expectNoA11yViolations(page);
   expect(errors).toHaveLength(0);
 });
