@@ -133,7 +133,7 @@ The checklist also names pipeline configuration, email connection, migration, an
 | Home and Leads navigation | Follow named rail links; active row follows the destination. | needed for Module 1 |
 | Group headings | Sales, Activities, and Integrations are expandable groups. Their expanded state was observed; collapse behavior was not exercised. | needed for Module 1: Sales; later: others |
 | Global search | Opens an overlay with an All Modules selector, query field, search hint, and a populated recent/search-history list. No query or result page was opened. | later |
-| Quick create `+` | Visible in the top bar. Its menu options were not verified because the control has no accessible name in the capture. | later; revisit if Leads creation requires this entry |
+| Quick create `+` | Opens the two-column `Create Records` menu. Its `Lead` choice opens the full Standard Create Lead form; see `research/specs/record-detail.md`. | needed for Module 1: Lead entry; other choices later |
 | Notifications | Visible in the top bar; menu contents not verified. | later |
 | Calendar / activity shortcut | Calendar icon links to a day view; reminder controls also appear in the bottom strip. Menus were not opened. | later |
 | Settings and extensions/store | Separate top-bar links are present; destinations were not opened. | later |
@@ -179,9 +179,9 @@ The Visual layout measurements use `home-main`, `home-leads-navigation`, `home-m
 
 1. What is the normal Home view after onboarding is completed, and which dashboard components, if any, are configured? The captured account remained on `/tab/Home/begin`; Skip would have changed onboarding state, so it was not used.
 2. Which of the 33 metadata `show_as_tab` modules can appear in this team's grouped rail, and how are module overflow and ordering controlled? Metadata sequence differs from the visible pinned/teamspace order. Feeds is `show_as_tab: true` but `visible: false`.
-3. What are the quick-create, notification, user-avatar, and applications-menu options? Their icons had no reliable accessible names in the capture, and no safe named selector was available. Calendar, extensions/store, and settings destinations were visible but not opened.
+3. What are the notification, user-avatar, and applications-menu options? Their icons had no reliable accessible names in the capture, and no safe named selector was available. The quick-create menu and its Lead destination are documented in `research/specs/record-detail.md`. Calendar, extensions/store, and settings destinations were visible but not opened.
 4. Does the shell vary between Administrator and Standard profiles? Metadata lists both profiles, but the capture shows one session only.
 5. What are the collapsed rail, empty menu/search, and route/network error states? None was captured. Validation rules for global search are also unknown.
-6. Does Leads creation depend on the top-bar quick-create entry, or is its module-local action sufficient? Confirm against the Leads screen spec before implementing that top-bar menu in Module 1.
+6. The top-bar `+` → `Lead` choice opens the full Standard Create Lead form; see `research/specs/record-detail.md`. The module-local creation action remains described in the Leads screen spec.
 7. Which exact typeface, CSS font metrics, CSS line-heights, shadow blur/spread, and shell-wide main-content inset apply? Single-line labels do not reveal CSS line-height or the height of an unhighlighted menu item; these are not measurable from capture. The Visual layout records only measured glyph and region geometry.
 8. What produces the first More Actions item highlight (hover, focus, or default selection), and what are the hidden-rail, hover, focus, disabled, and empty shell states? These are not measurable from capture.
