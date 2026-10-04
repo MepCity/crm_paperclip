@@ -26,13 +26,16 @@ neither HTTP payloads nor physical storage.
 The port, fixture adapter, reusable contract suite and application selection point
 are implemented. The fixture publishes all 56 Leads fields and 14 configured views.
 It generates 250 deterministic synthetic records using a fixed seed. Organization
-state lives in process memory; factories bound to the same organization share it,
+state lives in process memory under one `globalThis` / `Symbol.for` key, surviving
+module re-evaluation and separate server bundles in the same runtime.
+Factories bound to the same organization share it,
 while different organizations remain isolated. State is lost when the process
 restarts and is not shared across processes. This adapter is for screen development.
 
-Inputs used: `research/specs/leads-fields-and-layout.md`, the updated list spec on
-`origin/mep/MEP-17`, `research/specs/app-shell.md`, ADR 0001 and existing context/error
-types. No research metadata, captures or live reference CRM was accessed.
+Inputs used: `research/specs/leads-fields-and-layout.md`,
+`research/specs/list-views.md`, `research/specs/app-shell.md`, ADR 0001 and existing context/error
+types. The follow-up checked relevant field constraints and Lead_Source stored
+values against local research metadata. No captures or live reference CRM was accessed.
 
 ## Screen usage
 
@@ -41,6 +44,10 @@ then calls `getRecordService(ctx)` from `apps/web/src/lib/records.ts`. All scree
 obtain record data through that selection point. It currently imports the fixture
 from the separate `@crm/core/records/fixture` subpath. Client components import
 only types from `@crm/core/records`.
+
+`Owner`, `Created_By` and `Modified_By` carry user IDs (strings), not display
+names. Screens resolve those IDs through `listMembers(ctx)` from `@crm/core`.
+Display names are not part of the record service port.
 
 ```ts
 const service = getRecordService(ctx);
@@ -105,6 +112,17 @@ not evidence of reference CRM behavior and must not determine screen parity.
   Email or Phone. It combines with view criteria and filters using `and`.
 - Full_Name is recomputed at create/update: First_Name plus a space plus Last_Name
   when First_Name is populated, otherwise Last_Name. Salutation is excluded.
+- Create/update normalize exactly empty strings (`""`) in string-valued fields to
+  null before validation and storage. Strings are not trimmed; required-field
+  validation and type checks for non-string fields are unchanged.
+- Synthetic Lead_Source values use published stored values or null, excluding
+  the `-None-` placeholder. First_Name includes populated and null values;
+  Full_Name follows the same composition rule as writes.
+- Seeded Owner, Created_By and Modified_By are assigned to the user who first
+  opens the organization's store. Opening it as another user does not reassign
+  existing records. The pure seed generator is independent of user context.
+- Callers cannot write Owner. The reference CRM create/edit forms expose Lead
+  Owner; support will be handled in a separate task after the MEP-18 form spec.
 - Effective sort is query override, view sort, then creation order (seed order,
   then created records). All metadata fields are accepted for sorting; the nine
   metadata-ineligible fields are not separately rejected until the Sort By menu
