@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test } from "vitest";
+import { Form } from "./form";
 import { Select, SelectItem } from "./select";
 
 const fruits = [
@@ -50,9 +51,37 @@ test("Select ties its error message to the trigger", () => {
   const describedBy = trigger.getAttribute("aria-describedby");
   expect(describedBy).toBeTruthy();
   expect(document.getElementById(describedBy as string)?.textContent).toBe("Pick a fruit");
+});
 
-  // The invalid state is the styling hook for the field and its error.
-  expect(trigger.parentElement?.getAttribute("data-invalid")).toBe("true");
+test("Select marks its trigger invalid so the border follows the danger token", () => {
+  const { unmount } = render(<FruitSelect isInvalid errorMessage="Pick a fruit" />);
+
+  // The trigger draws the border, so the styling hook has to live on the trigger.
+  expect(screen.getByRole("button", { name: /Fruit/ }).getAttribute("data-invalid")).toBe("true");
+
+  unmount();
+  render(<FruitSelect />);
+
+  expect(screen.getByRole("button", { name: /Fruit/ }).getAttribute("data-invalid")).toBeNull();
+});
+
+test("Select marks its trigger invalid from form field errors", () => {
+  render(
+    <Form
+      validationBehavior="aria"
+      actionState={{
+        status: "error",
+        message: "Fix the fields below",
+        fieldErrors: { fruit: ["Pick a fruit"] },
+      }}
+    >
+      <Select name="fruit" label="Fruit" items={fruits}>
+        {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+      </Select>
+    </Form>,
+  );
+
+  expect(screen.getByRole("button", { name: /Fruit/ }).getAttribute("data-invalid")).toBe("true");
 });
 
 test("Select in the disabled state cannot be opened", async () => {

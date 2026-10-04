@@ -36,5 +36,25 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toBeHidden();
 
+  // An invalid Select trigger draws the same danger border as an invalid input.
+  const invalidInput = page
+    .getByRole("region", { name: "text field" })
+    .getByRole("textbox", { name: "With Error" });
+  await expect(invalidInput).toHaveAttribute("aria-invalid", "true");
+  const invalidBorderColor = await invalidInput.evaluate(
+    (element) => getComputedStyle(element).borderTopColor,
+  );
+
+  const selectRegion = page.getByRole("region", { name: "select" });
+  const invalidTrigger = selectRegion.getByRole("button", { name: /Invalid choice/ });
+  await expect(invalidTrigger).toHaveAttribute("data-invalid", "true");
+  const triggerBorderColor = await invalidTrigger.evaluate(
+    (element) => getComputedStyle(element).borderTopColor,
+  );
+  expect(triggerBorderColor).toBe(invalidBorderColor);
+  await expect(selectRegion.getByRole("button", { name: /Select a fruit/ })).not.toHaveAttribute(
+    "data-invalid",
+  );
+
   expect(errors).toHaveLength(0);
 });
