@@ -1,15 +1,24 @@
-:root {
-  --color-bg: #f9fafb;
-  --color-surface: #ffffff;
-  --color-text: #111827;
-  --color-text-muted: #4b5563;
-  --color-border: #d1d5db;
+/* Values are taken from the Visual layout sections of research/specs/*.md, which are
+   their only source. apps/web/src/components/ui/README.md lists the source row of every
+   token and marks the ones the specs have not measured yet. */
 
-  --color-primary: #2563eb;
+:root {
+  /* Page, surfaces and ink */
+  --color-bg: #eef1f9;
+  --color-surface: #ffffff;
+  --color-text: #313949;
+  --color-text-muted: #616e88;
+  --color-text-placeholder: #8c91ab;
+  --color-border: #ced0e1;
+
+  --color-primary: #5464f2;
   --color-primary-text: #ffffff;
   --color-primary-hover: #1d4ed8;
   --color-primary-pressed: #1e40af;
+  --color-primary-subtle: #f0f1ff;
 
+  /* Status colours stay at their pre-spec values: the app shell spec measures none of
+     them. The list, detail and form specs derive them in a separate issue. */
   --color-danger: #b91c1c;
   --color-danger-text: #ffffff;
   --color-danger-hover: #991b1b;
@@ -25,36 +34,130 @@
   --color-warning-hover: #78350f;
   --color-warning-pressed: #652b0d;
 
-  --color-surface-hover: #f3f4f6;
+  --color-surface-hover: #f0f4fc;
   --color-surface-pressed: #e5e7eb;
 
-  --color-focus-ring: #2563eb;
-  --color-overlay: #111827;
+  --color-focus-ring: #5464f2;
+  --color-overlay: #313949;
 
+  /* Navigation rail */
+  --color-rail-surface: #223458;
+  --color-rail-surface-raised: #374d7f;
+  --color-rail-border: #505d81;
+  --color-rail-text: #c2cbde;
+  --color-rail-icon: #7d8aa7;
+  --color-rail-placeholder: #7a859b;
+  --color-rail-scrollbar: #aaaaaa;
+  --color-rail-item-active: #31446f;
+  --color-rail-item-active-text: #ffffff;
+
+  /* Top bar */
+  --color-topbar-surface: #ffffff;
+  --color-topbar-border: #dcdbee;
+
+  /* Menus and popovers */
+  --color-menu-surface: #ffffff;
+
+  /* Bottom utility strip */
+  --color-utility-border: #c5c4d3;
+  --color-utility-help: #7875e6;
+
+  /* Identity marks, drawn as original assets */
+  --color-monogram: #00b96f;
+  --color-avatar: #dbdfe8;
+
+  /* Accents of the reference pinned-link icons, which are redrawn as original icons */
+  --color-accent-blue: #5a78ff;
+  --color-accent-orange: #ff7621;
+  --color-accent-pink: #ee3275;
+  --color-accent-purple: #a247ea;
+  --color-accent-amber: #f18e0a;
+  --color-accent-yellow: #e7b910;
+
+  /* The specs describe a rounded humanist sans-serif whose exact font is not measurable
+     from capture, so the system stack stays. No font file is added to the repository. */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
+  /* The specs measure regular and semibold only. CSS line-height is not measurable from
+     a single-line capture, so no --leading-* token is derived. */
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+
+  --text-2xs: 0.5rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
+  --text-md: 0.9375rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
 
+  /* Every measured corner is approx. 6 px, which is --radius-md. The other steps have no
+     measured counterpart yet. */
   --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
+  --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-full: 9999px;
 
+  /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
+  /* Generic spacing scale. Measured gaps carry their own --size-* token below. */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+
+  /* Shell regions */
+  --size-rail-width: 320px;
+  --size-topbar-height: 50px;
+  --size-utility-strip-height: 28px;
+  --size-topbar-title-inset: 16px;
+
+  /* Rail rows */
+  --size-rail-row-width: 300px;
+  --size-rail-row-height: 30px;
+  --size-rail-row-gap: 6px;
+  --size-rail-row-pitch: 36px;
+  --size-rail-nested-row-pitch: 32px;
+  --size-rail-inset: 10px;
+  --size-rail-nested-indent: 30px;
+  --size-rail-label-gap: 12px;
+  --size-rail-icon: 16px;
+  --size-rail-group-icon: 14px;
+  --size-rail-search-icon: 15px;
+  --size-rail-scrollbar-width: 8px;
+  --size-rail-group-gap: 9px;
+
+  /* Rail header, product selector and teamspace selector */
+  --size-rail-header-inset: 15px;
+  --size-rail-product-selector-height: 30px;
+  --size-rail-product-mark: 30px;
+  --size-rail-selector-height: 24px;
+  --size-rail-selector-inset: 13px;
+  --size-rail-monogram: 24px;
+  --size-rail-overflow-trigger: 30px;
+
+  /* Top bar controls */
+  --size-topbar-icon: 18px;
+  --size-topbar-control-pitch: 34px;
+  --size-topbar-quick-create: 28px;
+  --size-topbar-avatar: 30px;
+  --size-topbar-search-width: 235px;
+  --size-topbar-search-height: 32px;
+  --size-topbar-search-icon: 17px;
+
+  /* Menus and popovers */
+  --size-menu-width: 237px;
+  --size-menu-offset: 18px;
+  --size-menu-inset: 6px;
+  --size-menu-item-height: 30px;
+  --size-menu-icon: 16px;
+  --size-menu-label-gap: 12px;
 }

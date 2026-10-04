@@ -18,9 +18,11 @@ import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 import ToastDemo from "@/components/ui/toast.demo";
+import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
   link: LinkDemo,
