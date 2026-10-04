@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
+import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
   const errors: string[] = [];
@@ -142,8 +142,9 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
 });
 
 /**
- * Every expected value below is quoted from a Visual layout section. Shell samples come from
- * `research/specs/app-shell.md`. List samples come from `research/specs/list-views.md`.
+ * Expected values come from the measured specs. Shell samples come from
+ * `research/specs/app-shell.md`, adopted type from `research/specs/typography.md`, and list
+ * samples from `research/specs/list-views.md`.
  * Colour samples are drawn as blocks, type samples as text, corner radii as boxes and every
  * `--size-*` metric as a bar whose width is the metric, so one computed style proves the token.
  */
@@ -196,16 +197,16 @@ test("token demo renders the values measured in the shell and list specs", async
   // input, the quick-create box, the menu and the highlighted menu row.
   await expect(sample("--radius-md")).toHaveCSS("border-radius", "6px");
 
-  // Type summary: "Page title | approx. 20 px / semibold".
-  await expect(sample("--text-xl")).toHaveCSS("font-size", "20px");
+  // typography.md, Recommendation: adopted Page title 18.5 px / 510.
+  await expect(sample("--text-xl")).toHaveCSS("font-size", "18.5px");
   // Type summary: "Product selector | approx. 16 px / semibold".
   await expect(sample("--text-base")).toHaveCSS("font-size", "16px");
-  // Type summary: "Rail fixed link | approx. 15 px / regular".
-  await expect(sample("--text-md")).toHaveCSS("font-size", "15px");
-  // Type summary: "Top-bar search placeholder | approx. 14 px / regular".
-  await expect(sample("--text-sm")).toHaveCSS("font-size", "14px");
-  // Type summary: weights measured in the spec are regular and semibold.
-  await expect(sample("--font-weight-semibold")).toHaveCSS("font-weight", "600");
+  // typography.md, Recommendation: Rail fixed link 14.5 px / 400.
+  await expect(sample("--text-md")).toHaveCSS("font-size", "14.5px");
+  // typography.md, Recommendation: Top-bar search placeholder 13.5 px / 400.
+  await expect(sample("--text-sm")).toHaveCSS("font-size", "13.5px");
+  // typography.md: adopted bold stem matches at 510; regular stays 400.
+  await expect(sample("--font-weight-semibold")).toHaveCSS("font-weight", "510");
   await expect(sample("--font-weight-normal")).toHaveCSS("font-weight", "400");
   // Text roles: toolbar labels and column headers are "medium".
   await expect(sample("--font-weight-medium")).toHaveCSS("font-weight", "500");
@@ -254,4 +255,105 @@ test("token demo renders the values measured in the shell and list specs", async
   const infoAlert = page.getByRole("region", { name: "alert" }).getByRole("alert").first();
   await expect(infoAlert).toHaveCSS("color", "rgb(49, 57, 73)");
   await expect(infoAlert.locator("svg")).toHaveCSS("color", "rgb(84, 100, 242)");
+});
+
+// These DOM advances are independent measurements from typography.md, Signed ink-width
+// differences. The strict width and axis checks must fail when the local face is removed.
+test("type roles load one local variable font and preserve measured advances", async ({
+  page,
+}, testInfo) => {
+  const requests: string[] = [];
+  const fontResponses: { url: string; status: number }[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  page.on("response", (response) => {
+    if (response.request().resourceType() === "font") {
+      fontResponses.push({ url: response.url(), status: response.status() });
+    }
+  });
+  await page.goto("/dev/ui");
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => document.fonts.check("400 14.5px Figtree"))).toBe(true);
+  expect(await page.evaluate(() => document.fonts.check("510 14.5px Figtree"))).toBe(true);
+  expect(
+    await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily),
+  ).toMatch(/^"?Figtree"?,/);
+
+  const roles = page.getByRole("region", { name: "Type roles", exact: true });
+  const expectedRoles = [
+    ["Product selector", 16, 510],
+    ["Page title", 18.5, 510],
+    ["Rail fixed link", 14.5, 400],
+    ["Rail active link", 14.5, 510],
+    ["Teamspace selector", 16, 510],
+    ["Group heading", 14.5, 510],
+    ["Rail child link", 14.5, 400],
+    ["Rail Search placeholder", 14.5, 400],
+    ["Top-bar search placeholder", 13.5, 400],
+    ["Menu item", 14.5, 400],
+    ["Utility label", 8.5, 400],
+    ["Help utility label", 11.5, 510],
+  ] as const;
+  const measurements = [];
+  for (const [role, size, weight] of expectedRoles) {
+    const samples = roles.locator(`[data-type-role="${role}"]`);
+    expect(await samples.count()).toBe(role === "Rail fixed link" ? 2 : 1);
+    for (const sample of await samples.all()) {
+      await expect(sample).toHaveCSS("font-size", `${size}px`);
+      await expect(sample).toHaveCSS("font-weight", String(weight));
+      measurements.push(
+        await sample.evaluate((element) => ({
+          role: element.getAttribute("data-type-role"),
+          label: element.textContent,
+          size: getComputedStyle(element).fontSize,
+          weight: getComputedStyle(element).fontWeight,
+          width: element.getBoundingClientRect().width,
+        })),
+      );
+    }
+  }
+  for (const [role, label, expected] of [
+    ["Rail fixed link", "Workqueue", 73.91],
+    ["Rail fixed link", "Reports", 51.09],
+    ["Rail child link", "Documents", 74.89],
+    ["Top-bar search placeholder", "Search records", 91.09],
+  ] as const) {
+    const sample = roles.locator(`[data-type-role="${role}"]`).filter({ hasText: label });
+    const width = await sample.evaluate((element) => element.getBoundingClientRect().width);
+    expect(Math.abs(width - expected), `${role}: ${label} width ${width}`).toBeLessThanOrEqual(0.5);
+  }
+
+  const axis = await roles.locator('[data-type-role="Group heading"]').evaluate((element) => {
+    const sample = element.cloneNode(true) as HTMLElement;
+    sample.removeAttribute("data-type-role");
+    element.after(sample);
+    const widths = ["var(--font-weight-normal)", "var(--font-weight-semibold)", "600"].map(
+      (weight) => {
+        sample.style.fontWeight = weight;
+        return sample.getBoundingClientRect().width;
+      },
+    );
+    sample.remove();
+    return widths;
+  });
+  expect(axis[0]).toBeLessThan(axis[1] as number);
+  expect(axis[1]).toBeLessThan(axis[2] as number);
+
+  const tokens = page.getByRole("region", { name: "tokens", exact: true });
+  await expect(tokens.locator('[data-token="--text-2xs"]')).toHaveCSS("font-size", "8.5px");
+  await expect(tokens.locator('[data-token="--text-xs"]')).toHaveCSS("font-size", "11.5px");
+  await expectNoA11yViolations(page);
+  expect(fontResponses).toHaveLength(1);
+  expect(fontResponses[0]?.status).toBe(200);
+  const origin = new URL(page.url()).origin;
+  expect(fontResponses.map((response) => new URL(response.url).origin)).toEqual([origin]);
+  expect(requests.filter((url) => new URL(url).origin !== origin)).toEqual([]);
+  await roles.screenshot({ path: testInfo.outputPath("type-roles.png") });
+  await testInfo.attach("type-roles", {
+    path: testInfo.outputPath("type-roles.png"),
+    contentType: "image/png",
+  });
+  await testInfo.attach("type-role-measurements", {
+    body: JSON.stringify({ measurements, axis, fontResponses }, null, 2),
+    contentType: "application/json",
+  });
 });

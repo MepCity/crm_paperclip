@@ -2,6 +2,14 @@
    their only source. apps/web/src/components/ui/README.md lists the source row of every
    token and marks the ones the specs have not measured yet. */
 
+@font-face {
+  font-family: "Figtree";
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("./fonts/figtree/figtree-variable.ttf") format("truetype");
+}
+
 :root {
   /* Page, surfaces and ink */
   --color-bg: #eef1f9;
@@ -89,26 +97,26 @@
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
 
-  /* The specs describe a rounded humanist sans-serif whose exact font is not measurable
-     from capture, so the system stack stays. No font file is added to the repository. */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
+     Its official file is served locally; no reference CRM font file is copied. */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* The app shell spec measures regular and semibold. The list spec also measures medium
+  /* typography.md fits bold stems at weight 510. The list spec also measures medium
      for toolbar labels and column headers. CSS line-height is not measurable from a
      single-line capture, so no --leading-* token is derived. */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
+  --font-weight-semibold: 510;
 
-  --text-2xs: 0.5rem;
-  --text-xs: 0.75rem;
+  --text-2xs: 0.53125rem;
+  --text-xs: 0.71875rem;
   --text-13: 0.8125rem;
-  --text-sm: 0.875rem;
-  --text-md: 0.9375rem;
+  --text-sm: 0.84375rem;
+  --text-md: 0.90625rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
+  --text-xl: 1.15625rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
 
