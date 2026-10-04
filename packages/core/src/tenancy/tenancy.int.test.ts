@@ -65,6 +65,28 @@ describe("organizations", () => {
     expect(absent.message).toBe(inaccessible.message);
   });
 
+  it("returns the same not found error for a malformed slug as for a missing organization", async () => {
+    const member = await createTestUser();
+    const absent = await requireOrgContext(
+      member.headers,
+      `missing-${crypto.randomUUID().slice(0, 8)}`,
+    ).catch((error: unknown) => error);
+    for (const slug of ["ab", "Acme", "a_b", "a".repeat(41)]) {
+      const malformed = await requireOrgContext(member.headers, slug).catch(
+        (error: unknown) => error,
+      );
+      expect(malformed).toBeInstanceOf(NotFoundError);
+      expect(absent).toBeInstanceOf(NotFoundError);
+      expect((malformed as Error).message).toBe((absent as Error).message);
+    }
+  });
+
+  it("rejects an unauthenticated request before checking a malformed slug", async () => {
+    await expect(requireOrgContext(new Headers(), "ab")).rejects.toBeInstanceOf(
+      UnauthenticatedError,
+    );
+  });
+
   it("returns a slug field error for concurrent creation of the same slug", async () => {
     const admin = await createTestUser();
     const slug = `race-${crypto.randomUUID().slice(0, 8)}`;
@@ -183,13 +205,15 @@ describe("invitations and isolation", () => {
     });
     expect(invitation.email).toBe(invitee.user.email);
     expect(invitation.expiresAt.getTime()).toBeGreaterThanOrEqual(before + 7 * 24 * 60 * 60 * 1000);
-    expect(invitation.tokenHash).not.toBe(token);
+    expect(invitation).not.toHaveProperty("tokenHash");
     const raw = await getDb().execute(
       sql`select row_to_json(i)::text as value from invitations i where id = ${invitation.id}`,
     );
     expect(String(raw.rows[0]?.value)).not.toContain(token);
     await createInvitation(b.ctx, { email: invitee.user.email, role: "member" });
-    expect((await listInvitations(a.ctx)).map((row) => row.id)).toEqual([invitation.id]);
+    const listed = await listInvitations(a.ctx);
+    for (const row of listed) expect(row).not.toHaveProperty("tokenHash");
+    expect(listed.map((row) => row.id)).toEqual([invitation.id]);
     expect((await listInvitations(b.ctx)).map((row) => row.id)).not.toContain(invitation.id);
     await expect(
       createInvitation(a.ctx, { email: a.admin.user.email, role: "member" }),

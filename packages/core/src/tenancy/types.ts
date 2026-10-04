@@ -9,7 +9,17 @@ export type OrgContext = {
   role: OrgRole;
 };
 export type Organization = typeof schema.organizations.$inferSelect;
-export type Invitation = typeof schema.invitations.$inferSelect;
+export type Invitation = {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: OrgRole;
+  expiresAt: Date;
+  invitedBy: string;
+  acceptedAt: Date | null;
+  revokedAt: Date | null;
+  createdAt: Date;
+};
 export type Member = { userId: string; name: string; email: string; role: OrgRole; joinedAt: Date };
 export type InvitationPreview = {
   organizationName: string;

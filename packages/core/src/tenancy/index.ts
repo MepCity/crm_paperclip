@@ -97,12 +97,12 @@ export async function listOrganizationsForUser(
 
 export async function requireOrgContext(headers: Headers, orgSlug: string): Promise<OrgContext> {
   const user = await requireUser(headers);
-  const slug = parseInput(slugInput, orgSlug);
+  if (!slugInput.safeParse(orgSlug).success) throw missingOrg();
   const [row] = await getDb()
     .select({ org: schema.organizations, role: schema.memberships.role })
     .from(schema.organizations)
     .innerJoin(schema.memberships, eq(schema.memberships.organizationId, schema.organizations.id))
-    .where(and(eq(schema.organizations.slug, slug), eq(schema.memberships.userId, user.id)));
+    .where(and(eq(schema.organizations.slug, orgSlug), eq(schema.memberships.userId, user.id)));
   if (!row) throw missingOrg();
   return {
     orgId: row.org.id,
@@ -155,7 +155,7 @@ async function lockOrganization(tx: Transaction, ctx: OrgContext): Promise<void>
     .select({ id: schema.organizations.id })
     .from(schema.organizations)
     .where(eq(schema.organizations.id, ctx.orgId))
-    .for("update");
+    .for("no key update");
   if (!row) throw missingOrg();
 }
 
@@ -252,6 +252,42 @@ export async function removeMember(ctx: OrgContext, input: { userId: string }): 
 }
 
 const inviteInput = z.object({ email: emailInput, role: roleInput });
+const invitationColumns = {
+  id: schema.invitations.id,
+  organizationId: schema.invitations.organizationId,
+  email: schema.invitations.email,
+  role: schema.invitations.role,
+  expiresAt: schema.invitations.expiresAt,
+  invitedBy: schema.invitations.invitedBy,
+  acceptedAt: schema.invitations.acceptedAt,
+  revokedAt: schema.invitations.revokedAt,
+  createdAt: schema.invitations.createdAt,
+};
+
+function toInvitation(row: {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string;
+  expiresAt: Date;
+  invitedBy: string;
+  acceptedAt: Date | null;
+  revokedAt: Date | null;
+  createdAt: Date;
+}): Invitation {
+  return {
+    id: row.id,
+    organizationId: row.organizationId,
+    email: row.email,
+    role: row.role as OrgRole,
+    expiresAt: row.expiresAt,
+    invitedBy: row.invitedBy,
+    acceptedAt: row.acceptedAt,
+    revokedAt: row.revokedAt,
+    createdAt: row.createdAt,
+  };
+}
+
 export async function createInvitation(
   ctx: OrgContext,
   input: { email: string; role: OrgRole },
@@ -280,7 +316,7 @@ export async function createInvitation(
         ),
       );
     const { token, hash } = createInvitationToken();
-    const [invitation] = await tx
+    const [row] = await tx
       .insert(schema.invitations)
       .values({
         organizationId: ctx.orgId,
@@ -290,20 +326,21 @@ export async function createInvitation(
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         invitedBy: ctx.userId,
       })
-      .returning();
-    if (!invitation) throw new Error("Invitation insert returned no row");
-    return { invitation, token };
+      .returning(invitationColumns);
+    if (!row) throw new Error("Invitation insert returned no row");
+    return { invitation: toInvitation(row), token };
   });
 }
 
 export async function listInvitations(ctx: OrgContext): Promise<Invitation[]> {
   return withOrg(ctx, async (tx) => {
     await requireCurrentAdmin(tx, ctx);
-    return tx
-      .select()
+    const rows = await tx
+      .select(invitationColumns)
       .from(schema.invitations)
       .where(and(eq(schema.invitations.organizationId, ctx.orgId), pending(new Date())))
       .orderBy(schema.invitations.createdAt, schema.invitations.id);
+    return rows.map(toInvitation);
   });
 }
 
