@@ -210,8 +210,8 @@ Measured pairs that reach AA:
 | `--color-focus-ring` on `--color-surface` | 4.69:1, non-text |
 
 Measured pairs that stay below AA. Their values are kept exactly as measured and no check is
-disabled; deviating from the measured look is the board's decision, so they are reported to the CTO
-instead of being adjusted here.
+disabled. The board decided on 2026-10-04 that placeholder text and separator lines keep the
+measured look; ADR 0003 §8 records that exception and its limits.
 
 | Pair | Ratio | Where the reference uses it |
 | --- | --- | --- |
@@ -221,12 +221,13 @@ instead of being adjusted here.
 | `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface |
 
 No component consumes either placeholder token yet and `text-primary` is only rendered on a panel,
-so nothing on `/dev/ui` fails AA today. The four rows are a constraint on the shell and on the later
-screens: a placeholder or primary-coloured text needs `--color-surface` behind it, or the board has
-to accept the deviation.
+so nothing on `/dev/ui` fails AA today. The three placeholder rows fall under the ADR 0003 §8
+exception: the tokens are used only for the placeholder of a real input. The last row does not:
+primary-coloured text needs `--color-surface` behind it.
 
-Separators sit below the 3:1 non-text ratio and stay as measured: `--color-border` on a panel
-(1.53:1), `--color-topbar-border` on the top bar (1.36:1) and `--color-rail-border` on the rail
-(1.90:1). They divide regions rather than identify a control, and the skeleton border they replace
-was no darker (1.47:1).
+Separators sit below the 3:1 non-text ratio and stay as measured under the same exception:
+`--color-border` on a panel (1.53:1), `--color-topbar-border` on the top bar (1.36:1) and
+`--color-rail-border` on the rail (1.90:1). They divide regions rather than identify a control, and
+the skeleton border they replace was no darker (1.47:1). A border that outlines a control is not
+covered by the exception.
 
