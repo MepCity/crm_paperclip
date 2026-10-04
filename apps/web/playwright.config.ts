@@ -8,6 +8,9 @@ if (!port)
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // Vitest runs immediately before e2e in verify; one retry absorbs transient
+  // browser/session loss without loosening measurement assertions.
+  retries: 1,
   forbidOnly: Boolean(process.env.CI),
   reporter: [["list"]],
   outputDir: "./test-results",

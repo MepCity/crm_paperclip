@@ -2,8 +2,9 @@ import { expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
-  // A loaded machine runs this gallery past the 30s default (~36s); allow 90s.
-  test.setTimeout(90_000);
+  // Two full-gallery axe scans plus keyboard flows exceed 90s after `pnpm verify`
+  // runs Vitest in parallel first; keep measurement thresholds, extend wall time only.
+  test.setTimeout(180_000);
   // Scan the settled colours, rather than the transient opacity of toast entry animations.
   await page.emulateMedia({ reducedMotion: "reduce" });
   const errors: string[] = [];
