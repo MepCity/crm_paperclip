@@ -137,6 +137,34 @@ describe("wire codec", () => {
       }),
     ).toThrow(ValidationError);
   });
+  it("rejects invalid group_operator values with the filters key", () => {
+    const validGroup = {
+      group_operator: "AND",
+      group: [{ field: { api_name: "Example" }, comparator: "equal", value: "x" }],
+    };
+    for (const group_operator of ["and", "Or", "XOR", undefined]) {
+      try {
+        decodeCriteria({ ...validGroup, group_operator });
+        expect.fail("Expected a validation failure");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(encodeError(error)).toMatchObject({
+          status: 400,
+          body: { details: { fields: { filters: expect.any(Array) } } },
+        });
+      }
+    }
+    try {
+      decodeCriteria({ group: validGroup.group });
+      expect.fail("Expected a validation failure");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(encodeError(error)).toMatchObject({
+        status: 400,
+        body: { details: { fields: { filters: expect.any(Array) } } },
+      });
+    }
+  });
   it("rejects unknown comparators with the filters key in both directions", () => {
     const leaf = { field: "Example", comparator: "unknown", value: "literal" };
     for (const encode of [
@@ -299,11 +327,11 @@ describe("wire codec", () => {
       default: true,
       fields: [{ api_name: "text" }, { api_name: "boolean" }],
       criteria: {
-        group_operator: "and",
+        group_operator: "AND",
         group: [
           { field: { api_name: "boolean" }, comparator: "equal", value: false },
           {
-            group_operator: "or",
+            group_operator: "OR",
             group: [{ field: { api_name: "text" }, comparator: "equal", value: ["A", null] }],
           },
         ],

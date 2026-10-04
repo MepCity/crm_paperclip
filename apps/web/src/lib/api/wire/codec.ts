@@ -231,9 +231,14 @@ function comparator(value: unknown): Comparator {
     return value;
   return invalid("filters", "Unknown comparator.");
 }
+const wireGroupOperator = (operator: "and" | "or"): "AND" | "OR" =>
+  operator === "and" ? "AND" : "OR";
 export function encodeCriteria(criteria: Criteria): WireCriteria {
   if ("group" in criteria)
-    return { group_operator: criteria.groupOperator, group: criteria.group.map(encodeCriteria) };
+    return {
+      group_operator: wireGroupOperator(criteria.groupOperator),
+      group: criteria.group.map(encodeCriteria),
+    };
   return {
     field: { api_name: criteria.field },
     comparator: comparator(criteria.comparator),
@@ -244,10 +249,11 @@ export function decodeCriteria(value: unknown, depth = 0): Criteria {
   if (depth > 32) invalid("filters", "Criteria are too deeply nested.");
   const criteria = object(value, "filters");
   if ("group" in criteria) {
-    if (!Array.isArray(criteria.group) || !["and", "or"].includes(String(criteria.group_operator)))
+    const operator = criteria.group_operator;
+    if (!Array.isArray(criteria.group) || (operator !== "AND" && operator !== "OR"))
       invalid("filters");
     return {
-      groupOperator: criteria.group_operator as "and" | "or",
+      groupOperator: operator === "AND" ? "and" : "or",
       group: criteria.group.map((child) => decodeCriteria(child, depth + 1)),
     };
   }

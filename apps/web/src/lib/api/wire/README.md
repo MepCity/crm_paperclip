@@ -67,11 +67,16 @@ strings, timestamps and image references retain their domain strings.
 `encodeModule`, `encodeField`, `encodeLayout` and `decodeModule` split/reassemble
 `ModuleMetadata` through the three resource envelopes. Layout section ordering,
 field ordering and picklist display/stored values are preserved. `encodeView` /
-`decodeView` preserve leaf/group criteria, columns and nullable sort. Comparators
-`equal`, `contains`, `not_contains` and `less_equal` pass through unchanged
-(view definitions in `research/specs/list-views.md`).
+`decodeView` preserve leaf/group criteria, columns and nullable sort; wire
+`group_operator` is `AND` / `OR` and port `groupOperator` is `and` / `or`.
+Comparators `equal`, `contains`, `not_contains` and `less_equal` pass through
+unchanged (view definitions in `research/specs/list-views.md`).
 
 ### Observed criteria tokens
+
+`info.sort_by` and `info.sort_order` come only from `ListResult.sort`; `decodeList`
+restores that applied order. Unknown fields returned by the service in a record
+or layout are server errors, not caller validation errors.
 
 | Port value | Wire `value` |
 | --- | --- |
@@ -80,12 +85,6 @@ field ordering and picklist display/stored values are preserved. `encodeView` /
 | `{ token: "AGEINDAYS", offset: 31 }` | `"${AGEINDAYS}+31"` |
 | `{ token: "CATEGORY", name: "Junk" }` | `"${CATEGORY.Junk}"` |
 
-`encodeInput` / `decodeInput` carry write field values in both directions; owner
-and single-module lookup inputs use `{id}` without display names.
-`info.sort_by` and `info.sort_order` come only from `ListResult.sort`; `decodeList`
-restores that applied order. Unknown fields returned by the service in a record
-or layout are server errors, not caller validation errors.
-
 ## Interim resource behavior
 
 - Write method/path and JSON `{data:[{...}]}` envelopes follow ADR 0004 §5.
@@ -93,6 +92,10 @@ or layout are server errors, not caller validation errors.
   Writes return only IDs, with a separate detail read for the complete record.
   Delete accepts comma-separated `ids` and returns their IDs after successful
   atomic port deletion. None of these write shapes were captured.
+- `encodeInput` / `decodeInput` carry write field values in both directions;
+  owner and single-module lookup inputs use `{id}` without display names.
+  Write request bodies were not captured, so this behavior is not listed under
+  Observed above.
 - Bulk/count accept optional JSON `{filters?,search?}`. Filters use the saved-view
   criteria keys. Changed sort travels in `sort_by` / `sort_order`. Unknown query
   keys are ignored. Invalid inputs use port keys (`page`, `perPage`, `fields`,
@@ -108,6 +111,10 @@ or layout are server errors, not caller validation errors.
   unknown names are rejected, not silently removed. The port always includes ID.
 - Negative `AGEINDAYS` offsets were not observed. They encode as
   `"${AGEINDAYS}-<n>"` and decode to the corresponding negative offset.
+- `AGEINDAYS` offsets are written with JavaScript number formatting, so decimal
+  and exponential forms also decode as tokens; only `+31` was observed on the wire.
+- A `CATEGORY` token whose name contains `{`, `}` or a line break is returned
+  from the wire as a plain string unchanged.
 - Only exact token forms decode as tokens; other strings remain plain values.
   A plain string exactly matching `${TODAY}`, `${AGEINDAYS}+<n>`,
   `${AGEINDAYS}-<n>` or `${CATEGORY.<name>}` consequently returns as a token.

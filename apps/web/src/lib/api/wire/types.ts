@@ -8,7 +8,7 @@ export type WireRecord = { id: string } & Record<string, WireValue>;
 export type WireCriteriaValue = FieldValue | readonly FieldValue[] | { name: "${CURRENTUSER}" };
 export type WireCriteria =
   | { field: { api_name: string }; comparator: Comparator; value: WireCriteriaValue }
-  | { group_operator: "and" | "or"; group: readonly WireCriteria[] };
+  | { group_operator: "AND" | "OR"; group: readonly WireCriteria[] };
 export type WireField = {
   api_name: string;
   field_label: string;
