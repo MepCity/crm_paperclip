@@ -1,0 +1,129 @@
+import { NotFoundError, ValidationError } from "../../errors";
+import type { OrgContext } from "../../tenancy/types";
+import type { FieldValue, ListQuery, RecordData, RecordService } from "../contract";
+import { leadsMetadata } from "./metadata";
+import { matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { fullName, generateFixtureLeads } from "./seed";
+import { validateInput } from "./validation";
+import { leadsViews } from "./views";
+
+interface FixtureStore {
+  records: Map<string, RecordData>;
+  nextId: bigint;
+}
+const stores = new Map<string, FixtureStore>();
+const copy = <T>(value: T): T => structuredClone(value);
+
+export function createFixtureRecordService(context: OrgContext): RecordService {
+  const ctx = { ...context };
+  let store = stores.get(ctx.orgId);
+  if (!store) {
+    store = {
+      records: new Map(generateFixtureLeads().map((record) => [record.id, record])),
+      nextId: 200000000000000000n,
+    };
+    stores.set(ctx.orgId, store);
+  }
+  const state = store;
+  const moduleExists = (module: string) => {
+    if (module !== "Leads") throw new NotFoundError("Module not found.");
+  };
+  const viewFor = (module: string, id: string) => {
+    moduleExists(module);
+    const view = leadsViews.find((view) => view.id === id);
+    if (!view) throw new NotFoundError("View not found.");
+    return view;
+  };
+  const recordFor = (module: string, id: string) => {
+    moduleExists(module);
+    const record = state.records.get(id);
+    if (!record) throw new NotFoundError("Record not found.");
+    return record;
+  };
+  const matching = (module: string, query: Pick<ListQuery, "viewId" | "filters" | "search">) => {
+    const view = viewFor(module, query.viewId);
+    if (query.filters) validateCriteria(query.filters);
+    return [...state.records.values()].filter(
+      (record) =>
+        (!view.criteria || matches(record, view.criteria)) &&
+        (!query.filters || matches(record, query.filters)) &&
+        matchesSearch(record, query.search),
+    );
+  };
+  return {
+    async getModule(module) {
+      moduleExists(module);
+      return copy(leadsMetadata);
+    },
+    async listViews(module) {
+      moduleExists(module);
+      return copy(leadsViews);
+    },
+    async getView(module, id) {
+      return copy(viewFor(module, id));
+    },
+    async list(module, query) {
+      const view = viewFor(module, query.viewId);
+      const errors: Record<string, string[]> = {};
+      if (!Number.isSafeInteger(query.page) || query.page < 1)
+        errors.page = ["Choose a positive integer page."];
+      if (![10, 20, 30, 40, 50, 100].includes(query.perPage))
+        errors.perPage = ["Choose a supported page size."];
+      if (Object.keys(errors).length) throw new ValidationError(errors);
+      const rows = sortRecords(matching(module, query), query.sort ?? view.sort);
+      const start = (query.page - 1) * query.perPage;
+      return copy({
+        records: rows.slice(start, start + query.perPage),
+        page: query.page,
+        perPage: query.perPage,
+        moreRecords: start + query.perPage < rows.length,
+      });
+    },
+    async count(module, query) {
+      return matching(module, query).length;
+    },
+    async get(module, id) {
+      return copy(recordFor(module, id));
+    },
+    async create(module, input) {
+      moduleExists(module);
+      validateInput(input, false);
+      const id = String(state.nextId++);
+      const fields: Record<string, FieldValue> = Object.fromEntries(
+        leadsMetadata.fields.map((field) => [field.apiName, null]),
+      );
+      const now = new Date().toISOString();
+      Object.assign(fields, copy(input), {
+        id,
+        Owner: ctx.userId,
+        Created_By: ctx.userId,
+        Modified_By: ctx.userId,
+        Created_Time: now,
+        Modified_Time: now,
+      });
+      fields.Full_Name = fullName(fields);
+      const record = { id, fields };
+      state.records.set(id, record);
+      return copy(record);
+    },
+    async update(module, id, input) {
+      const record = recordFor(module, id);
+      validateInput(input, true);
+      const fields: Record<string, FieldValue> = {
+        ...record.fields,
+        ...copy(input),
+        Modified_By: ctx.userId,
+        Modified_Time: new Date().toISOString(),
+      };
+      fields.Full_Name = fullName(fields);
+      const updated = { id, fields };
+      state.records.set(id, updated);
+      return copy(updated);
+    },
+    async delete(module, ids) {
+      moduleExists(module);
+      for (const id of ids) recordFor(module, id);
+      for (const id of ids) state.records.delete(id);
+    },
+  };
+}

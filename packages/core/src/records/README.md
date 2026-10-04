@@ -1,87 +1,154 @@
 # Record service port
 
-The type-only `@crm/core/records` entry point defines the record service used by
-Leads screens. A service factory binds an `OrgContext` once. Service methods take
-module API names and opaque record identifiers, never organization identifiers.
-`contract.ts` imports only the context type. Client components can import its
-types without loading authentication, a database, or a server implementation.
+The type-only `@crm/core/records` entry point defines the service used by Leads
+screens. `RecordServiceFactory` binds an authorized `OrgContext` once; methods
+accept module API names and opaque record IDs, never organization parameters.
+`contract.ts` imports only types, and the entry point exports only types. Client
+components can import it without loading authentication, a database or a service.
+The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendment.
 
-The signatures follow the MEP-68 contract. Metadata expresses fields, ordered
-picklist display/stored values, and layout sections with their ordered field API
-names. List responses carry page information and `moreRecords`; total counts use
-a separate method. Updates are partial. A view's criteria and extra filters are
-combined using `and`.
+Metadata describes fields, ordered picklist display/stored values, layout sections
+and ordered field API names. Exactly one view is default. List results carry page,
+page size and `moreRecords`; `count` is separate. Updates are partial. View criteria
+and extra filters combine with `and`. The only observed comparator is `is`: exact
+stored-value equality, case-sensitive for strings; an array matches any element;
+null matches an empty field. Groups support `and` and `or`.
 
 Field values are JSON-compatible domain values: strings for text-like fields,
-timestamps, opaque single-module references, image references, and long integers;
-finite numbers for integer/decimal/currency fields; booleans for checkbox fields;
-`{ module, id }` for connected-module references; and `null` for empty fields.
-Long integers use strings to avoid precision loss. Adapters must validate values
-against each field's data type. These representations do not specify HTTP payloads
-or physical storage. The only observed comparator is `is`.
-
-## Deliberately excluded
-
-The port makes no storage, identity-generation, authorization, event-processing,
-or HTTP design decision. No database schema, migration, dependency, route, or
-screen is introduced by this preparatory change.
+UTC timestamps, opaque single-module references, image references and long
+integers; finite numbers for integer/decimal/currency fields; booleans for checkbox
+fields; `{ module, id }` for connected-module references; and null for empty fields.
+Long integers use strings to avoid precision loss. These representations specify
+neither HTTP payloads nor physical storage.
 
 ## Current delivery status
 
-The type boundary is implemented and tested. The fixture adapter, reusable
-behavioral contract suite, and application service entry point are pending a
-specification clarification. They must not fabricate missing reference behavior.
-This branch is not ready for screen integration or implementation approval.
+The port, fixture adapter, reusable contract suite and application selection point
+are implemented. The fixture publishes all 56 Leads fields and 14 configured views.
+It generates 250 deterministic synthetic records using a fixed seed. Organization
+state lives in process memory; factories bound to the same organization share it,
+while different organizations remain isolated. State is lost when the process
+restarts and is not shared across processes. This adapter is for screen development.
 
-Inputs used: `research/specs/leads-fields-and-layout.md`, the list specification
-on `origin/mep/MEP-17`, `research/specs/app-shell.md`, ADR 0001, the existing context
-and error types. No research metadata, captures, or live reference CRM was read.
+Inputs used: `research/specs/leads-fields-and-layout.md`, the updated list spec on
+`origin/mep/MEP-17`, `research/specs/app-shell.md`, ADR 0001 and existing context/error
+types. No research metadata, captures or live reference CRM was accessed.
 
-## Screen usage after the adapter lands
+## Screen usage
 
-A server component or route handler will obtain its already-authorized
-`OrgContext`, call `getRecordService(ctx)` from the application library, and use
-`getModule`, `listViews`, `list`, and `count` to render the screen. A client imports
-`RecordData`, `ListQuery`, and other types from `@crm/core/records`. The application
-library will be the only adapter selection point; it is not implemented yet.
+A server component or route handler obtains its already-authorized `OrgContext`,
+then calls `getRecordService(ctx)` from `apps/web/src/lib/records.ts`. All screens
+obtain record data through that selection point. It currently imports the fixture
+from the separate `@crm/core/records/fixture` subpath. Client components import
+only types from `@crm/core/records`.
 
-## Adapter verification after clarification
+```ts
+const service = getRecordService(ctx);
+const module = await service.getModule("Leads");
+const views = await service.listViews(module.apiName);
+const view = views.find((candidate) => candidate.isDefault);
+if (!view) throw new Error("No default view.");
+const query = { viewId: view.id, page: 1, perPage: 20 };
+const page = await service.list(module.apiName, query);
+const total = await service.count(module.apiName, query);
+```
 
-The future `describeRecordServiceContract(name, makeService)` suite will accept
-an organization-bound factory, exercise public methods only, and run against both
-the fixture and future persistent adapter. It must test metadata, pagination,
-queries, mutations, errors, system fields, tenant isolation, and detached return
-values. It must not assume an adapter's internal collection or insertion order.
+Validation uses metadata: required fields, lengths, types and published picklist
+membership. Empty published picklists accept null; Country and State validate only
+string/null and length. Unknown fields and writes to system-managed fields are
+validation failures. Owner/created-by/modified-by use the bound user; Full_Name is
+computed. System-generated fields unavailable on forms cannot be supplied by callers.
+Lengths apply to strings/reference IDs and numerical digits (sign and decimal
+separator excluded, exponent notation expanded). No email/phone syntax or
+unobserved decimal-place validation rule is added.
 
-## Specification blockers
+Unknown modules, views and records raise `NotFoundError`. Validation raises
+`ValidationError` with field API names (query failures use page/perPage/sort/filters).
+A future uniqueness violation must use the existing `ConflictError`. This Leads
+fixture has no unique fields and permits duplicate Email on create and update.
+Returned metadata, views, records and nested values are detached copies; write
+inputs are copied before storage. Bulk delete validates every ID before deleting.
 
-- Country and State have 248 and 3954 options respectively, but neither list is
-  published in the permitted field spec. The fourth Unsubscribed Mode value is
-  intentionally withheld. A full picklist metadata fixture cannot be reproduced
-  or validated from these inputs alone. Do not read the underlying export.
-- The list spec names eleven system views but does not publish the criteria for
-  them. It confirms columns for the default and one unnamed second system view;
-  column sets for the other system views are unknown. A name is not evidence of
-  its predicate. The three custom views have category-based status criteria.
-- Module-local search scope, applied sort behavior, null ordering, and the exact
-  sortable menu are explicitly unverified. The fixture needs an approved policy
-  or additional spec evidence rather than an undocumented parity claim.
-- All 56 Leads fields have `unique: false`, and duplicate email is explicitly
-  allowed. A Leads-only factory cannot demonstrate a genuine uniqueness
-  rejection without changing metadata or inventing another module. The requested
-  uniqueness test needs a clarified adapter-independent test setup.
+## Adapter verification
+
+Import `describeRecordServiceContract` from `@crm/core/records/contract-suite` in a
+test file and provide a factory accepting `OrgContext` (synchronous or asynchronous):
+
+```ts
+describeRecordServiceContract("adapter", (ctx) => createRecordService(ctx));
+```
+
+The suite invokes only public methods. Each test gets a fresh synthetic organization;
+an adapter harness must provision that organization and bound user, and clean up its
+test state. Pagination tests create their own matching records and discover views
+through `listViews`; they require no fixture IDs or default insertion order. Tests
+cover metadata/view consistency, every page size, counts, criteria plus filters,
+search, text/number sorting, CRUD, field errors, duplicate Email, system fields,
+tenant isolation and independent return values. `fixture.test.ts` separately tests
+the precise seed, view content and interim fixture policies. Run targeted tests with
+`corepack pnpm exec vitest run --project unit packages/core/src/records` and the full
+repository gate with `corepack pnpm verify`.
+
+## Interim fixture policies (not reference parity)
+
+These CTO-approved policies permit development while research is pending. They are
+not evidence of reference CRM behavior and must not determine screen parity.
+
+- All 14 views have null sort. Eleven system views have interim null criteria:
+  `all-leads`, `all-locked-leads`, `converted-leads`, `mailing-labels`,
+  `my-converted-leads`, `my-leads`, `recently-created-leads`,
+  `recently-modified-leads`, `todays-leads`, `unread-leads`, `unsubscribed-leads`.
+  `SYSTEM_VIEW_IDS_WITH_INTERIM_NULL_CRITERIA` is their single inventory constant.
+  MEP-71 tracks the actual definitions; view names never imply predicates.
+- Search trims input; blank means no restriction. Otherwise it matches a
+  case-insensitive substring (`toLowerCase`, no locale) in Full_Name, Company,
+  Email or Phone. It combines with view criteria and filters using `and`.
+- Full_Name is recomputed at create/update: First_Name plus a space plus Last_Name
+  when First_Name is populated, otherwise Last_Name. Salutation is excluded.
+- Effective sort is query override, view sort, then creation order (seed order,
+  then created records). All metadata fields are accepted for sorting; the nine
+  metadata-ineligible fields are not separately rejected until the Sort By menu
+  is researched. Invalid sort/filter fields raise keyed validation errors.
+- Numbers compare numerically, booleans false before true, strings by lowercase
+  code-unit order (no localeCompare/Intl), timestamps chronologically, object
+  references by ID. Equal
+  values preserve default order. Null and empty strings sort last in either order.
+- Page must be a positive integer and perPage one of 10, 20, 30, 40, 50, 100.
+  Beyond the last page, records are empty and moreRecords is false.
+
+## Deferred
+
+- Country/State option inventories and their dependency. Both are picklists with
+  maxLength 120 and no picklist property; seed values are null. MEP-18 tracks these
+  questions, placeholder storage and Full_Name composition.
+- Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
+  fourth contains a forbidden product name and cannot enter this repository.
+  Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.
+- The reference's storage of the -None- placeholder is unverified. Published lists
+  include it, but the fixture represents empty picklists with null.
+- Uniqueness enforcement and rejection tests await the first scope with a unique
+  field. Leads has unique=false on every field; no hidden module or unreachable
+  uniqueness branch is introduced.
 
 ## Open points for ADR 0002
 
-- Preserve this domain port for every storage option; adapters must detach returned
-  objects and isolate all operations using their bound context.
-- Preserve opaque IDs and lossless long integer strings across implementations.
-- Define how category-based criteria are represented and evaluated without losing
-  the distinction between stored Lead Status values and record categories.
-- Keep search scope, null ordering, and supported sort/filter eligibility as
-  explicit observable semantics once researched or approved.
-- Resolve the uniqueness contract test setup without making the Leads seed unique
-  or extending the authorized module scope.
+- Preserve the port across document, typed-table or EAV storage. Tenant isolation,
+  detached values and the same validated write service remain adapter obligations.
+- Preserve opaque IDs and lossless long-integer strings across implementations.
+- Define how picklist inventories enter runtime metadata, including deferred
+  Country/State options and dependency behavior.
+- Three custom views expand Lead Status record categories to stored-value arrays.
+  Open expands six values, Junk to Junk Lead and Not Qualified to Not Qualified;
+  empty status is excluded. Reference category wire encoding is unverified and
+  the current port has no category member. Avoid losing that distinction.
+- Replace interim search/sort/null/default-order policies when researched. Filter
+  operators, sortable menu entries and system view criteria/sorts remain open.
+- Add metadata-driven uniqueness enforcement using ConflictError and a genuine
+  rejection contract test with the first authorized unique-field scope.
 
-No extra comparator, inferred system-view predicate, global picklist option,
-email/phone syntax rule, or default sort has been introduced.
+## Deliberately excluded
+
+Storage, schemas/migrations, identity-generation strategy, HTTP paths/methods,
+authorization and role rules, event processing, routes, screens, conversions,
+bulk actions, import/export and non-Leads modules are outside this delivery.
+The database package and route tree remain unchanged. No dependencies are added.

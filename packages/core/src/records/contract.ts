@@ -90,6 +90,7 @@ export interface ListView {
   id: string;
   name: string;
   systemDefined: boolean;
+  isDefault: boolean;
   columns: readonly string[];
   criteria: Criteria | null;
   sort: SortSpec | null;
