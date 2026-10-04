@@ -155,7 +155,7 @@ describe("operation routes", () => {
     const myView = await call(operations.view, a, { viewId: "my-leads" });
     expect(myView.status).toBe(200);
     expect((await myView.json()).custom_views[0].criteria).toEqual({
-      group_operator: "and",
+      group_operator: "AND",
       group: [
         { field: { api_name: "Owner" }, comparator: "equal", value: { name: `\${CURRENTUSER}` } },
         { field: { api_name: "Converted__s" }, comparator: "equal", value: false },

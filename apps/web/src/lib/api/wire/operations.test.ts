@@ -236,7 +236,7 @@ describe("wire operations", () => {
     await deps.records.create("Leads", { Company: "Filter Test", Last_Name: "Other" });
     const body = {
       filters: {
-        group_operator: "and",
+        group_operator: "AND",
         group: [{ field: { api_name: "Company" }, comparator: "equal", value: "Filter Test" }],
       },
       search: "target",
@@ -294,10 +294,26 @@ describe("wire operations", () => {
       { filters: {} },
       { search: 12 },
       { filters: { group: [], group_operator: "xor" } },
+      {
+        filters: {
+          group_operator: "and",
+          group: [{ field: { api_name: "Company" }, comparator: "equal", value: "Example" }],
+        },
+      },
     ])
       await expect(operations.count.run(deps, input({}, body))).rejects.toBeInstanceOf(
         ValidationError,
       );
+    for (const op of [operations.bulk, operations.count]) {
+      const error = await op
+        .run(deps, input({}, { filters: { group_operator: "and", group: [] } }))
+        .catch((failure: unknown) => failure);
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(encodeError(error)).toMatchObject({
+        status: 400,
+        body: { details: { fields: { filters: expect.any(Array) } } },
+      });
+    }
     await expect(
       operations.count.run(deps, { ...input(), request: { text: async () => "{" } }),
     ).rejects.toMatchObject({ fieldErrors: { data: expect.any(Array) } });
