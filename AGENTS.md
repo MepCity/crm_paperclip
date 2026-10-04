@@ -9,13 +9,14 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 > 4. **Stay inside your worktree and the research workspace.** Never search the home folder or the whole disk (`find ~`, `find /`, `mdfind`); it triggers privacy prompts on the board's computer. Locate tools with `command -v <tool>`.
 
 ## Delivery model — module by module
-- We never copy the reference CRM all at once. Each module goes through research → spec → implementation → QA → CTO approval → board approval before the next module starts.
+- We never copy the reference CRM all at once. Each module goes through research → spec → implementation → QA → lead approval (CTO for milestones) → board approval before the next module starts.
+- Final approval of regular issues belongs to the domain leads: **UI Lead** (screens, components, design tokens, frontend requests, screen specs) and **Platform Lead** (backend, data access, API contract, auth, test and build tooling). The CTO approves milestones, cross-domain contract changes and ADR work. Ask domain questions to the matching lead and architecture questions to the CTO.
 - Order: Leads (with the minimal app shell) → Contacts → Accounts → Deals + pipeline → Activities → notes/attachments, CSV → customization → automation → reports → integrations. The board may reorder.
-- Nobody merges into `main` by hand: after QA and CTO approval the merge bot merges the branch into a clean copy of `main`, runs `pnpm verify`, and pushes `main`; on conflict or failure it reopens the issue to its engineer. If the CTO is unavailable (usage limit), work may continue on issue branches, but approvals and merges wait.
+- Nobody merges into `main` by hand: after QA and the final approval the merge bot merges the branch into a clean copy of `main`, runs `pnpm verify`, and pushes `main`; on conflict or failure it reopens the issue to its engineer. If the Claude reviewers are unavailable (usage limit), work may continue on issue branches, but approvals and merges wait.
 
 ## Research workspace (local only, never committed)
 - `~/Desktop/mepcity-research/metadata/` — reference CRM metadata (modules, fields, layouts, custom views, related lists, roles, profiles). **Source of truth for the data model.**
-- `~/Desktop/mepcity-research/captures/<slug>/` — screen captures (screenshot.png, aria.yml, page.txt, network.json, meta.json). They may show real customer data: describe structure only, never copy values, text blocks or images into the repo.
+- `~/Desktop/mepcity-research/captures/<slug>/` — screen captures (screenshot.png, aria.yml, page.txt, network.json, controls.json, meta.json). They may show real customer data: describe structure only, never copy values, text blocks or images into the repo.
 - `~/Desktop/mepcity-research/tools/capture/capture.mjs` — the only way to look at the reference CRM. It runs in its own tab of the shared, always-open browser window; never close that window, never kill Chrome, never log out.
 - `research/specs/` (in the repo) — module/screen specs derived from the research, written in neutral language.
 
@@ -25,7 +26,7 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 
 ## Engineering workflow
 - One Paperclip issue = one isolated git worktree/branch (`mep/MEP-<n>`). Keep changes small and focused.
-- Every change ships with tests. QA verifies, the CTO approves, the merge bot merges.
+- Every change ships with tests. QA verifies, the domain lead (or the CTO) approves, the merge bot merges.
 - Architecture decisions live in `docs/adr/`.
 - Never commit secrets. `.env*` files are git-ignored.
 
