@@ -39,13 +39,16 @@ import {
 import {
   applyStatements,
   checkpoint,
+  cleanGinPending,
   configureClient,
   createTables,
   currentLsn,
   deleteInserted,
   dropStatements,
   expressionIndexNames,
+  filterOperators,
   generateAndLoad,
+  ginIndexNames,
   insertRecord,
   installRls,
   measureAlter,
@@ -143,7 +146,9 @@ function makeParams(
 
 function equalityFor(option: Option, stage: string): JsonEquality {
   if (option !== "A") return "containment";
-  return stage === "A2" || stage === "rls-on" || stage === "rls-off" ? "expression" : "containment";
+  return stage === "A2" || stage === "A3" || stage === "rls-on" || stage === "rls-off"
+    ? "expression"
+    : "containment";
 }
 
 type ExplainDocument = {
@@ -155,11 +160,20 @@ async function explainQuery(
   client: pg.Client,
   text: string,
   values: unknown[],
-): Promise<{ summary: string; buffers: number; sharedRead: number }> {
+): Promise<ReturnType<typeof summarizePlan>> {
   const result = await client.query(`explain (analyze, buffers, format json) ${text}`, values);
   const raw = result.rows[0]?.["QUERY PLAN"] as ExplainDocument[] | undefined;
   const document = raw?.[0];
-  if (!document?.Plan) return { summary: "no plan", buffers: 0, sharedRead: 0 };
+  if (!document?.Plan) {
+    return {
+      summary: "no plan",
+      buffers: 0,
+      sharedRead: 0,
+      estRows: 0,
+      actualRows: 0,
+      rowsRemoved: 0,
+    };
+  }
   return summarizePlan(document.Plan, document.JIT?.Timing?.Total);
 }
 
@@ -205,6 +219,9 @@ async function measureStatement(
     plan: plan.summary,
     buffers: plan.buffers,
     sharedRead: plan.sharedRead,
+    estRows: plan.estRows,
+    actualRows: plan.actualRows,
+    rowsRemoved: plan.rowsRemoved,
   };
 }
 
@@ -318,14 +335,26 @@ async function assertEquivalent(
     const expressed = await executeList(client, "A", kind, params, "expression");
     assertSame(`${kind} expression`, expressed, await executeList(client, "B", kind, params));
   }
-  const selective = { ...params, prefixQuery: SEARCH_TERMS.prefixSelective };
-  const selectiveRows = [
-    await executeList(client, "A", "s7-prefix", selective),
-    await executeList(client, "B", "s7-prefix", selective),
-    await executeList(client, "C", "s7-prefix", selective),
-  ];
-  assertSame("s7 selective A/B", selectiveRows[0], selectiveRows[1]);
-  assertSame("s7 selective A/C", selectiveRows[0], selectiveRows[2]);
+  for (const like of searchLikes()) {
+    const search = { ...params, searchLike: like };
+    const found = [
+      await executeList(client, "A", "s7-like", search),
+      await executeList(client, "B", "s7-like", search),
+      await executeList(client, "C", "s7-like", search),
+    ];
+    assertSame(`s7-like ${like} A/B`, found[0], found[1]);
+    assertSame(`s7-like ${like} A/C`, found[0], found[2]);
+  }
+  for (const prefix of [SEARCH_TERMS.prefixQuery, SEARCH_TERMS.prefixSelective]) {
+    const search = { ...params, prefixQuery: prefix };
+    const found = [
+      await executeList(client, "A", "s7-prefix", search),
+      await executeList(client, "B", "s7-prefix", search),
+      await executeList(client, "C", "s7-prefix", search),
+    ];
+    assertSame(`s7-prefix ${prefix} A/B`, found[0], found[1]);
+    assertSame(`s7-prefix ${prefix} A/C`, found[0], found[2]);
+  }
   for (const kind of ["s2", "s4"] as const) {
     for (const capped of [false, true]) {
       const counts = [
@@ -495,6 +524,8 @@ async function measureWrites(
   for (const kind of kinds) {
     progress(`${stage} ${option} S9 ${kind} rls=${rls}`);
     await checkpoint(meter);
+    const ginIndexes = await ginIndexNames(meter, option);
+    await cleanGinPending(meter, ginIndexes);
     const startLsn = await currentLsn(meter);
     const samples: number[] = [];
     for (let index = 0; index < operations; index++) {
@@ -547,6 +578,7 @@ async function measureWrites(
       }
       samples.push(performance.now() - started);
     }
+    const ginFlushMs = await cleanGinPending(meter, ginIndexes);
     const wal = await walBytes(meter, startLsn);
     const totalMs = samples.reduce((sum, sample) => sum + sample, 0);
     rows.push({
@@ -559,6 +591,7 @@ async function measureWrites(
       medianMs: percentile(samples, 0.5),
       p95Ms: percentile(samples, 0.95),
       walBytesPerOp: operations === 0 ? 0 : wal / operations,
+      ginFlushMs,
     });
   }
   return { rows, inserted };
@@ -600,6 +633,7 @@ export async function runBench(
     await client.connect();
     await configureClient(client);
     const info = await serverInfo(client);
+    const operators = await filterOperators(client);
     const publish = async (
       checks: BenchReport["checks"] = [],
       alter: BenchReport["alter"] = null,
@@ -625,6 +659,7 @@ export async function runBench(
         checks,
         alter,
         selectivity,
+        operators,
         notes: [],
       };
       partial.notes = collectNotes(partial);
@@ -725,9 +760,9 @@ export async function runBench(
     };
 
     await measureStage("A0", "A");
-    for (const stage of ["A1", "A2"] as const) {
+    for (const stage of ["A1", "A2", "A3"] as const) {
       const ms = await applyStatements(client, stageStatements(stage, world.moduleLeads));
-      loads.push({ phase: `index ${stage}`, ms });
+      loads.push({ phase: stage === "A3" ? "stats A3" : `index ${stage}`, ms });
       await measureStage(stage, "A");
     }
     await measureStage("B0", "B");
@@ -798,17 +833,31 @@ export async function runBench(
     );
     await publish();
 
+    progress("checking A/B/C equivalence before row level security");
+    await assertEquivalent(client, world, contactIds, firstLead, cursorA);
     progress("row level security");
     await installRls(client);
     app = new pg.Client({ connectionString: roleUrl(server.urlFor("bench")) });
     await app.connect();
     await configureClient(app);
-    const rlsScenarios: Array<{ id: string; kind: ListKind; like?: string }> = [
+    const rlsScenarios: Array<{
+      id: string;
+      kind: ListKind | "s2-count";
+      like?: string;
+      prefix?: string;
+    }> = [
       { id: "S1", kind: "s1" },
       { id: "S2", kind: "s2" },
       { id: "S2-KEYSET", kind: "s2-keyset" },
       { id: "S2-OFFSET", kind: "s2-offset" },
+      { id: "S3", kind: "s3" },
+      { id: "S4", kind: "s4" },
+      { id: "S5", kind: "s5" },
+      { id: "S11", kind: "s11" },
+      { id: "S2 count", kind: "s2-count" },
       ...likeKinds,
+      { id: "S7b selective", kind: "s7-prefix", prefix: SEARCH_TERMS.prefixSelective },
+      { id: "S7b common", kind: "s7-prefix", prefix: SEARCH_TERMS.prefixQuery },
     ];
     for (const enabled of [false, true]) {
       await setRls(client, enabled);
@@ -819,32 +868,57 @@ export async function runBench(
         const equality = equalityFor(option, stage);
         for (const item of rlsScenarios) {
           const like = item.like ?? "%xqz%";
-          const measured =
-            item.kind === "s2-keyset"
-              ? keysetMeasurement(
+          const prefix = item.prefix ?? SEARCH_TERMS.prefixQuery;
+          const measured = (() => {
+            if (item.kind === "s2-keyset") {
+              return keysetMeasurement(
+                option,
+                world,
+                contactIds,
+                optionCursors,
+                protocol.measure,
+                equality,
+              );
+            }
+            if (item.kind === "s2-count") {
+              return {
+                text: countQuery(
                   option,
+                  "s2",
+                  makeParams(world, 0, contactIds, null, like, prefix),
+                  false,
+                  equality,
+                ).text,
+                values: setsFor(
                   world,
                   contactIds,
                   optionCursors,
                   protocol.measure,
-                  equality,
-                )
-              : {
-                  text: listQuery(
-                    option,
-                    item.kind,
-                    makeParams(world, 0, contactIds, null, like),
-                    equality,
-                  ).text,
-                  values: setsFor(
-                    world,
-                    contactIds,
-                    optionCursors,
-                    protocol.measure,
-                    (params) => listQuery(option, item.kind, params, equality).values,
-                    like,
-                  ),
-                };
+                  (params) => countQuery(option, "s2", params, false, equality).values,
+                  like,
+                  prefix,
+                ),
+              };
+            }
+            const kind = item.kind;
+            return {
+              text: listQuery(
+                option,
+                kind,
+                makeParams(world, 0, contactIds, null, like, prefix),
+                equality,
+              ).text,
+              values: setsFor(
+                world,
+                contactIds,
+                optionCursors,
+                protocol.measure,
+                (params) => listQuery(option, kind, params, equality).values,
+                like,
+                prefix,
+              ),
+            };
+          })();
           const query = { text: measured.text };
           const values = measured.values;
           progress(`${stage} ${option} ${item.id}`);
@@ -874,6 +948,9 @@ export async function runBench(
             plan: plan.summary,
             buffers: plan.buffers,
             sharedRead: plan.sharedRead,
+            estRows: plan.estRows,
+            actualRows: plan.actualRows,
+            rowsRemoved: plan.rowsRemoved,
           });
         }
         const fullText = fullQuery(option, firstLead).text;
@@ -904,6 +981,9 @@ export async function runBench(
           plan: plan.summary,
           buffers: plan.buffers,
           sharedRead: plan.sharedRead,
+          estRows: plan.estRows,
+          actualRows: plan.actualRows,
+          rowsRemoved: plan.rowsRemoved,
         });
       }
     }
@@ -1002,6 +1082,7 @@ export async function runBench(
         rows: leadCount.rows[0]?.n ?? 0,
       },
       selectivity,
+      operators,
       notes: [],
     };
     report.notes = collectNotes(report);

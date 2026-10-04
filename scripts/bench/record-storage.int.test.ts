@@ -1,6 +1,6 @@
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { SEARCH_TERMS, universe } from "./dataset";
+import { INDEXED_LEAD_KEYS, SEARCH_TERMS, universe } from "./dataset";
 import { assertSame, executeCount, executeFull, executeList, executeReport } from "./exec";
 import type { JsonEquality, ListKind, ListParams, ListRow } from "./queries";
 import {
@@ -9,6 +9,7 @@ import {
   generateAndLoad,
   installRls,
   roleUrl,
+  stageStatements,
   verifyRls,
 } from "./storage";
 
@@ -172,7 +173,12 @@ describe("storage options", () => {
       assertSame(`report ${byOwner} A/C`, reports[0], reports[2]);
     }
 
-    for (const like of [`%${SEARCH_TERMS.rare8}%`, `%${SEARCH_TERMS.common8}%`]) {
+    for (const like of [
+      `%${SEARCH_TERMS.common3}%`,
+      `%${SEARCH_TERMS.rare3}%`,
+      `%${SEARCH_TERMS.common8}%`,
+      `%${SEARCH_TERMS.rare8}%`,
+    ]) {
       const search = params({ searchLike: like });
       const rows = [
         await executeList(admin, "A", "s7-like", search),
@@ -181,6 +187,16 @@ describe("storage options", () => {
       ];
       assertSame(`search ${like} A/B`, rows[0], rows[1]);
       assertSame(`search ${like} A/C`, rows[0], rows[2]);
+    }
+    for (const prefix of [SEARCH_TERMS.prefixQuery, SEARCH_TERMS.prefixSelective]) {
+      const search = params({ prefixQuery: prefix });
+      const rows = [
+        await executeList(admin, "A", "s7-prefix", search),
+        await executeList(admin, "B", "s7-prefix", search),
+        await executeList(admin, "C", "s7-prefix", search),
+      ];
+      assertSame(`prefix ${prefix} A/B`, rows[0], rows[1]);
+      assertSame(`prefix ${prefix} A/C`, rows[0], rows[2]);
     }
 
     const full = [
@@ -191,6 +207,20 @@ describe("storage options", () => {
     assertSame("full A/B", full[0], full[1]);
     assertSame("full A/C", full[0], full[2]);
   }, 120_000);
+
+  it("creates one extended statistic for each indexed lead expression", async () => {
+    for (const statement of stageStatements("A3", world.moduleLeads)) {
+      await admin.query(statement);
+    }
+    const found = await admin.query<{ stxname: string }>(`
+      select s.stxname
+      from pg_statistic_ext s
+      join pg_namespace n on n.oid = s.stxnamespace
+      where n.nspname = 'bench_a'
+    `);
+    const names = new Set(found.rows.map((row) => row.stxname));
+    for (const key of INDEXED_LEAD_KEYS) expect(names.has(`a_s_${key}`), key).toBe(true);
+  });
 
   it("isolates organizations with row level security", async () => {
     await installRls(admin);

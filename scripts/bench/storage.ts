@@ -19,7 +19,7 @@ import {
   uuidV7,
 } from "./dataset";
 
-export type Stage = "A0" | "A1" | "A2" | "B0" | "B1" | "C0";
+export type Stage = "A0" | "A1" | "A2" | "A3" | "B0" | "B1" | "C0";
 
 const SYSTEM_COLUMNS = [
   "id",
@@ -180,6 +180,14 @@ export function stageStatements(stage: Stage, moduleLeads: string): string[] {
       return INDEXED_LEAD_KEYS.map((key) => {
         const field = fieldByKey(key);
         return `create index a_x_${assertKey(key)} on bench_a.records (${aExpr(field)}, id) ${partial}`;
+      });
+    case "A3":
+      // Partial expression indexes do not supply planner statistics. One
+      // extended statistic per indexed expression does. Kinds stay unspecified:
+      // PostgreSQL 18 rejects an explicit kind list on a single expression.
+      return INDEXED_LEAD_KEYS.map((key) => {
+        const field = fieldByKey(key);
+        return `create statistics bench_a.a_s_${assertKey(key)} on (${aExpr(field)}) from bench_a.records`;
       });
     case "B0":
       return [
@@ -762,6 +770,93 @@ export async function deleteInserted(
 
 export async function checkpoint(client: pg.Client): Promise<void> {
   await client.query("checkpoint");
+}
+
+/** GIN indexes on the table a write batch modifies. */
+export async function ginIndexNames(client: pg.Client, option: "A" | "B" | "C"): Promise<string[]> {
+  const schema = option === "A" ? "bench_a" : option === "B" ? "bench_b" : "bench_c";
+  const tables = option === "B" ? ["leads"] : ["records"];
+  const result = await client.query<{ name: string }>(
+    `select n.nspname || '.' || c.relname as name
+     from pg_class c
+     join pg_namespace n on n.oid = c.relnamespace
+     join pg_am am on am.oid = c.relam
+     join pg_index i on i.indexrelid = c.oid
+     join pg_class t on t.oid = i.indrelid
+     join pg_namespace tn on tn.oid = t.relnamespace
+     where am.amname = 'gin' and tn.nspname = $1 and t.relname = any($2::text[])
+     order by 1`,
+    [schema, tables],
+  );
+  return result.rows.map((row) => row.name);
+}
+
+/** Empties fastupdate pending lists. Returns the call duration in milliseconds. */
+export async function cleanGinPending(
+  client: pg.Client,
+  indexes: readonly string[],
+): Promise<number> {
+  if (indexes.length === 0) return 0;
+  const started = performance.now();
+  for (const name of indexes) {
+    await client.query("select gin_clean_pending_list($1::regclass)", [name]);
+  }
+  return performance.now() - started;
+}
+
+export type OperatorLeak = {
+  operator: string;
+  leftType: string;
+  rightType: string;
+  proc: string;
+  leakproof: boolean;
+};
+
+/** Operators used by the scenario filters, with their leakproof flag. */
+export async function filterOperators(client: pg.Client): Promise<OperatorLeak[]> {
+  const result = await client.query<{
+    operator: string;
+    left_type: string;
+    right_type: string;
+    proc: string;
+    leakproof: boolean;
+  }>(`
+    select o.oprname as operator,
+      pg_catalog.format_type(o.oprleft, null) as left_type,
+      pg_catalog.format_type(o.oprright, null) as right_type,
+      p.proname as proc,
+      p.proleakproof as leakproof
+    from pg_operator o
+    join pg_proc p on p.oid = o.oprcode
+    join pg_type l on l.oid = o.oprleft
+    join pg_type r on r.oid = o.oprright
+    where o.oprnamespace = 'pg_catalog'::regnamespace
+      and (l.typname, o.oprname, r.typname) in (
+        ('text', '=', 'text'),
+        ('text', '>=', 'text'),
+        ('text', '<', 'text'),
+        ('text', '>', 'text'),
+        ('text', '~~*', 'text'),
+        ('bool', '=', 'bool'),
+        ('numeric', '>=', 'numeric'),
+        ('timestamptz', '>=', 'timestamptz'),
+        ('timestamptz', '<', 'timestamptz'),
+        ('uuid', '=', 'uuid'),
+        ('jsonb', '@>', 'jsonb'),
+        ('jsonb', '->', 'text'),
+        ('jsonb', '->>', 'text'),
+        ('tsvector', '@@', 'tsquery'),
+        ('record', '>', 'record')
+      )
+    order by 2, 1, 3
+  `);
+  return result.rows.map((row) => ({
+    operator: row.operator,
+    leftType: row.left_type,
+    rightType: row.right_type,
+    proc: row.proc,
+    leakproof: row.leakproof,
+  }));
 }
 
 export async function walBytes(client: pg.Client, startLsn: string): Promise<number> {
