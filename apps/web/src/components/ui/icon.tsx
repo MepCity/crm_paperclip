@@ -23,9 +23,57 @@ import {
 } from "lucide-react";
 import type { SVGProps } from "react";
 
+/** Original filled triangles and magnifier; no reference icon assets or titles. */
+function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 8 4.5"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M0 0h8L4 4.5Z" />
+    </svg>
+  );
+}
+
+function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 4.5 8"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M0 0v8l4.5-4Z" />
+    </svg>
+  );
+}
+
+function FilterSearch(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 13.5 13.5"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
+      <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
+  filterChevronDown: FilterChevronDown,
+  filterChevronRight: FilterChevronRight,
+  filterSearch: FilterSearch,
   building: Building2,
   check: Check,
   chevronUp: ChevronUp,
