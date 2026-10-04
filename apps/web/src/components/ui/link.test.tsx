@@ -9,6 +9,9 @@ test("Link renders an anchor to its target for every variant", () => {
   render(
     <>
       <Link href="/text">Text link</Link>
+      <Link href="/records/1" variant="body">
+        Body link
+      </Link>
       <Link href="/primary" variant="primary">
         Primary link
       </Link>
@@ -26,6 +29,7 @@ test("Link renders an anchor to its target for every variant", () => {
 
   const targets: Record<string, string> = {
     "Text link": "/text",
+    "Body link": "/records/1",
     "Primary link": "/primary",
     "Secondary link": "/secondary",
     "Ghost link": "/ghost",

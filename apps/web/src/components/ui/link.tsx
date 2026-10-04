@@ -8,10 +8,18 @@ import {
 } from "react-aria-components";
 import { buttonSizes, buttonStyles } from "./button";
 
+export type LinkVariant =
+  | "text"
+  | "body"
+  | "rail"
+  | "railNested"
+  | "icon"
+  | keyof typeof buttonStyles;
+
 export interface LinkProps extends Omit<AriaLinkProps, "render"> {
   "aria-current"?: "page";
   href: string;
-  variant?: "text" | "rail" | "railNested" | "icon" | keyof typeof buttonStyles;
+  variant?: LinkVariant;
   size?: keyof typeof buttonSizes;
   prefetch?: NextLinkProps["prefetch"];
   replace?: boolean;
@@ -38,7 +46,9 @@ export function Link({
         ? "inline-flex items-center justify-center rounded-md text-text-muted data-hovered:bg-surface-hover"
         : variant === "text"
           ? "text-primary rounded-sm data-hovered:underline"
-          : `inline-flex items-center justify-center font-medium rounded-md ${buttonStyles[variant]} ${buttonSizes[size]}`;
+          : variant === "body"
+            ? "rounded-sm text-text"
+            : `inline-flex items-center justify-center font-medium rounded-md ${buttonStyles[variant]} ${buttonSizes[size]}`;
 
   return (
     <AriaLink
