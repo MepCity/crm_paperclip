@@ -39,6 +39,35 @@ it("keeps a query and hash on a relative path", () => {
   );
 });
 
+it("rejects hosts hidden behind whitespace controls", () => {
+  expect(safeNextPath("/\t/example.org")).toBe("/");
+  expect(safeNextPath("/\n/example.org")).toBe("/");
+  expect(safeNextPath("/\r/example.org")).toBe("/");
+  expect(safeNextPath("/\t\\example.org")).toBe("/");
+});
+
+it("rejects a leading or embedded tab, newline, or carriage return", () => {
+  expect(safeNextPath("\t/dev/ui")).toBe("/");
+  expect(safeNextPath("/dev/\tui")).toBe("/");
+  expect(safeNextPath("\n/dev/ui")).toBe("/");
+  expect(safeNextPath("/dev/\nui")).toBe("/");
+  expect(safeNextPath("\r/dev/ui")).toBe("/");
+  expect(safeNextPath("/dev/\rui")).toBe("/");
+});
+
+it("rejects a backslash in the middle of a path", () => {
+  expect(safeNextPath("/dev/ui\\secret")).toBe("/");
+});
+
+it("rejects a delete character", () => {
+  expect(safeNextPath("/dev/\u007Fui")).toBe("/");
+});
+
+it("returns the resolved path rather than the raw input", () => {
+  expect(safeNextPath("/dev/../ui")).toBe("/ui");
+  expect(safeNextPath("/dev/./ui?tab=form#menu")).toBe("/dev/ui?tab=form#menu");
+});
+
 it("reads the first next query value and drops an unsafe one", () => {
   expect(readNextParam("/dev/ui")).toBe("/dev/ui");
   expect(readNextParam(["/dev/ui", "/sign-up"])).toBe("/dev/ui");

@@ -57,6 +57,7 @@ test("a wrong password shows a general error and stays on sign in", async ({
 test("the correct password opens home", async ({ page }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user);
   await expect(page).toHaveURL("/");
   await expect(page.getByText(`Signed in as ${user.name} (${user.email})`)).toBeVisible();
@@ -65,6 +66,7 @@ test("the correct password opens home", async ({ page }) => {
 test("signing up again with the same email shows an error", async ({ page, pageErrors }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto("/sign-up");
   await page.getByRole("textbox", { name: "Name" }).fill(user.name);
   await page.getByRole("textbox", { name: "Email" }).fill(user.email);
@@ -79,6 +81,7 @@ test("signing up again with the same email shows an error", async ({ page, pageE
 test("sign in follows a safe next path", async ({ page }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user, { next: "/dev/ui" });
   await expect(page).toHaveURL("/dev/ui");
 });
@@ -86,6 +89,7 @@ test("sign in follows a safe next path", async ({ page }) => {
 test("sign in ignores a protocol-relative next path", async ({ page }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto("/sign-in?next=//example.org");
   await page.getByRole("textbox", { name: "Email" }).fill(user.email);
   await page.getByLabel("Password").fill(user.password);
@@ -95,9 +99,27 @@ test("sign in ignores a protocol-relative next path", async ({ page }) => {
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
+test("sign in ignores a next path that hides a host behind a tab", async ({ page }) => {
+  const user = await signUpNewUser(page);
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await page.goto("/sign-in?next=/%09/example.org");
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByLabel("Password").fill(user.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(page).toHaveURL("/");
+  expect(new URL(page.url()).hostname).toBe("127.0.0.1");
+
+  await page.goto("/sign-in?next=/%09/example.org");
+  await expect(page).toHaveURL("/");
+  expect(new URL(page.url()).hostname).toBe("127.0.0.1");
+});
+
 test("sign in ignores an absolute next URL", async ({ page }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto("/sign-in?next=https://example.org");
   await page.getByRole("textbox", { name: "Email" }).fill(user.email);
   await page.getByLabel("Password").fill(user.password);
