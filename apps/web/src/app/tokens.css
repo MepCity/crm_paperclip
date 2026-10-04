@@ -99,6 +99,7 @@
   --color-surface-active: #edf0f9;
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
+  --color-text-empty: #8b9ab9;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
@@ -106,8 +107,8 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /* typography.md fits bold stems at weight 510. The list spec also measures medium
-     for toolbar labels and column headers. CSS line-height is not measurable from a
-     single-line capture, so no --leading-* token is derived. */
+     for toolbar labels and column headers. A type style's CSS line-height is not a
+     --leading-* token; the list row's 18 px line pitch is --size-list-line-height. */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 510;
@@ -216,20 +217,33 @@
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
 
-  /* Records table. Header height includes the 2 px bottom border. Footer height is the
-     band between its two 1 px lines. */
+  /* Records table. Header height includes the 2 px bottom border. A single-line row is
+     the 9 px pad, one 18 px line and the 9 px pad again; the pitch adds the 1 px
+     separator. Footer height is the band between its two 1 px lines. */
   --size-list-header-height: 37px;
   --size-list-header-border: 2px;
-  --size-list-row-height: 54px;
-  --size-list-row-pitch: 55px;
+  --size-list-header-rule: 23.5px;
+  --size-list-header-rule-offset: 6px;
+  --size-list-row-height: 36px;
+  --size-list-row-pitch: 37px;
+  --size-list-row-pad: 9px;
+  --size-list-line-height: 18px;
   --size-list-leading-width: 240px;
   --size-list-leading-pair-width: 100px;
   --size-list-badge-width: 140px;
+  --size-list-checkbox-inset: 10px;
+  --size-list-checkbox-offset: 12px;
   --size-list-column-width: 200px;
   --size-list-cell-inset: 12px;
   --size-list-settings-width: 40px;
   --size-list-settings-row-width: 250px;
+  --size-list-empty-offset: 30px;
   --size-list-footer-height: 31px;
+  --size-list-footer-gap-before: 21px;
+  --size-list-footer-gap-after: 19.5px;
+  --size-list-footer-end: 26px;
+  --size-list-chevron-width: 6px;
+  --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
 
   /* View edit form */

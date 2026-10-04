@@ -51,6 +51,8 @@ function boxBorder(isSelected: boolean, isInvalid: boolean): BoxBorder {
 
 export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" | "value"> {
   label: string;
+  /** Keeps the accessible name and removes the label from the visual layout. */
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string;
   /** `first-line` keeps the box on the first wrapped line. The default stays centered. */
@@ -59,6 +61,7 @@ export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" |
 
 export function Checkbox({
   label,
+  hideLabel = false,
   description,
   errorMessage,
   align = "center",
@@ -82,7 +85,9 @@ export function Checkbox({
             >
               {isSelected && <Icons.check className={styles.check} />}
             </span>
-            <span className={wraps ? styles.labelFirstLine : styles.label}>{label}</span>
+            <span className={hideLabel ? "sr-only" : wraps ? styles.labelFirstLine : styles.label}>
+              {label}
+            </span>
           </>
         )}
       </CheckboxButton>

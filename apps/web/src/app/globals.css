@@ -51,6 +51,11 @@
   --color-menu-surface: var(--color-menu-surface);
   --color-utility-border: var(--color-utility-border);
   --color-utility-help: var(--color-utility-help);
+  --color-panel-border: var(--color-panel-border);
+  --color-row-separator: var(--color-row-separator);
+  --color-text-strong: var(--color-text-strong);
+  --color-text-disabled: var(--color-text-disabled);
+  --color-text-empty: var(--color-text-empty);
 
   --color-monogram: var(--color-monogram);
   --color-avatar: var(--color-avatar);
@@ -70,6 +75,7 @@
 
   --text-2xs: var(--text-2xs);
   --text-xs: var(--text-xs);
+  --text-13: var(--text-13);
   --text-sm: var(--text-sm);
   --text-md: var(--text-md);
   --text-base: var(--text-base);

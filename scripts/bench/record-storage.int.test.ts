@@ -9,6 +9,7 @@ import {
   type ListRow,
   listQuery,
 } from "./queries";
+import { loadedParams } from "./slot-queries";
 import {
   applyStatements,
   configureClient,
@@ -26,6 +27,7 @@ const world = universe(11);
 let admin: pg.Client;
 let loadedLeadId = "";
 let contactId = "";
+let selected: ListParams | undefined;
 
 function params(overrides: Partial<ListParams> = {}): ListParams {
   return {
@@ -43,6 +45,7 @@ function params(overrides: Partial<ListParams> = {}): ListParams {
     searchLike: `%${SEARCH_TERMS.common3}%`,
     prefixQuery: SEARCH_TERMS.prefixQuery,
     offset: 5000,
+    ...selected,
     ...overrides,
   };
 }
@@ -65,6 +68,7 @@ beforeAll(async () => {
   await admin.query(
     "vacuum analyze bench_a.records, bench_b.leads, bench_b.contacts, bench_c.records, bench_c.record_values",
   );
+  selected = (await loadedParams(admin, world, 1))[0];
 }, 120_000);
 
 afterAll(async () => {
@@ -72,14 +76,8 @@ afterAll(async () => {
   await admin.query("drop schema if exists bench_a cascade");
   await admin.query("drop schema if exists bench_b cascade");
   await admin.query("drop schema if exists bench_c cascade");
-  await admin.query(`
-    do $$ begin
-      if exists (select 1 from pg_roles where rolname = 'bench_app') then
-        execute 'drop owned by bench_app';
-        drop role bench_app;
-      end if;
-    end $$
-  `);
+  // bench_app is cluster-wide and may have grants in another worker database.
+  // The throwaway cluster owns role cleanup after all workers finish.
   await admin.end();
 });
 
@@ -96,6 +94,7 @@ describe("storage options", () => {
       "s7-like",
       "s7-prefix",
       "s11",
+      "s14",
     ];
     for (const kind of kinds) {
       const rows = [
@@ -103,6 +102,8 @@ describe("storage options", () => {
         await executeList(admin, "B", kind, input),
         await executeList(admin, "C", kind, input),
       ];
+      if (["s2", "s3", "s4", "s5", "s11", "s14"].includes(kind))
+        expect(rows[0]?.length, kind).toBeGreaterThan(0);
       assertSame(`${kind} A/B`, rows[0], rows[1]);
       assertSame(`${kind} A/C`, rows[0], rows[2]);
     }
