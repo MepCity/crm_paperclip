@@ -74,11 +74,20 @@ export interface RecordData {
   fields: Readonly<Record<string, FieldValue>>;
 }
 
-/** The only comparator observed in the list specification. */
-export type Comparator = "is";
+/** Wire literals used by saved view definitions (list-views.md › View definitions). */
+export type Comparator = "equal" | "contains" | "not_contains" | "less_equal";
+
+/** A `${…}` value of a view definition; the adapter resolves it when the query runs. */
+export type CriteriaToken =
+  | { token: "CURRENTUSER" }
+  | { token: "TODAY" }
+  | { token: "AGEINDAYS"; offset: number }
+  | { token: "CATEGORY"; name: string };
+
+export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
 
 export type Criteria =
-  | { field: string; comparator: Comparator; value: FieldValue | readonly FieldValue[] }
+  | { field: string; comparator: Comparator; value: CriteriaValue }
   | { groupOperator: "and" | "or"; group: readonly Criteria[] };
 
 export interface SortSpec {
@@ -112,6 +121,8 @@ export interface ListResult {
   page: number;
   perPage: number;
   moreRecords: boolean;
+  /** The order the adapter applied: query sort, else view sort, else the default. */
+  sort: SortSpec;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
