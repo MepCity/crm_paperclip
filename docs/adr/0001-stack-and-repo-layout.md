@@ -95,7 +95,7 @@ These rules are binding from the first CRM issue. The physical storage of record
 2. **One write path.** Every record change goes through one service: validate against metadata, authorize, write, append a domain event — in one transaction. Server actions, REST handlers, CSV import and workflow actions all call it.
 3. **Events before automation.** Domain events in an outbox table are the trigger source for workflow rules, notifications, the audit trail and webhooks.
 4. **Queries are compiled.** List views, filters, search and reports compile criteria plus metadata into parameterized SQL. User input never reaches SQL as text.
-5. **PostgreSQL covers the infrastructure:** JSONB with GIN and expression indexes for flexible fields, full-text search, row-level security, the job queue, and `LISTEN/NOTIFY` for live updates.
+5. **PostgreSQL covers the infrastructure:** JSONB with GIN and expression indexes for flexible fields, full-text search, row-level security, the job queue, and `LISTEN/NOTIFY` for live updates. ADR 0002 §8 replaces the GIN and expression indexes with typed index slots and defers the search index.
 6. **The REST API is a thin layer** over the same services, with routes derived from module API names.
 
 ### 6. Test strategy
