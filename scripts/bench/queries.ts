@@ -164,7 +164,10 @@ function orderBy(option: Option, kind: ListKind): string {
         : `ln.value_text`;
   const created = option === "C" ? "r.created_at" : "created_at";
   const updated = option === "C" ? "r.updated_at" : "updated_at";
-  const id = option === "C" ? "r.id" : "id";
+  // Qualify id. The select list aliases `id::text as id`, and ORDER BY binds a
+  // bare name to that output column before the table column, so the index's
+  // uuid id cannot satisfy the sort.
+  const id = tableId(option);
   switch (kind) {
     case "s2":
     case "s2-keyset":

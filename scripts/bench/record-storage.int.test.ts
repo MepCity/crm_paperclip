@@ -2,8 +2,15 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { INDEXED_LEAD_KEYS, SEARCH_TERMS, universe } from "./dataset";
 import { assertSame, executeCount, executeFull, executeList, executeReport } from "./exec";
-import type { JsonEquality, ListKind, ListParams, ListRow } from "./queries";
 import {
+  type JsonEquality,
+  type ListKind,
+  type ListParams,
+  type ListRow,
+  listQuery,
+} from "./queries";
+import {
+  applyStatements,
   configureClient,
   createTables,
   generateAndLoad,
@@ -207,6 +214,34 @@ describe("storage options", () => {
     assertSame("full A/B", full[0], full[1]);
     assertSame("full A/C", full[0], full[2]);
   }, 120_000);
+
+  it("does not sort A or B plans for S1 and S7", async () => {
+    await applyStatements(admin, stageStatements("A0", world.moduleLeads));
+    await applyStatements(admin, stageStatements("B0", world.moduleLeads));
+    await admin.query("vacuum analyze bench_a.records, bench_b.leads");
+    const input = params();
+    await admin.query("begin");
+    try {
+      // At a few hundred rows the planner can bitmap the owner index and
+      // sort. These switches leave the order index as the cheap path, so a
+      // remaining Sort node means the id leg still does not match that index.
+      await admin.query("set local enable_seqscan = off");
+      await admin.query("set local enable_bitmapscan = off");
+      await admin.query("set local enable_sort = off");
+      for (const option of ["A", "B"] as const) {
+        for (const kind of ["s1", "s7-like", "s7-prefix"] as const) {
+          const query = listQuery(option, kind, input);
+          const result = await admin.query(`explain (format json) ${query.text}`, query.values);
+          const text = JSON.stringify(result.rows[0]?.["QUERY PLAN"]);
+          expect(text, `${option} ${kind}`).not.toContain("Incremental Sort");
+          expect(text, `${option} ${kind}`).not.toContain('"Node Type":"Sort"');
+          expect(text, `${option} ${kind}`).not.toContain('"Node Type": "Sort"');
+        }
+      }
+    } finally {
+      await admin.query("rollback");
+    }
+  }, 60_000);
 
   it("creates one extended statistic for each indexed lead expression", async () => {
     for (const statement of stageStatements("A3", world.moduleLeads)) {

@@ -51,6 +51,18 @@ describe("listQuery", () => {
     expect(query.values).toContain(input.cursorId);
   });
 
+  it("orders A and B lists by the qualified id column", () => {
+    const orderClause = (text: string) => text.slice(text.toLowerCase().lastIndexOf("order by"));
+    for (const kind of ["s1", "s2", "s3", "s4", "s5", "s7-like", "s7-prefix", "s11"] as const) {
+      const a = orderClause(listQuery("A", kind, input).text);
+      const b = orderClause(listQuery("B", kind, input).text);
+      expect(a).toContain("bench_a.records.id");
+      expect(b).toContain("bench_b.leads.id");
+      expect(a).not.toMatch(/(^|,\s)id (asc|desc)/);
+      expect(b).not.toMatch(/(^|,\s)id (asc|desc)/);
+    }
+  });
+
   it("continues a null keyset cursor inside the null tail", () => {
     const query = listQuery("B", "s2-keyset", { ...input, cursorCompany: null }, "containment");
     expect(query.text.toLowerCase()).not.toContain("union all");

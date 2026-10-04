@@ -44,4 +44,42 @@ describe("summarizePlan", () => {
     expect(summary.actualRows).toBe(10);
     expect(summary.rowsRemoved).toBe(9);
   });
+
+  it("lists Incremental Sort and Gather in tree order", () => {
+    const summary = summarizePlan({
+      "Node Type": "Limit",
+      "Shared Hit Blocks": 4,
+      "Shared Read Blocks": 1,
+      Plans: [
+        {
+          "Node Type": "Gather",
+          "Workers Planned": 2,
+          "Workers Launched": 2,
+          "Shared Hit Blocks": 4,
+          "Shared Read Blocks": 1,
+          Plans: [
+            {
+              "Node Type": "Incremental Sort",
+              Plans: [
+                {
+                  "Node Type": "Index Scan",
+                  "Index Name": "a_updated_idx",
+                  "Plan Rows": 50,
+                  "Actual Rows": 50,
+                  "Actual Loops": 1,
+                  "Rows Removed by Filter": 3,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(summary.summary).toBe(
+      "Gather planned=2 launched=2; Incremental Sort; Index Scan a_updated_idx",
+    );
+    expect(summary.buffers).toBe(5);
+    expect(summary.actualRows).toBe(50);
+    expect(summary.rowsRemoved).toBe(3);
+  });
 });

@@ -842,11 +842,11 @@ export async function filterOperators(client: pg.Client): Promise<OperatorLeak[]
         ('timestamptz', '>=', 'timestamptz'),
         ('timestamptz', '<', 'timestamptz'),
         ('uuid', '=', 'uuid'),
+        ('uuid', '>', 'uuid'),
         ('jsonb', '@>', 'jsonb'),
         ('jsonb', '->', 'text'),
         ('jsonb', '->>', 'text'),
-        ('tsvector', '@@', 'tsquery'),
-        ('record', '>', 'record')
+        ('tsvector', '@@', 'tsquery')
       )
     order by 2, 1, 3
   `);

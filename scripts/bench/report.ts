@@ -75,7 +75,11 @@ export type PlanNode = {
   "Actual Rows"?: number;
   "Actual Loops"?: number;
   "Rows Removed by Filter"?: number;
+  "Workers Planned"?: number;
+  "Workers Launched"?: number;
 };
+
+const SHAPE_NODES = new Set(["Sort", "Incremental Sort", "Gather", "Gather Merge"]);
 
 export type PlanSummary = {
   summary: string;
@@ -99,17 +103,28 @@ function firstScan(node: PlanNode): PlanNode | undefined {
   return undefined;
 }
 
-export function summarizePlan(plan: PlanNode, jitTotalMs?: number): PlanSummary {
-  const scans: string[] = [];
-  const walk = (node: PlanNode): void => {
-    if (node["Node Type"].includes("Scan")) {
-      const index = node["Index Name"];
-      scans.push(
-        index
-          ? `${node["Node Type"]} ${index}`
-          : `${node["Node Type"]} ${node["Relation Name"] ?? ""}`.trim(),
-      );
+function shapeLabel(node: PlanNode): string | undefined {
+  const type = node["Node Type"];
+  if (type.includes("Scan")) {
+    const index = node["Index Name"];
+    return index ? `${type} ${index}` : `${type} ${node["Relation Name"] ?? ""}`.trim();
+  }
+  if (!SHAPE_NODES.has(type)) return undefined;
+  if (type === "Gather" || type === "Gather Merge") {
+    const planned = node["Workers Planned"];
+    const launched = node["Workers Launched"];
+    if (planned !== undefined || launched !== undefined) {
+      return `${type} planned=${planned ?? 0} launched=${launched ?? 0}`;
     }
+  }
+  return type;
+}
+
+export function summarizePlan(plan: PlanNode, jitTotalMs?: number): PlanSummary {
+  const parts: string[] = [];
+  const walk = (node: PlanNode): void => {
+    const label = shapeLabel(node);
+    if (label) parts.push(label);
     for (const child of node.Plans ?? []) walk(child);
   };
   walk(plan);
@@ -117,7 +132,7 @@ export function summarizePlan(plan: PlanNode, jitTotalMs?: number): PlanSummary 
   const loops = scan?.["Actual Loops"] ?? 1;
   const buffers = (plan["Shared Hit Blocks"] ?? 0) + (plan["Shared Read Blocks"] ?? 0);
   const sharedRead = plan["Shared Read Blocks"] ?? 0;
-  let summary = scans.join("; ") || plan["Node Type"];
+  let summary = parts.join("; ") || plan["Node Type"];
   if (jitTotalMs !== undefined && jitTotalMs > 0) {
     summary = `${summary}; jit ${jitTotalMs.toFixed(1)}ms`;
   }
@@ -412,8 +427,100 @@ function scanFacts(row: TimingRow): string {
   return `removed ${Math.round(row.rowsRemoved)} est ${Math.round(row.estRows)} actual ${Math.round(row.actualRows)} buf ${row.buffers} (${row.plan})`;
 }
 
+function hasSortNode(plan: string): boolean {
+  return plan.split("; ").some((part) => {
+    const name = part.trim();
+    return name === "Sort" || name.startsWith("Incremental Sort");
+  });
+}
+
+function examinedRows(row: TimingRow): number {
+  return row.rowsRemoved + row.actualRows;
+}
+
+function buffersMatch(left: number, right: number): boolean {
+  const scale = Math.max(left, right, 1);
+  return Math.abs(left - right) / scale <= 0.01;
+}
+
+const STORAGE_STAGES = new Set(["A0", "A1", "A2", "A3", "B0", "B1", "C0"]);
+
+/** Storage stages whose plan and buffer count match, but whose median differs by more than 2x. */
+function samePlanSpreads(timings: TimingRow[]): string[] {
+  const groups = new Map<string, TimingRow[]>();
+  for (const row of timings) {
+    if (!STORAGE_STAGES.has(row.stage)) continue;
+    const key = `${row.scenario}\0${row.option}`;
+    const list = groups.get(key) ?? [];
+    list.push(row);
+    groups.set(key, list);
+  }
+  const notes: string[] = [];
+  for (const [key, rows] of groups) {
+    const used = new Set<number>();
+    for (let i = 0; i < rows.length; i++) {
+      if (used.has(i)) continue;
+      const base = rows[i];
+      if (!base) continue;
+      const cluster = [base];
+      used.add(i);
+      for (let j = i + 1; j < rows.length; j++) {
+        if (used.has(j)) continue;
+        const other = rows[j];
+        if (!other || other.plan !== base.plan || !buffersMatch(base.buffers, other.buffers))
+          continue;
+        cluster.push(other);
+        used.add(j);
+      }
+      if (cluster.length < 2) continue;
+      const medians = cluster.map((row) => row.medianMs);
+      const hi = Math.max(...medians);
+      const lo = Math.min(...medians);
+      // Sub-millisecond medians move by 2x from timer noise. The rule is for
+      // a spread large enough to change a storage decision, such as S10.
+      if (!(lo >= 5 && hi >= 20 && hi > lo * 2)) continue;
+      const [scenario, option] = key.split("\0");
+      const listed = cluster
+        .map(
+          (row) =>
+            `${row.stage} ${row.medianMs.toFixed(1)} ms / ${row.buffers} buffers / shared_read ${row.sharedRead}`,
+        )
+        .join("; ");
+      const gather = cluster.some((row) => row.plan.includes("Gather"));
+      const cause = gather
+        ? "Gather is in the plan and the launched worker count is the same on every stage in this group, so the spread is not a different number of parallel workers. Equal buffer counts mean the same pages were read. The elapsed-time spread is machine load or OS cache warmth between stages: a stage measured just after a large index build can miss the OS page cache, while a later stage of the same scan hits it. shared_read counts blocks missing from shared_buffers, not physical I/O."
+        : "The plan has no Gather node, so this is not a parallel-worker difference. Equal buffer counts mean the same pages were read. The elapsed-time spread is machine load or OS cache warmth between stages: a stage measured just after a large index build can miss the OS page cache, while a later stage of the same scan hits it. shared_read counts blocks missing from shared_buffers, not physical I/O.";
+      notes.push(
+        `${scenario} ${option} medians differ by more than 2x on the same plan and the same buffer count: ${listed}. Plan: ${base.plan}. ${cause}`,
+      );
+    }
+  }
+  const s10 = timings.filter((row) => row.scenario === "S10 source" && row.option === "A");
+  if (s10.length >= 2) {
+    const hi = Math.max(...s10.map((row) => row.medianMs));
+    const lo = Math.min(...s10.map((row) => row.medianMs));
+    const plans = new Set(s10.map((row) => row.plan));
+    if (lo >= 5 && hi >= 20 && hi > lo * 2 && plans.size > 1) {
+      const listed = s10
+        .map(
+          (row) =>
+            `${row.stage} ${row.medianMs.toFixed(1)} ms (${row.plan}, ${row.buffers} buffers)`,
+        )
+        .join("; ");
+      const gather = [...plans].some((plan) => plan.includes("Gather"));
+      const cause = gather
+        ? "Gather is present on only some stages, so the spread follows parallel workers."
+        : "The plans differ, so this is not the same access path.";
+      notes.push(
+        `S10 source on A medians differ by more than 2x and the plans are not the same: ${listed}. ${cause}`,
+      );
+    }
+  }
+  return notes;
+}
+
 export function collectNotes(
-  report: Pick<BenchReport, "timings" | "checks" | "writes" | "selectivity" | "workMem">,
+  report: Pick<BenchReport, "timings" | "checks" | "writes" | "selectivity">,
 ): string[] {
   const statusPct = (report.selectivity.leadStatusShare * 100).toFixed(1);
   const optPct = (report.selectivity.emailOptOutFalseShare * 100).toFixed(1);
@@ -426,7 +533,7 @@ export function collectNotes(
     "S7b measures two prefixes: zzrare:* (prefix of the rare 8-character token) and alpha:* (about one row in three). The plan summary appends JIT total time when JIT ran.",
     "Update writes rebuild the record's search text from the stored searchable fields with the changed values applied. Search maintenance is part of the write, not a constant placeholder.",
     "Read scenarios, including every S7 parameter, run before any write. Equivalence of the four ILIKE fragments and both prefixes is checked on the loaded data and again immediately before the RLS reads, so A, B, and C still hold the same logical rows at each read.",
-    "RLS reads for A use A3 (expression indexes plus expression statistics). B uses B1. A non-leakproof operator cannot be an index condition and cannot use statistics while row level security is enabled. The operator table has the flags. text comparisons, boolean equality, timestamptz comparisons, and uuid equality are leakproof. numeric >=, record >, jsonb operators (->> , ->, @>), ILIKE, and @@ are not, so an expression built on jsonb cannot be an index condition under RLS.",
+    "RLS reads for A use A3 (expression indexes plus expression statistics). B uses B1. A non-leakproof operator cannot be an index condition and cannot use statistics while row level security is enabled. The operator table has the flags. text comparisons, boolean equality, timestamptz comparisons, and uuid comparisons (= and >) are leakproof. numeric >=, jsonb operators (->> , ->, @>), ILIKE, and @@ are not, so an expression built on jsonb cannot be an index condition under RLS.",
   ];
   for (const row of report.timings) {
     if (row.scenario === "S1" && row.plan.includes("Seq Scan")) {
@@ -496,7 +603,7 @@ export function collectNotes(
       )
       .join("; ");
     notes.push(
-      `S7b did not use the tsvector GIN for: ${listed}. A common prefix matches about one row in three, so the planner can walk updated_at instead. A and B heap tuples are wider than C's header row, so the same plan costs more there. JIT time is in the plan summary when JIT ran.`,
+      `S7b did not use the tsvector GIN for: ${listed}. A common prefix matches about one row in three, so the planner can walk updated_at instead. JIT time is in the plan summary when JIT ran.`,
     );
   }
   for (const scenario of ["S9 insert", "S9 update1", "S9 update5"]) {
@@ -575,56 +682,71 @@ export function collectNotes(
       const c = timingAt(report, scenario, "C", stage);
       return a && b && c ? [{ scenario, a, b, c }] : [];
     });
-    const samePrefix = triples.filter((item) => {
-      const counts = [item.a.rowsRemoved, item.b.rowsRemoved, item.c.rowsRemoved];
-      const hi = Math.max(...counts);
-      const lo = Math.min(...counts);
-      return lo > 0 && hi <= lo * 3 && item.c.plan.includes("c_updated_idx");
-    });
-    const longerOnTyped = triples.filter(
-      (item) =>
-        item.c.plan.includes("c_updated_idx") &&
-        item.a.rowsRemoved > Math.max(50, item.c.rowsRemoved * 3) &&
-        item.b.rowsRemoved > Math.max(50, item.c.rowsRemoved * 3),
-    );
     notes.push(`S7 first-scan rows: ${searchFacts.join(". ")}.`);
-    if (triples.length > 0 && samePrefix.length === triples.length) {
-      notes.push(
-        "On the common terms, A, B, and C remove a similar number of non-matches before the 50th hit, and C's first scan is the updated_at index. Equivalence returned the same ids, so the plans stop on the same logical prefix. The buffer gap is pages per visited heap tuple: A reads the JSONB row to test search, B reads the wide typed row, and C reads a narrow header. Common-term buffer counts stay nearly flat because terms that match 20-33% of leads stop within a few hundred scattered updated_at rows and touch mostly the same pages. A rare term walks much further; once that walk touches on the order of 10^4 pages, A and C meet.",
+    if (triples.length > 0) {
+      const sorting = triples.filter(
+        (item) => hasSortNode(item.a.plan) || hasSortNode(item.b.plan),
       );
-    } else if (longerOnTyped.length > 0) {
-      const windows = longerOnTyped.map((item) => ({
-        scenario: item.scenario,
-        aExamined: item.a.rowsRemoved + item.a.actualRows,
-        bExamined: item.b.rowsRemoved + item.b.actualRows,
-        cExamined: item.c.rowsRemoved + item.c.actualRows,
-        aEmitted: item.a.actualRows,
-        cEmitted: item.c.actualRows,
-      }));
-      const examined = windows.map((item) => item.aExamined);
-      const low = Math.min(...examined);
-      const high = Math.max(...examined);
-      const flat = low > 0 && high - low <= low * 0.05;
-      const listed = windows
-        .map(
-          (item) =>
-            `${item.scenario} examined A ${Math.round(item.aExamined)} (emitted ${Math.round(item.aEmitted)}), B ${Math.round(item.bExamined)}, C ${Math.round(item.cExamined)} (emitted ${Math.round(item.cEmitted)})`,
-        )
-        .join("; ");
-      if (flat) {
-        const window = Math.round(
-          examined.reduce((sum, value) => sum + value, 0) / examined.length,
-        );
+      if (sorting.length > 0) {
+        const listed = sorting
+          .map((item) => `${item.scenario} A (${item.a.plan}) B (${item.b.plan})`)
+          .join("; ");
         notes.push(
-          `On the common terms A and B do not stop the updated_at index scan at 50 matches. They examine a fixed window of about ${window} index entries (${listed}). A and B remove the same number of rows as each other, and equivalence returned the same 50 ids, so the order matches; the extra emitted rows are later matches inside that window. The window does not move when the term changes, which is why the buffer count stays flat. ${window} projected tuples are on the order of one work_mem (${report.workMem}). C's plan nests the value lookups under the limit, so the outer index scan stops when 50 rows are filled.`,
+          `A or B still has a Sort or Incremental Sort on a common term: ${listed}. The order by names the table id column; a sort node means the index did not supply both keys.`,
         );
-      } else {
+      }
+      const sameOrder = (left: TimingRow, right: TimingRow) =>
+        examinedRows(left) <= Math.max(examinedRows(right) * 3, examinedRows(right) + 50);
+      const stopped = triples.filter(
+        (item) =>
+          !hasSortNode(item.a.plan) &&
+          !hasSortNode(item.b.plan) &&
+          item.a.actualRows <= 50.5 &&
+          item.b.actualRows <= 50.5 &&
+          sameOrder(item.a, item.c) &&
+          sameOrder(item.b, item.c),
+      );
+      if (stopped.length === triples.length) {
         notes.push(
-          `On the common terms A and B discard several times more non-matches than C: ${listed}. Equivalence passed, so this is not a wider tuple. A wider row cannot raise rows_removed.`,
+          "On the common terms A and B have no Sort or Incremental Sort. The first scan's actual_rows is 50, and the rows examined (actual plus removed) are the same order as C. The order by uses the table id column, so the updated_at index supplies both sort keys and the scan stops at the limit.",
         );
+      } else if (sorting.length === 0) {
+        const listed = triples
+          .map(
+            (item) =>
+              `${item.scenario} examined A ${Math.round(examinedRows(item.a))} (actual ${Math.round(item.a.actualRows)}), B ${Math.round(examinedRows(item.b))} (actual ${Math.round(item.b.actualRows)}), C ${Math.round(examinedRows(item.c))} (actual ${Math.round(item.c.actualRows)}) plan A ${item.a.plan}`,
+          )
+          .join("; ");
+        notes.push(`On the common terms the first scan did not stop with C: ${listed}.`);
       }
     }
   }
+  const s1Stages = [
+    ["A", "A3"],
+    ["B", "B1"],
+    ["C", "C0"],
+  ] as const;
+  const s1Rows = s1Stages.flatMap(([option, stage]) => {
+    const row = timingAt(report, "S1", option, stage);
+    return row ? [{ option, stage, row }] : [];
+  });
+  const s1Miss = s1Rows.filter(
+    (item) => hasSortNode(item.row.plan) || (item.option !== "C" && item.row.actualRows > 50.5),
+  );
+  if (s1Miss.length > 0) {
+    const listed = s1Miss
+      .map(
+        (item) =>
+          `${item.option} ${item.stage} actual ${Math.round(item.row.actualRows)} removed ${Math.round(item.row.rowsRemoved)} (${item.row.plan})`,
+      )
+      .join("; ");
+    notes.push(`S1 did not stop on the index order: ${listed}.`);
+  } else if (s1Rows.length === s1Stages.length) {
+    notes.push(
+      "S1 on A3 and B1 has no Sort or Incremental Sort. The first scan actual_rows is 50, the same as C.",
+    );
+  }
+  notes.push(...samePlanSpreads(report.timings));
   const lost: string[] = [];
   for (const option of ["A", "B"] as const) {
     const scenarios = new Set(
