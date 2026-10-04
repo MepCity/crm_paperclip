@@ -5,12 +5,21 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "building",
+  "check",
+  "chevronUp",
+  "folder",
+  "home",
+  "signOut",
+  "hideMenu",
+  "showMenu",
+  "plus",
+  "settings",
   "spinner",
   "error",
   "success",
   "info",
   "warning",
-  "check",
   "calendar",
   "chevronDown",
   "chevronLeft",

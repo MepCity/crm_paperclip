@@ -20,6 +20,9 @@ export default defineConfig({
           include: ["apps/web/**/*.test.tsx"],
           exclude,
           environment: "jsdom",
+          // Keyboard flows in jsdom sit just over the 5s default when the full
+          // suite runs in parallel. A short overrun was failing verify.
+          testTimeout: 15_000,
           alias: {
             "@": path.resolve(__dirname, "./apps/web/src"),
           },

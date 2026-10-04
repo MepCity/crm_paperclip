@@ -157,14 +157,25 @@
   --size-rail-row-gap: 6px;
   --size-rail-row-pitch: 36px;
   --size-rail-nested-row-pitch: 32px;
+  --size-rail-nested-row-gap: 2px;
   --size-rail-inset: 10px;
   --size-rail-nested-indent: 30px;
+  --size-rail-nested-icon-offset: 28px;
+  --size-rail-nested-label-gap: 14px;
   --size-rail-label-gap: 12px;
   --size-rail-icon: 16px;
   --size-rail-group-icon: 14px;
   --size-rail-search-icon: 15px;
   --size-rail-scrollbar-width: 8px;
   --size-rail-group-gap: 9px;
+
+  /* Coordinates derived from app-shell.md Visual layout. */
+  --size-rail-header-top: 11px;
+  --size-rail-nav-start: 5px;
+  --size-rail-product-gap: 8px;
+  --size-rail-pinned-region: 227px;
+  --size-rail-teamspace-top: 11px;
+  --size-rail-teamspace-group-gap: 49px;
 
   /* Rail header, product selector and teamspace selector */
   --size-rail-header-inset: 15px;
@@ -178,6 +189,7 @@
   /* Top bar controls */
   --size-topbar-icon: 18px;
   --size-topbar-control-pitch: 34px;
+  --size-topbar-control-gap: 2px;
   --size-topbar-quick-create: 28px;
   --size-topbar-avatar: 30px;
   --size-topbar-search-width: 235px;
