@@ -1,10 +1,13 @@
 import { act, cleanup, configure, getConfig, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { describedBy, submittedValues } from "@/test/dom";
 import { render } from "@/test/render";
 import { ComboBox, ComboBoxItem } from "./combo-box";
 import { Form } from "./form";
+import { UiProvider } from "./ui-provider";
 
 interface Account {
   id: string;
@@ -631,4 +634,71 @@ test("lookup reverts an uncommitted search without reporting a new selection", a
   expect(onChange.mock.calls).toEqual([["account-2"]]);
   expect(onSelectionChange.mock.calls).toEqual([["account-2"]]);
   expect(onInputChange.mock.calls).toEqual([["f"], ["fa"], ["fab"], ["Contoso Ltd"]]);
+});
+
+test("keeps characters typed before hydration", async () => {
+  const html = renderToString(
+    <UiProvider>
+      <ComboBox label="Account" items={accounts}>
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  const container = document.createElement("div");
+  document.body.append(container);
+  container.innerHTML = html;
+  const serverInput = container.querySelector("input");
+  expect(serverInput).toBeTruthy();
+  if (!serverInput) return;
+  serverInput.value = "cont";
+
+  const root = hydrateRoot(
+    container,
+    <UiProvider>
+      <ComboBox label="Account" items={accounts}>
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  await act(async () => {});
+
+  expect(container.querySelector("input")?.value).toBe("cont");
+  root.unmount();
+  container.remove();
+});
+
+test("hydration does not search for a label that was already saved", async () => {
+  const loadOptions = vi.fn(async () => [] as Account[]);
+  const field = (
+    <UiProvider>
+      <ComboBox
+        label="Account"
+        loadOptions={loadOptions}
+        defaultSelectedItem={{ id: "account-3", label: "Fabrikam Inc" }}
+      >
+        {accountItem}
+      </ComboBox>
+    </UiProvider>
+  );
+  const container = document.createElement("div");
+  document.body.append(container);
+  container.innerHTML = renderToString(field);
+  const root = hydrateRoot(
+    container,
+    <UiProvider>
+      <ComboBox
+        label="Account"
+        loadOptions={loadOptions}
+        defaultSelectedItem={{ id: "account-3", label: "Fabrikam Inc" }}
+      >
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  await act(async () => {});
+
+  expect(container.querySelector("input")?.value).toBe("Fabrikam Inc");
+  expect(loadOptions).not.toHaveBeenCalled();
+  root.unmount();
+  container.remove();
 });
