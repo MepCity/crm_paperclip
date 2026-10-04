@@ -12,11 +12,10 @@ export interface SortPopoverProps {
   fields: readonly { apiName: string; label: string }[];
   sort: SortSpec | null;
   onApply: (sort: SortSpec) => void;
-  defaultOpen?: boolean;
 }
 
-export function SortPopover({ fields, sort, onApply, defaultOpen = false }: SortPopoverProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
+  const [open, setOpen] = useState(false);
   const [field, setField] = useState(sort?.field ?? "");
   const [order, setOrder] = useState<SortSpec["order"]>(sort?.order ?? "asc");
   const validField = fields.some((option) => option.apiName === field);
@@ -38,10 +37,10 @@ export function SortPopover({ fields, sort, onApply, defaultOpen = false }: Sort
         hideTitle
         placement="bottom start"
         className="record-sort-popover w-(--size-popover-sort-width) h-(--size-popover-sort-height)"
-        contentClassName="flex h-full flex-col justify-between"
+        contentClassName="record-sort-dialog"
         shouldCloseOnInteractOutside={(element) => !element.closest("[data-trigger='Select']")}
       >
-        <div className="record-sort-fields flex items-end gap-4 text-sm">
+        <div className="record-sort-fields">
           <Select
             label="Sort By"
             placeholder="None"
@@ -64,7 +63,7 @@ export function SortPopover({ fields, sort, onApply, defaultOpen = false }: Sort
             {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
           </Select>
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="record-sort-actions">
           <Button variant="secondary" size="toolbar" onPress={() => setOpen(false)}>
             Cancel
           </Button>

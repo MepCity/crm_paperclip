@@ -1,6 +1,21 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+
+/** Computed value of a token applied to a temporary element. */
+async function tokenValue(page: Page, property: "font-size" | "font-weight", token: string) {
+  return page.evaluate(
+    ({ property, token }) => {
+      const probe = document.createElement("span");
+      probe.style.setProperty(property, `var(${token})`);
+      document.body.append(probe);
+      const value = getComputedStyle(probe).getPropertyValue(property);
+      probe.remove();
+      return value;
+    },
+    { property, token },
+  );
+}
 
 // All expected metrics cite research/specs/list-views.md › Layout › Visual layout.
 test("list chrome matches the measured tab, toolbar and button rows", async ({ page }) => {
@@ -21,15 +36,21 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   await box("selected pill", pill, 75.5, 26);
   await expect(pill).toHaveCSS("border-radius", "6px");
   await expect(pill).toHaveCSS("background-color", "rgb(240, 244, 252)");
-  await expect(pill).toHaveCSS("font-size", "13px");
-  await expect(pill).toHaveCSS("font-weight", "600");
+  await expect(pill).toHaveCSS("font-size", await tokenValue(page, "font-size", "--text-13"));
+  await expect(pill).toHaveCSS(
+    "font-weight",
+    await tokenValue(page, "font-weight", "--font-weight-semibold"),
+  );
   // Toolbar; Selected / disabled; Text roles.
   await box("toolbar", chrome.locator("[data-list-toolbar]"), null, 47);
   const filter = chrome.getByRole("button", { name: "Filter", exact: true });
   await box("Filter", filter, 69.5, 27);
   await expect(filter).toHaveCSS("background-color", "rgb(237, 240, 249)");
-  await expect(filter).toHaveCSS("font-size", "14px");
-  await expect(filter).toHaveCSS("font-weight", "500");
+  await expect(filter).toHaveCSS("font-size", await tokenValue(page, "font-size", "--text-sm"));
+  await expect(filter).toHaveCSS(
+    "font-weight",
+    await tokenValue(page, "font-weight", "--font-weight-medium"),
+  );
   await expect(filter).toHaveCSS("color", "rgb(49, 57, 73)");
   const list = chrome.getByRole("img", { name: "List presentation" });
   await box("presentation", list, 26, 26);
@@ -120,6 +141,8 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   const popover = page.locator(".record-sort-popover");
   await expect(popover).toHaveCSS("width", "385px");
   await expect(popover).toHaveCSS("height", "157px");
+  await expect(popover).toHaveCSS("border-top-width", "1px");
+  await expect(popover).toHaveCSS("border-top-color", "rgb(206, 208, 225)");
   const field = page.getByRole("button", { name: /Sort By/ });
   const order = page.getByRole("button", { name: /Order/ });
   for (const select of [field, order]) {
@@ -128,8 +151,17 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   }
   await expect(field).toContainText("None");
   await expect(order).toContainText("Ascending");
+  const popoverBox = await popover.boundingBox();
   const fieldBox = await field.boundingBox();
   const orderBox = await order.boundingBox();
+  expect(popoverBox).not.toBeNull();
+  expect(fieldBox).not.toBeNull();
+  expect(orderBox).not.toBeNull();
+  expect(Math.abs((fieldBox?.x ?? 0) - (popoverBox?.x ?? 0) - 31)).toBeLessThanOrEqual(1);
+  expect(Math.abs((fieldBox?.y ?? 0) - (popoverBox?.y ?? 0) - 57)).toBeLessThanOrEqual(1);
+  expect(Math.abs((orderBox?.y ?? 0) - (popoverBox?.y ?? 0) - 57)).toBeLessThanOrEqual(1);
+  const selectorGap = (orderBox?.x ?? 0) - ((fieldBox?.x ?? 0) + (fieldBox?.width ?? 0));
+  expect(Math.abs(selectorGap - 15)).toBeLessThanOrEqual(1);
   expect(Math.abs((fieldBox?.y ?? 0) - (orderBox?.y ?? 0))).toBeLessThanOrEqual(1);
   const orderLabel = popover.getByText("Order", { exact: true });
   await expect(orderLabel).toHaveClass(/sr-only/);
@@ -138,7 +170,31 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   await expect(orderLabel).toHaveCSS("height", "1px");
   const sortByLabel = popover.getByText("Sort By", { exact: true });
   await expect(sortByLabel).not.toHaveClass(/sr-only/);
+  const labelBox = await sortByLabel.boundingBox();
+  expect(Math.abs((labelBox?.x ?? 0) - (fieldBox?.x ?? 0))).toBeLessThanOrEqual(1);
+  const cancel = page.getByRole("button", { name: "Cancel" });
   const apply = page.getByRole("button", { name: "Apply" });
+  const cancelBox = await cancel.boundingBox();
+  const applyBox = await apply.boundingBox();
+  expect(cancelBox).not.toBeNull();
+  expect(applyBox).not.toBeNull();
+  expect(Math.abs((cancelBox?.height ?? 0) - 27)).toBeLessThanOrEqual(1);
+  expect(Math.abs((applyBox?.height ?? 0) - 27)).toBeLessThanOrEqual(1);
+  const selectorBottom = (fieldBox?.y ?? 0) + (fieldBox?.height ?? 0);
+  expect(Math.abs((cancelBox?.y ?? 0) - selectorBottom - 20)).toBeLessThanOrEqual(1);
+  expect(Math.abs((applyBox?.y ?? 0) - selectorBottom - 20)).toBeLessThanOrEqual(1);
+  expect(Math.abs((cancelBox?.width ?? 0) - 66.5)).toBeLessThanOrEqual(1);
+  expect(Math.abs((applyBox?.width ?? 0) - 60)).toBeLessThanOrEqual(1);
+  const buttonGap = (applyBox?.x ?? 0) - ((cancelBox?.x ?? 0) + (cancelBox?.width ?? 0));
+  expect(Math.abs(buttonGap - 8)).toBeLessThanOrEqual(1);
+  const orderRight = (orderBox?.x ?? 0) + (orderBox?.width ?? 0);
+  const applyRight = (applyBox?.x ?? 0) + (applyBox?.width ?? 0);
+  const outerRight = (popoverBox?.x ?? 0) + (popoverBox?.width ?? 0);
+  expect(Math.abs(applyRight - orderRight)).toBeLessThanOrEqual(1);
+  expect(Math.abs(outerRight - applyRight - 39)).toBeLessThanOrEqual(1);
+  await expect(cancel).toHaveCSS("border-top-width", "1px");
+  await expect(cancel).toHaveCSS("border-top-color", "rgb(213, 216, 233)");
+  await expect(cancel).toHaveCSS("background-image", /rgb\(254, 254, 254\).*rgb\(242, 241, 248\)/);
   await expect(apply).toBeDisabled();
   await expect(apply).toHaveCSS("background-color", "rgb(173, 179, 238)");
   await expect(apply).toHaveCSS("opacity", "1");

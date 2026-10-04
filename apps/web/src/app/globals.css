@@ -62,6 +62,7 @@
   --font-mono: var(--font-mono);
 
   --font-weight-normal: var(--font-weight-normal);
+  --font-weight-medium: var(--font-weight-medium);
   --font-weight-semibold: var(--font-weight-semibold);
 
   --text-2xs: var(--text-2xs);
