@@ -391,6 +391,54 @@ test.each(["button", "arrow"])(
   },
 );
 
+test.each(["defaultSelectedKey", "defaultValue"] as const)(
+  "lookup ignores %s without a label on mount and focus and blur",
+  async (defaultProp) => {
+    const user = userEvent.setup();
+    const loadOptions = vi.fn(async (): Promise<Account[]> => []);
+    render(
+      <form>
+        <ComboBox
+          label="Account"
+          name="account"
+          loadOptions={loadOptions}
+          {...{ [defaultProp]: "account-3" }}
+        >
+          {accountItem}
+        </ComboBox>
+      </form>,
+    );
+    expectLookup("", "");
+    await user.click(input());
+    await user.tab();
+    expectLookup("", "");
+    expect(loadOptions).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["defaultSelectedKey", "defaultValue"] as const)(
+  "fixed-list ComboBox resolves the label for %s on mount and focus and blur",
+  async (defaultProp) => {
+    const user = userEvent.setup();
+    render(
+      <form>
+        <ComboBox
+          label="Account"
+          name="account"
+          items={accounts}
+          {...{ [defaultProp]: "account-3" }}
+        >
+          {accountItem}
+        </ComboBox>
+      </form>,
+    );
+    expectLookup("Fabrikam Inc", "account-3");
+    await user.click(input());
+    await user.tab();
+    expectLookup("Fabrikam Inc", "account-3");
+  },
+);
+
 test("lookup preserves a saved key and explicit default label on focus and blur", async () => {
   const user = userEvent.setup();
   const loadOptions = vi.fn(async (): Promise<Account[]> => []);

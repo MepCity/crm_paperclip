@@ -91,9 +91,8 @@ export function ComboBox<T extends object>({
       ? { id, label: props.defaultInputValue }
       : null;
   });
-  const [localKey, setLocalKey] = useState<Key | null>(
-    props.defaultValue ?? props.defaultSelectedKey ?? defaultSelectedItem?.id ?? null,
-  );
+  // A lookup's initial key is valid only when its label is known.
+  const [localKey, setLocalKey] = useState<Key | null>(selected?.id ?? null);
   const [localInput, setLocalInput] = useState(
     props.defaultInputValue ?? defaultSelectedItem?.label ?? "",
   );
