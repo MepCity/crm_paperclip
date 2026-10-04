@@ -68,10 +68,14 @@ export function FilterPanel({
               });
             }}
           >
-            <ul>
+            <ul className="min-w-0">
               {group.items.map((item) => (
-                <li key={item.id} className="flex h-(--size-list-filter-row-height) items-center">
+                <li
+                  key={item.id}
+                  className="flex min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
+                >
                   <Checkbox
+                    align="first-line"
                     label={item.label}
                     isDisabled={item.disabled}
                     isSelected={selectedIds.includes(item.id)}

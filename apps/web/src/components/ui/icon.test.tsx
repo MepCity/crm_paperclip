@@ -7,6 +7,7 @@ afterEach(cleanup);
 const expectedIcons = [
   "filterChevronDown",
   "filterChevronRight",
+  "filterSearch",
   "spinner",
   "error",
   "success",

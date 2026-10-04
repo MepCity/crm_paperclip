@@ -12,6 +12,9 @@ test("filter search keeps an accessible label independent of its placeholder", a
   expect(input.placeholder).toBe("Search");
   await user.type(input, "code");
   expect(input.value).toBe("code");
+  const icon = input.parentElement?.querySelector("svg");
+  expect(icon?.getAttribute("aria-hidden")).toBe("true");
+  expect(icon?.querySelector("title")).toBeNull();
 });
 
 test("TextField links error message via aria-describedby", () => {

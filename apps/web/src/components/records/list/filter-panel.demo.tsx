@@ -8,6 +8,7 @@ const groups: FilterGroup[] = [
     id: "system",
     label: "System Defined Filters",
     items: [
+      { id: "related-action", label: "Sample related records action" },
       { id: "recent", label: "Recent samples" },
       { id: "archived", label: "Archived samples", disabled: true },
     ],

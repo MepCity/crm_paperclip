@@ -8,6 +8,7 @@ import {
   Label,
   Text,
 } from "react-aria-components";
+import { Icons } from "./icon";
 
 export interface TextFieldProps extends AriaTextFieldProps {
   label: string;
@@ -30,10 +31,23 @@ export function TextField({
       <Label className={variant === "filter-search" ? "sr-only" : "text-sm font-medium text-text"}>
         {label}
       </Label>
-      <Input
-        placeholder={placeholder}
-        className={`${variant === "filter-search" ? "h-(--size-list-filter-search-height) w-full min-w-0 border-control-border text-sm placeholder:text-text-placeholder" : "border-border py-2"} border rounded-md px-3 outline-none bg-surface text-text data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:opacity-50 data-disabled:bg-surface-hover data-invalid:border-danger`}
-      />
+      {variant === "filter-search" ? (
+        <div className="relative">
+          <Icons.filterSearch
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-(--size-list-filter-search-icon-inset) h-(--size-list-filter-search-icon) w-(--size-list-filter-search-icon) -translate-y-1/2 text-text"
+          />
+          <Input
+            placeholder={placeholder}
+            className="h-(--size-list-filter-search-height) w-full min-w-0 rounded-md border border-control-border bg-surface pr-3 pl-(--size-list-filter-search-padding) text-sm text-text outline-none placeholder:text-text-placeholder data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
+          />
+        </div>
+      ) : (
+        <Input
+          placeholder={placeholder}
+          className="rounded-md border border-border bg-surface px-3 py-2 text-text outline-none data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
+        />
+      )}
       {description && (
         <Text slot="description" className="text-sm text-text-muted">
           {description}

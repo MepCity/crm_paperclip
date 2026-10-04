@@ -16,6 +16,7 @@ const props: FilterPanelProps = {
       id: "system",
       label: "System Defined Filters",
       items: [
+        { id: "related-action", label: "Sample related records action" },
         { id: "recent", label: "Recent samples" },
         { id: "disabled", label: "Archived samples", disabled: true },
       ],
@@ -85,6 +86,15 @@ test("selection is controlled and sends the next full array without dropping hid
   expect(code.checked).toBe(true);
   await user.click(recent);
   expect(onSelectionChange).toHaveBeenLastCalledWith(["outside", "code"]);
+});
+
+test("a wrapping row label can be selected", async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(<FilterPanel {...props} onSelectionChange={onSelectionChange} />);
+  const row = screen.getByRole("checkbox", { name: "Sample related records action" });
+  await user.click(row);
+  expect(onSelectionChange).toHaveBeenCalledWith(["related-action"]);
 });
 
 test("disabled rows do not change selection with pointer or keyboard", async () => {

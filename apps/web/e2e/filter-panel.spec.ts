@@ -46,6 +46,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const bodySize = await computedToken(page, "font-size", "--text-sm");
   await expect(heading).toHaveCSS("font-size", titleSize);
   await expect(heading).toHaveCSS("font-weight", semibold);
+  await expect(heading).toHaveCSS("color", "rgb(49, 57, 73)");
   const search = panel.getByRole("textbox", { name: "Search filter choices" });
   await expect(search).toHaveAttribute("placeholder", "Search");
   await expect(search).toHaveCSS("height", "34px");
@@ -56,14 +57,44 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expect(await search.evaluate((element) => getComputedStyle(element, "::placeholder").color)).toBe(
     "rgb(140, 145, 171)",
   );
+  // Filter content: placeholder text starts 32 px inside the outer left edge (1 px border + padding).
+  const textStart = await search.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft);
+  });
+  expect(Math.abs(textStart - 31)).toBeLessThanOrEqual(1);
+  const magnifier = search.locator("..").locator("svg");
+  await expect(magnifier).toBeVisible();
+  await expect(magnifier).toHaveAttribute("aria-hidden", "true");
+  await expect(magnifier).toHaveCSS("width", "13.5px");
+  await expect(magnifier).toHaveCSS("height", "13.5px");
+  await expect(magnifier).toHaveCSS("color", "rgb(49, 57, 73)");
+  expect(await magnifier.locator("title").count()).toBe(0);
+  const magnifierInset = await search.evaluate((element) => {
+    const icon = element.parentElement?.querySelector("svg");
+    const field = element.getBoundingClientRect();
+    const glyph = icon?.getBoundingClientRect();
+    return {
+      left: glyph ? glyph.left - field.left : Number.NaN,
+      vertical: glyph ? glyph.top + glyph.height / 2 - (field.top + field.height / 2) : Number.NaN,
+    };
+  });
+  expect(Math.abs(magnifierInset.left - 11.5)).toBeLessThanOrEqual(1);
+  expect(Math.abs(magnifierInset.vertical)).toBeLessThanOrEqual(1);
 
   const triggers = panel.getByRole("button");
   for (const trigger of await triggers.all()) {
-    // Filter content: group headings about 14 px semibold via --text-sm / --font-weight-semibold.
+    // Filter content: group headings about 14 px semibold #202123 via --text-sm / --font-weight-semibold.
     await expect(trigger).toHaveCSS("font-size", bodySize);
     await expect(trigger).toHaveCSS("font-weight", semibold);
+    await expect(trigger).toHaveCSS("color", "rgb(32, 33, 35)");
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    await expect(trigger.locator("svg")).toBeVisible();
+    const arrow = trigger.locator("svg");
+    await expect(arrow).toBeVisible();
+    await expect(arrow).toHaveAttribute("aria-hidden", "true");
+    await expect(arrow).toHaveCSS("width", "8px");
+    await expect(arrow).toHaveCSS("height", "4.5px");
+    expect(await arrow.locator("title").count()).toBe(0);
     expect(
       await trigger.evaluate((element) => {
         const icon = element.querySelector("svg");
@@ -77,15 +108,35 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const clippedLabel = panel
     .getByRole("button", { name: "System Defined Filters" })
     .locator("span");
+  // Figtree fits this label, so the reference clip is a letter-width deviation.
+  // The heading still ellipsizes when the text is wider than the row.
   await expect(clippedLabel).toHaveCSS("text-overflow", "ellipsis");
-  expect(await clippedLabel.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
-    true,
-  );
+  await expect(clippedLabel).toHaveCSS("overflow-x", "hidden");
+  await expect(clippedLabel).toHaveCSS("white-space", "nowrap");
+  const headingText = panel.getByRole("button", { name: "Filter By Fields" }).locator("span");
+  await expect(headingText).toHaveCSS("padding-left", "17.5px");
+  const longLabel = "Sample related records action";
+  const checkboxTop = async (rowText: string) =>
+    panel
+      .getByRole("listitem")
+      .filter({ hasText: rowText })
+      .evaluate((element) => {
+        const box = element.querySelector('span[aria-hidden="true"]');
+        if (!box) return Number.NaN;
+        return box.getBoundingClientRect().top - element.getBoundingClientRect().top;
+      });
   for (const row of await panel.getByRole("listitem").all()) {
-    // Filter content: checkbox rows about 30 px high; text role is --text-sm.
-    await expect(row).toHaveCSS("height", "30px");
-    await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-size", bodySize);
+    const name = (await row.innerText()).replace(/\s+/g, " ").trim();
     const box = row.locator('span[aria-hidden="true"]');
+    if (name === longLabel) {
+      // Filter content: a label that does not fit wraps; two lines are 44 px with 16 px line spacing.
+      await expect(row).toHaveCSS("height", "44px");
+      await expect(row.getByText(longLabel)).toHaveCSS("line-height", "16px");
+    } else {
+      // Filter content: one-line checkbox rows stay about 30 px; text role is --text-sm.
+      await expect(row).toHaveCSS("height", "30px");
+      await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-size", bodySize);
+    }
     // Selected / disabled: unselected boxes 15 × 15, 2 px #C5C4D3, 2–3 px corners.
     await expect(box).toHaveCSS("width", "15px");
     await expect(box).toHaveCSS("height", "15px");
@@ -93,12 +144,12 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
     await expect(box).toHaveCSS("border-top-color", "rgb(197, 196, 211)");
     await expect(box).toHaveCSS("border-radius", "2px");
   }
+  const oneLineOffset = await checkboxTop("Recent samples");
+  const twoLineOffset = await checkboxTop(longLabel);
+  expect(Math.abs(oneLineOffset - 7)).toBeLessThanOrEqual(1);
+  expect(Math.abs(twoLineOffset - oneLineOffset)).toBeLessThanOrEqual(1);
   await expectNoA11yViolations(page);
-  await demo.screenshot({
-    path: process.env.PAPERCLIP_RUN_SCRATCH_DIR
-      ? `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/filter-panel-demo.png`
-      : testInfo.outputPath("filter-panel-demo.png"),
-  });
+  await demo.screenshot({ path: testInfo.outputPath("filter-panel-demo.png") });
 });
 
 test("filter demo exposes closed, searched, selected and disabled states", async ({ page }) => {
@@ -118,7 +169,10 @@ test("filter demo exposes closed, searched, selected and disabled states", async
   await expect(recent).toBeChecked();
   await expect(demo.getByRole("status")).toHaveText("Selected: recent");
   // Selected appearance was not measured: preserve the primitive's prior 16 px / 1 px style.
-  const checkedBox = demo.getByRole("listitem").first().locator('span[aria-hidden="true"]');
+  const checkedBox = demo
+    .getByRole("listitem")
+    .filter({ hasText: "Recent samples" })
+    .locator('span[aria-hidden="true"]');
   await expect(checkedBox).toHaveCSS("width", "16px");
   await expect(checkedBox).toHaveCSS("border-top-width", "1px");
   const search = demo.getByRole("textbox", { name: "Search filter choices" });

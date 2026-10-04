@@ -20,11 +20,13 @@ Left filters, Search and Flow 6. No data access or criteria controls.
 | `selectedIds` | Controlled selected item IDs. Selection remains intact when searching or collapsing. |
 | `onSelectionChange` | Receives the next complete ID array; adds at the end or removes the toggled item, retaining other IDs. Disabled rows never call it. |
 
-Groups start open. The expand icon precedes the heading label. Headings support
-Enter and Space and expose `aria-expanded`.
-Clipped headings retain the complete accessible name and a native title tooltip.
-The `/dev/ui` filter-panel demo uses synthetic items, includes a disabled row, and
-allows reviewers to demonstrate open/closed groups and filtered results.
+Groups start open. The filled triangle precedes the heading label: open points down,
+closed points right, and the icon has no tooltip title. Headings support Enter and
+Space and expose `aria-expanded`. Clipped headings retain the complete accessible name
+and a native title tooltip on the label. A row label that does not fit wraps; the
+checkbox stays on the first line. The `/dev/ui` filter-panel demo uses synthetic items,
+including a two-line label and a disabled row, and allows reviewers to demonstrate
+open/closed groups and filtered results.
 
 ### Unverified
 
@@ -33,17 +35,22 @@ allows reviewers to demonstrate open/closed groups and filtered results.
   task-authorized provisional behavior. An empty result shows no groups. Clearing
   restores rows and prior group expansion state. No filter is applied to records.
 - Operators, values, AND/OR, apply controls, counters and persisted panel preferences
-  remain unobserved and are excluded. Checked/disabled checkbox appearance keeps the
-  existing primitive behavior; the spec measures only the unchecked box.
-- Vertical padding, heading/search/group gaps, search inner padding and chevron size
-  are not measured in the spec; existing spacing tokens are used provisionally.
+  remain unobserved and are excluded. Checked checkbox appearance keeps the existing
+  primitive (16 px box, 1 px border); the spec measures only the unchecked box, and a
+  checked box was not captured.
+- Open question 12 records the still-unmeasured filter-panel parts: vertical gaps
+  between the heading, the search field, the group headings and the rows; whether group
+  headings are 14 px or nearer 15 px; and the search field's right inset. A closed group
+  was not captured. Those gaps keep the existing spacing scale.
 
 ### Deviations
 
-- Typeface uses the current shared font token pending the typography task. Chevron
-  drawings are original strokes exported by the shared icon module; no reference assets are copied.
-- No measured size, color, weight or horizontal padding differs from the scoped
-  Visual layout rows. Page position and full Leads lists belong to the page task.
+- The expand triangle is `#000000` in the spec and `--color-text-strong` here. The
+  magnifier and triangle are original drawings; no reference assets are copied.
+- Figtree at `--text-sm` fits **System Defined Filters** on one line in the 202 px
+  panel, so the reference clip **System Defined Fil...** does not appear. The heading
+  still truncates with an ellipsis when the label is wider than the row.
+- Page position and full Leads lists belong to the page task.
 
 ## View tab and toolbar
 

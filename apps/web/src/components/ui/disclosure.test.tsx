@@ -40,9 +40,11 @@ test("Disclosure leads the heading with the expand icon", async () => {
     return (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   };
   expect(iconPrecedesLabel()).toBe(true);
+  expect(trigger.querySelector("svg title")).toBeNull();
   await user.click(trigger);
   expect(trigger.getAttribute("aria-expanded")).toBe("false");
   expect(iconPrecedesLabel()).toBe(true);
+  expect(trigger.querySelector("svg title")).toBeNull();
 });
 
 test("Disclosure supports controlled expansion and a disabled trigger", async () => {
