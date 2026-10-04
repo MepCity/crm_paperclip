@@ -91,11 +91,30 @@ const COLOUR_GROUPS = [
       "--color-accent-yellow",
     ],
   },
+  {
+    label: "Leads list",
+    tokens: [
+      "--color-panel-border",
+      "--color-row-separator",
+      "--color-control-border",
+      "--color-button-border",
+      "--color-button-gradient-start",
+      "--color-button-gradient-end",
+      "--color-primary-gradient-start",
+      "--color-primary-gradient-end",
+      "--color-primary-divider",
+      "--color-surface-selected",
+      "--color-surface-active",
+      "--color-text-strong",
+      "--color-text-disabled",
+    ],
+  },
 ] as const;
 
 const TEXT_TOKENS = [
   "--text-2xs",
   "--text-xs",
+  "--text-13",
   "--text-sm",
   "--text-md",
   "--text-base",
@@ -105,11 +124,21 @@ const TEXT_TOKENS = [
   "--text-3xl",
 ] as const;
 
-const WEIGHT_TOKENS = ["--font-weight-normal", "--font-weight-semibold"] as const;
+const WEIGHT_TOKENS = [
+  "--font-weight-normal",
+  "--font-weight-medium",
+  "--font-weight-semibold",
+] as const;
 
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
-const RADIUS_TOKENS = ["--radius-sm", "--radius-md", "--radius-lg", "--radius-full"] as const;
+const RADIUS_TOKENS = [
+  "--radius-sm",
+  "--radius-md",
+  "--radius-lg",
+  "--radius-xl",
+  "--radius-full",
+] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
@@ -174,6 +203,68 @@ const SIZE_GROUPS = [
       "--size-menu-item-height",
       "--size-menu-icon",
       "--size-menu-label-gap",
+    ],
+  },
+  {
+    label: "Leads list",
+    tokens: [
+      "--size-list-inset",
+      "--size-list-tab-height",
+      "--size-list-pill-width",
+      "--size-list-pill-height",
+      "--size-list-toolbar-height",
+      "--size-list-filter-width",
+      "--size-list-filter-gap",
+      "--size-list-filter-padding",
+      "--size-list-filter-search-height",
+      "--size-list-filter-row-height",
+      "--size-list-filter-button-width",
+      "--size-list-filter-button-height",
+      "--size-list-header-height",
+      "--size-list-header-border",
+      "--size-list-row-height",
+      "--size-list-row-pitch",
+      "--size-list-leading-width",
+      "--size-list-leading-pair-width",
+      "--size-list-badge-width",
+      "--size-list-column-width",
+      "--size-list-cell-inset",
+      "--size-list-settings-width",
+      "--size-list-settings-row-width",
+      "--size-list-footer-height",
+      "--size-list-view-icon",
+      "--size-list-view-name-width",
+      "--size-list-column-lane-width",
+    ],
+  },
+  {
+    label: "Buttons, checkbox and dialog",
+    tokens: [
+      "--size-button-split-width",
+      "--size-button-split-height",
+      "--size-button-split-primary",
+      "--size-button-split-arrow",
+      "--size-button-gap",
+      "--size-button-ellipsis-width",
+      "--size-button-ellipsis-height",
+      "--size-checkbox",
+      "--size-checkbox-border",
+      "--size-dialog-width",
+      "--size-dialog-height",
+      "--size-dialog-padding",
+    ],
+  },
+  {
+    label: "List popovers",
+    tokens: [
+      "--size-popover-view-width",
+      "--size-popover-import-width",
+      "--size-popover-actions-width",
+      "--size-popover-settings-width",
+      "--size-popover-sort-width",
+      "--size-popover-sort-height",
+      "--size-popover-sort-field-width",
+      "--size-popover-sort-field-height",
     ],
   },
   {

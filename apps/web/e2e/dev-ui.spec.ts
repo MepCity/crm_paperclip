@@ -129,12 +129,12 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
 });
 
 /**
- * Every expected value below is quoted from the Visual layout section or the colour and type
- * summaries of `research/specs/app-shell.md`, which is the only source of the token values.
+ * Every expected value below is quoted from a Visual layout section. Shell samples come from
+ * `research/specs/app-shell.md`. List samples come from `research/specs/list-views.md`.
  * Colour samples are drawn as blocks, type samples as text, corner radii as boxes and every
  * `--size-*` metric as a bar whose width is the metric, so one computed style proves the token.
  */
-test("token demo renders the values measured in the app shell spec", async ({ page }) => {
+test("token demo renders the values measured in the shell and list specs", async ({ page }) => {
   await page.goto("/dev/ui");
 
   const tokens = page.getByRole("region", { name: "tokens" });
@@ -194,6 +194,41 @@ test("token demo renders the values measured in the app shell spec", async ({ pa
   // Type summary: weights measured in the spec are regular and semibold.
   await expect(sample("--font-weight-semibold")).toHaveCSS("font-weight", "600");
   await expect(sample("--font-weight-normal")).toHaveCSS("font-weight", "400");
+  // Text roles: toolbar labels and column headers are "medium".
+  await expect(sample("--font-weight-medium")).toHaveCSS("font-weight", "500");
+  // Text roles: "View tab about 13 px"; Table footer: "text about 13 px".
+  await expect(sample("--text-13")).toHaveCSS("font-size", "13px");
+
+  // Surface and line colors: "panel and table outline 1 px `#DCDBEE`".
+  await expect(sample("--color-panel-border")).toHaveCSS("background-color", "rgb(220, 219, 238)");
+  // Surface and line colors: "horizontal row separators 1 px `#EDF0F4`".
+  await expect(sample("--color-row-separator")).toHaveCSS("background-color", "rgb(237, 240, 244)");
+  // Text roles: "column headers about 14 px medium `#202123`".
+  await expect(sample("--color-text-strong")).toHaveCSS("background-color", "rgb(32, 33, 35)");
+  // Text roles: "disabled pagination text/icon about `#B5B8BE`".
+  await expect(sample("--color-text-disabled")).toHaveCSS("background-color", "rgb(181, 184, 190)");
+  // Create and action buttons: gradient `#5767F6` at top.
+  await expect(sample("--color-primary-gradient-start")).toHaveCSS(
+    "background-color",
+    "rgb(87, 103, 246)",
+  );
+
+  // Filter panel: "202 px wide including its 1 px borders".
+  await expect(sample("--size-list-filter-width")).toHaveCSS("width", "202px");
+  // Table header and rows: "Header 37 px high".
+  await expect(sample("--size-list-header-height")).toHaveCSS("width", "37px");
+  // Table header and rows: "54 px plus a 1 px separator".
+  await expect(sample("--size-list-row-height")).toHaveCSS("width", "54px");
+  // Data and trailing column widths: "200 px per column".
+  await expect(sample("--size-list-column-width")).toHaveCSS("width", "200px");
+  // Create and action buttons: "Split Create Lead 137.5 × 33 px".
+  await expect(sample("--size-button-split-width")).toHaveCSS("width", "137.5px");
+  // Manage Columns dialog: "about 16 px corners".
+  await expect(sample("--radius-xl")).toHaveCSS("border-radius", "16px");
+  // Selected / disabled: checkbox radius "2–3 px"; the token keeps 2 px.
+  await expect(sample("--radius-sm")).toHaveCSS("border-radius", "2px");
+  // View edit form: "8 px corners".
+  await expect(sample("--radius-lg")).toHaveCSS("border-radius", "8px");
 
   // The primary Button keeps white text on the measured primary colour, 4.69:1.
   const primaryButton = page
