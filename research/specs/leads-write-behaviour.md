@@ -6,7 +6,7 @@ Status: Specification of write, mutation, bulk, and secondary read behaviours de
 
 The board's strict read-only policy forbids executing mutations against the reference CRM environment. Consequently, user-initiated write flows—such as record deletion, cloning, mass actions, inline updates, stage transitions, and form submissions—could not be observed via live capture execution.
 
-This document establishes the behavioral and contract specification for these write interactions in Module 1 (Leads) using the reference CRM's public help guides and developer documentation. Sources are referenced using neutral keys (`D1` through `D12`), with complete URLs, titles, timestamps, and verbatim quotes maintained exclusively in local workspace research notes (`docs-notes/leads-write-behaviour.md`) outside version control.
+This document establishes the behavioral and contract specification for these write interactions in Module 1 (Leads) using the reference CRM's public help guides and developer documentation. Sources are referenced using neutral keys (`D1`–`D8`, `D10`, `D12`), with complete URLs, titles, timestamps, and verbatim quotes maintained exclusively in local workspace research notes (`docs-notes/leads-write-behaviour.md`) outside version control.
 
 Strict adherence to evidence is maintained throughout: any behavior, interface label, or post-mutation outcome not explicitly stated in public documentation is designated as `Not documented`. No speculative, estimated, or invented user interface details are included.
 
@@ -25,7 +25,6 @@ Public documentation sources relied upon are referenced throughout this document
 | `D7` | Developer Documentation (REST API) | Mass update endpoint, selection limits, multi-select picklist modes |
 | `D8` | Developer Documentation (REST API) | Mass delete endpoint, criteria and selection parameters |
 | `D10` | Developer Documentation (REST API) | Search records API, supported criteria operators and endpoints |
-| `D11` | Public Help Documentation | Advanced filters interface, panel layout |
 | `D12` | Public Help Documentation | List view management, column sorting options, selection in views |
 
 ---
@@ -66,18 +65,20 @@ Public documentation sources relied upon are referenced throughout this document
     - Opens the `Clone [Record]` page (`D1`).
   - **Controls**:
     - In the `Clone [Record]` page, modify the required details and click `Save` (`D1`).
-  - **Field Values & Excluded Properties**:
+  - **Clone API (D4)**:
     - Field values from the source record are copied to the cloned record by default (`D4`).
-    - The following fields and properties are explicitly excluded during the record cloning process (`D4`):
+    - The following fields and properties are explicitly excluded during the record cloning process via API (`D4`):
       - Field Types: File Upload, Image Upload (`D4`).
       - Transient / Module-Specific Fields: `wizard`, `data_processing_basis_details` (if GDPR is enabled) (`D4`).
       - Field Properties: `read_only`, `external`, and internal system `$` properties (`D4`).
+    - Whether the web UI clone form excludes the exact same set of fields is Not documented.
   - **Unique Fields Behaviour on Clone**:
-    - When unique field checking is active (e.g., on Email or Phone), the unique value is not automatically omitted or stripped by the application; instead, the documentation explicitly instructs: *"When you clone a record, remove the unique fields' values on the Clone <record> page. Update them manually and save the record, for example, a contact's email address."* (`D5`).
+    - On the `Clone [Record]` page, the user must manually remove unique field values and update them before saving to prevent duplicate validation rejection (`D5`).
 - **Not Documented**:
   - Availability or behavior of a `Save and New` button on the clone form.
   - Availability or behavior of a `Cancel` button and its navigation return destination.
   - Post-save redirection target page (e.g. whether user navigates to the newly cloned record's detail page or returns to the source record).
+  - Whether the UI clone form excludes the exact same field types and system properties as the Clone API (`D4`).
 
 ### A3: List Row Selection & Bulk Actions
 - **Status**: `Documented, depends on edition or setting [D1, D12]`
@@ -86,7 +87,7 @@ Public documentation sources relied upon are referenced throughout this document
     - Checkboxes allow selecting records individually or selecting all records within the page (`D1`).
     - Selecting records displays the mass action menu on top of the screen (`D12`).
   - **Available Bulk Actions in List View**:
-    - The documentation identifies the following actions available for bulk execution: Assign Owner / Change Record Owners (`Change Owner`), Run Macro, Send Mass Emails, Create Task, Add or Remove Tags, Mass Update, Mass Record Convert (where applicable), Bulk Mail Merge, Set Reminders, and Delete (`D1`, `D12`).
+    - The documentation identifies the following actions available for bulk execution: Change Record Owners (`Change Owner`), Run Macro, Send Mass Emails, Create Task, Add or Remove Tags, Mass Update, Mass Record Convert (where applicable), Bulk Mail Merge, Set Reminders, and Delete (`D1`, `D12`).
   - **Manual Selection Limit**:
     - When selecting records manually, there is a hard limit of selecting 500 records at once (`D1`).
   - **View-Wide Selection**:
@@ -115,8 +116,8 @@ Public documentation sources relied upon are referenced throughout this document
     - `Overwrite`: Default option; replaces previous value with the new one (`D1`, `D7`).
     - `Append`: Retains previous value and adds the new value (`D1`, `D7`).
   - **Execution Limits**:
-    - Up to 500 records in a single operation via manual selection (`D1`, `D7`).
-    - Up to 50,000 records via custom view / criteria (`D1`, `D7`).
+    - Up to 500 records in a single operation via manual selection (`D1`, `D7`). For larger sets, selecting all records in the view is used (`D1`).
+    - Up to 50,000 records via custom view (`D7`), with the view-wide selection link not appearing if the view exceeds 50,000 records (`D12`).
   - **Permissions**:
     - Requires `Mass Update` profile permission for the module (`D1`).
 - **Not Documented**:
@@ -155,7 +156,8 @@ Public documentation sources relied upon are referenced throughout this document
     - If a single record is selected, only `Delete` permission is required (`D1`).
     - If multiple records are selected, `Mass Delete` profile permission is required (`D1`).
   - **Limits**:
-    - Up to 500 records via manual selection; up to 50,000 records via custom view / criteria (`D1`, `D8`).
+    - Up to 500 records via manual selection (`D1`, `D8`). For larger selections, view-wide selection is used (`D1`).
+    - Up to 50,000 records via custom view (`D8`), with view-wide selection unavailable when the view exceeds 50,000 records (`D12`).
 - **Not Documented**:
   - Confirmation modal dialog window title.
   - Warning message text and prompt copy.
@@ -175,9 +177,9 @@ Public documentation sources relied upon are referenced throughout this document
 - **Status**: `Documented [D6]` (partially)
 - **Documented Flow & Rules**:
   - **Commit Interaction**:
-    - Committing an inline edit occurs on "the click of the tick icon after you edit or update a particular field", which triggers the `onBeforeUpdate` event (`D6`).
+    - Committing an inline edit occurs by clicking the checkmark tick icon after updating a field, which fires the `onBeforeUpdate` event (`D6`).
   - **Mandatory Fields Form**:
-    - *"When there is an inline edit on the detail page which satisfies the layout rule, a form will pop-up to get the values for the mandatory fields. This form is called as the Mandatory fields form."* (`D6`).
+    - When an inline edit on the detail page satisfies a layout rule requiring additional mandatory fields, a popup form titled `Mandatory fields form` appears to collect values for those mandatory fields (`D6`).
     - Triggers `onMandatoryFormLoad` when the pop-up appears, and `onBeforeMandatoryFormSave` when the form's save button is clicked (`D6`).
 - **Not Documented**:
   - Hover behavior and appearance of a pencil icon affordance (not present in saved public documentation).
@@ -198,10 +200,10 @@ Public documentation sources relied upon are referenced throughout this document
   - **Duplicate Detection on Unique Fields**:
     - Active when unique field checking (e.g., on Email) or Duplicate Check Preferences are configured in settings (`D5`).
     - Evaluated during manual record creation, editing, cloning, and API inserts (`D5`).
-    - Alert notification: *"When a duplicate record is entered in the Leads module, an alert message will notify you of the existing record."* (`D5`).
-    - Save prevention: *"Create and Edit records - You will get a notification message, and you will not be able to save the record if the email address already exists in another record."* (`D5`).
-    - Single duplicate: *"Hover over the View Lead icon to see the record's name and owner. Clicking the View Lead icon displays the full record details. The View Lead option is available only if there is one duplicate record."* (`D5`).
-    - Multiple duplicates: *"If multiple records are found with the same email address, an alert message will prompt you to merge the leads."* (`D5`).
+    - Alert notification: When entering a duplicate lead, an alert message notifies the user of the existing record (`D5`).
+    - Save prevention: During record creation or editing, a notification message prevents saving if an email address matches an existing record (`D5`).
+    - Single duplicate: When exactly one duplicate record exists, a `View Lead` option is available; hovering over the `View Lead` icon shows the record name and owner, and clicking it displays the full record details (`D5`).
+    - Multiple duplicates: If multiple duplicate records exist with the same email address, an alert message prompts the user to merge the records (`D5`).
   - **Server Error Codes (Public REST API)**:
     - `MANDATORY_NOT_FOUND` (HTTP 400): Missing mandatory layout fields (`D2`).
     - `DUPLICATE_DATA` (HTTP 400): Unique constraint violation (`D2`).
@@ -213,29 +215,29 @@ Public documentation sources relied upon are referenced throughout this document
 ### A11: Write Request Contracts & ADR 0004 §5 Comparison
 - **Status**: `Documented [D2, D3, D7, D8]`
 - **Public REST API Specifications**:
-  - **Base URL**: `https://{api_domain}/crm/{version}`
-  - **Create Lead**: `POST /{module_api_name}` (`D2`). Payload: `{"data": [{"Company": "...", "Last_Name": "...", ...}]}`. Success response (HTTP 201/200): `{"data": [{"code": "SUCCESS", "details": {"id": "...", "Created_Time": "...", "Modified_Time": "..."}, "message": "record added", "status": "success"}]}`.
-  - **Update Lead**: `PUT /{module_api_name}/{record_id}` (`D2`). Payload: `{"data": [{"Title": "...", ...}]}`. Success response (HTTP 200): `{"data": [{"code": "SUCCESS", "details": {"id": "...", "Modified_Time": "..."}, "message": "record updated", "status": "success"}]}`.
-  - **Delete Lead**: `DELETE /{module_api_name}/{record_id}` (single) or `DELETE /{module_api_name}?ids={id1,id2,...}` (batch, max 100 records per call) (`D3`). Success response (HTTP 200): `{"data": [{"code": "SUCCESS", "details": {"id": "..."}, "message": "record deleted", "status": "success"}]}`.
-  - **Mass Update**: `POST /{module_api_name}/actions/mass_update` (`D7`). Payload: `{"data": [{"Field": "Value"}], "ids": ["id1", "id2"], "over_write": true}` (up to 500 records) or with `"cvid": "..."` (up to 50,000 records).
-  - **Mass Delete**: `POST /{module_api_name}/actions/mass_delete` (`D8`). Payload: `{"ids": ["id1", "id2"]}` (up to 500 records) or `{"cvid": "..."}` (up to 50,000 records).
-  - **Error Envelope**: `{"code": "<ERROR_CODE>", "details": {...}, "message": "<description>", "status": "error"}`.
+  - Sample requests use the path prefix `/crm/v2` (`D2`, `D3`, `D7`, `D10`) and `/crm/v8` (`D4`, `D8`); the host is not recorded here.
+  - **Create Lead**: `POST /{module_api_name}` (`D2`). Payload: `{"data": [{"Company": "...", "Last_Name": "...", ...}]}`. A maximum of 100 records can be inserted per API call (`D2`). Success response: `{"data": [{"code": "SUCCESS", "details": {"Modified_Time": "...", "Modified_By": {...}, "Created_Time": "...", "id": "...", "Created_By": {...}}, "message": "record added", "status": "success"}]}`.
+  - **Update Lead**: `Not documented (update page not read)`.
+  - **Delete Lead**: `DELETE /{module_api_name}/{record_id}` (single) or `DELETE /{module_api_name}?ids={id1,id2,...}` (batch, max 100 records per call) (`D3`). Success response: `{"data": [{"code": "SUCCESS", "details": {"id": "..."}, "message": "record deleted", "status": "success"}]}`.
+  - **Mass Update**: `POST /{module_api_name}/actions/mass_update` (`D7`). Payload: `{"data": [{"Field": "Value"}], "ids": ["id1", "id2"], "over_write": true}` (up to 500 records) or with `"cvid": "..."` (up to 50,000 records). Only one field can be updated per API call (up to three fields in the Deals module) (`D7`). When specifying `cvid`, it initiates a background job and returns a `job_id` (`D7`). Returns `LIMIT_EXCEEDED` (HTTP 400) if records exceed 500 (`D7`).
+  - **Mass Delete**: `POST /{module_api_name}/actions/mass_delete` (`D8`). Payload: `{"ids": ["id1", "id2"]}` (up to 500 records) or `{"cvid": "..."}` (up to 50,000 records). Success response message is `"record is deleted"` (`D8`). The `cvid` parameter is supported in specific editions (`D8`).
+  - **Error Envelope**: Error body sample: Not documented in the pages read. Each page lists per error a code, an HTTP status and a message (`D2`, `D7`, `D8`).
 - **Architectural Distinction**:
   - Public developer documentation documents the external public REST API, **NOT** the reference CRM web client's internal browser AJAX/XHR network requests. Due to the board's read-only rule, internal web application network requests remain unobservable.
 - **Comparison with ADR 0004 §5 Interim Shapes**:
 
 | Operation / Aspect | ADR 0004 §5 Interim Shape | Public REST API Contract (`D2`, `D3`, `D7`, `D8`) | Differences & Architectural Notes |
 | --- | --- | --- | --- |
-| **Create Lead** | `POST /crm/v2.2/{module}`<br/>Body: `{"data": [{...}]}` | `POST /{module_api_name}`<br/>(Base: `https://{api_domain}/crm/v2`)<br/>Body: `{"data": [{...}]}` | Path prefix differs (`/crm/v2.2/` vs `/{module_api_name}`). Envelopes match. Note: Public API is external, not internal browser API. |
-| **Update Lead** | `PUT /crm/v2.2/{module}/{recordId}`<br/>Body: `{"data": [{...}]}` | `PUT /{module_api_name}/{record_id}`<br/>Body: `{"data": [{...}]}` | Path version prefix differs (`v2.2` vs `v2`). Request/response envelope structures match. |
-| **Delete Lead (Single)** | `DELETE /crm/v2.2/{module}?ids=` (query parameter) | `DELETE /{module_api_name}/{record_id}` | Public API supports dedicated path parameter for single record deletion. |
-| **Delete Lead (Batch)** | `DELETE /crm/v2.2/{module}?ids=`<br/>No batch limit specified | `DELETE /{module_api_name}?ids={id1,id2,..}`<br/>**Max 100 records per call** (`D3`) | Public API enforces a strict cap of **100 records** per batch delete call. |
-| **Mass Update** | Not defined in ADR §5 (assumed batch `PUT`) | `POST /{module_api_name}/actions/mass_update`<br/>Body: `{"data": [...], "ids": [...], "over_write": true}` or `{"data": [...], "cvid": "..."}` (`D7`) | Public API uses dedicated `actions/mass_update` action route. Supports `ids` (max 500) and `cvid` (max 50,000), plus `over_write` flag for multi-select. |
-| **Mass Delete** | Not defined in ADR §5 (assumed `DELETE ?ids=`) | `POST /{module_api_name}/actions/mass_delete`<br/>Body: `{"ids": [...]}` or `{"cvid": "..."}` (`D8`) | Public API uses dedicated `actions/mass_delete` action route via `POST` (documented under `v8`), distinct from standard `DELETE ?ids=`. |
+| **Create Lead** | `POST /crm/v2.2/{module}`<br/>Body: `{"data": [{...}]}` | `POST /{module_api_name}`<br/>(path prefix `/crm/v2`)<br/>Body: `{"data": [{...}]}` | Path prefix differs (`/crm/v2.2/` vs `/crm/v2`). Envelopes match. Max 100 records per API call (`D2`). Note: Public API is external, not internal browser API. |
+| **Update Lead** | `PUT /crm/v2.2/{module}/{recordId}`<br/>Body: `{"data": [{...}]}` | `Not documented (update page not read)` | The update records developer documentation page was not included in the read set. |
+| **Delete Lead (Single)** | `DELETE /crm/v2.2/{module}?ids=` (query parameter) | `DELETE /{module_api_name}/{record_id}` | Public API supports dedicated path parameter for single record deletion (`D3`). |
+| **Delete Lead (Batch)** | `DELETE /crm/v2.2/{module}?ids=`<br/>No batch limit specified | `DELETE /{module_api_name}?ids={id1,id2,..}`<br/>**Max 100 records per call** (`D3`) | Public API enforces a strict cap of **100 records** per batch delete call (`D3`). |
+| **Mass Update** | Not defined in ADR §5 | `POST /{module_api_name}/actions/mass_update`<br/>Body: `{"data": [...], "ids": [...], "over_write": true}` or `{"data": [...], "cvid": "..."}` (`D7`) | Public API uses dedicated `actions/mass_update` action route. Supports `ids` (max 500) and `cvid` (max 50,000, returns `job_id`), updates 1 field (3 in Deals), plus `over_write` flag for multi-select. Returns `LIMIT_EXCEEDED` (HTTP 400) if count exceeded (`D7`). |
+| **Mass Delete** | Not defined in ADR §5 | `POST /{module_api_name}/actions/mass_delete`<br/>Body: `{"ids": [...]}` or `{"cvid": "..."}` (`D8`) | Public API uses dedicated `actions/mass_delete` action route via `POST` (documented under `/crm/v8`), returns `"record is deleted"`, distinct from standard `DELETE ?ids=`. `cvid` parameter is edition-dependent (`D8`). |
 | **Duplicate Conflict Status** | `HTTP 409 Conflict` | `HTTP 400 Bad Request`<br/>(`code: "DUPLICATE_DATA"`, `D2`) | **Major discrepancy**: ADR §5 specified HTTP 409 for conflicts; reference CRM returns HTTP 400 with duplicate code. |
 | **Validation Error Status** | `HTTP 400`<br/>Custom `code` / `details` | `HTTP 400 Bad Request`<br/>(`code: "MANDATORY_NOT_FOUND"`, `D2`) | HTTP status matches. Reference CRM provides standardized error code strings. |
-| **Authentication / Permission** | `HTTP 401` unauthenticated<br/>`HTTP 403` forbidden | `HTTP 401` (`AUTHENTICATION_FAILURE`)<br/>`HTTP 403` (`NO_PERMISSION`) | Status codes match. Error envelope keys (`code`, `details`, `message`, `status`) match. |
-| **API Versioning** | Unified `v2.2` across all interim endpoints | Mixed versions in public docs (`v2` for insert/delete/mass_update, `v8` for mass_delete/clone) | Public documentation reflects multi-version public evolution; internal CRM browser endpoints may use unified internal routing. |
+| **Authentication / Permission** | `HTTP 401` unauthenticated<br/>`HTTP 403` forbidden | `HTTP 401` (`AUTHENTICATION_FAILURE` in `D4`, `D8`; `OAUTH_SCOPE_MISMATCH` in `D2`)<br/>`HTTP 403` (`NO_PERMISSION` in `D2`) | Status codes match. Error envelope keys (`code`, `details`, `message`, `status`) match. |
+| **API Versioning** | Unified `v2.2` across all interim endpoints | Mixed versions in public docs (`/crm/v2` for insert, delete, mass_update, search; `/crm/v8` for mass_delete, clone) | Public documentation reflects multi-version public evolution; internal CRM browser endpoints may use unified internal routing. |
 
 ---
 
@@ -244,11 +246,11 @@ Public documentation sources relied upon are referenced throughout this document
 ### B1: List Search (`row 10`)
 - **Status**: `Documented [D1, D10]` (partially)
 - **Documented Flow**:
-  - Alphabet search: *"Choose an alphabet and CRM will list out all the records that begin with the defined alphabet."* (`D1`).
+  - Alphabet search: Selecting an alphabet letter filters the list to records starting with that chosen letter (`D1`).
   - Search records API: `GET /{module_api_name}/search?word={search_word}` or `GET /{module_api_name}/search?criteria={criteria}` (`D10`).
 - **Not Documented**:
   - Screen placement of the alphabet search strip.
-  - Whether alphabet search specifically targets `Last_Name` in Leads (documentation states "records that begin with the defined alphabet").
+  - Whether alphabet search specifically targets `Last_Name` in Leads.
 
 ### B2: Filter Operators by Field Type (`row 8`)
 - **Status**: `Not documented [UI Panel] / Documented [Search API, D10]`
@@ -256,20 +258,20 @@ Public documentation sources relied upon are referenced throughout this document
   - Supported criteria operators: `equals`, `starts_with`, `in`.
 - **Conflicts with Observed & Not Documented**:
   - UI filter panel operators and criteria by field type are **Not documented** in public help guides.
-  - Search API operators (`equals`, `starts_with`, `in`) conflict with observed custom view criteria in metadata, which support a much richer operator set (`is`, `isn't`, `contains`, `doesn't contain`, `starts with`, `ends with`, `is empty`, `is not empty`, `less than`, `greater than`, `less or equal`, `greater or equal`).
+  - Search API operators (`equals`, `starts_with`, `in`) conflict with observed custom view criteria in `list-views.md`, which record: `equal`, `contains`, `not_contains`, `less_equal`.
 
 ### B3: Sort By Field List (`row 9`)
 - **Status**: `Documented [D12]` (partially)
 - **Documented Flow**:
-  - Column sorting options near column headers: *"Asc ꜛ : To sort the records of the column in ascending oder. Descꜜ : To sort the records of the column in descending order."* (`D12`).
-- **Conflicts with Observed & Not Documented**:
-  - Documentation describes sorting via `Asc ꜛ` / `Descꜜ` options under column options near the header (`D12`), whereas UI observations show direct clicks on column headers toggle sort direction.
-  - A separate "Sort By" dialog or toolbar menu listing sortable fields is derived from metadata and UI observations, but is **Not documented** in public help documentation.
+  - Column sorting options: Options near the column header provide `Asc ꜛ` to sort the column in ascending order and `Descꜜ` to sort in descending order (`D12`).
+- **Observed Comparison & Not Documented**:
+  - Documentation (`D12`) describes sorting via `Asc ꜛ` and `Descꜜ` options under column options near the header; in observed UI captures (`list-views.md`), sorting is accessed via the toolbar `Sort` button opening a dialog (`Sort By` field, Ascending / Descending, `Cancel`, `Apply`), and a column header options menu was not captured. This is not a direct conflict but a different interface entry point.
+  - A separate "Sort By" dialog or toolbar menu listing sortable fields is **Not documented** in public help documentation.
 
 ### B4: Previous/Next Record Navigation (`row 12`)
 - **Status**: `Documented [D1]`
 - **Documented Flow**:
-  - *"With record-level navigation you can move from one record to the previous or next consecutive record(s). You can also view the first or last record entry."* (`D1`).
+  - Record-level navigation enables moving to previous or next consecutive records, as well as navigating directly to the first or last record in the list (`D1`).
 - **Not Documented**:
   - Chevron icon styling and boundary disabled states (e.g. disabled `<` on first record and `>` on last record).
 
@@ -279,7 +281,7 @@ Public documentation sources relied upon are referenced throughout this document
 
 ### B6: Timeline Filter & Event Types (`row 17`)
 - **Status**: `Not documented`
-- **Explanatory Details**: `D14` describes a module-level "Timeline View" (a custom list view layout grouping records by date fields), not the Record Detail Timeline related list/tab. Record detail timeline filter criteria and event types are undocumented in public user guides.
+- **Explanatory Details**: A module-level timeline list view page was read and is unrelated to record details. Filter criteria and event types for the record detail Timeline related list/tab are Not documented in public user guides.
 
 ### B7: Quick Create 5-Field Subset (`row 20`)
 - **Status**: `Not documented`
@@ -293,9 +295,8 @@ Public documentation sources relied upon are referenced throughout this document
 
 ## Conflicts with Observed
 
-1. **Bulk Ownership Transfer Action Name (A5)**: Public help documentation (`D1`, `D12`) designates the list view bulk action as `Change Owner` (`Change Record Owners`), located under the bulk actions menu. Prior interim specifications and ADR referenced this interaction as `Mass Transfer`.
-2. **Filter Operators (B2)**: The public Search API documentation (`D10`) supports only three criteria operators: `equals`, `starts_with`, and `in`. Observed custom view criteria in metadata (`metadata/modules/Leads/custom_views/`) and live UI captures support a much wider operator set (`is`, `isn't`, `contains`, `doesn't contain`, `starts with`, `ends with`, `is empty`, `is not empty`, `less than`, `greater than`, `less or equal`, `greater or equal`).
-3. **Column Sorting Affordance (B3)**: Public documentation (`D12`) describes sorting via `Asc ꜛ` and `Descꜜ` options under column options near the column header, whereas UI observations show clicking the column header directly toggles sort direction.
+1. **Bulk Ownership Transfer Action Name (A5)**: In the observed Actions menu (`list-views.md › Actions`), the action is named `Mass Transfer`. Public help documentation (`D1`) designates the list view selection action as `Change Owner`, while placing `Mass Transfer [Module]` under module tools.
+2. **Filter Operators (B2)**: The public Search API documentation (`D10`) supports criteria operators `equals`, `starts_with`, and `in`. Observed custom view criteria in `list-views.md` record: `equal`, `contains`, `not_contains`, `less_equal`.
 
 ---
 
@@ -303,7 +304,7 @@ Public documentation sources relied upon are referenced throughout this document
 
 The following functional behaviors, presentation details, and UI feedback mechanisms are not specified in public documentation and could not be observed due to the read-only rule:
 - **A1**: Delete confirmation modal window title, prompt body text, confirmation button labels, post-deletion redirection target page, and success toast notification message.
-- **A2**: Availability and behavior of `Save and New` and `Cancel` on clone form; post-save redirection destination.
+- **A2**: Availability and behavior of `Save and New` and `Cancel` on clone form; post-save redirection destination; whether the UI clone form excludes the same fields as the Clone API (`D4`).
 - **A3**: Exact row selection counter text format and visual styling of bulk action bar.
 - **A4**: Mass update modal title and input styling; post-update confirmation notification text.
 - **A5**: Mass transfer modal styling vs full-page presentation, and result toast message.
@@ -312,6 +313,7 @@ The following functional behaviors, presentation details, and UI feedback mechan
 - **A8**: Inline editing hover affordance, cancel button, field-specific inline editor controls, and failure/error states.
 - **A9**: Interactive click behavior of stage chevrons in the lead status ribbon (confirmation dialog, additional fields, notification).
 - **A10**: Web UI display and styling of server-side errors on form submission (outside duplicate alert).
+- **A11**: Update Lead API contract (update records documentation page not included in the read set); sample error response body.
 - **B1**: Placement of alphabet search bar and field targeting (`Last_Name`).
 - **B2**: UI filter panel operators and criteria by field type.
 - **B3**: Sort By dialog/dropdown field list.
@@ -332,6 +334,6 @@ This specification definitively resolves the following open questions from prior
    - Confirms mass action selection limit of 500 records manually, and up to 50,000 records via custom view (`D1`, `D7`, `D8`, `D12`).
    - Confirms multi-select picklist mass update options (`Overwrite` vs `Append`) (`D1`, `D7`).
    - Confirms ineligible mass update fields: Text Area and Lookup fields (`D1`), line items and system fields (`D7`).
-2. `docs/adr/0004-request-shape.md › Open questions #1`: Resolved regarding public REST API wire contracts for create, update, delete, mass update, mass delete, and error envelope structure (with discrepancies with interim shapes identified).
+2. `docs/adr/0004-request-shape.md › Open questions #1`: Evidence supplied regarding public REST API wire contracts for create, delete, mass update, mass delete, and error envelope structure (with discrepancies with interim shapes identified); the decision stays with the CTO.
 
 *Note: `research/specs/record-detail.md › Open questions #1, #4` and `research/specs/list-views.md › Open questions #2, #6` remain unresolved because public documentation does not specify UI stage ribbon click interactions, quick create subset selection rules, or UI filter panel operator structures.*
