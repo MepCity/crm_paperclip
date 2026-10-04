@@ -7,6 +7,8 @@
 
 Number 0002 is reserved for record storage (see ADR 0001, deferred decisions).
 
+Amended by ADR 0004 (2026-10-04): §3 and §4 no longer apply to screens that have a counterpart in the reference CRM; those screens fetch from route handlers in the browser. In §5, `/o/[orgSlug]/…` becomes `/crm/[orgSlug]/…`.
+
 ## Context
 
 ADR 0001 deferred two UI decisions: the headless component primitives and the UI language. They are needed now:

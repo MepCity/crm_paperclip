@@ -14,6 +14,12 @@ export function generateFixtureLeads(seed = 68): RecordData[] {
     return state;
   };
   const statuses = [...OPEN_STATUS_VALUES, "Junk Lead", "Not Qualified", null];
+  const sources = [
+    ...(leadsMetadata.fields.find((field) => field.apiName === "Lead_Source")?.picklist ?? [])
+      .map((option) => option.storedValue)
+      .filter((value) => value !== "-None-"),
+    null,
+  ];
   return Array.from({ length: 250 }, (_, index) => {
     const suffix = String(index + 1).padStart(3, "0");
     const id = String(100000000000000000n + BigInt(index));
@@ -23,16 +29,14 @@ export function generateFixtureLeads(seed = 68): RecordData[] {
     Object.assign(fields, {
       id,
       Last_Name: `Lead ${suffix}`,
-      First_Name: null,
+      First_Name: random() % 3 === 0 ? null : `Sample ${suffix}`,
       Company: `Example Company ${suffix}`,
       Email: `lead-${suffix}@example.org`,
       Phone: `000-${suffix}`,
       No_of_Employees: random() % 1000,
       Annual_Revenue: (random() % 10000000) / 100,
       Lead_Status: statuses[random() % statuses.length],
-      Owner: "fixture-user",
-      Created_By: "fixture-user",
-      Modified_By: "fixture-user",
+      Lead_Source: sources[random() % sources.length],
       Created_Time: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
       Modified_Time: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
     });
