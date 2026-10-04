@@ -22,29 +22,30 @@ The module metadata records 33 `show_as_tab` entries. In `sequence_number` order
 
 ### Visual layout
 
-All values are measured from screenshot. The 2940 × 1670 image corresponds to a **1470 × 835 CSS px viewport at 2 image px per CSS px**: the straight top-bar rule at image rows 98–99, rail separator at rows 554–555, and open-menu dividers at rows 778–779 and 860–861 each occupy exactly two image pixels (`home-main`, `home-more-actions`). Coordinates below use the viewport's top-left corner as `(0, 0)` and all dimensions are CSS px. Flat interior pixels, rather than softened edges, supply hex colours. Text colours use the darkest solid glyph pixels and are **approx.**; type sizes are **approx.**, derived from measured cap/x-height, descenders, and row line boxes. The type has a rounded humanist sans-serif feel with ordinary tracking; the exact font is not measurable from capture (`home-main`).
+All values are measured from screenshot. The 2940 × 1670 image corresponds to a **1470 × 835 CSS px viewport at 2 image px per CSS px**: the straight top-bar rule at image rows 98–99, rail separator at rows 554–555, and open-menu dividers at rows 778–779 and 860–861 each occupy exactly two image pixels (`home-main`, `home-more-actions`). Coordinates below use the viewport's top-left corner as `(0, 0)` and all dimensions are CSS px. Flat interior pixels, rather than softened edges, supply hex colours. Text colours use the darkest solid glyph pixels and are **approx.**; type sizes are **approx.**, inferred from measured cap and x-height; CSS line-height is **not measurable from capture** because each label appears on a single line. Visible row bounds and glyph top–bottom positions are reported separately. The type has a rounded humanist sans-serif feel with ordinary tracking; the exact font is not measurable from capture (`home-main`).
 
 | Region / element | Property | Value | State | Capture | Note |
 | --- | --- | --- | --- | --- | --- |
 | Navigation rail | Bounds and surface | x 0–320, y 0–807; 320 wide; `#223458` | Home and Leads | `home-main`, `home-leads-navigation` | Full-height above the utility strip; sharp edge at x 320, with no distinct right border. |
 | Top bar | Bounds and surface | x 320–1470, y 0–50; 50 high; `#FFFFFF` | Home and Leads | `home-main`, `home-leads-navigation` | Bottom rule at y 49–50 is 1 px `#DCDBEE`; no separate shadow band is visible. |
-| Main content | Bounds and page surface | x 320–1470, y 50–807; 1150 × 757; Home `#FFFFFF`, Leads `#EDF0F8` | Route dependent | `home-main`, `home-leads-navigation` | The Home onboarding composition is outside this measurement. A shell-wide content inset is **not measurable from capture**; the Leads list has its own panels and toolbar. |
-| Bottom utility strip | Bounds, surface, and elevation | x 0–1470, y 807–835; 28 high; `#FFFFFF` | Home and Leads | `home-main`, `home-leads-navigation` | A light 2–3 px transition/shadow sits immediately above it; exact blur is **not measurable from capture**. Left tool cluster occupies x 0–290; right cluster begins at x 1017. |
-| Rail/product selector | Visible occupied box | x 15–150, y 11–41; 30 high | Default | `home-main` | Product mark occupies x 15–45, 30 × 30; recreate it with an original asset. Label begins near x 53; down chevron near x 138–148. Label approx. 16 px semibold / 20 px line-height, `#C2CBDE` approx. |
+| Main content | Bounds and page surface | x 320–1470, y 50–807; 1150 × 757; Home `#FFFFFF`, Leads `#EEF1F9` | Route dependent | `home-main`, `home-leads-navigation` | The Home onboarding composition is outside this measurement. A shell-wide content inset is **not measurable from capture**; the Leads list has its own panels and toolbar. |
+| Bottom utility strip | Bounds, surface, and elevation | x 0–1470, y 807–835; 28 high; `#FFFFFF` | Home and Leads | `home-main`, `home-leads-navigation` | A light shadow occupies about 7 px above it (y 800–807, from `#FEFEFE` to about `#E7E7E7` over white); exact blur parameters are **not measurable from capture**. Left tool cluster occupies x 0–290; right cluster begins at x 1017. |
+| Rail/product selector | Visible occupied box | x 15–150, y 11–41; 30 high | Default | `home-main` | Product mark occupies x 15–45, 30 × 30; recreate it with an original asset. Label begins near x 53; down chevron near x 138–148. Label approx. 16 px semibold; visible cap y 20–31, x-height y 23–31; CSS line-height is **not measurable from capture**; `#C2CBDE` approx. |
 | Rail/Hide Menu | Icon bounds | x 285–303, y 17–33; approx. 18 × 16 | Default | `home-main` | Functionally named `Hide Menu`; no labelled button box or collapsed result was captured. Icon colour approx. `#C2CBDE`. |
 | Rail/pinned rows | Row box and rhythm | x 10–310; 300 wide × 30 high; starts y 55, then 36 px vertical pitch | Home selected | `home-main` | 10 px side inset; 6 px between rows. The six pinned entries end above the y 277 separator. Later entries need only this footprint. |
-| Rail/pinned link | Icon, label, and type | icon approx. 16 × 16 at x 20–36; label starts x 48; approx. 12 px gap; label approx. 15 px regular / 20 px line-height, `#C2CBDE` approx. | Unselected | `home-main` | Workqueue glyph core spans 26 image px (13 CSS px) including descender; coloured link icons vary by function and should be redrawn. |
-| Rail/active row | Box, fill, text, indicator | x 10–310, 300 × 30; `#31446F` fill; approx. 6 px radius; `#FFFFFF` approx. 15 px semibold / 20 px line-height; no side indicator | Home selected | `home-main` | Home occupies y 55–85. Flat fill starts at x 10 on its midline; no separate indicator-colour run. |
+| Rail/pinned link | Icon, label, and type | icon approx. 16 × 16 at x 20–36; label starts x 48; approx. 12 px gap; label approx. 15 px regular; CSS line-height is **not measurable from capture**; `#C2CBDE` approx. | Unselected | `home-main` | Workqueue glyph core spans 26 image px (13 CSS px) including descender; coloured link icons vary by function and should be redrawn. |
+| Rail/active row | Box, fill, text, indicator | x 10–310, 300 × 30; `#31446F` fill; approx. 6 px radius; `#FFFFFF` approx. 15 px semibold; CSS line-height is **not measurable from capture**; no side indicator | Home selected | `home-main` | Home occupies y 55–85. Flat fill starts at x 10 on its midline; no separate indicator-colour run. |
 | Rail/active row | Box, fill, text, indicator | x 10–310, y 394–424; `#31446F` fill; `#FFFFFF` approx. label and icon; no side indicator | Leads selected | `home-leads-navigation` | Same 30 px row height and approx. 6 px corners. A trailing more-actions icon appears within this row. |
+| Rail/scrollbar | Visible thumb | x 312–320, y about 356–578; 8 px wide; `#AAAAAA` | Leads route only | `home-leads-navigation`, `home-main` | Visible along the rail right edge in the Leads capture; absent in Home. |
 | Rail/teamspace divider | Position and rule | y 277–278; 1 px `#505D81` across rail | Default | `home-main` | Separates pinned links from teamspace. |
-| Rail/teamspace selector | Occupied row | y 289–313; about 24 high; left inset 13 px | Default | `home-main` | 24 × 24 coloured monogram block at x 13–37, text begins x 42; chevron near x 169–180; label approx. 15 px semibold / 20 px, `#C2CBDE` approx. The selector itself has no measured enclosing border. |
+| Rail/teamspace selector | Occupied row | y 289–313; about 24 high; left inset 13 px | Default | `home-main` | 24 × 24 coloured monogram block at x 13–37, text begins x 42; chevron near x 169–180; label approx. 16 px semibold; cap y 295.5–306.5, x-height y 298–306; CSS line-height is **not measurable from capture**; `#C2CBDE` approx. The selector itself has no measured enclosing border. |
 | Rail/teamspace overflow trigger | Icon bounds | x 288–302, centred near y 301; approx. 14 × 4 | Closed / open | `home-main`, `home-more-actions` | Open trigger gains `#374D7F` fill in a 30 × 30 box at x 280–310, y 286–316. |
-| Rail/local Search | Input box | x 10–310, y 324–354; 300 × 30; transparent/`#223458` fill, 1 px `#505D81` border, approx. 5 px radius | Empty | `home-main` | Search icon approx. 15 × 15 at x 20–35; placeholder starts x 41, approx. 14 px regular / 20 px, `#7A859B` approx. Later feature: retain this footprint. |
-| Rail/group heading | Row, icon, label, chevron | Sales row centred at y 377, about 30 high; icon approx. 14 × 14 at x 21–35; label begins x 48; chevron at x 287–297 | Expanded | `home-main`, `home-leads-navigation` | Approx. 15 px semibold / 20 px, `#C2CBDE` approx.; top gap after local Search is about 9 px. The upward chevron denotes the observed expanded state. |
-| Rail/nested link | Row and indent | Leads row y 394–424; about 30 high; 32 px pitch; icon approx. 16 × 16 at x 48–64, label starts x 78 | Unselected / selected | `home-main`, `home-leads-navigation` | Approx. 14–15 px regular / 20 px, `#C2CBDE` approx. when unselected; selected styling is the active row above. Indent from fixed-link label is 30 px. |
+| Rail/local Search | Input box | x 10–310, y 324–354; 300 × 30; transparent/`#223458` fill, 1 px `#505D81` border, approx. 6 px radius | Empty | `home-main` | Search icon approx. 15 × 15 at x 20–35; placeholder starts x 41, approx. 15 px regular; cap y 333–344, x-height y 336.5–344; CSS line-height is **not measurable from capture**; `#7A859B` approx. Later feature: retain this footprint. |
+| Rail/group heading | Row, icon, label, chevron | Sales row centred at y 377, about 30 high; icon approx. 14 × 14 at x 21–35; label begins x 48; chevron at x 287–297 | Expanded | `home-main`, `home-leads-navigation` | Approx. 15 px semibold, `#C2CBDE` approx.; cap y 371–382, x-height y 374–382; CSS line-height is **not measurable from capture**; the folder icon is solid `#5464F2`; top gap after local Search is about 9 px. The upward chevron denotes the observed expanded state. |
+| Rail/nested link | Row and indent | Leads row y 394–424; about 30 high; 32 px pitch; icon approx. 16 × 16 at x 48–64, label starts x 78 | Unselected / selected | `home-main`, `home-leads-navigation` | Approx. 15 px regular, `#C2CBDE` approx. when unselected; cap y 403–414, x-height y 406–414; icon `#7D8AA7` when unselected and `#FFFFFF` when selected; CSS line-height is **not measurable from capture**; selected styling is the active row above. Indent from fixed-link label is 30 px. |
 | Rail/groups below Sales | Position and footprint | Activities heading near y 601, Integrations near y 729; same heading and child-row geometry | Expanded | `home-main` | Later content. The screenshot shows expanded chevrons and child links; lower entries continue under the strip's top edge. |
-| Top bar/page title | Position and type | left x 336 (16 px from content edge), glyph top near y 17; approx. 20 px semibold / 26 px line-height, `#313949` approx. | Home / Leads | `home-main`, `home-leads-navigation` | Text changes with route; cap glyph is 13 image px high. |
-| Top bar/global search | Footprint | x 929–1164, y 8–40; 235 × 32; `#EEF1F9` fill, approx. 6 px radius | Closed | `home-main` | Later feature. Search glyph approx. 17 × 17; placeholder approx. 14 px regular / 20 px, `#8C91AB` approx. |
+| Top bar/page title | Position and type | left x 336 (16 px from content edge), glyph top near y 17; approx. 20 px semibold, `#313949` approx. | Home / Leads | `home-main`, `home-leads-navigation` | Text changes with route; measured cap is 26 image px = 13 CSS px, x-height 10 CSS px, and ascender height up to 14 CSS px. The approx. 20 px size follows these three heights; CSS line-height is **not measurable from capture**. |
+| Top bar/global search | Footprint | x 929–1164, y 8–40; 235 × 32; `#EEF1F9` fill, approx. 6 px radius | Closed | `home-main` | Later feature. Search glyph approx. 17 × 17; placeholder approx. 14 px regular, `#8C91AB` approx. |
 | Top bar/right controls | Order, sizing, spacing | search → quick create → assistant → bell → calendar → store → settings → avatar → applications; icon centres roughly 34 px apart after quick create | Default | `home-main` | Later controls except title. Quick-create box x 1176–1204, y 10–38 (28 × 28), 1 px `#5464F2` border, approx. 6 px radius; other line icons about 18 × 18, `#616E88` approx. Avatar is about 30 × 30 circular; applications grid is about 18 × 18. |
 | Main and strip boundary | Position | content ends at y 807; strip overlaps the viewport bottom | Home / Leads | `home-main`, `home-leads-navigation` | The strip's left cluster is five roughly 58 px slots; right cluster uses roughly 49 px icon cells and a wider Help cell. These are later controls. |
 
@@ -54,7 +55,7 @@ All values are measured from screenshot. The 2940 × 1670 image corresponds to a
 | --- | --- | --- | --- | --- | --- |
 | Teamspace More Actions menu | Outer bounds and placement | x 328–565, y 286–473; about 237 × 187 | Open | `home-more-actions` | Starts level with the trigger's top and about 18 px to its right; a small left-pointing notch reaches x 322. |
 | Teamspace More Actions menu | Surface, edge, corners, shadow | `#FFFFFF` fill; 1 px `#CED0E1` edge; approx. 6 px radius | Open | `home-more-actions` | Soft grey shadow is visible outside the edge; blur/spread and opacity are **not measurable from capture**. |
-| Teamspace More Actions menu | Item geometry | inner horizontal inset 6 px; first three entries about 30 px high, last two about 41 px high; icon approx. 16 × 16; text begins x 375 | Open | `home-more-actions` | Text approx. 15 px regular / 20 px, `#313949` approx.; about 12 px between icon and label. Two 1 px `#CED0E1` dividers cross x 335–559 at y 389 and y 430. |
+| Teamspace More Actions menu | Item geometry | inner horizontal inset 6 px; first three visible bands about 30 px high; last two bands between dividers about 40 px high, but their row-box heights are **not measurable from capture**; icon approx. 16 × 16; text begins x 375 | Open | `home-more-actions` | Text approx. 15 px regular, `#313949` approx.; CSS line-height is **not measurable from capture**; about 12 px between icon and label. Two 1 px `#CED0E1` dividers cross x 335–559 at y 389 and y 430. |
 | Teamspace More Actions menu | Highlighted first item | x 335–559, y 293–323; `#F0F4FC` fill, approx. 6 px radius | Highlighted while menu open | `home-more-actions` | State cause is not measurable from capture; no menu action was executed. |
 | Global search dimmer | Area and colour | x 0–1470, y 0–807; `#313949` at approx. 50% opacity | Search open | `home-search`, `home-main` | Solved from flat pairs: white `#FFFFFF` becomes `#989CA4`; rail `#223458` becomes `#293651`. The bottom utility strip at y 807–835 is not dimmed. |
 | Global search panel | Outer bounds | x about 355.5–1164, y 4–679; about 808.5 × 675; `#FFFFFF` | Search open | `home-search` | Approx. 6 px outer radius; sits 4 px below the viewport top. Only geometry is in scope. |
@@ -71,9 +72,11 @@ All values are measured from screenshot. The 2940 × 1670 image corresponds to a
 | `#00B96F` | Teamspace monogram block | `home-main` |
 | `#5A78FF`, `#FF7621`, `#EE3275`, `#A247EA`, `#F18E0A`, `#E7B910` | Functional accent colours in pinned-link icons; replace with original drawn icons | `home-main` |
 | `#C2CBDE` | Rail labels and chevrons, approx. | `home-main` |
+| `#7D8AA7` | Unselected nested-link icon | `home-main` |
+| `#AAAAAA` | Visible rail scrollbar thumb in Leads | `home-leads-navigation` |
 | `#7A859B` | Local Search placeholder, approx. | `home-main` |
 | `#FFFFFF` | Top bar, Home main surface, utility strip, menu, active text approx. | `home-main`, `home-more-actions` |
-| `#EDF0F8` | Leads main surface | `home-leads-navigation` |
+| `#EEF1F9` | Leads main surface | `home-leads-navigation` |
 | `#DBDFE8` | Avatar disk | `home-main` |
 | `#C5C4D3` | Utility-strip cell rules | `home-main` |
 | `#7875E6` | Help utility cell | `home-main` |
@@ -82,26 +85,28 @@ All values are measured from screenshot. The 2940 × 1670 image corresponds to a
 | `#F0F1FF` | Quick-create button interior | `home-main` |
 | `#8C91AB` | Global search placeholder, approx. | `home-main` |
 | `#616E88` | Top-bar line icons, approx. | `home-main` |
-| `#5464F2` | Quick-create border and open search outline | `home-main`, `home-search` |
+| `#5464F2` | Sales folder icon, quick-create border, and open search outline | `home-main`, `home-search` |
 | `#313949` | Page title/menu text approx.; search dimmer source colour | `home-main`, `home-more-actions`, `home-search` |
 | `#CED0E1` | More Actions menu edge and dividers | `home-more-actions` |
 | `#F0F4FC` | Highlighted More Actions row | `home-more-actions` |
 | `#989CA4`, `#293651` | White and rail surfaces after the open-search dimmer | `home-search` |
 
-**Type summary** (all sizes and line-heights approx., derived from solid glyph heights and enclosing rows):
+**Type summary** (size and weight approx.; cap and x-height are measured CSS px; a single-line screenshot cannot establish CSS line-height):
 
-| Style | Size / weight / line-height | Use | Capture |
-| --- | --- | --- | --- |
-| Product selector | 16 px / semibold / 20 px | Rail header label | `home-main` |
-| Page title | 20 px / semibold / 26 px | Home and Leads title | `home-main`, `home-leads-navigation` |
-| Rail fixed link | 15 px / regular / 20 px | Unselected pinned entries | `home-main` |
-| Rail active link | 15 px / semibold / 20 px | Selected Home or Leads | `home-main`, `home-leads-navigation` |
-| Teamspace and group label | 15 px / semibold / 20 px | Selector and Sales heading | `home-main` |
-| Rail child link | 14–15 px / regular / 20 px | Unselected Leads and other children | `home-main` |
-| Search placeholder | 14 px / regular / 20 px | Rail and top-bar Search | `home-main` |
-| Menu item | 15 px / regular / 20 px | Open More Actions menu | `home-more-actions` |
-| Utility label | 8 px / regular / 10 px | Bottom left tool captions | `home-main` |
-| Help utility label | 12 px / semibold / 16 px | Bottom Help cell | `home-main` |
+| Style | Size / weight | Cap height / x-height | CSS line-height | Use | Capture |
+| --- | --- | --- | --- | --- | --- |
+| Product selector | approx. 16 px / semibold | 11 / 8 | not measurable from capture | Rail header label | `home-main` |
+| Page title | approx. 20 px / semibold | 13 / 10; ascender up to 14 | not measurable from capture | Home and Leads title | `home-main`, `home-leads-navigation` |
+| Rail fixed link | approx. 15 px / regular | 10.5 / 7.5 | not measurable from capture | Unselected pinned entries; glyphs vertically centred in their 30 px rows | `home-main` |
+| Rail active link | approx. 15 px / semibold | 10.5 / 7.5 | not measurable from capture | Selected Home or Leads; Home glyphs y 64.5–75 within row y 55–85 | `home-main`, `home-leads-navigation` |
+| Teamspace selector | approx. 16 px / semibold | 11 / 8 | not measurable from capture | Teamspace label; cap y 295.5–306.5 within selector y 289–313 | `home-main` |
+| Group heading | approx. 15 px / semibold | 11 / 7.5 | not measurable from capture | Sales heading; cap y 371–382 within its centred row | `home-main` |
+| Rail child link | approx. 15 px / regular | 10.5 / 7.5 | not measurable from capture | Unselected Leads and other children; cap y 403–414 within row y 394–424 | `home-main` |
+| Rail Search placeholder | approx. 15 px / regular | 10.5 / 7.5 | not measurable from capture | Local Search; cap y 333–344 within input y 324–354 | `home-main` |
+| Top-bar search placeholder | approx. 14 px / regular | 9.5 / 7 | not measurable from capture | Global search; cap y 18.5–28 within field y 8–40 | `home-main` |
+| Menu item | approx. 15 px / regular | 11 / 8 | not measurable from capture | Open More Actions menu; glyphs vertically centred in visible bands | `home-more-actions` |
+| Utility label | approx. 8 px / regular | 6 / 4.5 | not measurable from capture | Bottom left tool captions; later | `home-main` |
+| Help utility label | approx. 12 px / semibold | 8 / 5.5 | not measurable from capture | Bottom Help cell; later | `home-main` |
 
 ### Home components currently shown
 
@@ -178,5 +183,5 @@ The Visual layout measurements use `home-main`, `home-leads-navigation`, `home-m
 4. Does the shell vary between Administrator and Standard profiles? Metadata lists both profiles, but the capture shows one session only.
 5. What are the collapsed rail, empty menu/search, and route/network error states? None was captured. Validation rules for global search are also unknown.
 6. Does Leads creation depend on the top-bar quick-create entry, or is its module-local action sufficient? Confirm against the Leads screen spec before implementing that top-bar menu in Module 1.
-7. Which exact typeface, CSS font metrics, shadow blur/spread, and shell-wide main-content inset apply? These are not measurable from capture; the Visual layout records only measured glyph and region geometry.
+7. Which exact typeface, CSS font metrics, CSS line-heights, shadow blur/spread, and shell-wide main-content inset apply? Single-line labels do not reveal CSS line-height or the height of an unhighlighted menu item; these are not measurable from capture. The Visual layout records only measured glyph and region geometry.
 8. What produces the first More Actions item highlight (hover, focus, or default selection), and what are the hidden-rail, hover, focus, disabled, and empty shell states? These are not measurable from capture.
