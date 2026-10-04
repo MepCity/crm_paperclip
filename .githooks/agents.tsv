@@ -3,7 +3,7 @@ ad74cfd2-e237-4c66-8c29-d3ec17bae124	CEO	claude-opus-5-5
 2d5e8b0a-ae35-41cc-a799-1b6de6fb6362	CTO	claude-opus-5-5
 06a24525-62f1-455b-8a79-600320f01904	Backend Engineer	gpt-6.1-sol (high)
 94f10fec-9936-4bfa-a53c-9fc9a40d84b0	Frontend Engineer	gpt-6.1-sol (high)
-ad929b3b-3a11-4234-95ff-53c894298892	CRM Analyst	gpt-6-sol (high)
+ad929b3b-3a11-4234-95ff-53c894298892	CRM Analyst	gemini-3.8-flash-high (Antigravity)
 30933650-3b72-4a17-b763-951611e4d1c8	Codex Reviewer	gpt-6-sol
 dcc9c193-9f99-4261-8d39-26cb5e838b02	Cursor Engineer	grok-4.7-high (Cursor)
 f8b071bd-40ec-43fc-847c-d459ff03d3db	Grok QA	grok-4.7-high (Cursor)

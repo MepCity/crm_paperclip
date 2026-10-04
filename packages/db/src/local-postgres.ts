@@ -10,6 +10,37 @@ const USER = "postgres";
 const PASSWORD = "postgres";
 const HOST = "127.0.0.1";
 
+// Empty LANG/LC_ALL makes initdb choose SQL_ASCII. ICU collations such as
+// und-x-icu exist only for UTF-8, so every cluster uses the ICU root locale
+// and does not follow the process locale.
+const UTF8_INITDB_FLAGS = ["--encoding=UTF8", "--locale-provider=icu", "--icu-locale=und"];
+
+const failureExitGuard = Symbol.for("crm.failureExitGuard");
+
+/**
+ * embedded-postgres registers async-exit-hook at import. That hook's beforeExit
+ * listener always finishes by calling process.exit(0). Vitest stores a failed
+ * run on process.exitCode and lets the event loop drain, so the listener reports
+ * success. The hook still stops the cluster; a non-zero code already recorded
+ * on the process is kept.
+ */
+function preserveFailureExitCode(): void {
+  const current = process.exit as typeof process.exit & { [failureExitGuard]?: true };
+  if (current[failureExitGuard]) return;
+  const realExit = process.exit.bind(process);
+  const guarded = ((code?: number) => {
+    const recorded = process.exitCode;
+    if ((code === undefined || code === 0) && typeof recorded === "number" && recorded !== 0) {
+      return realExit(recorded);
+    }
+    return code === undefined ? realExit() : realExit(code);
+  }) as typeof process.exit & { [failureExitGuard]?: true };
+  guarded[failureExitGuard] = true;
+  process.exit = guarded;
+}
+
+preserveFailureExitCode();
+
 export type LocalPostgresOptions = {
   /** Cluster data directory. Created and initialised on first use. */
   dataDir: string;
@@ -111,6 +142,7 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     user: USER,
     password: PASSWORD,
     persistent: true,
+    initdbFlags: UTF8_INITDB_FLAGS,
     postgresFlags: flags,
     onLog,
     onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
