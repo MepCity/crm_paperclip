@@ -5,6 +5,9 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "filterChevronDown",
+  "filterChevronRight",
+  "filterSearch",
   "building",
   "check",
   "chevronUp",

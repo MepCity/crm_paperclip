@@ -1,3 +1,4 @@
+import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
 import AlertDemo from "@/components/ui/alert.demo";
@@ -33,6 +34,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "filter-panel": FilterPanelDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
