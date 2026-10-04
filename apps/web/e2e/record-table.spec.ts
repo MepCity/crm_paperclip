@@ -55,10 +55,11 @@ test("record table matches the measured list layout", async ({ page }) => {
   await expect(card).toHaveCSS("border-top-width", "1px");
   await expect(card).toHaveCSS("border-top-left-radius", radius);
 
-  const header = populated.locator("[data-part=header]");
-  // Table header and rows: header is 37 px including the 2 px bottom border.
-  expectPx(await boxHeight(header), headerHeight);
+  const table = populated.locator("table");
+  await expect(table).toHaveCSS("border-collapse", "separate");
   const headerCell = populated.locator("[data-part=header] [data-part=column]").first();
+  // Table header and rows: the header cell box is 37 px, with the 2 px rule inside it.
+  expectPx(await boxHeight(headerCell), headerHeight);
   await expect(headerCell).toHaveCSS("border-bottom-width", headerBorder);
   await expect(headerCell).toHaveCSS("border-bottom-color", panel);
   await expect(headerCell).toHaveCSS("border-left-width", "0px");
@@ -88,13 +89,17 @@ test("record table matches the measured list layout", async ({ page }) => {
   );
 
   const rows = populated.locator("[data-part=row]");
-  const firstBox = await rows.nth(0).boundingBox();
-  const secondBox = await rows.nth(1).boundingBox();
+  const bodyCell = rows.nth(0).locator("[data-part=column]").first();
+  const secondCell = rows.nth(1).locator("[data-part=column]").first();
+  const firstBox = await bodyCell.boundingBox();
+  const secondBox = await secondCell.boundingBox();
   expect(firstBox).not.toBeNull();
   expect(secondBox).not.toBeNull();
-  // Table header and rows: single-line rows repeat every 37 px.
+  // Table header and rows: single-line cells repeat every 37 px.
   expectPx((secondBox?.y ?? 0) - (firstBox?.y ?? 0), rowPitch);
-  const bodyCell = populated.locator("[data-part=row] [data-part=column]").first();
+  const headerCellBox = await headerCell.boundingBox();
+  expect(headerCellBox).not.toBeNull();
+  expectPx((firstBox?.y ?? 0) - (headerCellBox?.y ?? 0), headerHeight);
   await expect(bodyCell).toHaveCSS("border-bottom-color", separator);
   await expect(bodyCell).toHaveCSS("border-left-width", "0px");
   const separatorWidth = await bodyCell.evaluate(
@@ -102,8 +107,9 @@ test("record table matches the measured list layout", async ({ page }) => {
   );
 
   const wrappedRow = rows.nth(2);
+  const wrappedCell = wrappedRow.locator("[data-part=column]").first();
   const twoLine = px(rowPad) * 2 + px(lineHeight) * 2 + px(separatorWidth);
-  expectPx(await boxHeight(wrappedRow), String(twoLine));
+  expectPx(await boxHeight(wrappedCell), String(twoLine));
   const wrappedName = wrappedRow
     .getByRole("cell", { name: "Lead 003" })
     .locator("[data-part=value]");
@@ -150,7 +156,18 @@ test("record table matches the measured list layout", async ({ page }) => {
   const settings = populated.locator("[data-part=settings]");
   expectPx(await boxWidth(settings), settingsWidth);
   expectPx(await boxHeight(settings), headerHeight);
+  const settingsBox = await settings.boundingBox();
+  expect(settingsBox).not.toBeNull();
+  expect(Math.abs((settingsBox?.y ?? 0) - (headerCellBox?.y ?? 0))).toBeLessThanOrEqual(0.5);
+  expect(
+    Math.abs(
+      (settingsBox?.y ?? 0) +
+        (settingsBox?.height ?? 0) -
+        ((headerCellBox?.y ?? 0) + (headerCellBox?.height ?? 0)),
+    ),
+  ).toBeLessThanOrEqual(0.5);
   await expect(populated.locator("[data-part=row] [data-part=settings]")).toHaveCount(0);
+  await expect(settings).toHaveText("");
 
   // Table footer: previous, range, next. The names are accessible, not visible.
   const footer = populated.locator("[data-part=footer]");
@@ -167,6 +184,7 @@ test("record table matches the measured list layout", async ({ page }) => {
   );
   await expect(footer.locator("[data-part=range-end]").first()).toHaveCSS("color", text);
   const footerBox = await footer.boundingBox();
+  const cardEdges = await innerEdges(card);
   const previous = footer.locator("[data-part=previous]");
   const range = footer.locator("[data-part=range]");
   const next = footer.locator("[data-part=next]");
@@ -181,13 +199,11 @@ test("record table matches the measured list layout", async ({ page }) => {
     footerGapBefore,
   );
   expectPx((nextBox?.x ?? 0) - ((rangeBox?.x ?? 0) + (rangeBox?.width ?? 0)), footerGapAfter);
-  expectPx(
-    (footerBox?.x ?? 0) + (footerBox?.width ?? 0) - ((nextBox?.x ?? 0) + (nextBox?.width ?? 0)),
-    footerEnd,
-  );
+  expectPx(cardEdges.right - ((nextBox?.x ?? 0) + (nextBox?.width ?? 0)), footerEnd);
+  expect((footerBox?.x ?? 0) + (footerBox?.width ?? 0)).toBeLessThanOrEqual(cardEdges.right + 0.5);
   const totalLabel = footer.locator("[data-part=total-label]");
   const totalBox = await totalLabel.boundingBox();
-  expectPx((totalBox?.x ?? 0) - (footerBox?.x ?? 0), listInset);
+  expectPx((totalBox?.x ?? 0) - cardEdges.left, listInset);
   await expect(previous).toHaveCSS("color", disabled);
   await expect(next).toHaveCSS("color", disabled);
   await expect(footer).not.toContainText("Previous");
@@ -205,7 +221,17 @@ test("record table matches the measured list layout", async ({ page }) => {
   await expect(empty.locator("[data-part=badge]")).toHaveCount(0);
   expectPx(await sumWidth(empty.locator("[data-part=header] [data-part=leading]")), leadingPair);
   const emptyBand = empty.locator("[data-part=empty]");
-  expectPx(await boxHeight(emptyBand), String(px(emptyOffset) + px(lineHeight) + px(rowPad)));
+  expect(await emptyBand.evaluate((element) => element.closest("table"))).toBeNull();
+  await expect(empty.locator("[data-part=header] [data-part=column]")).toHaveCount(7);
+  const emptyCard = empty.locator("[data-part=card]");
+  const emptyCardBox = await emptyCard.boundingBox();
+  const emptyTableBox = await empty.locator("table").boundingBox();
+  expect(emptyCardBox).not.toBeNull();
+  expect(emptyTableBox).not.toBeNull();
+  expect(emptyTableBox?.width ?? 0).toBeGreaterThan(emptyCardBox?.width ?? 0);
+  expectPx(await contentHeight(emptyBand), String(px(emptyOffset) + px(lineHeight) + px(rowPad)));
+  await expect(emptyBand).toHaveCSS("border-bottom-width", "1px");
+  await expect(emptyBand).toHaveCSS("border-bottom-color", separator);
   await expect(emptyBand).toHaveCSS("color", emptyInk);
   const emptyBandBox = await emptyBand.boundingBox();
   const emptyTextTop = await emptyBand.evaluate((element) => {
@@ -214,6 +240,13 @@ test("record table matches the measured list layout", async ({ page }) => {
     return range.getBoundingClientRect().y;
   });
   expectPx(emptyTextTop - (emptyBandBox?.y ?? 0), emptyOffset);
+  const messageCenter = await textCenter(emptyMessage);
+  const cardCenter = (emptyCardBox?.x ?? 0) + (emptyCardBox?.width ?? 0) / 2;
+  expect(Math.abs(messageCenter - cardCenter)).toBeLessThanOrEqual(1);
+  await empty.locator("section").evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  expect(Math.abs((await textCenter(emptyMessage)) - cardCenter)).toBeLessThanOrEqual(1);
   await expect(empty.locator("[data-part=range]")).toHaveCount(0);
   await expect(empty.locator("[data-part=previous]")).toHaveCount(0);
   await expect(empty.locator("[data-part=next]")).toHaveCount(0);
@@ -225,8 +258,18 @@ test("record table matches the measured list layout", async ({ page }) => {
 
   // A later page enables both directions in the body colour.
   const later = page.getByRole("region", { name: "Later page" });
+  const laterNext = later.getByRole("link", { name: "Next" });
   await expect(later.getByRole("link", { name: "Previous" })).toHaveCSS("color", text);
-  await expect(later.getByRole("link", { name: "Next" })).toHaveCSS("color", text);
+  await expect(laterNext).toHaveCSS("color", text);
+  const laterCardBox = await later.locator("[data-part=card]").boundingBox();
+  const laterNextBox = await laterNext.boundingBox();
+  expect(laterCardBox).not.toBeNull();
+  expect(laterNextBox).not.toBeNull();
+  expect((laterNextBox?.x ?? 0) >= (laterCardBox?.x ?? 0) - 0.5).toBe(true);
+  expect(
+    (laterNextBox?.x ?? 0) + (laterNextBox?.width ?? 0) <=
+      (laterCardBox?.x ?? 0) + (laterCardBox?.width ?? 0) + 0.5,
+  ).toBe(true);
 });
 
 function expectPx(actual: number, expected: string) {
@@ -294,6 +337,26 @@ async function sumWidth(locator: Locator) {
   return locator.evaluateAll((elements) =>
     elements.reduce((sum, element) => sum + element.getBoundingClientRect().width, 0),
   );
+}
+
+async function innerEdges(locator: Locator) {
+  return locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left + Number.parseFloat(style.borderLeftWidth),
+      right: rect.right - Number.parseFloat(style.borderRightWidth),
+    };
+  });
+}
+
+async function textCenter(locator: Locator) {
+  return locator.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const rect = range.getBoundingClientRect();
+    return rect.x + rect.width / 2;
+  });
 }
 
 async function contentHeight(locator: Locator) {

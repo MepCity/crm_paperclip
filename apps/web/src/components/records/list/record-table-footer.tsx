@@ -39,7 +39,7 @@ export function RecordTableFooter({
     <fieldset
       data-part="footer"
       aria-label="Records summary"
-      className="m-0 box-content flex h-(--size-list-footer-height) w-full min-w-0 items-center justify-between border-x-0 border-y border-panel-border bg-surface py-0 ps-(--size-list-inset) pe-(--size-list-footer-end) text-13 text-text"
+      className="m-0 box-content flex h-(--size-list-footer-height) min-w-0 items-center justify-between border-x-0 border-y border-panel-border bg-surface py-0 ps-(--size-list-inset) pe-(--size-list-footer-end) text-13 text-text"
     >
       <span className="inline-flex items-center gap-1">
         <span data-part="total-label">Total Records</span>

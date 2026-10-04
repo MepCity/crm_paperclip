@@ -30,7 +30,9 @@ Header order when rows exist: an unlabeled leading cell and a selection cell
 (`--size-list-column-width`). The data columns scroll. The leading pair and the
 badge strip stay pinned. View Settings is not a column: a
 `--size-list-settings-width` overlay sits on the header's right edge, with a
-1px left border, and body rows have no cell there.
+1px left border, and body rows have no cell there. Omitting `settings` leaves
+that overlay empty, with no accessible name. Scrolled to the end, the overlay
+covers the last `--size-list-settings-width` of the last column header.
 
 The header checkbox selects or clears every row on the page. A row checkbox
 selects that row. Nothing else changes: there is no selection toolbar.
@@ -49,11 +51,12 @@ leading pair. In the header it is centred; in a body row its top is
 `--size-list-checkbox-offset` below the row.
 
 Empty `records`: the header and footer stay, the badge strip and the checkboxes
-are omitted, and the two leading cells remain. The first body band shows
-`emptyMessage`, centred horizontally and inset from the top of the band. The
-horizontal scroller is then a tab stop, because the empty page has no other
-focusable control inside it, and only then does that scroller have an
-accessible name.
+are omitted, and the two leading cells remain. The first body band sits outside
+the horizontal scroller, so `emptyMessage` stays centred on the card's visible
+width whatever the column count or scroll position. The text is inset from the
+top of that band. The horizontal scroller is then a tab stop, because the empty
+page has no other focusable control inside it, and only then does that scroller
+have an accessible name.
 
 ## CellValue
 
@@ -135,7 +138,11 @@ Also:
 - A view with fewer columns was measured near 204px. Column width stays 200px.
 - Figtree changes the measured advance of some labels. The largest recorded
   difference is 2px (`research/specs/typography.md`).
-- The settings menu is not drawn. The header overlay is a slot.
+- The settings menu is not drawn. The header overlay is a slot. Scrolled to the
+  end, it covers the last 40px of the last column header. That overlap was not
+  observed.
+- A wide empty table's message position was not observed. The message is
+  centred on the visible card.
 - A partially selected page does not draw an indeterminate header box. Partial
   selection was not observed; the header box is checked only when every row on
   the page is selected.

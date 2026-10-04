@@ -88,7 +88,8 @@ test("exposes the table, column headers and row links", () => {
   expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
   expect(screen.queryByRole("region", { name: "Records" })).toBeNull();
   expect(document.querySelector("[data-part=row] [data-part=settings]")).toBeNull();
-  expect(document.querySelector("[data-part=settings]")).toBeTruthy();
+  expect(document.querySelector("[data-part=settings]")?.textContent).toBe("");
+  expect(screen.queryByText("View settings")).toBeNull();
   expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
@@ -152,7 +153,10 @@ test("empty state keeps the header and footer, drops the badge and checkboxes, a
   expect(document.querySelector("[data-part=range]")).toBeNull();
   expect(document.querySelector("[data-part=previous]")).toBeNull();
   expect(document.querySelectorAll("[data-part=header] [data-part=leading]")).toHaveLength(2);
-  expect(document.querySelector("[data-part=empty]")?.textContent).toBe("No records found.");
+  const emptyBand = document.querySelector("[data-part=empty]");
+  expect(emptyBand?.textContent).toBe("No records found.");
+  expect(emptyBand?.closest("table")).toBeNull();
+  expect(emptyBand?.parentElement?.getAttribute("data-part")).toBe("card");
   const scroller = document.querySelector("[data-part=card] .overflow-x-auto");
   expect(scroller?.getAttribute("tabindex")).toBe("0");
   expect(scroller?.getAttribute("aria-label")).toBe("Records");

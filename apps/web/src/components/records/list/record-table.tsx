@@ -82,7 +82,6 @@ export function RecordTable({
   const selected = new Set(selectedIds);
   const pageIds = records.map((record) => record.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
-  const emptyColumnCount = 2 + columns.length;
 
   function changePage(checked: boolean) {
     const next = new Set(selectedIds);
@@ -114,7 +113,8 @@ export function RecordTable({
         // itself takes keyboard focus (WCAG 2.1.1 / scrollable region).
         tabIndex={empty ? 0 : undefined}
       >
-        <table className="w-max min-w-full border-collapse border-spacing-0" aria-label="Records">
+        {/* Separate borders keep the 2px header rule inside each cell box. */}
+        <table className="w-max min-w-full border-separate border-spacing-0" aria-label="Records">
           <thead>
             <tr data-part="header">
               <td
@@ -171,20 +171,9 @@ export function RecordTable({
               ))}
             </tr>
           </thead>
-          <tbody>
-            {empty ? (
-              <tr data-part="row">
-                <td colSpan={emptyColumnCount} className={bodyBox}>
-                  <div
-                    data-part="empty"
-                    className="pt-(--size-list-empty-offset) pb-(--size-list-row-pad) text-center text-text-empty leading-(--size-list-line-height)"
-                  >
-                    {emptyMessage}
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              records.map((record) => (
+          {empty ? null : (
+            <tbody>
+              {records.map((record) => (
                 <tr key={record.id} data-part="row">
                   <td
                     data-part="leading"
@@ -233,11 +222,19 @@ export function RecordTable({
                     </td>
                   ))}
                 </tr>
-              ))
-            )}
-          </tbody>
+              ))}
+            </tbody>
+          )}
         </table>
       </section>
+      {empty ? (
+        <div
+          data-part="empty"
+          className="border-b border-b-row-separator bg-surface pt-(--size-list-empty-offset) pb-(--size-list-row-pad) text-center text-sm text-text-empty leading-(--size-list-line-height)"
+        >
+          {emptyMessage}
+        </div>
+      ) : null}
       <div
         data-part="settings"
         className={[
@@ -247,7 +244,7 @@ export function RecordTable({
           "border-b-(length:--size-list-header-border) border-b-panel-border",
         ].join(" ")}
       >
-        {settings ?? <span className="sr-only">View settings</span>}
+        {settings ?? null}
       </div>
       <RecordTableFooter {...footer} />
     </div>
