@@ -1,3 +1,4 @@
+import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -7,6 +8,7 @@ import CheckboxDemo from "@/components/ui/checkbox.demo";
 import ComboBoxDemo from "@/components/ui/combo-box.demo";
 import DatePickerDemo from "@/components/ui/date-picker.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
+import DisclosureDemo from "@/components/ui/disclosure.demo";
 import EmptyStateDemo from "@/components/ui/empty-state.demo";
 import FormDemo from "@/components/ui/form.demo";
 import IconDemo from "@/components/ui/icon.demo";
@@ -29,6 +31,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "filter-panel": FilterPanelDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
@@ -47,6 +50,7 @@ export const demos: Record<string, React.ComponentType> = {
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,
+  disclosure: DisclosureDemo,
   menu: MenuDemo,
   table: TableDemo,
   spinner: SpinnerDemo,

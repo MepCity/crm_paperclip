@@ -5,6 +5,15 @@ import { TextField } from "./text-field";
 
 afterEach(cleanup);
 
+test("filter search keeps an accessible label independent of its placeholder", async () => {
+  const user = userEvent.setup();
+  render(<TextField label="Search choices" placeholder="Search" variant="filter-search" />);
+  const input = screen.getByRole("textbox", { name: "Search choices" }) as HTMLInputElement;
+  expect(input.placeholder).toBe("Search");
+  await user.type(input, "code");
+  expect(input.value).toBe("code");
+});
+
 test("TextField links error message via aria-describedby", () => {
   render(<TextField name="email" label="Email" isInvalid errorMessage="Invalid email" />);
   const input = screen.getByRole("textbox", { name: "Email" });

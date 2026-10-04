@@ -18,9 +18,13 @@ const styles = {
     "flex w-fit cursor-default items-center gap-2 rounded-sm outline-none " +
     "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
-  box: "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border bg-surface",
+  box: "flex shrink-0 items-center justify-center rounded-sm bg-surface",
+  boxSize: {
+    unselected: "h-(--size-checkbox) w-(--size-checkbox) border-(length:--size-checkbox-border)",
+    selected: "h-4 w-4 border",
+  },
   boxBorder: {
-    unselected: "border-border",
+    unselected: "border-control-border",
     selected: "border-primary",
     invalid: "border-danger",
   },
@@ -52,7 +56,7 @@ export function Checkbox({ label, description, errorMessage, ...props }: Checkbo
           <>
             <span
               aria-hidden="true"
-              className={`${styles.box} ${styles.boxBorder[boxBorder(isSelected, isInvalid)]} ${
+              className={`${styles.box} ${styles.boxSize[isSelected ? "selected" : "unselected"]} ${styles.boxBorder[boxBorder(isSelected, isInvalid)]} ${
                 isSelected ? styles.boxChecked : ""
               }`}
             >

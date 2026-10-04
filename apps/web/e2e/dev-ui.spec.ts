@@ -119,6 +119,14 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(page.getByRole("alertdialog", { name: "Record saved" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeVisible();
   await expect(danger).toBeFocused();
+  // Entrance animation starts at opacity 0; contrast is only valid once it has settled.
+  await expect
+    .poll(() =>
+      page
+        .getByRole("alertdialog")
+        .evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "1")),
+    )
+    .toBe(true);
   await expectNoA11yViolations(page);
   await expect(page.getByRole("alertdialog", { name: "Export started" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeHidden({

@@ -16,7 +16,20 @@ This directory contains the headless-first design system components, built on `r
 - **Do not introduce heavy styling libraries** (e.g., styled-components, emotion). Tailwind + variables is enough.
 - **Do not import from `@crm/core` in client components**, except for types or `@crm/core/errors`.
 
+## Filter panel primitives
+
+`Disclosure` supplies a clipped, fully labelled keyboard-accessible heading with a
+controlled or uncontrolled panel. Its `/dev/ui` demo includes open, closed and disabled
+states. `TextField` has a `filter-search` variant (visually hidden label, measured search
+height, control border and placeholder tokens) and a separate `placeholder` prop.
+Unchecked `Checkbox` boxes use the measured checkbox size/border tokens; checked boxes
+retain the previous appearance. Sources: list-views.md → Visual layout → Filter content,
+Surface and line colors, Selected / disabled. Unmeasured spacing uses the existing scale.
+
 ## Token sources
+
+Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
+This keeps measured color fixtures outside the component directory's no-literal scan.
 
 Every token declared in `apps/web/src/app/tokens.css`, in file order, with the row it comes from. The
 **Visual layout** section of a spec is the only source of token values (ADR 0003, §2). Rows are
@@ -345,4 +358,3 @@ divide regions. `--color-control-border`, `--color-button-border` and `--color-p
 outline or split a control, and `--color-text-disabled` plus the white label on
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
-

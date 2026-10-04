@@ -12,6 +12,8 @@
   --color-text-muted: var(--color-text-muted);
   --color-text-placeholder: var(--color-text-placeholder);
   --color-border: var(--color-border);
+  --color-panel-border: var(--color-panel-border);
+  --color-control-border: var(--color-control-border);
   --color-primary: var(--color-primary);
   --color-primary-text: var(--color-primary-text);
   --color-primary-hover: var(--color-primary-hover);
