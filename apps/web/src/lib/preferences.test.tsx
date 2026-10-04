@@ -180,6 +180,99 @@ test("retains in-memory value across remount when localStorage throws", async ()
   expect(remounted.current[0]).toBe(40);
 });
 
+test("allows different defaults for the same key until a value is set", async () => {
+  function ConsumerA() {
+    const [value, setValue] = usePreference("list.pageSize", 25);
+    return (
+      <>
+        <span data-testid="a">{value}</span>
+        <button type="button" onClick={() => setValue(40)}>
+          a-set
+        </button>
+      </>
+    );
+  }
+
+  function ConsumerB() {
+    const [value] = usePreference("list.pageSize", 50);
+    return <span data-testid="b">{value}</span>;
+  }
+
+  render(
+    <PreferenceProvider orgSlug="acme" userId="user-1">
+      <ConsumerA />
+      <ConsumerB />
+    </PreferenceProvider>,
+  );
+
+  expect(screen.getByTestId("a").textContent).toBe("25");
+  expect(screen.getByTestId("b").textContent).toBe("50");
+
+  await act(async () => {
+    screen.getByRole("button", { name: "a-set" }).click();
+  });
+
+  expect(screen.getByTestId("a").textContent).toBe("40");
+  expect(screen.getByTestId("b").textContent).toBe("40");
+});
+
+test("late consumer sees in-memory value after write when localStorage write fails", async () => {
+  localStorage.setItem("crm:pref:acme:user-1:list.pageSize", "30");
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new Error("quota");
+  });
+
+  const lateSeen: number[] = [];
+
+  function ConsumerA() {
+    const [value, setValue] = usePreference("list.pageSize", DEFAULT_PAGE_SIZE);
+    return (
+      <>
+        <span data-testid="a">{value}</span>
+        <button type="button" onClick={() => setValue(40)}>
+          a-set
+        </button>
+      </>
+    );
+  }
+
+  function ConsumerB() {
+    const [value] = usePreference("list.pageSize", DEFAULT_PAGE_SIZE);
+    lateSeen.push(value);
+    return <span data-testid="b">{value}</span>;
+  }
+
+  function App({ showB }: { showB: boolean }) {
+    return (
+      <>
+        <ConsumerA />
+        {showB ? <ConsumerB /> : null}
+      </>
+    );
+  }
+
+  const { rerender } = render(
+    <PreferenceProvider orgSlug="acme" userId="user-1">
+      <App showB={false} />
+    </PreferenceProvider>,
+  );
+
+  expect(screen.getByTestId("a").textContent).toBe("30");
+
+  await act(async () => {
+    screen.getByRole("button", { name: "a-set" }).click();
+  });
+
+  rerender(
+    <PreferenceProvider orgSlug="acme" userId="user-1">
+      <App showB={true} />
+    </PreferenceProvider>,
+  );
+
+  expect(lateSeen).toEqual([40]);
+  expect(screen.getByTestId("b").textContent).toBe("40");
+});
+
 test("syncs consumers when localStorage write fails", async () => {
   localStorage.setItem("crm:pref:acme:user-1:list.pageSize", "30");
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
@@ -322,19 +415,15 @@ test("server render returns the default value", async () => {
 });
 
 test("infers boolean and number types without an explicit type argument", () => {
-  function InferenceProbe() {
-    const [, setBool] = usePreference("detail.railHidden", false);
-    setBool(true);
+  const boolHook = renderHook(() => usePreference("detail.railHidden", false));
+  expectTypeOf(boolHook.result.current[0]).toBeBoolean();
+  expectTypeOf(boolHook.result.current[1]).toBeCallableWith(true);
 
-    const [, setNum] = usePreference("list.pageSize", 25);
-    setNum(50);
+  const numHook = renderHook(() => usePreference("list.pageSize", 25));
+  expectTypeOf(numHook.result.current[0]).toBeNumber();
+  expectTypeOf(numHook.result.current[1]).toBeCallableWith(25);
 
-    const [, setUnion] = usePreference<10 | 20 | 50>("list.pageSize", 20);
-    setUnion(50);
-
-    return null;
-  }
-
-  expectTypeOf(usePreference).toBeFunction();
-  render(<InferenceProbe />);
+  const unionHook = renderHook(() => usePreference<10 | 20 | 50>("list.pageSize", 20));
+  expectTypeOf(unionHook.result.current[0]).toEqualTypeOf<10 | 20 | 50>();
+  expectTypeOf(unionHook.result.current[1]).toBeCallableWith(50);
 });

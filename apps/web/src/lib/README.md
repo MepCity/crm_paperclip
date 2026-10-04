@@ -12,6 +12,6 @@ Server-side preference storage is deferred until ADR 0002; the hook signature st
 
 **Storage key format:** `crm:pref:<orgSlug>:<userId>:<key>` with JSON-encoded values.
 
-On the server and the first client paint the hook returns `defaultValue`; stored values apply after mount without hydration warnings. Invalid or mistyped stored values are ignored. If browser storage is unavailable, reads and writes fall back to in-memory state without throwing.
+On the server render and the hydration render the hook returns `defaultValue`. On later client mounts in the same tab, the first render returns the stored value when one exists; in-tab memory wins over storage until a full reload (changes in another tab are not visible until reload). Invalid or mistyped stored values are ignored. If browser storage is unavailable, reads and writes fall back to in-memory state without throwing.
 
 The hook only validates value **types** against `defaultValue`; allowed value sets (for example page-size options) are enforced by the consumer.
