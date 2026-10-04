@@ -1,0 +1,36 @@
+"use client";
+
+import type { ReactNode } from "react";
+import {
+  Dialog as AriaDialog,
+  Popover as AriaPopover,
+  type PopoverProps as AriaPopoverProps,
+  composeRenderProps,
+  DialogTrigger,
+  Heading,
+} from "react-aria-components";
+
+export { DialogTrigger as PopoverTrigger };
+
+const popoverClass = "rounded-md border border-border bg-surface shadow-lg outline-none";
+
+export function Popover({
+  title,
+  children,
+  className,
+  ...props
+}: Omit<AriaPopoverProps, "children"> & { title: string; children: ReactNode }) {
+  return (
+    <AriaPopover
+      {...props}
+      className={composeRenderProps(className, (extra) => `${popoverClass} ${extra ?? ""}`)}
+    >
+      <AriaDialog className="p-4 outline-none">
+        <Heading slot="title" className="mb-2 text-base font-medium text-text">
+          {title}
+        </Heading>
+        {children}
+      </AriaDialog>
+    </AriaPopover>
+  );
+}

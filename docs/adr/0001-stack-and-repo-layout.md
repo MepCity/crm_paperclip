@@ -5,6 +5,8 @@
 - Decider: CTO
 - Issue: MEP-14
 
+Amended by ADR 0004 (2026-10-04): the organization pages live under `/crm/[orgSlug]/…` instead of `/o/[orgSlug]/…` (§2, §3), and the thin REST layer of §5.6 is built from Module 1 on.
+
 ## Context
 
 We are rebuilding the reference CRM setup we use as an internal tool, with an agent team.

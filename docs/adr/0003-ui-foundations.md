@@ -7,6 +7,8 @@
 
 Number 0002 is reserved for record storage (see ADR 0001, deferred decisions).
 
+Amended by ADR 0004 (2026-10-04): §3 and §4 no longer apply to screens that have a counterpart in the reference CRM; those screens fetch from route handlers in the browser. In §5, `/o/[orgSlug]/…` becomes `/crm/[orgSlug]/…`.
+
 ## Context
 
 ADR 0001 deferred two UI decisions: the headless component primitives and the UI language. They are needed now:
@@ -36,6 +38,8 @@ ADR 0001 deferred two UI decisions: the headless component primitives and the UI
 - Variants are typed props (`variant`, `size`) mapped to class lists inside the component file. No CSS-in-JS and no variant library.
 - Interaction states are styled from React Aria's data attributes (`data-hovered`, `data-pressed`, `data-focus-visible`, `data-disabled`, `data-invalid`).
 - One light theme. Tokens are CSS variables, so a dark theme can be added without touching components.
+- Token values are derived from the measured look of the reference CRM. The **Visual layout** sections of the specs in `research/specs/` are their only source, and `apps/web/src/components/ui/README.md` lists the source of every token. Screens of our own that have no counterpart in the reference CRM use the same tokens.
+- The typeface is set by the single `--font-sans` token (board decision, 2026-10-04, MEP-63). It is an open-licence typeface whose measured widths, x-height and weights are closest to the reference look, and the board sees the candidate before it is adopted. Its files come from the typeface's own official source and are served by our app. Replacing the typeface later means changing that token and its font-face declaration and nothing else.
 
 ### 3. Server and client code
 
@@ -92,6 +96,13 @@ type ActionState =
 ### 8. Accessibility baseline
 
 WCAG 2.1 AA: every control has a label, focus is visible, everything works from the keyboard, colour contrast comes from the tokens, and form errors are tied to their field and announced.
+
+Exception (board decision, 2026-10-04, MEP-63). The one-to-one look takes precedence over the contrast minimum in two places only. There the measured reference values stay as they are:
+
+- **Placeholder text.** `--color-text-placeholder` and `--color-rail-placeholder` measure 2.75:1 to 3.33:1 against their surfaces, below the 4.5:1 text minimum. The two tokens are used only for the placeholder of a real input. A placeholder is never the only label of a control and never carries a value, an instruction or an error.
+- **Separator lines.** `--color-border`, `--color-topbar-border` and `--color-rail-border` measure 1.36:1 to 1.90:1, below the 3:1 non-text minimum, where they divide regions. A border that outlines a control is not covered.
+
+Everything else meets AA. Text in `--color-primary` is drawn on `--color-surface` (4.69:1) and not on `--color-bg` (4.15:1). The ratios are listed under "Contrast notes" in `apps/web/src/components/ui/README.md`. A newly measured pair below AA is not covered by this exception: the engineer reports it to the CTO and the board decides.
 
 ## Alternatives considered
 

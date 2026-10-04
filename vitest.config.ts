@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
@@ -14,11 +15,25 @@ export default defineConfig({
       },
       {
         test: {
+          name: "component",
+          include: ["apps/web/**/*.test.tsx"],
+          exclude,
+          environment: "jsdom",
+          alias: {
+            "@": path.resolve(__dirname, "./apps/web/src"),
+          },
+        },
+      },
+      {
+        test: {
           name: "integration",
           include: ["{apps,packages,scripts}/**/*.int.test.ts"],
           exclude,
           globalSetup: ["./packages/db/src/vitest-global-setup.ts"],
-          setupFiles: ["./packages/db/src/vitest-setup.ts"],
+          setupFiles: [
+            "./packages/db/src/vitest-setup.ts",
+            "./packages/core/src/vitest-auth-setup.ts",
+          ],
           maxWorkers: 2,
           sequence: { groupOrder: 1 },
           testTimeout: 30_000,

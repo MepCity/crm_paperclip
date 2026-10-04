@@ -5,6 +5,9 @@
     "jsx": "react-jsx",
     "allowJs": false,
     "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [{ "name": "next" }]
   },
   "include": [
