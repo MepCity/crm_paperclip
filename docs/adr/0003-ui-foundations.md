@@ -36,6 +36,7 @@ ADR 0001 deferred two UI decisions: the headless component primitives and the UI
 - Variants are typed props (`variant`, `size`) mapped to class lists inside the component file. No CSS-in-JS and no variant library.
 - Interaction states are styled from React Aria's data attributes (`data-hovered`, `data-pressed`, `data-focus-visible`, `data-disabled`, `data-invalid`).
 - One light theme. Tokens are CSS variables, so a dark theme can be added without touching components.
+- Token values are derived from the measured look of the reference CRM. The **Visual layout** sections of the specs in `research/specs/` are their only source, and `apps/web/src/components/ui/README.md` lists the source of every token. Screens of our own that have no counterpart in the reference CRM use the same tokens.
 
 ### 3. Server and client code
 
