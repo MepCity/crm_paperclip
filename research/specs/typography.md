@@ -6,30 +6,30 @@
 - Screenshots are 2940 × 1670 for a 1470 × 835 CSS px viewport; 2 image pixels = 1 CSS px. The same PNG decoder and ink function process captured and candidate screenshots. Each text-only box samples its flat background and darkest solid text pixels. A pixel counts as ink when its projected colour distance from the background reaches 50% of the sampled background-to-core-text distance. This relative threshold handles light placeholders over coloured surfaces. Width is the inclusive first-to-last ink pixel span, in CSS px.
 - Candidate fonts and SIL OFL license files remain in the local research font cache, downloaded from each family project's official repository. Each family's local `source.json` records the URL, embedded version, license, axis range, coverage result, and SHA-256. The variable `wght` axis includes 400 and 600; all requested Turkish glyphs were checked.
 - A local HTML page loads the candidate files through `@font-face`. Repository Playwright launches its separate headless Chromium at `deviceScaleFactor: 2`. It renders the same labels in the individually sampled reference foreground and background colours. DOM `getBoundingClientRect()` advance widths are recorded separately; visible pixel widths determine the ranking. The shared reference browser and capture tool are not used.
-- For each measurable style and family, 0.5 px size steps spanning the app-shell estimate ±2 px are rasterized. Eligible sizes keep both cap and x-height within 0.5 CSS px of the canonical `app-shell.md` Type summary. Among eligible sizes, the one minimizing that style's mean absolute ink-width error is selected; ties minimize summed cap and x-height error, then choose the smaller size. Styles with no eligible generic text retain the app-shell estimate and are excluded from width ranking.
-- Cap and x-height use the first isolated capital and following lowercase letter in a generic label. For tiny utility text, glyph overlap makes direct reference isolation unreliable, so the app-shell Type summary remains the canonical height target; a standalone candidate `x` gives the comparable lowercase height. A scanline-only glyph can differ by 0.5 CSS px under antialiasing; see the reconciliation below. Straight `l` stems are measured by summing normalized ink coverage across each horizontal row through the middle 45–65% of the glyph and averaging those rows; this measures subpixel thickness to 0.1 CSS px. The captured `l` comes from regular “Calls” and semibold “Sales”; candidate `l` glyphs use the same coverage function and the fitted style size.
+- For each measurable style and family, 0.5 px size steps spanning the app-shell estimate ±2 px are rasterized. Eligible sizes keep both cap and x-height within 0.5 CSS px of the relative-threshold reference measurement. Only tiny utility and Help styles use the `app-shell.md` Type summary as their height target because their captured lowercase glyph cannot be isolated reliably. Among eligible sizes, the one minimizing that style's mean absolute ink-width error is selected; ties minimize summed cap and x-height error, then choose the smaller size. Styles with no eligible generic text retain the app-shell estimate and are excluded from width ranking.
+- Cap and x-height use the first isolated capital and following lowercase letter in a generic label. For tiny utility text, glyph overlap makes direct reference isolation unreliable, so the app-shell Type summary remains the canonical height target; a standalone candidate `x` gives the comparable lowercase height. Measured and fitted height targets are stored separately in `reference-glyphs.json`. The measured 10.5/7.5 CSS px targets for group headings and menu items supersede the 11/7.5 and 11/8 values in `app-shell.md`; their source-spec correction is tracked in MEP-61. A scanline-only glyph can differ by 0.5 CSS px under antialiasing. Straight `l` stems are measured by summing normalized ink coverage across each horizontal row through the middle 45–65% of the glyph and averaging those rows; the script retains unrounded subpixel thickness and the tables show two decimals. The captured `l` comes from regular “Calls” and semibold “Sales”; candidate `l` glyphs use the same coverage function and the fitted style size.
 
 ## Reference measurements
 
 **Loaded font:** not determinable from capture. None of four shell network logs records a font request or font MIME response. Each does contain a JSON response with a static-file listing that names one icon font and one web font file; a filename in a response does not establish that it loaded, which weights loaded, its family, or whether it is static or variable. No filename or URL is reproduced here.
 
-| Style | App-shell size / weight | Canonical cap / x height (CSS px) | Relative-threshold check |
+| Style | App-shell size / weight | Fit target cap / x height (CSS px) | Relative-threshold check |
 | --- | --- | --- | --- |
 | Product / teamspace selector | approx. 16 / 600 | 11 / 8 | No eligible generic selector text |
 | Page title | approx. 20 / 600 | 13 / 10 | 4 glyph runs; extracted first-pair 13/10 |
 | Rail fixed link | approx. 15 / 400 | 10.5 / 7.5 | 9 glyph runs; extracted first-pair 10.5/7.5 |
 | Rail active link | approx. 15 / 600 | 10.5 / 7.5 | 4 glyph runs; extracted first-pair 10.5/7.5 |
-| Group heading | approx. 15 / 600 | 11 / 7.5 | 5 glyph runs; sampled 10.5 / 7.5 (within 0.5 px) |
+| Group heading | approx. 15 / 600 | 10.5 / 7.5 | 5 glyph runs; measured 10.5 / 7.5 |
 | Rail child link | approx. 15 / 400 | 10.5 / 7.5 | 5 glyph runs; extracted first-pair 10.5/7.5 |
 | Rail Search placeholder | approx. 15 / 400 | 10.5 / 7.5 | 6 glyph runs; sampled height within 0.5 px |
 | Top-bar search placeholder | approx. 14 / 400 | 9.5 / 7 | 11 glyph runs; extracted first-pair 9.5/7 |
-| Menu item | approx. 15 / 400 | 11 / 8 | 12 glyph runs; sampled 10.5 / 7.5 (within 0.5 px) |
+| Menu item | approx. 15 / 400 | 10.5 / 7.5 | 12 glyph runs; measured 10.5 / 7.5 |
 | Utility label | approx. 8 / 400 | 6 / 4.5 | Tiny / coloured utility glyphs: retained app-shell height target |
 | Help utility label | approx. 12 / 600 | 8 / 5.5 | Tiny / coloured utility glyphs: retained app-shell height target |
 
-The relative-threshold check reproduces the app-shell cap/x values exactly for rail links, page title, and top search. “Sales” and “Create Folder” yield cap/x values 0.5 CSS px below the Type summary due to their specific letter edge pixels; the app-shell values remain canonical and the fit tolerance includes that half pixel. Tiny utility text cannot isolate a trustworthy lowercase glyph from the captured label, so its app-shell values are retained. This is the same height definition across both specs.
+The relative-threshold measurement is the fit target for all styles with separable glyphs. The group-heading and menu-item targets are 10.5/7.5 CSS px, while `app-shell.md` currently states 11/7.5 and 11/8; that source-spec correction is tracked in MEP-61. Tiny utility and Help text retain the app-shell targets because the captured lowercase glyphs overlap at this resolution. The local `reference-glyphs.json` stores both the raw measured pair and the selected fit target.
 
-Regular `l` stem: **1.5 CSS px**. Semibold `l` stem: **1.7 CSS px**. The reference `a` appears double-storey, `g` single-storey, `l` straight without a visible tail, dots softly squared, and terminals softly squared. Equal numeral widths cannot be established from eligible generic labels.
+Regular `l` stem: **1.46 CSS px**. Semibold `l` stem: **1.69 CSS px**. The reference `a` appears double-storey, `g` single-storey, `l` straight without a visible tail, dots softly squared, and terminals softly squared. Equal numeral widths cannot be established from eligible generic labels.
 
 ### Generic interface label ink widths
 
@@ -85,33 +85,33 @@ All five sources are the typeface project or designer repositories, not font col
 
 ## Comparison
 
-Ranking is lexicographic by visible width fit, then x/cap-height ratio, then stem thickness. The width score for sorting is mean absolute ink-width difference + 0.2 × maximum absolute difference (CSS px), across the same 35 generic-label instances for every family. All widths below use the corrected fitted sizes. “Ratio gap” is the mean absolute percentage-point gap between candidate and canonical x/cap ratios across ten measurable styles. Stem deltas are candidate minus reference, in CSS px.
+Ranking is lexicographic by visible width fit, then x/cap-height ratio, then stem thickness. The width score for sorting is mean absolute ink-width difference + 0.2 × maximum absolute difference (CSS px), across the same 35 generic-label instances for every family. “Ratio gap” is the mean absolute percentage-point gap between candidate and the relative-threshold target x/cap ratios across ten measurable styles; tiny utility and Help use their app-shell targets. Stem deltas are candidate minus reference, in CSS px.
 
 | Rank / family | Width score | Width mean / max abs. (CSS px) | Width mean / max abs. (%) | Signed mean (CSS px) | Ratio gap (pp) | Stem Δ 400 / 600 (CSS px) | Letter-form differences |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 1. Figtree | 1.01 | 0.61 / 2.00 | 1.27 / 5.97 | +0.30 | 1.39 | +0.0 / +0.2 | Double-storey a and single-storey g match; dot and terminals are slightly rounder; straight l. |
-| 2. Source Sans 3 | 1.44 | 0.84 / 3.00 | 1.44 / 4.88 | -0.30 | 3.20 | +0.1 / +0.3 | Double-storey a matches; double-storey g and small foot on l differ; sharper terminals. |
-| 3. Nunito Sans | 1.84 | 0.94 / 4.50 | 1.83 / 5.88 | +0.34 | 1.76 | -0.1 / +0.0 | Double-storey a and single-storey g match; dot and terminals are rounder. |
-| 4. Inter | 2.43 | 1.33 / 5.50 | 2.38 / 7.14 | +0.84 | 3.60 | +0.0 / +0.4 | Double-storey a and single-storey g match; rounder dot and sharper terminals. |
-| 5. Mulish | 3.03 | 1.53 / 7.50 | 2.55 / 7.46 | +1.16 | 2.76 | +0.0 / +0.0 | Single-storey a differs; single-storey g and straight l match; round dot. |
+| 1. Figtree | 1.01 | 0.61 / 2.00 | 1.27 / 5.97 | +0.30 | 0.94 | +0.02 / +0.25 | Double-storey a and single-storey g match; dot and terminals are slightly rounder; straight l. |
+| 2. Inter | 1.30 | 0.80 / 2.50 | 1.81 / 7.14 | +0.06 | 3.17 | +0.01 / +0.36 | Double-storey a and single-storey g match; rounder dot and sharper terminals. |
+| 3. Source Sans 3 | 1.44 | 0.84 / 3.00 | 1.44 / 4.88 | -0.30 | 3.01 | +0.17 / +0.31 | Double-storey a matches; double-storey g and small foot on l differ; sharper terminals. |
+| 4. Mulish | 1.56 | 0.96 / 3.00 | 2.00 / 7.46 | +0.39 | 3.02 | +0.00 / -0.07 | Single-storey a differs; single-storey g and straight l match; round dot. |
+| 5. Nunito Sans | 1.84 | 0.94 / 4.50 | 1.83 / 5.88 | +0.34 | 1.30 | -0.01 / +0.02 | Double-storey a and single-storey g match; dot and terminals are rounder. |
 
 ### Fitted font sizes (CSS px)
 
 | Candidate | Product / teamspace selector | Page title | Rail fixed link | Rail active link | Group heading |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Figtree | provisional | 18.5 | 14.5 | 14.5 | 14.5 |
+| Inter | provisional | 18 | 13.5 | 13.5 | 13.5 |
 | Source Sans 3 | provisional | 20 | 15.5 | 15.5 | 15.5 |
+| Mulish | provisional | 18 | 14 | 14 | 14 |
 | Nunito Sans | provisional | 18.5 | 14.5 | 14.5 | 14.5 |
-| Inter | provisional | 18 | 13.5 | 13.5 | 14 |
-| Mulish | provisional | 18 | 14 | 14 | 14.5 |
 
 | Candidate | Rail child link | Rail Search placeholder | Top-bar search placeholder | Menu item | Utility label | Help utility label |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Figtree | 14.5 | 14.5 | 13.5 | 14.5 | 8.5 | 11.5 |
+| Inter | 14 | 13.5 | 12.5 | 13.5 | 8 | 10.5 |
 | Source Sans 3 | 15.5 | 16 | 14.5 | 16 | 9 | 12 |
+| Mulish | 14.5 | 14 | 13 | 14 | 8 | 11 |
 | Nunito Sans | 14.5 | 15 | 13.5 | 14.5 | 7.5 | 11 |
-| Inter | 14 | 13.5 | 12.5 | 14 | 8 | 10.5 |
-| Mulish | 14.5 | 14 | 13 | 14.5 | 8 | 11 |
 
 For product and teamspace selectors, generic text is unavailable. The app-shell 16 px / 600 estimate is provisional for every candidate and was excluded from fit and ranking.
 
@@ -119,53 +119,71 @@ For product and teamspace selectors, generic text is unavailable. The app-shell 
 
 Candidate minus reference, CSS px. These are visible pixel extents, distinct from DOM advance widths.
 
-| Label | Reference width | Figtree Δ | Source Sans 3 Δ | Figtree DOM width | Source Sans 3 DOM width |
+| Label | Reference width | Figtree Δ | Inter Δ | Figtree DOM width | Inter DOM width |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Home (active) | 38.5 | +0.0 | +0.0 | 39.81 | 39.72 |
-| Workqueue | 74.5 | -1.0 | -1.0 | 73.91 | 74.19 |
-| Reports | 49.5 | +0.0 | -0.5 | 51.09 | 50.33 |
-| Analytics | 58.5 | +0.5 | -0.5 | 59.55 | 58.55 |
-| Agents | 45.5 | +0.5 | -2.0 | 46.47 | 43.78 |
-| MCP Server | 74.5 | +1.0 | -1.5 | 76.59 | 73.97 |
-| Search (rail) | 44.0 | +0.0 | +0.0 | 45.06 | 45.72 |
-| Sales | 34.0 | +0.0 | +0.5 | 34.61 | 35.19 |
-| Activities | 60.5 | +2.0 | +0.5 | 62.77 | 61.23 |
-| Integrations | 78.5 | +0.5 | +1.0 | 80.03 | 80.80 |
-| Leads | 37.0 | -0.5 | -0.5 | 38.11 | 37.73 |
-| Contacts | 58.5 | +0.5 | -2.5 | 59.86 | 56.95 |
-| Accounts | 61.5 | +0.5 | -3.0 | 62.22 | 58.80 |
-| Deals | 34.0 | +0.0 | +0.0 | 35.23 | 35.28 |
-| Documents | 74.0 | -0.5 | -1.5 | 74.89 | 74.03 |
-| Campaigns | 73.5 | -1.5 | -2.0 | 72.88 | 72.33 |
-| Tasks | 35.0 | -0.5 | +0.0 | 35.06 | 35.67 |
-| Meetings | 59.0 | +0.0 | -2.0 | 60.30 | 58.33 |
-| Calls | 30.5 | -0.5 | +0.0 | 30.98 | 31.08 |
-| Visits | 33.5 | +2.0 | +0.0 | 35.75 | 33.70 |
-| Home (title) | 49.0 | +0.0 | +0.0 | 50.80 | 51.25 |
-| Search records | 89.0 | +1.0 | -0.5 | 91.09 | 89.59 |
-| My Pins | 27.5 | +1.0 | +0.5 | 29.36 | 28.56 |
-| Chats | 21.0 | +0.5 | -0.5 | 22.39 | 21.19 |
-| Channels | 34.0 | +0.5 | +0.0 | 35.17 | 34.95 |
-| Threads | 29.0 | +1.0 | +1.0 | 30.23 | 30.41 |
-| Contacts (utility) | 33.0 | +1.5 | -0.5 | 35.09 | 33.08 |
-| Help | 23.0 | +0.0 | -0.5 | 24.55 | 24.06 |
-| New Teamspace | 105.0 | +0.5 | +1.0 | 107.14 | 107.95 |
-| Create Folder | 86.5 | +1.0 | +2.0 | 88.30 | 89.23 |
-| Add Modules | 84.5 | +0.5 | +1.0 | 85.39 | 86.25 |
-| Manage CRM Teamspace | 162.5 | -0.5 | -1.0 | 163.75 | 163.45 |
-| View All Teamspace | 127.5 | +1.0 | +2.0 | 129.08 | 129.84 |
-| Leads (active) | 37.5 | +0.0 | +0.0 | 38.61 | 38.67 |
-| Leads (title) | 48.0 | -0.5 | +0.0 | 49.27 | 49.91 |
+| Home (active) | 38.5 | +0.0 | -1.5 | 39.81 | 38.42 |
+| Workqueue | 74.5 | -1.0 | -2.0 | 73.91 | 73.09 |
+| Reports | 49.5 | +0.0 | -1.5 | 51.09 | 49.44 |
+| Analytics | 58.5 | +0.5 | -0.5 | 59.55 | 58.52 |
+| Agents | 45.5 | +0.5 | -1.0 | 46.47 | 44.86 |
+| MCP Server | 74.5 | +1.0 | +1.0 | 76.59 | 76.58 |
+| Search (rail) | 44.0 | +0.0 | -0.5 | 45.06 | 44.81 |
+| Sales | 34.0 | +0.0 | +0.5 | 34.61 | 35.47 |
+| Activities | 60.5 | +2.0 | +0.0 | 62.77 | 60.95 |
+| Integrations | 78.5 | +0.5 | -1.5 | 80.03 | 78.25 |
+| Leads | 37.0 | -0.5 | +1.5 | 38.11 | 40.05 |
+| Contacts | 58.5 | +0.5 | -0.5 | 59.86 | 59.23 |
+| Accounts | 61.5 | +0.5 | +0.5 | 62.22 | 62.44 |
+| Deals | 34.0 | +0.0 | +1.5 | 35.23 | 37.05 |
+| Documents | 74.0 | -0.5 | -0.5 | 74.89 | 75.31 |
+| Campaigns | 73.5 | -1.5 | +0.0 | 72.88 | 74.56 |
+| Tasks | 35.0 | -0.5 | +2.5 | 35.06 | 38.34 |
+| Meetings | 59.0 | +0.0 | +0.5 | 60.30 | 61.20 |
+| Calls | 30.5 | -0.5 | +0.5 | 30.98 | 32.27 |
+| Visits | 33.5 | +2.0 | +1.0 | 35.75 | 35.67 |
+| Home (title) | 49.0 | +0.0 | +0.0 | 50.80 | 50.67 |
+| Search records | 89.0 | +1.0 | +0.0 | 91.09 | 90.17 |
+| My Pins | 27.5 | +1.0 | +1.5 | 29.36 | 30.02 |
+| Chats | 21.0 | +0.5 | +0.0 | 22.39 | 21.83 |
+| Channels | 34.0 | +0.5 | +0.5 | 35.17 | 35.34 |
+| Threads | 29.0 | +1.0 | +1.0 | 30.23 | 31.14 |
+| Contacts (utility) | 33.0 | +1.5 | +0.0 | 35.09 | 33.86 |
+| Help | 23.0 | +0.0 | -0.5 | 24.55 | 23.34 |
+| New Teamspace | 105.0 | +0.5 | +0.0 | 107.14 | 106.41 |
+| Create Folder | 86.5 | +1.0 | -1.5 | 88.30 | 86.28 |
+| Add Modules | 84.5 | +0.5 | -1.0 | 85.39 | 84.45 |
+| Manage CRM Teamspace | 162.5 | -0.5 | -0.5 | 163.75 | 163.58 |
+| View All Teamspace | 127.5 | +1.0 | +0.0 | 129.08 | 128.47 |
+| Leads (active) | 37.5 | +0.0 | +0.5 | 38.61 | 39.36 |
+| Leads (title) | 48.0 | -0.5 | +2.0 | 49.27 | 51.78 |
 
-At the corrected sizes, Figtree’s top-bar “Search records” differs by +1.0 CSS px and menu “View All Teamspace” by +1.0 CSS px. The earlier opposite-direction 6.5/5.5 px outliers arose from selecting sizes using heights alone and a fixed contrast threshold. The largest remaining Figtree error is Activities, Visits at 2.0 CSS px. No global letter-spacing correction is supported.
+At the corrected sizes, Figtree’s top-bar “Search records” and menu “View All Teamspace” each differ by +1.0 CSS px. The earlier opposite-direction 6.5/5.5 px outliers arose from selecting sizes using heights alone and a fixed contrast threshold. The largest remaining Figtree error is Activities and Visits at 2.0 CSS px. No global letter-spacing correction is supported.
 
 ### Variable-weight stem check
 
-At 400 / 600, Figtree stems are 1.5 / 1.9 CSS px versus reference 1.5 / 1.7. A 10-unit `wght` sweep found 530 matches the semibold stem at 1.7 CSS px. Keeping fitted sizes, 530 changes the 35-label mean absolute width difference from 0.61 to 0.64 CSS px; the maximum stays 2.0 CSS px. The 600 setting preserves the best width fit, so the stem-matching axis value is recorded as an optional trial, not the baseline recommendation.
+The reference regular and semibold stems measure **1.46 / 1.69 CSS px**. Figtree at 400 / 600 measures **1.48 / 1.94 CSS px**. With fitted sizes held fixed, the following Figtree `wght` sweep changes only the semibold labels; the width statistics cover all 35 labels. The script retains unrounded stem values before presentation.
+
+| `wght` | Semibold stem (CSS px) | Width mean abs. (CSS px) | Width max abs. (CSS px) |
+| ---: | ---: | ---: | ---: |
+| 500 | 1.67 | 0.66 | 2.00 |
+| 510 | 1.69 | 0.64 | 2.00 |
+| 520 | 1.70 | 0.64 | 2.00 |
+| 530 | 1.71 | 0.64 | 2.00 |
+| 540 | 1.72 | 0.66 | 2.00 |
+| 550 | 1.75 | 0.66 | 2.00 |
+| 560 | 1.79 | 0.63 | 2.00 |
+| 570 | 1.82 | 0.63 | 2.00 |
+| 580 | 1.86 | 0.61 | 2.00 |
+| 590 | 1.90 | 0.60 | 2.00 |
+| 600 | 1.94 | 0.61 | 2.00 |
+
+At `wght` 510, Figtree’s semibold stem matches the reference to two decimals and the mean width error increases from 0.61 to 0.64 CSS px; the maximum remains 2.0 CSS px. `wght` 590 has the lowest mean width error, 0.60 CSS px, but its 1.90 CSS px stem is farther from the reference. The baseline remains 600; the implementation weight decision belongs to MEP-66.
 
 ## Recommendation
 
-**Recommend Figtree** for board review. It has the lowest width mean/maximum error, **0.61 / 2.0 CSS px** (1.27% / 5.97%), x/cap ratio gap **1.39 percentage points**, and regular/semibold stem deltas **0.0 / +0.2 CSS px**. Its `a` and `g` constructions match the reference. **Backup: Source Sans 3** under the mandated width-first ranking: **0.84 / 3.0 CSS px** (1.44% / 4.88%), ratio gap **3.20 percentage points**, stem deltas **+0.1 / +0.3 CSS px**. Its double-storey `g` and small `l` foot visibly differ. Mulish matches both stem thicknesses but its width mean/maximum is 1.53 / 7.5 CSS px after the same size fit.
+**Recommend Figtree** for board review. Its width mean/maximum error is **0.61 / 2.0 CSS px** (1.27% / 5.97%), x/cap ratio gap **0.94 percentage points**, and regular/semibold stem deltas **+0.02 / +0.25 CSS px**. Its `a` and `g` constructions match the reference. **Backup: Inter** under the width-first score: **0.80 / 2.5 CSS px** (1.81% / 7.14%), ratio gap **3.17 percentage points**, and stem deltas **+0.01 / +0.36 CSS px**. Mulish fits the semibold stem more closely (**−0.07 CSS px**) but has width mean/maximum **0.96 / 3.0 CSS px** under the same height targets.
+
+The second through fifth candidates differ in mean absolute width by only about 0.16 CSS px, below the 0.5 CSS px bitmap width step. Their backup order is therefore weakly determined by width; the score also accounts for the maximum error.
 
 Suggested Figtree values for an implementation trial (`letter-spacing: normal`):
 
