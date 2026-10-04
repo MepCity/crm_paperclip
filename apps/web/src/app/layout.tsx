@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { ToastProvider } from "@/components/ui/toast";
 import { APP_NAME } from "../app-info";
 import { UiProvider } from "../components/ui/ui-provider";
 import "./globals.css";
@@ -12,7 +13,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <UiProvider>{children}</UiProvider>
+        <UiProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </UiProvider>
       </body>
     </html>
   );

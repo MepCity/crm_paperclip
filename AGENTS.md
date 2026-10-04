@@ -11,7 +11,7 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 ## Delivery model — module by module
 - We never copy the reference CRM all at once. Each module goes through research → spec → implementation → QA → CTO approval → board approval before the next module starts.
 - Order: Leads (with the minimal app shell) → Contacts → Accounts → Deals + pipeline → Activities → notes/attachments, CSV → customization → automation → reports → integrations. The board may reorder.
-- Only the CTO merges into `main`, and only after QA and CTO review. If the CTO is unavailable (usage limit), work may continue on issue branches, but approvals and merges wait.
+- Nobody merges into `main` by hand: after QA and CTO approval the merge bot merges the branch into a clean copy of `main`, runs `pnpm verify`, and pushes `main`; on conflict or failure it reopens the issue to its engineer. If the CTO is unavailable (usage limit), work may continue on issue branches, but approvals and merges wait.
 
 ## Research workspace (local only, never committed)
 - `~/Desktop/mepcity-research/metadata/` — reference CRM metadata (modules, fields, layouts, custom views, related lists, roles, profiles). **Source of truth for the data model.**
@@ -25,7 +25,7 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 
 ## Engineering workflow
 - One Paperclip issue = one isolated git worktree/branch (`mep/MEP-<n>`). Keep changes small and focused.
-- Every change ships with tests. QA verifies, then the CTO approves and merges.
+- Every change ships with tests. QA verifies, the CTO approves, the merge bot merges.
 - Architecture decisions live in `docs/adr/`.
 - Never commit secrets. `.env*` files are git-ignored.
 
@@ -33,8 +33,8 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 - Subject: `<type>(<scope>): <summary>` — English, imperative, max 72 characters. Types: `feat fix refactor perf test docs build ci chore style revert`. Example: `feat(leads): add list view with saved filters`.
 - Optional body after a blank line: what and why, wrapped at 72 characters. Reference the issue: `Refs: MEP-<n>`.
 - `Agent:` and `Model:` signature trailers are added automatically by the `.githooks/commit-msg` hook. Do not write or edit them yourself.
-- Commits are authored as the repository owner automatically (post-commit hook); your agent name and model live in the trailers. Never run `git config user.*` and never pass `--author`. If git stops with `empty ident name`, rerun the same command as `env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL git commit ...`.
+- Commits are authored as the repository owner automatically (post-commit hook); your agent name and model live in the trailers. Never run `git config user.*` and never pass `--author`. Paperclip's `git` wrapper blanks the identity, so run local `commit`, `merge` and `rebase` with the real git: `env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL /usr/bin/git commit ...` (the owner identity comes from the repo config). Never push; `main` and `mep/*` are pushed automatically.
 - If a hook reports that repository maintenance is running, keep your changes, wait 3 minutes and retry the same command.
 
 ## GitHub
-- Remote `origin`: MepCity/crm_paperclip. `main` and `mep/*` branches are pushed automatically every 5 minutes (new issue branches start from `origin/main`, so the CTO also pushes right after each merge); the pre-push hook re-checks every outgoing commit. Never force-push or rewrite `main`.
+- Remote `origin`: MepCity/crm_paperclip. `main` and `mep/*` branches are pushed automatically every 5 minutes (new issue branches start from `origin/main`, so the merge bot pushes right after each merge); the pre-push hook re-checks every outgoing commit. Never force-push or rewrite `main`.

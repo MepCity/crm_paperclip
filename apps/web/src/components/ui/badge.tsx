@@ -1,17 +1,20 @@
 import type { ReactNode } from "react";
 
+const badgeStyles = {
+  neutral: "bg-surface-hover text-text",
+  success: "bg-success/10 text-success",
+  warning: "bg-warning/10 text-warning",
+  danger: "bg-danger/10 text-danger",
+} as const;
+
+const badgeBase = "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium";
+
 export function Badge({
   children,
   variant = "neutral",
 }: {
   children: ReactNode;
-  variant?: "neutral" | "success" | "warning" | "danger";
+  variant?: keyof typeof badgeStyles;
 }) {
-  let classes = "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ";
-  if (variant === "neutral") classes += "bg-surface-hover text-text ";
-  if (variant === "success") classes += "bg-success/10 text-success ";
-  if (variant === "warning") classes += "bg-warning/10 text-warning ";
-  if (variant === "danger") classes += "bg-danger/10 text-danger ";
-
-  return <span className={classes}>{children}</span>;
+  return <span className={`${badgeBase} ${badgeStyles[variant]}`}>{children}</span>;
 }
