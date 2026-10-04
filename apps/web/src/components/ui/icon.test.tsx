@@ -15,6 +15,7 @@ const expectedIcons = [
   "showMenu",
   "plus",
   "settings",
+  "users",
   "spinner",
   "error",
   "success",

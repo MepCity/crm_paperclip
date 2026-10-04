@@ -9,6 +9,7 @@ import { Navigation } from "./navigation";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { PageHeader } from "./page-header";
 import { PageTitle } from "./page-title";
+import { SettingsNavigation } from "./settings-navigation";
 import { UserMenu } from "./user-menu";
 
 const navigation = vi.hoisted(() => ({
@@ -225,6 +226,15 @@ test("Mobile rail starts hidden and changes with viewport width", () => {
   expect(screen.getByLabelText("Navigation rail").className).toContain("hidden");
   view.unmount();
   expect(media.removeEventListener).toHaveBeenCalledWith("change", onChange);
+});
+
+test("Settings navigation links to Members and keeps General exact", () => {
+  navigation.path = "/o/example/settings/members";
+  render(<SettingsNavigation orgSlug="example" />);
+  const members = screen.getByRole("link", { name: "Members" });
+  expect(members.getAttribute("href")).toBe("/o/example/settings/members");
+  expect(members.getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
 });
 
 test("PageHeader supplies description and actions without repeating a title", () => {

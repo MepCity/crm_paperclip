@@ -7,7 +7,7 @@ import { isNavLinkActive, settingsNav } from "./nav";
 export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Settings navigation" className="shrink-0">
+    <nav aria-label="Settings navigation" className="flex shrink-0 flex-col gap-1">
       {settingsNav.map((link) => (
         <Link
           key={link.id}
