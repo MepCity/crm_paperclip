@@ -73,6 +73,7 @@ let eventSeq = 8_000_000;
 const READ_KINDS = ["s1", "s2", "s2-keyset", "s2-offset", "s3", "s4", "s5", "s11"] as const;
 
 export type BenchArgs = {
+  slots?: boolean;
   rows?: number;
   seed?: number;
   warmup?: number;
@@ -501,7 +502,7 @@ async function measureSearch(
   return rows;
 }
 
-async function measureWrites(
+export async function measureWrites(
   session: pg.Client,
   meter: pg.Client,
   option: Option,
@@ -512,6 +513,7 @@ async function measureWrites(
   ids: { update1: string[]; update5: string[] },
   orgForRls: string | null,
   progress: Progress,
+  slots = false,
 ): Promise<{ rows: WriteRow[]; inserted: string[] }> {
   const actor = world.usersA[0];
   if (!actor) throw new Error("missing actor");
@@ -538,7 +540,7 @@ async function measureWrites(
         eventSeq += 1;
         if (kind === "insert") {
           const record = syntheticLead(world, 20_000_000 + eventSeq);
-          await insertRecord(session, option, record, eventId);
+          await insertRecord(session, option, record, eventId, slots);
           inserted.push(record.id);
         } else if (kind === "update1") {
           const recordId = ids.update1[index];
@@ -551,6 +553,7 @@ async function measureWrites(
             picklistValue("lead_status", 9, index),
             actor,
             eventId,
+            slots,
           );
         } else {
           const recordId = ids.update5[index];
@@ -569,6 +572,7 @@ async function measureWrites(
             },
             actor,
             eventId,
+            slots,
           );
         }
         await session.query("commit");

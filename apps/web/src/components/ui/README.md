@@ -7,7 +7,7 @@ This directory contains the headless-first design system components, built on `r
 1. **One primitive, one file:** Use `kebab-case.tsx`. No barrel files (`index.ts`). Import components directly from their file (e.g., `import { Button } from "@/components/ui/button"`).
 2. **Design strictly with tokens:** Do not use arbitrary colors or generic tailwind colors (`bg-red-500`). Use semantic tokens like `bg-primary`, `text-text-muted`, `border-border`.
 3. **Headless first:** Use `react-aria-components` for interaction and accessibility. Define styles on the `className` directly using Tailwind and Aria data attributes (e.g., `data-hovered:`, `data-disabled:`).
-4. **Test thoroughly:** Every primitive must have a `*.test.tsx` file checking keyboard interaction, variants, and accessible roles/labels.
+4. **Test thoroughly:** Every primitive must have a `*.test.tsx` file checking keyboard interaction, variants, and accessible roles/labels. Component tests render through `@/test/render` to include the UI provider.
 5. **Add a demo:** Create a `*.demo.tsx` file exhibiting all states and variants, and register it in `/dev/ui` (in `apps/web/src/app/dev/ui/demos.ts`).
 
 ## What NOT to do
@@ -90,7 +90,7 @@ what the "no colour constants" rule forbids.
 | `--color-accent-purple` | `#a247ea` | app-shell.md › Colour summary › "`#A247EA` › Functional accent colours in pinned-link icons" | from spec |
 | `--color-accent-amber` | `#f18e0a` | app-shell.md › Colour summary › "`#F18E0A` › Functional accent colours in pinned-link icons" | from spec |
 | `--color-accent-yellow` | `#e7b910` | app-shell.md › Colour summary › "`#E7B910` › Functional accent colours in pinned-link icons" | from spec |
-| `--color-panel-border` | `#dcdbee` | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`"; Table header and rows › "2 px `#DCDBEE` bottom border" and "1 px `#DCDBEE` vertical dividers"; Table footer › "two 1 px `#DCDBEE` lines" | from spec |
+| `--color-panel-border` | `#dcdbee` | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`"; Table header and rows › "2 px `#DCDBEE` bottom border" and "1 px `#DCDBEE` divider on its right edge"; Table footer › "two 1 px `#DCDBEE` lines" | from spec |
 | `--color-row-separator` | `#edf0f4` | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`"; Table header and rows › "1 px `#EDF0F4` separator" | from spec |
 | `--color-control-border` | `#c5c4d3` | list-views.md › Surface and line colors › "filter search outline and unchecked checkbox border `#C5C4D3`"; Selected / disabled › "2 px `#C5C4D3` border" | from spec |
 | `--color-button-border` | `#d5d8e9` | list-views.md › Create and action buttons › "1 px `#D5D8E9` border" | from spec |
@@ -105,6 +105,7 @@ what the "no colour constants" rule forbids.
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
+| `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
 | `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular" | from spec |
@@ -185,16 +186,28 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-header-height` | `37px` | list-views.md › Table header and rows › "Header 37 px high: 35 px white plus a 2 px `#DCDBEE` bottom border". The 37 px box includes that border | from spec |
 | `--size-list-header-border` | `2px` | list-views.md › Table header and rows › "2 px `#DCDBEE` bottom border" | from spec |
-| `--size-list-row-height` | `54px` | list-views.md › Table header and rows › "54 px plus a 1 px `#EDF0F4` separator" | from spec |
-| `--size-list-row-pitch` | `55px` | list-views.md › Table header and rows › "repeat every 55 px (54 px plus a 1 px `#EDF0F4` separator)" | from spec |
+| `--size-list-header-rule` | `23.5px` | list-views.md › Table header and rows › "23.5 px tall" | from spec |
+| `--size-list-header-rule-offset` | `6px` | list-views.md › Table header and rows › "starting 6 px below the header's top edge" | from spec |
+| `--size-list-row-height` | `36px` | list-views.md › Table header and rows › "Single-line rows are 36 px" | from spec |
+| `--size-list-row-pitch` | `37px` | list-views.md › Table header and rows › "repeat every 37 px" | from spec |
+| `--size-list-row-pad` | `9px` | list-views.md › Table header and rows › "a row is 9 px" | from spec |
+| `--size-list-line-height` | `18px` | list-views.md › Table header and rows › "18 px per text line" | from spec |
 | `--size-list-leading-width` | `240px` | list-views.md › Leading table strips › "From the table edge at x=548 to the first data column edge at x=788 (240 px)" | from spec |
 | `--size-list-leading-pair-width` | `100px` | list-views.md › Leading table strips › "The unlabeled leading cell and the selection cell together span 100 px" | from spec |
 | `--size-list-badge-width` | `140px` | list-views.md › Leading table strips › "The badge strip is 140 px" | from spec |
+| `--size-list-checkbox-inset` | `10px` | list-views.md › Leading table strips › "10 px inside the pair's right edge" | from spec |
+| `--size-list-checkbox-offset` | `12px` | list-views.md › Leading table strips › "starts 12 px below the top edge of a body row" | from spec |
 | `--size-list-column-width` | `200px` | list-views.md › Data and trailing column widths › "200 px per column" | from spec |
 | `--size-list-cell-inset` | `12px` | list-views.md › Data and trailing column widths › "Header and cell text starts 12 px inside the column edge" | from spec |
-| `--size-list-settings-width` | `40px` | list-views.md › Data and trailing column widths › "View Settings occupies 40 px at the right edge" | from spec |
+| `--size-list-settings-width` | `40px` | list-views.md › Data and trailing column widths › "40 px at the right edge" | from spec |
 | `--size-list-settings-row-width` | `250px` | list-views.md › Selected / disabled › "highlighted settings-menu row 250 × 30 px" | from spec |
+| `--size-list-empty-offset` | `30px` | list-views.md › Empty view › "starts 30 px below the band's top edge" | from spec |
 | `--size-list-footer-height` | `31px` | list-views.md › Table footer › "31 px high between two 1 px `#DCDBEE` lines". The 31 px band is between the lines; the lines are not included | from spec |
+| `--size-list-footer-gap-before` | `21px` | list-views.md › Table footer › "Previous at x 1335.5–1341.5, range text at x 1362.5–1402.5" | from spec |
+| `--size-list-footer-gap-after` | `19.5px` | list-views.md › Table footer › "range text at x 1362.5–1402.5, Next at x 1422–1428" | from spec |
+| `--size-list-footer-end` | `26px` | list-views.md › Table footer › "26 px inside the table's inner right edge" | from spec |
+| `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
+| `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
@@ -296,8 +309,12 @@ token:
   viewport, not a reusable metric.
 - **The 35 px white band** inside the table header. It is the 37 px header (`--size-list-header-height`)
   minus the 2 px bottom border (`--size-list-header-border`).
-- **The first data row at 53 px.** The repeating row is 54 px plus a 1 px separator; 53 px is a
+- **The first data row at 53 px.** Both captures measure that first row at 53 px. Repeating
+  single-line rows are 36 px and repeat every 37 px; repeating two-line rows are 54 px
+  (`--size-list-row-pad` twice plus `--size-list-line-height` twice). 53 px is a
   single-capture exception, not a second row height.
+- **The 57 px empty band.** It is `--size-list-empty-offset` plus `--size-list-line-height`
+  plus `--size-list-row-pad`.
 - **Individual widths of the two leading cells.** They "together span 100 px" and "the header shows
   no divider between them, so their individual widths are not measurable."
 - **1 px rules in the list.** Search outline, panel and table outline, row separator, header
@@ -355,6 +372,7 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-rail-placeholder` `#7a859b` on `--color-rail-surface` | 3.33:1 | Rail/local Search › Input box › "`#7A859B` approx." |
 | `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface. list-views.md › Text roles measures Lead Name and Email in the body colour even when linked ("rather than the blue action color"), so there is no separate link token |
 | `--color-text-disabled` `#b5b8be` on `--color-surface` | 1.99:1 | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" |
+| `--color-text-empty` `#8b9ab9` on `--color-surface` | 2.83:1 | list-views.md › Empty view › "message in #8B9AB9" |
 | `--color-primary-text` `#ffffff` on `--color-primary-gradient-start` `#5767f6` | 4.49:1 | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top to `#154EC5` at bottom, white `#FFFFFF` label". The darker end of the same gradient passes at 7.17:1 |
 | `--color-primary-text` `#ffffff` on `--color-primary-disabled` `#adb3ee` | 2.01:1 | list-views.md › Sort popover › "flat `#ADB3EE` fill and a white `#FFFFFF` label". Disabled controls are inactive text; the fill stays as measured |
 | `--color-popover-sort-border` `#ced0e1` on `--color-surface` | 1.53:1 | list-views.md › Sort popover › "1 px `#CED0E1` border" |
@@ -381,7 +399,7 @@ covered by the exception.
 The list rows in the table above are newly measured, so the placeholder and separator exceptions do
 not cover them. Their values stay as measured. `--color-panel-border` and `--color-row-separator`
 divide regions. `--color-control-border`, `--color-button-border` and `--color-primary-divider`
-outline or split a control, and `--color-text-disabled` plus the white label on
+outline or split a control, and `--color-text-disabled`, `--color-text-empty` plus the white label on
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
 
