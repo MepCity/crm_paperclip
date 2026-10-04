@@ -236,7 +236,7 @@ export function ComboBox<T extends object>({
           {/* The group draws the border, but React Aria reports the resolved invalid state
               (prop or Form validationErrors) only on the ComboBox root. */}
           <Group data-invalid={isInvalid || undefined} className={styles.group}>
-            <Input className={styles.input} />
+            <PreservedInput className={styles.input} />
             <Button slot="trigger" className={styles.trigger}>
               <Icons.chevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
             </Button>
@@ -267,6 +267,25 @@ export function ComboBox<T extends object>({
       )}
     </AriaComboBox>
   );
+}
+
+/**
+ * Hydration leaves text the user typed into the server markup, then React writes the
+ * field state over it. The value tracker already matches that text, so an input event
+ * would be ignored. Reset the tracker and publish the event so React Aria keeps it.
+ */
+function PreservedInput({ className }: { className: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || node.value === node.defaultValue) return;
+    const tracker = (
+      node as HTMLInputElement & { _valueTracker?: { setValue: (value: string) => void } }
+    )._valueTracker;
+    tracker?.setValue(node.defaultValue);
+    node.dispatchEvent(new Event("input", { bubbles: true }));
+  }, []);
+  return <Input ref={ref} className={className} />;
 }
 
 /** Reads option text from RAC's collection without imposing a shape on loader results. */

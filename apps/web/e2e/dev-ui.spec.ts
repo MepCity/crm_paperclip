@@ -292,9 +292,38 @@ test("type roles load one local variable font and preserve measured advances", a
     }
   });
   await page.goto("/dev/ui");
-  await page.evaluate(() => document.fonts.ready);
-  expect(await page.evaluate(() => document.fonts.check("400 14.5px Figtree"))).toBe(true);
-  expect(await page.evaluate(() => document.fonts.check("510 14.5px Figtree"))).toBe(true);
+  // document.fonts.ready settles before a face is requested. Ask for the file and
+  // poll until both measured weights check; a rejected load retries instead of failing.
+  const figTreeReady = async (weight: 400 | 510) => {
+    const probe = await page.evaluate(async (requested) => {
+      const font = `${requested} 14.5px Figtree`;
+      const faces = () =>
+        [...document.fonts]
+          .filter((face) => face.family.replaceAll('"', "") === "Figtree")
+          .map((face) => ({ weight: face.weight, status: face.status }));
+      try {
+        await document.fonts.load(font);
+      } catch {
+        return { check: false, faces: faces() };
+      }
+      return { check: document.fonts.check(font), faces: faces() };
+    }, weight);
+    return {
+      check: probe.check,
+      faces: probe.faces,
+      fontResponses: fontResponses.map((response) => ({
+        url: response.url,
+        status: response.status,
+      })),
+    };
+  };
+  const fontMessage = "Figtree FontFace.status values and fontResponses";
+  await expect
+    .poll(() => figTreeReady(400), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
+  await expect
+    .poll(() => figTreeReady(510), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
   expect(
     await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily),
   ).toMatch(/^"?Figtree"?,/);

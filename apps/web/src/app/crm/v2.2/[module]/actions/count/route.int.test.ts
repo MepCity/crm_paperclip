@@ -1,8 +1,8 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it } from "vitest";
-import { decodeError } from "../../../../../../lib/api/wire/errors";
-import { getRecordService } from "../../../../../../lib/records";
+import { decodeError } from "@/lib/api/wire/errors";
+import { getRecordService } from "@/lib/records";
 import { POST } from "./route";
 
 type Organization = Awaited<ReturnType<typeof createTestOrganization>>;
@@ -68,14 +68,17 @@ describe("POST /crm/v2.2/{module}/actions/count", () => {
       const decoded = decodeError(response.status, body);
       expect(decoded).toBeInstanceOf(ValidationError);
       if (decoded instanceof ValidationError) {
-        expect(decoded.fieldErrors.cvid?.length).toBeGreaterThan(0);
+        expect(decoded.fieldErrors.viewId?.length).toBeGreaterThan(0);
       }
     }
   });
 
   it("returns 404 for an unknown view and an unknown module", async () => {
     const view = await countRequest(orgA, { query: "?cvid=missing-view" });
-    const moduleResponse = await countRequest(orgA, { module: "Deals", query: "?cvid=all-leads" });
+    const moduleResponse = await countRequest(orgA, {
+      module: "Never_A_Module",
+      query: "?cvid=all-leads",
+    });
     for (const response of [view, moduleResponse]) {
       expect(response.status).toBe(404);
       expect(response.headers.get("cache-control")).toBe("no-store");

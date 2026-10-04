@@ -73,3 +73,29 @@ test("Link in the disabled state renders no anchor and ignores presses", async (
   await user.click(element);
   expect(presses).toBe(0);
 });
+
+test("Rail and icon links retain destinations, current page semantics and keyboard focus", async () => {
+  const user = userEvent.setup();
+  render(
+    <>
+      <Link href="/home" variant="rail" aria-current="page">
+        Home
+      </Link>
+      <Link href="/child" variant="railNested">
+        Child
+      </Link>
+      <Link href="/settings" variant="icon" aria-label="Settings">
+        Settings
+      </Link>
+    </>,
+  );
+  const home = screen.getByRole("link", { name: "Home" });
+  expect(home.getAttribute("aria-current")).toBe("page");
+  expect(home.getAttribute("href")).toBe("/home");
+  await user.tab();
+  expect(document.activeElement).toBe(home);
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Child" }));
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Settings" }));
+});

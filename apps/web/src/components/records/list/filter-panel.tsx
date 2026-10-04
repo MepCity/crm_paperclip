@@ -56,6 +56,7 @@ export function FilterPanel({
       <div className="mt-3">
         {visibleGroups.map((group) => (
           <Disclosure
+            variant="filter"
             key={group.id}
             label={group.label}
             isExpanded={!collapsedIds.has(group.id)}

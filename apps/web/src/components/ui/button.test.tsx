@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createRef } from "react";
 import { afterEach, expect, test } from "vitest";
 import { Button } from "./button";
 
@@ -71,3 +72,20 @@ test("Button in the pending state ignores presses and announces pending", async 
   await user.click(button);
   expect(presses).toBe(0);
 });
+
+for (const variant of ["rail", "railIcon", "icon", "avatar"] as const) {
+  test(`Button ${variant} variant forwards focus refs and supports keyboard activation`, async () => {
+    const user = userEvent.setup();
+    const ref = createRef<HTMLButtonElement>();
+    let presses = 0;
+    render(
+      <Button variant={variant} size="compact" ref={ref} onPress={() => presses++}>
+        Control
+      </Button>,
+    );
+    expect(ref.current).toBe(screen.getByRole("button", { name: "Control" }));
+    ref.current?.focus();
+    await user.keyboard("{Enter}");
+    expect(presses).toBe(1);
+  });
+}

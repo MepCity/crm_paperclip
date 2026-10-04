@@ -101,6 +101,31 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(await service.getView("Leads", view.id)).toEqual(view);
       }
     });
+    it("projects fields, always includes id and rejects unknown names", async () => {
+      const created = await service.create("Leads", forView(defaultView));
+      const query = {
+        viewId: defaultView.id,
+        page: 1,
+        perPage: 10,
+        filters: {
+          field: "id",
+          comparator: "is" as const,
+          value: created.id,
+        },
+      };
+      const projected = await service.list("Leads", { ...query, fields: ["Company"] });
+      expect(projected.records).toEqual([
+        { id: created.id, fields: { id: created.id, Company: created.fields.Company } },
+      ]);
+      expect((await service.list("Leads", { ...query, fields: [] })).records).toEqual([
+        { id: created.id, fields: { id: created.id } },
+      ]);
+      expect((await service.list("Leads", query)).records).toEqual([created]);
+      await validation(service.list("Leads", { ...query, fields: ["Unknown_Field"] }), "fields");
+      const fields = projected.records[0]?.fields as Record<string, FieldValue>;
+      fields.Company = "Changed";
+      expect(await service.get("Leads", created.id)).toEqual(created);
+    });
     for (const perPage of [10, 20, 30, 40, 50, 100]) {
       it(`paginates at ${perPage}, with consistent counts and no duplicate or missing records`, async () => {
         const query = {

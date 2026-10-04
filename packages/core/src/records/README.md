@@ -10,7 +10,10 @@ The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendme
 Metadata describes fields, ordered picklist display/stored values, layout sections
 and ordered field API names. Exactly one view is default. List results carry page,
 page size and `moreRecords`; `count` is separate. Updates are partial. View criteria
-and extra filters combine with `and`. The only observed comparator is `is`: exact
+and extra filters combine with `and`.
+`ListQuery.fields` projects field API names, always including `id`. Omission
+returns all fields; an empty list returns only `id`. Unknown names raise a
+`ValidationError` keyed by `fields`. Projection happens after filtering and sorting. The only observed comparator is `is`: exact
 stored-value equality, case-sensitive for strings; an array matches any element;
 null matches an empty field. Groups support `and` and `or`.
 
