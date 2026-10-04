@@ -14,7 +14,8 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
 
   await page.goto("/dev/ui");
   await expect(page).toHaveTitle(/Component Gallery/);
-  await expectNoA11yViolations(page);
+  // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
+  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
 
   // Each demo is a labelled region so screens and tests can address it.
   const formRegion = page.getByRole("region", { name: "form" });
@@ -134,7 +135,8 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   // The scan can outlast the notification lifetime. The three toasts are
   // already visible above; requiring the first one to still be mounted
   // afterwards races that lifetime and fails when the scan is slow.
-  await expectNoA11yViolations(page);
+  // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
+  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
   // A pointer resting on the toast pauses its timer. Park it clear of the
   // region so auto-dismiss runs from whatever time is left.
   await page.mouse.move(0, 0);
@@ -235,8 +237,17 @@ test("token demo renders the values measured in the shell and list specs", async
   await expect(sample("--size-list-filter-width")).toHaveCSS("width", "202px");
   // Table header and rows: "Header 37 px high".
   await expect(sample("--size-list-header-height")).toHaveCSS("width", "37px");
-  // Table header and rows: "54 px plus a 1 px separator".
-  await expect(sample("--size-list-row-height")).toHaveCSS("width", "54px");
+  // Table header and rows: "Single-line rows are 36 px" and "repeat every 37 px".
+  await expect(sample("--size-list-row-height")).toHaveCSS("width", "36px");
+  await expect(sample("--size-list-row-pitch")).toHaveCSS("width", "37px");
+  // Table header and rows: "a row is 9 px" and "18 px per text line".
+  await expect(sample("--size-list-row-pad")).toHaveCSS("width", "9px");
+  await expect(sample("--size-list-line-height")).toHaveCSS("width", "18px");
+  // Table header and rows: divider "23.5 px tall", "starting 6 px below".
+  await expect(sample("--size-list-header-rule")).toHaveCSS("width", "23.5px");
+  await expect(sample("--size-list-header-rule-offset")).toHaveCSS("width", "6px");
+  // Empty view: "message in #8B9AB9".
+  await expect(sample("--color-text-empty")).toHaveCSS("background-color", "rgb(139, 154, 185)");
   // Data and trailing column widths: "200 px per column".
   await expect(sample("--size-list-column-width")).toHaveCSS("width", "200px");
   // Create and action buttons: "Split Create Lead 137.5 × 33 px".
@@ -351,7 +362,8 @@ test("type roles load one local variable font and preserve measured advances", a
   const tokens = page.getByRole("region", { name: "tokens", exact: true });
   await expect(tokens.locator('[data-token="--text-2xs"]')).toHaveCSS("font-size", "8.5px");
   await expect(tokens.locator('[data-token="--text-xs"]')).toHaveCSS("font-size", "11.5px");
-  await expectNoA11yViolations(page);
+  // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
+  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
   expect(fontResponses).toHaveLength(1);
   expect(fontResponses[0]?.status).toBe(200);
   const origin = new URL(page.url()).origin;

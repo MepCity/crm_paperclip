@@ -196,6 +196,9 @@ importers:
       '@crm/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@internationalized/date':
+        specifier: ^3.12.4
+        version: 3.12.4
       lucide-react:
         specifier: ^1.50.0
         version: 1.50.0(@types/react@19.3.0)(react@19.3.0)
