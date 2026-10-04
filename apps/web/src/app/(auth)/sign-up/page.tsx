@@ -14,7 +14,7 @@ export default async function SignUpPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium text-text">Sign up</h2>
+      <h2 className="text-xl font-semibold text-text">Sign up</h2>
       <SignUpForm next={next} />
       <p className="text-sm text-text-muted">
         Already have an account?{" "}

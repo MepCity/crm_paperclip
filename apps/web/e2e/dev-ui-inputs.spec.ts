@@ -27,6 +27,8 @@ async function whenHydrated(locator: Locator): Promise<void> {
 
 // The gallery renders every primitive in every state, so one scan covers the new ones too.
 test("dev ui gallery is accessible with the data entry primitives", async ({ page }) => {
+  // Full-gallery axe scans exceed 30s on a loaded machine, as in dev-ui.spec.ts.
+  test.setTimeout(90_000);
   await gotoGallery(page);
 
   for (const name of [

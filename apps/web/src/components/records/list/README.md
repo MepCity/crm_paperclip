@@ -132,8 +132,8 @@ Also:
 - Picklist display values come from the field's published options. The spec
   does not describe that formatting.
 - Phone and every type that is not a row link or an email stay plain text.
-- Footer emphasis uses `--font-weight-semibold`. The spec says "bold" and the
-  type scale has no separate bold token.
+- Footer numbers retain `--font-weight-semibold` (510) by CTO decision; the
+  new `--font-weight-bold` (650) is used for the view tab.
 - The enabled pagination chevron was not observed. It uses the body colour.
 - A view with fewer columns was measured near 204px. Column width stays 200px.
 - Figtree changes the measured advance of some labels. The largest recorded
@@ -185,7 +185,7 @@ and apply payloads. `e2e/list-chrome.spec.ts` checks real rendered geometry and 
 ## Primitive extensions
 
 `Button` and button-styled `Link` use measured primary and secondary gradients with
-6 px corners. Existing hover/pressed fills are retained. `toolbar`, `splitPrimary`,
+6 px corners. Existing hover/pressed fills are retained. `toolbar`, `listToolbar`, `splitPrimary`,
 `splitArrow`, `actions`, `listFilter` and `listIcon` sizes use list tokens. `Menu` accepts optional `width`
 (`create` or `actions`) for measured popover widths; default menus retain their width.
 `Popover` accepts `hideTitle` (a visually hidden accessible title) and `contentClassName`
@@ -196,7 +196,7 @@ the scoped list CSS applies the measured selector dimensions.
 
 - No view selector/options, View Settings or unconfirmed presentation controls, as scoped.
 - Icons are original line drawings. No reference logo, image, font or icon asset is added.
-- Typography uses the existing system font token; the precise reference family remains an
+- Typography uses the board-selected Figtree token. The loaded reference family remains an
   open research question. Label lengths can change intrinsic widths. The measured minimums
   reproduce the All Leads pill and Create Lead split button; longer labels grow.
 - Sort content insets, the selector gap, button size and the outer border follow the Sort
@@ -208,3 +208,22 @@ the scoped list CSS applies the measured selector dimensions.
 - Shadow parameters, hover and pressed states retain existing primitive behavior because
   the spec does not measure them. Disabled Apply is measured: a flat pale fill, not a
   faded primary gradient. Responsive behavior outside the captured desktop is open.
+
+## Adopted text roles
+
+`research/specs/typography.md` → List and detail text roles, with the CTO token
+mapping in MEP-126, supersedes the earlier list-spec type estimates:
+
+| Role | Size token | Weight token |
+| --- | --- | --- |
+| List view tab | `--text-sm` | `--font-weight-bold` |
+| List toolbar Filter / Sort | `--text-md` | `--font-weight-semibold` |
+| List primary button (button or link) | `--text-md` | `--font-weight-semibold` |
+| Table column header | `--text-md` | `--font-weight-normal` |
+| Table cell value | `--text-md` | `--font-weight-normal` |
+| Footer fixed label | `--text-md` | `--font-weight-normal` |
+
+Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
+are retained. Toolbar labels map the measured 14px to the existing 14.5px token;
+no separate 14px size is introduced. The Sort popover action buttons retain their
+existing size until their screen typography task.

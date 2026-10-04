@@ -7,7 +7,7 @@ const badgeStyles = {
   danger: "bg-danger/10 text-danger",
 } as const;
 
-const badgeBase = "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium";
+const badgeBase = "inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold";
 
 export function Badge({
   children,

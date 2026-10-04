@@ -21,7 +21,7 @@ export function Dialog(props: AriaDialogProps & { title?: string }) {
           {(renderProps) => (
             <>
               {props.title && (
-                <Heading slot="title" className="text-lg font-medium mb-4">
+                <Heading slot="title" className="text-xl font-semibold mb-4">
                   {props.title}
                 </Heading>
               )}
@@ -76,7 +76,7 @@ function ConfirmDialogSession({
 
   return (
     <>
-      <Heading slot="title" className="text-lg font-medium mb-4">
+      <Heading slot="title" className="text-xl font-semibold mb-4">
         {title}
       </Heading>
       <p id={descriptionId} className="text-sm text-text-muted mb-4">

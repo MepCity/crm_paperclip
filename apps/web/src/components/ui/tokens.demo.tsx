@@ -117,7 +117,6 @@ const COLOUR_GROUPS = [
 const TEXT_TOKENS = [
   "--text-2xs",
   "--text-xs",
-  "--text-13",
   "--text-sm",
   "--text-md",
   "--text-base",
@@ -129,8 +128,8 @@ const TEXT_TOKENS = [
 
 const WEIGHT_TOKENS = [
   "--font-weight-normal",
-  "--font-weight-medium",
   "--font-weight-semibold",
+  "--font-weight-bold",
 ] as const;
 
 /** Adopted roles from typography.md, Recommendation. Values come only from tokens. */
@@ -411,7 +410,7 @@ export default function TokensDemo() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Colours</h3>
+        <h3 className="text-xl font-semibold text-text">Colours</h3>
         {COLOUR_GROUPS.map((group) => (
           <Group key={group.label} label={group.label}>
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -437,7 +436,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Type scale</h3>
+        <h3 className="text-xl font-semibold text-text">Type scale</h3>
         <ul className="space-y-2">
           {TEXT_TOKENS.map((token) => (
             <li key={token} className="flex flex-wrap items-baseline gap-x-4">
@@ -489,7 +488,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4" aria-label="Type roles">
-        <h3 className="text-lg font-semibold text-text">Type roles</h3>
+        <h3 className="text-xl font-semibold text-text">Type roles</h3>
         <ul className="space-y-2">
           {TYPE_ROLES.flatMap(({ role, labels, size, weight }) =>
             labels.map((label) => (
@@ -509,7 +508,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Corner radii</h3>
+        <h3 className="text-xl font-semibold text-text">Corner radii</h3>
         <ul className="flex flex-wrap gap-6">
           {RADIUS_TOKENS.map((token) => (
             <li key={token} className="space-y-1">
@@ -528,7 +527,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Shadows</h3>
+        <h3 className="text-xl font-semibold text-text">Shadows</h3>
         <ul className="flex flex-wrap gap-6">
           {SHADOW_TOKENS.map((token) => (
             <li key={token} className="space-y-1">
@@ -547,7 +546,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Layout dimensions</h3>
+        <h3 className="text-xl font-semibold text-text">Layout dimensions</h3>
         {SIZE_GROUPS.map((group) => (
           <Group key={group.label} label={group.label}>
             <ul className="space-y-2">
