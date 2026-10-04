@@ -19,6 +19,8 @@ import {
   uuidV7,
 } from "./dataset";
 
+import { SLOT_COLUMNS, slotValues } from "./slot-layout";
+
 export type Stage = "A0" | "A1" | "A2" | "A3" | "B0" | "B1" | "C0";
 
 const SYSTEM_COLUMNS = [
@@ -89,6 +91,13 @@ export async function configureClient(client: pg.Client): Promise<void> {
   await client.query("set plan_cache_mode to force_custom_plan");
 }
 
+export async function createATable(client: pg.Client, slots = false): Promise<void> {
+  const extra = slots
+    ? `, ${SLOT_COLUMNS.map(({ name, type }) => `${name} ${type}`).join(", ")}`
+    : "";
+  await client.query(`create table bench_a.records (${SYSTEM_DDL}, data jsonb not null${extra})`);
+}
+
 export async function createTables(client: pg.Client): Promise<void> {
   await client.query("create extension if not exists pg_trgm");
   await client.query("create extension if not exists unaccent");
@@ -96,7 +105,7 @@ export async function createTables(client: pg.Client): Promise<void> {
   await client.query("create schema bench_a");
   await client.query("create schema bench_b");
   await client.query("create schema bench_c");
-  await client.query(`create table bench_a.records (${SYSTEM_DDL}, data jsonb not null)`);
+  await createATable(client);
   await client.query(
     `create table bench_b.leads (${SYSTEM_DDL}, ${LEAD_FIELDS.map(columnDdl).join(", ")})`,
   );
@@ -333,10 +342,17 @@ export type LoadTimes = {
 export async function generateAndLoad(
   client: pg.Client,
   options: GenerateOptions,
+  mode: { skipC?: boolean; slots?: boolean; onlyA?: boolean } = {},
 ): Promise<LoadTimes> {
-  const dir = await mkdtemp(join(tmpdir(), "crm-bench-copy-"));
+  const dir = await mkdtemp(
+    join(process.env.PAPERCLIP_RUN_SCRATCH_DIR ?? tmpdir(), "crm-bench-copy-"),
+  );
   const files = {
-    a: new CopyFile(join(dir, "a.txt"), "bench_a.records", [...SYSTEM_COLUMNS, "data"]),
+    a: new CopyFile(join(dir, "a.txt"), "bench_a.records", [
+      ...SYSTEM_COLUMNS,
+      "data",
+      ...(mode.slots ? SLOT_COLUMNS.map(({ name }) => name) : []),
+    ]),
     bLeads: new CopyFile(join(dir, "b-leads.txt"), "bench_b.leads", [
       ...SYSTEM_COLUMNS,
       ...LEAD_FIELDS.map((field) => field.key),
@@ -364,12 +380,17 @@ export async function generateAndLoad(
       ...options,
       retain: false,
       onRecord: (record, kind) => {
-        files.a.add([...systemValues(record), record.dataJson]);
-        files.cRecords.add(systemValues(record));
+        files.a.add([
+          ...systemValues(record),
+          record.dataJson,
+          ...(mode.slots ? slotValues(record, kind === "contact") : []),
+        ]);
+        if (mode.onlyA) return;
+        if (!mode.skipC) files.cRecords.add(systemValues(record));
         if (kind === "contact")
           files.bContacts.add([...systemValues(record), ...fieldColumns(record, contactFields())]);
         else files.bLeads.add([...systemValues(record), ...fieldColumns(record, LEAD_FIELDS)]);
-        for (const value of Object.values(record.fields)) {
+        for (const value of mode.skipC ? [] : Object.values(record.fields)) {
           const field = fieldByKey(value.key);
           const text = field.type === "date" || field.type === "datetime" ? null : value.text;
           files.cValues.add([
@@ -397,8 +418,11 @@ export async function generateAndLoad(
     };
 
     const aMs = await copyOne(files.a);
-    const bMs = (await copyOne(files.bLeads)) + (await copyOne(files.bContacts));
-    const cMs = (await copyOne(files.cRecords)) + (await copyOne(files.cValues));
+    const bMs = mode.onlyA ? 0 : (await copyOne(files.bLeads)) + (await copyOne(files.bContacts));
+    const cMs =
+      mode.onlyA || mode.skipC
+        ? 0
+        : (await copyOne(files.cRecords)) + (await copyOne(files.cValues));
     const lookupContactIds = [...generated.lookupHits.entries()]
       .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
       .slice(0, 30)
@@ -493,12 +517,13 @@ export async function insertRecord(
   option: "A" | "B" | "C",
   record: GeneratedRecord,
   eventId: string,
+  slots = false,
 ): Promise<void> {
   if (option === "A") {
     await client.query(
-      `insert into bench_a.records (${SYSTEM_COLUMNS.join(", ")}, data)
-       values (${bPlaceholders(SYSTEM_COLUMNS.length)}, $${SYSTEM_COLUMNS.length + 1}::jsonb)`,
-      [...systemValues(record), record.dataJson],
+      `insert into bench_a.records (${SYSTEM_COLUMNS.join(", ")}, data${slots ? `, ${SLOT_COLUMNS.map(({ name }) => name).join(", ")}` : ""})
+       values (${bPlaceholders(SYSTEM_COLUMNS.length)}, $${SYSTEM_COLUMNS.length + 1}::jsonb${slots ? SLOT_COLUMNS.map((_, i) => `, $${SYSTEM_COLUMNS.length + 2 + i}`).join("") : ""})`,
+      [...systemValues(record), record.dataJson, ...(slots ? slotValues(record) : [])],
     );
   } else if (option === "B") {
     const fields = LEAD_FIELDS;
@@ -614,12 +639,13 @@ export async function updateStatus(
   status: string,
   actorId: string,
   eventId: string,
+  slots = false,
 ): Promise<void> {
   const search = await refreshedSearch(client, option, recordId, { lead_status: status });
   if (option === "A") {
     await client.query(
       `update bench_a.records
-       set data = jsonb_set(data, '{lead_status}', to_jsonb($1::text), true),
+       set data = jsonb_set(data, '{lead_status}', to_jsonb($1::text), true),${slots ? " ix_text_3 = $1::text," : ""}
            search = $2, version = version + 1, updated_at = clock_timestamp(), updated_by = $3::uuid
        where id = $4::uuid`,
       [status, search, actorId, recordId],
@@ -668,6 +694,7 @@ export async function updateFive(
   patch: FivePatch,
   actorId: string,
   eventId: string,
+  slots = false,
 ): Promise<void> {
   const search = await refreshedSearch(client, option, recordId, {
     lead_status: patch.leadStatus,
@@ -685,6 +712,7 @@ export async function updateFive(
            'annual_revenue', $4::numeric,
            'cf_text_1', $5::text
          ),
+         ${slots ? "ix_text_3 = $1::text, ix_text_1 = $2::text, ix_num_1 = $4::double precision," : ""}
          search = $6, version = version + 1, updated_at = clock_timestamp(), updated_by = $7::uuid
        where id = $8::uuid`,
       [
@@ -839,6 +867,9 @@ export async function filterOperators(client: pg.Client): Promise<OperatorLeak[]
         ('text', '~~*', 'text'),
         ('bool', '=', 'bool'),
         ('numeric', '>=', 'numeric'),
+        ('float8', '=', 'float8'), ('float8', '<', 'float8'), ('float8', '>=', 'float8'),
+        ('date', '=', 'date'), ('date', '<', 'date'),
+        ('int8', '=', 'int8'), ('int8', '<', 'int8'),
         ('timestamptz', '>=', 'timestamptz'),
         ('timestamptz', '<', 'timestamptz'),
         ('uuid', '=', 'uuid'),
@@ -850,13 +881,25 @@ export async function filterOperators(client: pg.Client): Promise<OperatorLeak[]
       )
     order by 2, 1, 3
   `);
-  return result.rows.map((row) => ({
-    operator: row.operator,
-    leftType: row.left_type,
-    rightType: row.right_type,
-    proc: row.proc,
-    leakproof: row.leakproof,
-  }));
+  const lower = await client.query<{ proc: string; leakproof: boolean }>(
+    "select proname as proc, proleakproof as leakproof from pg_proc where oid = 'pg_catalog.lower(text)'::regprocedure",
+  );
+  return [
+    ...result.rows.map((row) => ({
+      operator: row.operator,
+      leftType: row.left_type,
+      rightType: row.right_type,
+      proc: row.proc,
+      leakproof: row.leakproof,
+    })),
+    ...lower.rows.map((row) => ({
+      operator: "lower(text)",
+      leftType: "text",
+      rightType: "—",
+      proc: row.proc,
+      leakproof: row.leakproof,
+    })),
+  ];
 }
 
 export async function walBytes(client: pg.Client, startLsn: string): Promise<number> {
@@ -906,6 +949,7 @@ const RLS_PREDICATE = `organization_id = (select nullif(current_setting('app.org
 export async function installRls(client: pg.Client): Promise<void> {
   await client.query(`
     do $$ begin
+      perform pg_advisory_xact_lock(18004096);
       if not exists (select 1 from pg_roles where rolname = 'bench_app') then
         create role bench_app login password 'bench_app' nosuperuser nocreatedb nocreaterole;
       end if;

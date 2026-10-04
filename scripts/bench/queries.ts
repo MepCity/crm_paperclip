@@ -63,7 +63,8 @@ export type ListKind =
   | "s5"
   | "s7-like"
   | "s7-prefix"
-  | "s11";
+  | "s11"
+  | "s14";
 
 export type ListParams = {
   orgId: string;
@@ -175,6 +176,8 @@ function orderBy(option: Option, kind: ListKind): string {
       return `order by ${company} asc nulls last, ${id} asc`;
     case "s3":
       return `order by ${revenue} desc nulls last, ${id} desc`;
+    case "s14":
+      return `order by ${revenue} desc nulls last, ${id} asc`;
     case "s4":
       return `order by ${lastName} asc nulls last, ${id} asc`;
     case "s5":
@@ -208,6 +211,16 @@ function filters(
   const parts: string[] = [];
   if (kind === "s2" || kind === "s2-offset") {
     parts.push(statusFilter(option, params, input.leadStatus, equality));
+  }
+  if (kind === "s14") {
+    const revenue = params.add(input.revenueMin);
+    const column =
+      option === "A"
+        ? "(data->'annual_revenue')::numeric"
+        : option === "B"
+          ? "annual_revenue"
+          : "rev.value_num";
+    parts.push(`${column} >= ${revenue}::numeric`);
   }
   if (kind === "s3") parts.push(s3Filter(option, params, input));
   if (kind === "s4") parts.push(optOutFilter(option, params, equality));
