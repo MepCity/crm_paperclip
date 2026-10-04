@@ -99,6 +99,8 @@ what the "no colour constants" rule forbids.
 | `--color-primary-gradient-start` | `#5767f6` | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top" | from spec |
 | `--color-primary-gradient-end` | `#154ec5` | list-views.md › Create and action buttons › "to `#154EC5` at bottom" | from spec |
 | `--color-primary-divider` | `#c3c8f4` | list-views.md › Create and action buttons › "1 px `#C3C8F4` divider" | from spec |
+| `--color-primary-disabled` | `#adb3ee` | list-views.md › Sort popover › "flat `#ADB3EE` fill" | from spec |
+| `--color-popover-sort-border` | `#ced0e1` | list-views.md › Sort popover › "1 px `#CED0E1` border" | from spec |
 | `--color-surface-selected` | `#f0f4fc` | list-views.md › Header and tab strip › "with 6 px corners and `#F0F4FC` fill" | from spec |
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
@@ -216,6 +218,16 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-height` | `157px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
 | `--size-popover-sort-field-width` | `150px` | list-views.md › Sort popover › "two side-by-side selectors around 150 px wide" | from spec |
 | `--size-popover-sort-field-height` | `28px` | list-views.md › Sort popover › "28 px high" | from spec |
+| `--size-popover-sort-field-top` | `57px` | list-views.md › Sort popover › "Both selectors sit at y 195–223"; outer box "y 138–296" (195 − 138) | from spec |
+| `--size-popover-sort-inset-inline` | `31px` | list-views.md › Sort popover › "31 px from the outer left edge" | from spec |
+| `--size-popover-sort-inset-end` | `39px` | list-views.md › Sort popover › "39 px from the outer right edge" | from spec |
+| `--size-popover-sort-field-gap` | `15px` | list-views.md › Sort popover › "after a 15 px gap" | from spec |
+| `--size-popover-sort-label-gap` | `18px` | list-views.md › Sort popover › "glyphs at x 444.5–489.5, y 162–174.5" | from spec |
+| `--size-popover-sort-actions-offset` | `20px` | list-views.md › Sort popover › "20 px below the selectors" | from spec |
+| `--size-popover-sort-button-height` | `27px` | list-views.md › Sort popover › "27 px high" | from spec |
+| `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
+| `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
+| `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
 
 ### Typeface
 
@@ -299,6 +311,12 @@ token:
   "soft shadow" or "shadow".
 - **Colours stated without a hex.** "hovered row pale blue", "disabled view-menu entries are muted
   gray", and the Manage Columns "dark translucent scrim".
+- **Sort By glyph band.** "glyphs at x 444.5–489.5, y 162–174.5" is ink, not a DOM box, so it is
+  not a size token. `--size-popover-sort-label-gap` is the gap that places the label above the
+  selector; the rendered ink top is measured from our own screenshot.
+- **Second selector's initial fill.** "a `#F5F6F8` fill and a 1 px `#D2D9F1` border" was captured,
+  but "whether it is disabled until a field is chosen was not captured", so neither colour is a
+  token and the control is not drawn that way.
 
 ### Contrast notes
 
@@ -338,6 +356,8 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface. list-views.md › Text roles measures Lead Name and Email in the body colour even when linked ("rather than the blue action color"), so there is no separate link token |
 | `--color-text-disabled` `#b5b8be` on `--color-surface` | 1.99:1 | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" |
 | `--color-primary-text` `#ffffff` on `--color-primary-gradient-start` `#5767f6` | 4.49:1 | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top to `#154EC5` at bottom, white `#FFFFFF` label". The darker end of the same gradient passes at 7.17:1 |
+| `--color-primary-text` `#ffffff` on `--color-primary-disabled` `#adb3ee` | 2.01:1 | list-views.md › Sort popover › "flat `#ADB3EE` fill and a white `#FFFFFF` label". Disabled controls are inactive text; the fill stays as measured |
+| `--color-popover-sort-border` `#ced0e1` on `--color-surface` | 1.53:1 | list-views.md › Sort popover › "1 px `#CED0E1` border" |
 | `--color-control-border` `#c5c4d3` on `--color-surface` | 1.72:1 | list-views.md › Surface and line colors › "filter search outline and unchecked checkbox border `#C5C4D3`" |
 | `--color-button-border` `#d5d8e9` on `--color-button-gradient-start` `#fefefe` | 1.40:1 | list-views.md › Create and action buttons › "1 px `#D5D8E9` border" and "from `#FEFEFE` at top" |
 | `--color-button-border` `#d5d8e9` on `--color-button-gradient-end` `#f2f1f8` | 1.26:1 | list-views.md › Create and action buttons › "to `#F2F1F8` at bottom" |
@@ -365,3 +385,19 @@ outline or split a control, and `--color-text-disabled` plus the white label on
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
 
+
+## List chrome primitive composition
+
+`SplitButton` composes a primary button or link, an optional 1 px token divider and a
+separately named More menu trigger. Its item contract is `MenuAction` from `menu.tsx`.
+Empty items omit both the divider and arrow. The `split-button` gallery and component
+keyboard tests cover both trigger parts, plain creation and link navigation.
+
+Button primary and secondary variants use the measured vertical gradients from the
+**Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
+fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
+opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
+menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+`contentClassName` permits the fixed compact Sort layout. No token value is duplicated.

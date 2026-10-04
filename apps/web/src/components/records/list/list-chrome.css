@@ -1,0 +1,68 @@
+/* Sort popover geometry, from the outer border box in list-views.md › Sort popover.
+   Absolute offsets use the padding edge, which sits one border width inside that box.
+   The 1 px subtraction is Tailwind's border width; 1 px rules are not tokenized. */
+
+.record-sort-popover {
+  border-color: var(--color-popover-sort-border);
+}
+
+.record-sort-popover .record-sort-dialog {
+  height: 100%;
+  padding: 0;
+}
+
+.record-sort-fields,
+.record-sort-actions {
+  position: absolute;
+}
+
+.record-sort-fields {
+  top: calc(var(--size-popover-sort-field-top) - 1px);
+  left: calc(var(--size-popover-sort-inset-inline) - 1px);
+  display: flex;
+  align-items: flex-end;
+  column-gap: var(--size-popover-sort-field-gap);
+}
+
+.record-sort-fields > * {
+  position: relative;
+}
+
+.record-sort-fields button {
+  width: var(--size-popover-sort-field-width);
+  height: var(--size-popover-sort-field-height);
+  padding-block: 0;
+}
+
+/* React Aria renders the field label as a span, not a native label. */
+.record-sort-fields span.text-sm:not(.sr-only) {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--size-popover-sort-label-gap));
+  margin: 0;
+}
+
+.record-sort-actions {
+  top: calc(
+    var(--size-popover-sort-field-top) +
+    var(--size-popover-sort-field-height) +
+    var(--size-popover-sort-actions-offset) -
+    1px
+  );
+  right: calc(var(--size-popover-sort-inset-end) - 1px);
+  display: flex;
+  column-gap: var(--size-popover-sort-button-gap);
+}
+
+.record-sort-actions button {
+  height: var(--size-popover-sort-button-height);
+  padding: 0;
+}
+
+.record-sort-actions button:first-of-type {
+  width: var(--size-popover-sort-cancel-width);
+}
+
+.record-sort-actions button:last-of-type {
+  width: var(--size-popover-sort-apply-width);
+}

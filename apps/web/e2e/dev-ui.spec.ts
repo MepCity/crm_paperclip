@@ -2,6 +2,8 @@ import { expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
+  // Scan the settled colours, rather than the transient opacity of toast entry animations.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const errors: string[] = [];
   page.on("pageerror", (err) => errors.push(err.message));
   page.on("console", (msg) => {
@@ -244,11 +246,15 @@ test("token demo renders the values measured in the shell and list specs", async
   // View edit form: "8 px corners".
   await expect(sample("--radius-lg")).toHaveCSS("border-radius", "8px");
 
-  // The primary Button keeps white text on the measured primary colour, 4.69:1.
+  // Create and action buttons: the primary Button uses the measured vertical gradient.
   const primaryButton = page
     .getByRole("region", { name: "button" })
     .getByRole("button", { name: "Primary", exact: true });
-  await expect(primaryButton).toHaveCSS("background-color", "rgb(84, 100, 242)");
+  await expect(primaryButton).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(primaryButton).toHaveCSS(
+    "background-image",
+    /rgb\(87, 103, 246\).*rgb\(21, 78, 197\)/,
+  );
 
   // The info Alert carries the primary colour on its icon only: primary text on the 5%
   // primary tint measures 4.39:1, below the 4.5:1 that ADR 0003 requires.

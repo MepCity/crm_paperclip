@@ -92,6 +92,9 @@
   --color-primary-gradient-start: #5767f6;
   --color-primary-gradient-end: #154ec5;
   --color-primary-divider: #c3c8f4;
+  /* Disabled Apply on the sort popover is a flat fill, not the primary gradient. */
+  --color-primary-disabled: #adb3ee;
+  --color-popover-sort-border: #ced0e1;
   --color-surface-selected: #f0f4fc;
   --color-surface-active: #edf0f9;
   --color-text-strong: #202123;
@@ -251,4 +254,16 @@
   --size-popover-sort-height: 157px;
   --size-popover-sort-field-width: 150px;
   --size-popover-sort-field-height: 28px;
+  /* 195 − 138, from the selector band and the outer box top in the sort row. */
+  --size-popover-sort-field-top: 57px;
+  --size-popover-sort-inset-inline: 31px;
+  --size-popover-sort-inset-end: 39px;
+  --size-popover-sort-field-gap: 15px;
+  /* Gap above the selector so Sort By ink sits in the measured glyph band. */
+  --size-popover-sort-label-gap: 18px;
+  --size-popover-sort-actions-offset: 20px;
+  --size-popover-sort-button-height: 27px;
+  --size-popover-sort-cancel-width: 66.5px;
+  --size-popover-sort-apply-width: 60px;
+  --size-popover-sort-button-gap: 8px;
 }
