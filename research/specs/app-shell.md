@@ -20,6 +20,89 @@ The current interface has **no horizontal module tab bar**. The rail and its gro
 
 The module metadata records 33 `show_as_tab` entries. In `sequence_number` order they are: Home (1), Workqueue (2), Leads (3), Contacts (4), Accounts (5), Deals (6), Tasks / Meetings / Calls (7), Reports (8), Analytics (9), Products (10), Quotes (11), Sales Orders (12), Purchase Orders (13), Invoices (14), Feeds / SalesInbox (15), Campaigns (17), Vendors (18), Price Books (19), Cases (20), Solutions (21), Documents (22), Forecasts (23), Visits (24), Social (25), Emails (35), CommandCenter (56), Automation Cadences (106), Cadences Followups (107), Entity Cadences (108), and My Jobs (119). Feeds is marked `visible: false`; the other 32 are marked visible. This metadata order is not the rendered rail order. Only the Home and Leads route/selection were verified. See the external research workspace's `metadata/modules.json` for full module configuration and `metadata/profiles.json` for the two configured profile types; the captures do not establish profile-specific menu differences.
 
+### Visual layout
+
+All values are measured from screenshot. The 2940 × 1670 image corresponds to a **1470 × 835 CSS px viewport at 2 image px per CSS px**: the straight top-bar rule at image rows 98–99, rail separator at rows 554–555, and open-menu dividers at rows 778–779 and 860–861 each occupy exactly two image pixels (`home-main`, `home-more-actions`). Coordinates below use the viewport's top-left corner as `(0, 0)` and all dimensions are CSS px. Flat interior pixels, rather than softened edges, supply hex colours. Text colours use the darkest solid glyph pixels and are **approx.**; type sizes are **approx.**, derived from measured cap/x-height, descenders, and row line boxes. The type has a rounded humanist sans-serif feel with ordinary tracking; the exact font is not measurable from capture (`home-main`).
+
+| Region / element | Property | Value | State | Capture | Note |
+| --- | --- | --- | --- | --- | --- |
+| Navigation rail | Bounds and surface | x 0–320, y 0–807; 320 wide; `#223458` | Home and Leads | `home-main`, `home-leads-navigation` | Full-height above the utility strip; sharp edge at x 320, with no distinct right border. |
+| Top bar | Bounds and surface | x 320–1470, y 0–50; 50 high; `#FFFFFF` | Home and Leads | `home-main`, `home-leads-navigation` | Bottom rule at y 49–50 is 1 px `#DCDBEE`; no separate shadow band is visible. |
+| Main content | Bounds and page surface | x 320–1470, y 50–807; 1150 × 757; Home `#FFFFFF`, Leads `#EDF0F8` | Route dependent | `home-main`, `home-leads-navigation` | The Home onboarding composition is outside this measurement. A shell-wide content inset is **not measurable from capture**; the Leads list has its own panels and toolbar. |
+| Bottom utility strip | Bounds, surface, and elevation | x 0–1470, y 807–835; 28 high; `#FFFFFF` | Home and Leads | `home-main`, `home-leads-navigation` | A light 2–3 px transition/shadow sits immediately above it; exact blur is **not measurable from capture**. Left tool cluster occupies x 0–290; right cluster begins at x 1017. |
+| Rail/product selector | Visible occupied box | x 15–150, y 11–41; 30 high | Default | `home-main` | Product mark occupies x 15–45, 30 × 30; recreate it with an original asset. Label begins near x 53; down chevron near x 138–148. Label approx. 16 px semibold / 20 px line-height, `#C2CBDE` approx. |
+| Rail/Hide Menu | Icon bounds | x 285–303, y 17–33; approx. 18 × 16 | Default | `home-main` | Functionally named `Hide Menu`; no labelled button box or collapsed result was captured. Icon colour approx. `#C2CBDE`. |
+| Rail/pinned rows | Row box and rhythm | x 10–310; 300 wide × 30 high; starts y 55, then 36 px vertical pitch | Home selected | `home-main` | 10 px side inset; 6 px between rows. The six pinned entries end above the y 277 separator. Later entries need only this footprint. |
+| Rail/pinned link | Icon, label, and type | icon approx. 16 × 16 at x 20–36; label starts x 48; approx. 12 px gap; label approx. 15 px regular / 20 px line-height, `#C2CBDE` approx. | Unselected | `home-main` | Workqueue glyph core spans 26 image px (13 CSS px) including descender; coloured link icons vary by function and should be redrawn. |
+| Rail/active row | Box, fill, text, indicator | x 10–310, 300 × 30; `#31446F` fill; approx. 6 px radius; `#FFFFFF` approx. 15 px semibold / 20 px line-height; no side indicator | Home selected | `home-main` | Home occupies y 55–85. Flat fill starts at x 10 on its midline; no separate indicator-colour run. |
+| Rail/active row | Box, fill, text, indicator | x 10–310, y 394–424; `#31446F` fill; `#FFFFFF` approx. label and icon; no side indicator | Leads selected | `home-leads-navigation` | Same 30 px row height and approx. 6 px corners. A trailing more-actions icon appears within this row. |
+| Rail/teamspace divider | Position and rule | y 277–278; 1 px `#505D81` across rail | Default | `home-main` | Separates pinned links from teamspace. |
+| Rail/teamspace selector | Occupied row | y 289–313; about 24 high; left inset 13 px | Default | `home-main` | 24 × 24 coloured monogram block at x 13–37, text begins x 42; chevron near x 169–180; label approx. 15 px semibold / 20 px, `#C2CBDE` approx. The selector itself has no measured enclosing border. |
+| Rail/teamspace overflow trigger | Icon bounds | x 288–302, centred near y 301; approx. 14 × 4 | Closed / open | `home-main`, `home-more-actions` | Open trigger gains `#374D7F` fill in a 30 × 30 box at x 280–310, y 286–316. |
+| Rail/local Search | Input box | x 10–310, y 324–354; 300 × 30; transparent/`#223458` fill, 1 px `#505D81` border, approx. 5 px radius | Empty | `home-main` | Search icon approx. 15 × 15 at x 20–35; placeholder starts x 41, approx. 14 px regular / 20 px, `#7A859B` approx. Later feature: retain this footprint. |
+| Rail/group heading | Row, icon, label, chevron | Sales row centred at y 377, about 30 high; icon approx. 14 × 14 at x 21–35; label begins x 48; chevron at x 287–297 | Expanded | `home-main`, `home-leads-navigation` | Approx. 15 px semibold / 20 px, `#C2CBDE` approx.; top gap after local Search is about 9 px. The upward chevron denotes the observed expanded state. |
+| Rail/nested link | Row and indent | Leads row y 394–424; about 30 high; 32 px pitch; icon approx. 16 × 16 at x 48–64, label starts x 78 | Unselected / selected | `home-main`, `home-leads-navigation` | Approx. 14–15 px regular / 20 px, `#C2CBDE` approx. when unselected; selected styling is the active row above. Indent from fixed-link label is 30 px. |
+| Rail/groups below Sales | Position and footprint | Activities heading near y 601, Integrations near y 729; same heading and child-row geometry | Expanded | `home-main` | Later content. The screenshot shows expanded chevrons and child links; lower entries continue under the strip's top edge. |
+| Top bar/page title | Position and type | left x 336 (16 px from content edge), glyph top near y 17; approx. 20 px semibold / 26 px line-height, `#313949` approx. | Home / Leads | `home-main`, `home-leads-navigation` | Text changes with route; cap glyph is 13 image px high. |
+| Top bar/global search | Footprint | x 929–1164, y 8–40; 235 × 32; `#EEF1F9` fill, approx. 6 px radius | Closed | `home-main` | Later feature. Search glyph approx. 17 × 17; placeholder approx. 14 px regular / 20 px, `#8C91AB` approx. |
+| Top bar/right controls | Order, sizing, spacing | search → quick create → assistant → bell → calendar → store → settings → avatar → applications; icon centres roughly 34 px apart after quick create | Default | `home-main` | Later controls except title. Quick-create box x 1176–1204, y 10–38 (28 × 28), 1 px `#5464F2` border, approx. 6 px radius; other line icons about 18 × 18, `#616E88` approx. Avatar is about 30 × 30 circular; applications grid is about 18 × 18. |
+| Main and strip boundary | Position | content ends at y 807; strip overlaps the viewport bottom | Home / Leads | `home-main`, `home-leads-navigation` | The strip's left cluster is five roughly 58 px slots; right cluster uses roughly 49 px icon cells and a wider Help cell. These are later controls. |
+
+**Open layers and visible states.** The `More Actions` trigger is open in `home-more-actions`; the first menu row is highlighted, but whether that highlight is hover, focus, or default selection is **not measurable from capture**. The global search panel is open in `home-search`; its dimmer also covers the rail and top bar, while the utility strip remains bright.
+
+| Region / element | Property | Value | State | Capture | Note |
+| --- | --- | --- | --- | --- | --- |
+| Teamspace More Actions menu | Outer bounds and placement | x 328–565, y 286–473; about 237 × 187 | Open | `home-more-actions` | Starts level with the trigger's top and about 18 px to its right; a small left-pointing notch reaches x 322. |
+| Teamspace More Actions menu | Surface, edge, corners, shadow | `#FFFFFF` fill; 1 px `#CED0E1` edge; approx. 6 px radius | Open | `home-more-actions` | Soft grey shadow is visible outside the edge; blur/spread and opacity are **not measurable from capture**. |
+| Teamspace More Actions menu | Item geometry | inner horizontal inset 6 px; first three entries about 30 px high, last two about 41 px high; icon approx. 16 × 16; text begins x 375 | Open | `home-more-actions` | Text approx. 15 px regular / 20 px, `#313949` approx.; about 12 px between icon and label. Two 1 px `#CED0E1` dividers cross x 335–559 at y 389 and y 430. |
+| Teamspace More Actions menu | Highlighted first item | x 335–559, y 293–323; `#F0F4FC` fill, approx. 6 px radius | Highlighted while menu open | `home-more-actions` | State cause is not measurable from capture; no menu action was executed. |
+| Global search dimmer | Area and colour | x 0–1470, y 0–807; `#313949` at approx. 50% opacity | Search open | `home-search`, `home-main` | Solved from flat pairs: white `#FFFFFF` becomes `#989CA4`; rail `#223458` becomes `#293651`. The bottom utility strip at y 807–835 is not dimmed. |
+| Global search panel | Outer bounds | x about 355.5–1164, y 4–679; about 808.5 × 675; `#FFFFFF` | Search open | `home-search` | Approx. 6 px outer radius; sits 4 px below the viewport top. Only geometry is in scope. |
+| Global search input | Footprint | x 366–1154, y 14–54; about 788 × 40 | Search open | `home-search` | Blue `#5464F2` outline is visible. Interior behaviour is later. |
+
+**Colour summary** (flat interiors; text and line-icon samples marked approx. where glyph antialiasing can vary):
+
+| Colour | Use | Capture |
+| --- | --- | --- |
+| `#223458` | Rail surface and empty local Search interior | `home-main` |
+| `#31446F` | Active Home/Leads row | `home-main`, `home-leads-navigation` |
+| `#374D7F` | Open teamspace overflow trigger | `home-more-actions` |
+| `#505D81` | Rail divider and local Search border | `home-main` |
+| `#00B96F` | Teamspace monogram block | `home-main` |
+| `#5A78FF`, `#FF7621`, `#EE3275`, `#A247EA`, `#F18E0A`, `#E7B910` | Functional accent colours in pinned-link icons; replace with original drawn icons | `home-main` |
+| `#C2CBDE` | Rail labels and chevrons, approx. | `home-main` |
+| `#7A859B` | Local Search placeholder, approx. | `home-main` |
+| `#FFFFFF` | Top bar, Home main surface, utility strip, menu, active text approx. | `home-main`, `home-more-actions` |
+| `#EDF0F8` | Leads main surface | `home-leads-navigation` |
+| `#DBDFE8` | Avatar disk | `home-main` |
+| `#C5C4D3` | Utility-strip cell rules | `home-main` |
+| `#7875E6` | Help utility cell | `home-main` |
+| `#DCDBEE` | Top-bar lower rule | `home-main` |
+| `#EEF1F9` | Global search field | `home-main` |
+| `#F0F1FF` | Quick-create button interior | `home-main` |
+| `#8C91AB` | Global search placeholder, approx. | `home-main` |
+| `#616E88` | Top-bar line icons, approx. | `home-main` |
+| `#5464F2` | Quick-create border and open search outline | `home-main`, `home-search` |
+| `#313949` | Page title/menu text approx.; search dimmer source colour | `home-main`, `home-more-actions`, `home-search` |
+| `#CED0E1` | More Actions menu edge and dividers | `home-more-actions` |
+| `#F0F4FC` | Highlighted More Actions row | `home-more-actions` |
+| `#989CA4`, `#293651` | White and rail surfaces after the open-search dimmer | `home-search` |
+
+**Type summary** (all sizes and line-heights approx., derived from solid glyph heights and enclosing rows):
+
+| Style | Size / weight / line-height | Use | Capture |
+| --- | --- | --- | --- |
+| Product selector | 16 px / semibold / 20 px | Rail header label | `home-main` |
+| Page title | 20 px / semibold / 26 px | Home and Leads title | `home-main`, `home-leads-navigation` |
+| Rail fixed link | 15 px / regular / 20 px | Unselected pinned entries | `home-main` |
+| Rail active link | 15 px / semibold / 20 px | Selected Home or Leads | `home-main`, `home-leads-navigation` |
+| Teamspace and group label | 15 px / semibold / 20 px | Selector and Sales heading | `home-main` |
+| Rail child link | 14–15 px / regular / 20 px | Unselected Leads and other children | `home-main` |
+| Search placeholder | 14 px / regular / 20 px | Rail and top-bar Search | `home-main` |
+| Menu item | 15 px / regular / 20 px | Open More Actions menu | `home-more-actions` |
+| Utility label | 8 px / regular / 10 px | Bottom left tool captions | `home-main` |
+| Help utility label | 12 px / semibold / 16 px | Bottom Help cell | `home-main` |
+
 ### Home components currently shown
 
 | Title, generalized where needed | Type | Source module | Scope |
@@ -83,6 +166,8 @@ The following are request *shapes* observed in the sanitized capture network fil
 
 ## Capture refs
 
+The Visual layout measurements use `home-main`, `home-leads-navigation`, `home-more-actions`, and `home-search`; `home-quick-create` shows the same shell geometry as `home-main`.
+
 `home-main` (initial Home and layout), `home-more-actions` (teamspace overflow), `home-quick-create` (same Home state after an unintended positional click was blocked), `home-search` (global search overlay), `home-leads-navigation` (Leads route and active rail state). All captures remained in the local research workspace. No raw capture or customer value is included here. `home-quick-create` records a blocked `PUT` to `/crm/v9/org/actions/onboarding_status`; `home-leads-navigation` records a blocked `PUT` to `/crm/v9/settings/user_view_preference`. Neither write completed. No `skippedClicks` were recorded.
 
 ## Open questions
@@ -93,3 +178,5 @@ The following are request *shapes* observed in the sanitized capture network fil
 4. Does the shell vary between Administrator and Standard profiles? Metadata lists both profiles, but the capture shows one session only.
 5. What are the collapsed rail, empty menu/search, and route/network error states? None was captured. Validation rules for global search are also unknown.
 6. Does Leads creation depend on the top-bar quick-create entry, or is its module-local action sufficient? Confirm against the Leads screen spec before implementing that top-bar menu in Module 1.
+7. Which exact typeface, CSS font metrics, shadow blur/spread, and shell-wide main-content inset apply? These are not measurable from capture; the Visual layout records only measured glyph and region geometry.
+8. What produces the first More Actions item highlight (hover, focus, or default selection), and what are the hidden-rail, hover, focus, disabled, and empty shell states? These are not measurable from capture.
