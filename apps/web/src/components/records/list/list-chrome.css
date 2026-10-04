@@ -1,0 +1,6 @@
+/* Sort popover › selectors: 150 × 28 px. Keep the shared Select interaction. */
+.record-sort-fields button {
+  width: var(--size-popover-sort-field-width);
+  height: var(--size-popover-sort-field-height);
+  padding-block: 0;
+}

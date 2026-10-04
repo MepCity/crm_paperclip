@@ -37,9 +37,28 @@ export function MenuItem<T extends object>({
   );
 }
 
-export function Menu<T extends object>(props: AriaMenuProps<T>) {
+export interface MenuAction {
+  id: string;
+  label: string;
+  onAction: () => void;
+  isDisabled?: boolean;
+}
+
+export function Menu<T extends object>({
+  width,
+  ...props
+}: AriaMenuProps<T> & { width?: "create" | "actions" }) {
+  const widthClass =
+    width === "create"
+      ? "w-(--size-popover-import-width)"
+      : width === "actions"
+        ? "w-(--size-popover-actions-width)"
+        : "w-48";
   return (
-    <Popover className="w-48 rounded-md border border-border bg-surface shadow-lg outline-none">
+    <Popover
+      placement="bottom end"
+      className={`${widthClass} max-h-80 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none`}
+    >
       <AriaMenu {...props} className="p-1 outline-none" />
     </Popover>
   );

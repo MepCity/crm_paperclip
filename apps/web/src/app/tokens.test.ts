@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 
 const directory = dirname(fileURLToPath(import.meta.url));
-const css = readFileSync(resolve(directory, "../../app/tokens.css"), "utf8");
-const readme = readFileSync(resolve(directory, "README.md"), "utf8");
-const demo = readFileSync(resolve(directory, "tokens.demo.tsx"), "utf8");
+const css = readFileSync(resolve(directory, "tokens.css"), "utf8");
+const readme = readFileSync(resolve(directory, "../components/ui/README.md"), "utf8");
+const demo = readFileSync(resolve(directory, "../components/ui/tokens.demo.tsx"), "utf8");
 const listSpec = readFileSync(
-  resolve(directory, "../../../../../research/specs/list-views.md"),
+  resolve(directory, "../../../../research/specs/list-views.md"),
   "utf8",
 );
 

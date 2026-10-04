@@ -346,3 +346,18 @@ outline or split a control, and `--color-text-disabled` plus the white label on
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
 
+
+## List chrome primitive composition
+
+`SplitButton` composes a primary button or link, an optional 1 px token divider and a
+separately named More menu trigger. Its item contract is `MenuAction` from `menu.tsx`.
+Empty items omit both the divider and arrow. The `split-button` gallery and component
+keyboard tests cover both trigger parts, plain creation and link navigation.
+
+Button primary and secondary variants use the measured vertical gradients from the
+**Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
+fills. `toolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
+menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+`contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
