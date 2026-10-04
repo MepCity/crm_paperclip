@@ -157,8 +157,8 @@ Verified on the team machine: embedded PostgreSQL 18.4 initialises a cluster in 
 
 | Decision | When |
 | --- | --- |
-| Record storage, row-level security policies, runtime database role (ADR 0002) | After the metadata export is audited |
-| Roles, profiles and sharing rules | After the metadata export is audited |
+| Record storage, row-level security policies, runtime database role | Decided in ADR 0002 |
+| Roles, profiles and sharing rules | Separate ADR, after the permission screens are researched |
 | Headless component primitives; UI language and localization | Decided in ADR 0003 |
 | Job queue library; worker process | Phase 4 |
 | File storage for attachments | Phase 2 |
