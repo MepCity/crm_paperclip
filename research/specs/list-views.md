@@ -99,15 +99,15 @@ The following visible controls had no accessible name in `list-default`; they we
 | All Locked Leads | — | `ALLLOCKEDLEADS` | yes | `public_views` | no | no | Same as All Leads | 0 |
 | Converted Leads | — | `CONVERTEDVIEWS` | yes | `public_views` | no | no | Lead Name (`Full_Name`), Company (`Company`), Phone (`Phone`), Email (`Email`) | 0 |
 | Junk Leads | — | — | no | `created_by_me` | no | no | Last Name (`Last_Name`), First Name (`First_Name`), Company (`Company`), Email (`Email`); selected in edit form, list screen not captured | — |
-| Mailing Labels | — | `ALLVIEWS` | yes | `public_views` | no | no | Salutation (`Salutation`), Lead Name (`Full_Name`), Company (`Company`) visible in the capture; export also selects `Old_Street`, `Old_City`, `Old_State`, `Old_Country`, `Old_Zip_Code` after them | 10 |
+| Mailing Labels | — | `ALLVIEWS` | yes | `public_views` | no | yes | Salutation (`Salutation`), Lead Name (`Full_Name`), Company (`Company`) visible in the capture; export also selects `Old_Street`, `Old_City`, `Old_State`, `Old_Country`, `Old_Zip_Code` after them | 10 |
 | My Converted Leads | — | `MYCONVERTEDVIEWS` | yes | `public_views` | no | no | Same as Converted Leads | 0 |
-| My Leads | — | `MYVIEWS` | yes | `public_views` | no | no | Lead Name (`Full_Name`), Company (`Company`), Email (`Email`), Phone (`Phone`), Lead Source (`Lead_Source`) | 10 |
+| My Leads | — | `MYVIEWS` | yes | `public_views` | no | yes | Lead Name (`Full_Name`), Company (`Company`), Email (`Email`), Phone (`Phone`), Lead Source (`Lead_Source`) | 10 |
 | Not Qualified Leads | — | — | no | `created_by_me` | no | no | Same selected columns as Junk Leads; list screen not captured | — |
-| Open Leads | — | — | no | `created_by_me` | no | no | Same selected columns as Junk Leads; list screen not captured | — |
+| Open Leads | — | — | no | `created_by_me` | no | yes | Same selected columns as Junk Leads; list screen not captured | — |
 | Recently Created Leads | — | `RECENTLYCREATED` | yes | `public_views` | no | no | Same as All Leads | 0 |
 | Recently Modified Leads | — | `RECENTLYMODIFIED` | yes | `public_views` | no | no | Same as All Leads | 0 |
 | Today's Leads | Todays Leads | `today` | yes | `public_views` | no | yes | Same as All Leads | 0 |
-| Unread Leads | — | `UNREADVIEWS` | yes | `public_views` | no | no | Same as All Leads | 6 |
+| Unread Leads | — | `UNREADVIEWS` | yes | `public_views` | no | yes | Same as All Leads | 6 |
 | Unsubscribed Leads | — | `UNSUBSCRIBED` | yes | `public_views` | no | no | Lead Name (`Full_Name`), Company (`Company`), Email (`Email`), Lead Owner (`Owner`), Created Time (`Created_Time`), Unsubscribed Mode (`Unsubscribed_Mode`), Unsubscribed Time (`Unsubscribed_Time`) | 0 |
 
 The current view tab exposes Pin and view-management options. The inventory response has four grouping translation keys: `public_views`, `other_users_views`, `shared_with_me`, and `created_by_me`; only public and created-by-me categories occur in the 14 configured views. In the current metadata export, `last_accessed_time` is populated for All Leads, Mailing Labels, My Leads, Unread Leads, Today's Leads, and the user-created Open Leads. All except Today's Leads were accessed during this research's capture sessions, so those stamps do not establish team use; opening a view can set the field. A null stamp for the other eight views does not prove they are unused. See `research/specs/leads.md`. A full selector and new-view entry point were not reached through named controls. `favorite` is null for every metadata item, so configured favorites are **not in use in the captured metadata**; Pin was not exercised. All nine newly captured system view lists use the same shell, filter panel, toolbar and footer structure. Mailing Labels changes the visible data columns; the others retain the same basic table layout.
@@ -273,7 +273,6 @@ The default view's detailed metadata contains one leaf criterion, although its e
 9. Why does the default view's response contain a `Converted__s` leaf criterion while its edit form hides the criteria section? The user views encode Record Category as `type: value` with a `${CATEGORY.…}` token, but whether category membership is resolved at query time, how changed mappings affect results, and how multi-value selections encode multiple categories remain unknown.
 10. What distinguishes the unlabeled leading table strip from the selection strip? The populated table has three leading header cells, but two empty converted-view tables have only two; the approximately 140 px ribbon strip disappears. The exact assignment of Activity Badge versus Note Badge within that ribbon area is not proven by the screenshots. The two leading cells together measure 100 px and show no divider between them, so their individual widths are also unknown.
 11. Which responsive breakpoints, precise font family and offscreen horizontal column behavior apply outside the captured 1470 × 835 CSS px viewport? Only the desktop screenshot was measured.
-
 12. What do `Common_Status` values `c`, `m`, and `v` mean? Does `contains` match substrings or tokens, does `not_contains` include missing values, and is unread state user-specific? The export only supplies comparisons; this field is absent from `fields.json`.
 13. How is `${AGEINDAYS}+31` evaluated for `less_equal`: age direction, boundary inclusion, unit, and calendar/time-zone basis? The definitions do not establish a 31-day window.
 14. What day boundary, time zone, and equality granularity does `${TODAY}` use against `Created_Time`?
