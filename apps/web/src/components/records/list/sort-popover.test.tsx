@@ -1,7 +1,18 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { SortPopover } from "./sort-popover";
+
+/** Opens a select from the keyboard and confirms the named option. Pointer clicks on a
+ * portaled listbox race the parent popover's outside-dismiss in jsdom. */
+async function chooseOption(user: UserEvent, triggerName: RegExp, optionName: string) {
+  const trigger = screen.getByRole("button", { name: triggerName });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  const option = screen.getByRole("option", { name: optionName });
+  option.focus();
+  await user.keyboard("{Enter}");
+}
 
 const fields = [
   { apiName: "Full_Name", label: "Lead Name" },
@@ -17,13 +28,16 @@ test("Sort starts at None/Ascending; choosing a field enables Apply and emits So
   await user.click(trigger);
   const field = screen.getByRole("button", { name: /Sort By/ });
   expect(field.textContent).toContain("None");
+  expect(screen.getByText("Sort By").className).not.toContain("sr-only");
+  expect(screen.getByText("Order").className).toContain("sr-only");
   expect(screen.getByRole("button", { name: /Order/ }).textContent).toContain("Ascending");
-  expect((screen.getByRole("button", { name: "Apply" }) as HTMLButtonElement).disabled).toBe(true);
-  await user.click(field);
-  await user.click(screen.getByRole("option", { name: "Company" }));
+  const applyButton = screen.getByRole("button", { name: "Apply" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+  expect(applyButton.className).toContain("data-disabled:bg-(--color-primary-disabled)");
+  expect(applyButton.className).toContain("data-disabled:opacity-100");
+  await chooseOption(user, /Sort By/, "Company");
   expect((screen.getByRole("button", { name: "Apply" }) as HTMLButtonElement).disabled).toBe(false);
-  await user.click(screen.getByRole("button", { name: /Order/ }));
-  await user.click(screen.getByRole("option", { name: "Descending" }));
+  await chooseOption(user, /Order/, "Descending");
   await user.click(screen.getByRole("button", { name: "Apply" }));
   expect(apply.mock.calls).toEqual([[{ field: "Company", order: "desc" }]]);
   expect(screen.queryByRole("dialog")).toBeNull();
@@ -38,8 +52,7 @@ test("Cancel discards edits and reopening initializes from the current sort", as
   );
   await user.click(screen.getByRole("button", { name: "Sort" }));
   expect(screen.getByRole("button", { name: /Sort By/ }).textContent).toContain("Company");
-  await user.click(screen.getByRole("button", { name: /Sort By/ }));
-  await user.click(screen.getByRole("option", { name: "Lead Name" }));
+  await chooseOption(user, /Sort By/, "Lead Name");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(apply).not.toHaveBeenCalled();
   rerender(<SortPopover fields={fields} sort={null} onApply={apply} />);

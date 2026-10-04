@@ -19,6 +19,9 @@ Measured values come from `research/specs/list-views.md` → Layout → Visual l
   from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
   collection and emits `{ field, order: "asc" | "desc" }`. Cancel, Escape and outside
   dismissal leave the applied value alone. The page supplies eligible sort fields.
+  Only the Sort By label is visible; the order selector keeps the accessible name Order
+  without a visible label, and the two selectors share a row. Disabled Apply uses the
+  flat pale primary fill. A portaled field list does not dismiss the draft.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -51,4 +54,5 @@ the scoped list CSS applies the measured selector dimensions.
   are measured; page coordinates belong to the page integration task.
 - Menu entries in demos are neutral examples; real action availability belongs to the caller.
 - Shadow parameters, hover and pressed states retain existing primitive behavior because
-  the spec does not measure them. Responsive behavior outside the captured desktop is open.
+  the spec does not measure them. Disabled Apply is measured: a flat pale fill, not a
+  faded primary gradient. Responsive behavior outside the captured desktop is open.

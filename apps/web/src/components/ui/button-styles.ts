@@ -1,6 +1,6 @@
 export const buttonStyles = {
   primary:
-    "bg-primary bg-linear-to-b from-(--color-primary-gradient-start) to-(--color-primary-gradient-end) text-primary-text data-hovered:bg-none data-hovered:bg-primary-hover data-pressed:bg-none data-pressed:bg-primary-pressed",
+    "bg-primary bg-linear-to-b from-(--color-primary-gradient-start) to-(--color-primary-gradient-end) text-primary-text data-hovered:bg-none data-hovered:bg-primary-hover data-pressed:bg-none data-pressed:bg-primary-pressed data-disabled:bg-none! data-disabled:bg-(--color-primary-disabled)! data-disabled:opacity-100!",
   secondary:
     "bg-surface bg-linear-to-b from-(--color-button-gradient-start) to-(--color-button-gradient-end) text-text border border-(--color-button-border) shadow-sm data-hovered:bg-none data-hovered:bg-surface-hover data-pressed:bg-none data-pressed:bg-surface-pressed",
   ghost: "bg-transparent text-text data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",

@@ -103,6 +103,7 @@ const COLOUR_GROUPS = [
       "--color-primary-gradient-start",
       "--color-primary-gradient-end",
       "--color-primary-divider",
+      "--color-primary-disabled",
       "--color-surface-selected",
       "--color-surface-active",
       "--color-text-strong",

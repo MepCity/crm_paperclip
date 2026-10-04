@@ -128,7 +128,22 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   }
   await expect(field).toContainText("None");
   await expect(order).toContainText("Ascending");
-  await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+  const fieldBox = await field.boundingBox();
+  const orderBox = await order.boundingBox();
+  expect(Math.abs((fieldBox?.y ?? 0) - (orderBox?.y ?? 0))).toBeLessThanOrEqual(1);
+  const orderLabel = popover.getByText("Order", { exact: true });
+  await expect(orderLabel).toHaveClass(/sr-only/);
+  await expect(orderLabel).toHaveCSS("position", "absolute");
+  await expect(orderLabel).toHaveCSS("width", "1px");
+  await expect(orderLabel).toHaveCSS("height", "1px");
+  const sortByLabel = popover.getByText("Sort By", { exact: true });
+  await expect(sortByLabel).not.toHaveClass(/sr-only/);
+  const apply = page.getByRole("button", { name: "Apply" });
+  await expect(apply).toBeDisabled();
+  await expect(apply).toHaveCSS("background-color", "rgb(173, 179, 238)");
+  await expect(apply).toHaveCSS("opacity", "1");
+  await expect(apply).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(apply).toHaveCSS("background-image", "none");
   if (process.env.LIST_CHROME_ARTIFACT_DIR)
     await popover.screenshot({ path: join(process.env.LIST_CHROME_ARTIFACT_DIR, "list-sort.png") });
   await field.click();

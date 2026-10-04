@@ -39,8 +39,9 @@ export function SortPopover({ fields, sort, onApply, defaultOpen = false }: Sort
         placement="bottom start"
         className="record-sort-popover w-(--size-popover-sort-width) h-(--size-popover-sort-height)"
         contentClassName="flex h-full flex-col justify-between"
+        shouldCloseOnInteractOutside={(element) => !element.closest("[data-trigger='Select']")}
       >
-        <div className="record-sort-fields flex gap-4 text-sm">
+        <div className="record-sort-fields flex items-end gap-4 text-sm">
           <Select
             label="Sort By"
             placeholder="None"
@@ -52,6 +53,7 @@ export function SortPopover({ fields, sort, onApply, defaultOpen = false }: Sort
           </Select>
           <Select
             label="Order"
+            hideLabel
             items={[
               { id: "asc", label: "Ascending" },
               { id: "desc", label: "Descending" },

@@ -23,6 +23,7 @@ const LIST_PASS = {
   "--color-primary-gradient-start": "#5767f6",
   "--color-primary-gradient-end": "#154ec5",
   "--color-primary-divider": "#c3c8f4",
+  "--color-primary-disabled": "#adb3ee",
   "--color-surface-selected": "#f0f4fc",
   "--color-surface-active": "#edf0f9",
   "--color-text-strong": "#202123",
