@@ -87,6 +87,15 @@ describe("wire operations", () => {
       info: { page: 1, per_page: 200, count: 1, more_records: false },
     });
   });
+  it("reads the module from the query when static-route params are absent", async () => {
+    const request = { query: { module: "Leads" } };
+    for (const op of [operations.fields, operations.layouts, operations.views, operations.users])
+      expect((await op.run(deps, request)).status).toBe(200);
+    await expect(operations.fields.run(deps, { query: {} })).rejects.toMatchObject({
+      fieldErrors: { module: expect.any(Array) },
+    });
+  });
+
   it("passes view columns union requested fields to the port", async () => {
     const response = json(await operations.bulk.run(deps, input({ fields: "Annual_Revenue" })));
     const row = response.body.data[0];

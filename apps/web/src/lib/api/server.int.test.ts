@@ -152,6 +152,18 @@ describe("apiRoute", () => {
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
   });
 
+  it("normalizes missing static-route params to an empty object", async () => {
+    const staticHandler = apiRoute(async ({ params, query }) => ({ params, query }));
+    const response = await staticHandler(
+      new Request(`${appOrigin}/crm/v2.2/settings/fields?module=Leads`, {
+        headers: { cookie: cookieOf(orgA), "X-CRM-ORG": orgA.org.slug },
+      }),
+      {},
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ params: {}, query: { module: "Leads" } });
+  });
+
   it("hides an unexpected handler error behind a fixed 500", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const failing = apiRoute(async () => {

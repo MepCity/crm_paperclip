@@ -15,7 +15,7 @@ import type { WireMember } from "./types";
 
 export type OperationDeps = { records: RecordService; members: readonly WireMember[] };
 export type OperationRequest = {
-  params: Record<string, string>;
+  params?: Record<string, string>;
   query: Record<string, string>;
   /** The wrapper's request is used only for reading its optional JSON body. */
   request?: { text(): Promise<string> };
@@ -30,10 +30,10 @@ export type Operation = {
 const ok = (body: unknown): OperationResult => ({ status: 200, body });
 const empty = (): OperationResult => ({ status: 204, body: null });
 const moduleOf = (input: OperationRequest) =>
-  input.params.module ?? input.query.module ?? invalid("module", "Choose a module.");
+  input.params?.module ?? input.query.module ?? invalid("module", "Choose a module.");
 const viewIdOf = (input: OperationRequest) =>
   input.query.cvid || invalid("viewId", "Choose a view.");
-const recordIdOf = (input: OperationRequest) => input.params.recordId || invalid("id");
+const recordIdOf = (input: OperationRequest) => input.params?.recordId || invalid("id");
 function positive(value: string | undefined, fallback: number, key: string): number {
   if (value === undefined) return fallback;
   if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) < 1)
@@ -150,7 +150,7 @@ export const operations = {
       return ok({
         custom_views: [
           encodeView(
-            await records.getView(moduleOf(input), input.params.viewId || invalid("viewId")),
+            await records.getView(moduleOf(input), input.params?.viewId || invalid("viewId")),
           ),
         ],
       });

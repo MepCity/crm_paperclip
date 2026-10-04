@@ -33,11 +33,14 @@ async function call(
   const handler = (
     route as unknown as Record<
       string,
-      (request: Request, context: { params: Promise<Record<string, string>> }) => Promise<Response>
+      (request: Request, context: { params?: Promise<Record<string, string>> }) => Promise<Response>
     >
   )[op.method];
   if (!handler) throw new Error("Missing method");
   const boundParams = { ...params, recordId: options.recordId ?? params.recordId };
+  const routeParams = Object.fromEntries(
+    Object.entries(boundParams).filter(([key]) => op.path.includes(`{${key}}`)),
+  );
   const url = new URL(operationPath(op, boundParams), origin);
   for (const [key, value] of Object.entries({
     module: "Leads",
@@ -58,7 +61,7 @@ async function call(
       headers,
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
     }),
-    { params: Promise.resolve(boundParams) },
+    Object.keys(routeParams).length ? { params: Promise.resolve(routeParams) } : {},
   );
 }
 
@@ -110,6 +113,34 @@ describe("operation routes", () => {
       if (op === operations.record)
         expect(body.data[0]).toMatchObject({ id: created.id, Last_Name: "Handler Example" });
     }
+  });
+  it.each([
+    { op: operations.fields, envelope: "fields" },
+    { op: operations.layouts, envelope: "layouts" },
+    { op: operations.views, envelope: "custom_views" },
+    { op: operations.users, envelope: "users" },
+  ] as const)("serves $envelope without context params", async ({ op, envelope }) => {
+    const response = await call(op, a);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    const body = await response.json();
+    expect(body[envelope].length).toBeGreaterThan(0);
+    if (op === operations.fields)
+      expect(body.fields).toContainEqual(
+        expect.objectContaining({ api_name: "Company", field_label: "Company" }),
+      );
+    if (op === operations.layouts)
+      expect(
+        body.layouts[0].sections.flatMap((section: { fields: unknown[] }) => section.fields),
+      ).toContainEqual(expect.objectContaining({ api_name: "Company" }));
+    if (op === operations.views)
+      expect(body.custom_views).toContainEqual(
+        expect.objectContaining({ id: "all-leads", default: true }),
+      );
+    if (op === operations.users)
+      expect(body.users).toContainEqual(
+        expect.objectContaining({ id: a.ctx.userId, full_name: expect.any(String) }),
+      );
   });
   it("enforces tenant isolation in list, count and single-record reads", async () => {
     const created = await getRecordService(a.ctx).create("Leads", {

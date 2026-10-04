@@ -14,7 +14,8 @@ is not session state. Only this wrapper, its tests and this document know that n
    organization or a user who is not a member is `404`.
 
 The handler receives `{ ctx, request, params, query }`. A query key it does not read
-is ignored. Repeated keys keep the first value.
+is ignored. Repeated keys keep the first value. Static routes receive an empty
+`params` object when Next provides no route parameters.
 
 Return `null` for `204` with no body, or any other value for `200` JSON. Throw an
 `AppError` for an expected failure. Any other error is `500` with empty `details`;
