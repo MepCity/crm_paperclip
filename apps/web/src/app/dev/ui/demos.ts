@@ -1,4 +1,5 @@
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
+import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -21,6 +22,7 @@ import RadioGroupDemo from "@/components/ui/radio-group.demo";
 import SelectDemo from "@/components/ui/select.demo";
 import SkeletonDemo from "@/components/ui/skeleton.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
+import SplitButtonDemo from "@/components/ui/split-button.demo";
 import SwitchDemo from "@/components/ui/switch.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
@@ -62,4 +64,6 @@ export const demos: Record<string, React.ComponentType> = {
   breadcrumbs: BreadcrumbsDemo,
   "empty-state": EmptyStateDemo,
   skeleton: SkeletonDemo,
+  "list-chrome": ListChromeDemo,
+  "split-button": SplitButtonDemo,
 };

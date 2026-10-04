@@ -18,6 +18,11 @@ const expectedIcons = [
   "chevronLeft",
   "chevronRight",
   "close",
+  "filter",
+  "sort",
+  "list",
+  "refresh",
+  "ellipsis",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

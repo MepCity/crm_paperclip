@@ -6,6 +6,7 @@ import {
   type SelectProps as AriaSelectProps,
   Button,
   FieldError,
+  I18nProvider,
   Label,
   ListBox,
   ListBoxItem,
@@ -19,6 +20,8 @@ import { Icons } from "./icon";
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
   label: string;
+  /** Keeps the accessible name and removes the label from the visual layout. */
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string;
   items: Iterable<T>;
@@ -27,6 +30,7 @@ export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, 
 
 export function Select<T extends object>({
   label,
+  hideLabel = false,
   description,
   errorMessage,
   items,
@@ -34,33 +38,37 @@ export function Select<T extends object>({
   ...props
 }: SelectProps<T>) {
   return (
-    <AriaSelect {...props} className="flex flex-col gap-1">
-      {({ isInvalid }: SelectRenderProps) => (
-        <>
-          <Label className="text-sm font-medium text-text">{label}</Label>
-          {/* The trigger draws the border, but React Aria only reports the resolved
-              invalid state (prop or Form validationErrors) on the Select root. */}
-          <Button
-            data-invalid={isInvalid || undefined}
-            className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left outline-none data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:bg-surface-hover data-disabled:opacity-50 data-invalid:border-danger"
-          >
-            <SelectValue className="truncate" />
-            <Icons.chevronDown className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
-          </Button>
-          {description && (
-            <Text slot="description" className="text-sm text-text-muted">
-              {description}
-            </Text>
-          )}
-          <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
-          <Popover className="max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none">
-            <ListBox items={items} className="p-1 outline-none">
-              {children}
-            </ListBox>
-          </Popover>
-        </>
-      )}
-    </AriaSelect>
+    <I18nProvider locale="en-US">
+      <AriaSelect {...props} className="flex flex-col gap-1">
+        {({ isInvalid }: SelectRenderProps) => (
+          <>
+            <Label className={hideLabel ? "sr-only" : "text-sm font-medium text-text"}>
+              {label}
+            </Label>
+            {/* The trigger draws the border, but React Aria only reports the resolved
+                invalid state (prop or Form validationErrors) on the Select root. */}
+            <Button
+              data-invalid={isInvalid || undefined}
+              className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left outline-none data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:bg-surface-hover data-disabled:opacity-50 data-invalid:border-danger"
+            >
+              <SelectValue className="truncate" />
+              <Icons.chevronDown className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
+            </Button>
+            {description && (
+              <Text slot="description" className="text-sm text-text-muted">
+                {description}
+              </Text>
+            )}
+            <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
+            <Popover className="max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none enter:animate-in enter:fade-in exit:animate-out exit:fade-out">
+              <ListBox items={items} className="p-1 outline-none">
+                {children}
+              </ListBox>
+            </Popover>
+          </>
+        )}
+      </AriaSelect>
+    </I18nProvider>
   );
 }
 
