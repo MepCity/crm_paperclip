@@ -22,8 +22,9 @@ Observed:
 - Paging: `info{per_page, count, page, sort_by, sort_order, more_records}`. The total comes from a separate request that returns `{count}`.
 - An empty collection is `204` with no body (the list of an empty view, notes, view filters).
 - The record list and its count are `POST` requests although they only read.
+- One error body was captured: `404` with the keys `code`, `details`, `message`, `status`, for an unknown record path (capture `list-main`).
 
-Not observed, because the reference CRM is read-only for us: any record create, update or delete request; any error body; request headers; how an ad-hoc filter, a search text or a changed sort travels. Preference writes were seen as method and path only (`PUT`, blocked by the capture tool).
+Not observed, because the reference CRM is read-only for us: any record create, update or delete request; the body of a validation, permission or conflict error; request headers; how an ad-hoc filter, a search text or a changed sort travels. Preference writes were seen as method and path only (`PUT`, blocked by the capture tool).
 
 The record service port (MEP-68) is independent of storage, so this decision does not wait for ADR 0002.
 
@@ -78,10 +79,12 @@ Decided, whatever later evidence shows:
 - The wire shape of write requests, write responses and error bodies exists only in the codec (§6). Screens see the port: `RecordData`, and `AppError` subclasses whose `fieldErrors` are keyed by field API name.
 - The codec carries every `AppError` subclass across the wire without loss, including several field errors at once.
 
+Observed: an error body is `{"code", "details", "message", "status"}`, and an unknown record is `404`. Every error we send uses these four keys.
+
 Interim shapes. Basis: analogy with the observed read envelope and general knowledge of the reference CRM's public API conventions. Nobody has verified them.
 
 - `POST /crm/v2.2/{module}` creates, `PUT /crm/v2.2/{module}/{recordId}` updates, `DELETE /crm/v2.2/{module}?ids=` deletes. The request body is `{"data": [{<field API name>: <value>}]}`.
-- An error body is `{"code", "status": "error", "message", "details"}`. Status: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `409` conflict. An unexpected failure is `500` without details.
+- Errors other than the observed one: status `400` validation, `401` unauthenticated, `403` forbidden, `409` conflict; an unexpected failure is `500` with empty `details`. The values of `code` and the layout of `details` for field errors are ours.
 
 They become final when evidence exists (open question 1). Until Phase 6 publishes the API, our own browser layer is the only consumer, so a change costs the codec and its tests.
 
@@ -142,7 +145,7 @@ Verification:
 
 ## Open questions
 
-1. Which evidence source settles the write and error shapes (§5)? The reference CRM cannot be written to. Candidates: its public developer documentation, a network record the board makes itself, or keeping our interim design.
+1. Which evidence source settles the write shapes and the error details (§5)? The reference CRM cannot be written to. Candidates: its public developer documentation, a network record the board makes itself, or keeping our interim design.
 2. Request header names are not in the captures. `X-CRM-ORG` is our choice; only `server.ts` and the fetch wrapper know it.
 3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)?
 4. Which value does `info.sort_by` carry when neither the request nor the view sets a sort? The observed default view returns strings. Until known we send `null`.
