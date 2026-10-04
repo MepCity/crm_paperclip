@@ -1,12 +1,13 @@
+"use client";
+
 import {
   createContext,
   createElement,
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 export type PreferenceValue = string | number | boolean;
@@ -69,21 +70,6 @@ function safeSetItem(storageKey: string, value: PreferenceValue): void {
 const memoryValues = new Map<string, PreferenceValue>();
 const listeners = new Map<string, Set<() => void>>();
 
-function getMemoryValue<T extends PreferenceValue>(storageKey: string, defaultValue: T): T {
-  const stored = memoryValues.get(storageKey);
-  if (stored === undefined) {
-    return defaultValue;
-  }
-  if (!matchesPreferenceType(stored, defaultValue)) {
-    return defaultValue;
-  }
-  return stored as T;
-}
-
-function setMemoryValue(storageKey: string, value: PreferenceValue): void {
-  memoryValues.set(storageKey, value);
-}
-
 function subscribe(storageKey: string, listener: () => void): () => void {
   let set = listeners.get(storageKey);
   if (!set) {
@@ -114,12 +100,48 @@ function loadPersistedValue<T extends PreferenceValue>(storageKey: string, defau
   return parsed ?? defaultValue;
 }
 
+function readSnapshot<T extends PreferenceValue>(
+  storageKey: string,
+  defaultValue: T,
+  canPersist: boolean,
+): T {
+  if (memoryValues.has(storageKey)) {
+    const stored = memoryValues.get(storageKey);
+    if (stored !== undefined && matchesPreferenceType(stored, defaultValue)) {
+      return stored as T;
+    }
+    return defaultValue;
+  }
+  if (canPersist) {
+    const loaded = loadPersistedValue(storageKey, defaultValue);
+    memoryValues.set(storageKey, loaded);
+    return loaded;
+  }
+  return defaultValue;
+}
+
 /** Clears in-memory preference state between tests. */
 export function resetPreferenceStoreForTests(): void {
   memoryValues.clear();
   listeners.clear();
 }
 
+export function usePreference(
+  key: string,
+  defaultValue: boolean,
+): readonly [value: boolean, setValue: (next: boolean) => void];
+export function usePreference(
+  key: string,
+  defaultValue: number,
+): readonly [value: number, setValue: (next: number) => void];
+export function usePreference(
+  key: string,
+  defaultValue: string,
+): readonly [value: string, setValue: (next: string) => void];
+export function usePreference<T extends PreferenceValue>(
+  key: string,
+  defaultValue: T,
+): readonly [value: T, setValue: (next: T) => void];
 export function usePreference<T extends PreferenceValue>(
   key: string,
   defaultValue: T,
@@ -128,24 +150,15 @@ export function usePreference<T extends PreferenceValue>(
   const storageKey = buildStorageKey(scope, key);
   const canPersist = scope !== null;
 
-  const [value, setValueState] = useState<T>(defaultValue);
-
-  useEffect(() => {
-    const hydrated = canPersist
-      ? loadPersistedValue(storageKey, defaultValue)
-      : getMemoryValue(storageKey, defaultValue);
-    setMemoryValue(storageKey, hydrated);
-    setValueState(hydrated);
-
-    return subscribe(storageKey, () => {
-      setValueState(getMemoryValue(storageKey, defaultValue));
-    });
-  }, [storageKey, defaultValue, canPersist]);
+  const value = useSyncExternalStore(
+    (onStoreChange) => subscribe(storageKey, onStoreChange),
+    () => readSnapshot(storageKey, defaultValue, canPersist),
+    () => defaultValue,
+  );
 
   const setValue = useCallback(
     (next: T) => {
-      setMemoryValue(storageKey, next);
-      setValueState(next);
+      memoryValues.set(storageKey, next);
       if (canPersist) {
         safeSetItem(storageKey, next);
       }
