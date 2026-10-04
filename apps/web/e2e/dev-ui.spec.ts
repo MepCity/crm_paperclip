@@ -127,8 +127,13 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(page.getByRole("alertdialog", { name: "Record saved" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeVisible();
   await expect(danger).toBeFocused();
+  // The scan can outlast the notification lifetime. The three toasts are
+  // already visible above; requiring the first one to still be mounted
+  // afterwards races that lifetime and fails when the scan is slow.
   await expectNoA11yViolations(page);
-  await expect(page.getByRole("alertdialog", { name: "Export started" })).toBeVisible();
+  // A pointer resting on the toast pauses its timer. Park it clear of the
+  // region so auto-dismiss runs from whatever time is left.
+  await page.mouse.move(0, 0);
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeHidden({
     timeout: 7000,
   });
