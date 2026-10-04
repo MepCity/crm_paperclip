@@ -1,6 +1,6 @@
 # Module 1 request and response shapes
 
-Source: existing type-only `network.json` captures. No live reference CRM request was made for this document. Paths use placeholders; no record or account values are reproduced. The table lists the union of observed keys, not a promise that every key is always present. `array<object>` denotes the captured item schema; an empty array or a capture depth limit cannot establish nested keys. Each row cites a capture that contains that node.
+Source: existing type-only `network.json` captures and Leads metadata. No live reference CRM request was made for this document. Paths use placeholders; no record or account values are reproduced. Each capture's shape function retains only the **first array item** and stops at depth 8. Thus `[]` paths describe the first item only; a `string` leaf in that item does not rule out `null` in later items. A union here joins shapes **across captures**, not across items in an array. Empty arrays and `<deep>` do not establish item keys. Each response-table row cites a capture containing that node; metadata-derived rows below cite their metadata source.
 
 The capture stores HTTP response content type but does not retain request headers. For POST calls it records an opaque multipart marker; constituent field names are not observable in the captures. Query values written below are limited to non-identity constants preserved by the capture.
 
@@ -11,6 +11,8 @@ The capture stores HTTP response content type but does not retain request header
 - Query parameters: `include` (`analyst-smoke`).
 - Request body: none observed (`analyst-smoke`). Request content type: not applicable.
 - Observed status: `200` (`analyst-smoke`).
+
+The response tree below is the Leads module shape. The same path was also called for Accounts, Contacts, Deals, and Tasks in `setup-accounts-summary`, `setup-contacts-summary`, `setup-deals-summary`, and `setup-tasks-summary`; the last call supplies the nullable `modified_by` and `modified_time` variants and populated `parent_module` keys above. The three captured `include` lists for Leads are: `layouts,profiles` (`setup-leads-summary`), `layouts,lookup_field_properties,custom_view,related_lists,business_card_fields` (`detail-main`), and a longer list containing these safe keys plus `$properties`, `$on_demand_properties`, `default_view`, `split_view_supported`, `chart_view_supported`, `kanban_view_supported`, `customized_view`, `related_list_properties`, `search_layout_fields`, `group_by_field_available`, and omitted (name rule) (`list-default`). The other four modules use `include=layouts,profiles` (`setup-tasks-summary`).
 
 | Response path | Observed type | Evidence |
 | --- | --- | --- |
@@ -38,7 +40,7 @@ The capture stores HTTP response content type but does not retain request header
 | `modules[].custom_view.category` | string | `analyst-smoke` |
 | `modules[].custom_view.created_by` | null | `analyst-smoke` |
 | `modules[].custom_view.created_time` | null | `analyst-smoke` |
-| `modules[].custom_view.criteria` | object | `analyst-smoke` |
+| `modules[].custom_view.criteria` | null, object | `analyst-smoke`, `board-lead-convert-probe` |
 | `modules[].custom_view.criteria.comparator` | string | `analyst-smoke` |
 | `modules[].custom_view.criteria.field` | object | `analyst-smoke` |
 | `modules[].custom_view.criteria.field.api_name` | string | `analyst-smoke` |
@@ -118,12 +120,14 @@ The capture stores HTTP response content type but does not retain request header
 | `modules[].lookup_field_properties.fields[].id` | string | `analyst-smoke` |
 | `modules[].lookup_field_properties.fields[].sequence_number` | number | `analyst-smoke` |
 | `modules[].map_view` | boolean | `analyst-smoke` |
-| `modules[].modified_by` | object | `analyst-smoke` |
+| `modules[].modified_by` | null, object | `analyst-smoke`, `setup-tasks-summary` |
 | `modules[].modified_by.id` | string | `analyst-smoke` |
 | `modules[].modified_by.name` | string | `analyst-smoke` |
-| `modules[].modified_time` | string | `analyst-smoke` |
+| `modules[].modified_time` | null, string | `analyst-smoke`, `setup-tasks-summary` |
 | `modules[].module_name` | string | `analyst-smoke` |
 | `modules[].parent_module` | object | `analyst-smoke` |
+| `modules[].parent_module.api_name` | string | `setup-tasks-summary` |
+| `modules[].parent_module.id` | string | `setup-tasks-summary` |
 | `modules[].per_page` | number | `analyst-smoke` |
 | `modules[].plural_label` | string | `analyst-smoke` |
 | `modules[].presence_sub_menu` | boolean | `analyst-smoke` |
@@ -191,6 +195,8 @@ The capture stores HTTP response content type but does not retain request header
 - Query parameters: `include` (`setup-leads-field-permissions`), `include_external_fields` (`setup-leads-field-permissions`), `module` (`list-view-edit-1`), `type` (`list-view-edit-1`).
 - Request body: none observed (`list-view-edit-1`). Request content type: not applicable.
 - Observed status: `200` (`list-view-edit-1`).
+
+The tree below uses `module=Leads` calls: `list-view-edit-1`, `list-view-edit-2`, `list-view-edit-3`, `list-view-edit-default`, `setup-leads-field-permissions`, `setup-leads-layout-rules`, and `setup-leads-locking` (seven captures). The four view-edit captures also request `module=Campaigns` at the same endpoint, with a different first-item shape. Ordinary Leads list and detail captures contain no request for Leads field definitions; their source is not observable in the captures. `include=allowed_permissions_to_update` occurs in `setup-leads-field-permissions`.
 
 | Response path | Observed type | Evidence |
 | --- | --- | --- |
@@ -292,10 +298,12 @@ The capture stores HTTP response content type but does not retain request header
 - Request body: none observed (`detail-attachments-card`). Request content type: not applicable.
 - Observed status: `200` (`detail-attachments-card`).
 
+The 136 response paths below all occur with `module=Leads` in `setup-leads-layout-rules` (also `board-lead-convert-probe`); that is the evidence for this table. In 23 other captures the request uses `module=Campaigns`, with `mode=all`, and 16 of those entries have no retained response body. Ordinary Leads list and detail captures contain no request for Leads layout sections; their source is not observable in the captures.
+
 | Response path | Observed type | Evidence |
 | --- | --- | --- |
-| `layouts` | array<object> | `detail-main` |
-| `layouts[]` | object | `detail-main` |
+| `layouts` | array<object> | `setup-leads-layout-rules` |
+| `layouts[]` | object | `setup-leads-layout-rules` |
 | `layouts[].convert_mapping` | object | `setup-leads-layout-rules` |
 | `layouts[].convert_mapping.Accounts` | object | `setup-leads-layout-rules` |
 | `layouts[].convert_mapping.Accounts.display_label` | string | `setup-leads-layout-rules` |
@@ -315,121 +323,121 @@ The capture stores HTTP response content type but does not retain request header
 | `layouts[].convert_mapping.Deals.fields[].required` | boolean | `setup-leads-layout-rules` |
 | `layouts[].convert_mapping.Deals.id` | string | `setup-leads-layout-rules` |
 | `layouts[].convert_mapping.Deals.name` | string | `setup-leads-layout-rules` |
-| `layouts[].created_by` | null | `detail-main` |
-| `layouts[].created_for` | null | `detail-main` |
-| `layouts[].created_time` | null | `detail-main` |
-| `layouts[].display_label` | string | `detail-main` |
-| `layouts[].id` | string | `detail-main` |
-| `layouts[].modified_by` | null | `detail-main` |
-| `layouts[].modified_time` | null | `detail-main` |
-| `layouts[].name` | string | `detail-main` |
-| `layouts[].profiles` | array<object> | `detail-main` |
-| `layouts[].profiles[]` | object | `detail-main` |
-| `layouts[].profiles[]._default_assignment_view` | object | `detail-main` |
-| `layouts[].profiles[]._default_assignment_view.id` | string | `detail-main` |
-| `layouts[].profiles[]._default_assignment_view.name` | string | `detail-main` |
-| `layouts[].profiles[]._default_assignment_view.type` | string | `detail-main` |
-| `layouts[].profiles[]._default_view` | object | `detail-main` |
-| `layouts[].profiles[]._default_view.id` | string | `detail-main` |
-| `layouts[].profiles[]._default_view.name` | string | `detail-main` |
-| `layouts[].profiles[]._default_view.type` | string | `detail-main` |
-| `layouts[].profiles[].default` | boolean | `detail-main` |
-| `layouts[].profiles[].id` | string | `detail-main` |
-| `layouts[].profiles[].name` | string | `detail-main` |
-| `layouts[].sections` | array<object> | `detail-main` |
-| `layouts[].sections[]` | object | `detail-main` |
-| `layouts[].sections[].api_name` | string | `detail-main` |
-| `layouts[].sections[].column_count` | number | `detail-main` |
-| `layouts[].sections[].display_label` | string | `detail-main` |
-| `layouts[].sections[].fields` | array<object> | `detail-main` |
-| `layouts[].sections[].fields[]` | object | `detail-main` |
-| `layouts[].sections[].fields[].additional_column` | null | `detail-main` |
-| `layouts[].sections[].fields[].address` | null | `detail-main` |
-| `layouts[].sections[].fields[].api_name` | string | `detail-main` |
-| `layouts[].sections[].fields[].association_details` | null | `detail-main` |
-| `layouts[].sections[].fields[].auto_number` | object | `detail-main` |
-| `layouts[].sections[].fields[].businesscard_supported` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].category` | number | `detail-main` |
-| `layouts[].sections[].fields[].child_fields` | null | `detail-main` |
-| `layouts[].sections[].fields[].column_name` | string | `detail-main` |
+| `layouts[].created_by` | null | `setup-leads-layout-rules` |
+| `layouts[].created_for` | null | `setup-leads-layout-rules` |
+| `layouts[].created_time` | null | `setup-leads-layout-rules` |
+| `layouts[].display_label` | string | `setup-leads-layout-rules` |
+| `layouts[].id` | string | `setup-leads-layout-rules` |
+| `layouts[].modified_by` | null | `setup-leads-layout-rules` |
+| `layouts[].modified_time` | null | `setup-leads-layout-rules` |
+| `layouts[].name` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles` | array<object> | `setup-leads-layout-rules` |
+| `layouts[].profiles[]` | object | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_assignment_view` | object | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_assignment_view.id` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_assignment_view.name` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_assignment_view.type` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_view` | object | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_view.id` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_view.name` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[]._default_view.type` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[].default` | boolean | `setup-leads-layout-rules` |
+| `layouts[].profiles[].id` | string | `setup-leads-layout-rules` |
+| `layouts[].profiles[].name` | string | `setup-leads-layout-rules` |
+| `layouts[].sections` | array<object> | `setup-leads-layout-rules` |
+| `layouts[].sections[]` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].api_name` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].column_count` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].display_label` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields` | array<object> | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[]` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].additional_column` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].address` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].api_name` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].association_details` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].auto_number` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].businesscard_supported` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].category` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].child_fields` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].column_name` | string | `setup-leads-layout-rules` |
 | `layouts[].sections[].fields[].convert_mapping` | object | `setup-leads-layout-rules` |
 | `layouts[].sections[].fields[].convert_mapping.Accounts` | null | `setup-leads-layout-rules` |
 | `layouts[].sections[].fields[].convert_mapping.Contacts` | null | `setup-leads-layout-rules` |
 | `layouts[].sections[].fields[].convert_mapping.Deals` | null | `setup-leads-layout-rules` |
-| `layouts[].sections[].fields[].created_source` | string | `detail-main` |
-| `layouts[].sections[].fields[].created_time` | null | `detail-main` |
-| `layouts[].sections[].fields[].crypt` | null | `detail-main` |
-| `layouts[].sections[].fields[].currency` | object | `detail-main` |
-| `layouts[].sections[].fields[].custom_field` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].data_type` | string | `detail-main` |
-| `layouts[].sections[].fields[].decimal_place` | null | `detail-main` |
-| `layouts[].sections[].fields[].default_value` | null | `detail-main` |
-| `layouts[].sections[].fields[].display_field` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].display_format` | null | `detail-main` |
-| `layouts[].sections[].fields[].display_format_properties` | null | `detail-main` |
-| `layouts[].sections[].fields[].display_label` | string | `detail-main` |
-| `layouts[].sections[].fields[].display_type` | number | `detail-main` |
-| `layouts[].sections[].fields[].enable_record_category` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].external` | null | `detail-main` |
-| `layouts[].sections[].fields[].field_label` | string | `detail-main` |
-| `layouts[].sections[].fields[].field_read_only` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].filterable` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].formula` | object | `detail-main` |
-| `layouts[].sections[].fields[].history_tracking` | null | `detail-main` |
-| `layouts[].sections[].fields[].id` | string | `detail-main` |
-| `layouts[].sections[].fields[].json_type` | string | `detail-main` |
-| `layouts[].sections[].fields[].length` | number | `detail-main` |
-| `layouts[].sections[].fields[].lookup` | object | `detail-main` |
-| `layouts[].sections[].fields[].modified_time` | null | `detail-main` |
-| `layouts[].sections[].fields[].multi_module_lookup` | object | `detail-main` |
-| `layouts[].sections[].fields[].multiselectlookup` | object | `detail-main` |
-| `layouts[].sections[].fields[].parent_field` | null | `detail-main` |
-| `layouts[].sections[].fields[].pick_list_values` | array (empty; item type not observable) | `detail-main` |
-| `layouts[].sections[].fields[].pick_list_values_sorted_lexically` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].profiles` | array<object> | `detail-main` |
-| `layouts[].sections[].fields[].profiles[]` | object | `detail-main` |
-| `layouts[].sections[].fields[].profiles[].id` | not observable in the captures (depth limit) | `detail-main` |
-| `layouts[].sections[].fields[].profiles[].name` | not observable in the captures (depth limit) | `detail-main` |
-| `layouts[].sections[].fields[].profiles[].permission_type` | not observable in the captures (depth limit) | `detail-main` |
-| `layouts[].sections[].fields[].public` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].range` | null | `detail-main` |
-| `layouts[].sections[].fields[].read_only` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].refer_from_field` | null | `detail-main` |
-| `layouts[].sections[].fields[].required` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].rollup_summary` | object | `detail-main` |
-| `layouts[].sections[].fields[].section_id` | number | `detail-main` |
-| `layouts[].sections[].fields[].sequence_number` | number | `detail-main` |
-| `layouts[].sections[].fields[].show_type` | number | `detail-main` |
-| `layouts[].sections[].fields[].sortable` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].static_field` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].static_values` | null | `detail-main` |
-| `layouts[].sections[].fields[].subform` | null | `detail-main` |
-| `layouts[].sections[].fields[].subform_properties` | null | `detail-main` |
-| `layouts[].sections[].fields[].system_mandatory` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].tooltip` | null | `detail-main` |
-| `layouts[].sections[].fields[].type` | string | `detail-main` |
-| `layouts[].sections[].fields[].ui_type` | number | `detail-main` |
-| `layouts[].sections[].fields[].unique` | object | `detail-main` |
-| `layouts[].sections[].fields[].validation_rule` | null | `detail-main` |
-| `layouts[].sections[].fields[].view_type` | object | `detail-main` |
-| `layouts[].sections[].fields[].view_type.create` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].view_type.edit` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].view_type.quick_create` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].view_type.view` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].visible` | boolean | `detail-main` |
-| `layouts[].sections[].fields[].webhook` | boolean | `detail-main` |
-| `layouts[].sections[].generated_type` | string | `detail-main` |
-| `layouts[].sections[].isSubformSection` | boolean | `detail-main` |
-| `layouts[].sections[].is_parent_section` | boolean | `detail-main` |
-| `layouts[].sections[].name` | string | `detail-main` |
-| `layouts[].sections[].parent_section` | null | `detail-main` |
-| `layouts[].sections[].properties` | null | `detail-main` |
-| `layouts[].sections[].sequence_number` | number | `detail-main` |
-| `layouts[].sections[].tab_traversal` | number | `detail-main` |
-| `layouts[].sections[].type` | string | `detail-main` |
-| `layouts[].show_business_card` | boolean | `detail-main` |
-| `layouts[].status` | number | `detail-main` |
-| `layouts[].visible` | boolean | `detail-main` |
+| `layouts[].sections[].fields[].created_source` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].created_time` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].crypt` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].currency` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].custom_field` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].data_type` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].decimal_place` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].default_value` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].display_field` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].display_format` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].display_format_properties` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].display_label` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].display_type` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].enable_record_category` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].external` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].field_label` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].field_read_only` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].filterable` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].formula` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].history_tracking` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].id` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].json_type` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].length` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].lookup` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].modified_time` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].multi_module_lookup` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].multiselectlookup` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].parent_field` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].pick_list_values` | array (empty; item type not observable) | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].pick_list_values_sorted_lexically` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].profiles` | array<object> | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].profiles[]` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].profiles[].id` | not observable in the captures (depth limit) | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].profiles[].name` | not observable in the captures (depth limit) | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].profiles[].permission_type` | not observable in the captures (depth limit) | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].public` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].range` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].read_only` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].refer_from_field` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].required` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].rollup_summary` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].section_id` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].sequence_number` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].show_type` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].sortable` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].static_field` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].static_values` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].subform` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].subform_properties` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].system_mandatory` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].tooltip` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].type` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].ui_type` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].unique` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].validation_rule` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].view_type` | object | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].view_type.create` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].view_type.edit` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].view_type.quick_create` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].view_type.view` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].visible` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].fields[].webhook` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].generated_type` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].isSubformSection` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].is_parent_section` | boolean | `setup-leads-layout-rules` |
+| `layouts[].sections[].name` | string | `setup-leads-layout-rules` |
+| `layouts[].sections[].parent_section` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].properties` | null | `setup-leads-layout-rules` |
+| `layouts[].sections[].sequence_number` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].tab_traversal` | number | `setup-leads-layout-rules` |
+| `layouts[].sections[].type` | string | `setup-leads-layout-rules` |
+| `layouts[].show_business_card` | boolean | `setup-leads-layout-rules` |
+| `layouts[].status` | number | `setup-leads-layout-rules` |
+| `layouts[].visible` | boolean | `setup-leads-layout-rules` |
 
 ## View inventory
 
@@ -912,20 +920,96 @@ The `204` response has no body (`detail-attachments-card`).
 | `users[].zip` | null | `detail-create-owner` |
 | `users[].zuid` | string | `detail-create-owner` |
 
+## Nested field configuration from metadata
+
+In the v2.2 field and v2.1 layout captures, the first field item's `auto_number`, `currency`, `formula`, `lookup`, `multi_module_lookup`, `multiselectlookup`, `rollup_summary`, and `unique` are each `object (empty in every capture)` (`list-view-edit-1`, `setup-leads-layout-rules`). The first `pick_list_values` array is empty in those captures; its item type is not observable **at those endpoints**. The Leads metadata export is the data-model source and shows populated configuration across all 56 fields: `pick_list_values` in 9 fields, `lookup` in 3, `currency` in 1, and `multi_module_lookup` in 1. The v4.0 and v2 field variants below independently expose some `pick_list_values[]` keys. The other five objects remain empty across all 56 metadata fields. These metadata rows enrich the configuration model; they are **not** keys observed in the first v2.2 field item or first v2.1 layout field item.
+
+| Configuration path | Observed metadata type | Evidence |
+| --- | --- | --- |
+| `pick_list_values` | array | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[]` | object | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].actual_value` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].colour_code` | null | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].display_value` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].id` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].record_category_value` | null, object | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].record_category_value.api_name` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].record_category_value.id` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].reference_value` | string | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].sequence_number` | number | `metadata/modules/Leads/fields.json` |
+| `pick_list_values[].type` | string | `metadata/modules/Leads/fields.json` |
+| `lookup` | object | `metadata/modules/Leads/fields.json` |
+| `lookup.api_name` | null | `metadata/modules/Leads/fields.json` |
+| `lookup.display_label` | null | `metadata/modules/Leads/fields.json` |
+| `lookup.id` | null | `metadata/modules/Leads/fields.json` |
+| `lookup.module` | object | `metadata/modules/Leads/fields.json` |
+| `lookup.module.api_name` | string | `metadata/modules/Leads/fields.json` |
+| `lookup.module.crypt` | boolean | `metadata/modules/Leads/fields.json` |
+| `lookup.module.id` | string | `metadata/modules/Leads/fields.json` |
+| `lookup.query_details` | object | `metadata/modules/Leads/fields.json` |
+| `lookup.query_details.system_query_id` | null | `metadata/modules/Leads/fields.json` |
+| `lookup.revalidate_filter_during_edit` | boolean | `metadata/modules/Leads/fields.json` |
+| `currency` | object | `metadata/modules/Leads/fields.json` |
+| `currency.precision` | number | `metadata/modules/Leads/fields.json` |
+| `currency.rounding_option` | string | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup` | object | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.api_name` | string | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.display_label` | string | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.dynamic_module_addition_allowed` | boolean | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.modules` | array | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.modules[]` | object | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.modules[].api_name` | string | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.modules[].id` | string | `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup.modules[].module_name` | string | `metadata/modules/Leads/fields.json` |
+
+The metadata `lookup.module`, `lookup.query_details`, `multi_module_lookup.modules[]`, and `pick_list_values[].record_category_value` branches above include their nested keys. No record values are implied by these configuration objects.
+
+## Endpoint version variants
+
+These adjacent calls are listed for codec routing. Their first-item keys may differ by module and capture depth; the full response tables above cover the requested versions only. All counts refer to distinct capture directories, except that a directory may contain multiple calls.
+
+| Variant | Query keys and module values | Captures / retained bodies / status | Key difference from the documented version | Evidence |
+| --- | --- | --- | --- | --- |
+| `GET /crm/v4.0/settings/fields` | `module=Entity_Cadences__s` | 51 / 13 / `200` | Adds `blueprint_supported` and `pick_list_values[]{display_value,actual_value,reference_value,id,sequence_number,type,colour_code}`; 12 keys from the v2.2 union are absent, including `allowed_permissions_to_update`. | `detail-main`, `list-default` |
+| `GET /crm/v2/settings/fields` | `module=Campaign_Leads_Members` (26), `users` (6), `Checklists` (1), `Leads` (1) | 34 / 19 / `200` | Adds `quick_sequence_number`, `blueprint_supported`, `pick_list_values[]{display_value,actual_value,reference_value,id}`; 28 keys from the v2.2 union are absent, including `allowed_permissions_to_update`. | `detail-main`, `detail-create-owner`, `setup-leads-map-dependency`, `board-lead-detail-controls` |
+| `GET /crm/v2.2/settings/layouts` | `module=Leads` or `Deals`; `fields`, `include`, `include_element_types`, `include_inner_details`, `module` | 4 / 5 / `200` | Adds 25 paths over the v2.1 union, including `actions_allowed.*`, `sections[].id`, `sections[].fields[].element_type`, `total_profiles`. | `setup-leads-fields`, `setup-leads-layout-editor`, `setup-leads-validation-rules`, `setup-deals-fields` |
+| `GET /crm/v3/settings/layouts` | `module=Leads`; `fields`, `include`, `include_inner_details`, `module` | 2 / 2 / `200` | Adds `actions_allowed.*`, `generated_type`, `total_profiles`; the first-item shape has no `sections` branch. | `setup-leads-buttons`, `setup-leads-layouts` |
+| `GET /crm/v8/settings/layouts` | `module=Leads` | 1 / 1 / `200` | Adds `sections[].mode`, `sections[].actions_allowed.*`, `sections[].fields[].operation_type.*`, `api_name`; lacks v2.1 `sections[].parent_section`, `sections[].is_parent_section`, and `sections[].fields[].subform`. | `setup-leads-map-dependency` |
+| `GET /crm/v8/settings/layouts/<layoutId>` | `module=Leads`; `mode`, `include_inner_details`, `module` | 2 / 2 / `200` | Same 40-path extra and three-path absent set as the v8 inventory in these captures. | `setup-leads-layout-editor`, `setup-leads-map-dependency` |
+| `GET /crm/v8/settings/custom_views` | `module=Leads`; `favourite`, `page=1`, `per_page=200`, `module` | 4 / 0 / `204` | No response tree; v9 inventory has `custom_views[]`. | `list-view-edit-1`, `list-view-edit-2`, `list-view-edit-3`, `list-view-edit-default` |
+
+The v2 fields count is **34**, whereas the earlier review reported 32; `board-lead-detail-controls` and `board-lead-convert-probe` are also present in the current captures. The capture files take precedence for this count.
+
 ## Query values and field projection
 
-- `fields` on `POST /crm/v2.2/<module>/bulk` is one comma-separated query value of field API names and `$` properties (`list-default`). The preserved list includes `Full_Name`, `First_Name`, `Last_Name`, `Owner`, `Tag`, `Layout`, `Locked__s`, `Currency`, `Exchange_Rate`, and `Data_Processing_Basis_Details`. It also includes the state and permission properties listed below. The default view metadata lists `Full_Name`, `Company`, `Email`, `Phone`, `Lead_Source`, and `Owner` as columns (`metadata/modules/Leads/custom_views/`; `list-default` identifies the default view). Thus `First_Name`, `Last_Name`, `Tag`, `Layout`, `Locked__s`, `Currency`, `Exchange_Rate`, `Data_Processing_Basis_Details`, and the `$` properties are beyond those columns, while `Company`, `Email`, `Phone`, and `Lead_Source` are columns absent from this query value. This is an inference from the default-view metadata and capture; it does not establish how the service applies `fields`.
-- Preserved non-identity constants: `type=all` on field definitions (`setup-leads-fields`), `type=ActiveUsers` on user inventory (`detail-create-owner`), `type=sent_from_crm` on another observed request (`detail-main`), and `mode=all` on layouts (`detail-main`). The capture masks `approved`, `converted`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`, `include_element_types`, `insert_recent_item`, `filters`, `include_inner_details`, and `type__s` values as `<v>`; their values are not observable in the captures.
-- Query values for `module`, `cvid`, `relatedId`, `relationId`, and user or record identifiers are intentionally omitted.
+- The main `POST /crm/v2.2/Leads/bulk` call has the **same** comma-separated `fields` query value in all 53 captures: the default, converted, nine system views, and view-edit screens (`list-default`, `list-converted`, `list-sysview-1` through `list-sysview-9`, `list-view-edit-1` through `list-view-edit-3`). It contains field API names `Exchange_Rate`, `First_Name`, `Last_Name`, `Full_Name`, `Currency`, `Tag`, `Owner`, `Layout`, `Data_Processing_Basis_Details`, `Locked__s` and the `$` names listed below; two names are omitted (name rule). The default view columns are `Full_Name`, `Company`, `Email`, `Phone`, `Lead_Source`, and `Owner` (`metadata/modules/Leads/custom_views/`, `list-default`). Thus the parameter includes non-column fields and properties and omits four default columns.
+- This is also visible **in the response**: first rows in all 44 populated main-list captures include keys outside `fields`; the default view returns `Company`, `Email`, `Phone`, `Lead_Source` (`list-default`), and another view returns `Salutation` (`list-sysview-2`). The server response is therefore not limited to the named `fields` projection. The nine `204` main-list calls cannot establish row keys (`list-converted`).
+- `POST /crm/v2.2/Leads/bulk` also has a related-row form with `relatedId` and `relationId` but **no** `fields` query value in 24 captures; those calls are marked multipart and return `204` (`detail-main`). The 53 main-list calls have `request: null` in 52 captures and an opaque multipart marker with `200` in `home-leads-navigation`. All 53 count calls carry the multipart marker (`list-default`). The marker does not reveal form field names or establish the actual request header.
+- Preserved non-identity constants: main list `page=1`, `per_page=30` (`list-default`); view inventory `page=1`, `per_page=11` (`list-default`); user inventory `page=1`, `per_page=200`, `type=ActiveUsers` (`detail-create-owner`); field definitions `type=all` (`setup-leads-fields`) and `include=allowed_permissions_to_update` (`setup-leads-field-permissions`); layouts `mode=all` for `module=Campaigns` (`detail-main`). Module-definition `include` lists appear in its section above. Captured `approved`, `converted`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`, `include_element_types`, `insert_recent_item`, `filters`, `include_inner_details`, and `type__s` values are masked as `<v>`; their constants are not observable in the captures. `type=sent_from_crm` appears on an adjacent request outside the endpoint table (`detail-main`).
+- Query values for `cvid`, `relatedId`, `relationId`, and user or record identifiers are intentionally omitted. The `module` values are documented where they determine the meaning of a metadata response.
 
 ## Record row value forms
 
-- `Owner` is an object with `name`, `id`, and `email` string leaves (`list-default`). Other observed owner-like and lookup objects are represented by their exact paths in the record list and detail tables above. Those tables are the evidence for each key and type, including nullable alternatives.
-- Date and time leaves are captured as `string` or `null`, numeric leaves as `number` or `null`, and checkboxes as `boolean` or `null` where those alternatives appear in the tables. The capture does not retain date-time string format, numeric precision, or checkbox wire values beyond type.
-- A captured `null` proves an explicit null at that path; absence of a path in another response proves only that the key was not represented in that type snapshot. It does not establish a universal omission rule.
-- Multi-module lookup value objects: not observable in the captures. Metadata defines field configuration, but it does not establish a record value shape.
-- For the populated default list, `info.sort_by` and `info.sort_order` are both `string` (`list-default`). ADR 0004's open question states an interim `null` for an unset sort; that differs from the captured default-view types.
-- Observed `$` row properties in the `fields` projection: `$approval`, `$approval_state`, `$approved`, `$blocked_reason`, `$converted`, `$converted_detail`, `$cpq_executions`, `$currency_symbol`, `$editable`, `$field_states`, `$in_merge`, `$layout_id`, `$locked_for_me`, `$orchestration`, `$pathfinder`, `$photo_id`, `$process_flow`, `$review`, `$review_process`, `$sharing_permission`, `$state`, `$status`, `$upcoming_activity`, `$wizard_connection_path`, and omitted (name rule) (`list-default`). A projected name does not prove the row response contains the key; use the response table for that.
+The table joins `data_type` / `json_type` from `metadata/modules/Leads/fields.json` with first-row leaves in the `GET /crm/v2.2/Leads/<recordId>` detail response (`detail-main`, `detail-edit`). It reports types, not values or a guarantee for later array items.
+
+| Metadata data type | Detail response value form | Evidence |
+| --- | --- | --- |
+| `ownerlookup` / `jsonobject` | `Owner`, `Created_By`, `Modified_By`: object with `name`, `id`, `email` string leaves. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `lookup` / `jsonobject` (3 fields) | `null` only; populated object keys are not observable in the captures. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `multi_module_lookup` / `jsonobject` (1 field) | `null` only; populated object keys are not observable in the captures. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `datetime` / `string` | Four fields are `string`; one is `null`. The string's date-time syntax is not retained. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `boolean` / `boolean` | `boolean` for `Email_Opt_Out` and `Locked__s`. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `currency` / `double` | `Annual_Revenue` is `number`; `$formatted_currency.<field>` is `string`. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `integer` / `integer` (2 fields), `double` / `double` (3 fields) | `null` only; non-null numeric encoding is not observable in the captures. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `picklist` / `string` | Six fields are `string`; two are `null`. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `text`, `textarea`, `email`, `phone`, `website` | `string` or `null`, depending on the field. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `profileimage` / `string` | `string`. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `text` / `jsonarray` | `Tag` is an empty array; item type is not observable in the captures. | `detail-main`; `metadata/modules/Leads/fields.json` |
+| `bigint` / `string` | `id` is `string`. | `detail-main`; `metadata/modules/Leads/fields.json` |
+
+In the retained detail first item, empty fields are **present with `null`**: 16 non-`$` leaves have only `null` across the 24 detail captures (`detail-main`, `detail-edit`). Five metadata fields are absent from the detail response altogether: `Converted_Date_Time`, `Change_Log_Time__s`, `Converted__s`, `Last_Enriched_Time__s`, `Enrich_Status__s` (`metadata/modules/Leads/fields.json`, `detail-main`). Because list captures retain only their first row, the presence/null rule for other list rows is not observable in the captures. The populated list's `Owner` object likewise has `name`, `id`, `email` string leaves (`list-default`).
+
+For the populated default list, `info` has `count:number`, `more_records:boolean`, `page:number`, `per_page:number`, `sort_by:string`, and `sort_order:string` (`list-default`). The `info` table above gives each path and capture. The observed `$` row keys in the list and detail response tables are: `$approval`, `$approval_state`, `$approved`, `$converted`, `$converted_detail`, `$currency_symbol`, `$editable`, `$field_states`, `$formatted_currency`, `$home_converted_currency`, `$in_merge`, `$layout_id`, `$locked_for_me`, `$orchestration`, `$pathfinder`, `$photo_id`, `$process_flow`, `$review`, `$review_process`, `$sharing_permission`, `$state`, `$status`, `$upcoming_activity`, `$wizard_connection_path`, and omitted (name rule) (`list-default`, `detail-main`). Other `$` names appear only in the `fields` query, including `$blocked_reason` and `$cpq_executions`; a projected name alone is not proof of a response key.
 
 ## Errors in all existing captures
 
@@ -939,10 +1023,13 @@ The error `details` object has no nested keys in these captures; its value conte
 ## Differences across captures
 
 - The module definition endpoint has captured `200` responses with a `modules[]` body and other `200` entries whose response is absent in `network.json` (`list-main`, `list-default`). The absent entry is a capture limitation, not a confirmed empty response.
-- The list endpoint returns `200` with `data[]` and `info` in populated views (`list-default`) and `204` with no body in an empty view (`list-converted`). A related-row variant uses `relatedId` and `relationId` and also returns `204` (`detail-main`).
-- The populated list captures `request: null` (`list-default`), whereas the related-row `204` variant records only an opaque multipart marker (`detail-main`). This does not show the multipart field names.
+- The list endpoint returns `200` with `data[]` and `info` in 44 populated main-list captures (`list-default`) and `204` with no body in nine empty-view captures (`list-converted`). A related-row variant uses `relatedId` and `relationId`, omits `fields`, and returns `204` in 24 captures (`detail-main`).
+- Main-list calls have `request: null` in 52 captures (`list-default`), but `home-leads-navigation` has a multipart marker and `200`. All 24 related-row calls and all 53 count calls have a multipart marker (`detail-main`, `list-default`). This does not show form field names or the actual request `Content-Type` header.
+- The main-list `fields` value is identical in all 53 captures, while returned first rows contain keys missing from that query (`list-default`, `list-sysview-2`). ADR 0004 §6 describes it as a column projection; that reading is not supported by these captured response keys. ADR 0004's open question 4 already records the default `info.sort_by` and `info.sort_order` string finding, so that is not a new contradiction.
+- Metadata endpoints sometimes target a different module: the v2.1 layout calls on detail screens use `module=Campaigns`, and four v2.2 field calls in view editing do too (`detail-main`, `list-view-edit-1`). The v2.2 field and v2.1 layout tables above describe their Leads calls only; version variants are listed separately.
 - The selected view criteria may be one leaf or a nested group; the union table includes both (`list-default`, `list-sysview-1`, `list-sysview-9`). Null, absent, and populated optional metadata fields vary between captures.
 - The record detail endpoint is used by both detail and edit loads; the captured paths carry different optional query flags (`detail-main`, `detail-edit`). The response node types above are the union.
+- `data[].$converted_detail` is `object (empty in every capture)` in both list and detail first items (`list-default`, `detail-main`). For Leads module definitions, `modules[].parent_module` is also `object (empty in every Leads capture)`; the Tasks call supplies the nested keys in the union table (`analyst-smoke`, `setup-tasks-summary`).
 
 ## Not observed
 
@@ -952,3 +1039,5 @@ The error `details` object has no nested keys in these captures; its value conte
 - Transport of a changed sort, ad-hoc filter, or search text: not observable in the captures.
 - Exact values of masked flags and request bodies behind the opaque multipart marker: not observable in the captures.
 - Nested fields behind a `<deep>` capture truncation: not observable in the captures.
+- Values and nullability of array items beyond the first retained item: not observable in the captures.
+- The source of Leads field definitions and Leads layout sections on ordinary list and detail screens: not observable in the captures.
