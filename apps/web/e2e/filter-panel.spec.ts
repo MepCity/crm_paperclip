@@ -1,5 +1,24 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
+
+/** Resolved custom property, so typography expectations follow the token. */
+async function computedToken(
+  page: Page,
+  property: "font-size" | "font-weight",
+  token: "--text-md" | "--text-sm" | "--font-weight-semibold",
+): Promise<string> {
+  return page.evaluate(
+    ({ property, token }) => {
+      const probe = document.createElement("span");
+      probe.style.setProperty(property, `var(${token})`);
+      document.body.append(probe);
+      const value = getComputedStyle(probe).getPropertyValue(property);
+      probe.remove();
+      return value;
+    },
+    { property, token },
+  );
+}
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
   await page.goto("/dev/ui");
@@ -20,10 +39,13 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   }
   for (const side of ["left", "right"]) await expect(panel).toHaveCSS(`padding-${side}`, "18px");
 
-  // Filter content: title about 15 px semibold; search field about 34 px high.
+  // Filter content: title about 15 px semibold maps to --text-md / --font-weight-semibold.
   const heading = panel.getByRole("heading", { name: "Filter Leads by" });
-  await expect(heading).toHaveCSS("font-size", "15px");
-  await expect(heading).toHaveCSS("font-weight", "600");
+  const titleSize = await computedToken(page, "font-size", "--text-md");
+  const semibold = await computedToken(page, "font-weight", "--font-weight-semibold");
+  const bodySize = await computedToken(page, "font-size", "--text-sm");
+  await expect(heading).toHaveCSS("font-size", titleSize);
+  await expect(heading).toHaveCSS("font-weight", semibold);
   const search = panel.getByRole("textbox", { name: "Search filter choices" });
   await expect(search).toHaveAttribute("placeholder", "Search");
   await expect(search).toHaveCSS("height", "34px");
@@ -37,11 +59,20 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
 
   const triggers = panel.getByRole("button");
   for (const trigger of await triggers.all()) {
-    // Filter content: group headings about 14 px semibold, downward arrow when open.
-    await expect(trigger).toHaveCSS("font-size", "14px");
-    await expect(trigger).toHaveCSS("font-weight", "600");
+    // Filter content: group headings about 14 px semibold via --text-sm / --font-weight-semibold.
+    await expect(trigger).toHaveCSS("font-size", bodySize);
+    await expect(trigger).toHaveCSS("font-weight", semibold);
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
     await expect(trigger.locator("svg")).toBeVisible();
+    expect(
+      await trigger.evaluate((element) => {
+        const icon = element.querySelector("svg");
+        const label = element.querySelector("span");
+        if (!icon || !label) return false;
+        const position = icon.compareDocumentPosition(label);
+        return (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+      }),
+    ).toBe(true);
   }
   const clippedLabel = panel
     .getByRole("button", { name: "System Defined Filters" })
@@ -51,9 +82,9 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
     true,
   );
   for (const row of await panel.getByRole("listitem").all()) {
-    // Filter content: checkbox rows about 30 px high with 14 px text.
+    // Filter content: checkbox rows about 30 px high; text role is --text-sm.
     await expect(row).toHaveCSS("height", "30px");
-    await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-size", "14px");
+    await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-size", bodySize);
     const box = row.locator('span[aria-hidden="true"]');
     // Selected / disabled: unselected boxes 15 × 15, 2 px #C5C4D3, 2–3 px corners.
     await expect(box).toHaveCSS("width", "15px");

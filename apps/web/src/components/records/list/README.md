@@ -16,7 +16,8 @@ Left filters, Search and Flow 6. No data access or criteria controls.
 | `selectedIds` | Controlled selected item IDs. Selection remains intact when searching or collapsing. |
 | `onSelectionChange` | Receives the next complete ID array; adds at the end or removes the toggled item, retaining other IDs. Disabled rows never call it. |
 
-Groups start open. Their headings support Enter and Space and expose `aria-expanded`.
+Groups start open. The expand icon precedes the heading label. Headings support
+Enter and Space and expose `aria-expanded`.
 Clipped headings retain the complete accessible name and a native title tooltip.
 The `/dev/ui` filter-panel demo uses synthetic items, includes a disabled row, and
 allows reviewers to demonstrate open/closed groups and filtered results.
