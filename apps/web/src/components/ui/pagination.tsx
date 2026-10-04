@@ -1,4 +1,4 @@
-import { buttonSizes, buttonStyles } from "./button";
+import { buttonSizes, buttonStyles } from "./button-styles";
 import { Link } from "./link";
 
 export interface PaginationProps {

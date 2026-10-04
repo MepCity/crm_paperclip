@@ -7,8 +7,9 @@ afterEach(cleanup);
 test("Skeleton announces loading and hides the placeholder", () => {
   const { container } = render(<Skeleton />);
 
-  const status = screen.getByRole("status", { name: "Loading" });
-  expect(status.getAttribute("aria-label")).toBe("Loading");
+  const status = screen.getByRole("status");
+  expect(status.textContent).toBe("Loading");
+  expect(status.hasAttribute("aria-label")).toBe(false);
   expect(status.className).toContain("sr-only");
   const placeholder = container.querySelector("[aria-hidden='true']");
   expect(placeholder).toBeTruthy();
@@ -19,7 +20,7 @@ test("Skeleton announces loading and hides the placeholder", () => {
 test("Skeleton row is a hidden placeholder with the same loading name", () => {
   const { container } = render(<Skeleton variant="row" />);
 
-  expect(screen.getByRole("status", { name: "Loading" })).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toBe("Loading");
   const placeholder = container.querySelector("[aria-hidden='true']");
   expect(placeholder?.className).toContain("h-4");
   expect(placeholder?.getAttribute("aria-hidden")).toBe("true");

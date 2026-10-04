@@ -80,11 +80,29 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
 
   const pagination = page.getByRole("region", { name: "pagination" });
   const firstPage = pagination.getByRole("group", { name: "First page" });
-  await expect(firstPage.getByText("Previous")).toHaveAttribute("aria-disabled", "true");
-  await expect(firstPage.getByRole("link", { name: "Next" })).toHaveAttribute(
-    "href",
-    "/dev/ui?page=2",
+  const disabledPrevious = firstPage.getByText("Previous");
+  const enabledNext = firstPage.getByRole("link", { name: "Next" });
+  await expect(disabledPrevious).toHaveAttribute("aria-disabled", "true");
+  expect(await disabledPrevious.getAttribute("class")).not.toContain("undefined");
+  const controlBox = (element: Element) => {
+    const style = getComputedStyle(element);
+    return {
+      paddingTop: style.paddingTop,
+      paddingRight: style.paddingRight,
+      paddingBottom: style.paddingBottom,
+      paddingLeft: style.paddingLeft,
+      borderTopWidth: style.borderTopWidth,
+      borderRightWidth: style.borderRightWidth,
+      borderBottomWidth: style.borderBottomWidth,
+      borderLeftWidth: style.borderLeftWidth,
+      borderTopStyle: style.borderTopStyle,
+      borderTopColor: style.borderTopColor,
+    };
+  };
+  expect(await disabledPrevious.evaluate(controlBox)).toEqual(
+    await enabledNext.evaluate(controlBox),
   );
+  await expect(enabledNext).toHaveAttribute("href", "/dev/ui?page=2");
   const lastPage = pagination.getByRole("group", { name: "Last page" });
   await expect(lastPage.getByText("Next")).toHaveAttribute("aria-disabled", "true");
   await expect(lastPage.getByRole("link", { name: "Previous" })).toHaveAttribute(
@@ -101,6 +119,8 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(page.getByRole("alertdialog", { name: "Record saved" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeVisible();
   await expect(danger).toBeFocused();
+  await expectNoA11yViolations(page);
+  await expect(page.getByRole("alertdialog", { name: "Export started" })).toBeVisible();
   await expect(page.getByRole("alertdialog", { name: "Could not save" })).toBeHidden({
     timeout: 7000,
   });

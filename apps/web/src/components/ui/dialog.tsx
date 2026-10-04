@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import {
   Dialog as AriaDialog,
   type DialogProps as AriaDialogProps,
@@ -47,6 +47,75 @@ function isPromise(value: void | Promise<void>): value is Promise<void> {
   return typeof (value as Promise<void> | undefined)?.then === "function";
 }
 
+function ConfirmDialogSession({
+  title,
+  children,
+  confirmLabel,
+  cancelLabel,
+  variant,
+  onConfirm,
+  close,
+  descriptionId,
+  onPendingChange,
+}: ConfirmDialogProps & {
+  close: () => void;
+  descriptionId: string;
+  onPendingChange: (pending: boolean) => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const started = useRef(false);
+
+  useEffect(() => {
+    return () => onPendingChange(false);
+  }, [onPendingChange]);
+
+  function setPendingState(next: boolean) {
+    setPending(next);
+    onPendingChange(next);
+  }
+
+  return (
+    <>
+      <Heading slot="title" className="text-lg font-medium mb-4">
+        {title}
+      </Heading>
+      <p id={descriptionId} className="text-sm text-text-muted mb-4">
+        {children}
+      </p>
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" onPress={close} isDisabled={pending}>
+          {cancelLabel}
+        </Button>
+        <Button
+          variant={variant}
+          isPending={pending}
+          onPress={() => {
+            if (started.current) return;
+            started.current = true;
+            const result = onConfirm();
+            if (!isPromise(result)) {
+              close();
+              return;
+            }
+            setPendingState(true);
+            void result.then(
+              () => {
+                close();
+              },
+              () => {
+                started.current = false;
+                setPendingState(false);
+              },
+            );
+          }}
+        >
+          {confirmLabel}
+        </Button>
+      </div>
+    </>
+  );
+}
+
 export function ConfirmDialog({
   title,
   children,
@@ -55,8 +124,8 @@ export function ConfirmDialog({
   variant = "primary",
   onConfirm,
 }: ConfirmDialogProps) {
+  const descriptionId = useId();
   const [pending, setPending] = useState(false);
-  const started = useRef(false);
 
   return (
     <ModalOverlay
@@ -64,44 +133,20 @@ export function ConfirmDialog({
       className="fixed inset-0 z-50 bg-overlay/50 flex items-center justify-center p-4"
     >
       <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-md w-full p-6 outline-none">
-        <AriaDialog role="alertdialog" className="outline-none">
+        <AriaDialog role="alertdialog" aria-describedby={descriptionId} className="outline-none">
           {({ close }) => (
-            <>
-              <Heading slot="title" className="text-lg font-medium mb-4">
-                {title}
-              </Heading>
-              <p className="text-sm text-text-muted mb-4">{children}</p>
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" onPress={close} isDisabled={pending}>
-                  {cancelLabel}
-                </Button>
-                <Button
-                  variant={variant}
-                  isPending={pending}
-                  onPress={() => {
-                    if (started.current) return;
-                    started.current = true;
-                    const result = onConfirm();
-                    if (!isPromise(result)) {
-                      close();
-                      return;
-                    }
-                    setPending(true);
-                    void result.then(
-                      () => {
-                        close();
-                      },
-                      () => {
-                        started.current = false;
-                        setPending(false);
-                      },
-                    );
-                  }}
-                >
-                  {confirmLabel}
-                </Button>
-              </div>
-            </>
+            <ConfirmDialogSession
+              title={title}
+              confirmLabel={confirmLabel}
+              cancelLabel={cancelLabel}
+              variant={variant}
+              onConfirm={onConfirm}
+              close={close}
+              descriptionId={descriptionId}
+              onPendingChange={setPending}
+            >
+              {children}
+            </ConfirmDialogSession>
           )}
         </AriaDialog>
       </Modal>
