@@ -79,3 +79,36 @@ test("Menu skips disabled items and closes on Escape", async () => {
   expect(screen.queryByRole("menu")).toBeNull();
   await waitFor(() => expect(document.activeElement).toBe(trigger));
 });
+
+test("Measured menu displays a header and communicates single selection", async () => {
+  const user = userEvent.setup();
+  render(
+    <MenuTrigger>
+      <MenuButton>Organizations</MenuButton>
+      <Menu
+        appearance="measured"
+        aria-label="Organizations"
+        header={<p>Example identity</p>}
+        selectionMode="single"
+        selectedKeys={["current"]}
+      >
+        <MenuItem appearance="measured" id="current">
+          Current organization
+        </MenuItem>
+        <MenuItem appearance="measured" id="other">
+          Other organization
+        </MenuItem>
+      </Menu>
+    </MenuTrigger>,
+  );
+  await user.click(screen.getByRole("button", { name: "Organizations" }));
+  expect(screen.getByText("Example identity")).toBeTruthy();
+  expect(
+    screen
+      .getByRole("menuitemradio", { name: "Current organization" })
+      .getAttribute("aria-checked"),
+  ).toBe("true");
+  expect(
+    screen.getByRole("menuitemradio", { name: "Other organization" }).getAttribute("aria-checked"),
+  ).toBe("false");
+});

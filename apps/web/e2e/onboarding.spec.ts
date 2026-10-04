@@ -14,12 +14,12 @@ test("a new user creates an organization and returns to it from home", async ({ 
   const organization = await createOrganization(page, "Çağrı Şirketi Örnek");
   expect(organization).toEqual({ name: "Çağrı Şirketi Örnek", slug: "cagri-sirketi-ornek" });
   await page.reload();
-  await expect(page.getByRole("heading", { name: organization.name, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
   await expectNoA11yViolations(page);
 
   await page.goto("/");
   await expect(page).toHaveURL(`/o/${organization.slug}`);
-  await expect(page.getByRole("heading", { name: organization.name, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
 });
 
 test("a slug that is already in use is reported on the slug field", async ({ page, browser }) => {
