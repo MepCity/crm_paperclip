@@ -1,6 +1,6 @@
 # Leads — Module 1 entry and scope
 
-Status: read-only Module 1 research complete. The Convert dialog is outside Module 1 scope; its unobserved details are deferred to Deals research. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
+Status: read-only Module 1 research complete. Conversion dialog research is deferred under MEP-102 and does not block Module 1. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
 
 ## Purpose
 
@@ -19,7 +19,7 @@ All values in this subsection are **measured from screenshot** in CSS pixels usi
 | Detail Convert trigger | Interactive box x 1185–1266, y 70–102 (81 × 32); 1 px pale edge, approximately 6 px corners; interior vertical gradient includes `#FDFDFE`, `#F8F8FB`, `#F5F4F9`, and `#F3F2F8`; label's solid glyph pixels are `#313949`. The label is visually centered in this 32 px row. | Enabled in the observed record header; `leads-detail`. Bounds are from the captured control box and the colors from pixel samples in that box. Its hover, focus, and disabled variants were not captured. |
 | Detail More Options menu | White `#FFFFFF` panel over the page surface `#EEF1F9`; a visible highlighted option uses `#F0F4FC` and text pixels include `#313949`. | Open menu; `detail-more`. Panel geometry and menu item rhythm are already specified in `research/specs/record-detail.md`. |
 | List Actions menu | White `#FFFFFF` panel; a visible highlighted item uses `#F0F4FC`, text pixels include `#313949`, and a divider uses `#CED0E1`. | Open menu; `list-actions`. List toolbar placement is in `research/specs/list-views.md`. |
-| Conversion dialog | No screenshot exists. No dialog size, surface, spacing, typography, field placement, selected/disabled fill, validation border, or empty state can be measured. | Unknown. The safe capture tool blocks any click whose text or attributes include Convert, including the header trigger. |
+| Conversion dialog | No screenshot exists. Its dimensions, surfaces, spacing, typography, controls, and states are unmeasured. | Research deferred to MEP-102; the safe capture tool blocks the header trigger. |
 
 The measured palette above is local to the sampled components. Do not infer dialog styling from the header or menu. Recreate icons for their functions; do not reuse reference assets.
 
@@ -64,7 +64,7 @@ The observed detail record's Notes, Cadences, Attachments, Products, Open Activi
 
 1. **Reach a Lead.** Select Leads in the shell, load the default or a saved view, then activate a named Lead link. The populated default list and unconverted detail render as described in the linked specs. The initial plain list route briefly showed a blank hydration interval; it is not a confirmed empty state. Empty saved views retain headers and show **No Leads found.** with zero total. Network error states were not observed.
 2. **Inspect Leads actions.** Open **Actions** on the list or **More Options** on the detail page. Read the menu labels above; dismiss without selecting a result-producing command. No action-specific form, validation, success, empty, or error state was observed.
-3. **Conversion entry (unverified).** A **Convert** header control is visible and enabled on the observed Lead. The requested next step—opening its dialog—was unavailable because the capture tool rejects this control before clicking. Accordingly the Account/Contact create-versus-match choice, optional Deal switch and fields, owner selection, validation, empty/error states, and the final confirmation layout remain unobserved. The metadata establishes target modules/layouts and Deal field mappings only. Do not implement a guessed dialog from this spec.
+3. **Conversion entry (unverified).** A **Convert** header control is visible and enabled on the observed Lead. Its dialog could not be opened because the capture tool rejects this control before clicking. The metadata establishes target modules/layouts and Deal field mappings only. Dialog controls, validation, empty/error states, and request shapes are deferred to MEP-102; do not implement a guessed dialog from this spec.
 4. **Converted views.** Select **Converted Leads** or **My Converted Leads** to see the empty view structure observed in this organization. No actual conversion was run; the behavior of a converted record, list navigation after conversion, duplicate matching, and errors is unknown.
 
 ### Module 1 capability and dependency table
@@ -96,9 +96,9 @@ The observed detail record's Notes, Cadences, Attachments, Products, Open Activi
 | Record Overview and Timeline History | Used; Lead Image history event | Module 1 for Lead history display; full activity sources depend on later modules. |
 | Timeline Interactions, filters and signals | Empty for observed record | Later Activities/communications/signals; board scope decision. |
 | Lead status ribbon and inline field edit | Visible; edit result not exercised | Module 1 with Lead write API; validation behavior open. |
-| Convert Lead to Contact/Account; optional Deal | Visible on the observed unconverted Lead; no conversion executed; dialog unobserved | **Later — outside Module 1.** Conversion creates Account and Contact records and may create a Deal; those modules follow Leads. The dialog spec is deferred to Deals research. Board-provided read-only evidence is required before UI implementation. |
-| Converted-account/contact/deal bookkeeping and converted views | Fields and empty views configured | Depends on conversion and Contacts, Accounts, Deals. |
-| Mass Convert | Menu visible; not executed | Depends on conversion plus selection/bulk API and Contacts, Accounts, Deals. |
+| Convert Lead to Contact/Account; optional Deal | Visible on the observed unconverted Lead; no conversion executed; dialog unobserved | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals. Dialog research is deferred under MEP-102. |
+| Converted-account/contact/deal bookkeeping and converted views | Fields and empty views configured | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals conversion; dialog research is deferred under MEP-102. |
+| Mass Convert | Menu visible; not executed | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals conversion plus selection/bulk API; dialog research is deferred under MEP-102. |
 | Duplicates and merge | Menu visible; not executed | Depends on duplicate matching/merge capability; details unobserved. |
 | Approval, assignment rules, cadences, macros, blueprints | Menu/configuration entry points; automation counts zero or inactive | Not in use in captured setup; later automation/permissions. |
 | Notes | Empty for observed record | Later notes module. |
@@ -134,12 +134,9 @@ New captures: `leads-main` (plain list route, initial shell interval), `leads-de
 
 ## Open questions
 
-1. What does the **Convert** header trigger open? The permitted capture tool blocks the label before clicking, so the dialog was not observed. The board will provide read-only evidence when Deals research begins; do not bypass the tool guard. This question does not block Module 1.
-2. Which dialog controls choose new versus existing Account and Contact, and how are duplicates suggested or matched? What are the optional Deal toggle, four target fields, and owner selectors' labels, initial values, ordering, required markers, and enabled states?
-3. What are the dialog's exact pixel geometry, colors, typography, field focus/selection/disabled states, validation messages, empty choices, loading, failure, and cancel behavior? None is measurable without a dialog capture.
-4. Does the dialog label `Deal_Name` as **Potential Name**, as the Lead conversion mapping does, or **Deal Name**, as Deal field metadata does? This is a metadata label difference; the rendered label is unknown.
-5. What conversion requests, query keys, body shapes, response fields, duplicate-handling outcomes, and post-conversion navigation occur? No conversion was run and no dialog preload was captured.
-6. Which listed menu entries are genuinely unique to Leads rather than shared across modules? Only their presence on Leads has been inspected. What are their enabled/disabled states after selection or for converted records?
-7. Which three custom views have records, if any, and which views are actually used beyond the two with `last_accessed_time`? The available metadata and captures do not establish that other configured views are unused.
-8. Which related lists are populated on other Leads, and does Connected Records contain entries? One observed record is empty in the rendered lists, and its related-count POST was blocked.
-9. What are list filter operators/validation, alternative presentation modes, inline edit outcomes, form submit errors, and actual conversion-related permissions? The linked specs document the visible entry points but not these unexecuted flows.
+1. **Conversion dialog, deferred to MEP-102:** What does the trigger open? Which controls choose new or existing Accounts and Contacts, handle duplicates, configure an optional Deal and owners, and what are their labels, initial values, order, required markers, permissions, and states? What are the dialog's measured layout, focus/disabled states, validation, empty/loading/error/cancel behavior, request and response shapes, and post-conversion navigation? The mapping calls `Deal_Name` **Potential Name**, while Deal metadata calls it **Deal Name**; its rendered label remains unknown. The capture tool blocks the trigger, and the board's read-only evidence request in MEP-102 does not block Module 1.
+2. In Module 1, should the detail header's **Convert** trigger remain visible but disabled, or be hidden? The reference shows it enabled, while Contacts, Accounts, and Deals are later dependencies; this requires a board decision.
+3. Which listed menu entries are genuinely unique to Leads rather than shared across modules? Only their presence on Leads has been inspected. What are their enabled/disabled states after selection or for converted records?
+4. Which three custom views have records, if any, and which views are actually used beyond the two with `last_accessed_time`? The available metadata and captures do not establish that other configured views are unused.
+5. Which related lists are populated on other Leads, and does Connected Records contain entries? One observed record is empty in the rendered lists, and its related-count POST was blocked.
+6. What are list filter operators/validation, alternative presentation modes, inline edit outcomes, and form submit errors? The linked specs document the visible entry points but not these unexecuted flows.
