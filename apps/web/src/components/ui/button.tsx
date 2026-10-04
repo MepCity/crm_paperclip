@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import {
   Button as AriaButton,
   type ButtonProps as AriaButtonProps,
@@ -11,12 +12,13 @@ import { Spinner } from "./spinner";
 export { buttonSizes, buttonStyles };
 
 const buttonBase =
-  "inline-flex items-center justify-center font-medium rounded-md outline-none transition-colors " +
+  "inline-flex items-center justify-center outline-none transition-colors " +
   "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-focus-visible:ring-offset-2 " +
   "data-disabled:opacity-50 data-disabled:cursor-not-allowed " +
   "data-pending:opacity-50 data-pending:cursor-wait";
 
 export interface ButtonProps extends AriaButtonProps {
+  ref?: Ref<HTMLButtonElement>;
   variant?: keyof typeof buttonStyles;
   size?: keyof typeof buttonSizes;
 }
