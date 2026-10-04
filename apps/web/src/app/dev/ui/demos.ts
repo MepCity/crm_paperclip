@@ -11,8 +11,10 @@ import SelectDemo from "@/components/ui/select.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
+import TokensDemo from "@/components/ui/tokens.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
   link: LinkDemo,

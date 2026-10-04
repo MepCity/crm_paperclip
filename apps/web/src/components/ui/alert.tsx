@@ -11,9 +11,13 @@ export function Alert({
   title?: string;
 }) {
   let classes = "p-4 rounded-md flex gap-3 ";
+  let iconClasses = "w-5 h-5 shrink-0";
   let Icon = Icons.info;
   if (variant === "info") {
-    classes += "bg-primary/5 text-primary ";
+    // The primary token measures 4.39:1 on its own 5% tint, below the 4.5:1 ADR 0003
+    // requires, so only the icon carries the primary colour.
+    classes += "bg-primary/5 text-text ";
+    iconClasses += " text-primary";
     Icon = Icons.info;
   }
   if (variant === "success") {
@@ -31,7 +35,7 @@ export function Alert({
 
   return (
     <div className={classes} role="alert">
-      <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+      <Icon className={iconClasses} aria-hidden="true" />
       <div>
         {title && <h3 className="font-medium mb-1">{title}</h3>}
         <div className="text-sm">{children}</div>
