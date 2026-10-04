@@ -143,14 +143,23 @@ what the "no colour constants" rule forbids.
 | `--size-rail-row-gap` | `6px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "6 px between rows" | from spec |
 | `--size-rail-row-pitch` | `36px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "starts y 55, then 36 px vertical pitch" | from spec |
 | `--size-rail-nested-row-pitch` | `32px` | app-shell.md › Rail/nested link › Row and indent › "32 px pitch" | from spec |
+| `--size-rail-nested-row-gap` | `2px` | Rail/nested link: 32 px pitch minus 30 px row | from spec |
 | `--size-rail-inset` | `10px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "10 px side inset" | from spec |
 | `--size-rail-nested-indent` | `30px` | app-shell.md › Rail/nested link › Row and indent › "Indent from fixed-link label is 30 px" | from spec |
+| `--size-rail-nested-icon-offset` | `28px` | Rail/nested link: icon x 48 minus fixed icon x 20 | from spec |
+| `--size-rail-nested-label-gap` | `14px` | Rail/nested link: label x 78 minus icon right x 64 | from spec |
 | `--size-rail-label-gap` | `12px` | app-shell.md › Rail/pinned link › Icon, label, and type › "label starts x 48; approx. 12 px gap" | from spec |
 | `--size-rail-icon` | `16px` | app-shell.md › Rail/pinned link › "icon approx. 16 x 16 at x 20-36"; also Rail/nested link › "icon approx. 16 x 16" | from spec |
 | `--size-rail-group-icon` | `14px` | app-shell.md › Rail/group heading › Row, icon, label, chevron › "icon approx. 14 x 14 at x 21-35" | from spec |
 | `--size-rail-search-icon` | `15px` | app-shell.md › Rail/local Search › Input box › "Search icon approx. 15 x 15 at x 20-35" | from spec |
 | `--size-rail-scrollbar-width` | `8px` | app-shell.md › Rail/scrollbar › Visible thumb › "x 312-320 ... 8 px wide" | from spec |
 | `--size-rail-group-gap` | `9px` | app-shell.md › Rail/group heading › Row, icon, label, chevron › "top gap after local Search is about 9 px" | from spec |
+| `--size-rail-header-top` | `11px` | Rail/product selector: top y 11 | from spec |
+| `--size-rail-nav-start` | `5px` | Rail/pinned rows: y 55 minus the 50 px header | from spec |
+| `--size-rail-product-gap` | `8px` | Rail/product selector: label x 53 minus mark right x 45 | from spec |
+| `--size-rail-pinned-region` | `227px` | Rail/teamspace divider: y 277 minus the 50 px header | from spec |
+| `--size-rail-teamspace-top` | `11px` | Rail/teamspace selector: y 289 minus divider bottom y 278 | from spec |
+| `--size-rail-teamspace-group-gap` | `49px` | Rail/group heading: top y 362 minus selector bottom y 313; reserves later Search footprint | from spec |
 | `--size-rail-header-inset` | `15px` | app-shell.md › Rail/product selector › Visible occupied box › "x 15-150, y 11-41" | from spec |
 | `--size-rail-product-selector-height` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "30 high" | from spec |
 | `--size-rail-product-mark` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "Product mark occupies x 15-45, 30 x 30" | from spec |
@@ -160,6 +169,7 @@ what the "no colour constants" rule forbids.
 | `--size-rail-overflow-trigger` | `30px` | app-shell.md › Rail/teamspace overflow trigger › Icon bounds › "Open trigger gains `#374D7F` fill in a 30 x 30 box" | from spec |
 | `--size-topbar-icon` | `18px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "other line icons about 18 x 18"; "applications grid is about 18 x 18" | from spec |
 | `--size-topbar-control-pitch` | `34px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "icon centres roughly 34 px apart after quick create" | from spec |
+| `--size-topbar-control-gap` | `2px` | Top bar/right controls: 34 px centres minus half the 34 px settings slot and half the 30 px avatar | from spec |
 | `--size-topbar-quick-create` | `28px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Quick-create box x 1176-1204, y 10-38 (28 x 28)" | from spec |
 | `--size-topbar-avatar` | `30px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--size-topbar-search-width` | `235px` | app-shell.md › Top bar/global search › Footprint › "x 929-1164, y 8-40; 235 x 32" | from spec |
@@ -228,42 +238,6 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
-
-### Typeface
-
-The board selected **Figtree** on 2026-10-04 (MEP-66). We serve our chosen open-license
-font from its official source; we never copy the reference CRM's font files.
-
-- Official file: https://github.com/erikdkennedy/figtree/raw/master/fonts/variable/Figtree%5Bwght%5D.ttf
-- Embedded version: `Version 2.001`; variable `wght` axis 300–900, normal style.
-- File: `apps/web/src/app/fonts/figtree/figtree-variable.ttf`, unchanged bytes.
-- SHA-256: `c8d9e77bb970c18f7b55fd2d8c91f86c9e9cc42696da9c3e7bc4fffba1d3ef5a`.
-- License: SIL OFL 1.1, unchanged `OFL.txt` beside the font.
-- Official license: https://github.com/erikdkennedy/figtree/raw/master/OFL.txt
-- License SHA-256: `140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268`.
-
-To replace the typeface, update `--font-sans`, the single `@font-face` in `tokens.css`,
-and the font folder with the official file and license. Then refit the size and weight
-measurements in `typography.md`, update the tokens and this table, and verify the checksums,
-rendered widths and weight axis. Components inherit `--font-sans` and need no family edits.
-
-### Shell coordinate tokens
-
-The shell also needs these offsets to preserve positions when later controls are omitted.
-They are derived from the same Visual layout rows, not new measurements.
-
-| Token | Value | Spec row and derivation | Status |
-| --- | --- | --- | --- |
-| `--size-topbar-control-gap` | `2px` | Top bar/right controls: 34 px centres minus half the 34 px settings slot and half the 30 px avatar | from spec |
-| `--size-rail-nested-row-gap` | `2px` | Rail/nested link: 32 px pitch minus 30 px row | from spec |
-| `--size-rail-nested-icon-offset` | `28px` | Rail/nested link: icon x 48 minus fixed icon x 20 | from spec |
-| `--size-rail-nested-label-gap` | `14px` | Rail/nested link: label x 78 minus icon right x 64 | from spec |
-| `--size-rail-header-top` | `11px` | Rail/product selector: top y 11 | from spec |
-| `--size-rail-nav-start` | `5px` | Rail/pinned rows: y 55 minus the 50 px header | from spec |
-| `--size-rail-product-gap` | `8px` | Rail/product selector: label x 53 minus mark right x 45 | from spec |
-| `--size-rail-pinned-region` | `227px` | Rail/teamspace divider: y 277 minus the 50 px header | from spec |
-| `--size-rail-teamspace-top` | `11px` | Rail/teamspace selector: y 289 minus divider bottom y 278 | from spec |
-| `--size-rail-teamspace-group-gap` | `49px` | Rail/group heading: top y 362 minus selector bottom y 313; reserves later Search footprint | from spec |
 
 ### Measured values that carry no token
 

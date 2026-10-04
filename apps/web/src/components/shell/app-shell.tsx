@@ -22,6 +22,7 @@ export function AppShell({
 }) {
   const [title, setTitle] = useState("Loading");
   const [railVisible, setRailVisible] = useState<boolean | null>(null);
+  const mainContent = useRef<HTMLElement>(null);
   const showControl = useRef<HTMLButtonElement>(null);
   const hideControl = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -40,6 +41,10 @@ export function AppShell({
       <div className="flex h-dvh bg-surface pb-(--size-utility-strip-height)">
         <Link
           href="#main-content"
+          onClick={(event) => {
+            event.preventDefault();
+            mainContent.current?.focus();
+          }}
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:p-3 focus:text-text"
         >
           Skip to content
@@ -71,18 +76,20 @@ export function AppShell({
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="relative flex h-(--size-topbar-height) shrink-0 items-center justify-between gap-2 border-b border-topbar-border bg-topbar-surface px-(--size-topbar-title-inset)">
             <div className="flex min-w-0 items-center gap-2">
-              <Button
-                ref={showControl}
-                variant="icon"
-                size="compact"
-                aria-label="Show Menu"
-                aria-controls="navigation-rail"
-                aria-expanded={false}
-                onPress={() => toggleRail(true)}
-                className={`${railVisible === null ? "md:hidden" : railVisible ? "hidden" : "inline-flex"} size-(--size-topbar-avatar) shrink-0`}
-              >
-                <Icons.showMenu className="size-(--size-topbar-icon)" aria-hidden />
-              </Button>
+              {railVisible !== true && (
+                <Button
+                  ref={showControl}
+                  variant="icon"
+                  size="compact"
+                  aria-label="Show Menu"
+                  aria-controls="navigation-rail"
+                  aria-expanded={false}
+                  onPress={() => toggleRail(true)}
+                  className={`${railVisible === null ? "md:hidden" : ""} size-(--size-topbar-avatar) shrink-0`}
+                >
+                  <Icons.showMenu className="size-(--size-topbar-icon)" aria-hidden />
+                </Button>
+              )}
               <h1 className="truncate text-xl font-semibold text-text">{title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-(--size-topbar-control-gap)">
@@ -98,6 +105,7 @@ export function AppShell({
             </div>
           </header>
           <main
+            ref={mainContent}
             id="main-content"
             tabIndex={-1}
             className="min-h-0 flex-1 overflow-auto bg-surface outline-none"

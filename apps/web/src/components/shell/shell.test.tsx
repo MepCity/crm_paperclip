@@ -237,3 +237,17 @@ test("PageHeader supplies description and actions without repeating a title", ()
   view.rerender(<PageHeader />);
   expect(view.container.textContent).toBe("");
 });
+
+test("Skip to content transfers focus to the main landmark", async () => {
+  const keyboard = userEvent.setup();
+  render(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Home" />
+    </AppShell>,
+  );
+  await keyboard.tab();
+  const skip = screen.getByRole("link", { name: "Skip to content" });
+  expect(document.activeElement).toBe(skip);
+  await keyboard.keyboard("{Enter}");
+  expect(document.activeElement).toBe(screen.getByRole("main"));
+});

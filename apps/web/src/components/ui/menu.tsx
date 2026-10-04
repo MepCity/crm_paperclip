@@ -72,7 +72,9 @@ export function Menu<T extends object>({
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}
       <AriaMenu
         {...props}
-        className={appearance === "measured" ? "p-(--size-menu-inset) outline-none" : "p-1 outline-none"}
+        className={
+          appearance === "measured" ? "p-(--size-menu-inset) outline-none" : "p-1 outline-none"
+        }
       />
     </Popover>
   );
