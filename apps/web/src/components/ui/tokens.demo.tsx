@@ -130,6 +130,72 @@ const WEIGHT_TOKENS = [
   "--font-weight-semibold",
 ] as const;
 
+/** Adopted roles from typography.md, Recommendation. Values come only from tokens. */
+const TYPE_ROLES = [
+  {
+    role: "Product selector",
+    labels: ["Workqueue"],
+    size: "--text-base",
+    weight: "--font-weight-semibold",
+  },
+  { role: "Page title", labels: ["Home"], size: "--text-xl", weight: "--font-weight-semibold" },
+  {
+    role: "Rail fixed link",
+    labels: ["Workqueue", "Reports"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Rail active link",
+    labels: ["Home"],
+    size: "--text-md",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Teamspace selector",
+    labels: ["Workqueue"],
+    size: "--text-base",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Group heading",
+    labels: ["Integrations"],
+    size: "--text-md",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Rail child link",
+    labels: ["Documents"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Rail Search placeholder",
+    labels: ["Search records"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Top-bar search placeholder",
+    labels: ["Search records"],
+    size: "--text-sm",
+    weight: "--font-weight-normal",
+  },
+  { role: "Menu item", labels: ["Reports"], size: "--text-md", weight: "--font-weight-normal" },
+  {
+    role: "Utility label",
+    labels: ["My Pins"],
+    size: "--text-2xs",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Help utility label",
+    labels: ["Help"],
+    size: "--text-xs",
+    weight: "--font-weight-semibold",
+  },
+] as const;
+
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
@@ -380,6 +446,26 @@ export default function TokensDemo() {
             ))}
           </ul>
         </Group>
+      </section>
+
+      <section className="space-y-4" aria-label="Type roles">
+        <h3 className="text-lg font-semibold text-text">Type roles</h3>
+        <ul className="space-y-2">
+          {TYPE_ROLES.flatMap(({ role, labels, size, weight }) =>
+            labels.map((label) => (
+              <li key={`${role}-${label}`} className="flex flex-wrap items-baseline gap-x-4">
+                <span
+                  data-type-role={role}
+                  style={{ fontSize: `var(${size})`, fontWeight: `var(${weight})` }}
+                  className="inline-block text-text"
+                >
+                  {label}
+                </span>
+                <code className="text-xs text-text-muted">{role}</code>
+              </li>
+            )),
+          )}
+        </ul>
       </section>
 
       <section className="space-y-4">

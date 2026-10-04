@@ -39,7 +39,7 @@ ADR 0001 deferred two UI decisions: the headless component primitives and the UI
 - Interaction states are styled from React Aria's data attributes (`data-hovered`, `data-pressed`, `data-focus-visible`, `data-disabled`, `data-invalid`).
 - One light theme. Tokens are CSS variables, so a dark theme can be added without touching components.
 - Token values are derived from the measured look of the reference CRM. The **Visual layout** sections of the specs in `research/specs/` are their only source, and `apps/web/src/components/ui/README.md` lists the source of every token. Screens of our own that have no counterpart in the reference CRM use the same tokens.
-- The typeface is set by the single `--font-sans` token (board decision, 2026-10-04, MEP-63). It is an open-licence typeface whose measured widths, x-height and weights are closest to the reference look, and the board sees the candidate before it is adopted. Its files come from the typeface's own official source and are served by our app. Replacing the typeface later means changing that token and its font-face declaration and nothing else.
+- The typeface is set by the single `--font-sans` token (board decision, 2026-10-04, MEP-63). It is an open-licence typeface whose measured widths, x-height and weights are closest to the reference look, and the board sees the candidate before it is adopted. Its files come from the typeface's own official source and are served by our app. Replacing the typeface later means changing that token and its font-face declaration and nothing else. Selected on 2026-10-04 (MEP-66): Figtree, variable `wght` 300–900, SIL OFL 1.1, with bold text at weight 510 through `--font-weight-semibold`.
 
 ### 3. Server and client code
 
