@@ -10,7 +10,11 @@ const expectedIcons = [
   "success",
   "info",
   "warning",
+  "check",
+  "calendar",
   "chevronDown",
+  "chevronLeft",
+  "chevronRight",
   "close",
 ] as const;
 

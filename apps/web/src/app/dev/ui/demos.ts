@@ -3,19 +3,26 @@ import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
 import ButtonDemo from "@/components/ui/button.demo";
 import CardDemo from "@/components/ui/card.demo";
+import CheckboxDemo from "@/components/ui/checkbox.demo";
+import ComboBoxDemo from "@/components/ui/combo-box.demo";
+import DatePickerDemo from "@/components/ui/date-picker.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
 import EmptyStateDemo from "@/components/ui/empty-state.demo";
 import FormDemo from "@/components/ui/form.demo";
 import IconDemo from "@/components/ui/icon.demo";
 import LinkDemo from "@/components/ui/link.demo";
 import MenuDemo from "@/components/ui/menu.demo";
+import NumberFieldDemo from "@/components/ui/number-field.demo";
 import PaginationDemo from "@/components/ui/pagination.demo";
 import PopoverDemo from "@/components/ui/popover.demo";
+import RadioGroupDemo from "@/components/ui/radio-group.demo";
 import SelectDemo from "@/components/ui/select.demo";
 import SkeletonDemo from "@/components/ui/skeleton.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
+import SwitchDemo from "@/components/ui/switch.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
+import TextAreaDemo from "@/components/ui/text-area.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 import ToastDemo from "@/components/ui/toast.demo";
 import TokensDemo from "@/components/ui/tokens.demo";
@@ -30,6 +37,13 @@ export const demos: Record<string, React.ComponentType> = {
   alert: AlertDemo,
   card: CardDemo,
   "text-field": TextFieldDemo,
+  "text-area": TextAreaDemo,
+  "number-field": NumberFieldDemo,
+  checkbox: CheckboxDemo,
+  switch: SwitchDemo,
+  "radio-group": RadioGroupDemo,
+  "date-picker": DatePickerDemo,
+  "combo-box": ComboBoxDemo,
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,
