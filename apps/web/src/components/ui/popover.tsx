@@ -17,16 +17,26 @@ const popoverClass = "rounded-md border border-border bg-surface shadow-lg outli
 export function Popover({
   title,
   children,
+  hideTitle = false,
+  contentClassName,
   className,
   ...props
-}: Omit<AriaPopoverProps, "children"> & { title: string; children: ReactNode }) {
+}: Omit<AriaPopoverProps, "children"> & {
+  title: string;
+  children: ReactNode;
+  hideTitle?: boolean;
+  contentClassName?: string;
+}) {
   return (
     <AriaPopover
       {...props}
       className={composeRenderProps(className, (extra) => `${popoverClass} ${extra ?? ""}`)}
     >
-      <AriaDialog className="p-4 outline-none">
-        <Heading slot="title" className="mb-2 text-base font-medium text-text">
+      <AriaDialog className={`p-4 outline-none ${contentClassName ?? ""}`}>
+        <Heading
+          slot="title"
+          className={hideTitle ? "sr-only" : "mb-2 text-base font-medium text-text"}
+        >
           {title}
         </Heading>
         {children}

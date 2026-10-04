@@ -84,6 +84,17 @@ test("Select marks its trigger invalid from form field errors", () => {
   expect(screen.getByRole("button", { name: /Fruit/ }).getAttribute("data-invalid")).toBe("true");
 });
 
+test("Select can keep its label accessible without showing it", () => {
+  render(
+    <Select label="Order" hideLabel items={fruits}>
+      {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+    </Select>,
+  );
+
+  expect(screen.getByText("Order").className).toContain("sr-only");
+  expect(screen.getByRole("button", { name: /Order/ })).toBeTruthy();
+});
+
 test("Select in the disabled state cannot be opened", async () => {
   const user = userEvent.setup();
   render(<FruitSelect isDisabled />);

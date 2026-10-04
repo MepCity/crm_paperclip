@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
-import type { FieldValue, ListQuery, RecordData, RecordService } from "../contract";
+import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
 import { leadsMetadata } from "./metadata";
 import { matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { fullName, generateFixtureLeads } from "./seed";
@@ -11,15 +11,52 @@ interface FixtureStore {
   records: Map<string, RecordData>;
   nextId: bigint;
 }
-const stores = new Map<string, FixtureStore>();
+const storeKey = Symbol.for("mepcity.records.fixture.stores");
+const runtime = globalThis as typeof globalThis & {
+  [storeKey]?: Map<string, FixtureStore>;
+};
+runtime[storeKey] ??= new Map<string, FixtureStore>();
+const stores = runtime[storeKey];
 const copy = <T>(value: T): T => structuredClone(value);
+const stringFields = new Set(
+  leadsMetadata.fields
+    .filter(
+      (field) =>
+        !["integer", "currency", "double", "boolean", "multi_module_lookup"].includes(
+          field.dataType,
+        ),
+    )
+    .map((field) => field.apiName),
+);
+const normalizeInput = (input: RecordInput): RecordInput =>
+  copy(
+    Object.fromEntries(
+      Object.entries(input).map(([name, value]) => [
+        name,
+        value === "" && stringFields.has(name) ? null : value,
+      ]),
+    ),
+  );
 
 export function createFixtureRecordService(context: OrgContext): RecordService {
   const ctx = { ...context };
   let store = stores.get(ctx.orgId);
   if (!store) {
     store = {
-      records: new Map(generateFixtureLeads().map((record) => [record.id, record])),
+      records: new Map(
+        generateFixtureLeads().map((record) => [
+          record.id,
+          {
+            ...record,
+            fields: {
+              ...record.fields,
+              Owner: ctx.userId,
+              Created_By: ctx.userId,
+              Modified_By: ctx.userId,
+            },
+          },
+        ]),
+      ),
       nextId: 200000000000000000n,
     };
     stores.set(ctx.orgId, store);
@@ -87,13 +124,14 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
     },
     async create(module, input) {
       moduleExists(module);
-      validateInput(input, false);
+      const normalized = normalizeInput(input);
+      validateInput(normalized, false);
       const id = String(state.nextId++);
       const fields: Record<string, FieldValue> = Object.fromEntries(
         leadsMetadata.fields.map((field) => [field.apiName, null]),
       );
       const now = new Date().toISOString();
-      Object.assign(fields, copy(input), {
+      Object.assign(fields, normalized, {
         id,
         Owner: ctx.userId,
         Created_By: ctx.userId,
@@ -108,10 +146,11 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
     },
     async update(module, id, input) {
       const record = recordFor(module, id);
-      validateInput(input, true);
+      const normalized = normalizeInput(input);
+      validateInput(normalized, true);
       const fields: Record<string, FieldValue> = {
         ...record.fields,
-        ...copy(input),
+        ...normalized,
         Modified_By: ctx.userId,
         Modified_Time: new Date().toISOString(),
       };

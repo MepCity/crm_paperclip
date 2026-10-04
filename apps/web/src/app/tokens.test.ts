@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 
 const directory = dirname(fileURLToPath(import.meta.url));
-const css = readFileSync(resolve(directory, "../../app/tokens.css"), "utf8");
-const readme = readFileSync(resolve(directory, "README.md"), "utf8");
-const demo = readFileSync(resolve(directory, "tokens.demo.tsx"), "utf8");
+const css = readFileSync(resolve(directory, "tokens.css"), "utf8");
+const readme = readFileSync(resolve(directory, "../components/ui/README.md"), "utf8");
+const demo = readFileSync(resolve(directory, "../components/ui/tokens.demo.tsx"), "utf8");
 const listSpec = readFileSync(
-  resolve(directory, "../../../../../research/specs/list-views.md"),
+  resolve(directory, "../../../../research/specs/list-views.md"),
   "utf8",
 );
 
@@ -23,6 +23,8 @@ const LIST_PASS = {
   "--color-primary-gradient-start": "#5767f6",
   "--color-primary-gradient-end": "#154ec5",
   "--color-primary-divider": "#c3c8f4",
+  "--color-primary-disabled": "#adb3ee",
+  "--color-popover-sort-border": "#ced0e1",
   "--color-surface-selected": "#f0f4fc",
   "--color-surface-active": "#edf0f9",
   "--color-text-strong": "#202123",
@@ -30,6 +32,16 @@ const LIST_PASS = {
   "--font-weight-medium": "500",
   "--text-13": "0.8125rem",
   "--radius-xl": "1rem",
+  "--size-popover-sort-field-top": "57px",
+  "--size-popover-sort-inset-inline": "31px",
+  "--size-popover-sort-inset-end": "39px",
+  "--size-popover-sort-field-gap": "15px",
+  "--size-popover-sort-label-gap": "18px",
+  "--size-popover-sort-actions-offset": "20px",
+  "--size-popover-sort-button-height": "27px",
+  "--size-popover-sort-cancel-width": "66.5px",
+  "--size-popover-sort-apply-width": "60px",
+  "--size-popover-sort-button-gap": "8px",
 } as const;
 
 function cssTokens(source: string): { name: string; value: string }[] {
