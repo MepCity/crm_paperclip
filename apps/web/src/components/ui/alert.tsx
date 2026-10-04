@@ -1,36 +1,35 @@
 import type { ReactNode } from "react";
 import { Icons } from "./icon";
 
+const alertStyles = {
+  info: "bg-primary/5 text-primary",
+  success: "bg-success/5 text-success",
+  warning: "bg-warning/5 text-warning",
+  danger: "bg-danger/5 text-danger",
+} as const;
+
+const alertIcons = {
+  info: Icons.info,
+  success: Icons.success,
+  warning: Icons.warning,
+  danger: Icons.error,
+} as const;
+
+const alertBase = "p-4 rounded-md flex gap-3";
+
 export function Alert({
   children,
   variant = "info",
   title,
 }: {
   children: ReactNode;
-  variant?: "info" | "success" | "warning" | "danger";
+  variant?: keyof typeof alertStyles;
   title?: string;
 }) {
-  let classes = "p-4 rounded-md flex gap-3 ";
-  let Icon = Icons.info;
-  if (variant === "info") {
-    classes += "bg-primary/5 text-primary ";
-    Icon = Icons.info;
-  }
-  if (variant === "success") {
-    classes += "bg-success/5 text-success ";
-    Icon = Icons.success;
-  }
-  if (variant === "warning") {
-    classes += "bg-warning/5 text-warning ";
-    Icon = Icons.warning;
-  }
-  if (variant === "danger") {
-    classes += "bg-danger/5 text-danger ";
-    Icon = Icons.error;
-  }
+  const Icon = alertIcons[variant];
 
   return (
-    <div className={classes} role="alert">
+    <div className={`${alertBase} ${alertStyles[variant]}`} role="alert">
       <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
       <div>
         {title && <h3 className="font-medium mb-1">{title}</h3>}
