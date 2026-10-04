@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const POST = apiRoute(
   async (input) =>
     (
-      await operations.count.run(
+      await operations.bulk.run(
         { records: getRecordService(input.ctx), members: await listMembers(input.ctx) },
         input,
       )

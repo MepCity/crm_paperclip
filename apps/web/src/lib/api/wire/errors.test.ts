@@ -7,7 +7,7 @@ import {
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   decodeError,
   encodeError,
@@ -48,6 +48,17 @@ describe("encodeError / decodeError", () => {
       expect(decoded.fieldErrors).toEqual(error.fieldErrors);
       expect(decoded.fieldErrors).not.toBe(error.fieldErrors);
     }
+  });
+
+  it("encodes field errors from a second module instance", async () => {
+    vi.resetModules();
+    const { ValidationError: OtherValidationError } = await import("@crm/core/errors");
+    const error = new OtherValidationError(fieldErrors);
+    expect(error).not.toBeInstanceOf(ValidationError);
+    expect(encodeError(error)).toMatchObject({
+      status: 400,
+      body: { details: { fields: fieldErrors } },
+    });
   });
 
   it("does not copy a validation stack or share field-error arrays", () => {
