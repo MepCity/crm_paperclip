@@ -4,6 +4,7 @@ import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createClientRecordService } from "./client-record-service";
 import { useCreateRecord, useRecord, useRecordCount, useRecordList } from "./hooks";
 import type { ClientRecordService } from "./http-record-service";
 import { ApiProvider } from "./provider";
@@ -17,13 +18,11 @@ const ctx = {
 };
 
 function createService(): ClientRecordService {
-  const records = createFixtureRecordService(ctx);
-  return {
-    ...records,
+  return createClientRecordService(createFixtureRecordService(ctx), {
     listUsers: async () => [
       { userId: ctx.userId, name: "Hooks User", email: "hooks@example.test" },
     ],
-  };
+  });
 }
 
 function wrapper(service: ClientRecordService) {

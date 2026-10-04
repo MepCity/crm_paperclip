@@ -6,7 +6,8 @@ Screens that load CRM data in the browser use this folder only. Route paths and
 ## Setup
 
 Wrap the screen tree in `ApiProvider` with the active organization slug. Tests
-may pass `service` with the fixture-backed `RecordService` instead of HTTP.
+may pass `service` from `createClientRecordService(fixture, { listUsers })`
+instead of HTTP.
 
 ```tsx
 import { ApiProvider } from "@/lib/api/client/provider";
@@ -26,7 +27,7 @@ export function LeadsListScreen({ orgSlug }: { orgSlug: string }) {
 | Hook | Purpose |
 | --- | --- |
 | `useModule` | Module metadata (fields and layout) |
-| `useViews` | View inventory for a module |
+| `useViews` | View summaries (`id`, `name`, flags); use `useView` for the full definition |
 | `useView` | One view definition |
 | `useRecordList` | Paginated list; keeps the previous page while the next loads |
 | `useRecordCount` | Total count for a view and restrictions |

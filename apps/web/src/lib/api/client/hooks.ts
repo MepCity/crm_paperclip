@@ -25,7 +25,7 @@ export function useViews(module: ModuleApiName) {
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.views(module),
-    queryFn: () => service.listViews(module),
+    queryFn: () => service.listViewSummaries(module),
   });
 }
 

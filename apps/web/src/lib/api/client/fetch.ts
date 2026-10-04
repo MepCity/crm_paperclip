@@ -35,9 +35,19 @@ export async function apiFetch(
   });
   if (response.status === 204) return null;
   const text = await response.text();
-  const parsed: unknown = text ? JSON.parse(text) : null;
-  if (response.ok) return parsed;
-  const error = decodeError(response.status, parsed);
+  let parsed: unknown = null;
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = undefined;
+    }
+  }
+  if (response.ok) {
+    if (parsed === undefined && text) throw decodeError(response.status, null);
+    return parsed;
+  }
+  const error = decodeError(response.status, parsed === undefined ? null : parsed);
   if (response.status === 401) redirectToSignIn();
   throw error;
 }

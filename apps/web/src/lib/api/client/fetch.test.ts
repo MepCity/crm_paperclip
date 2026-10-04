@@ -5,7 +5,7 @@ import {
   ValidationError,
 } from "@crm/core/errors";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { encodeError } from "@/lib/api/wire/errors";
+import { encodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
 import { apiFetch, CRM_ORG_HEADER, shouldRetryQuery } from "./fetch";
 
 const orgSlug = "test-org";
@@ -95,6 +95,32 @@ describe("apiFetch", () => {
       ),
     );
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("throws UnexpectedApiError for non-JSON error bodies", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<html>error</html>", { status: 500 })),
+    );
+    await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(UnexpectedApiError);
+    await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.not.toBeInstanceOf(SyntaxError);
+  });
+
+  it("redirects to sign-in on 401 without a JSON body", async () => {
+    const assign = vi.fn();
+    vi.stubGlobal("window", {
+      location: {
+        pathname: "/crm/acme/Leads",
+        search: "",
+        assign,
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 401 })),
+    );
+    await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(UnexpectedApiError);
+    expect(assign).toHaveBeenCalledWith("/sign-in?next=%2Fcrm%2Facme%2FLeads");
   });
 
   it("redirects to sign-in on 401", async () => {
