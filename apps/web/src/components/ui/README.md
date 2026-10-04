@@ -144,14 +144,23 @@ what the "no colour constants" rule forbids.
 | `--size-rail-row-gap` | `6px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "6 px between rows" | from spec |
 | `--size-rail-row-pitch` | `36px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "starts y 55, then 36 px vertical pitch" | from spec |
 | `--size-rail-nested-row-pitch` | `32px` | app-shell.md › Rail/nested link › Row and indent › "32 px pitch" | from spec |
+| `--size-rail-nested-row-gap` | `2px` | Rail/nested link: 32 px pitch minus 30 px row | from spec |
 | `--size-rail-inset` | `10px` | app-shell.md › Rail/pinned rows › Row box and rhythm › "10 px side inset" | from spec |
 | `--size-rail-nested-indent` | `30px` | app-shell.md › Rail/nested link › Row and indent › "Indent from fixed-link label is 30 px" | from spec |
+| `--size-rail-nested-icon-offset` | `28px` | Rail/nested link: icon x 48 minus fixed icon x 20 | from spec |
+| `--size-rail-nested-label-gap` | `14px` | Rail/nested link: label x 78 minus icon right x 64 | from spec |
 | `--size-rail-label-gap` | `12px` | app-shell.md › Rail/pinned link › Icon, label, and type › "label starts x 48; approx. 12 px gap" | from spec |
 | `--size-rail-icon` | `16px` | app-shell.md › Rail/pinned link › "icon approx. 16 x 16 at x 20-36"; also Rail/nested link › "icon approx. 16 x 16" | from spec |
 | `--size-rail-group-icon` | `14px` | app-shell.md › Rail/group heading › Row, icon, label, chevron › "icon approx. 14 x 14 at x 21-35" | from spec |
 | `--size-rail-search-icon` | `15px` | app-shell.md › Rail/local Search › Input box › "Search icon approx. 15 x 15 at x 20-35" | from spec |
 | `--size-rail-scrollbar-width` | `8px` | app-shell.md › Rail/scrollbar › Visible thumb › "x 312-320 ... 8 px wide" | from spec |
 | `--size-rail-group-gap` | `9px` | app-shell.md › Rail/group heading › Row, icon, label, chevron › "top gap after local Search is about 9 px" | from spec |
+| `--size-rail-header-top` | `11px` | Rail/product selector: top y 11 | from spec |
+| `--size-rail-nav-start` | `5px` | Rail/pinned rows: y 55 minus the 50 px header | from spec |
+| `--size-rail-product-gap` | `8px` | Rail/product selector: label x 53 minus mark right x 45 | from spec |
+| `--size-rail-pinned-region` | `227px` | Rail/teamspace divider: y 277 minus the 50 px header | from spec |
+| `--size-rail-teamspace-top` | `11px` | Rail/teamspace selector: y 289 minus divider bottom y 278 | from spec |
+| `--size-rail-teamspace-group-gap` | `49px` | Rail/group heading: top y 362 minus selector bottom y 313; reserves later Search footprint | from spec |
 | `--size-rail-header-inset` | `15px` | app-shell.md › Rail/product selector › Visible occupied box › "x 15-150, y 11-41" | from spec |
 | `--size-rail-product-selector-height` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "30 high" | from spec |
 | `--size-rail-product-mark` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "Product mark occupies x 15-45, 30 x 30" | from spec |
@@ -161,6 +170,7 @@ what the "no colour constants" rule forbids.
 | `--size-rail-overflow-trigger` | `30px` | app-shell.md › Rail/teamspace overflow trigger › Icon bounds › "Open trigger gains `#374D7F` fill in a 30 x 30 box" | from spec |
 | `--size-topbar-icon` | `18px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "other line icons about 18 x 18"; "applications grid is about 18 x 18" | from spec |
 | `--size-topbar-control-pitch` | `34px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "icon centres roughly 34 px apart after quick create" | from spec |
+| `--size-topbar-control-gap` | `2px` | Top bar/right controls: 34 px centres minus half the 34 px settings slot and half the 30 px avatar | from spec |
 | `--size-topbar-quick-create` | `28px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Quick-create box x 1176-1204, y 10-38 (28 x 28)" | from spec |
 | `--size-topbar-avatar` | `30px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--size-topbar-search-width` | `235px` | app-shell.md › Top bar/global search › Footprint › "x 929-1164, y 8-40; 235 x 32" | from spec |
@@ -279,7 +289,7 @@ gaps in the table above.
   the width Tailwind's `border` already gives.
 - **The absence of a rail border.** "sharp edge at x 320, with no distinct right border" is a note
   for the shell, not a value.
-- **Positions and viewport-derived bounds.** Rail rows start at y 55, the teamspace divider is at
+- **Other positions and viewport-derived bounds.** Except for the derived shell offsets above, the teamspace divider is at
   y 277-278, the selector row at y 289-313, the local Search at y 324-354, the Sales heading is
   centred at y 377, Activities is near y 601 and Integrations near y 729, the open menu is 187 high
   with a notch reaching x 322 and dividers at y 389 and y 430, the main content is 1150 x 757, and

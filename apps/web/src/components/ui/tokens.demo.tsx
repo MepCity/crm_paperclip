@@ -213,6 +213,21 @@ const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
 const SIZE_GROUPS = [
   {
+    label: "Shell positions",
+    tokens: [
+      "--size-topbar-control-gap",
+      "--size-rail-nested-row-gap",
+      "--size-rail-nested-icon-offset",
+      "--size-rail-nested-label-gap",
+      "--size-rail-header-top",
+      "--size-rail-nav-start",
+      "--size-rail-product-gap",
+      "--size-rail-pinned-region",
+      "--size-rail-teamspace-top",
+      "--size-rail-teamspace-group-gap",
+    ],
+  },
+  {
     label: "Shell regions",
     tokens: [
       "--size-rail-width",

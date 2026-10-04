@@ -20,6 +20,23 @@ export default function MenuDemo() {
           </MenuItem>
         </Menu>
       </MenuTrigger>
+      <MenuTrigger>
+        <MenuButton>Measured menu</MenuButton>
+        <Menu
+          appearance="measured"
+          aria-label="Measured options"
+          selectionMode="single"
+          selectedKeys={["current"]}
+          header={<p>Example identity</p>}
+        >
+          <MenuItem appearance="measured" id="current">
+            Current organization
+          </MenuItem>
+          <MenuItem appearance="measured" id="other">
+            Another organization
+          </MenuItem>
+        </Menu>
+      </MenuTrigger>
       <MenuButton isDisabled>Disabled menu</MenuButton>
       <p role="status">{action}</p>
     </div>
