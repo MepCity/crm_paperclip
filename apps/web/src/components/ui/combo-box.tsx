@@ -103,6 +103,13 @@ export function ComboBox<T extends object>({
         ? props.selectedKey
         : localKey;
   const inputValue = props.inputValue ?? localInput;
+  // RAC can commit more than once before React renders the controlled values.
+  const currentKey = useRef(key);
+  const currentInput = useRef(inputValue);
+  useLayoutEffect(() => {
+    currentKey.current = key;
+    currentInput.current = inputValue;
+  }, [key, inputValue]);
   const [search, setSearch] = useState<{ query: string } | null>(null);
   const [loaded, setLoaded] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -131,7 +138,10 @@ export function ComboBox<T extends object>({
 
   function changeInput(value: string) {
     setLocalInput(value);
-    props.onInputChange?.(value);
+    if (value !== currentInput.current) {
+      currentInput.current = value;
+      props.onInputChange?.(value);
+    }
   }
 
   function changeSelection(nextKey: Key | null, label: string) {
@@ -139,8 +149,11 @@ export function ComboBox<T extends object>({
     setSelected(nextKey === null ? null : { id: nextKey, label });
     changeInput(label);
     stopSearch();
-    props.onChange?.(nextKey);
-    props.onSelectionChange?.(nextKey);
+    if (nextKey !== currentKey.current) {
+      currentKey.current = nextKey;
+      props.onChange?.(nextKey);
+      props.onSelectionChange?.(nextKey);
+    }
   }
 
   useEffect(() => {
@@ -182,8 +195,11 @@ export function ComboBox<T extends object>({
           if (value === "") {
             setLocalKey(null);
             setSelected(null);
-            props.onChange?.(null);
-            props.onSelectionChange?.(null);
+            if (currentKey.current !== null) {
+              currentKey.current = null;
+              props.onChange?.(null);
+              props.onSelectionChange?.(null);
+            }
           }
           startSearch(value);
         },
