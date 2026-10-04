@@ -33,8 +33,9 @@ Without a global pnpm, prefix every command with `corepack`, for example `corepa
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Local PostgreSQL + migrations + app |
-| `pnpm test` | Unit, integration and end-to-end tests |
+| `pnpm test` | Unit, component, integration and end-to-end tests |
 | `pnpm test:unit` | Vitest, `*.test.ts`, no database |
+| `pnpm test:component` | Vitest, `*.test.tsx`, jsdom (UI components) |
 | `pnpm test:int` | Vitest, `*.int.test.ts`, real PostgreSQL |
 | `pnpm test:e2e` | Playwright (Chromium) against a production build |
 | `pnpm check` | Biome and type check |
