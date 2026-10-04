@@ -1,8 +1,37 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { Button } from "./button";
-import { Dialog, DialogTrigger } from "./dialog";
+import { ConfirmDialog, Dialog, DialogTrigger } from "./dialog";
+
+declare module "vitest" {
+  interface Matchers<R extends void | Promise<void> = void | Promise<void>, T = unknown> {
+    toHaveAccessibleDescription(expected: string): R;
+  }
+}
+
+function accessibleDescription(element: Element) {
+  const describedBy = element.getAttribute("aria-describedby");
+  if (!describedBy) return element.getAttribute("aria-description") ?? "";
+  const document = element.ownerDocument;
+  return describedBy
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((id) => document.getElementById(id)?.textContent ?? "")
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+expect.extend({
+  toHaveAccessibleDescription(received: Element, expected: string) {
+    const actual = accessibleDescription(received);
+    return {
+      pass: actual === expected,
+      message: () => `expected accessible description "${actual}" to be "${expected}"`,
+    };
+  },
+});
 
 function renderDialog() {
   render(
@@ -42,4 +71,152 @@ test("Dialog closes on Escape and returns focus to the trigger", async () => {
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).toBeNull();
   await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+function renderConfirm(onConfirm: () => void | Promise<void>) {
+  render(
+    <DialogTrigger>
+      <Button>Delete record</Button>
+      <ConfirmDialog
+        title="Delete record"
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={onConfirm}
+      >
+        This cannot be undone.
+      </ConfirmDialog>
+    </DialogTrigger>,
+  );
+  return screen.getByRole("button", { name: "Delete record" });
+}
+
+test("ConfirmDialog keeps focus inside and closes on Escape and cancel", async () => {
+  const user = userEvent.setup();
+  const onConfirm = vi.fn();
+  const trigger = renderConfirm(onConfirm);
+
+  await user.click(trigger);
+  const dialog = screen.getByRole("alertdialog", { name: "Delete record" });
+  expect(dialog).toHaveAccessibleDescription("This cannot be undone.");
+  expect(dialog.contains(document.activeElement)).toBe(true);
+
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(onConfirm).not.toHaveBeenCalled();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(onConfirm).not.toHaveBeenCalled();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+test("ConfirmDialog calls onConfirm once and returns focus to the trigger", async () => {
+  const user = userEvent.setup();
+  const onConfirm = vi.fn();
+  const trigger = renderConfirm(onConfirm);
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+
+  expect(onConfirm).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+test("ConfirmDialog stays open with a pending confirm button until onConfirm settles", async () => {
+  const user = userEvent.setup();
+  let resolveConfirm: () => void = () => {};
+  const onConfirm = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveConfirm = resolve;
+      }),
+  );
+  const trigger = renderConfirm(onConfirm);
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+
+  expect(onConfirm).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("alertdialog", { name: "Delete record" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Delete" }).hasAttribute("data-pending")).toBe(true);
+
+  resolveConfirm();
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+test("ConfirmDialog calls onConfirm again after it is reopened", async () => {
+  const user = userEvent.setup();
+  const onConfirm = vi.fn();
+  const trigger = renderConfirm(onConfirm);
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+
+  expect(onConfirm).toHaveBeenCalledTimes(2);
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+});
+
+test("ConfirmDialog starts idle after a resolved confirm so Escape closes it again", async () => {
+  const user = userEvent.setup();
+  let resolveConfirm: () => void = () => {};
+  const onConfirm = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveConfirm = resolve;
+      }),
+  );
+  const trigger = renderConfirm(onConfirm);
+
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  resolveConfirm();
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+
+  await user.click(trigger);
+  expect(screen.getByRole("button", { name: "Delete" }).hasAttribute("data-pending")).toBe(false);
+  expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(
+    false,
+  );
+
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  expect(onConfirm).toHaveBeenCalledTimes(1);
+});
+
+test("ConfirmDialog stays open and retries when onConfirm rejects", async () => {
+  const user = userEvent.setup();
+  let rejectConfirm: (reason?: unknown) => void = () => {};
+  const onConfirm = vi.fn(
+    () =>
+      new Promise<void>((_, reject) => {
+        rejectConfirm = reject;
+      }),
+  );
+  renderConfirm(onConfirm);
+
+  await user.click(screen.getByRole("button", { name: "Delete record" }));
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  expect(onConfirm).toHaveBeenCalledTimes(1);
+
+  rejectConfirm(new Error("failed"));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Delete" }).hasAttribute("data-pending")).toBe(false),
+  );
+  expect(screen.getByRole("alertdialog", { name: "Delete record" })).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(
+    false,
+  );
+
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  expect(onConfirm).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("alertdialog", { name: "Delete record" })).toBeTruthy();
 });
