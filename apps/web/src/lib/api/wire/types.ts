@@ -1,12 +1,13 @@
-import type { FieldDataType, FieldValue } from "@crm/core/records";
+import type { Comparator, FieldDataType, FieldValue } from "@crm/core/records";
 
 /** Structural subset of listMembers: no core runtime or database dependency. */
 export type WireMember = { userId: string; name: string; email: string };
 export type WireOwner = { id: string; name?: string; email?: string };
 export type WireValue = FieldValue | WireOwner;
 export type WireRecord = { id: string } & Record<string, WireValue>;
+export type WireCriteriaValue = FieldValue | readonly FieldValue[] | { name: "${CURRENTUSER}" };
 export type WireCriteria =
-  | { field: { api_name: string }; comparator: "equal"; value: FieldValue | readonly FieldValue[] }
+  | { field: { api_name: string }; comparator: Comparator; value: WireCriteriaValue }
   | { group_operator: "and" | "or"; group: readonly WireCriteria[] };
 export type WireField = {
   api_name: string;

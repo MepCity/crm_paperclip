@@ -113,7 +113,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         perPage: 10,
         filters: {
           field: "id",
-          comparator: "is" as const,
+          comparator: "equal" as const,
           value: created.id,
         },
       };
