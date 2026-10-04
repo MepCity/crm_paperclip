@@ -5,10 +5,10 @@ import { getRecordService } from "@/lib/records";
 
 export const dynamic = "force-dynamic";
 
-export const POST = apiRoute(
+export const GET = apiRoute(
   async (input) =>
     (
-      await operations.count.run(
+      await operations.layouts.run(
         { records: getRecordService(input.ctx), members: await listMembers(input.ctx) },
         input,
       )

@@ -106,11 +106,27 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
         errors.page = ["Choose a positive integer page."];
       if (![10, 20, 30, 40, 50, 100].includes(query.perPage))
         errors.perPage = ["Choose a supported page size."];
+      if (
+        query.fields?.some((name) => !leadsMetadata.fields.some((field) => field.apiName === name))
+      )
+        errors.fields = ["Choose known field API names."];
       if (Object.keys(errors).length) throw new ValidationError(errors);
       const rows = sortRecords(matching(module, query), query.sort ?? view.sort);
       const start = (query.page - 1) * query.perPage;
       return copy({
-        records: rows.slice(start, start + query.perPage),
+        records: rows.slice(start, start + query.perPage).map((record) =>
+          query.fields === undefined
+            ? record
+            : {
+                id: record.id,
+                fields: Object.fromEntries(
+                  ["id", ...query.fields].map((name) => [
+                    name,
+                    name === "id" ? record.id : (record.fields[name] ?? null),
+                  ]),
+                ),
+              },
+        ),
         page: query.page,
         perPage: query.perPage,
         moreRecords: start + query.perPage < rows.length,

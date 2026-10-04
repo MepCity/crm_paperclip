@@ -102,6 +102,8 @@ export interface ListQuery {
   page: number;
   /** One of the six page sizes documented in the list specification. */
   perPage: number;
+  /** Field projection; id is always included. Omitted returns all fields. */
+  fields?: readonly string[];
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;

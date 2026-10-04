@@ -9,6 +9,7 @@ export default defineConfig({
       {
         test: {
           name: "unit",
+          alias: { "@": path.resolve(__dirname, "./apps/web/src") },
           include: ["{apps,packages,scripts}/**/*.test.ts"],
           exclude: [...exclude, "**/*.int.test.ts"],
         },
@@ -30,6 +31,7 @@ export default defineConfig({
       {
         test: {
           name: "integration",
+          alias: { "@": path.resolve(__dirname, "./apps/web/src") },
           include: ["{apps,packages,scripts}/**/*.int.test.ts"],
           exclude,
           globalSetup: ["./packages/db/src/vitest-global-setup.ts"],
