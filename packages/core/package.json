@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./errors": "./src/errors.ts",
     "./format": "./src/format/index.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./records": "./src/records/index.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",
