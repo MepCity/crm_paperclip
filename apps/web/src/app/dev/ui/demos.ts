@@ -3,6 +3,7 @@ import BadgeDemo from "@/components/ui/badge.demo";
 import ButtonDemo from "@/components/ui/button.demo";
 import CardDemo from "@/components/ui/card.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
+import DisclosureDemo from "@/components/ui/disclosure.demo";
 import FormDemo from "@/components/ui/form.demo";
 import IconDemo from "@/components/ui/icon.demo";
 import LinkDemo from "@/components/ui/link.demo";
@@ -25,6 +26,7 @@ export const demos: Record<string, React.ComponentType> = {
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,
+  disclosure: DisclosureDemo,
   menu: MenuDemo,
   table: TableDemo,
   spinner: SpinnerDemo,

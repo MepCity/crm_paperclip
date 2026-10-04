@@ -1,17 +1,37 @@
 import {
   AlertCircle,
   AlertTriangle,
+  Building2,
+  Check,
   CheckCircle2,
   ChevronDown,
+  ChevronUp,
+  Folder,
+  Home,
   Info,
   Loader2,
+  LogOut,
   type LucideIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Settings,
   X,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
 
 export const Icons = {
+  building: Building2,
+  check: Check,
+  chevronUp: ChevronUp,
+  folder: Folder,
+  home: Home,
+  signOut: LogOut,
+  hideMenu: PanelLeftClose,
+  showMenu: PanelLeftOpen,
+  plus: Plus,
+  settings: Settings,
   spinner: Loader2,
   error: AlertCircle,
   success: CheckCircle2,

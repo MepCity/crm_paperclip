@@ -152,6 +152,24 @@ what the "no colour constants" rule forbids.
 | `--size-menu-icon` | `16px` | app-shell.md › Teamspace More Actions menu › Item geometry › "icon approx. 16 x 16" | from spec |
 | `--size-menu-label-gap` | `12px` | app-shell.md › Teamspace More Actions menu › Item geometry › "about 12 px between icon and label" | from spec |
 
+### Shell coordinate tokens
+
+The shell also needs these offsets to preserve positions when later controls are omitted.
+They are derived from the same Visual layout rows, not new measurements.
+
+| Token | Value | Spec row and derivation | Status |
+| --- | --- | --- | --- |
+| `--size-topbar-control-gap` | `2px` | Top bar/right controls: 34 px centres minus half the 34 px settings slot and half the 30 px avatar | from spec |
+| `--size-rail-nested-row-gap` | `2px` | Rail/nested link: 32 px pitch minus 30 px row | from spec |
+| `--size-rail-nested-icon-offset` | `28px` | Rail/nested link: icon x 48 minus fixed icon x 20 | from spec |
+| `--size-rail-nested-label-gap` | `14px` | Rail/nested link: label x 78 minus icon right x 64 | from spec |
+| `--size-rail-header-top` | `11px` | Rail/product selector: top y 11 | from spec |
+| `--size-rail-nav-start` | `5px` | Rail/pinned rows: y 55 minus the 50 px header | from spec |
+| `--size-rail-product-gap` | `8px` | Rail/product selector: label x 53 minus mark right x 45 | from spec |
+| `--size-rail-pinned-region` | `227px` | Rail/teamspace divider: y 277 minus the 50 px header | from spec |
+| `--size-rail-teamspace-top` | `11px` | Rail/teamspace selector: y 289 minus divider bottom y 278 | from spec |
+| `--size-rail-teamspace-group-gap` | `49px` | Rail/group heading: top y 362 minus selector bottom y 313; reserves later Search footprint | from spec |
+
 ### Measured values that carry no token
 
 These are in the Visual layout section but are not tokens, with the reason for each. They are not
@@ -171,7 +189,7 @@ gaps in the table above.
   the width Tailwind's `border` already gives.
 - **The absence of a rail border.** "sharp edge at x 320, with no distinct right border" is a note
   for the shell, not a value.
-- **Positions and viewport-derived bounds.** Rail rows start at y 55, the teamspace divider is at
+- **Other positions and viewport-derived bounds.** Except for the derived shell offsets above, the teamspace divider is at
   y 277-278, the selector row at y 289-313, the local Search at y 324-354, the Sales heading is
   centred at y 377, Activities is near y 601 and Integrations near y 729, the open menu is 187 high
   with a notch reaching x 322 and dividers at y 389 and y 430, the main content is 1150 x 757, and
