@@ -216,7 +216,16 @@
   --size-list-filter-gap: 10px;
   --size-list-filter-padding: 18px;
   --size-list-filter-search-height: 34px;
+  --size-list-filter-search-icon: 13.5px;
+  --size-list-filter-search-icon-inset: 11.5px;
+  --size-list-filter-search-padding: 31px;
   --size-list-filter-row-height: 30px;
+  --size-list-filter-row-padding: 6px;
+  --size-list-filter-row-line: 16px;
+  --size-list-filter-label-gap: 8.5px;
+  --size-list-filter-chevron-width: 8px;
+  --size-list-filter-chevron-height: 4.5px;
+  --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
 

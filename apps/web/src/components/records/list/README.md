@@ -153,6 +153,54 @@ These components compose UI primitives without fetching data. Core imports are t
 Measured values come from `research/specs/list-views.md` → Layout → Visual layout and
 `apps/web/src/app/tokens.css`. The page owns data, navigation and persisted state.
 
+## FilterPanel
+
+Presentation-only panel, sourced from `research/specs/list-views.md`: Layout → Visual
+layout (Filter panel, Filter content, Surface and line colors, Selected / disabled),
+Left filters, Search and Flow 6. No data access or criteria controls.
+
+### Props
+
+| Prop | Contract |
+| --- | --- |
+| `title` | Visible panel heading and accessible region name. |
+| `searchLabel` / `searchPlaceholder` | Accessible input label and visible placeholder, supplied by the caller. |
+| `groups` | Ordered `{ id, label, items: { id, label, disabled? }[] }[]`; group IDs and item IDs must each be unique across the panel. |
+| `selectedIds` | Controlled selected item IDs. Selection remains intact when searching or collapsing. |
+| `onSelectionChange` | Receives the next complete ID array; adds at the end or removes the toggled item, retaining other IDs. Disabled rows never call it. |
+
+Groups start open. The filled triangle precedes the heading label: open points down,
+closed points right, and the icon has no tooltip title. Headings support Enter and
+Space and expose `aria-expanded`. Clipped headings retain the complete accessible name
+and a native title tooltip on the label. A row label that does not fit wraps; the
+checkbox stays on the first line. The `/dev/ui` filter-panel demo uses synthetic items,
+including a two-line label and a disabled row, and allows reviewers to demonstrate
+open/closed groups and filtered results.
+
+### Unverified
+
+- Search currently matches row labels by case-insensitive substring and hides groups
+  without matching rows. No term was entered in the reference capture; this is the
+  task-authorized provisional behavior. An empty result shows no groups. Clearing
+  restores rows and prior group expansion state. No filter is applied to records.
+- Operators, values, AND/OR, apply controls, counters and persisted panel preferences
+  remain unobserved and are excluded. Checked checkbox appearance keeps the existing
+  primitive (16 px box, 1 px border); the spec measures only the unchecked box, and a
+  checked box was not captured.
+- Open question 12 records the still-unmeasured filter-panel parts: vertical gaps
+  between the heading, the search field, the group headings and the rows; whether group
+  headings are 14 px or nearer 15 px; and the search field's right inset. A closed group
+  was not captured. Those gaps keep the existing spacing scale.
+
+### Deviations
+
+- The expand triangle is `#000000` in the spec and `--color-text-strong` here. The
+  magnifier and triangle are original drawings; no reference assets are copied.
+- Figtree at `--text-sm` fits **System Defined Filters** on one line in the 202 px
+  panel, so the reference clip **System Defined Fil...** does not appear. The heading
+  still truncates with an ellipsis when the label is wider than the row.
+- Page position and full Leads lists belong to the page task.
+
 ## View tab and toolbar
 
 - `ViewTabStrip({ viewName })`: renders the selected view label in the measured pill.
