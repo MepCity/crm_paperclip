@@ -2,6 +2,14 @@
    their only source. apps/web/src/components/ui/README.md lists the source row of every
    token and marks the ones the specs have not measured yet. */
 
+@font-face {
+  font-family: "Figtree";
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("./fonts/figtree/figtree-variable.ttf") format("truetype");
+}
+
 :root {
   /* Page, surfaces and ink */
   --color-bg: #eef1f9;
@@ -17,8 +25,8 @@
   --color-primary-pressed: #1e40af;
   --color-primary-subtle: #f0f1ff;
 
-  /* Status colours stay at their pre-spec values: the app shell spec measures none of
-     them. The list, detail and form specs derive them in a separate issue. */
+  /* Status colours stay at their pre-spec values: neither the app shell spec nor the
+     list spec measures them. Detail and form specs may derive them in a separate issue. */
   --color-danger: #b91c1c;
   --color-danger-text: #ffffff;
   --color-danger-hover: #991b1b;
@@ -74,31 +82,53 @@
   --color-accent-amber: #f18e0a;
   --color-accent-yellow: #e7b910;
 
-  /* The specs describe a rounded humanist sans-serif whose exact font is not measurable
-     from capture, so the system stack stays. No font file is added to the repository. */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Leads list. Each value is measured in research/specs/list-views.md, Visual layout. */
+  --color-panel-border: #dcdbee;
+  --color-row-separator: #edf0f4;
+  --color-control-border: #c5c4d3;
+  --color-button-border: #d5d8e9;
+  --color-button-gradient-start: #fefefe;
+  --color-button-gradient-end: #f2f1f8;
+  --color-primary-gradient-start: #5767f6;
+  --color-primary-gradient-end: #154ec5;
+  --color-primary-divider: #c3c8f4;
+  /* Disabled Apply on the sort popover is a flat fill, not the primary gradient. */
+  --color-primary-disabled: #adb3ee;
+  --color-popover-sort-border: #ced0e1;
+  --color-surface-selected: #f0f4fc;
+  --color-surface-active: #edf0f9;
+  --color-text-strong: #202123;
+  --color-text-disabled: #b5b8be;
+
+  /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
+     Its official file is served locally; no reference CRM font file is copied. */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* The specs measure regular and semibold only. CSS line-height is not measurable from
-     a single-line capture, so no --leading-* token is derived. */
+  /* typography.md fits bold stems at weight 510. The list spec also measures medium
+     for toolbar labels and column headers. CSS line-height is not measurable from a
+     single-line capture, so no --leading-* token is derived. */
   --font-weight-normal: 400;
-  --font-weight-semibold: 600;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 510;
 
-  --text-2xs: 0.5rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 0.9375rem;
+  --text-2xs: 0.53125rem;
+  --text-xs: 0.71875rem;
+  --text-13: 0.8125rem;
+  --text-sm: 0.84375rem;
+  --text-md: 0.90625rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
+  --text-xl: 1.15625rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
 
-  /* Every measured corner is approx. 6 px, which is --radius-md. The other steps have no
-     measured counterpart yet. */
+  /* Measured corners: 2–3 px (--radius-sm, kept at 2 px), about 6 px (--radius-md),
+     8 px (--radius-lg) and about 16 px (--radius-xl). --radius-full is the circular avatar. */
   --radius-sm: 0.125rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
+  --radius-xl: 1rem;
   --radius-full: 9999px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
@@ -172,4 +202,80 @@
   --size-menu-item-height: 30px;
   --size-menu-icon: 16px;
   --size-menu-label-gap: 12px;
+
+  /* Leads list chrome */
+  --size-list-inset: 16px;
+  --size-list-tab-height: 42px;
+  --size-list-pill-width: 75.5px;
+  --size-list-pill-height: 26px;
+  --size-list-toolbar-height: 47px;
+
+  /* Filter panel. Width includes the 1 px borders. */
+  --size-list-filter-width: 202px;
+  --size-list-filter-gap: 10px;
+  --size-list-filter-padding: 18px;
+  --size-list-filter-search-height: 34px;
+  --size-list-filter-row-height: 30px;
+  --size-list-filter-button-width: 69.5px;
+  --size-list-filter-button-height: 27px;
+
+  /* Records table. Header height includes the 2 px bottom border. Footer height is the
+     band between its two 1 px lines. */
+  --size-list-header-height: 37px;
+  --size-list-header-border: 2px;
+  --size-list-row-height: 54px;
+  --size-list-row-pitch: 55px;
+  --size-list-leading-width: 240px;
+  --size-list-leading-pair-width: 100px;
+  --size-list-badge-width: 140px;
+  --size-list-column-width: 200px;
+  --size-list-cell-inset: 12px;
+  --size-list-settings-width: 40px;
+  --size-list-settings-row-width: 250px;
+  --size-list-footer-height: 31px;
+  --size-list-view-icon: 26px;
+
+  /* View edit form */
+  --size-list-view-name-width: 600px;
+  --size-list-column-lane-width: 280px;
+
+  /* Split and ellipsis buttons. The 137.5 px width is 102.5 + 1 + 34. */
+  --size-button-split-width: 137.5px;
+  --size-button-split-height: 33px;
+  --size-button-split-primary: 102.5px;
+  --size-button-split-arrow: 34px;
+  --size-button-gap: 8.5px;
+  --size-button-ellipsis-width: 44px;
+  --size-button-ellipsis-height: 32px;
+
+  /* Checkbox */
+  --size-checkbox: 15px;
+  --size-checkbox-border: 2px;
+
+  /* Manage Columns dialog */
+  --size-dialog-width: 400px;
+  --size-dialog-height: 770px;
+  --size-dialog-padding: 30px;
+
+  /* List popovers */
+  --size-popover-view-width: 128px;
+  --size-popover-import-width: 180px;
+  --size-popover-actions-width: 200px;
+  --size-popover-settings-width: 264px;
+  --size-popover-sort-width: 385px;
+  --size-popover-sort-height: 157px;
+  --size-popover-sort-field-width: 150px;
+  --size-popover-sort-field-height: 28px;
+  /* 195 − 138, from the selector band and the outer box top in the sort row. */
+  --size-popover-sort-field-top: 57px;
+  --size-popover-sort-inset-inline: 31px;
+  --size-popover-sort-inset-end: 39px;
+  --size-popover-sort-field-gap: 15px;
+  /* Gap above the selector so Sort By ink sits in the measured glyph band. */
+  --size-popover-sort-label-gap: 18px;
+  --size-popover-sort-actions-offset: 20px;
+  --size-popover-sort-button-height: 27px;
+  --size-popover-sort-cancel-width: 66.5px;
+  --size-popover-sort-apply-width: 60px;
+  --size-popover-sort-button-gap: 8px;
 }

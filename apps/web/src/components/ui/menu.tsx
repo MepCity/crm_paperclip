@@ -39,21 +39,40 @@ export function MenuItem<T extends object>({
   );
 }
 
+export interface MenuAction {
+  id: string;
+  label: string;
+  onAction: () => void;
+  isDisabled?: boolean;
+}
+
 export function Menu<T extends object>({
+  width,
   appearance = "default",
   header,
   ...props
-}: AriaMenuProps<T> & { appearance?: "default" | "measured"; header?: ReactNode }) {
+}: AriaMenuProps<T> & {
+  width?: "create" | "actions";
+  appearance?: "default" | "measured";
+  header?: ReactNode;
+}) {
+  const widthClass =
+    width === "create"
+      ? "w-(--size-popover-import-width)"
+      : width === "actions"
+        ? "w-(--size-popover-actions-width)"
+        : appearance === "measured"
+          ? "w-(--size-menu-width)"
+          : "w-48";
   return (
     <Popover
-      className={`${appearance === "measured" ? "w-(--size-menu-width) bg-menu-surface" : "w-48 bg-surface"} rounded-md border border-border shadow-lg outline-none max-w-full`}
+      placement="bottom end"
+      className={`${widthClass} ${appearance === "measured" ? "bg-menu-surface" : "bg-surface"} max-w-full max-h-80 overflow-auto rounded-md border border-border shadow-lg outline-none`}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}
       <AriaMenu
         {...props}
-        className={
-          appearance === "measured" ? "p-(--size-menu-inset) outline-none" : "p-1 outline-none"
-        }
+        className={appearance === "measured" ? "p-(--size-menu-inset) outline-none" : "p-1 outline-none"}
       />
     </Popover>
   );

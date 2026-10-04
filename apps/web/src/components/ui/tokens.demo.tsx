@@ -91,11 +91,32 @@ const COLOUR_GROUPS = [
       "--color-accent-yellow",
     ],
   },
+  {
+    label: "Leads list",
+    tokens: [
+      "--color-panel-border",
+      "--color-row-separator",
+      "--color-control-border",
+      "--color-button-border",
+      "--color-button-gradient-start",
+      "--color-button-gradient-end",
+      "--color-primary-gradient-start",
+      "--color-primary-gradient-end",
+      "--color-primary-divider",
+      "--color-primary-disabled",
+      "--color-popover-sort-border",
+      "--color-surface-selected",
+      "--color-surface-active",
+      "--color-text-strong",
+      "--color-text-disabled",
+    ],
+  },
 ] as const;
 
 const TEXT_TOKENS = [
   "--text-2xs",
   "--text-xs",
+  "--text-13",
   "--text-sm",
   "--text-md",
   "--text-base",
@@ -105,11 +126,87 @@ const TEXT_TOKENS = [
   "--text-3xl",
 ] as const;
 
-const WEIGHT_TOKENS = ["--font-weight-normal", "--font-weight-semibold"] as const;
+const WEIGHT_TOKENS = [
+  "--font-weight-normal",
+  "--font-weight-medium",
+  "--font-weight-semibold",
+] as const;
+
+/** Adopted roles from typography.md, Recommendation. Values come only from tokens. */
+const TYPE_ROLES = [
+  {
+    role: "Product selector",
+    labels: ["Workqueue"],
+    size: "--text-base",
+    weight: "--font-weight-semibold",
+  },
+  { role: "Page title", labels: ["Home"], size: "--text-xl", weight: "--font-weight-semibold" },
+  {
+    role: "Rail fixed link",
+    labels: ["Workqueue", "Reports"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Rail active link",
+    labels: ["Home"],
+    size: "--text-md",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Teamspace selector",
+    labels: ["Workqueue"],
+    size: "--text-base",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Group heading",
+    labels: ["Integrations"],
+    size: "--text-md",
+    weight: "--font-weight-semibold",
+  },
+  {
+    role: "Rail child link",
+    labels: ["Documents"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Rail Search placeholder",
+    labels: ["Search records"],
+    size: "--text-md",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Top-bar search placeholder",
+    labels: ["Search records"],
+    size: "--text-sm",
+    weight: "--font-weight-normal",
+  },
+  { role: "Menu item", labels: ["Reports"], size: "--text-md", weight: "--font-weight-normal" },
+  {
+    role: "Utility label",
+    labels: ["My Pins"],
+    size: "--text-2xs",
+    weight: "--font-weight-normal",
+  },
+  {
+    role: "Help utility label",
+    labels: ["Help"],
+    size: "--text-xs",
+    weight: "--font-weight-semibold",
+  },
+] as const;
 
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
-const RADIUS_TOKENS = ["--radius-sm", "--radius-md", "--radius-lg", "--radius-full"] as const;
+const RADIUS_TOKENS = [
+  "--radius-sm",
+  "--radius-md",
+  "--radius-lg",
+  "--radius-xl",
+  "--radius-full",
+] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
@@ -189,6 +286,78 @@ const SIZE_GROUPS = [
       "--size-menu-item-height",
       "--size-menu-icon",
       "--size-menu-label-gap",
+    ],
+  },
+  {
+    label: "Leads list",
+    tokens: [
+      "--size-list-inset",
+      "--size-list-tab-height",
+      "--size-list-pill-width",
+      "--size-list-pill-height",
+      "--size-list-toolbar-height",
+      "--size-list-filter-width",
+      "--size-list-filter-gap",
+      "--size-list-filter-padding",
+      "--size-list-filter-search-height",
+      "--size-list-filter-row-height",
+      "--size-list-filter-button-width",
+      "--size-list-filter-button-height",
+      "--size-list-header-height",
+      "--size-list-header-border",
+      "--size-list-row-height",
+      "--size-list-row-pitch",
+      "--size-list-leading-width",
+      "--size-list-leading-pair-width",
+      "--size-list-badge-width",
+      "--size-list-column-width",
+      "--size-list-cell-inset",
+      "--size-list-settings-width",
+      "--size-list-settings-row-width",
+      "--size-list-footer-height",
+      "--size-list-view-icon",
+      "--size-list-view-name-width",
+      "--size-list-column-lane-width",
+    ],
+  },
+  {
+    label: "Buttons, checkbox and dialog",
+    tokens: [
+      "--size-button-split-width",
+      "--size-button-split-height",
+      "--size-button-split-primary",
+      "--size-button-split-arrow",
+      "--size-button-gap",
+      "--size-button-ellipsis-width",
+      "--size-button-ellipsis-height",
+      "--size-checkbox",
+      "--size-checkbox-border",
+      "--size-dialog-width",
+      "--size-dialog-height",
+      "--size-dialog-padding",
+    ],
+  },
+  {
+    label: "List popovers",
+    tokens: [
+      "--size-popover-view-width",
+      "--size-popover-import-width",
+      "--size-popover-actions-width",
+      "--size-popover-settings-width",
+      "--size-popover-sort-width",
+      "--size-popover-sort-height",
+      "--size-popover-sort-field-width",
+      "--size-popover-sort-field-height",
+      "--size-popover-sort-field-top",
+      "--size-popover-sort-inset-inline",
+      "--size-popover-sort-inset-end",
+      "--size-popover-sort-field-gap",
+      "--size-popover-sort-label-gap",
+      "--size-popover-sort-actions-offset",
+      "--size-popover-sort-button-height",
+      "--size-popover-sort-cancel-width",
+      "--size-popover-sort-apply-width",
+      "--size-popover-sort-button-gap",
     ],
   },
   {
@@ -304,6 +473,26 @@ export default function TokensDemo() {
             ))}
           </ul>
         </Group>
+      </section>
+
+      <section className="space-y-4" aria-label="Type roles">
+        <h3 className="text-lg font-semibold text-text">Type roles</h3>
+        <ul className="space-y-2">
+          {TYPE_ROLES.flatMap(({ role, labels, size, weight }) =>
+            labels.map((label) => (
+              <li key={`${role}-${label}`} className="flex flex-wrap items-baseline gap-x-4">
+                <span
+                  data-type-role={role}
+                  style={{ fontSize: `var(${size})`, fontWeight: `var(${weight})` }}
+                  className="inline-block text-text"
+                >
+                  {label}
+                </span>
+                <code className="text-xs text-text-muted">{role}</code>
+              </li>
+            )),
+          )}
+        </ul>
       </section>
 
       <section className="space-y-4">

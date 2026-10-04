@@ -48,6 +48,59 @@ test("passes when the page has no violations", async ({ page }) => {
   await expectNoA11yViolations(page);
 });
 
+test("waits for a running fade to reach its resting color before scanning", async ({ page }) => {
+  await page.setContent(
+    pageHtml(`
+      <style>
+        body { background: #ffffff; color: #313949; }
+        @keyframes rise {
+          from { opacity: 0.2; }
+          to { opacity: 1; }
+        }
+        #fading {
+          color: #313949;
+          background: #ffffff;
+          font-size: 16px;
+          animation: rise 5s linear forwards;
+        }
+      </style>
+      <main>
+        <h1>Ready</h1>
+        <p id="fading">This label is readable once the fade finishes.</p>
+      </main>
+    `),
+  );
+
+  const opacity = () =>
+    page.locator("#fading").evaluate((element) => Number(getComputedStyle(element).opacity));
+
+  // Still in the fade: partial opacity composites the text toward the page
+  // and drops it under 4.5:1. Scanning here fails unless the helper waits.
+  expect(await opacity()).toBeLessThan(0.5);
+  await expectNoA11yViolations(page);
+  expect(await opacity()).toBeGreaterThan(0.99);
+});
+
+test("does not wait out an infinite animation", async ({ page }) => {
+  await page.setContent(
+    pageHtml(`
+      <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; display: inline-block; }
+      </style>
+      <main>
+        <h1>Ready</h1>
+        <p class="spin">Loading</p>
+      </main>
+    `),
+  );
+
+  const started = Date.now();
+  await expectNoA11yViolations(page);
+  // A spinner never finishes. Waiting on it would hang this scan.
+  expect(Date.now() - started).toBeLessThan(5_000);
+});
+
 test("leaves excluded selectors out of the scan", async ({ page }) => {
   await page.setContent(
     pageHtml(`

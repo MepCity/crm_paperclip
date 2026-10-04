@@ -1,0 +1,228 @@
+# Leads record detail and create/edit forms
+
+Read-only research of one Lead in the reference CRM. This is the reusable record-page pattern for later modules; only Leads was inspected. Configuration and field definitions are in `research/specs/leads-fields-and-layout.md` and the external research workspace's `metadata/modules/Leads/{layouts,fields,related_lists}.json`. The list-to-record entry point is in `research/specs/list-views.md`. Capture slugs below refer to local research evidence, never to committed screenshots.
+
+## Purpose
+
+Open one Lead, read its identity and related information, inspect history, or open the full create/edit form. The observed record is a single sample; no record was changed. The form and page use the configured `Standard` layout. The create, edit, detail, and quick-create field flags remain defined by the field metadata; this spec adds observed placement and behavior.
+
+## Layout
+
+### Record page
+
+Below the shared shell, a horizontal record header contains Back, a square 48 px portrait, `Full_Name`, ` - `, Company, `Add Tags`, `Send Email`, `Convert`, `Edit`, `More Options`, and `Previous Record` / `Next Record` arrows. The identity uses two lines: the first is name and company; the second is a tag-shaped icon followed by `Add Tags`. The previous arrow is pale and the next arrow darker in this one-record context; their boundary rules and destination order were not tested. `Convert` opens a separate flow covered by later research. The portrait is a user image on this record; implementations must use their own asset or placeholder.
+
+A white related-list rail occupies the left of the detail body. Its heading is `Related List`; 12 entries are visible in order: Notes, Connected Records, Cadences, Attachments, Products, Open Activities, Closed Activities, Invited Meetings, Emails, Campaigns, Social, Voice of the Customer. `Add Related List` follows. A `Links` heading and `Add Link` follow below. Selecting a named entry scrolls that card to the top of the central pane and highlights the rail row; a plus affordance appears at the right of some hovered/selected rows. The central pane has only two primary tabs, `Overview` and `Timeline`. An unlabeled circular icon button precedes their pill switch; its glyph is a vertical bar beside a rounded rectangle outline. Overview starts with a `Last Update` age label, a horizontal Lead Status progression ribbon, a business-card panel, a collapsible `Hide Details` panel, then related-list cards. The status ribbon follows the `Lead_Status` metadata order, excluding `-None-`: Attempted to Contact, Contact in Future, Contacted, Junk Lead, Lost Lead, Not Contacted, Pre-Qualified, Not Qualified. The strip overflows horizontally and has a scroll arrow at each end. Junk Lead and Not Qualified show a thumbs-down icon. In the picklist metadata (`Lead_Status` → `pick_list_values[].record_category_value.api_name`) these are the only two values outside the `Open` category (`Junk` and `Not Qualified`), so the icon coincides with a non-Open record category. The current stage has blue text and an outline plus a dropdown. The rightmost decision control is a red thumb icon/dropdown. These controls were not activated. The header and tab row stay fixed while detail content scrolls beneath them; `Scroll To Top` appears at lower right after scrolling. `Record detail page views : Standard View` and `Create a custom record page` appear in a bottom strip; customization was not entered.
+
+The business card shows exactly five **fields** in this capture: Lead Owner, Email, Phone, Mobile, Lead Status. The portrait and heading are separate. The full detail panel shows Lead Information in two independently flowing columns: left Lead Owner, Title, Phone, Mobile, Lead Source, Industry, Annual Revenue, Email Opt Out, Modified By; right Company, Lead Name (`Full_Name`), Email, Fax, Website, Lead Status, No. of Employees, Rating, Created By, Skype ID, Secondary Email, Twitter. Wrapped values increase only their own column's row height, so opposite rows need not align. `Lead Name` is the UI label here although metadata labels `Full_Name` as `Full Name`. Blank values render an em dash, including Rating and Fax; an empty detail picklist is **not** shown as `-None-`. The observed header/full-name presentation places Salutation, First Name, and Last Name in that order with spaces, then ` - ` and Company in the header. This confirms the composition for this one record, not every empty-name case. `Created By` and `Modified By` each show user on one line and a timestamp beneath, formatted `ddd, DD MMM YYYY hh:mm AM/PM`; `Created_Time` and `Modified_Time` are embedded there, not separate rows. Phone and Mobile have green call icon buttons; Skype ID has its own icon beneath its value. Email and other interactive values are blue. A field pencil appears at the end of the value area on hover/field activation. Address Information shows one composite Address row spanning the section; Description Information shows one Description row. The address sub-fields are not separate detail rows. Metadata address sub-field labels include an `Address - ` prefix, while form labels omit it.
+
+### Timeline
+
+`Timeline` contains `History` and `Interactions` subtabs with an underline beneath the active one. History shows the visible link `Show Upcoming Automated Actions` (its accessible button name includes the count), `Timeline History`, a filter icon button, and one observed `Lead Image uploaded` event. A dated badge anchors a vertical connector; time is in a left column, a circular action icon straddles the connector, and the event title and `by <user> <date>` occupy the right column. Other event types are not evidenced by this one record. The History filter expands four selectors: Modules (`All Modules`), Users (`All Users`), Time (`Any Time`), Sources (`All Sources`); the first three occupy one row, Sources and disabled `Apply Filter` the next. Interactions shows `Customer Interactions`, a separate filter icon, `Signals` and `Follow-ups` with colored-dot indicators, `View By : All`, and `No logs available` centered between horizontal rules. Its filter expands `Mediums` (`All Mediums`), Users (`All Users`), Time (`Any Time`), and a disabled `Apply Filter`. This feature is **not in use for the observed record**; other records were not inspected.
+
+### Create and edit forms
+
+The create route displays `Create Lead`; edit displays `Edit Lead`. Both place `Edit Page Layout` beside the title and `Cancel`, `Save and New`, `Save` on the right. This title/action strip remains fixed when the form scrolls. The sections appear in order: Lead Image (circular placeholder avatar), Lead Information, Address Information, Description Information. Lead Information is a two-column row grid: left Lead Owner / First Name plus Salutation / Title / Phone / Mobile / Lead Source / Industry / Annual Revenue / Email Opt Out; right Company / Last Name / Email / Fax / Website / Lead Status / No. of Employees / Rating / Skype ID / Secondary Email / Twitter. Lead Owner combines a dropdown and an adjacent user-selector icon button; the dropdown displays user options, whereas the icon opens the larger `Select User` dialog. Salutation is attached as a narrow prefix selector inside the First Name input row. Company is an input inside an unnamed combobox; whether it offers suggestions is unobserved. Annual Revenue has a currency prefix and information icon; Twitter has an `@` prefix. Address Information encloses its fields in a bordered `Address` group only as wide as the left column: Country / Region, Flat / House No./ Building / Apartment Name, Street Address, City, State / Province, Zip / Postal Code, Coordinates (Latitude and Longitude placeholders plus `Clear All`). Description is a resizable textarea with a lower-corner handle. The bottom shows `Create Form Views : Standard View` and `Create a custom form page`. A vertical `Client Script` tab sits on the right edge. `Connected To` is flagged create-only in metadata but was **not visible** in the captured real create form; see Open questions. `Created By` and `Modified By` are absent from both real forms, resolving the layout-editor discrepancy in the field spec.
+
+Company and Last Name have a narrow red required indicator on the input's left edge; other visible fields have no such indicator. Lead Owner is prefilled on create. Create picklists show `-None-` before selection, including Salutation, Lead Source, Lead Status, Industry, Rating, Country / Region, and State / Province. Edit retains record values; an empty Rating still shows `-None-`. Country opens a searchable list with a `-None-` option. With Country blank, State opens a searchable list containing only `-None-`; with the observed record's Country populated, State offers matching locations plus the currently stored short value. No selection was made. The `Open Lead Owner` button opens a `Select User` dialog with `Search Users`, a selected-user summary, a table headed User Name / Role / Email / Profile, radio controls, `Cancel`, and initially disabled `Done`. No user was selected.
+
+### Related-list structure and use
+
+The 35-entry metadata inventory has 30 `visible=true` entries. The rendered rail consolidates six activity entries into Open/Closed Activities, omits Checklists, Locking Information, and the 12 generated Connected Record Child entries, and does not show the five metadata-hidden entries. The following are the **12 actually rendered** cards for this record. No related-list table headers or data columns were visible in these empty/loading captures; the exact populated columns remain open. Actions are listed as visible controls only; none was run.
+
+| Rail/card | Visible card action or tabs | Observed body state | Visible data columns |
+| --- | --- | --- | --- |
+| Notes | `Recent Last` sort and `Add a note` input | No note row visible; `GET Notes` returned `204`; **not in use for this record** | None rendered |
+| Connected Records | None shown | `Loading...` persisted | None rendered |
+| Cadences | `Enroll` | `No records found`; **not in use for this record** | None rendered |
+| Attachments | `Attach` | `No Attachment`; **not in use for this record** | None rendered |
+| Products | `Add Products` | `No records found`; **not in use for this record** | None rendered |
+| Open Activities | `Add New` | `No records found`; **not in use for this record** | None rendered |
+| Closed Activities | None shown | `No records found`; **not in use for this record** | None rendered |
+| Invited Meetings | None shown | `No records found`; **not in use for this record** | None rendered |
+| Emails | `Compose Email`; `Mails`, `Drafts`, `Scheduled` tabs | `No records found`; **not in use for this record** | None rendered |
+| Campaigns | `Add Campaigns` | `No records found`; **not in use for this record** | None rendered |
+| Social | `Associate Twitter`, `Associate Facebook` links | Association guidance; no linked profile visible; **not in use for this record** | None rendered |
+| Voice of the Customer | `Enable feature` | Feature introduction, not a record list; **not enabled here** | None rendered |
+
+Notes, attachment, email, social, and activity internals belong to their later modules. These cards' shell and empty states remain part of the record page. The blocked related-record-count request may explain Connected Records' persistent `Loading...`; do not treat that as proof that the list is empty.
+
+### Visual layout
+
+**Measured from screenshot** at a 1470 × 835 CSS px viewport (2940 × 1670 capture; 2 image px per CSS px). Coordinates identify visible edges unless stated otherwise. Typography uses the cap/x-height matching method of `research/specs/typography.md`; the proposed project font is not a claim about the reference font. Shared shell geometry is in `research/specs/app-shell.md`. Values described as not measurable are tracked in Open questions.
+
+**Record page — measured from `detail-main`, `detail-inline-rating`, and card screenshots.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Record header | x 320–1470, y 50–123; white `#FFFFFF`; 1 px bottom rule `#DCDBEE`. Portrait x 372–420, 48 × 48; first title line starts x 435; tag line starts x 435 below it. | Title ink `#313949`; title cap/x target 13/10 px, candidate 18.5 px/600. Section and command ink `#202123`. Back icon dark; previous chevron pale `#ADB0B6`, next dark `#313949`. |
+| Header buttons | All 32 px high, aligned on the first line's vertical center; 6 px corners. Primary `Send Email` top/bottom fill `#5767F6`/`#134DC4`; secondary `Convert`, `Edit`, and ellipsis top/bottom fill `#FDFDFE`/`#F1F0F7` with 1 px `#D5D8E9` edge. | Primary text white; secondary text `#313949`. |
+| Related-list rail | x 320–540, y 123–807; white `#FFFFFF`; item text starts x 340.5; rows repeat every 32 px (selected-row highlights: Notes y 161–191, Attachments y 257–287). Heading cap/x target 10.5/7.5 px, candidate 14.5 px/600; rows candidate 14.5 px/400. | On selection, a 30 px high highlight with fill `#EDF0F9` spans x 332–528 (12 px inside both rail edges) and a plus affordance appears at right; otherwise white. Links blue `#5464F2`. |
+| Canvas and tab row | Canvas x 540–1470, y 123–807, fill `#EEF1F9`; first card left x 552, right x 1458, giving 12 px side insets. Unnamed circular button x 552–588, y 137–173, fill `#DFE4EF`. Outer tab pill left x 600, y 137, 1 px edge `#DCDBEE`. | Selected Overview slice x 604–712 at y 154, fill `#EBEDFF`, 1 px border `#A3ACFF`, label `#202123`; inactive label `#313949`. Button purpose is not measurable. |
+| Status strip | White card x 552–1458, y 185–253; 8 px corners. Chevron band y 205–233 with 1 px top/bottom `#DCDBEE`. | Current stage fill `#EEEFFC`, text/border `#5464F2`; terminal control fill `#FFECEC`, icon `#FF5D5A`. |
+| Business card | x 552–1458, y 265–552, white, 8 px corners. Labels are right-aligned and end at x 725.5; values start at x 771; label text tops are at y 311.5, 355, 399.5, 444 and 490 (44.5 px average row pitch). | Label ink `#616E88`, value `#313949`, links `#5464F2`; label cap/x target 10.5/7.5 px, candidate 14.5 px/400. |
+| Details card | x 552–1458; upper edge y 564.5; white, 8 px corners. `Hide Details` divider is 1 px `#D6D6E3` at y 608. Labels are right-aligned: left-column labels end at x 701 and right-column labels at x 1134.5; values start at x 737.5 (left column) and x 1170.5 (right column). Left label text tops are at y 681.5, 725 and 769.5 (44 px average pitch for single-line rows). | `Hide Details` and section headings ink `#202123`; empty value em dash uses `#313949`; pencil appears at the value row's trailing edge. Header and tab row remain fixed on content scroll. |
+
+**Timeline — measured from `detail-timeline-filter` and `detail-interactions`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| White timeline surface | x 552–1458, starts y 185; 8 px upper corners. Subtab line y 222; active History underline spans x 583–642, blue `#5464F2`. | `History` and `Interactions` candidate 14.5 px/600; inactive text `#313949`. |
+| History controls | `Timeline History` text starts x 578 with top ink y 256; filter icon button x 703–745 with a 1 px `#C5C4D3` border (fill `#EDF0F9` while the panel is open in `detail-timeline-filter`), 32 px high; the right-side link is right-aligned, ink x 1183–1432. | Disabled `Apply Filter` has flat fill `#ADB3EE` and white label (x 856–959 in the expanded panel). |
+| Expanded History filter | Panel x 577–1433, y 293.5–449.5, fill `#F9FAFF`, 1 px edge `#DCDBEE`. Three first-row selectors each 250 px wide; selectors are white, 33–34 px high including their 1 px `#C5C4D3` border (Modules y 331.5–364.5, Users y 330.5–364.5, Sources in the second row y 400.5–433.5). | Initial `All Modules`, `All Users`, `Any Time`, `All Sources`; Apply Filter disabled until a permitted selection. |
+| Event track | Date badge at x 577–707, y 475–501; vertical connector centered x 677. Time is left of connector; 36 px circular icon centered on connector; title and byline begin x 712. | Date/time and byline ink `#616E88`; event title `#313949`; observed icon represents an image upload. |
+| Interactions | `Signals` and `Follow-ups` each follow a 12 px dot (x 1117–1129 and x 1195.5–1207.5, y 258.5–270.5). `View By : All` is a bordered dropdown to their right on the same row. `No logs available` is centered between two 1 px rules `#EDF0F4` at y 327.5–328.5 and y 403.5–404.5. An orange help marker (x 1438–1458, y 244.5–280) is clipped by the surface's right edge. | Signals dot `#12AA67`; Follow-ups dot `#2BA9DA`; empty text ink `#8B9AB9`; help marker fill `#FFA860`. |
+
+**More Options menu — measured from `detail-more`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Popover | x 1163–1380, y 103–592; white, 4 px corners, 1 px edge `#CED0E1`. Shadow extent and blur: not measurable. | Opens below the ellipsis. No action was selected. |
+| Rows and groups | Text starts x 1180; first row starts y 109; row pitch 30 px. 1 px group rules `#CED0E1` after `Delete` (y 204.5–205.5) and `Mail Merge` (y 305.5–306.5). | Highlighted `Clone` row fill `#F0F4FC`, x 1169.5–1373 (6 px inside the popover edges), y 109.5–139.5 (30 px high); `Add Kiosk` and `Create Client Script` have a sparkle marker. Menu candidate 14.5 px/400, cap/x target 10.5/7.5 px. |
+
+**Create/edit form — measured from `detail-create` and `detail-create-country`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Fixed title/action strip | y 50–107; `Create Lead` starts x 332; form card upper edge y 107, after a 1 px `#EDF0F4` line at y 106. | Title ink `#202123`, cap/x target 13/10 px and candidate 18.5 px/600. Save uses primary gradient above; Cancel and Save and New use secondary gradient. |
+| Form surface and Lead Image | White card x 332–1458, 8 px upper corners; section title starts x 344. Circular placeholder portrait has 48 px diameter (x 344–392, y 170–218), drawn in gray `#B2B2B2` on white. | Section ink `#202123`; candidate 14.5 px/600, cap/x target 10.5/7.5 px. |
+| Lead Information rows | Left inputs x 553–873 (320 px wide); right inputs x 1131.5–1446 (314.5 px wide); 34 px high, 1 px border `#C5C4D3`, 5 px corners; rows repeat every 54 px (34 px input plus a 20 px gap; first row y 312–346). Labels end at x 516 (left column) and x 1094.5 (right column), 37 px before their input. | Labels right aligned, ink `#616E88`; candidate 14.5 px/400, cap/x target 10.5/7.5 px. Values `#313949`. Required left bar `#FF5D5A`, 3 px wide (Company x 1131.5–1134.5). Focus edge `#5464F2`. |
+| Composite inputs | Salutation prefix occupies the left portion of First Name; Lead Owner has an adjacent picker icon. Annual Revenue begins with a currency prefix and ends with an information icon; Twitter starts with `@`. | Full-width empty picklists use normal value ink `#313949`; only the Salutation `-None-` prefix uses muted `#8C91AB`. |
+| Address and Description | `Address` bordered group is left-column width; its legend intersects the top border. Coordinates have two side-by-side inputs with `Latitude` and `Longitude` placeholders plus `Clear All`. Description spans a wider textarea and has a resize handle. | Exact textarea height and bottom-form strip vertical position: not measurable in these screenshots; controls are visible in the scroll capture/ARIA. |
+| Auxiliary controls | `Create Form Views : Standard View` and `Create a custom form page` are below the fields. `Client Script` is a dark vertical tab (fill `#313949`, x 1434.5–1470, y 374–497) docked at the right edge; it covers the right ends of the right-column inputs behind it. | Form strip stays fixed while field content scrolls. |
+
+**Dropdown panel — measured from `detail-create-country`, `detail-create-state`, `detail-create-status-panel`, and `detail-create-salutation-panel`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Country panel | Anchored to input x 554–857; panel x 554–857, y 444.5–714.5 (270 px high including its 1 px `#CED0E1` edge), opening immediately below the field; the option list scrolls inside it. Search input y 456.5–490.5 (34 px high) with a 1 px `#5464F2` focus edge; options have 32 px row pitch. | `-None-` is checked and semibold; list has further options, never selected. State with blank Country shows only `-None-`. |
+| Standard picklist | Lead Status and Salutation panels expose a listbox; first `-None-` option is selected, then metadata-ordered options. | No search textbox appears in these simple listboxes. Panel is white with a 1 px `#CED0E1` edge, 6 px padding above and below the list and 32 px option rows; the selected first option has fill `#F0F4FC`. Lead Status panel: x 1131.5–1446 (its input's width), y 359–583, opening above the field (field y 582–616) and scrolling internally. Salutation panel: x 554–664, y 398–604, opening below with all six options visible. Shadow blur: not measurable. |
+| Owner dropdown | The Lead Owner combobox opens a panel beneath its field with a focused `Search Users` input and user rows. Each row has an avatar, a first-line name, and a second-line email; the selected row has a checkmark and heavier name. The adjacent icon opens a separate dialog. | User option values are intentionally omitted. Panel edge (1 px `#CED0E1`) spans x 554–853.5, y 344–523 (179 px high). |
+
+**Select User dialog — measured from `detail-create-owner`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Backdrop and modal | Full viewport dark translucent overlay; dialog x 294–1176, y 0–353, white with 12 px lower corners and drop shadow. | Backdrop opacity and shadow blur: not measurable. |
+| Search and selected summary | Search input starts x 325, y 64, 300 × 34; `Selected User` summary sits to its right with a round avatar. | Search focused with `#5464F2` edge; selected user value is omitted here. |
+| User table and footer | Table x 325–1145, y 119–270; header labels `User Name`, `Role`, `Email`, `Profile`; radio at each row start. Footer controls at lower right; `Done` is 32 px high. | Existing owner's radio selected; `Done` disabled with flat fill `#ADB3EE` (x 1081.5–1145, y 290.5–322.5); `Cancel` secondary style. |
+
+**Related-list card — measured from `detail-notes-card`, `detail-attachments-card`, and `detail-voc-card`.**
+
+| Element | Geometry and style (CSS px) | Visible state |
+| --- | --- | --- |
+| Card shell | x 552–1458, white with 8 px corners and 12 px vertical gaps. When selected through the rail, the card scrolls to y 185 below the fixed tab bar. Heading starts x 572; 1 px header rule `#D6D6E3` at y 227–228 (Notes) or y 228–229 (Attachments) in the top-positioned card. While content is scrolled, the fixed tab row casts a soft shadow that fades out over y 185–192.5. | Selected rail row has `#EDF0F9` fill (x 332–528, 30 px high). The header action is an outlined button 20 px inside the card's right edge (`Attach`: x 1359.5–1438, y 193–220, 27 px high, 1 px border `#5464F2`, fill `#F0F1FF`, label `#5464F2`). |
+| Empty/loading body | Attachment card top y 185–304 in its selected capture; empty message begins x 584 below header. Notes input spans card inset width; Connected Records uses `Loading...`. | Empty/loading text `#8B9AB9`; `No records found` and `No Attachment` are separate strings. |
+| Bottom page-view strip | x 540–1470 below final card, white. `Add Related List` at left; view label, `Standard View` selector, and `Create a custom record page` across center/right. | Sticky `Scroll To Top` is a white circle above the strip at the right edge. |
+
+The reference font family, responsive breakpoints, hover animation timing, exact shadows, and measurements explicitly marked not measurable require later evidence; see Open questions.
+
+## Fields
+
+This table covers visible identity, business card, detail rows, and rendered form inputs. API names, data types, and flags come from `metadata/modules/Leads/fields.json` plus the Standard layout in `layouts.json`; no listed field is unique. `required` means system or layout requirement, `RO` means read-only in the observed surface or metadata. For the complete dictionary and picklist definitions, use `research/specs/leads-fields-and-layout.md` rather than duplicating them here.
+
+| UI label | API name | Data type | Required / unique / RO | Surface and notes |
+| --- | --- | --- | --- | --- |
+| Lead Image | `Record_Image` | `profileimage` | no / no / no | Portrait and form image section. |
+| Lead Owner | `Owner` | `ownerlookup` | no / no / field-managed | Business card, detail, form lookup; prefilled on create. |
+| Company | `Company` | `text` | layout / no / no | Header suffix, detail, form; red required edge. |
+| First Name | `First_Name` | `text` | no / no / no | Form left; part of detail `Lead Name`. |
+| Last Name | `Last_Name` | `text` | system / no / no | Form right; red required edge; part of detail `Lead Name`. |
+| Salutation | `Salutation` | `picklist` | no / no / no | Attached before First Name on form; part of observed full name. |
+| Lead Name | `Full_Name` | `text` | no / no / detail only | Header and detail label differ from metadata `Full Name`. |
+| Title | `Designation` | `text` | no / no / no | Detail/form left. |
+| Email | `Email` | `email` | no / no / no | Business card, detail mail link, form right. |
+| Phone; Mobile | `Phone`; `Mobile` | `phone`; `phone` | no / no / no | Business card, detail call affordance, form left. |
+| Fax; Website | `Fax`; `Website` | `text`; `website` | no / no / no | Detail/form right; empty Fax displays em dash. |
+| Lead Source; Industry | `Lead_Source`; `Industry` | `picklist`; `picklist` | no / no / no | Detail/form left; form empty `-None-`. |
+| Lead Status; Rating | `Lead_Status`; `Rating` | `picklist`; `picklist` | no / no / no | Detail/form right; status also card and ribbon; empty Rating is dash in detail and `-None-` in form. |
+| No. of Employees | `No_of_Employees` | `integer` | no / no / no | Detail/form right. |
+| Annual Revenue | `Annual_Revenue` | `currency` | no / no / no | Detail/form left; form input has currency prefix and info icon. |
+| Email Opt Out | `Email_Opt_Out` | `boolean` | no / no / no | Detail left as dash when unchecked in this capture; form checkbox. |
+| Skype ID; Secondary Email; Twitter | `Skype_ID`; `Secondary_Email`; `Twitter` | `text`; `email`; `text` | no / no / no | Detail/form right; Skype and Twitter have link affordances when populated. |
+| Created By; Modified By | `Created_By`; `Modified_By` | `ownerlookup`; `ownerlookup` | no / no / detail only | Detail right/left with timestamp; absent from real forms. |
+| Country / Region; State / Province | `Country`; `State` | `picklist`; `picklist` | no / no / no | Searchable dependent form selectors; composite Address detail. |
+| Flat / House No./ Building / Apartment Name; Street Address; City; Zip / Postal Code | `Flat_House_No_Building_Apartment_Name`; `Street`; `City`; `Zip_Code` | `text`; `text`; `text`; `text` | no / no / no | Form address inputs in this order around Country and State. |
+| Latitude; Longitude | `Latitude`; `Longitude` | `double`; `double` | no / no / no | Coordinates row inputs; no coordinate change tested. |
+| Address | `Address` | `textarea` | no / no / metadata RO | One composite detail row; component form inputs. |
+| Description | `Description` | `textarea` | no / no / no | One detail row; form text area. |
+
+Metadata flags `Connected_To__s` as create-visible and edit-hidden, yet it did not render in the captured create form. Metadata marks several system fields view-visible, but the rendered detail showed only the rows listed in Layout; see Open questions. The quick-create metadata order is Company, First Name, Last Name, Email, Phone, with Company and Last Name required; its real form was not reachable through a named control, so appearance/validation remain unverified.
+
+## Actions
+
+The header `More Options` menu lists, in visual order: Clone, Share, Delete; separator; Print Preview, Find and Merge Duplicates, Mail Merge; separator; Run Macro, Customize Business Card, Organize Lead Details, Add Related List, Review History, Enroll to Cadence, Add Kiosk (sparkle marker), Create Button, Create Client Script (sparkle marker). This inventory was observed by opening the menu only. `Send Email`, `Convert`, `Edit`, `Add Tags`, Back, previous/next navigation and the status ribbon are present. Only `Edit`, Overview/Timeline navigation, menu opening, named related-list rail navigation, and passive form selectors were followed. No create/edit, send, conversion, association, deletion, or other result-producing action was executed.
+
+The detail's field button reveals a pencil affordance when clicked or hovered. The pencil has no accessible name in the capture, so inline editor contents and validation were not inspected. `Hide Details` is expanded in the capture; collapse behavior was not exercised. Related-card actions are listed under Layout.
+
+## Filters / views / sorting / search
+
+The Timeline History filter has Modules, Users, Time, and Sources selectors and an initially disabled `Apply Filter`. Opening Modules shows checkboxes for Notes, Attachments, Tasks, Calls, Meetings, Emails. Opening Time shows `Any Time`, `Today`, `Yesterday`, `Last 7 days`, `Last 30 days`, `Custom Range`, `Specific date`. Opening Sources shows checkboxes for API, Approval Processes, Assignment Rules, Blueprint, CPQ, Cadences, Calendar Bookings, CommandCenter, Connected Workflow, Functions, Import, Kiosk, Macro, Manual, Path Finder, Review Process, Scoring Rules, Wizards, Workflow Rules. No selection or filter application occurred. The Users selector was not opened because it lists employee names. `Customer Interactions` has a separate filter with Mediums, Users, Time and disabled `Apply Filter`, plus `View By : All`. Notes has a `Recent Last` selector; Emails has Mails/Drafts/Scheduled tabs. The record page itself has no observed record-list view switch, sort, or local search. Shell search and Leads list filtering are specified in `research/specs/app-shell.md` and `research/specs/list-views.md`.
+
+## Flows
+
+1. **Open a Lead.** From the Leads list, activate one named Lead link. The record header, related rail, Overview, five-field card and detail rows appear. The record request supplies field values and action eligibility. Back returns toward the list; its exact restoration of list view/scroll was not tested. Previous/Next are visible but were not followed because only one record was permitted for this study. Empty detail values render an em dash.
+2. **Read history.** Select Timeline, then History. The observed event card shows an event type, time and actor. Open the filter button to reveal four selectors; initially Apply Filter is disabled. Modules exposes six checkboxes, Time seven options, and Sources nineteen checkboxes as listed under Filters. Switch to Interactions to see the Mediums/Users/Time filter and empty `No logs available` state. A request or rendering error state did not occur in these captures.
+3. **Open create.** Navigate to `/crm/<org>/tab/Leads/create`. The real form shows the Standard sections and required markers described above. Open a picklist without choosing a value; `-None-` is selected. With no Country, State has only `-None-`; Country itself has a search field and choices. Open Lead Owner to see the user picker; its Done button is disabled until a change. No field was filled or submitted. Required-field, format, duplicate and server-error message placement therefore remain unobserved.
+4. **Open edit.** On that same Lead, activate Edit. The form has the same section order and save controls, with existing values. The empty Rating remains `-None-`; State exposes a searchable set associated with the populated Country and retains the stored short value. No value was changed or saved. `Cancel`, `Save`, and `Save and New` labels are visible, but their result routes, dirty-form prompt, success message and failure states were not exercised.
+5. **Inspect related cards.** Select a named rail entry. The card scrolls to the top below the fixed tab row; the rail entry gains a pale highlight. Empty cards retain their title and action control where one exists. Notes has an empty input and `204` list response; Attachments shows `No Attachment`; activities and Invited Meetings show `No records found`; Connected Records alone persisted as `Loading...`. No new related record, note, attachment, activity or association was created.
+
+## Data needs
+
+Only request shapes present in `network.json` are listed. Query **names** and response **keys** are preserved; IDs and values are placeholders. `204` means no response body. The capture tool blocked the page-initiated related-record-count POST; that block was not caused by a user action. No write payload or validation response was produced.
+
+| Screen purpose | Method and path | Query/body shape | Response keys or status |
+| --- | --- | --- | --- |
+| Detail record | `GET /crm/v2.2/Leads/<recordId>` | `approved`, `converted`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`, `insert_recent_item`, `include_element_types` | `data[]`: Lead API fields, `Owner`, `Created_By`, `Modified_By`, `Created_Time`, `Modified_Time`, `Full_Name`, `Tag`, permission/status flags, `id` |
+| Edit record | `GET /crm/v2.2/Leads/<recordId>` | `approved`, `converted`, `include_element_types` | Same `data[]` record shape; three-query variant observed on edit |
+| Record actions | `GET /crm/v2.2/Leads/<recordId>/actions/available_actions` | No query | `actions[]`, `info` |
+| Page-specific feature state | `GET /crm/v2.2/Leads/<recordId>/actions/get_feature_specific_info`; v6 and v9 variants also observed | `features` | `data[]{features_info,id}`; exact consumer of each version is unconfirmed |
+| Lead module configuration | `GET /crm/v2.2/settings/modules/Leads` | `include` | `modules[]` with layout, business-card, related-list and field configuration |
+| Standard layout/form | `GET /crm/v2.1/settings/layouts` | `module`, `mode` | `layouts[]{sections,show_business_card,display_label,name,id,status,...}` |
+| Layout rules | `GET /crm/v9/settings/layout_rules` | `module`, `layout_id`, `include`, `ispagecall` | `layout_rules[]{layout,name,active,conditions,primary_field,...}`; determines conditional form/detail fields |
+| Related-list configuration | `GET /crm/v5/settings/related_lists` | `module`, `layout_id` | `related_lists[]` |
+| Child relationships | `GET /crm/v9/settings/child_relationships` | `module`, `include_inner_details`, `from` | `child_relationships[]{display_label,field,api_name,module,id}`; explains generated related-list candidates |
+| Related cards | `GET /crm/<org>/NewRelatedList.do` | `action`, `countFlow`, `id`, `fromIndex`, `module` or `action`, `pname`, `module`, `id` | `Leads`, `notes`, `isNotesRLPresent`, `showVocPromo`, card body; Social variant includes `SocialObj` |
+| Related-list count | `POST /crm/v4/Leads/<recordId>/actions/get_related_records_count` | Page-initiated body shape hidden by the capture block | Blocked before response; effect on Connected Records loading uncertain |
+| Notes | `GET /crm/v9/Leads/<recordId>/Notes` | `per_page`, `page`, `sort_by`, `sort_order` | `204`, no body |
+| Email card configuration | `GET /crm/v2.2/settings/email_related_list_configuration` | No query | `email_related_list_configuration{column_widths}` |
+| Email card | `GET /crm/v2/Leads/<recordId>/Emails/shared_details`; `GET /crm/v6/Leads/<recordId>/Emails` | Second call: `index`, `type` | `email_related_list[]`; `Emails` |
+| Tags | `GET /crm/v2.2/settings/tags` | `module`, `fromPage` | `tags`, `info{record_limit,count,allowed_count}`; supports Add Tags affordance |
+| Page customization | `POST /crm/<org>/EntityCustomization.do` | `action`, `module`, `entityId` query; no request body captured | Response recorded as unparsed text; exact keys unavailable; page configuration is its likely consumer |
+| Detail list context | `GET /crm/v2.2/Leads/actions` | `cvid` | `actions[]{display_label,name,type,layouts}` |
+| Saved list context | `GET /crm/v9/settings/custom_views/<cvid>` | `module` | `custom_views`; filters variant with `cvid`, `module` returned `204` |
+| Detail list count | `POST /crm/v2.2/Leads/actions/count` | `approved`, `cvid`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`; request body captured as an opaque string | `count`; supports current list context, precise use unconfirmed |
+| Detail list rows | `POST /crm/v2.2/Leads/bulk` | `approved`, `cvid`, `fields`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`, `page`, `per_page` | `data[]`, `info{per_page,count,page,sort_by,sort_order,more_records}` |
+| Detail related-row variant | `POST /crm/v2.2/Leads/bulk` | `relatedId`, `relationId`, `approved`; multipart body, opaque in capture | `204`, no body; precise card consumer unconfirmed |
+| Timeline | `GET /crm/v9/Leads/<recordId>/timelines` | `per_page`, `include_inner_details`, `include_timeline_types`, `include` | `timelines[]{audited_time,action,type,source,done_by,record,field_history}`, `info{page,per_page,count,more_records,next_page_token,previous_page_token}` |
+| Upcoming actions | `GET /crm/v2/Leads/<recordId>/upcoming_actions/actions/count` | No query | `count` |
+| Interactions | `GET /crm/v9/Leads/<recordId>/__journeys`; `GET .../__journeys/actions/milestone_average_time`; `GET .../__ownership_history` | `per_page` on journeys and ownership history | First two `204`; ownership response `__ownership_history`, `info` |
+| Country/State dependency | `GET /crm/v9/settings/global_map_dependency` | No query | `global_map_dependency[]{parent_global_picklist,child_global_picklist,pick_list_values[]{maps[]}}`; loaded with form, no request on opening dropdowns |
+| Owner dropdown/dialog | `GET /crm/v9/users`; `GET /crm/v9/users/<userId>` | Collection: `type__s`, `type`, `filters`, `per_page`, `page` | `users[]`, `info{per_page,count,page,more_records}`; single-user response `users[]` |
+| Create/edit owner threshold | `GET /crm/v2.1/Leads/actions/permit_threshold`; `GET /crm/v2.1/Leads/<recordId>/actions/permit_threshold` | `owner_id` | `permit_threshold{allow,reason,remaining_allow_count}` |
+| Field definitions | `GET /crm/v2/settings/fields`; `GET /crm/v4.0/settings/fields` | `module` | `fields[]`; the v2 call occurs on detail, create and edit, the v4.0 call on detail and edit |
+| Field and layout cache | `GET /crm/<org>/ModuleCache.do` | `getField`, `module` or `layoutId`, `module` | `id`, `fields`, `layouts`; occurs on detail, create and edit |
+| Saved-view list | `GET /crm/v9/settings/custom_views` | `filters`, `module`, `page`, `per_page` | `custom_views[]`, `info{per_page,default,count,translation,page,more_records}`; list context on detail and edit |
+| Rail links | `GET /crm/v6/settings/custom_links` | `module` | `204`, no body; the `Links` rail section is **not in use** |
+| Custom buttons | `GET /crm/v9/settings/custom_buttons` | `fields`, `module` | `204`, no body; **not in use** |
+| Social card | `GET /crm/v2/Social/accounts` | No query | `brands`, `accounts`, `new_social`, `info{permissions}` |
+| Owner suggestion on create | `GET /crm/v2.2/settings/automation/owner_suggestion_configuration` | `module` | `owner_suggestion_configuration[]`; consumer unconfirmed |
+| Cross-module support traffic | Assistant insights, telemetry, chat, phone and meeting bridges | Varies; outside this screen's Lead record pattern | Present, not needed for this screen |
+
+No separate Country-to-State request occurred on opening either selector; the global dependency map was already fetched at form load. Whether a changed Country triggers another request cannot be established without changing a form value.
+
+## Capture refs
+
+`detail-main`, `detail-more`, `detail-timeline`, `detail-timeline-filter`, `detail-interactions`, `detail-create`, `detail-create-country`, `detail-create-state`, `detail-create-owner`, `detail-edit`, `detail-edit-state`, `detail-inline-rating`, `detail-notes-card`, `detail-attachments-card`, `detail-meetings-card`, `detail-voc-card`, `detail-description`, `detail-filter-modules-valid`, `detail-filter-time-valid`, `detail-filter-sources-valid`, `detail-interactions-filter-valid`, `detail-create-status-panel`, `detail-create-salutation-panel`, `detail-create-owner-panel`. All are in the local research workspace. `detail-edit` was recaptured after an initial loading state; `detail-inline-rating` records the pencil affordance without editing. Five extra attempts (`detail-notes`, `detail-filter-modules`, `detail-filter-time`, `detail-filter-sources`, `detail-interactions-filter`) had skipped navigation clicks and supplied no UI evidence; the corresponding corrected captures are listed above. No customer data or screenshots are committed.
+
+## Open questions
+
+1. **Needs board decision:** the real quick-create form's appearance, validation and Save behavior. Metadata gives five fields in order, but a named entry point was not available in this scoped capture. The board has a question card on the parent research issue; no write attempt is authorized here.
+2. Why does `Connected_To__s` have `create=true` in metadata but not appear in the real create form? The genuinely missing detail rows are `Last_Activity_Time`, conversion fields, and other metadata-view-visible system fields. `Created_Time` and `Modified_Time` are embedded beneath Created By/Modified By; `Tag` appears as `Add Tags` in the header. The rendered `Lead Name` label for `Full_Name` differs from metadata `Full Name`.
+3. What are the populated columns, row actions, counts and pagination for each related list? The observed record showed empty, disabled-feature, or persistent-loading bodies. The blocked page-initiated related-record-count POST needs a safe observation path before Connected Records can be classified. How do 30 metadata-visible lists reduce to 12 rendered entries, particularly generated child lists and Checklists/Locking Information?
+4. **Needs board decision:** what does the unnamed circular button before Overview/Timeline do? What do the status-ribbon dropdown and terminal control do? The stage buttons could change record state and were not clicked. The thumbs-down icon coincides with a non-Open `record_category_value` in the picklist metadata (see Layout); whether the terminal red control lists the same values is unobserved.
+5. **Needs board decision:** how does the unnamed inline pencil open its editor, and where do inline errors appear? The affordance was visible, but activation was not permitted under the named-selector rule. Does the Company combobox offer suggestions? Its panel was not opened through a named control.
+6. **Needs board decision:** where do required, email, numeric, duplicate, and server errors appear on Save or Save and New? What are Cancel's dirty-form warning and each successful destination? These outcomes require form changes or a write attempt, so this research did not test them.
+7. Does Country change clear State, and how is an older short State value represented when the dropdown lists full names? Opening both selectors showed dependent choices but changing either value was prohibited. Whether dependency mapping is entirely supplied by the initial `global_map_dependency` response is unproven for a changed parent.
+8. What are the behavior and results of Timeline filter application, the Users and Mediums option sets, other event types, and previous/next record boundaries? Only one record and one history event were in scope; the empty Interactions state is known only for this record.
+9. What are the responsive breakpoints, loaded reference font family, hover timing, shadows, and form textarea height? These were not measurable in the available screenshots at this viewport. Use project-owned typography guidance and preserve measured color and spacing roles until further evidence is available.
