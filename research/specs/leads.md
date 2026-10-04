@@ -1,6 +1,6 @@
 # Leads — Module 1 entry and scope
 
-Status: partial read-only research for MEP-19. The conversion dialog could not be opened with the permitted capture tool; its unobserved details are explicit open questions below. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
+Status: read-only Module 1 research complete. The Convert dialog is outside Module 1 scope; its unobserved details are deferred to Deals research. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
 
 ## Purpose
 
@@ -96,7 +96,7 @@ The observed detail record's Notes, Cadences, Attachments, Products, Open Activi
 | Record Overview and Timeline History | Used; Lead Image history event | Module 1 for Lead history display; full activity sources depend on later modules. |
 | Timeline Interactions, filters and signals | Empty for observed record | Later Activities/communications/signals; board scope decision. |
 | Lead status ribbon and inline field edit | Visible; edit result not exercised | Module 1 with Lead write API; validation behavior open. |
-| Convert Lead to Contact/Account; optional Deal | Visible; no conversion executed; dialog unobserved | Depends on Contacts, Accounts and Deals data/actions. A safe dialog capture or board-provided evidence is required before UI implementation. |
+| Convert Lead to Contact/Account; optional Deal | Visible on the observed unconverted Lead; no conversion executed; dialog unobserved | **Later — outside Module 1.** Conversion creates Account and Contact records and may create a Deal; those modules follow Leads. The dialog spec is deferred to Deals research. Board-provided read-only evidence is required before UI implementation. |
 | Converted-account/contact/deal bookkeeping and converted views | Fields and empty views configured | Depends on conversion and Contacts, Accounts, Deals. |
 | Mass Convert | Menu visible; not executed | Depends on conversion plus selection/bulk API and Contacts, Accounts, Deals. |
 | Duplicates and merge | Menu visible; not executed | Depends on duplicate matching/merge capability; details unobserved. |
@@ -134,7 +134,7 @@ New captures: `leads-main` (plain list route, initial shell interval), `leads-de
 
 ## Open questions
 
-1. What does the **Convert** header trigger open? The permitted capture tool blocks the label before clicking, and automatic approval review rejected the attempt because the control could modify a Lead. Obtain a board-provided dialog capture or an explicitly safe, approved inspection method; do not bypass the tool guard.
+1. What does the **Convert** header trigger open? The permitted capture tool blocks the label before clicking, so the dialog was not observed. The board will provide read-only evidence when Deals research begins; do not bypass the tool guard. This question does not block Module 1.
 2. Which dialog controls choose new versus existing Account and Contact, and how are duplicates suggested or matched? What are the optional Deal toggle, four target fields, and owner selectors' labels, initial values, ordering, required markers, and enabled states?
 3. What are the dialog's exact pixel geometry, colors, typography, field focus/selection/disabled states, validation messages, empty choices, loading, failure, and cancel behavior? None is measurable without a dialog capture.
 4. Does the dialog label `Deal_Name` as **Potential Name**, as the Lead conversion mapping does, or **Deal Name**, as Deal field metadata does? This is a metadata label difference; the rendered label is unknown.
