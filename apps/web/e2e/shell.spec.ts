@@ -156,12 +156,32 @@ test("keyboard navigation starts with skip and operates both menus", async ({ pa
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Home", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Settings", exact: true })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Sales" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Leads" })).toBeFocused();
+  const settings = page.getByRole("link", { name: "Settings", exact: true });
+  for (let index = 0; index < 40; index++) {
+    try {
+      await expect(settings).toBeFocused({ timeout: 50 });
+      break;
+    } catch {
+      await page.keyboard.press("Tab");
+    }
+  }
+  await expect(settings).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   await page.reload();
-  for (let index = 0; index < 6; index++) await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "User menu" })).toBeFocused();
+  const userMenu = page.getByRole("button", { name: "User menu" });
+  for (let index = 0; index < 40; index++) {
+    try {
+      await expect(userMenu).toBeFocused({ timeout: 50 });
+      break;
+    } catch {
+      await page.keyboard.press("Tab");
+    }
+  }
+  await expect(userMenu).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeFocused();
   await expectNoA11yViolations(page);

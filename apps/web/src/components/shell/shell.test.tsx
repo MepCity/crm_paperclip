@@ -107,11 +107,13 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation omits empty teamspace containers", () => {
+test("Default navigation renders Leads under Sales and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(1);
-  expect(screen.queryByRole("button")).toBeNull();
-  expect(screen.queryByRole("region")).toBeNull();
+  expect(screen.getAllByRole("link")).toHaveLength(2);
+  expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
+    "/o/example/tab/Leads/list",
+  );
+  expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
 });
 
 test("Organization switcher lists organizations, marks the current one and selects using the keyboard", async () => {
