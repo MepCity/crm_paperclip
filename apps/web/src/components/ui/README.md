@@ -277,6 +277,24 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-select-user-dialog-left` | `294px` | record-detail.md › Select User dialog › Backdrop and modal › "dialog x 294–1176" | from spec |
+| `--size-select-user-dialog-width` | `882px` | record-detail.md › Select User dialog › Backdrop and modal › "dialog x 294–1176" (width) | from spec |
+| `--size-select-user-dialog-height` | `353px` | record-detail.md › Select User dialog › Backdrop and modal › "y 0–353" | from spec |
+| `--radius-select-user-dialog-bottom` | `12px` | record-detail.md › Select User dialog › Backdrop and modal › "12 px lower corners" | from spec |
+| `--size-select-user-dialog-inset` | `31px` | record-detail.md › Select User dialog › Search and selected summary › search starts x 325 (325 − 294) | from spec |
+| `--size-select-user-title-top` | `24px` | record-detail.md › Select User dialog › Select User dialog title; vertical position not measured from capture | not yet measured |
+| `--size-select-user-search-top` | `64px` | record-detail.md › Select User dialog › Search and selected summary › "Search input starts x 325, y 64" | from spec |
+| `--size-select-user-search-width` | `300px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-search-height` | `34px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-table-top` | `119px` | record-detail.md › Select User dialog › User table and footer › "Table x 325–1145, y 119–270" | from spec |
+| `--size-select-user-table-height` | `151px` | record-detail.md › Select User dialog › User table and footer › "y 119–270" (height) | from spec |
+| `--size-select-user-footer-top` | `290.5px` | record-detail.md › Select User dialog › User table and footer › "`Done` … y 290.5–322.5" | from spec |
+| `--size-select-user-done-height` | `32px` | record-detail.md › Select User dialog › User table and footer › "`Done` is 32 px high" | from spec |
+| `--size-select-user-done-width` | `63.5px` | record-detail.md › Select User dialog › User table and footer › "`Done` … x 1081.5–1145" | from spec |
+| `--size-select-user-cancel-width` | `66.5px` | record-detail.md › Select User dialog › User table and footer › Cancel secondary style; width not measured from capture | not yet measured |
+| `--size-select-user-footer-gap` | `8px` | record-detail.md › Select User dialog › User table and footer › gap between footer buttons not measured from capture | not yet measured |
+| `--size-select-user-summary-gap` | `16px` | record-detail.md › Select User dialog › Search and selected summary › spacing between summary label, avatar and name not measured from capture | not yet measured |
+| `--size-select-user-avatar` | `30px` | record-detail.md › Select User dialog › Search and selected summary › "round avatar"; diameter not measured from capture | not yet measured |
 
 ### Typeface
 

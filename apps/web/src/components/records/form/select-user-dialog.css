@@ -1,0 +1,174 @@
+/* Select User dialog geometry — record-detail.md › Layout › Visual layout › Select User dialog */
+
+.select-user-overlay {
+  background-color: color-mix(in srgb, var(--color-overlay) 50%, transparent);
+}
+
+.select-user-modal {
+  position: fixed;
+  top: 0;
+  left: var(--size-select-user-dialog-left);
+  width: var(--size-select-user-dialog-width);
+  height: var(--size-select-user-dialog-height);
+  border-bottom-left-radius: var(--radius-select-user-dialog-bottom);
+  border-bottom-right-radius: var(--radius-select-user-dialog-bottom);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.select-user-dialog {
+  position: relative;
+  height: 100%;
+  outline: none;
+}
+
+.select-user-title {
+  position: absolute;
+  top: var(--size-select-user-title-top);
+  left: var(--size-select-user-dialog-inset);
+  right: var(--size-select-user-dialog-inset);
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.select-user-search-row {
+  position: absolute;
+  top: var(--size-select-user-search-top);
+  left: var(--size-select-user-dialog-inset);
+  right: var(--size-select-user-dialog-inset);
+  display: flex;
+  align-items: center;
+  column-gap: var(--size-select-user-summary-gap);
+}
+
+.select-user-search-row .select-user-search-field {
+  width: var(--size-select-user-search-width);
+  flex-shrink: 0;
+}
+
+.select-user-search-field [data-slot="input"],
+.select-user-search-field input {
+  height: var(--size-select-user-search-height);
+  font-size: var(--text-md);
+}
+
+.select-user-summary {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  column-gap: var(--size-select-user-summary-gap);
+}
+
+.select-user-summary-label {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+}
+
+.select-user-summary-avatar {
+  height: var(--size-select-user-avatar);
+  width: var(--size-select-user-avatar);
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-avatar);
+}
+
+.select-user-summary-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+}
+
+.select-user-table-wrap {
+  position: absolute;
+  top: var(--size-select-user-table-top);
+  left: var(--size-select-user-dialog-inset);
+  right: var(--size-select-user-dialog-inset);
+  height: var(--size-select-user-table-height);
+  overflow: auto;
+}
+
+.select-user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-md);
+}
+
+.select-user-table thead th {
+  padding: 0 0 8px;
+  text-align: left;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+}
+
+.select-user-table tbody td {
+  padding: 6px 8px 6px 0;
+  vertical-align: middle;
+  color: var(--color-text);
+}
+
+.select-user-radio {
+  display: inline-flex;
+  cursor: default;
+  align-items: center;
+  outline: none;
+}
+
+.select-user-radio-circle {
+  display: flex;
+  height: 16px;
+  width: 16px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.select-user-radio[data-selected] .select-user-radio-circle {
+  border-color: var(--color-primary);
+}
+
+.select-user-radio[data-focus-visible] .select-user-radio-circle {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.select-user-radio-dot {
+  height: 8px;
+  width: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+}
+
+.select-user-footer {
+  position: absolute;
+  top: var(--size-select-user-footer-top);
+  right: var(--size-select-user-dialog-inset);
+  display: flex;
+  column-gap: var(--size-select-user-footer-gap);
+}
+
+.select-user-footer button {
+  height: var(--size-select-user-done-height);
+  padding: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.select-user-footer button:first-of-type {
+  width: var(--size-select-user-cancel-width);
+}
+
+.select-user-footer button:last-of-type {
+  width: var(--size-select-user-done-width);
+}

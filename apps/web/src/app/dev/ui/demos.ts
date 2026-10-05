@@ -1,3 +1,4 @@
+import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
@@ -35,6 +36,7 @@ import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
   "filter-panel": FilterPanelDemo,
+  "select-user-dialog": SelectUserDialogDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,

@@ -300,4 +300,24 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+
+  /* Select User dialog — record-detail.md › Layout › Visual layout › Select User dialog */
+  --size-select-user-dialog-left: 294px;
+  --size-select-user-dialog-width: 882px;
+  --size-select-user-dialog-height: 353px;
+  --radius-select-user-dialog-bottom: 12px;
+  --size-select-user-dialog-inset: 31px;
+  --size-select-user-title-top: 24px;
+  --size-select-user-search-top: 64px;
+  --size-select-user-search-width: 300px;
+  --size-select-user-search-height: 34px;
+  --size-select-user-table-top: 119px;
+  --size-select-user-table-height: 151px;
+  --size-select-user-footer-top: 290.5px;
+  --size-select-user-done-height: 32px;
+  --size-select-user-done-width: 63.5px;
+  --size-select-user-cancel-width: 66.5px;
+  --size-select-user-footer-gap: 8px;
+  --size-select-user-summary-gap: 16px;
+  --size-select-user-avatar: 30px;
 }
