@@ -258,6 +258,20 @@
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
 
+  /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
+  --color-detail-divider: #d6d6e3;
+  --size-detail-card-width: 906px;
+  --size-detail-card-padding: 20px;
+  --size-detail-business-label-width: 153.5px;
+  --size-detail-business-label-value-gap: 45.5px;
+  --size-detail-business-row-pitch: 44.5px;
+  --size-detail-details-label-width: 129px;
+  --size-detail-details-label-value-gap: 36.5px;
+  --size-detail-details-row-pitch: 44px;
+  --size-detail-columns-gap: 20px;
+  --size-detail-hide-details-padding-block: 12px;
+  --size-detail-section-title-margin-block: 12px 8px;
+
   /* View edit form */
   --size-list-view-name-width: 600px;
   --size-list-column-lane-width: 280px;

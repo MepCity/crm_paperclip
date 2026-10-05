@@ -1,8 +1,9 @@
 "use client";
 
-import { type FormatOptions, formatDateTime } from "@crm/core/format";
+import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { Link } from "@/components/ui/link";
+import { formatFieldValue } from "../field-format";
 
 export interface CellValueProps {
   field: FieldDefinition;
@@ -26,63 +27,28 @@ export interface CellValueProps {
  * views: text, email, phone, picklist, ownerlookup and datetime.
  */
 export function CellValue({ field, value, href, ownerNames = {}, format }: CellValueProps) {
-  const rendered = renderValue(field, value, href, ownerNames, format);
-  if (rendered === null) return null;
-  if (typeof rendered === "string") return rendered;
-  return (
-    <Link href={rendered.href} variant="body" prefetch={false}>
-      {rendered.text}
-    </Link>
-  );
-}
-
-type Linked = { href: string; text: string };
-
-function renderValue(
-  field: FieldDefinition,
-  value: FieldValue,
-  href: string | undefined,
-  ownerNames: Readonly<Record<string, string>>,
-  format: FormatOptions,
-): string | Linked | null {
-  const text = valueText(field, value, ownerNames, format);
-  if (text === null) return null;
-  if (href) return { href, text };
-  if (field.dataType === "email" && typeof value === "string") {
-    const mail = mailHref(value);
-    if (mail) return { href: mail, text };
+  const rendered = formatFieldValue(field, value, ownerNames, format, { href });
+  if (rendered.kind === "empty") return null;
+  if (rendered.kind === "link") {
+    return (
+      <Link href={rendered.link.href} variant="body" prefetch={false}>
+        {rendered.link.text}
+      </Link>
+    );
   }
-  return text;
-}
-
-function valueText(
-  field: FieldDefinition,
-  value: FieldValue,
-  ownerNames: Readonly<Record<string, string>>,
-  format: FormatOptions,
-): string | null {
-  if (value === null || value === "") return null;
-
-  if (field.dataType === "ownerlookup" && typeof value === "string") {
-    return ownerNames[value] ?? value;
+  if (rendered.kind === "audit") {
+    return (
+      <>
+        {rendered.name}
+        {rendered.timestamp ? (
+          <>
+            <br />
+            {rendered.timestamp}
+          </>
+        ) : null}
+      </>
+    );
   }
-
-  if (field.dataType === "datetime" && typeof value === "string") {
-    return formatDateTime(value, format);
-  }
-
-  if (field.dataType === "picklist" && typeof value === "string") {
-    const option = field.picklist?.find((candidate) => candidate.storedValue === value);
-    return option?.displayValue ?? value;
-  }
-
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return value.id;
-}
-
-/** A mail link only for a single address token. Anything else stays plain text. */
-function mailHref(value: string): string | null {
-  if (!/^[^\s<>"]+$/.test(value)) return null;
-  return `mailto:${value}`;
+  if (rendered.kind === "multiline") return rendered.text;
+  return rendered.text;
 }
