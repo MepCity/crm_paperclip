@@ -28,7 +28,7 @@ export function TextField({
 }: TextFieldProps) {
   return (
     <AriaTextField {...props} className="flex flex-col gap-1">
-      <Label className={variant === "filter-search" ? "sr-only" : "text-sm font-medium text-text"}>
+      <Label className={variant === "filter-search" ? "sr-only" : "text-md font-normal text-text"}>
         {label}
       </Label>
       {variant === "filter-search" ? (
