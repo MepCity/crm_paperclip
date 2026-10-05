@@ -28,7 +28,7 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
   };
   return (
     <PopoverTrigger isOpen={open} onOpenChange={changeOpen}>
-      <Button variant="ghost" size="toolbar" className="gap-1">
+      <Button variant="ghost" size="listToolbar" className="gap-1">
         <Icons.sort aria-hidden="true" className="h-4 w-4" />
         Sort
       </Button>

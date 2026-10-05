@@ -1,21 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
-/** Computed value of a token applied to a temporary element. */
-async function tokenValue(page: Page, property: "font-size" | "font-weight", token: string) {
-  return page.evaluate(
-    ({ property, token }) => {
-      const probe = document.createElement("span");
-      probe.style.setProperty(property, `var(${token})`);
-      document.body.append(probe);
-      const value = getComputedStyle(probe).getPropertyValue(property);
-      probe.remove();
-      return value;
-    },
-    { property, token },
-  );
-}
+import { expectType } from "./support/typography";
 
 // All expected metrics cite research/specs/list-views.md › Layout › Visual layout.
 test("list chrome matches the measured tab, toolbar and button rows", async ({ page }) => {
@@ -36,20 +23,18 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   await box("selected pill", pill, 75.5, 26);
   await expect(pill).toHaveCSS("border-radius", "6px");
   await expect(pill).toHaveCSS("background-color", "rgb(240, 244, 252)");
-  await expect(pill).toHaveCSS("font-size", await tokenValue(page, "font-size", "--text-13"));
-  await expect(pill).toHaveCSS(
-    "font-weight",
-    await tokenValue(page, "font-weight", "--font-weight-semibold"),
-  );
+  await expectType(page, pill, "--text-sm", "--font-weight-bold");
   // Toolbar; Selected / disabled; Text roles.
   await box("toolbar", chrome.locator("[data-list-toolbar]"), null, 47);
   const filter = chrome.getByRole("button", { name: "Filter", exact: true });
   await box("Filter", filter, 69.5, 27);
   await expect(filter).toHaveCSS("background-color", "rgb(237, 240, 249)");
-  await expect(filter).toHaveCSS("font-size", await tokenValue(page, "font-size", "--text-sm"));
-  await expect(filter).toHaveCSS(
-    "font-weight",
-    await tokenValue(page, "font-weight", "--font-weight-medium"),
+  await expectType(page, filter, "--text-md", "--font-weight-semibold");
+  await expectType(
+    page,
+    chrome.getByRole("button", { name: "Sort", exact: true }),
+    "--text-md",
+    "--font-weight-semibold",
   );
   await expect(filter).toHaveCSS("color", "rgb(49, 57, 73)");
   const list = chrome.getByRole("img", { name: "List presentation" });
@@ -70,6 +55,7 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   const actions = chrome.getByRole("button", { name: "Actions" });
   await box("split", split, 137.5, 33);
   await box("primary", primary, 102.5, 33);
+  await expectType(page, primary, "--text-md", "--font-weight-semibold");
   await box("More", more, 34, 33);
   await expect(primary).toHaveCSS("border-top-left-radius", "6px");
   await expect(more).toHaveCSS("border-top-right-radius", "6px");
