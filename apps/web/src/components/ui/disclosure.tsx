@@ -38,21 +38,21 @@ export function Disclosure({
             <Heading level={3}>
               <AriaButton
                 slot="trigger"
-                className="relative flex w-full min-w-0 items-center rounded-sm py-2 text-left text-sm font-semibold text-text-strong outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus-ring"
+                className="relative flex w-full min-w-0 items-center rounded-sm py-0 text-left text-lg font-bold text-text-strong outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus-ring"
               >
                 {isExpanded ? (
                   <Icons.filterChevronDown
                     aria-hidden
-                    className="absolute top-1/2 left-0 h-(--size-list-filter-chevron-height) w-(--size-list-filter-chevron-width) -translate-y-1/2"
+                    className="absolute top-1/2 left-0 mt-(--size-list-filter-chevron-offset) h-(--size-list-filter-chevron-height) w-(--size-list-filter-chevron-width) -translate-y-1/2"
                   />
                 ) : (
                   <Icons.filterChevronRight
                     aria-hidden
-                    className="absolute top-1/2 left-0 h-(--size-list-filter-chevron-width) w-(--size-list-filter-chevron-height) -translate-y-1/2"
+                    className="absolute top-1/2 left-0 mt-(--size-list-filter-chevron-offset) h-(--size-list-filter-chevron-width) w-(--size-list-filter-chevron-height) -translate-y-1/2"
                   />
                 )}
                 <span
-                  className="min-w-0 flex-1 truncate pl-(--size-list-filter-heading-inset)"
+                  className="block min-w-0 flex-1 truncate pl-(--size-list-filter-heading-inset) leading-(--size-list-filter-group-heading-line)"
                   title={label}
                 >
                   {label}
