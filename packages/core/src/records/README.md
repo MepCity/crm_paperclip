@@ -8,7 +8,13 @@ components can import it without loading authentication, a database or a service
 The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendment.
 
 Metadata describes fields, ordered picklist display/stored values, layout sections
-and ordered field API names. Exactly one view is default. List results carry page,
+and ordered field API names. Each field has `views` flags (`view`, `create`, `edit`,
+`quickCreate`), independent of `readOnly`. A section keeps its complete `fields`
+list and exposes `columns` in observed top-to-bottom order, with one array per
+`columnCount`. Fields with unobserved placement stay outside the columns. Screens
+filter each column by the desired surface flag and handle composite name/address
+inputs separately. `businessCardFields` is the ordered list of card field API names.
+Exactly one view is default. List results carry page,
 page size and `moreRecords`; `count` is separate. Updates are partial. View criteria
 and extra filters combine with `and`. Comparators are the saved-view wire values
 `equal`, `contains`, `not_contains` and `less_equal`. `equal` is exact stored-value
@@ -74,8 +80,11 @@ const total = await service.count(module.apiName, query);
 Validation uses metadata: required fields, lengths, types and published picklist
 membership. Empty published picklists accept null; Country and State validate only
 string/null and length. Unknown fields and writes to system-managed fields are
-validation failures. Owner/created-by/modified-by use the bound user; Full_Name is
-computed. System-generated fields unavailable on forms cannot be supplied by callers.
+validation failures. `Owner` accepts an organization member user ID on create
+and update; omission on create defaults to the bound user. Null, empty or unknown
+Owner IDs raise `ValidationError` keyed by `Owner`. Created_By and Modified_By use
+the bound user and remain unwritable; Full_Name is computed. System-generated
+fields unavailable on forms cannot be supplied by callers.
 Lengths apply to strings/reference IDs and numerical digits (sign and decimal
 separator excluded, exponent notation expanded). No email/phone syntax or
 unobserved decimal-place validation rule is added.
@@ -142,8 +151,10 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Search trims input; blank means no restriction. Otherwise it matches a
   case-insensitive substring (`toLowerCase`, no locale) in Full_Name, Company,
   Email or Phone. It combines with view criteria and filters using `and`.
-- Full_Name is recomputed at create/update: First_Name plus a space plus Last_Name
-  when First_Name is populated, otherwise Last_Name. Salutation is excluded.
+- Full_Name is recomputed at create/update by joining populated Salutation,
+  First_Name and Last_Name in that order with a single separating space. This
+  follows the one observed record in `research/specs/record-detail.md`; empty-name
+  cases remain interim. Input string normalization is unchanged.
 - Create/update normalize exactly empty strings (`""`) in string-valued fields to
   null before validation and storage. Strings are not trimmed; required-field
   validation and type checks for non-string fields are unchanged.
@@ -153,8 +164,14 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Seeded Owner, Created_By and Modified_By are assigned to the user who first
   opens the organization's store. Opening it as another user does not reassign
   existing records. The pure seed generator is independent of user context.
-- Callers cannot write Owner. The reference CRM create/edit forms expose Lead
-  Owner; support will be handled in a separate task after the MEP-18 form spec.
+- Business-card selection is `Owner`, `Email`, `Phone`, `Mobile`, `Lead_Status`,
+  following the observed detail card. The metadata export carries the five-field
+  limit but not the selected five; the fixture selection remains interim.
+- Without `FixtureRecordServiceOptions.listMemberIds`, the fixture regards users
+  from authorized contexts opened in that synthetic organization as its members.
+  The application selection point supplies the live `listMembers(ctx)` IDs on
+  every explicit Owner write, so removed and foreign members are rejected without
+  introducing a database dependency into the standalone fixture.
 - Effective sort follows Recorded sort behavior above. All metadata fields are
   accepted for sorting; the nine metadata-ineligible fields are not separately
   rejected until the Sort By menu is researched. Callers were not observed sending
@@ -173,7 +190,7 @@ not evidence of reference CRM behavior and must not determine screen parity.
 
 - Country/State option inventories and their dependency. Both are picklists with
   maxLength 120 and no picklist property; seed values are null. MEP-18 tracks these
-  questions, placeholder storage and Full_Name composition.
+  questions and placeholder storage.
 - Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
   fourth contains a forbidden product name and cannot enter this repository.
   Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.

@@ -4,7 +4,6 @@ import { leadsMetadata } from "./metadata";
 
 // These fields are supplied by the bound context or computed by this adapter.
 const managed = new Set([
-  "Owner",
   "Full_Name",
   "Created_By",
   "Modified_By",

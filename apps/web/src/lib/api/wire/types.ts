@@ -16,15 +16,22 @@ export type WireField = {
   system_mandatory: boolean;
   read_only: boolean;
   unique: { enforced?: boolean };
+  view_type: { view: boolean; create: boolean; edit: boolean; quick_create: boolean };
   length?: number;
   pick_list_values?: readonly { display_value: string; actual_value: string }[];
   lookup?: { module: { api_name: string } };
 };
-export type WireModule = { api_name: string; singular_label: string; plural_label: string };
+export type WireModule = {
+  api_name: string;
+  singular_label: string;
+  plural_label: string;
+  business_card_fields: readonly { api_name: string }[];
+};
 export type WireLayout = {
   sections: readonly {
     display_label: string;
     column_count: number;
+    columns: readonly (readonly string[])[];
     fields: readonly WireField[];
   }[];
 };

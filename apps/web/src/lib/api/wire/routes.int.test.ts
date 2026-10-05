@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createTestOrganization } from "@crm/core/testing";
+import { removeMember } from "@crm/core";
+import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getRecordService } from "@/lib/records";
+import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
@@ -95,6 +97,48 @@ describe("operation routes", () => {
       expect(source).toContain("@/lib/api/");
       expect(source).not.toMatch(/request\.json|X-CRM-ORG|\.list\(|\.create\(|\.count\(|\/crm\/v/);
     }
+  });
+  it("checks Owner against actual tenant membership on create and update routes", async () => {
+    const member = await addTestMember(a.ctx, "member");
+    const service = getRecordService(a.ctx);
+    const metadata = await service.getModule("Leads");
+    const body = (fields: Parameters<typeof encodeInput>[0]) => ({
+      data: [encodeInput(fields, metadata)],
+    });
+    const response = await call(operations.create, a, {
+      body: body({ Last_Name: "Owner Test", Company: "Synthetic Company", Owner: member.user.id }),
+    });
+    expect(response.status).toBe(200);
+    const id = (await response.json()).data[0].id as string;
+    expect((await service.get("Leads", id)).fields).toMatchObject({
+      Owner: member.user.id,
+      Created_By: a.ctx.userId,
+    });
+    const updated = await call(operations.update, a, {
+      recordId: id,
+      body: body({ Owner: a.ctx.userId }),
+    });
+    expect(updated.status).toBe(200);
+    expect((await service.get("Leads", id)).fields.Owner).toBe(a.ctx.userId);
+    // Opening an authorized fixture context must not override the live membership source.
+    getRecordService(member.ctx);
+    await removeMember(a.ctx, { userId: member.user.id });
+    for (const Owner of [member.user.id, b.ctx.userId]) {
+      for (const [op, fields] of [
+        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Company", Owner }],
+        [operations.update, { Owner, Company: "Rejected Change" }],
+      ] as const) {
+        const rejected = await call(op, a, { recordId: id, body: body(fields) });
+        expect(rejected.status).toBe(400);
+        expect(await rejected.json()).toMatchObject({
+          details: { fields: { Owner: expect.any(Array) } },
+        });
+      }
+    }
+    expect((await service.get("Leads", id)).fields).toMatchObject({
+      Owner: a.ctx.userId,
+      Company: "Synthetic Company",
+    });
   });
   it("passes every operation through session authentication", async () => {
     for (const [op] of handlers) {
