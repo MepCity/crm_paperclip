@@ -300,4 +300,35 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  /* record-detail.md > Visual layout > Record page and More Options menu. */
+  --color-record-primary-end: #134dc4;
+  --color-record-secondary-start: #fdfdfe;
+  --color-record-secondary-end: #f1f0f7;
+  --color-record-arrow-disabled: #adb0b6;
+  --color-record-tab-selected: #ebedff;
+  --color-record-tab-border: #a3acff;
+  --size-record-header-height: 73px;
+  --size-record-portrait: 48px;
+  --size-record-back-region: 52px;
+  --size-record-title-gap: 15px;
+  --size-record-rail-width: 220px;
+  --size-record-rail-heading-height: 38px;
+  --size-record-rail-text-inset: 8.5px;
+  --size-record-tab-row-height: 62px;
+  --size-record-tab-top: 14px;
+  --size-record-toggle-slot: 36px;
+  --size-record-tab-width: 222.5px;
+  --size-record-tab-height: 37px;
+  --size-record-tab-inset: 3px;
+  --size-record-tab-slice-width: 108px;
+  --size-record-tab-slice-height: 29px;
+  --size-record-menu-width: 217px;
+  --radius-record-menu: 4px;
+  --size-record-menu-inset: 5px;
+  --size-record-menu-inset-inline: 5.75px;
+  --size-record-menu-text-inset: 10.25px;
+  /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
+  --size-record-scroll-top: 36px;
+  --size-record-scroll-offset: 16px;
+  --size-record-demo-height: 560px;
 }
