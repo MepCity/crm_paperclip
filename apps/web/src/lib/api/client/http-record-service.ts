@@ -116,6 +116,7 @@ type ModuleLoadState = {
 };
 
 function metadataFromWire(bundle: ModuleWireBundle): ModuleMetadata {
+  // Decode surface flags, column placement and business-card selection together.
   return decodeModule(bundle.module, [...bundle.fields], bundle.layout);
 }
 

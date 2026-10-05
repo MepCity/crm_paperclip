@@ -12,6 +12,7 @@ afterEach(cleanup);
 const columns: FieldDefinition[] = [
   {
     apiName: "Full_Name",
+    views: { view: true, create: false, edit: false, quickCreate: false },
     label: "Name",
     dataType: "text",
     required: false,
@@ -20,6 +21,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Email",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Email",
     dataType: "email",
     required: false,
@@ -28,6 +30,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Company",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Company",
     dataType: "text",
     required: false,

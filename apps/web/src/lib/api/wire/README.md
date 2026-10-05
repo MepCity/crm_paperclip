@@ -46,9 +46,9 @@ are emitted; the captures do not justify synthesizing the remaining properties.
 
 | Endpoint operation | Emitted spec keys | Omitted |
 | --- | --- | --- |
-| module | `modules[].api_name`, `singular_label`, `plural_label` | Other module properties, identifiers, profiles, permissions, embedded views and related lists |
-| fields | `fields[].api_name`, `field_label`, `data_type`, `system_mandatory`, `read_only`, `unique`, optional `length`, `pick_list_values[]{display_value,actual_value}`, `lookup.module.api_name` | Field IDs, permissions, UI flags, dependencies, currency settings, category objects and other configuration |
-| layouts | `layouts[].sections[]{display_label,column_count,fields[]}`; fields use the field codec | Layout ID/name, section API name/ID, profiles, layout-specific field/UI flags |
+| module | `modules[].api_name`, `singular_label`, `plural_label`, `business_card_fields[]{api_name}` | Other module properties, identifiers, profiles, permissions, embedded views and related lists |
+| fields | `fields[].api_name`, `field_label`, `data_type`, `system_mandatory`, `read_only`, `unique`, `view_type{view,edit,create,quick_create}`, optional `length`, `pick_list_values[]{display_value,actual_value}`, `lookup.module.api_name` | Field IDs, permissions, other UI flags, dependencies, currency settings, category objects and other configuration |
+| layouts | `layouts[].sections[]{display_label,column_count,fields[]}` and interim `columns[][]`; fields use the field codec | Layout ID/name, section API name/ID, profiles, layout-specific field/UI flags |
 | views | `custom_views[]{id,name,system_defined,default}`, `info{per_page,count,page,more_records,default}` | Access/share/favorite/pin/history and translation properties, field IDs |
 | view | `custom_views[]{id,name,system_defined,default,fields[]{api_name},criteria,sort_by,sort_order}` | Access/share/favorite/pin/history and field identifiers |
 | bulk | `data[]{id,<field API names>}`, `info{per_page,count,page,sort_by,sort_order,more_records}` | All `$` flags/properties and port-absent row fields |
@@ -151,3 +151,18 @@ No populated uniqueness object was observed. The marker is emitted only for a
 true port value. The populated connected lookup's `module` leaf is likewise an
 interim domain-preserving shape, not a captured record key. JSON filter/search
 body names and `details.fields` are interim additions described above.
+
+## Interim surface metadata and Owner key mapping
+
+| Port | Wire | Evidence/status |
+| --- | --- | --- |
+| `FieldDefinition.views` | `fields[].view_type{view,create,edit,quick_create}` (also on layout fields) | Observed in Field definitions / Layouts of `research/specs/request-shapes.md` |
+| `ModuleMetadata.businessCardFields` | `modules[].business_card_fields[]{api_name}` | Observed key in Module definition; field IDs are omitted |
+| `LayoutSection.columns` | `layouts[].sections[].columns[][]` (field API name strings) | Interim: no placement key documented; the documented `column_name` has no observed UI-placement semantics |
+| Write `Owner: userId` | `data[].Owner: {id: userId}` | Interim: write payload unobserved; uses the existing owner/lookup write codec |
+
+`columns` preserves empty columns and omits fields whose placement is unknown;
+`fields` continues to carry the full section inventory. The card's observed five
+fields are documented as interim fixture selection in the record-service README.
+Owner display names and email are never sent in a write. These new interim keys
+do not assert reference write parity.

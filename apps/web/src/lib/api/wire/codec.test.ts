@@ -13,6 +13,7 @@ import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import {
   decodeCriteria,
+  decodeField,
   decodeInput,
   decodeList,
   decodeModule,
@@ -37,6 +38,7 @@ const field = (apiName: string, dataType: FieldDataType): FieldDefinition => ({
   required: false,
   readOnly: false,
   unique: false,
+  views: { view: true, create: false, edit: true, quickCreate: false },
 });
 const values = {
   text: "Example",
@@ -60,11 +62,19 @@ const metadata: ModuleMetadata = {
   apiName: "Leads",
   singularLabel: "Lead",
   pluralLabel: "Leads",
+  businessCardFields: ["ownerlookup", "email", "phone"],
   fields: [
     field("id", "bigint"),
     ...Object.keys(values).map((type) => field(type, type as FieldDataType)),
   ],
-  layout: [{ label: "Information", columnCount: 2, fields: Object.keys(values) }],
+  layout: [
+    {
+      label: "Information",
+      columnCount: 2,
+      fields: Object.keys(values),
+      columns: [Object.keys(values), []],
+    },
+  ],
 };
 const members = [{ userId: "member-id", name: "Example Member", email: "member@example.test" }];
 const tokens: { port: CriteriaToken; wire: unknown }[] = [
@@ -218,7 +228,14 @@ describe("wire codec", () => {
       () =>
         encodeLayout({
           ...metadata,
-          layout: [{ label: "Broken", columnCount: 1, fields: ["Unknown_Field"] }],
+          layout: [
+            {
+              label: "Broken",
+              columnCount: 1,
+              fields: ["Unknown_Field"],
+              columns: [["Unknown_Field"]],
+            },
+          ],
         }),
     ]) {
       try {
@@ -256,6 +273,42 @@ describe("wire codec", () => {
       encodeRecord({ id: "row-id", fields: { ownerlookup: "missing-member" } }, metadata, members),
     ).toEqual({ id: "row-id", ownerlookup: { id: "missing-member" } });
   });
+  it("round-trips every combination of surface flags through JSON", () => {
+    for (let bits = 0; bits < 16; bits++) {
+      const views = {
+        view: !!(bits & 1),
+        create: !!(bits & 2),
+        edit: !!(bits & 4),
+        quickCreate: !!(bits & 8),
+      };
+      const definition = { ...field("Example", "text"), views };
+      expect(encodeField(definition).view_type).toEqual({
+        view: views.view,
+        create: views.create,
+        edit: views.edit,
+        quick_create: views.quickCreate,
+      });
+      expect(decodeField(json(encodeField(definition)))).toEqual(definition);
+    }
+  });
+  it("round-trips the actual Owner write shape without display properties", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "owner-codec",
+      orgName: "Owner Codec",
+      userId: "actor",
+      role: "admin",
+    });
+    const module = await service.getModule("Leads");
+    expect(encodeInput({ Owner: "actor" }, module)).toEqual({ Owner: { id: "actor" } });
+    expect(decodeInput(json(encodeInput({ Owner: "actor" }, module)), module)).toEqual({
+      Owner: "actor",
+    });
+    expect(encodeInput({}, module)).toEqual({});
+    expect(() => encodeInput({ Owner: { module: "Contacts", id: "actor" } }, module)).toThrow(
+      ValidationError,
+    );
+  });
   it("round-trips metadata, layout ordering and optional field attributes", () => {
     const module: ModuleMetadata = {
       ...metadata,
@@ -283,10 +336,16 @@ describe("wire codec", () => {
       api_name: "Leads",
       singular_label: "Lead",
       plural_label: "Leads",
+      business_card_fields: [
+        { api_name: "ownerlookup" },
+        { api_name: "email" },
+        { api_name: "phone" },
+      ],
     });
     expect(encodeLayout(module).sections[0]).toMatchObject({
       display_label: "Information",
       column_count: 2,
+      columns: [Object.keys(values), []],
     });
     expect(encodeField(module.fields.at(-1) as FieldDefinition)).toEqual({
       api_name: "Choice",
@@ -295,6 +354,7 @@ describe("wire codec", () => {
       system_mandatory: true,
       read_only: true,
       unique: { enforced: true },
+      view_type: { view: true, create: false, edit: true, quick_create: false },
       length: 20,
       pick_list_values: [{ display_value: "Shown", actual_value: "Stored" }],
       lookup: { module: { api_name: "Contacts" } },
