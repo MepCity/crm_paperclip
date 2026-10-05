@@ -227,12 +227,20 @@
   --size-list-filter-search-icon: 13.5px;
   --size-list-filter-search-icon-inset: 11.5px;
   --size-list-filter-search-padding: 31px;
+  --size-list-filter-search-width: 167px;
+  --size-list-filter-search-end-inset: 15px;
+  --size-list-filter-title-inset-top: 20.5px;
+  --size-list-filter-title-line: 13px;
+  --size-list-filter-group-heading-line: 20px;
+  --size-list-filter-heading-to-search: 19.5px;
+  --size-list-filter-search-to-group: 18px;
+  --size-list-filter-group-to-row: 7px;
+  --size-list-filter-group-gap: 16px;
   --size-list-filter-row-height: 30px;
   --size-list-filter-row-padding: 6px;
-  --size-list-filter-row-line: 16px;
-  --size-list-filter-label-gap: 8.5px;
   --size-list-filter-chevron-width: 8px;
   --size-list-filter-chevron-height: 4.5px;
+  --size-list-filter-chevron-offset: 1.25px;
   --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
@@ -300,6 +308,8 @@
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
+  --size-checkbox-label-gap: 8.5px;
+  --size-checkbox-label-line: 16px;
 
   /* Manage Columns dialog */
   --size-dialog-width: 400px;
@@ -402,4 +412,35 @@
   --size-form-field-group-legend-padding: 12.5px;
   /* Description textarea height is not measurable in the capture; demo placeholder only. */
   --size-form-description-height: 80px;
+  /* record-detail.md > Visual layout > Record page and More Options menu. */
+  --color-record-primary-end: #134dc4;
+  --color-record-secondary-start: #fdfdfe;
+  --color-record-secondary-end: #f1f0f7;
+  --color-record-arrow-disabled: #adb0b6;
+  --color-record-tab-selected: #ebedff;
+  --color-record-tab-border: #a3acff;
+  --size-record-header-height: 73px;
+  --size-record-portrait: 48px;
+  --size-record-back-region: 52px;
+  --size-record-title-gap: 15px;
+  --size-record-rail-width: 220px;
+  --size-record-rail-heading-height: 38px;
+  --size-record-rail-text-inset: 8.5px;
+  --size-record-tab-row-height: 62px;
+  --size-record-tab-top: 14px;
+  --size-record-toggle-slot: 36px;
+  --size-record-tab-width: 222.5px;
+  --size-record-tab-height: 37px;
+  --size-record-tab-inset: 3px;
+  --size-record-tab-slice-width: 108px;
+  --size-record-tab-slice-height: 29px;
+  --size-record-menu-width: 217px;
+  --radius-record-menu: 4px;
+  --size-record-menu-inset: 5px;
+  --size-record-menu-inset-inline: 5.75px;
+  --size-record-menu-text-inset: 10.25px;
+  /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
+  --size-record-scroll-top: 36px;
+  --size-record-scroll-offset: 16px;
+  --size-record-demo-height: 560px;
 }

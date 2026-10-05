@@ -8,6 +8,17 @@ import { type ReactNode, useEffect, useState } from "react";
  */
 const COLOUR_GROUPS = [
   {
+    label: "Record detail",
+    tokens: [
+      "--color-record-primary-end",
+      "--color-record-secondary-start",
+      "--color-record-secondary-end",
+      "--color-record-arrow-disabled",
+      "--color-record-tab-selected",
+      "--color-record-tab-border",
+    ],
+  },
+  {
     label: "Page, surfaces and ink",
     tokens: [
       "--color-bg",
@@ -208,6 +219,7 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
+  "--radius-record-menu",
   "--radius-sm",
   "--radius-md",
   "--radius-lg",
@@ -219,6 +231,33 @@ const RADIUS_TOKENS = [
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
 const SIZE_GROUPS = [
+  {
+    label: "Record detail",
+    tokens: [
+      "--size-record-header-height",
+      "--size-record-portrait",
+      "--size-record-back-region",
+      "--size-record-title-gap",
+      "--size-record-rail-width",
+      "--size-record-rail-heading-height",
+      "--size-record-rail-text-inset",
+      "--size-record-tab-row-height",
+      "--size-record-tab-top",
+      "--size-record-toggle-slot",
+      "--size-record-tab-width",
+      "--size-record-tab-height",
+      "--size-record-tab-inset",
+      "--size-record-tab-slice-width",
+      "--size-record-tab-slice-height",
+      "--size-record-menu-width",
+      "--size-record-menu-inset",
+      "--size-record-menu-inset-inline",
+      "--size-record-menu-text-inset",
+      "--size-record-scroll-top",
+      "--size-record-scroll-offset",
+      "--size-record-demo-height",
+    ],
+  },
   {
     label: "Shell positions",
     tokens: [
@@ -311,12 +350,20 @@ const SIZE_GROUPS = [
       "--size-list-filter-search-icon",
       "--size-list-filter-search-icon-inset",
       "--size-list-filter-search-padding",
+      "--size-list-filter-search-width",
+      "--size-list-filter-search-end-inset",
+      "--size-list-filter-title-inset-top",
+      "--size-list-filter-title-line",
+      "--size-list-filter-group-heading-line",
+      "--size-list-filter-heading-to-search",
+      "--size-list-filter-search-to-group",
+      "--size-list-filter-group-to-row",
+      "--size-list-filter-group-gap",
       "--size-list-filter-row-height",
       "--size-list-filter-row-padding",
-      "--size-list-filter-row-line",
-      "--size-list-filter-label-gap",
       "--size-list-filter-chevron-width",
       "--size-list-filter-chevron-height",
+      "--size-list-filter-chevron-offset",
       "--size-list-filter-heading-inset",
       "--size-list-filter-button-width",
       "--size-list-filter-button-height",
@@ -377,6 +424,8 @@ const SIZE_GROUPS = [
       "--size-button-ellipsis-height",
       "--size-checkbox",
       "--size-checkbox-border",
+      "--size-checkbox-label-gap",
+      "--size-checkbox-label-line",
       "--size-dialog-width",
       "--size-dialog-height",
       "--size-dialog-padding",

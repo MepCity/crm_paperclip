@@ -27,9 +27,8 @@ separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbo
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
-The vertical gaps and search-field width measured in Filter content are not applied yet
-and use the existing scale; open question 17 records the uncaptured closed group and
-checked checkbox.
+Vertical gaps, search-field width and end inset use the measured Filter content tokens.
+Open question 17 records the uncaptured closed group and checked checkbox.
 
 ## Token sources
 
@@ -219,12 +218,20 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
 | `--size-list-filter-search-icon-inset` | `11.5px` | list-views.md › Filter content › "starting 11.5 px inside the field's outer left edge" | from spec |
 | `--size-list-filter-search-padding` | `31px` | list-views.md › Filter content › "the placeholder text starting 32 px inside that edge". Padding is that inset minus the 1 px border | from spec |
+| `--size-list-filter-search-width` | `167px` | list-views.md › Filter content › "167 px wide" | from spec |
+| `--size-list-filter-search-end-inset` | `15px` | list-views.md › Filter content › "15 px from its inner right edge" | from spec |
+| `--size-list-filter-title-inset-top` | `20.5px` | list-views.md › Filter content › "panel inner top edge to heading ink top 20.5 px" | from spec |
+| `--size-list-filter-title-line` | `13px` | list-views.md › Filter content › heading baseline 32 px − ink top 20.5 px, tuned for Figtree baseline probe | derived from spec |
+| `--size-list-filter-group-heading-line` | `20px` | list-views.md › Filter content › line box taller than 15.5 px heading; baseline 15 px below top, 5 px above bottom (no descender clip) | derived from spec |
+| `--size-list-filter-heading-to-search` | `19.5px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" minus title line extent below baseline | derived from spec |
+| `--size-list-filter-search-to-group` | `18px` | list-views.md › Filter content › search bottom to first group baseline 33 px, minus 15 px baseline inset in group heading line box | derived from spec |
+| `--size-list-filter-group-to-row` | `7px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" minus 5 px below baseline in line box | derived from spec |
+| `--size-list-filter-group-gap` | `16px` | list-views.md › Filter content › last row bottom to next group baseline 31 px, minus 15 px baseline inset in line box | derived from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
 | `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
-| `--size-list-filter-row-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
-| `--size-list-filter-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
 | `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-offset` | `1.25px` | list-views.md › Filter content › triangle top 6 px above heading baseline; centers chevron in 20 px line box (3.75 px above baseline vs 5 px box center) | derived from spec |
 | `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
@@ -280,6 +287,8 @@ what the "no colour constants" rule forbids.
 | `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
+| `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
+| `--size-checkbox-label-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
@@ -388,6 +397,36 @@ To replace the typeface, update `--font-sans`, the single `@font-face` in `token
 and the font folder with the official file and license. Then refit the size and weight
 measurements in `typography.md`, update the tokens and this table, and verify the checksums,
 rendered widths and weight axis. Components inherit `--font-sans` and need no family edits.
+
+| `--color-record-primary-end` | `#134dc4` | record-detail.md › Header buttons › Primary bottom fill | from spec |
+| `--color-record-secondary-start` | `#fdfdfe` | record-detail.md › Header buttons › Secondary top fill | from spec |
+| `--color-record-secondary-end` | `#f1f0f7` | record-detail.md › Header buttons › Secondary bottom fill | from spec |
+| `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
+| `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
+| `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
+| `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
+| `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
+| `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
+| `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
+| `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
+| `--size-record-tab-row-height` | `62px` | record-detail.md › Canvas and tab row; Status strip › 185 − 123 card offset | from spec |
+| `--size-record-tab-top` | `14px` | record-detail.md › Canvas and tab row › 137 − 123 pill offset | from spec |
+| `--size-record-toggle-slot` | `36px` | record-detail.md › Canvas and tab row › 588 − 552 reserved slot | from spec |
+| `--size-record-tab-width` | `222.5px` | record-detail.md › Hidden-rail layout › Outer tab pill › 222.5 wide; same pill with rail shown | from spec |
+| `--size-record-tab-height` | `37px` | record-detail.md › Hidden-rail layout › Outer tab pill › 37 high | from spec |
+| `--size-record-tab-inset` | `3px` | record-detail.md › Hidden-rail layout › Tab slices › 384 − 380 minus 1px border | from spec |
+| `--size-record-tab-slice-width` | `108px` | record-detail.md › Canvas and tab row › 712 − 604 selected slice | from spec |
+| `--size-record-tab-slice-height` | `29px` | record-detail.md › Hidden-rail layout › Tab slices › 29 high | from spec |
+| `--size-record-menu-width` | `217px` | record-detail.md › More Options menu › Popover › 1380 − 1163 | from spec |
+| `--radius-record-menu` | `4px` | record-detail.md › More Options menu › Popover › 4 px corners | from spec |
+| `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
+| `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
+| `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
+| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 
 ### Measured values that carry no token
 
@@ -547,3 +586,12 @@ opacity, with the same white label, instead of a faded copy of the enabled gradi
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
 menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
+
+
+## Record detail extensions
+
+Record-specific button, menu and tab appearances preserve the measured detail values.
+Shared tokens used here: panel border, surface, background, text, strong text, button
+border, primary gradient start, surface-active rail selection, surface-hover menu row,
+menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
+Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.

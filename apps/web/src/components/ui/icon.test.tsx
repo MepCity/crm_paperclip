@@ -5,6 +5,7 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "recordPortrait",
   "filterChevronDown",
   "filterChevronRight",
   "filterSearch",
@@ -55,6 +56,26 @@ test("Icons stays decorative when a primitive hides it", () => {
   render(<Icon aria-hidden="true" />);
 
   expect(screen.queryByRole("img")).toBeNull();
+});
+
+test("filter icons expose img role only with aria-label", () => {
+  render(<Icons.filterSearch aria-label="Search filters" />);
+  expect(screen.getByRole("img", { name: "Search filters" }).getAttribute("aria-label")).toBe(
+    "Search filters",
+  );
+
+  render(<Icons.filterChevronDown aria-label="Expand" />);
+  expect(screen.getByRole("img", { name: "Expand" }).getAttribute("aria-label")).toBe("Expand");
+
+  const { container: rightContainer } = render(<Icons.filterChevronRight />);
+  expect(rightContainer.querySelector("svg")?.getAttribute("role")).toBeNull();
+});
+
+test("filter icons omit img role when decorative", () => {
+  render(<Icons.filterSearch aria-hidden />);
+  expect(screen.queryByRole("img")).toBeNull();
+  const { container } = render(<Icons.filterChevronDown />);
+  expect(container.querySelector("svg")?.getAttribute("role")).toBeNull();
 });
 
 test("Icons aria-hidden removes a labelled icon from the accessibility tree", () => {

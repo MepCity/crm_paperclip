@@ -96,7 +96,7 @@ export function AppShell({
               <Link
                 variant="icon"
                 aria-label="Settings"
-                href={`/o/${orgSlug}/settings`}
+                href={`/crm/${orgSlug}/settings`}
                 className="size-(--size-topbar-control-pitch)"
               >
                 <Icons.settings className="size-(--size-topbar-icon)" aria-hidden />
