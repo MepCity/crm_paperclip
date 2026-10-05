@@ -73,9 +73,21 @@ test("email and website values use links", () => {
 
 test("Created_By renders user and audit timestamp on two lines", () => {
   const auditTimestamp = "2026-03-01T22:30:00Z";
-  show(field("Created_By", "ownerlookup"), "user-1", { auditTimestamp });
+  const format = { locale: "en-US", timeZone: "UTC" };
+  const { container } = render(
+    <FieldValueView
+      field={field("Created_By", "ownerlookup")}
+      value="user-1"
+      format={format}
+      ownerNames={{ "user-1": "Alex Morgan" }}
+      auditTimestamp={auditTimestamp}
+    />,
+  );
   expect(screen.getByText("Alex Morgan")).toBeTruthy();
-  expect(screen.getByText(formatRecordAuditDateTime(auditTimestamp, DEFAULT_FORMAT))).toBeTruthy();
+  const timestamp = container.querySelector(".detail-audit-timestamp");
+  expect(timestamp).toBeTruthy();
+  expect(timestamp?.textContent).toBe("Sun, 01 Mar 2026 10:30 PM");
+  expect(formatRecordAuditDateTime(auditTimestamp, format)).toBe("Sun, 01 Mar 2026 10:30 PM");
 });
 
 test("renders common field types for detail rows", () => {

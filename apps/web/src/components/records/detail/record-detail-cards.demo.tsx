@@ -57,6 +57,11 @@ const leadInfoLeft = [
     value: "user-2",
     auditTimestamp: "2026-03-01T22:30:00Z",
   },
+  {
+    column: "left" as const,
+    field: field("Secondary_Email", "Secondary Email", "email"),
+    value: "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789@example.org",
+  },
 ];
 
 const leadInfoRight = [

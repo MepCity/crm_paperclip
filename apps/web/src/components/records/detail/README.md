@@ -29,10 +29,14 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
+- MEP-171 tracks remaining visual gaps: value column wrap width, vertical
+  position of `Hide Details` and section headings (section heading is about 22 px
+  lower than reference; `Hide Details` about 1.5 px lower), spacing between
+  two-line field values, and pencil icon placement.
 
 ## Visual source
 
 `research/specs/record-detail.md` › **Layout** › **Visual layout** (Business card,
 Details card). Typography roles: `research/specs/typography.md` › **List and detail
 text roles** (`Business/details field label`, `Business/details field value`,
-`Details divider heading`).
+`Details divider heading`, `Details subsection heading`).

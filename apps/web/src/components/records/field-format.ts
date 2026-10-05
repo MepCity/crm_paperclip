@@ -40,7 +40,7 @@ export function formatFieldValue(
     currencyCode?: string;
   },
 ): FieldFormattedValue {
-  if (isFieldValueEmpty(field, value)) return { kind: "empty" };
+  if (value === null || value === "") return { kind: "empty" };
 
   if (isAuditField(field) && typeof value === "string") {
     const name = ownerNames[value] ?? value;

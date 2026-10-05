@@ -19,8 +19,10 @@ function textField(apiName: string, dataType: "text" | "integer" | "currency" | 
 test("integer and boolean match list cell string rendering", () => {
   const integer = formatFieldValue(textField("n", "integer"), 12_345, {}, format);
   expect(integer).toEqual({ kind: "text", text: "12345" });
-  const boolean = formatFieldValue(textField("b", "boolean"), true, {}, format);
-  expect(boolean).toEqual({ kind: "text", text: "true" });
+  const booleanTrue = formatFieldValue(textField("b", "boolean"), true, {}, format);
+  expect(booleanTrue).toEqual({ kind: "text", text: "true" });
+  const booleanFalse = formatFieldValue(textField("b2", "boolean"), false, {}, format);
+  expect(booleanFalse).toEqual({ kind: "text", text: "false" });
 });
 
 test("currency uses a supplied code and plain numbers otherwise", () => {

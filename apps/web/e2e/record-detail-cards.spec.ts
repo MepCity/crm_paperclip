@@ -80,13 +80,18 @@ test.describe("record detail cards visual layout", () => {
     const firstTextTop = labelTextTop({ y: labelBox?.y ?? 0 }) - (cardBox?.y ?? 0);
     expect(Math.abs(firstTextTop - BUSINESS_FIRST_LABEL_TEXT_TOP)).toBeLessThanOrEqual(1);
 
-    const statusLabel = business.getByText("Lead Status", { exact: true });
-    const statusBox = await statusLabel.boundingBox();
-    expect(statusBox).not.toBeNull();
-    const statusRow = business.locator('[data-detail-field="Lead_Status"]');
-    const rowBox = await statusRow.boundingBox();
-    expect(rowBox).not.toBeNull();
-    expect(Math.abs((rowBox?.height ?? 0) - BUSINESS_ROW_PITCH)).toBeLessThanOrEqual(2);
+    const businessLabelNames = ["Lead Owner", "Email", "Phone", "Mobile", "Lead Status"];
+    const businessLabelTops: number[] = [];
+    for (const name of businessLabelNames) {
+      const box = await business.getByText(name, { exact: true }).boundingBox();
+      expect(box).not.toBeNull();
+      businessLabelTops.push(box?.y ?? 0);
+    }
+    for (let i = 1; i < businessLabelTops.length; i += 1) {
+      const prevTop = businessLabelTops[i - 1] ?? 0;
+      const currTop = businessLabelTops[i] ?? 0;
+      expect(Math.abs(currTop - prevTop - BUSINESS_ROW_PITCH)).toBeLessThanOrEqual(1);
+    }
 
     await expect(ownerLabel).toHaveCSS("color", await colorToken(page, "--color-text-muted"));
     await expectType(page, ownerLabel, "--text-md", "--font-weight-normal");
@@ -134,7 +139,36 @@ test.describe("record detail cards visual layout", () => {
     );
 
     const firstDetailsTextTop = labelTextTop({ y: leftLabelBox?.y ?? 0 }) - (detailsBox?.y ?? 0);
-    expect(Math.abs(firstDetailsTextTop - DETAILS_FIRST_LABEL_TEXT_TOP)).toBeLessThanOrEqual(2);
+    expect(Math.abs(firstDetailsTextTop - DETAILS_FIRST_LABEL_TEXT_TOP)).toBeLessThanOrEqual(1);
+
+    const leftLabelNames = ["Title", "Lead Source", "Modified By"];
+    const leftLabelTops: number[] = [];
+    for (const name of leftLabelNames) {
+      const box = await leftColumn.getByText(name, { exact: true }).boundingBox();
+      expect(box).not.toBeNull();
+      leftLabelTops.push(box?.y ?? 0);
+    }
+    for (let i = 1; i < leftLabelTops.length; i += 1) {
+      const prevTop = leftLabelTops[i - 1] ?? 0;
+      const currTop = leftLabelTops[i] ?? 0;
+      expect(Math.abs(currTop - prevTop - DETAILS_ROW_PITCH)).toBeLessThanOrEqual(1);
+    }
+
+    const longEmailRow = leftColumn.locator('[data-detail-field="Secondary_Email"]');
+    const longEmailWrap = longEmailRow.locator(".detail-field-value-wrap");
+    const longEmailLink = longEmailRow.locator(".detail-field-value-link");
+    const [longEmailWrapBox, longEmailLinkBox, longEmailRowBox] = await Promise.all([
+      longEmailWrap.boundingBox(),
+      longEmailLink.boundingBox(),
+      longEmailRow.boundingBox(),
+    ]);
+    expect(longEmailWrapBox).not.toBeNull();
+    expect(longEmailLinkBox).not.toBeNull();
+    expect(longEmailRowBox).not.toBeNull();
+    expect((longEmailLinkBox?.x ?? 0) + (longEmailLinkBox?.width ?? 0)).toBeLessThanOrEqual(
+      (longEmailWrapBox?.x ?? 0) + (longEmailWrapBox?.width ?? 0) + 0.5,
+    );
+    expect(longEmailRowBox?.height ?? 0).toBeGreaterThan(DETAILS_ROW_PITCH);
 
     const rightColumn = columns.locator('[data-detail-column="right"]');
     const rightCompany = rightColumn.getByText("Company", { exact: true });
@@ -155,10 +189,17 @@ test.describe("record detail cards visual layout", () => {
 
     const longRow = rightColumn.locator('[data-detail-field="Description"]');
     const shortRow = leftColumn.locator('[data-detail-field="Title"]');
-    const [longBox, shortBox] = await Promise.all([longRow.boundingBox(), shortRow.boundingBox()]);
+    const companyRow = rightColumn.locator('[data-detail-field="Company"]');
+    const [longBox, shortBox, companyBox] = await Promise.all([
+      longRow.boundingBox(),
+      shortRow.boundingBox(),
+      companyRow.boundingBox(),
+    ]);
     expect(longBox).not.toBeNull();
     expect(shortBox).not.toBeNull();
+    expect(companyBox).not.toBeNull();
     expect((longBox?.height ?? 0) > DETAILS_ROW_PITCH).toBeTruthy();
-    expect(Math.abs((shortBox?.height ?? 0) - DETAILS_ROW_PITCH)).toBeLessThanOrEqual(2);
+    expect(Math.abs((shortBox?.height ?? 0) - DETAILS_ROW_PITCH)).toBeLessThanOrEqual(1);
+    expect(Math.abs((companyBox?.height ?? 0) - DETAILS_ROW_PITCH)).toBeLessThanOrEqual(1);
   });
 });
