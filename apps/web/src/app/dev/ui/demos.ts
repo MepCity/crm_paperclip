@@ -1,5 +1,5 @@
-import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
+import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
