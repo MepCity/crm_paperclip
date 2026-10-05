@@ -119,6 +119,7 @@ function expectPath(
   operation: Operation,
   params: Record<string, string>,
 ): void {
+  expect(entry.method).toBe(operation.method);
   expect(entry.pathname).toBe(operationPath(operation, params));
 }
 
@@ -130,6 +131,30 @@ function logEntry(log: readonly RecordedRequest[], index: number): RecordedReque
   const entry = log[index];
   if (!entry) throw new Error(`Expected request at index ${index}.`);
   return entry;
+}
+
+function entriesForOperation(
+  log: readonly RecordedRequest[],
+  operation: Operation,
+  params: Record<string, string>,
+): RecordedRequest[] {
+  const path = operationPath(operation, params);
+  return log.filter((entry) => entry.method === operation.method && entry.pathname === path);
+}
+
+function entriesMatchingOperation(
+  log: readonly RecordedRequest[],
+  operation: Operation,
+): RecordedRequest[] {
+  return log.filter((entry) => resolveOperation(entry.method, entry.pathname)?.op === operation);
+}
+
+function onRequestLogged(log: RecordedRequest[], url: URL, requestOptions?: ApiFetchOptions): void {
+  log.push({
+    method: requestOptions?.method ?? "GET",
+    pathname: url.pathname,
+    queryKeys: [...url.searchParams.keys()].sort(),
+  });
 }
 
 describe("http record service requests", () => {
@@ -172,7 +197,7 @@ describe("http record service requests", () => {
       sort: { field: "Last_Name", order: "asc" },
       fields: ["Last_Name", "Company"],
     });
-    const bulkCalls = log.filter((entry) => entry.pathname.includes("/bulk"));
+    const bulkCalls = entriesForOperation(log, operations.bulk, { module });
     expect(bulkCalls).toHaveLength(1);
     expectQueryKeys(logEntry(bulkCalls, 0), [
       "cvid",
@@ -185,7 +210,7 @@ describe("http record service requests", () => {
 
     log.length = 0;
     await service.count(module, { viewId });
-    const countCalls = log.filter((entry) => entry.pathname.includes("/actions/count"));
+    const countCalls = entriesForOperation(log, operations.count, { module });
     expect(countCalls).toHaveLength(1);
     expectQueryKeys(logEntry(countCalls, 0), ["cvid"]);
 
@@ -206,29 +231,43 @@ describe("http record service requests", () => {
 
     log.length = 0;
     await service.create(module, { Last_Name: "Wire", Company: "Wire Co" });
-    const createCall = log.find(
-      (entry) => entry.method === "POST" && !entry.pathname.includes("/bulk"),
-    );
-    if (!createCall) throw new Error("Expected create request.");
-    expectQueryKeys(createCall, []);
+    const createCalls = entriesForOperation(log, operations.create, { module });
+    expect(createCalls).toHaveLength(1);
+    expectQueryKeys(logEntry(createCalls, 0), []);
 
     log.length = 0;
     await service.update(module, recordId, { Last_Name: "Updated" });
-    const updateCall = log.find((entry) => entry.method === "PUT");
-    if (!updateCall) throw new Error("Expected update request.");
-    expectQueryKeys(updateCall, []);
+    const updateCalls = entriesForOperation(log, operations.update, { module, recordId });
+    expect(updateCalls).toHaveLength(1);
+    expectQueryKeys(logEntry(updateCalls, 0), []);
 
     log.length = 0;
     await service.delete(module, [recordId]);
-    const deleteCall = log.find((entry) => entry.method === "DELETE");
-    if (!deleteCall) throw new Error("Expected delete request.");
-    expectQueryKeys(deleteCall, ["ids"]);
+    const deleteCalls = entriesForOperation(log, operations.delete, { module });
+    expect(deleteCalls).toHaveLength(1);
+    expectQueryKeys(logEntry(deleteCalls, 0), ["ids"]);
 
     log.length = 0;
     await service.listUsers();
     expect(log).toHaveLength(1);
     expectPath(logEntry(log, 0), operations.users, {});
     expectQueryKeys(logEntry(log, 0), ["page", "per_page", "type"]);
+  });
+
+  it("sends bulk paging query names without sort when sort is omitted", async () => {
+    const log: RecordedRequest[] = [];
+    const service = createTrackedService((entry) => log.push(entry));
+    const module = "Leads";
+    const summaries = await service.listViewSummaries(module);
+    const defaultSummary = summaries.find((view) => view.isDefault) ?? summaries[0];
+    if (!defaultSummary) throw new Error("Missing view summary.");
+    const viewId = defaultSummary.id;
+
+    log.length = 0;
+    await service.list(module, { viewId, page: 1, perPage: 10 });
+    const bulkCalls = entriesForOperation(log, operations.bulk, { module });
+    expect(bulkCalls).toHaveLength(1);
+    expectQueryKeys(logEntry(bulkCalls, 0), ["cvid", "fields", "page", "per_page"]);
   });
 
   it("loads module metadata once and keeps create to one write and one read", async () => {
@@ -250,23 +289,114 @@ describe("http record service requests", () => {
       operationPath(operations.layouts, { module }),
     ]);
     const metadataRequests = log.filter((entry) => metadataPaths.has(entry.pathname));
-    const bulkRequests = log.filter((entry) => entry.pathname.endsWith("/bulk"));
+    const bulkRequests = entriesForOperation(log, operations.bulk, { module });
     expect(metadataRequests).toHaveLength(3);
     expect(bulkRequests).toHaveLength(2);
 
     log.length = 0;
     await service.create(module, { Last_Name: "Count", Company: "Count Co" });
     expect(log.filter((entry) => metadataPaths.has(entry.pathname))).toHaveLength(0);
-    expect(
-      log.filter((entry) => entry.method === "POST" && entry.pathname.endsWith(`/${module}`)),
-    ).toHaveLength(1);
-    expect(
-      log.filter((entry) => entry.method === "GET" && entry.pathname.includes(`/${module}/`)),
-    ).toHaveLength(1);
+    expect(entriesForOperation(log, operations.create, { module })).toHaveLength(1);
+    expect(entriesMatchingOperation(log, operations.record)).toHaveLength(1);
 
     log.length = 0;
     await service.listViewSummaries(module);
     expect(log).toHaveLength(1);
     expectPath(logEntry(log, 0), operations.views, { module });
+  });
+
+  it("shares one module metadata load across concurrent port calls", async () => {
+    const log: RecordedRequest[] = [];
+    const probe = createTrackedService((entry) => log.push(entry));
+    const module = "Leads";
+    const summaries = await probe.listViewSummaries(module);
+    const defaultSummary = summaries.find((view) => view.isDefault) ?? summaries[0];
+    if (!defaultSummary) throw new Error("Missing view summary.");
+    const viewId = defaultSummary.id;
+    const seeded = await probe.list(module, { viewId, page: 1, perPage: 10 });
+    const recordId = seeded.records[0]?.id;
+    if (!recordId) throw new Error("Missing fixture record.");
+
+    log.length = 0;
+    const service = createTrackedService((entry) => log.push(entry));
+    await Promise.all([
+      service.getModule(module),
+      service.list(module, { viewId, page: 1, perPage: 10, fields: ["Last_Name"] }),
+      service.get(module, recordId),
+    ]);
+
+    expect(entriesForOperation(log, operations.module, { module })).toHaveLength(1);
+    expect(entriesForOperation(log, operations.fields, { module })).toHaveLength(1);
+    expect(entriesForOperation(log, operations.layouts, { module })).toHaveLength(1);
+  });
+
+  it("does not cache module metadata after a failed load", async () => {
+    const log: RecordedRequest[] = [];
+    const module = "Leads";
+    const operationDeps = deps();
+    const fieldsPath = operationPath(operations.fields, { module });
+    let rejectFieldsOnce = true;
+
+    const service = createHttpRecordService({
+      orgSlug: ctx.orgSlug,
+      fetch: (path, requestOptions) => {
+        const url = new URL(path, "http://test.local");
+        onRequestLogged(log, url, requestOptions);
+        if (rejectFieldsOnce && url.pathname === fieldsPath) {
+          rejectFieldsOnce = false;
+          return Promise.reject(new Error("network"));
+        }
+        return operationApiFetch(operationDeps, path, requestOptions);
+      },
+    });
+
+    await expect(service.getModule(module)).rejects.toThrow("network");
+    log.length = 0;
+    await service.getModule(module);
+    expect(entriesForOperation(log, operations.module, { module })).toHaveLength(1);
+    expect(entriesForOperation(log, operations.fields, { module })).toHaveLength(1);
+    expect(entriesForOperation(log, operations.layouts, { module })).toHaveLength(1);
+  });
+
+  it("loads an empty page without view fetch when sort is provided", async () => {
+    const log: RecordedRequest[] = [];
+    const service = createTrackedService((entry) => log.push(entry));
+    const module = "Leads";
+    const summaries = await service.listViewSummaries(module);
+    const defaultSummary = summaries.find((view) => view.isDefault) ?? summaries[0];
+    if (!defaultSummary) throw new Error("Missing view summary.");
+    const viewId = defaultSummary.id;
+    await service.getModule(module);
+
+    const sort = { field: "Last_Name", order: "asc" as const };
+    log.length = 0;
+    const withSort = await service.list(module, {
+      viewId,
+      page: 1000,
+      perPage: 10,
+      sort,
+    });
+    expect(entriesForOperation(log, operations.bulk, { module })).toHaveLength(1);
+    expect(entriesMatchingOperation(log, operations.view)).toHaveLength(0);
+    expect(withSort.records).toEqual([]);
+    expect(withSort.sort).toEqual(sort);
+
+    log.length = 0;
+    await service.list(module, { viewId, page: 1000, perPage: 10 });
+    expect(entriesForOperation(log, operations.bulk, { module })).toHaveLength(1);
+    expect(entriesMatchingOperation(log, operations.view)).toHaveLength(1);
+  });
+
+  it("listViewSummaries matches fixture view flags", async () => {
+    const service = createTrackedService(() => {});
+    const module = "Leads";
+    const fixtureViews = await deps().records.listViews(module);
+    const expected = fixtureViews.map((view) => ({
+      id: view.id,
+      name: view.name,
+      systemDefined: view.systemDefined,
+      isDefault: view.isDefault,
+    }));
+    await expect(service.listViewSummaries(module)).resolves.toEqual(expected);
   });
 });
