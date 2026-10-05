@@ -94,10 +94,9 @@
 
 .timeline-history-filter-panel {
   box-sizing: border-box;
-  height: var(--size-detail-timeline-filter-panel-min-height);
   margin-top: var(--size-detail-timeline-filter-panel-gap);
-  padding: var(--size-detail-timeline-filter-field-label-offset)
-    var(--size-detail-timeline-filter-panel-padding)
+  padding: var(--size-detail-timeline-filter-panel-padding-block-start)
+    var(--size-detail-timeline-filter-panel-padding-inline)
     var(--size-detail-timeline-filter-panel-padding-bottom);
   border: 1px solid var(--color-panel-border);
   border-radius: var(--radius-md);
@@ -118,7 +117,7 @@
 .timeline-history-filter-field {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--size-detail-timeline-filter-field-gap);
 }
 
 .timeline-history-filter-field-label {
@@ -129,22 +128,9 @@
   color: var(--color-text);
 }
 
-.timeline-history-filter-row + .timeline-history-filter-row .timeline-history-filter-field-label {
-  margin-top: calc(-1 * var(--size-detail-timeline-filter-field-row2-label-offset));
-}
-
 .timeline-filter-selector-wrap {
   position: relative;
   display: inline-flex;
-}
-
-.timeline-history-filter-row:first-child .timeline-filter-selector-wrap {
-  margin-top: calc(
-    var(--size-detail-timeline-filter-selector-top) -
-    var(--size-detail-timeline-filter-field-label-offset) -
-    var(--size-detail-timeline-event-line-height) -
-    1px
-  );
 }
 
 .timeline-filter-selector {
@@ -170,11 +156,11 @@
   outline: none;
 }
 
-.timeline-filter-selector[data-tone="checkbox-placeholder"] {
+.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-selector {
   color: var(--color-text-empty);
 }
 
-.timeline-filter-selector[data-tone="user-placeholder"] {
+.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-selector {
   color: var(--color-text-placeholder);
 }
 
@@ -191,6 +177,7 @@
 
 .timeline-filter-caret {
   position: absolute;
+  top: 50%;
   right: var(--size-detail-timeline-filter-caret-inset);
   width: 0;
   height: 0;
@@ -198,17 +185,18 @@
   border-right: calc(var(--size-detail-timeline-filter-caret-width) / 2) solid transparent;
   border-top: var(--size-detail-timeline-filter-caret-height) solid var(--color-text);
   pointer-events: none;
+  transform: translateY(-50%);
 }
 
-.timeline-filter-selector[data-tone="checkbox-placeholder"] .timeline-filter-caret {
+.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-caret {
   border-top-color: var(--color-detail-timeline-caret-placeholder);
 }
 
-.timeline-filter-selector[data-tone="user-placeholder"] .timeline-filter-caret {
+.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-caret {
   border-top-color: var(--color-detail-timeline-caret-value);
 }
 
-.timeline-filter-selector[data-tone="value"] .timeline-filter-caret {
+.timeline-filter-selector-wrap[data-tone="value"] .timeline-filter-caret {
   border-top-color: var(--color-detail-timeline-caret-value);
 }
 
@@ -310,14 +298,15 @@
     var(--size-detail-timeline-event-column-gap)
     minmax(0, 1fr);
   align-items: start;
-  padding-bottom: var(--size-detail-timeline-event-body-gap);
+  padding-bottom: var(--size-detail-timeline-event-row-padding-bottom);
 }
 
 .timeline-event-time {
   grid-column: 1;
-  align-self: center;
+  align-self: start;
   font-size: var(--text-sm);
   font-weight: var(--font-weight-normal);
+  line-height: var(--size-detail-timeline-event-icon);
   color: var(--color-text-muted);
   text-align: right;
   white-space: nowrap;
@@ -326,7 +315,7 @@
 .timeline-event-rail {
   position: relative;
   grid-column: 3;
-  align-self: center;
+  align-self: start;
   display: flex;
   width: var(--size-detail-timeline-event-icon);
   height: var(--size-detail-timeline-event-icon);
@@ -337,9 +326,9 @@
   content: "";
   position: absolute;
   top: 100%;
-  bottom: calc(-1 * var(--size-detail-timeline-event-body-gap));
   left: 50%;
   width: 1px;
+  height: var(--size-detail-timeline-connector-height);
   transform: translateX(-50%);
   background-color: var(--color-detail-timeline-muted-border);
 }
@@ -366,10 +355,7 @@
 .timeline-event-body {
   grid-column: 5;
   align-self: start;
-  padding-top: calc(
-    (var(--size-detail-timeline-event-icon) - var(--size-detail-timeline-event-line-height)) /
-    2
-  );
+  padding-top: var(--size-detail-timeline-event-body-padding-top);
 }
 
 .timeline-event-title {

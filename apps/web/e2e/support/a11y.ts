@@ -6,8 +6,8 @@ const WCAG_21_A_AND_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 /** Measured sub-AA placeholder ink on white (ADR 0003 §8). Used on `/dev/ui` timeline filter demos. */
 export const DEV_UI_A11Y_EXCLUDE = [
   "[data-part=empty]",
-  '.timeline-filter-selector[data-tone="checkbox-placeholder"] .timeline-filter-selector-label',
-  '.timeline-filter-selector[data-tone="user-placeholder"] .timeline-filter-selector-label',
+  '.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-selector-label',
+  '.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-selector-label',
 ] as const;
 
 type AxeViolations = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];

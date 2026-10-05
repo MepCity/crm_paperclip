@@ -32,6 +32,10 @@ async function colorVar(page: import("@playwright/test").Page, token: string) {
   }, token);
 }
 
+async function caretBorderTopColor(caret: Locator) {
+  return caret.evaluate((element) => getComputedStyle(element).borderTopColor);
+}
+
 test("timeline history matches scoped Visual layout measurements", async ({ page }) => {
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "timeline history" });
@@ -92,13 +96,27 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
   await expect(panel).toHaveCSS("border-top-color", "rgb(220, 219, 238)");
   await expect(panel).toHaveCSS("padding-left", "20px");
 
+  const modulesLabelEl = open.getByText("Modules", { exact: true }).first();
+  const modulesLabelBox = await surfaceOffset(surface, modulesLabelEl);
+  expect(Math.abs(modulesLabelBox.y - panelBox.y - 15)).toBeLessThanOrEqual(1);
+
   const modules = open.getByRole("button", { name: "Modules" });
   const modulesBox = await surfaceOffset(surface, modules);
   expect(Math.abs(modulesBox.x - 46)).toBeLessThanOrEqual(1);
   expect(Math.abs(modulesBox.y - panelBox.y - 38)).toBeLessThanOrEqual(1);
   await expect(modules).toHaveCSS("width", "250px");
-  await expect(modules).toHaveCSS("height", "34px");
+  await expect(modules).toHaveCSS("height", "33px");
   await expect(modules).toHaveCSS("color", await colorVar(page, "--color-text-empty"));
+
+  const modulesTextBox = await surfaceOffset(
+    surface,
+    modules.locator(".timeline-filter-selector-label"),
+  );
+  expect(Math.abs(modulesTextBox.x - modulesBox.x - 12)).toBeLessThanOrEqual(1);
+
+  expect(
+    Math.abs(modulesBox.y - (modulesLabelBox.y + modulesLabelBox.height + 4)),
+  ).toBeLessThanOrEqual(1);
 
   const users = open.getByRole("button", { name: "Users" });
   const usersBox = await surfaceOffset(surface, users);
@@ -110,13 +128,55 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
 
   const sources = open.getByRole("button", { name: "Sources" });
   const sourcesBox = await surfaceOffset(surface, sources);
-  expect(Math.abs(sourcesBox.y - panelBox.y - 74)).toBeLessThanOrEqual(1);
+  expect(Math.abs(sourcesBox.y - (modulesBox.y + modulesBox.height + 36))).toBeLessThanOrEqual(1);
+  await expect(sources).toHaveCSS("color", await colorVar(page, "--color-text-empty"));
+
+  const sourcesLabelEl = open.getByText("Sources", { exact: true });
+  const sourcesLabelBox = await surfaceOffset(surface, sourcesLabelEl);
+  expect(Math.abs(sourcesLabelBox.y - (modulesBox.y + modulesBox.height + 14))).toBeLessThanOrEqual(
+    1,
+  );
+
+  expect(
+    Math.abs(panelBox.y + panelBox.height - (sourcesBox.y + sourcesBox.height + 16)),
+  ).toBeLessThanOrEqual(1);
 
   const apply = open.getByRole("button", { name: "Apply Filter" });
   const applyBox = await surfaceOffset(surface, apply);
   expect(Math.abs(applyBox.height - 32)).toBeLessThanOrEqual(1);
+  expect(Math.abs(applyBox.width - 103)).toBeLessThanOrEqual(1);
   expect(Math.abs(applyBox.x - (sourcesBox.x + sourcesBox.width + 8))).toBeLessThanOrEqual(1);
   await expect(apply).toHaveCSS("background-color", "rgb(173, 179, 238)");
+
+  for (const labelText of ["Modules", "Users", "Time", "Sources"]) {
+    const label = open
+      .locator(".timeline-history-filter-field-label")
+      .filter({ hasText: new RegExp(`^${labelText}$`) });
+    await label.scrollIntoViewIfNeeded();
+    const uncovered = await label.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return hit !== null && element.contains(hit);
+    });
+    expect(uncovered, `filter label ${labelText} should not be covered`).toBe(true);
+  }
+
+  const caretChecks: { button: Locator; token: string }[] = [
+    { button: modules, token: "--color-detail-timeline-caret-placeholder" },
+    { button: users, token: "--color-detail-timeline-caret-value" },
+    { button: time, token: "--color-detail-timeline-caret-value" },
+    { button: sources, token: "--color-detail-timeline-caret-placeholder" },
+  ];
+  for (const { button, token } of caretChecks) {
+    const caret = button.locator("..").locator(".timeline-filter-caret");
+    const caretBox = await surfaceOffset(surface, caret);
+    const selectorBox = await surfaceOffset(surface, button);
+    expect(
+      Math.abs(caretBox.y + caretBox.height / 2 - (selectorBox.y + selectorBox.height / 2)),
+    ).toBeLessThanOrEqual(1);
+    await expect(caret).toHaveCSS("right", "12px");
+    expect(await caretBorderTopColor(caret)).toBe(await colorVar(page, token));
+  }
 
   const dateBadge = open.locator(".timeline-event-date-badge").first();
   const badgeBox = await surfaceOffset(surface, dateBadge);
@@ -150,6 +210,8 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
   expect(Math.abs(iconBox.width - 36)).toBeLessThanOrEqual(1);
   expect(Math.abs(iconBox.height - 36)).toBeLessThanOrEqual(1);
   expect(Math.abs(iconBox.x - 108)).toBeLessThanOrEqual(1);
+  expect(Math.abs(iconBox.y - (badgeBox.y + badgeBox.height + 25))).toBeLessThanOrEqual(1);
+  expect(Math.abs(connectorBox.y + connectorBox.height - iconBox.y)).toBeLessThanOrEqual(1);
   await expect(icon).toHaveCSS("background-color", "rgb(249, 250, 255)");
   await expect(icon).toHaveCSS(
     "border-top-color",
@@ -162,20 +224,14 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
   expect(
     Math.abs(timeBox.y + timeBox.height / 2 - (iconBox.y + iconBox.height / 2)),
   ).toBeLessThanOrEqual(1);
-  const timeLines = await eventTime.evaluate(
-    (element) => element.scrollHeight <= element.clientHeight + 1,
-  );
-  expect(timeLines).toBe(true);
+  expect(Math.abs(timeBox.height - 36)).toBeLessThanOrEqual(1);
   await expectType(page, eventTime, "--text-sm", "--font-weight-normal");
   await expect(eventTime).toHaveCSS("color", await colorVar(page, "--color-text-muted"));
 
   const title = open.locator(".timeline-event-title").first();
   const titleBox = await surfaceOffset(surface, title);
   expect(Math.abs(titleBox.x - 161.5)).toBeLessThanOrEqual(1);
-  // Figtree line box vs cap height on the title role can differ by a few px from the icon center.
-  expect(
-    Math.abs(titleBox.y + titleBox.height / 2 - (iconBox.y + iconBox.height / 2)),
-  ).toBeLessThanOrEqual(5);
+  expect(Math.abs(titleBox.y - iconBox.y - 7)).toBeLessThanOrEqual(1);
   await expectType(page, title, "--text-md", "--font-weight-normal");
   await expect(title).toHaveCSS("color", await colorVar(page, "--color-text"));
 
@@ -184,4 +240,20 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
   expect(Math.abs(bylineBox.y - (titleBox.y + titleBox.height))).toBeLessThanOrEqual(1);
   await expectType(page, byline, "--text-sm", "--font-weight-normal");
   await expect(byline).toHaveCSS("color", await colorVar(page, "--color-text-muted"));
+
+  const multiEventDay = open.locator(".timeline-event-day:has(li:nth-child(2))");
+  const sameDayIcons = multiEventDay.locator(".timeline-event-icon");
+  const sameDayFirstIcon = sameDayIcons.first();
+  const sameDaySecondIcon = sameDayIcons.nth(1);
+  const sameDayFirstBox = await surfaceOffset(surface, sameDayFirstIcon);
+  const sameDaySecondBox = await surfaceOffset(surface, sameDaySecondIcon);
+  expect(
+    Math.abs(sameDaySecondBox.y - (sameDayFirstBox.y + sameDayFirstBox.height + 25)),
+  ).toBeLessThanOrEqual(1);
+
+  const railConnectorHeight = await multiEventDay
+    .locator(".timeline-event-rail")
+    .first()
+    .evaluate((element) => getComputedStyle(element, "::before").height);
+  expect(px(railConnectorHeight)).toBeCloseTo(25, 0);
 });

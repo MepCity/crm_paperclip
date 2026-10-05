@@ -42,8 +42,8 @@ function FilterField({ label, tone, triggerLabel, menu }: FilterFieldProps) {
         {label}
       </p>
       <MenuTrigger isOpen={open} onOpenChange={setOpen}>
-        <div className="timeline-filter-selector-wrap">
-          <Button className="timeline-filter-selector" data-tone={tone} aria-labelledby={labelId}>
+        <div className="timeline-filter-selector-wrap" data-tone={tone}>
+          <Button className="timeline-filter-selector" aria-labelledby={labelId}>
             <span className="timeline-filter-selector-label">{triggerLabel}</span>
           </Button>
           <span className="timeline-filter-caret" aria-hidden="true" />
@@ -178,6 +178,7 @@ export interface TimelineHistoryFilterProps {
   usersLabel: string;
   usersAllLabel: string;
   userOptions: readonly TimelineFilterOption[];
+  timeLabel: string;
   sourcesLabel: string;
   sourcesAllLabel: string;
   sourceOptions: readonly TimelineFilterOption[];
@@ -192,6 +193,7 @@ export function TimelineHistoryFilterPanel({
   usersLabel,
   usersAllLabel,
   userOptions,
+  timeLabel,
   sourcesLabel,
   sourcesAllLabel,
   sourceOptions,
@@ -223,7 +225,7 @@ export function TimelineHistoryFilterPanel({
           onChange={(userId) => setValue((current) => ({ ...current, userId }))}
         />
         <TimeSelect
-          label="Time"
+          label={timeLabel}
           value={value.time}
           onChange={(time) => setValue((current) => ({ ...current, time }))}
         />

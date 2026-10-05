@@ -312,23 +312,20 @@ what the "no colour constants" rule forbids.
 | `--size-detail-timeline-filter-button-height` | `30px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
 | `--size-detail-timeline-filter-button-gap` | `11px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap (measured) | from spec |
 | `--size-detail-timeline-filter-panel-gap` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "15 px below the filter button" | from spec |
-| `--size-detail-timeline-filter-panel-min-height` | `156px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "856 × 156 px" | from spec |
-| `--size-detail-timeline-filter-panel-padding` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › first selector starts 21 px inside panel left edge | from spec |
+| `--size-detail-timeline-filter-panel-padding-block-start` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 label cap top 19 px below panel top (15 px padding + 4 px field gap) | from spec |
+| `--size-detail-timeline-filter-panel-padding-inline` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › first selector starts 21 px inside panel left edge | from spec |
 | `--size-detail-timeline-filter-panel-padding-bottom` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "bottom edge is 16 px below the row-2 controls" | from spec |
-| `--size-detail-timeline-filter-field-label-offset` | `19px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 label cap top below panel top | from spec |
-| `--size-detail-timeline-filter-field-row2-label-offset` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 label below row-1 selectors | from spec |
-| `--size-detail-timeline-filter-selector-top` | `38px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 selector top below panel top | from spec |
+| `--size-detail-timeline-filter-field-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › label box to selector top | from spec |
 | `--size-detail-timeline-filter-selector-row-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px gaps" between row-1 selectors | from spec |
-| `--size-detail-timeline-filter-row2-margin-top` | `0px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 block spacing below row-1 selectors (derived from 36 px selector offset) | from spec |
+| `--size-detail-timeline-filter-row2-margin-top` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Sources label top 18 px below row-1 selector bottom edges | from spec |
 | `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "250 px wide" | from spec |
-| `--size-detail-timeline-filter-selector-height` | `34px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33–34 px high" | from spec |
-| `--size-detail-timeline-filter-selector-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "text starts 12 px inside the selector" | from spec |
+| `--size-detail-timeline-filter-selector-height` | `33px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33 px high" (Modules, Sources) | from spec |
+| `--size-detail-timeline-filter-selector-padding-inline` | `11px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "text ink starts 12 px right of the selector's outer left edge" (11 px + 1 px border) | from spec |
 | `--size-detail-timeline-filter-caret-width` | `9px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "9 px wide" caret | from spec |
 | `--size-detail-timeline-filter-caret-height` | `5px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "5 px high" caret | from spec |
 | `--size-detail-timeline-filter-caret-inset` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › caret right tip 12 px inside selector | from spec |
 | `--size-detail-timeline-apply-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" | from spec |
-| `--size-detail-timeline-apply-padding-inline` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter label band | from spec |
-| `--size-detail-timeline-apply-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px right of Sources" | from spec |
+| `--size-detail-timeline-apply-padding-inline` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" width | from spec |
 | `--size-detail-timeline-track-offset` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge starts 25 px below filter panel or button | from spec |
 | `--size-detail-timeline-date-badge-width` | `130px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
 | `--size-detail-timeline-date-badge-height` | `27px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
@@ -339,10 +336,10 @@ what the "no colour constants" rule forbids.
 | `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circle" | from spec |
 | `--size-detail-timeline-event-icon-offset-inline` | `108px` | record-detail.md › Layout › Visual layout › Timeline › Event track › icon x 660–696; surface x 552 | from spec |
 | `--size-detail-timeline-event-column-gap` | `17.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title x 713.5; icon ends x 696 | from spec |
-| `--size-detail-timeline-event-title-offset-inline` | `161.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title starts x 713.5; surface x 552 | from spec |
-| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title and byline baselines about 18 px apart | from spec |
+| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › byline cap 29 px below icon top (7 px body padding + 18 px title line) | from spec |
+| `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap top below icon top (measured box) | from spec |
+| `--size-detail-timeline-event-row-padding-bottom` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch (7 px title offset + 36 px icon + 18 px) yields 25 px between icons | from spec |
 | `--size-detail-timeline-day-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › day groups | Interim |
-| `--size-detail-timeline-event-body-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch between events | Interim |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |

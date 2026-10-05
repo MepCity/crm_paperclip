@@ -340,23 +340,20 @@
   --size-detail-timeline-filter-button-height: 30px;
   --size-detail-timeline-filter-button-gap: 11px;
   --size-detail-timeline-filter-panel-gap: 15px;
-  --size-detail-timeline-filter-panel-min-height: 156px;
-  --size-detail-timeline-filter-panel-padding: 20px;
+  --size-detail-timeline-filter-panel-padding-block-start: 15px;
+  --size-detail-timeline-filter-panel-padding-inline: 20px;
   --size-detail-timeline-filter-panel-padding-bottom: 16px;
-  --size-detail-timeline-filter-field-label-offset: 19px;
-  --size-detail-timeline-filter-field-row2-label-offset: 18px;
-  --size-detail-timeline-filter-selector-top: 38px;
+  --size-detail-timeline-filter-field-gap: 4px;
   --size-detail-timeline-filter-selector-row-gap: 8px;
-  --size-detail-timeline-filter-row2-margin-top: 0px;
+  --size-detail-timeline-filter-row2-margin-top: 14px;
   --size-detail-timeline-filter-selector-width: 250px;
-  --size-detail-timeline-filter-selector-height: 34px;
-  --size-detail-timeline-filter-selector-padding-inline: 12px;
+  --size-detail-timeline-filter-selector-height: 33px;
+  --size-detail-timeline-filter-selector-padding-inline: 11px;
   --size-detail-timeline-filter-caret-width: 9px;
   --size-detail-timeline-filter-caret-height: 5px;
   --size-detail-timeline-filter-caret-inset: 12px;
   --size-detail-timeline-apply-height: 32px;
-  --size-detail-timeline-apply-padding-inline: 16px;
-  --size-detail-timeline-apply-gap: 8px;
+  --size-detail-timeline-apply-padding-inline: 14px;
   --size-detail-timeline-track-offset: 25px;
   --size-detail-timeline-date-badge-width: 130px;
   --size-detail-timeline-date-badge-height: 27px;
@@ -367,10 +364,10 @@
   --size-detail-timeline-event-icon: 36px;
   --size-detail-timeline-event-icon-offset-inline: 108px;
   --size-detail-timeline-event-column-gap: 17.5px;
-  --size-detail-timeline-event-title-offset-inline: 161.5px;
   --size-detail-timeline-event-line-height: 18px;
+  --size-detail-timeline-event-body-padding-top: 7px;
+  --size-detail-timeline-event-row-padding-bottom: 18px;
   --size-detail-timeline-day-gap: 16px;
-  --size-detail-timeline-event-body-gap: 16px;
 
   /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
   --size-form-strip-height: 57px;

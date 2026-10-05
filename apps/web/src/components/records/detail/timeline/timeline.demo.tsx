@@ -81,6 +81,7 @@ const filterLabels = {
   usersLabel: "Users",
   usersAllLabel: "All Users",
   userOptions,
+  timeLabel: "Time",
   sourcesLabel: "Sources",
   sourcesAllLabel: "All Sources",
   sourceOptions,

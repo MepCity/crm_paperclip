@@ -1,4 +1,4 @@
-import { formatDate, formatTime } from "@crm/core/format";
+import { formatDate } from "@crm/core/format";
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
@@ -72,6 +72,7 @@ function renderHistory(
         usersLabel="Users"
         usersAllLabel="All Users"
         userOptions={userOptions}
+        timeLabel="Time"
         sourcesLabel="Sources"
         sourcesAllLabel="All Sources"
         sourceOptions={sourceOptions}
@@ -168,12 +169,9 @@ test("formats istanbul midnight event on the next calendar day", () => {
     section.querySelector(".timeline-event-date-badge")?.textContent?.includes(oct5Label),
   );
   expect(oct5Section).toBeTruthy();
-  expect(
-    within(oct5Section as HTMLElement).getByText(
-      formatTime("2026-10-04T22:30:00.000Z", IST_FORMAT),
-    ),
-  ).toBeTruthy();
-  expect(screen.getByText("Istanbul midnight edge")).toBeTruthy();
+  const section = oct5Section as HTMLElement;
+  expect(within(section).getByText("1:30 AM")).toBeTruthy();
+  expect(within(section).getByText("Istanbul midnight edge")).toBeTruthy();
 });
 
 test("shows visible filter field labels", () => {
