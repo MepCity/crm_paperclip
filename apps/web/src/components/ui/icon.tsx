@@ -113,8 +113,8 @@ function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
       fill="currentColor"
       {...props}
     >
-      <circle cx="24" cy="17" r="7.5" />
-      <path d="M8 48c0-12 7.2-18 16-18s16 6 16 18H8z" />
+      <circle cx="24" cy="23" r="8" />
+      <path d="M19.75 29h8.5v1.5C31.5 31 34.5 31.8 36 33c1.8 1.5 3.05 2.5 3.75 3L44 48H4l4.25-12C9 35.5 10.2 34.5 12 33c1.5-1.2 4.5-2 7.75-2.5Z" />
     </svg>
   );
 }

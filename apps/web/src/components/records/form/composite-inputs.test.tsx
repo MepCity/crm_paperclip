@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { CoordinatesInput, PrefixInput, TextPrefixInput } from "./composite-inputs";
+import { FormRow } from "./form-row";
 
 afterEach(cleanup);
 test("prefix selector remains independent of text, including null and disabled", async () => {
@@ -80,4 +81,27 @@ test("coordinates edit independently, clear both, and respect disabled", async (
   expect((screen.getByRole("textbox", { name: "Latitude" }) as HTMLInputElement).disabled).toBe(
     true,
   );
+});
+
+test("coordinates associate the form row label with the first input", async () => {
+  const user = userEvent.setup();
+  render(
+    <FormRow label="Location coordinates" controlId="location-coordinates" column="left">
+      <CoordinatesInput
+        id="location-coordinates"
+        label="Coordinates"
+        latitude={null}
+        longitude={null}
+        onChange={() => {}}
+      />
+    </FormRow>,
+  );
+  const first = screen.getByRole("textbox", { name: /Latitude/ });
+  expect(screen.getByLabelText("Latitude")).toBe(first);
+  const rowLabel = screen.getByText("Location coordinates") as HTMLLabelElement;
+  expect(rowLabel.control).toBe(first);
+  await user.click(rowLabel);
+  expect(document.activeElement).toBe(first);
+  expect(first.id).toBe("location-coordinates");
+  expect(screen.getByRole("textbox", { name: "Longitude" })).not.toBe(first);
 });

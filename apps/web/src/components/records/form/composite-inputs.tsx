@@ -49,6 +49,7 @@ export function TextPrefixInput({ prefix, ...props }: TextFieldProps & { prefix:
 }
 
 export interface CoordinatesInputProps {
+  id?: string;
   label: string;
   latitude: number | null;
   longitude: number | null;
@@ -60,6 +61,7 @@ export interface CoordinatesInputProps {
   errorMessage?: string;
 }
 export function CoordinatesInput({
+  id,
   label,
   latitude,
   longitude,
@@ -73,6 +75,7 @@ export function CoordinatesInput({
   return (
     <fieldset aria-label={label} className="flex items-start gap-2">
       <NumberField
+        id={id}
         label={latitudeLabel}
         hideLabel
         placeholder={latitudeLabel}

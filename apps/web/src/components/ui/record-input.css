@@ -66,7 +66,8 @@
 .record-input-frame:has([aria-invalid="true"]) {
   border-color: var(--color-danger);
 }
-.record-input-frame:has(:disabled) {
+.record-input-frame:has(:disabled),
+.record-choice-shell:has(:disabled) {
   background: var(--color-surface-hover);
   opacity: 0.5;
 }
@@ -86,7 +87,8 @@
   flex: none;
   width: 1px;
   height: var(--size-form-currency-divider-height);
-  margin-top: var(--size-form-currency-divider-top);
+  align-self: flex-start;
+  margin-top: calc(var(--size-form-currency-divider-top) - 1px);
   background: var(--color-control-border);
 }
 .record-input-end {
@@ -103,7 +105,7 @@
   cursor: default;
 }
 .record-input-end:disabled {
-  opacity: 0.5;
+  opacity: 1;
 }
 .record-input-end-icon {
   width: var(--size-form-input-end-icon);
@@ -144,15 +146,7 @@
   padding-right: calc(var(--size-form-caret-inset-end) + var(--size-form-caret-width));
 }
 .record-choice-shell--owner .record-choice-trigger {
-  padding-right: calc(
-    var(--size-form-owner-caret-gap) +
-    var(--size-form-caret-width) +
-    var(--size-form-input-end) +
-    1px
-  );
-}
-.record-choice-shell--owner .record-form-caret {
-  right: calc(var(--size-form-input-end) + var(--size-form-owner-caret-gap));
+  padding-right: calc(var(--size-form-owner-caret-gap) + var(--size-form-caret-width));
 }
 .record-form-caret {
   position: absolute;
@@ -162,6 +156,9 @@
   height: var(--size-form-caret-height);
   color: var(--color-form-caret);
   transform: translateY(-50%);
+}
+.record-choice-shell--owner .record-form-caret {
+  right: var(--size-form-owner-caret-gap);
 }
 .record-form-caret[data-open] {
   transform: translateY(-50%) rotate(180deg);
@@ -176,6 +173,11 @@
   overflow: hidden;
 }
 .record-profile-silhouette {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: var(--size-form-portrait);
+  height: var(--size-form-portrait);
   color: var(--color-form-portrait);
 }
 /* Dropdown panel rows: Country panel, Standard picklist, Owner dropdown. */
@@ -247,8 +249,12 @@
   flex: none;
   width: var(--size-form-prefix-divider-offset);
 }
+.record-prefix-select > div,
+.record-prefix-select .record-choice-trigger {
+  height: 100%;
+}
 .record-prefix-select .record-form-caret {
-  right: var(--size-form-prefix-caret-gap);
+  right: calc(var(--size-form-prefix-caret-gap) + 1px);
 }
 .record-prefix-select .record-prefix-divider {
   position: absolute;

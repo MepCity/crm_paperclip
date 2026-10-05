@@ -41,6 +41,16 @@ async function outerRightInset(frame: Locator, inner: Locator) {
   );
 }
 
+async function bounds(locator: Locator) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("Expected a rendered measurement target");
+  return box;
+}
+
+function expectPixels(actual: number, target: number) {
+  expect(Math.abs(actual - target)).toBeLessThanOrEqual(1);
+}
+
 test("form input geometry and composite inks match the measured form rows", async ({ page }) => {
   await page.setViewportSize({ width: 1470, height: 835 });
   await page.goto("/dev/ui");
@@ -95,6 +105,17 @@ test("form input geometry and composite inks match the measured form rows", asyn
   expect(
     await valueStartAfterOuterLeft(currencyFrame, currencyFrame.locator(".record-currency-prefix")),
   ).toBeCloseTo(12, 0);
+  const currencyDivider = currencyFrame.locator(".record-currency-divider");
+  const currencyBox = await bounds(currencyFrame);
+  const currencyDividerBox = await bounds(currencyDivider);
+  const currencyPrefixBox = await bounds(currencyPrefix);
+  const currencyDividerTop = currencyDividerBox.y - currencyBox.y;
+  const currencyDividerGap = currencyDividerBox.x - (currencyPrefixBox.x + currencyPrefixBox.width);
+  expectPixels(currencyDividerBox.width, 1);
+  expectPixels(currencyDividerBox.height, 20);
+  expectPixels(currencyDividerTop, 7);
+  expectPixels(currencyDividerGap, 9.5);
+  await expect(currencyDivider).toHaveCSS("background-color", "rgb(197, 196, 211)");
   const currencyEnd = currencyFrame.locator(".record-input-end");
   await expect(currencyEnd).toHaveCSS("width", "32px");
   await expect(currencyEnd).toHaveCSS("background-color", "rgb(240, 244, 255)");
@@ -112,13 +133,20 @@ test("form input geometry and composite inks match the measured form rows", asyn
   const salutationDivider = salutationFrame.locator(".record-prefix-divider");
   const salutationOuter = salutationFrame;
   expect(await outerLeftInset(salutationOuter, salutationDivider)).toBeCloseTo(94, 0);
-  const prefixSelect = prefix.locator(
-    'xpath=ancestor::*[contains(@class,"record-prefix-select")][1]',
-  );
-  expect(await outerRightInset(prefixSelect, prefix.locator(".record-form-caret"))).toBeCloseTo(
-    11,
-    0,
-  );
+  const salutationBox = await bounds(salutationFrame);
+  const prefixBox = await bounds(prefix);
+  const emptyBox = await bounds(emptyValue);
+  const prefixCaretBox = await bounds(prefix.locator(".record-form-caret"));
+  const prefixDividerBox = await bounds(salutationDivider);
+  const prefixTop = prefixBox.y - salutationBox.y;
+  const emptyCenter = emptyBox.y + emptyBox.height / 2 - salutationBox.y;
+  const caretCenter = prefixCaretBox.y + prefixCaretBox.height / 2 - salutationBox.y;
+  const prefixCaretGap = prefixDividerBox.x - (prefixCaretBox.x + prefixCaretBox.width);
+  expectPixels(prefixBox.height, 32);
+  expectPixels(prefixTop, 1);
+  expectPixels(emptyCenter, salutationBox.height / 2);
+  expectPixels(caretCenter, salutationBox.height / 2);
+  expectPixels(prefixCaretGap, 11);
   await prefix.click();
   const salutationPanel = page.locator(".record-choice-panel").last();
   expect((await salutationPanel.boundingBox())?.width).toBeCloseTo(110, 0);
@@ -133,9 +161,32 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(ownerEnd).toHaveCSS("width", "32px");
   await expect(ownerEnd).toHaveCSS("background-color", "rgb(240, 244, 255)");
   expect(await outerRightInset(ownerFrame, ownerEnd)).toBeCloseTo(1, 0);
-  expect(
-    await outerRightInset(ownerTrigger, ownerTrigger.locator(".record-form-caret")),
-  ).toBeCloseTo(9 + 32, 0);
+  const ownerEndBox = await bounds(ownerEnd);
+  const ownerCaretBox = await bounds(ownerTrigger.locator(".record-form-caret"));
+  const ownerCaretGap = ownerEndBox.x - (ownerCaretBox.x + ownerCaretBox.width);
+  expectPixels(ownerCaretGap, 9);
+  const ownerIcon = ownerEnd.locator("svg");
+  const ownerIconBox = await bounds(ownerIcon);
+  expectPixels(ownerIconBox.width, 16);
+  expectPixels(ownerIconBox.height, 16);
+  await expect(ownerIcon).toHaveCSS("color", "rgb(49, 57, 73)");
+  const disabledOwner = demo
+    .getByRole("button", { name: "ownerlookup disabled", exact: true })
+    .locator("xpath=ancestor::*[contains(@class,'record-choice-shell')][1]");
+  const disabledText = demo
+    .getByRole("textbox", { name: "text disabled", exact: true })
+    .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
+  for (const property of ["opacity", "background-color"]) {
+    await expect(disabledOwner).toHaveCSS(
+      property,
+      await disabledText.evaluate(
+        (element, name) => getComputedStyle(element).getPropertyValue(name),
+        property,
+      ),
+    );
+  }
+  await expect(disabledOwner).toHaveCSS("opacity", "0.5");
+  await expect(disabledOwner.locator(".record-input-end")).toHaveCSS("opacity", "1");
   const textFrame = demo
     .getByRole("textbox", { name: "text empty", exact: true })
     .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
@@ -150,6 +201,50 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(profile).toHaveCSS("border-top-width", "1px");
   await expect(profile).toHaveCSS("border-color", "rgb(180, 180, 180)");
   await expect(profile.locator("svg")).toHaveCSS("color", "rgb(178, 178, 178)");
+  const profileBox = await bounds(profile);
+  const headBox = await bounds(profile.locator("circle"));
+  const bodyBox = await bounds(profile.locator("path"));
+  const headTop = headBox.y - profileBox.y;
+  expectPixels(headTop, 15);
+  expectPixels(headBox.width, 16);
+  expect(bodyBox.y - profileBox.y).toBeLessThanOrEqual(32);
+  // The neck fills the space between the head and shoulders.
+  const bodyWidths = await profile.locator("path").evaluate((element) => {
+    const path = element as SVGGeometryElement;
+    return [30, 33, 36].map((y) => {
+      let halfWidth = 0;
+      for (let x = 24; x <= 48; x += 0.05) {
+        if (path.isPointInFill(new DOMPoint(x, y))) halfWidth = x - 24;
+      }
+      return halfWidth * 2;
+    });
+  });
+  for (const [index, width] of [8.5, 24, 31.5].entries()) {
+    expectPixels(bodyWidths[index] ?? Number.NaN, width);
+  }
+  const measurements = {
+    salutationTriggerHeight: prefixBox.height,
+    salutationTriggerTop: prefixTop,
+    salutationTextCenter: emptyCenter,
+    salutationCaretCenter: caretCenter,
+    salutationCaretDividerGap: prefixCaretGap,
+    ownerCaretEndGap: ownerCaretGap,
+    ownerIconWidth: ownerIconBox.width,
+    ownerIconHeight: ownerIconBox.height,
+    currencyDividerTop,
+    currencyDividerGap,
+    currencyDividerWidth: currencyDividerBox.width,
+    currencyDividerHeight: currencyDividerBox.height,
+    portraitHeadTop: headTop,
+    portraitHeadWidth: headBox.width,
+    portraitBodyTop: bodyBox.y - profileBox.y,
+    portraitBodyWidths: bodyWidths,
+  };
+  await test.info().attach("round-two-measurements", {
+    body: JSON.stringify(measurements, null, 2),
+    contentType: "application/json",
+  });
+  console.log("ROUND_TWO_MEASUREMENTS", JSON.stringify(measurements));
   await expect(demo.getByRole("textbox", { name: "textarea empty" })).toHaveCSS("resize", "both");
   await expect(demo.getByRole("textbox", { name: "Latitude" })).toHaveAttribute(
     "placeholder",
