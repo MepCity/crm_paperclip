@@ -49,7 +49,8 @@ the module's research found, assigned to the module that delivers it.
 ## Module 1 — Leads
 
 Specs: `app-shell.md`, `list-views.md`, `record-detail.md`,
-`leads-fields-and-layout.md`, `leads.md`, with `request-shapes.md` and
+`leads-fields-and-layout.md`, `leads.md`, `leads-write-behaviour.md` (write
+flows, from the public documentation), with `request-shapes.md` and
 `typography.md` for every screen.
 
 ### Delivered in Module 1
@@ -65,22 +66,22 @@ Specs: `app-shell.md`, `list-views.md`, `record-detail.md`,
 | 7 | View criteria and sort applied as defined | `list-views.md` › Criteria wire format, Saved and response sort evidence | — |
 | 8 | Filter panel with field filters | `list-views.md` › Filters / views / sorting / search | Operators and validation beyond the captured states. |
 | 9 | Sort dialog; Records Per Page; Wrap Text; Refresh | `list-views.md` › Actions | Available sort fields were not captured. |
-| 10 | Search inside Leads | `list-views.md` › Filters / views / sorting / search | Query and result states were not observed. |
-| 11 | Row selection with Mass Transfer, Mass Delete and Mass Update | `list-views.md` › Actions; `leads.md` › Actions | Selection toolbar and all three dialogs. |
+| 10 | Search inside Leads | `list-views.md` › Filters / views / sorting / search; `leads-write-behaviour.md` › B1 | Query and result states were not observed. |
+| 11 | Row selection with Mass Transfer, Mass Delete and Mass Update | `list-views.md` › Actions; `leads.md` › Actions; `leads-write-behaviour.md` › A3–A6 | Look and copy of the selection bar and the dialogs; result messages. |
 | 12 | Record header: identity, portrait placeholder, Edit, More Options, previous and next record | `record-detail.md` › Record page, Visual layout | Previous/next order and boundaries. |
 | 13 | Related-list rail frame and its show/hide control, stored as a user preference | `record-detail.md` › Record page | Entries arrive with their modules (see below). |
-| 14 | Lead Status ribbon with the stage menu and the terminal menu | `record-detail.md` › Record page | Result of applying a stage. |
+| 14 | Lead Status ribbon with the stage menu and the terminal menu | `record-detail.md` › Record page; `leads-write-behaviour.md` › A9 | Result of applying a stage. |
 | 15 | Business card (five fields) and the detail sections, blank values, Created By and Modified By rows, Hide Details | `record-detail.md` › Record page, Fields | Collapse behaviour of Hide Details. |
-| 16 | Inline field edit on the detail page | `record-detail.md` › Actions | Save, cancel and validation of a changed value. |
+| 16 | Inline field edit on the detail page | `record-detail.md` › Actions; `leads-write-behaviour.md` › A8 | Result of Save and Cancel, where errors appear, editors of field types other than the observed picklist. |
 | 17 | Timeline › History with its filter | `record-detail.md` › Timeline, Filters / views / sorting / search | Result of applying a filter; other event types. |
 | 18 | Lead image shown with our own placeholder | `record-detail.md` › Record page | Upload is M6. |
 | 19 | Lead owner display and the `Select User` picker | `record-detail.md` › Create and edit forms | — |
 | 20 | Create Lead form: Standard layout, required markers, picklists, Country and State lists | `record-detail.md` › Create and edit forms; `leads-fields-and-layout.md` › Standard layout | Whether a compact quick-create form exists. |
 | 21 | Edit Lead form | `record-detail.md` › Create and edit forms | — |
-| 22 | Save validation (required and format messages, focus) and the unsaved-changes dialog on Cancel | `record-detail.md` › Create and edit forms, Flows | Duplicate and server errors. |
-| 23 | Save and Save and New results | `record-detail.md` › Flows | Destination and message after a successful save. |
-| 24 | Delete Lead | `leads.md` › Actions | Confirmation dialog and where the page goes afterwards. |
-| 25 | Clone Lead | `leads.md` › Actions | The clone form. |
+| 22 | Save validation (required and format messages, focus) and the unsaved-changes dialog on Cancel | `record-detail.md` › Create and edit forms, Flows; `leads-write-behaviour.md` › A10 | Look of server errors on the form. |
+| 23 | Save and Save and New results | `record-detail.md` › Flows; `leads-write-behaviour.md` › A7 | Destination and message after a successful save. |
+| 24 | Delete Lead | `leads.md` › Actions; `leads-write-behaviour.md` › A1 | Confirmation dialog and where the page goes afterwards. |
+| 25 | Clone Lead | `leads.md` › Actions; `leads-write-behaviour.md` › A2 | Look of the clone form, the fields it leaves out and where the page goes after Save. |
 | 26 | Lead schema: fields, types, required fields, limits, picklists | `leads-fields-and-layout.md` › Fields, Picklists | — |
 | 27 | Field permissions of the two profiles applied to list, detail and forms | `leads-fields-and-layout.md` › Field permissions by profile | Whether the shell differs by profile. |
 
@@ -101,6 +102,9 @@ Specs: `app-shell.md`, `list-views.md`, `record-detail.md`,
 | Social card; ad-platform lead sync entries | M15 | `record-detail.md` › Related-list structure and use; `list-views.md` › Actions |
 | Products card | P2 | `record-detail.md` › Related-list structure and use |
 | Cadences card and Enroll to Cadence; Approve Leads and Review History; Voice of the Customer card; Add Kiosk and Create Client Script; applications menu, extensions entry and team-space controls | P3 | `record-detail.md` › Related-list structure and use; `leads.md` › Actions; `app-shell.md` › Actions |
+| Deleting a Lead also deletes its notes and activities; a change of owner can carry the Lead's open activities | M5, M6 | `leads-write-behaviour.md` › A1, A5 |
+| Mandatory-fields form opened by a layout rule during inline edit; duplicate alert on unique fields with its link to the existing record (no unique field is configured today) | M11 | `leads-write-behaviour.md` › A8, A10 |
+| Overwrite and Append choice when a multi-select field is mass updated (Leads has no such field) | with the first module that has one | `leads-write-behaviour.md` › A4 |
 | Links from the Lead page to records of other modules | with each module | `leads.md` › Module 1 capability and dependency table |
 
 ### Rows without a module
@@ -117,6 +121,9 @@ decides.
 | Notifications in the top bar | M12 | `app-shell.md` › Actions |
 | User menu in the top bar | M1 for sign-out through our own account screens; the reference menu's options are unobserved | `app-shell.md` › Actions |
 | Connected Records card | Unresolved: its use in our organization is unknown | `record-detail.md` › Related-list structure and use |
+| Recycle Bin: deleted records are kept 60 days, can be restored, and are removed for good only by an administrator | M6, with the other data administration tools; keeping deleted records is decided in ADR 0002 | `leads-write-behaviour.md` › A1 |
+| Mass Update, Mass Transfer and Mass Delete tool pages with a criteria step (list Actions menu) | M11, with view criteria editing | `leads-write-behaviour.md` › A4–A6 |
+| Mass actions on every record of a view; progress indicator of a running mass action | Unresolved: availability depends on the edition | `leads-write-behaviour.md` › A3 |
 
 ### Module 1 gate
 
