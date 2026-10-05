@@ -93,7 +93,7 @@ Public documentation sources relied upon are referenced throughout this document
   - **View-Wide Selection**:
     - The "Select all records in this view" option allows performing mass actions on all records within a specific view (`D1`, `D12`).
   - **Edition & Volume Dependencies**:
-    - The "Select All [Records] in this View" link is available only in Enterprise and Ultimate editions (`D12`).
+    - The "Select All [Records] in this View" link is available only in two named editions (`D12`; the names are in the key list).
     - The link does NOT appear if there are more than 50,000 records in the custom list view (`D12`).
     - The link does NOT appear if a mass update is already in progress (`D12`).
   - **Execution Feedback**:
@@ -112,9 +112,10 @@ Public documentation sources relied upon are referenced throughout this document
     - Text Area and Lookup fields cannot be updated using the Mass Update feature (`D1`).
     - Email, lookup fields, layout fields, multi line fields, and line items cannot be mass updated via API (`D7`).
   - **Multi-Select Picklist Handling**:
-    - During Mass Update of multi-select fields, users can choose either `Overwrite` or `Append` options (`D1`, `D7`).
-    - `Overwrite`: Default option; replaces previous value with the new one (`D1`, `D7`).
-    - `Append`: Retains previous value and adds the new value (`D1`, `D7`).
+    - During Mass Update of multi-select fields the user chooses `Overwrite` or `Append` (`D1`).
+    - `Overwrite`: the default option in the interface; replaces the previous value (`D1`).
+    - `Append`: keeps the previous value and adds the new one (`D1`).
+    - API: the optional boolean `over_write` replaces all values when `true` and adds the value when `false`; its default is `false`, the opposite of the interface default (`D7`).
   - **Execution Limits**:
     - Up to 500 records in a single operation via manual selection (`D1`, `D7`). For larger sets, selecting all records in the view is used (`D1`).
     - Up to 50,000 records via custom view (`D7`), with the view-wide selection link not appearing if the view exceeds 50,000 records (`D12`).
@@ -138,7 +139,7 @@ Public documentation sources relied upon are referenced throughout this document
     - Allows selecting open activities that should be transferred to the new owner (`D1`).
     - For Leads, associated open activities (Tasks, Events, scheduled/overdue Calls) can be transferred if owned by the same record owner, subject to the user's module permissions (`D1`).
   - **Permissions**:
-    - Requires `Change Owner` / `Mass Transfer` profile permission (`D1`).
+    - Requires the `Mass Transfer` profile permission for the module (`D1`). The `Change Owner` option is not available for records on which the user has read-only permission (`D1`).
 - **Not Documented**:
   - Modal vs full-page presentation in the modern web UI (help documentation describes a dedicated `Change Owner page` and `Mass Transfer [Module] page`).
   - Checkbox labels and default checked states for closed activities.
@@ -219,7 +220,7 @@ Public documentation sources relied upon are referenced throughout this document
   - **Create Lead**: `POST /{module_api_name}` (`D2`). Payload: `{"data": [{"Company": "...", "Last_Name": "...", ...}]}`. A maximum of 100 records can be inserted per API call (`D2`). Success response: `{"data": [{"code": "SUCCESS", "details": {"Modified_Time": "...", "Modified_By": {...}, "Created_Time": "...", "id": "...", "Created_By": {...}}, "message": "record added", "status": "success"}]}`.
   - **Update Lead**: `Not documented (update page not read)`.
   - **Delete Lead**: `DELETE /{module_api_name}/{record_id}` (single) or `DELETE /{module_api_name}?ids={id1,id2,...}` (batch, max 100 records per call) (`D3`). Success response: `{"data": [{"code": "SUCCESS", "details": {"id": "..."}, "message": "record deleted", "status": "success"}]}`.
-  - **Mass Update**: `POST /{module_api_name}/actions/mass_update` (`D7`). Payload: `{"data": [{"Field": "Value"}], "ids": ["id1", "id2"], "over_write": true}` (up to 500 records) or with `"cvid": "..."` (up to 50,000 records). Only one field can be updated per API call (up to three fields in the Deals module) (`D7`). When specifying `cvid`, it initiates a background job and returns a `job_id` (`D7`). Returns `LIMIT_EXCEEDED` (HTTP 400) if records exceed 500 (`D7`).
+  - **Mass Update**: `POST /{module_api_name}/actions/mass_update` (`D7`). Payload: `{"data": [{"Field": "Value"}], "ids": ["id1", "id2"], "over_write": true}` (up to 500 records) or with `"cvid": "..."` (up to 50,000 records). Only one field can be updated per API call (up to three fields in the Deals module) (`D7`). When specifying `cvid`, it initiates a background job and returns a `job_id` (`D7`). Scheduler-type success response carries `details.job_id` and the message `mass update scheduled successfully` (`D7`). `LIMIT_EXCEEDED` (HTTP 400) is listed for a record count above the maximum of 50,000 (`D7`). The response to more than 500 ids in one call is Not documented. `over_write` is optional and defaults to `false` (`D7`).
   - **Mass Delete**: `POST /{module_api_name}/actions/mass_delete` (`D8`). Payload: `{"ids": ["id1", "id2"]}` (up to 500 records) or `{"cvid": "..."}` (up to 50,000 records). Success response message is `"record is deleted"` (`D8`). The `cvid` parameter is supported in specific editions (`D8`).
   - **Error Envelope**: Error body sample: Not documented in the pages read. Each page lists per error a code, an HTTP status and a message (`D2`, `D7`, `D8`).
 - **Architectural Distinction**:
@@ -236,7 +237,7 @@ Public documentation sources relied upon are referenced throughout this document
 | **Mass Delete** | Not defined in ADR §5 | `POST /{module_api_name}/actions/mass_delete`<br/>Body: `{"ids": [...]}` or `{"cvid": "..."}` (`D8`) | Public API uses dedicated `actions/mass_delete` action route via `POST` (documented under `/crm/v8`), returns `"record is deleted"`, distinct from standard `DELETE ?ids=`. `cvid` parameter is edition-dependent (`D8`). |
 | **Duplicate Conflict Status** | `HTTP 409 Conflict` | `HTTP 400 Bad Request`<br/>(`code: "DUPLICATE_DATA"`, `D2`) | **Major discrepancy**: ADR §5 specified HTTP 409 for conflicts; reference CRM returns HTTP 400 with duplicate code. |
 | **Validation Error Status** | `HTTP 400`<br/>Custom `code` / `details` | `HTTP 400 Bad Request`<br/>(`code: "MANDATORY_NOT_FOUND"`, `D2`) | HTTP status matches. Reference CRM provides standardized error code strings. |
-| **Authentication / Permission** | `HTTP 401` unauthenticated<br/>`HTTP 403` forbidden | `HTTP 401` (`AUTHENTICATION_FAILURE` in `D4`, `D8`; `OAUTH_SCOPE_MISMATCH` in `D2`)<br/>`HTTP 403` (`NO_PERMISSION` in `D2`) | Status codes match. Error envelope keys (`code`, `details`, `message`, `status`) match. |
+| **Authentication / Permission** | `HTTP 401` unauthenticated<br/>`HTTP 403` forbidden | `HTTP 401` (`AUTHENTICATION_FAILURE` in `D4`, `D8`; `OAUTH_SCOPE_MISMATCH` in `D2`)<br/>`HTTP 403` (`NO_PERMISSION` in `D2`) | Status codes match. The pages list a code, an HTTP status and a message per error; no error body sample was read, so the four keys the ADR records as observed are neither confirmed nor contradicted. |
 | **API Versioning** | Unified `v2.2` across all interim endpoints | Mixed versions in public docs (`/crm/v2` for insert, delete, mass_update, search; `/crm/v8` for mass_delete, clone) | Public documentation reflects multi-version public evolution; internal CRM browser endpoints may use unified internal routing. |
 
 ---
@@ -253,7 +254,7 @@ Public documentation sources relied upon are referenced throughout this document
   - Whether alphabet search specifically targets `Last_Name` in Leads.
 
 ### B2: Filter Operators by Field Type (`row 8`)
-- **Status**: `Not documented [UI Panel] / Documented [Search API, D10]`
+- **Status**: `Not documented` (filter panel operators). The search API operators below are `Documented [D10]` and belong to a different surface.
 - **Documented in Search API (`D10`)**:
   - Supported criteria operators: `equals`, `starts_with`, `in`.
 - **Conflicts with Observed & Not Documented**:
@@ -333,7 +334,7 @@ This specification definitively resolves the following open questions from prior
    - Confirms clone unique fields must be manually removed/updated to prevent duplicate validation rejection (`D5`), and system/transient/read-only properties are excluded (`D4`).
    - Confirms mass action selection limit of 500 records manually, and up to 50,000 records via custom view (`D1`, `D7`, `D8`, `D12`).
    - Confirms multi-select picklist mass update options (`Overwrite` vs `Append`) (`D1`, `D7`).
-   - Confirms ineligible mass update fields: Text Area and Lookup fields (`D1`), line items and system fields (`D7`).
-2. `docs/adr/0004-request-shape.md › Open questions #1`: Evidence supplied regarding public REST API wire contracts for create, delete, mass update, mass delete, and error envelope structure (with discrepancies with interim shapes identified); the decision stays with the CTO.
+   - Confirms ineligible mass update fields: Text Area and Lookup fields (`D1`), Email, lookup, layout and multi-line fields and line items (`D7`).
+2. `docs/adr/0004-request-shape.md › Open questions #1`: Evidence supplied regarding public REST API wire contracts for create, delete, mass update, mass delete, and the listed error codes (with discrepancies with interim shapes identified); the decision stays with the CTO.
 
 *Note: `research/specs/record-detail.md › Open questions #1, #4` and `research/specs/list-views.md › Open questions #2, #6` remain unresolved because public documentation does not specify UI stage ribbon click interactions, quick create subset selection rules, or UI filter panel operator structures.*
