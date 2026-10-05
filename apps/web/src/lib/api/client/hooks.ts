@@ -38,12 +38,17 @@ export function useView(module: ModuleApiName, viewId: string) {
   });
 }
 
-export function useRecordList(module: ModuleApiName, query: ListQuery) {
+export function useRecordList(
+  module: ModuleApiName,
+  query: ListQuery,
+  options?: { enabled?: boolean },
+) {
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.list(module, query),
     queryFn: () => service.list(module, query),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? Boolean(query.viewId),
   });
 }
 

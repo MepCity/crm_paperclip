@@ -4,6 +4,19 @@ Overview tab cards for the record detail page: business card, collapsible detail
 card, shared field value rendering, and the `Last Update` age label. Data loading
 and page placement live in MEP-144.
 
+## Lead record page (MEP-144)
+
+| Piece | Location |
+| --- | --- |
+| Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
+| Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
+| List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
+| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
+| Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
+
+The route file wraps this screen in `ApiProvider` after `requireOrgContext`. Phase B
+adds `/crm/[orgSlug]/tab/Leads/[recordId]` and E2E once the list page is on `main`.
+
 ## Components
 
 | Component | Role |
