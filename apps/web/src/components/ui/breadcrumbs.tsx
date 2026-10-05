@@ -19,7 +19,10 @@ export function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
                 </span>
               ) : null}
               {isLast || !item.href ? (
-                <span aria-current={isLast ? "page" : undefined} className="font-medium text-text">
+                <span
+                  aria-current={isLast ? "page" : undefined}
+                  className="font-semibold text-text"
+                >
                   {item.label}
                 </span>
               ) : (
