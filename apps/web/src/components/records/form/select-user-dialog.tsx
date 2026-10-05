@@ -1,16 +1,11 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import {
-  Dialog as AriaDialog,
-  Heading,
-  Modal,
-  ModalOverlay,
-  Radio,
-  RadioGroup,
-} from "react-aria-components";
+import { type CSSProperties, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { TableRadio, TableRadioGroup } from "@/components/ui/table-radio";
 import { TextField } from "@/components/ui/text-field";
+import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { UserAvatarPlaceholder } from "@/components/ui/user-avatar-placeholder";
 import "./select-user-dialog.css";
 
 export interface SelectUserRecord {
@@ -26,6 +21,7 @@ export interface SelectUserDialogProps {
   searchLabel: string;
   searchPlaceholder: string;
   selectedUserLabel: string;
+  selectColumnLabel: string;
   columnUserName: string;
   columnRole: string;
   columnEmail: string;
@@ -49,6 +45,7 @@ export function SelectUserDialog({
   searchLabel,
   searchPlaceholder,
   selectedUserLabel,
+  selectColumnLabel,
   columnUserName,
   columnRole,
   columnEmail,
@@ -63,16 +60,6 @@ export function SelectUserDialog({
   const titleId = useId();
   const [draftId, setDraftId] = useState(selectedId);
   const [search, setSearch] = useState("");
-  const previouslyFocused = useRef<HTMLElement | null>(null);
-  if (previouslyFocused.current === null) {
-    previouslyFocused.current = document.activeElement as HTMLElement | null;
-  }
-
-  useEffect(() => {
-    return () => {
-      previouslyFocused.current?.focus();
-    };
-  }, []);
 
   const filteredUsers = useMemo(
     () => users.filter((user) => matchesSearch(user, search)),
@@ -80,94 +67,109 @@ export function SelectUserDialog({
   );
 
   const summaryUser =
-    users.find((user) => user.id === draftId) ?? users.find((u) => u.id === selectedId);
+    users.find((user) => user.id === draftId) ?? users.find((user) => user.id === selectedId);
 
   const selectionChanged = draftId !== selectedId;
+  const rowCount = filteredUsers.length;
+
+  const panelStyle = {
+    "--select-user-row-count": String(rowCount),
+  } as CSSProperties;
 
   return (
-    <ModalOverlay
+    <TopAlignedModal
       isOpen
-      isDismissable
-      className="select-user-overlay fixed inset-0 z-50 outline-none"
+      isDismissable={false}
+      aria-labelledby={titleId}
+      panelClassName="select-user-modal-panel"
+      panelStyle={panelStyle}
       onOpenChange={(open) => {
         if (!open) onCancel();
       }}
     >
-      <Modal className="select-user-modal outline-none">
-        <AriaDialog aria-labelledby={titleId} className="select-user-dialog">
-          <Heading id={titleId} slot="title" className="select-user-title">
-            {title}
-          </Heading>
+      <h2 id={titleId} className="select-user-title">
+        {title}
+      </h2>
 
-          <div className="select-user-search-row">
-            <div className="select-user-search-field">
-              <TextField
-                variant="filter-search"
-                label={searchLabel}
-                placeholder={searchPlaceholder}
-                value={search}
-                onChange={setSearch}
-              />
-            </div>
-            <div className="select-user-summary" aria-live="polite">
-              <span className="select-user-summary-label">{selectedUserLabel}</span>
-              <span className="select-user-summary-avatar" aria-hidden="true" />
-              <span className="select-user-summary-name">{summaryUser?.name ?? ""}</span>
-            </div>
-          </div>
+      <div className="select-user-search-row">
+        <div className="select-user-search-field">
+          <TextField
+            variant="filter-search"
+            label={searchLabel}
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={setSearch}
+            autoFocus
+          />
+        </div>
+        <div className="select-user-summary" aria-live="polite">
+          <span className="select-user-summary-label">{selectedUserLabel}</span>
+          <span className="select-user-summary-name-wrap">
+            <UserAvatarPlaceholder />
+            <span className="select-user-summary-name">{summaryUser?.name ?? ""}</span>
+          </span>
+        </div>
+      </div>
 
-          <div className="select-user-table-wrap">
-            <RadioGroup
-              aria-label={title}
-              value={draftId}
-              onChange={setDraftId}
-              className="select-user-table-group"
-            >
-              <table className="select-user-table">
-                <thead>
-                  <tr>
-                    <th scope="col">
-                      <span className="sr-only">Select</span>
-                    </th>
-                    <th scope="col">{columnUserName}</th>
-                    <th scope="col">{columnRole}</th>
-                    <th scope="col">{columnEmail}</th>
-                    <th scope="col">{columnProfile}</th>
+      <div className="select-user-table-wrap">
+        <div className="select-user-table-frame">
+          <TableRadioGroup
+            aria-label={title}
+            value={draftId}
+            onChange={setDraftId}
+            className="select-user-table-group"
+          >
+            <table className="select-user-table">
+              <colgroup>
+                <col className="select-user-col-radio" />
+                <col className="select-user-col-avatar" />
+                <col className="select-user-col-name" />
+                <col className="select-user-col-role" />
+                <col className="select-user-col-email" />
+                <col className="select-user-col-profile" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col" className="select-user-th-radio">
+                    <span className="sr-only">{selectColumnLabel}</span>
+                  </th>
+                  <th scope="col" colSpan={2} className="select-user-th-name">
+                    {columnUserName}
+                  </th>
+                  <th scope="col">{columnRole}</th>
+                  <th scope="col">{columnEmail}</th>
+                  <th scope="col">{columnProfile}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className="select-user-td-radio">
+                      <TableRadio value={user.id} aria-label={user.name} />
+                    </td>
+                    <td className="select-user-td-avatar">
+                      <UserAvatarPlaceholder />
+                    </td>
+                    <td className="select-user-td-name">{user.name}</td>
+                    <td className="select-user-td-role">{user.role ?? ""}</td>
+                    <td className="select-user-td-email">{user.email}</td>
+                    <td className="select-user-td-profile">{user.profile ?? ""}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <Radio value={user.id} aria-label={user.name} className="select-user-radio">
-                          {({ isSelected }) => (
-                            <span aria-hidden="true" className="select-user-radio-circle">
-                              {isSelected && <span className="select-user-radio-dot" />}
-                            </span>
-                          )}
-                        </Radio>
-                      </td>
-                      <td>{user.name}</td>
-                      <td>{user.role ?? ""}</td>
-                      <td>{user.email}</td>
-                      <td>{user.profile ?? ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </RadioGroup>
-          </div>
+                ))}
+              </tbody>
+            </table>
+          </TableRadioGroup>
+        </div>
+      </div>
 
-          <div className="select-user-footer">
-            <Button variant="secondary" size="toolbar" onPress={onCancel}>
-              {cancelLabel}
-            </Button>
-            <Button size="toolbar" isDisabled={!selectionChanged} onPress={() => onDone(draftId)}>
-              {doneLabel}
-            </Button>
-          </div>
-        </AriaDialog>
-      </Modal>
-    </ModalOverlay>
+      <div className="select-user-footer">
+        <Button variant="secondary" size="toolbar" onPress={onCancel}>
+          {cancelLabel}
+        </Button>
+        <Button size="toolbar" isDisabled={!selectionChanged} onPress={() => onDone(draftId)}>
+          {doneLabel}
+        </Button>
+      </div>
+    </TopAlignedModal>
   );
 }

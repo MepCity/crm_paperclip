@@ -16,7 +16,8 @@ const labels = {
   title: "Select User",
   searchLabel: "Search Users",
   searchPlaceholder: "Search Users",
-  selectedUserLabel: "Selected User",
+  selectedUserLabel: "Selected User:",
+  selectColumnLabel: "Select",
   columnUserName: "User Name",
   columnRole: "Role",
   columnEmail: "Email",
@@ -38,9 +39,10 @@ function renderDialog(selectedId = "a", onDone = vi.fn(), onCancel = vi.fn()) {
   return { onDone, onCancel };
 }
 
-test("opens with the current owner selected and Done disabled until selection changes", async () => {
+test("opens with search focused and Done disabled until selection changes", async () => {
   const user = userEvent.setup();
   renderDialog("a");
+  expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Search Users" }));
   const done = screen.getByRole("button", { name: "Done" }) as HTMLButtonElement;
   expect(done.disabled).toBe(true);
   await user.click(screen.getByRole("radio", { name: "Beta User" }));
@@ -72,13 +74,22 @@ test("Cancel and Escape close without onDone", async () => {
   expect(onDone).not.toHaveBeenCalled();
 });
 
+test("backdrop click does not call onCancel", async () => {
+  const onCancel = vi.fn();
+  renderDialog("a", vi.fn(), onCancel);
+  const overlay = document.querySelector(".top-aligned-modal-overlay");
+  expect(overlay).toBeTruthy();
+  overlay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  expect(onCancel).not.toHaveBeenCalled();
+});
+
 test("keyboard moves radio selection within the group", async () => {
   const user = userEvent.setup();
   renderDialog("a");
   const alpha = screen.getByRole("radio", { name: "Alpha User" }) as HTMLInputElement;
   const beta = screen.getByRole("radio", { name: "Beta User" }) as HTMLInputElement;
+  await user.click(screen.getByRole("textbox", { name: "Search Users" }));
   alpha.focus();
-  expect(document.activeElement).toBe(alpha);
   await user.keyboard("{ArrowDown}");
   expect(document.activeElement).toBe(beta);
   expect(beta.checked).toBe(true);
@@ -104,8 +115,8 @@ test("empty role and profile cells stay blank", () => {
   const row = screen.getByRole("radio", { name: "Beta User" }).closest("tr");
   expect(row?.textContent).not.toContain("undefined");
   const cells = row?.querySelectorAll("td") ?? [];
-  expect(cells[2]?.textContent).toBe("");
-  expect(cells[4]?.textContent).toBe("");
+  expect(cells[3]?.textContent).toBe("");
+  expect(cells[5]?.textContent).toBe("");
 });
 
 test("keeps focus inside the dialog while open", async () => {

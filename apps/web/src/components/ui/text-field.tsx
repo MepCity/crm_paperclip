@@ -39,7 +39,7 @@ export function TextField({
           />
           <Input
             placeholder={placeholder}
-            className="h-(--size-list-filter-search-height) w-full min-w-0 rounded-md border border-control-border bg-surface pr-3 pl-(--size-list-filter-search-padding) text-sm text-text outline-none placeholder:text-text-placeholder data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
+            className="h-(--size-list-filter-search-height) w-full min-w-0 rounded-md border border-control-border bg-surface pr-3 pl-(--size-list-filter-search-padding) text-sm text-text outline-none placeholder:text-text-placeholder data-disabled:bg-surface-hover data-disabled:opacity-50 data-focused:border-primary data-focused:ring-2 data-focused:ring-focus-ring data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
           />
         </div>
       ) : (

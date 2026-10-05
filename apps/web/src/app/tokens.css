@@ -100,6 +100,9 @@
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
+  --color-form-portrait: #b2b2b2;
+  /* MEP-172 interim: Address field group border on create/edit form. */
+  --color-form-field-group-border: #797883;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
@@ -130,6 +133,7 @@
   --radius-lg: 0.5rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
+  --radius-form-control: 5px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -257,6 +261,24 @@
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
 
+  /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
+  --color-detail-divider: #d6d6e3;
+  --size-detail-card-width: 906px;
+  --size-detail-card-padding: 20px;
+  --size-detail-business-label-width: 153.5px;
+  --size-detail-business-label-value-gap: 45.5px;
+  --size-detail-business-row-pitch: 44.5px;
+  --size-detail-details-label-width: 129px;
+  --size-detail-details-label-value-gap: 36.5px;
+  --size-detail-details-row-pitch: 44px;
+  --size-detail-column-width: 433.5px;
+  --size-detail-business-min-height: 287px;
+  --size-detail-business-padding-block-start: 42.75px;
+  --size-detail-business-padding-block-end: 21.75px;
+  --size-detail-details-toggle-padding-block: 12.75px;
+  --size-detail-details-sections-margin-top: 39px;
+  --size-detail-section-title-margin-block: 16px 8px;
+
   /* View edit form */
   --size-list-view-name-width: 600px;
   --size-list-column-lane-width: 280px;
@@ -302,22 +324,78 @@
   --size-popover-sort-button-gap: 8px;
 
   /* Select User dialog — record-detail.md › Layout › Visual layout › Select User dialog */
-  --size-select-user-dialog-left: 294px;
   --size-select-user-dialog-width: 882px;
-  --size-select-user-dialog-height: 353px;
   --radius-select-user-dialog-bottom: 12px;
   --size-select-user-dialog-inset: 31px;
-  --size-select-user-title-top: 24px;
+  --size-select-user-title-cap-top: 29px;
   --size-select-user-search-top: 64px;
   --size-select-user-search-width: 300px;
   --size-select-user-search-height: 34px;
   --size-select-user-table-top: 119px;
-  --size-select-user-table-height: 151px;
-  --size-select-user-footer-top: 290.5px;
+  --size-select-user-table-header-band: 32px;
+  --size-select-user-table-header-rule: 2px;
+  --size-select-user-table-row-height: 38px;
+  --size-select-user-table-row-divider: 1px;
+  --size-select-user-table-footer-gap: 20px;
+  --size-select-user-dialog-bottom-padding: 30.5px;
   --size-select-user-done-height: 32px;
   --size-select-user-done-width: 63.5px;
-  --size-select-user-cancel-width: 66.5px;
-  --size-select-user-footer-gap: 8px;
-  --size-select-user-summary-gap: 16px;
+  --size-select-user-cancel-width: 74.5px;
+  --size-select-user-footer-gap: 10.5px;
+  --size-select-user-summary-search-gap: 16px;
+  --size-select-user-summary-label-width: 92px;
+  --size-select-user-summary-label-avatar-gap: 8px;
+  --size-select-user-summary-avatar-name-gap: 11px;
   --size-select-user-avatar: 30px;
+  --size-select-user-radio: 15px;
+  --size-select-user-radio-ring-selected: 4px;
+  --size-select-user-radio-ring-unselected: 2px;
+  --size-select-user-radio-centre: 7px;
+  --color-select-user-table-border: #d9e0eb;
+  --color-select-user-row-divider: #eef1f7;
+  --size-select-user-table-radio-inset: 20px;
+  --size-select-user-table-radio-column: 36px;
+  --size-select-user-table-avatar-column: 60px;
+  --size-select-user-table-name-column: 141.5px;
+  --size-select-user-table-role-column: 164.5px;
+  --size-select-user-table-email-column: 253px;
+  --size-select-user-table-name-header-inset: 31px;
+  --size-select-user-table-avatar-inset: 30px;
+  --size-select-user-table-name-text-inset: 11px;
+  /* Frame outer height minus row sum; record-detail.md › User table › y 119–270.5 with three rows. */
+  --size-select-user-table-frame-adjust: 1.5px;
+
+  /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-strip-height: 57px;
+  --size-form-strip-padding-end: 8px;
+  --size-form-card-inset: 12px;
+  /* MEP-172 interim vertical rhythm on create/edit form. */
+  --size-form-first-title-center: 30px;
+  --size-form-first-content-top: 63px;
+  --size-form-section-gap: 55.5px;
+  --size-form-section-title-gap: 28px;
+  --size-form-section-title-box-trim: 4px;
+  --size-form-portrait: 48px;
+  --size-form-label-column-left: 172px;
+  --size-form-label-column-right: 221.5px;
+  --size-form-label-gap: 37px;
+  --size-form-input-left-width: 320px;
+  --size-form-input-right-width: 314.5px;
+  --size-form-column-gap: 258.5px;
+  --size-form-label-line-height: 17.5px;
+  --size-form-label-padding-top: 8px;
+  --size-form-input-group-width: 303px;
+  --size-form-input-height: 34px;
+  --size-form-row-pitch: 54px;
+  --size-form-control-padding-inline: 10px;
+  --size-form-control-padding-block: 8px;
+  --size-form-action-height: 32px;
+  --size-form-action-gap: 10px;
+  --size-form-action-padding-inline: 14.5px;
+  --size-form-field-group-padding-end: 16px;
+  --size-form-field-group-body-top: 31px;
+  --size-form-field-group-legend-inset: 18.5px;
+  --size-form-field-group-legend-padding: 12.5px;
+  /* Description textarea height is not measurable in the capture; demo placeholder only. */
+  --size-form-description-height: 80px;
 }

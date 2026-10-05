@@ -1,3 +1,5 @@
+import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
@@ -59,6 +61,7 @@ export const demos: Record<string, React.ComponentType> = {
   menu: MenuDemo,
   table: TableDemo,
   "record-table": RecordTableDemo,
+  "record-detail-cards": RecordDetailCardsDemo,
   spinner: SpinnerDemo,
   tabs: TabsDemo,
   tooltip: TooltipDemo,
@@ -69,5 +72,6 @@ export const demos: Record<string, React.ComponentType> = {
   "empty-state": EmptyStateDemo,
   skeleton: SkeletonDemo,
   "list-chrome": ListChromeDemo,
+  "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
 };

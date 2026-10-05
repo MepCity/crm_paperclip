@@ -124,6 +124,8 @@ what the "no colour constants" rule forbids.
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
+| `--color-form-portrait` | `#b2b2b2` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "drawn in gray `#B2B2B2`" | from spec |
+| `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
 | `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
@@ -143,6 +145,7 @@ what the "no colour constants" rule forbids.
 | `--radius-lg` | `0.5rem` (8px) | list-views.md › View edit form › "8 px corners" | from spec |
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
+| `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
@@ -245,6 +248,22 @@ what the "no colour constants" rule forbids.
 | `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
+| `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
+| `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
+| `--size-detail-business-label-value-gap` | `45.5px` | record-detail.md › Business card › values start x 771, labels end x 725.5 | from spec |
+| `--size-detail-business-row-pitch` | `44.5px` | record-detail.md › Business card › "44.5 px average row pitch" | from spec |
+| `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
+| `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
+| `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
+| `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
+| `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
+| `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
+| `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
+| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
+| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -277,24 +296,75 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
-| `--size-select-user-dialog-left` | `294px` | record-detail.md › Select User dialog › Backdrop and modal › "dialog x 294–1176" | from spec |
-| `--size-select-user-dialog-width` | `882px` | record-detail.md › Select User dialog › Backdrop and modal › "dialog x 294–1176" (width) | from spec |
-| `--size-select-user-dialog-height` | `353px` | record-detail.md › Select User dialog › Backdrop and modal › "y 0–353" | from spec |
+| `--size-select-user-dialog-width` | `882px` | record-detail.md › Select User dialog › Backdrop and modal › "882 px wide" | from spec |
 | `--radius-select-user-dialog-bottom` | `12px` | record-detail.md › Select User dialog › Backdrop and modal › "12 px lower corners" | from spec |
-| `--size-select-user-dialog-inset` | `31px` | record-detail.md › Select User dialog › Search and selected summary › search starts x 325 (325 − 294) | from spec |
-| `--size-select-user-title-top` | `24px` | record-detail.md › Select User dialog › Select User dialog title; vertical position not measured from capture | not yet measured |
-| `--size-select-user-search-top` | `64px` | record-detail.md › Select User dialog › Search and selected summary › "Search input starts x 325, y 64" | from spec |
+| `--size-select-user-dialog-inset` | `31px` | record-detail.md › Select User dialog › Search and selected summary › search x 325 (325 − 294) | from spec |
+| `--size-select-user-title-cap-top` | `29px` | record-detail.md › Select User dialog › Title › "cap top y 29" | from spec |
+| `--size-select-user-search-top` | `64px` | record-detail.md › Select User dialog › Search and selected summary › "y 64–98" | from spec |
 | `--size-select-user-search-width` | `300px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
 | `--size-select-user-search-height` | `34px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
-| `--size-select-user-table-top` | `119px` | record-detail.md › Select User dialog › User table and footer › "Table x 325–1145, y 119–270" | from spec |
-| `--size-select-user-table-height` | `151px` | record-detail.md › Select User dialog › User table and footer › "y 119–270" (height) | from spec |
-| `--size-select-user-footer-top` | `290.5px` | record-detail.md › Select User dialog › User table and footer › "`Done` … y 290.5–322.5" | from spec |
-| `--size-select-user-done-height` | `32px` | record-detail.md › Select User dialog › User table and footer › "`Done` is 32 px high" | from spec |
-| `--size-select-user-done-width` | `63.5px` | record-detail.md › Select User dialog › User table and footer › "`Done` … x 1081.5–1145" | from spec |
-| `--size-select-user-cancel-width` | `66.5px` | record-detail.md › Select User dialog › User table and footer › Cancel secondary style; width not measured from capture | not yet measured |
-| `--size-select-user-footer-gap` | `8px` | record-detail.md › Select User dialog › User table and footer › gap between footer buttons not measured from capture | not yet measured |
-| `--size-select-user-summary-gap` | `16px` | record-detail.md › Select User dialog › Search and selected summary › spacing between summary label, avatar and name not measured from capture | not yet measured |
-| `--size-select-user-avatar` | `30px` | record-detail.md › Select User dialog › Search and selected summary › "round avatar"; diameter not measured from capture | not yet measured |
+| `--size-select-user-table-top` | `119px` | record-detail.md › Select User dialog › User table › "Frame … y 119–270.5" | from spec |
+| `--size-select-user-table-header-band` | `32px` | record-detail.md › Select User dialog › User table › "Header band y 120–152" | from spec |
+| `--size-select-user-table-header-rule` | `2px` | record-detail.md › Select User dialog › User table › "2 px `#D9E0EB` rule" | from spec |
+| `--size-select-user-table-row-height` | `38px` | record-detail.md › Select User dialog › User table › "Rows are 38 px high" | from spec |
+| `--size-select-user-table-row-divider` | `1px` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-footer-gap` | `20px` | record-detail.md › Select User dialog › Backdrop and modal › "footer … 20 px below the table frame" | from spec |
+| `--size-select-user-dialog-bottom-padding` | `30.5px` | record-detail.md › Select User dialog › Backdrop and modal › "30.5 px above the dialog's lower edge" | from spec |
+| `--size-select-user-done-height` | `32px` | record-detail.md › Select User dialog › Footer › "32 px high" | from spec |
+| `--size-select-user-done-width` | `63.5px` | record-detail.md › Select User dialog › Footer › "`Done` x 1081.5–1145" | from spec |
+| `--size-select-user-cancel-width` | `74.5px` | record-detail.md › Select User dialog › Footer › "`Cancel` x 996.5–1071" | from spec |
+| `--size-select-user-footer-gap` | `10.5px` | record-detail.md › Select User dialog › Footer › "10.5 px gap" | from spec |
+| `--size-select-user-summary-search-gap` | `16px` | record-detail.md › Select User dialog › Search and selected summary › search ends x 625, label starts x 641 | from spec |
+| `--size-select-user-summary-label-width` | `92px` | record-detail.md › Select User dialog › Search and selected summary › label ink x 641–733 | from spec |
+| `--size-select-user-summary-label-avatar-gap` | `8px` | record-detail.md › Select User dialog › Search and selected summary › label ends x 733, avatar x 741 | from spec |
+| `--size-select-user-summary-avatar-name-gap` | `11px` | record-detail.md › Select User dialog › Search and selected summary › avatar ends x 771, name x 782 | from spec |
+| `--size-select-user-avatar` | `30px` | record-detail.md › Select User dialog › Search and selected summary › "30 px" avatar | from spec |
+| `--size-select-user-radio` | `15px` | record-detail.md › Select User dialog › Radio › "15 × 15 px circle" | from spec |
+| `--size-select-user-radio-ring-selected` | `4px` | record-detail.md › Select User dialog › Radio › "4 px `#5464F2` ring" | from spec |
+| `--size-select-user-radio-ring-unselected` | `2px` | record-detail.md › Select User dialog › Radio › "2 px `#C5C4D3` ring" | from spec |
+| `--size-select-user-radio-centre` | `7px` | record-detail.md › Select User dialog › Radio › "7 px white centre" | from spec |
+| `--color-select-user-table-border` | `#d9e0eb` | record-detail.md › Select User dialog › User table › "1 px `#D9E0EB` edge" | from spec |
+| `--color-select-user-row-divider` | `#eef1f7` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-radio-inset` | `20px` | record-detail.md › Select User dialog › User table › radio x 346 with frame x 325 (346 − 325 − 1 px frame edge) | from spec |
+| `--size-select-user-table-radio-column` | `36px` | record-detail.md › Select User dialog › User table › radio x 346–361 | from spec |
+| `--size-select-user-table-avatar-column` | `60px` | record-detail.md › Select User dialog › User table › row avatar x 391–421 | from spec |
+| `--size-select-user-table-name-column` | `141.5px` | record-detail.md › Select User dialog › User table › name x 432, Role x 573.5 | from spec |
+| `--size-select-user-table-role-column` | `164.5px` | record-detail.md › Select User dialog › User table › Role x 573.5, Email x 738 | from spec |
+| `--size-select-user-table-email-column` | `253px` | record-detail.md › Select User dialog › User table › Email x 738, Profile x 991 | from spec |
+| `--size-select-user-table-name-header-inset` | `31px` | record-detail.md › Select User dialog › User table › `User Name` label x 392, avatar column ends x 361 | from spec |
+| `--size-select-user-table-avatar-inset` | `30px` | record-detail.md › Select User dialog › User table › avatar x 391 after radio column | from spec |
+| `--size-select-user-table-name-text-inset` | `11px` | record-detail.md › Select User dialog › User table › name x 432 after avatar x 421 | from spec |
+| `--size-select-user-table-frame-adjust` | `1.5px` | record-detail.md › Select User dialog › User table › frame y 119–270.5 minus row band sum for three rows | from spec |
+| `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
+| `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
+| `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
+| `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
+| `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
+| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
+| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
+| `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
+| `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
+| `--size-form-label-gap` | `37px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "37 px before their input" | from spec |
+| `--size-form-input-left-width` | `320px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Left inputs x 553–873 (320 px wide)" | from spec |
+| `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
+| `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
+| `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
+| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
+| `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
+| `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
+| `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
+| `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
+| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
+| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
+| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
+| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
+| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
+| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
 
 ### Typeface
 
