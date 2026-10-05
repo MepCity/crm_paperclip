@@ -10,9 +10,17 @@ The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendme
 Metadata describes fields, ordered picklist display/stored values, layout sections
 and ordered field API names. Exactly one view is default. List results carry page,
 page size and `moreRecords`; `count` is separate. Updates are partial. View criteria
-and extra filters combine with `and`. The only observed comparator is `is`: exact
-stored-value equality, case-sensitive for strings; an array matches any element;
-null matches an empty field. Groups support `and` and `or`.
+and extra filters combine with `and`. Comparators are the saved-view wire values
+`equal`, `contains`, `not_contains` and `less_equal`. `equal` is exact stored-value
+equality, case-sensitive for strings; an array matches any element; null matches an
+empty field. `contains` and `not_contains` are case-insensitive substrings of text
+fields: a null field fails `contains` and passes `not_contains`. `less_equal` applies
+only to a datetime field with an `AGEINDAYS` token. Tokens (`CURRENTUSER`, `TODAY`,
+`AGEINDAYS`, `CATEGORY`) are resolved when the query runs. Groups support `and` and `or`.
+
+`ListQuery.fields` projects field API names, always including `id`. Omission
+returns all fields; an empty list returns only `id`. Unknown names raise a
+`ValidationError` keyed by `fields`. Projection happens after filtering and sorting.
 
 Field values are JSON-compatible domain values: strings for text-like fields,
 UTC timestamps, opaque single-module references, image references and long
@@ -25,7 +33,10 @@ neither HTTP payloads nor physical storage.
 
 The port, fixture adapter, reusable contract suite and application selection point
 are implemented. The fixture publishes all 56 Leads fields and 14 configured views.
-It generates 250 deterministic synthetic records using a fixed seed. Organization
+It generates 250 deterministic synthetic records using a fixed seed and a clock.
+`createFixtureRecordService(context, options?)` takes an optional `now: () => Date`
+(default: the system clock) for seed times, create/update timestamps and date tokens.
+Organization
 state lives in process memory under one `globalThis` / `Symbol.for` key, surviving
 module re-evaluation and separate server bundles in the same runtime.
 Factories bound to the same organization share it,
@@ -96,17 +107,38 @@ the precise seed, view content and interim fixture policies. Run targeted tests 
 `corepack pnpm exec vitest run --project unit packages/core/src/records` and the full
 repository gate with `corepack pnpm verify`.
 
+## Recorded sort behavior
+
+These points are evidence, separate from the interim policies below.
+
+- None of the 14 views stores a sort. Saved `sort_by` and `sort_order` are null on
+  every definition in `research/specs/list-views.md`. MEP-71.
+- Applied order is `query.sort`, otherwise the view's `sort`, otherwise record id
+  descending (`{ field: "id", order: "desc" }`). Identifiers are decimal text and
+  compare as `BigInt`. The id-descending default was observed on the default view
+  when the list request carried no sort parameter (`info.sort_by` `id`,
+  `info.sort_order` `desc`). The same rule is an assumption for the other 13 views.
+  MEP-71.
+
 ## Interim fixture policies (not reference parity)
 
 These CTO-approved policies permit development while research is pending. They are
 not evidence of reference CRM behavior and must not determine screen parity.
 
-- All 14 views have null sort. Eleven system views have interim null criteria:
-  `all-leads`, `all-locked-leads`, `converted-leads`, `mailing-labels`,
-  `my-converted-leads`, `my-leads`, `recently-created-leads`,
-  `recently-modified-leads`, `todays-leads`, `unread-leads`, `unsubscribed-leads`.
-  `SYSTEM_VIEW_IDS_WITH_INTERIM_NULL_CRITERIA` is their single inventory constant.
-  MEP-71 tracks the actual definitions; view names never imply predicates.
+- A criteria leaf whose field is absent from module metadata is still published on
+  the view, and evaluation treats that leaf as matching every record.
+  `Common_Status` is that field on the recent and unread views. Open question 12
+  in `research/specs/list-views.md`.
+- `TODAY` matches when the field's UTC calendar day equals the adapter clock's UTC
+  calendar day. Open question 14 in `research/specs/list-views.md`.
+- `AGEINDAYS` with `less_equal` matches when
+  `floor((now − field) / 86_400_000) <= offset`. A null or unparseable field does
+  not match. Open question 13 in `research/specs/list-views.md`.
+- Create sets read-only `Converted__s` and `Locked__s` to false so a new lead is
+  unconverted and unlocked. Callers cannot write those flags, and null would not
+  match `equal false`. What sets the flags in the reference CRM is open question 16
+  in `research/specs/list-views.md`. `Email_Opt_Out` stays null unless the caller
+  sends it.
 - Search trims input; blank means no restriction. Otherwise it matches a
   case-insensitive substring (`toLowerCase`, no locale) in Full_Name, Company,
   Email or Phone. It combines with view criteria and filters using `and`.
@@ -123,14 +155,17 @@ not evidence of reference CRM behavior and must not determine screen parity.
   existing records. The pure seed generator is independent of user context.
 - Callers cannot write Owner. The reference CRM create/edit forms expose Lead
   Owner; support will be handled in a separate task after the MEP-18 form spec.
-- Effective sort is query override, view sort, then creation order (seed order,
-  then created records). All metadata fields are accepted for sorting; the nine
-  metadata-ineligible fields are not separately rejected until the Sort By menu
-  is researched. Invalid sort/filter fields raise keyed validation errors.
+- Effective sort follows Recorded sort behavior above. All metadata fields are
+  accepted for sorting; the nine metadata-ineligible fields are not separately
+  rejected until the Sort By menu is researched. Callers were not observed sending
+  `id`, and the port does not add a special allowance: `id` is already a module
+  field. Invalid sort or filter fields, unknown comparators and comparator/type
+  mismatches raise keyed validation errors. Equal values keep the default
+  id-descending order. That tie break remains interim.
 - Numbers compare numerically, booleans false before true, strings by lowercase
   code-unit order (no localeCompare/Intl), timestamps chronologically, object
-  references by ID. Equal
-  values preserve default order. Null and empty strings sort last in either order.
+  references by ID. Equal values preserve id-descending order. Null and empty
+  strings sort last in either order.
 - Page must be a positive integer and perPage one of 10, 20, 30, 40, 50, 100.
   Beyond the last page, records are empty and moreRecords is false.
 
@@ -142,6 +177,10 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
   fourth contains a forbidden product name and cannot enter this repository.
   Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.
+- Mailing Labels selects five columns absent from Leads field metadata:
+  `Old_Street`, `Old_City`, `Old_State`, `Old_Country`, `Old_Zip_Code`. They are
+  not published. The captured table shows Salutation, Lead Name and Company
+  (`research/specs/list-views.md` › Fields absent from the Leads field metadata).
 - The reference's storage of the -None- placeholder is unverified. Published lists
   include it, but the fixture represents empty picklists with null.
 - Uniqueness enforcement and rejection tests await the first scope with a unique
@@ -155,12 +194,12 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Preserve opaque IDs and lossless long-integer strings across implementations.
 - Define how picklist inventories enter runtime metadata, including deferred
   Country/State options and dependency behavior.
-- Three custom views expand Lead Status record categories to stored-value arrays.
-  Open expands six values, Junk to Junk Lead and Not Qualified to Not Qualified;
-  empty status is excluded. Reference category wire encoding is unverified and
-  the current port has no category member. Avoid losing that distinction.
-- Replace interim search/sort/null/default-order policies when researched. Filter
-  operators, sortable menu entries and system view criteria/sorts remain open.
+- Three custom views keep the `CATEGORY` token. The fixture resolves it from Lead
+  Status picklist categories at query time (Open, Junk, Not Qualified). Empty
+  status is not a member of those categories.
+- Replace interim search, date-token, unknown-field and tie-break policies when
+  researched. Filter-panel operators and sortable menu entries remain open. Saved
+  view criteria and the recorded default sort are no longer open.
 - Add metadata-driven uniqueness enforcement using ConflictError and a genuine
   rejection contract test with the first authorized unique-field scope.
 

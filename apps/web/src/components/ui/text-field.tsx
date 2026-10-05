@@ -8,18 +8,46 @@ import {
   Label,
   Text,
 } from "react-aria-components";
+import { Icons } from "./icon";
 
 export interface TextFieldProps extends AriaTextFieldProps {
   label: string;
+  placeholder?: string;
+  variant?: "default" | "filter-search";
   description?: string;
   errorMessage?: string | ((v: import("react-aria-components").ValidationResult) => string);
 }
 
-export function TextField({ label, description, errorMessage, ...props }: TextFieldProps) {
+export function TextField({
+  label,
+  placeholder,
+  variant = "default",
+  description,
+  errorMessage,
+  ...props
+}: TextFieldProps) {
   return (
     <AriaTextField {...props} className="flex flex-col gap-1">
-      <Label className="text-md font-normal text-text">{label}</Label>
-      <Input className="border border-border rounded-md px-3 py-2 outline-none bg-surface text-text data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:opacity-50 data-disabled:bg-surface-hover data-invalid:border-danger" />
+      <Label className={variant === "filter-search" ? "sr-only" : "text-md font-normal text-text"}>
+        {label}
+      </Label>
+      {variant === "filter-search" ? (
+        <div className="relative">
+          <Icons.filterSearch
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-(--size-list-filter-search-icon-inset) h-(--size-list-filter-search-icon) w-(--size-list-filter-search-icon) -translate-y-1/2 text-text"
+          />
+          <Input
+            placeholder={placeholder}
+            className="h-(--size-list-filter-search-height) w-full min-w-0 rounded-md border border-control-border bg-surface pr-3 pl-(--size-list-filter-search-padding) text-sm text-text outline-none placeholder:text-text-placeholder data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
+          />
+        </div>
+      ) : (
+        <Input
+          placeholder={placeholder}
+          className="rounded-md border border-border bg-surface px-3 py-2 text-text outline-none data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
+        />
+      )}
       {description && (
         <Text slot="description" className="text-sm text-text-muted">
           {description}

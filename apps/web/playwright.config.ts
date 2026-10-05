@@ -6,11 +6,10 @@ if (!port)
   throw new Error("Run the end-to-end tests through `pnpm test:e2e` (E2E_PORT is not set).");
 
 export default defineConfig({
+  // Default 30s is too tight when other agents run verify on the same machine.
+  timeout: 90_000,
   testDir: "./e2e",
   fullyParallel: true,
-  // Vitest runs immediately before e2e in verify; one retry absorbs transient
-  // browser/session loss without loosening measurement assertions.
-  retries: 1,
   forbidOnly: Boolean(process.env.CI),
   reporter: [["list"]],
   outputDir: "./test-results",

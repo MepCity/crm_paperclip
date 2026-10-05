@@ -1,10 +1,6 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
-
-async function gotoGallery(page: Page): Promise<void> {
-  await page.goto("/dev/ui");
-}
 
 /**
  * The control's React fiber exists only after hydration, and it is already in view.
@@ -27,9 +23,8 @@ async function whenHydrated(locator: Locator): Promise<void> {
 
 // The gallery renders every primitive in every state, so one scan covers the new ones too.
 test("dev ui gallery is accessible with the data entry primitives", async ({ page }) => {
-  // Full-gallery axe scans exceed 30s on a loaded machine, as in dev-ui.spec.ts.
   test.setTimeout(90_000);
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
 
   for (const name of [
     "text area",
@@ -49,7 +44,7 @@ test("dev ui gallery is accessible with the data entry primitives", async ({ pag
 });
 
 test("number field steps and submits from the keyboard", async ({ page }) => {
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
 
   const region = page.getByRole("region", { name: "number field" });
   const field = region.getByRole("textbox", { name: "Filled" });
@@ -70,7 +65,7 @@ test("number field steps and submits from the keyboard", async ({ page }) => {
 });
 
 test("radio group and checkbox move with the keyboard", async ({ page }) => {
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
 
   const radios = page.getByRole("region", { name: "radio group" });
   const hot = radios.getByRole("radio", { name: "Hot" }).first();
@@ -88,7 +83,7 @@ test("radio group and checkbox move with the keyboard", async ({ page }) => {
 });
 
 test("date picker opens its calendar from the keyboard", async ({ page }) => {
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
 
   const region = page.getByRole("region", { name: "date picker" });
   const trigger = region.getByRole("button", { name: /Calendar/ }).first();
@@ -110,7 +105,7 @@ test("date picker opens its calendar from the keyboard", async ({ page }) => {
 });
 
 test("combo box filters, searches and selects from the keyboard", async ({ page }) => {
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
 
   const region = page.getByRole("region", { name: "combo box" });
 
@@ -140,7 +135,7 @@ test("combo box filters, searches and selects from the keyboard", async ({ page 
 });
 
 test("saved lookup restores its label after an unfinished search", async ({ page }) => {
-  await gotoGallery(page);
+  await page.goto("/dev/ui");
   const region = page.getByRole("region", { name: "combo box" });
   const lookup = region.getByRole("combobox", { name: "Saved lookup" });
   const submitted = () =>

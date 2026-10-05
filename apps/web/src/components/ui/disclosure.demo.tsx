@@ -14,6 +14,17 @@ export default function DisclosureDemo() {
           <p className="p-3">Expanded initially.</p>
         </Disclosure>
       </div>
+      <div className="w-(--size-list-filter-width) space-y-3">
+        <Disclosure variant="filter" label="Open section" defaultExpanded>
+          <p className="text-sm">Sample content</p>
+        </Disclosure>
+        <Disclosure variant="filter" label="Closed section">
+          <p className="text-sm">More sample content</p>
+        </Disclosure>
+        <Disclosure variant="filter" label="Disabled section" isDisabled>
+          <p>Unavailable content</p>
+        </Disclosure>
+      </div>
     </div>
   );
 }

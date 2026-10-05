@@ -16,7 +16,25 @@ This directory contains the headless-first design system components, built on `r
 - **Do not introduce heavy styling libraries** (e.g., styled-components, emotion). Tailwind + variables is enough.
 - **Do not import from `@crm/core` in client components**, except for types or `@crm/core/errors`.
 
+## Filter panel primitives
+
+`Disclosure` supplies a clipped, fully labelled keyboard-accessible heading with a
+controlled or uncontrolled panel. The expand mark is an original filled triangle, with no
+tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
+disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
+search height, a decorative magnifier, control border and placeholder tokens) and a
+separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
+keeps that box on the first line when a filter label wraps. Sources: list-views.md →
+Visual layout → Filter content, Surface and line colors, Selected / disabled.
+The vertical gaps and search-field width measured in Filter content are not applied yet
+and use the existing scale; open question 17 records the uncaptured closed group and
+checked checkbox.
+
 ## Token sources
+
+Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
+This keeps measured color fixtures outside the component directory's no-literal scan.
 
 Every token declared in `apps/web/src/app/tokens.css`, in file order, with the row it comes from. The
 **Visual layout** section of a spec is the only source of token values (ADR 0003, §2). Rows are
@@ -189,8 +207,17 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
-| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "placeholder about 34 px high" | from spec |
+| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
+| `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
+| `--size-list-filter-search-icon-inset` | `11.5px` | list-views.md › Filter content › "starting 11.5 px inside the field's outer left edge" | from spec |
+| `--size-list-filter-search-padding` | `31px` | list-views.md › Filter content › "the placeholder text starting 32 px inside that edge". Padding is that inset minus the 1 px border | from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
+| `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
+| `--size-list-filter-row-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
+| `--size-list-filter-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
+| `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-header-height` | `37px` | list-views.md › Table header and rows › "Header 37 px high: 35 px white plus a 2 px `#DCDBEE` bottom border". The 37 px box includes that border | from spec |
@@ -411,7 +438,6 @@ divide regions. `--color-control-border`, `--color-button-border` and `--color-p
 outline or split a control, and `--color-text-disabled`, `--color-text-empty` plus the white label on
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
-
 
 ## List chrome primitive composition
 
