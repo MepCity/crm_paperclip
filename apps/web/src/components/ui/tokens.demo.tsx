@@ -7,7 +7,16 @@ import { type ReactNode, useEffect, useState } from "react";
  * authored value with `getComputedStyle` so no value is repeated as a literal here.
  */
 const COLOUR_GROUPS = [
-  { label: "Record forms", tokens: ["--color-form-required", "--color-form-profile"] },
+  {
+    label: "Record forms",
+    tokens: [
+      "--color-form-required",
+      "--color-form-portrait",
+      "--color-form-caret",
+      "--color-form-input-end",
+      "--color-form-portrait-ring",
+    ],
+  },
   {
     label: "Page, surfaces and ink",
     tokens: [
@@ -111,6 +120,8 @@ const COLOUR_GROUPS = [
       "--color-text-strong",
       "--color-text-disabled",
       "--color-text-empty",
+      "--color-form-portrait",
+      "--color-form-field-group-border",
     ],
   },
 ] as const;
@@ -202,12 +213,12 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
-  "--radius-form-input",
   "--radius-sm",
   "--radius-md",
   "--radius-lg",
   "--radius-xl",
   "--radius-full",
+  "--radius-form-control",
 ] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
@@ -376,7 +387,18 @@ const SIZE_GROUPS = [
       "--size-form-country-height",
       "--size-form-owner-height",
       "--size-form-prefix-width",
-      "--size-form-profile-image",
+      "--size-form-prefix-divider-offset",
+      "--size-form-prefix-caret-gap",
+      "--size-form-caret-width",
+      "--size-form-caret-height",
+      "--size-form-caret-inset-end",
+      "--size-form-input-end",
+      "--size-form-input-end-icon",
+      "--size-form-currency-prefix-inset",
+      "--size-form-currency-divider-gap",
+      "--size-form-currency-divider-height",
+      "--size-form-currency-divider-top",
+      "--size-form-owner-caret-gap",
       "--size-checkbox",
       "--size-checkbox-border",
       "--size-dialog-width",
@@ -405,6 +427,41 @@ const SIZE_GROUPS = [
       "--size-popover-sort-cancel-width",
       "--size-popover-sort-apply-width",
       "--size-popover-sort-button-gap",
+    ],
+  },
+  {
+    label: "Create/edit form",
+    tokens: [
+      "--size-form-strip-height",
+      "--size-form-strip-padding-end",
+      "--size-form-card-inset",
+      "--size-form-first-title-center",
+      "--size-form-first-content-top",
+      "--size-form-section-gap",
+      "--size-form-section-title-gap",
+      "--size-form-section-title-box-trim",
+      "--size-form-portrait",
+      "--size-form-label-column-left",
+      "--size-form-label-column-right",
+      "--size-form-label-gap",
+      "--size-form-label-line-height",
+      "--size-form-label-padding-top",
+      "--size-form-input-left-width",
+      "--size-form-input-right-width",
+      "--size-form-input-group-width",
+      "--size-form-column-gap",
+      "--size-form-input-height",
+      "--size-form-row-pitch",
+      "--size-form-control-padding-inline",
+      "--size-form-control-padding-block",
+      "--size-form-action-height",
+      "--size-form-action-gap",
+      "--size-form-action-padding-inline",
+      "--size-form-field-group-padding-end",
+      "--size-form-field-group-body-top",
+      "--size-form-field-group-legend-inset",
+      "--size-form-field-group-legend-padding",
+      "--size-form-description-height",
     ],
   },
   {

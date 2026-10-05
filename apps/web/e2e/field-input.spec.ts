@@ -14,18 +14,46 @@ async function hydrate(target: Locator) {
     .toBe(true);
 }
 
+async function valueStartAfterOuterLeft(frame: Locator, control: Locator) {
+  return control.evaluate(
+    (element, frameElement) => {
+      const frameStyle = getComputedStyle(frameElement);
+      const controlStyle = getComputedStyle(element);
+      return (
+        Number.parseFloat(frameStyle.borderLeftWidth) + Number.parseFloat(controlStyle.paddingLeft)
+      );
+    },
+    await frame.elementHandle(),
+  );
+}
+
+async function outerLeftInset(frame: Locator, inner: Locator) {
+  const frameBox = await frame.boundingBox();
+  const innerBox = await inner.boundingBox();
+  return (innerBox?.x ?? 0) - (frameBox?.x ?? 0);
+}
+
+async function outerRightInset(frame: Locator, inner: Locator) {
+  const frameBox = await frame.boundingBox();
+  const innerBox = await inner.boundingBox();
+  return (
+    (frameBox?.x ?? 0) + (frameBox?.width ?? 0) - ((innerBox?.x ?? 0) + (innerBox?.width ?? 0))
+  );
+}
+
 test("form input geometry and composite inks match the measured form rows", async ({ page }) => {
   await page.setViewportSize({ width: 1470, height: 835 });
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "field input" });
   const input = demo.getByRole("textbox", { name: "text empty", exact: true });
   await hydrate(input);
-  const frame = input.locator("..");
+  const frame = input.locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
   // record-detail.md → Lead Information rows: 34 high, 1px C5C4D3 edge, 5px corners.
   await expect(frame).toHaveCSS("height", "34px");
   await expect(frame).toHaveCSS("border-top-width", "1px");
   await expect(frame).toHaveCSS("border-color", "rgb(197, 196, 211)");
   await expect(frame).toHaveCSS("border-radius", "5px");
+  expect(await valueStartAfterOuterLeft(frame, input)).toBeCloseTo(13, 0);
   await expect(input).toHaveCSS("color", "rgb(49, 57, 73)");
   await expect(demo.getByText("text empty", { exact: true })).toHaveCSS(
     "color",
@@ -38,6 +66,17 @@ test("form input geometry and composite inks match the measured form rows", asyn
     "--text-md",
     "--font-weight-normal",
   );
+  const picklist = demo.getByRole("button", { name: "picklist empty", exact: true });
+  await hydrate(picklist);
+  expect(await valueStartAfterOuterLeft(picklist, picklist)).toBeCloseTo(13, 0);
+  const caret = picklist.locator(".record-form-caret");
+  await expect(caret).toHaveCSS("width", "8px");
+  await expect(caret).toHaveCSS("height", "5px");
+  await expect(caret).toHaveCSS("color", "rgb(131, 136, 146)");
+  expect(await outerRightInset(picklist, caret)).toBeCloseTo(12, 0);
+  await picklist.click();
+  await expect(caret).toHaveAttribute("data-open", "");
+  await page.keyboard.press("Escape");
   // Lead Information rows: 3px FF5D5A required bar; 5464F2 focus border.
   const required = demo.getByRole("textbox", { name: "text required", exact: true }).locator("..");
   await expect(required).toHaveCSS("box-shadow", "rgb(255, 93, 90) 3px 0px 0px 0px inset");
@@ -48,15 +87,69 @@ test("form input geometry and composite inks match the measured form rows", asyn
       demo.getByRole("textbox", { name: `${type} empty`, exact: true }).locator(".."),
     ).toHaveCSS("height", "34px");
   }
+  const currencyFrame = demo
+    .getByRole("textbox", { name: "currency empty", exact: true })
+    .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
+  const currencyPrefix = currencyFrame.locator(".record-currency-prefix > span").first();
+  await expect(currencyPrefix).toHaveCSS("color", "rgb(97, 110, 136)");
+  expect(
+    await valueStartAfterOuterLeft(currencyFrame, currencyFrame.locator(".record-currency-prefix")),
+  ).toBeCloseTo(12, 0);
+  const currencyEnd = currencyFrame.locator(".record-input-end");
+  await expect(currencyEnd).toHaveCSS("width", "32px");
+  await expect(currencyEnd).toHaveCSS("background-color", "rgb(240, 244, 255)");
+  await expect(currencyEnd.locator("svg")).toHaveCSS("width", "16px");
+  await expect(currencyEnd.locator("svg")).toHaveCSS("color", "rgb(49, 57, 73)");
   // Composite inputs: only the empty Salutation prefix uses 8C91AB.
   const prefix = demo.getByRole("button", { name: "Salutation" });
   await prefix.scrollIntoViewIfNeeded();
-  await expect(prefix.locator("[data-part=empty-value]")).toHaveCSS("color", "rgb(140, 145, 171)");
-  // Form surface and Lead Image: 48px disk, B2B2B2 original placeholder ink.
+  const salutationFrame = prefix.locator(
+    "xpath=ancestor::*[contains(@class,'record-input-frame')][1]",
+  );
+  const emptyValue = prefix.locator("[data-part=empty-value]");
+  expect(await valueStartAfterOuterLeft(salutationFrame, prefix)).toBeCloseTo(13, 0);
+  await expect(emptyValue).toHaveCSS("color", "rgb(140, 145, 171)");
+  const salutationDivider = salutationFrame.locator(".record-prefix-divider");
+  const salutationOuter = salutationFrame;
+  expect(await outerLeftInset(salutationOuter, salutationDivider)).toBeCloseTo(94, 0);
+  const prefixSelect = prefix.locator(
+    'xpath=ancestor::*[contains(@class,"record-prefix-select")][1]',
+  );
+  expect(await outerRightInset(prefixSelect, prefix.locator(".record-form-caret"))).toBeCloseTo(
+    11,
+    0,
+  );
+  await prefix.click();
+  const salutationPanel = page.locator(".record-choice-panel").last();
+  expect((await salutationPanel.boundingBox())?.width).toBeCloseTo(110, 0);
+  expect((await prefix.boundingBox())?.width).toBeLessThan(110);
+  await page.keyboard.press("Escape");
+  const ownerTrigger = demo.getByRole("button", { name: "ownerlookup filled", exact: true });
+  await hydrate(ownerTrigger);
+  const ownerFrame = ownerTrigger.locator(
+    "xpath=ancestor::*[contains(@class,'record-choice-shell')][1]",
+  );
+  const ownerEnd = ownerFrame.locator(".record-input-end");
+  await expect(ownerEnd).toHaveCSS("width", "32px");
+  await expect(ownerEnd).toHaveCSS("background-color", "rgb(240, 244, 255)");
+  expect(await outerRightInset(ownerFrame, ownerEnd)).toBeCloseTo(1, 0);
+  expect(
+    await outerRightInset(ownerTrigger, ownerTrigger.locator(".record-form-caret")),
+  ).toBeCloseTo(9 + 32, 0);
+  const textFrame = demo
+    .getByRole("textbox", { name: "text empty", exact: true })
+    .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
+  expect((await ownerFrame.boundingBox())?.width).toBeCloseTo(
+    (await textFrame.boundingBox())?.width ?? 0,
+    0,
+  );
+  // Form surface and Lead Image: 48px disk, B4B4B4 ring, B2B2B2 silhouette.
   const profile = demo.getByRole("img", { name: "profileimage empty" });
   await expect(profile).toHaveCSS("width", "48px");
   await expect(profile).toHaveCSS("height", "48px");
-  await expect(profile).toHaveCSS("color", "rgb(178, 178, 178)");
+  await expect(profile).toHaveCSS("border-top-width", "1px");
+  await expect(profile).toHaveCSS("border-color", "rgb(180, 180, 180)");
+  await expect(profile.locator("svg")).toHaveCSS("color", "rgb(178, 178, 178)");
   await expect(demo.getByRole("textbox", { name: "textarea empty" })).toHaveCSS("resize", "both");
   await expect(demo.getByRole("textbox", { name: "Latitude" })).toHaveAttribute(
     "placeholder",

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
+import { FormRow } from "./form-row";
 
 const options = [
   { displayValue: "Alpha", storedValue: "a" },
@@ -81,7 +82,7 @@ test.each(["integer", "double", "currency"] as const)(
     expect(change).toHaveBeenLastCalledWith(null);
     if (type === "currency") {
       expect(screen.getByText("$")).toBeTruthy();
-      expect(screen.getByRole("img", { name: "Currency information" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Currency information" })).toBeTruthy();
     }
   },
 );
@@ -199,4 +200,48 @@ test("profile placeholder is noninteractive and unsupported types render nothing
 test("read-only metadata prevents editing", () => {
   render(<Controlled type="text" field={{ ...field("text"), readOnly: true }} />);
   expect((screen.getByRole("textbox") as HTMLInputElement).disabled).toBe(true);
+});
+test("FormRow pairs with text, picklist and owner inputs through hideLabel", async () => {
+  const user = userEvent.setup();
+  render(
+    <>
+      <FormRow label="Company" controlId="company-field" column="left">
+        <FieldInput
+          id="company-field"
+          hideLabel
+          field={{ ...field("text"), label: "Company", apiName: "Company" }}
+          value={null}
+          onChange={() => {}}
+        />
+      </FormRow>
+      <FormRow label="Status" controlId="status-field" column="left">
+        <FieldInput
+          id="status-field"
+          hideLabel
+          field={{ ...field("picklist"), label: "Status", apiName: "Status" }}
+          value={null}
+          onChange={() => {}}
+        />
+      </FormRow>
+      <FormRow label="Owner" controlId="owner-field" column="left">
+        <FieldInput
+          id="owner-field"
+          hideLabel
+          field={{ ...field("ownerlookup"), label: "Owner", apiName: "Owner" }}
+          value={null}
+          onChange={() => {}}
+          users={[{ id: "a", name: "Alex Example", email: "alex@example.test" }]}
+        />
+      </FormRow>
+    </>,
+  );
+  const visibleLabels = (name: string) =>
+    screen.getAllByText(name).filter((node) => !node.classList.contains("sr-only"));
+  expect(visibleLabels("Company")).toHaveLength(1);
+  expect(screen.getByLabelText("Company")).toBeTruthy();
+  expect(visibleLabels("Status")).toHaveLength(1);
+  expect(screen.getByLabelText("Status")).toBeTruthy();
+  expect(visibleLabels("Owner")).toHaveLength(1);
+  await user.click(screen.getByLabelText("Owner"));
+  expect(screen.getByRole("listbox")).toBeTruthy();
 });

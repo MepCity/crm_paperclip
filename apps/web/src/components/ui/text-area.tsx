@@ -22,16 +22,24 @@ const styles = {
 
 export interface TextAreaProps extends Omit<AriaTextFieldProps, "rows"> {
   label: string;
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string | ((v: ValidationResult) => string);
   /** How many rows of text are visible before the field starts scrolling. */
   rows?: number;
 }
 
-export function TextArea({ label, description, errorMessage, rows = 4, ...props }: TextAreaProps) {
+export function TextArea({
+  label,
+  hideLabel = false,
+  description,
+  errorMessage,
+  rows = 4,
+  ...props
+}: TextAreaProps) {
   return (
     <AriaTextField {...props} className={styles.field}>
-      <Label className={styles.label}>{label}</Label>
+      <Label className={hideLabel ? "sr-only" : styles.label}>{label}</Label>
       <AriaTextArea rows={rows} className={styles.input} />
       {description && (
         <Text slot="description" className={styles.description}>

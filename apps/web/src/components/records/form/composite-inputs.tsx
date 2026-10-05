@@ -28,12 +28,14 @@ export function PrefixInput({
           <RecordChoice
             label={prefixLabel}
             hideLabel
+            prefix
             mutedEmpty
             value={prefixValue}
             onChange={onPrefixChange}
             options={picklistChoices(options, prefixValue)}
             disabled={props.isDisabled || props.isReadOnly}
           />
+          <span className="record-prefix-divider" aria-hidden />
         </div>
       }
     />
@@ -41,7 +43,9 @@ export function PrefixInput({
 }
 
 export function TextPrefixInput({ prefix, ...props }: TextFieldProps & { prefix: string }) {
-  return <TextField {...props} prefix={prefix} />;
+  return (
+    <TextField {...props} prefix={<span className="record-prefix pl-(--space-3)">{prefix}</span>} />
+  );
 }
 
 export interface CoordinatesInputProps {

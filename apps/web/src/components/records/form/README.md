@@ -1,4 +1,64 @@
-# Record form inputs
+# Record form layout
+
+Module-agnostic presentation for create and edit record forms. Field controls,
+validation, save flows and page wiring live in other issues; these components only
+provide the measured shell, sections, two-column rows and bordered field groups.
+
+## RecordFormShell
+
+`record-form-shell.tsx`
+
+| Prop | Meaning |
+| --- | --- |
+| `title` | Fixed strip heading (for example `Create Lead`). |
+| `formAriaLabel` | Accessible name on the `<form>` landmark inside the card. |
+| `actionLabels` | `cancel`, `saveAndNew`, and `save` button text. |
+| `onCancel`, `onSaveAndNew`, `onSave` | Optional press handlers for the strip actions. |
+| `children` | Form body inside the card. |
+
+The strip stays `position: sticky` while the card body scrolls. Action order in
+the tab sequence is Cancel, Save and New, then Save.
+
+## FormSection
+
+`form-section.tsx`
+
+Optional `title` and `layout` (`single` or `two-column`). The layout flag is for
+documentation and tests; place a `FormGrid` in two-column sections and full-width
+rows in single-column sections.
+
+## FormGrid and FormRow
+
+`form-grid.tsx`, `form-row.tsx`
+
+`FormGrid` renders independent left and right columns. Each `FormRow` draws a
+right-aligned label and a control slot. Pass `column` as `left`, `right`, or
+`full` (Description-style rows). Set `controlId` on the row and the same `id` on
+the child control so the label association works.
+
+Measured geometry uses tokens from `app/tokens.css` (source:
+`research/specs/record-detail.md` › Layout › Visual layout › Create/edit form).
+The `--size-form-column-gap` token is the measured span from the left input’s
+right edge to the right input’s left edge (right label column plus label gap);
+`FormGrid` does not add a separate flex gap between columns.
+
+## FieldGroup
+
+`field-group.tsx`
+
+Bordered group with a legend straddling the top edge (for example `Address`). It
+spans the left column width. Rows inside the group use the narrower
+`--size-form-input-group-width` control column while keeping the same label
+geometry as the main grid.
+
+## Demo
+
+`/dev/ui` › `record-form-layout` shows a synthetic Create Lead layout with long
+labels, Address Information (bordered group), Description Information, and a
+scroll host to exercise the sticky strip. Layout styles live in `form.css`;
+demo-only control chrome lives in `record-form-layout.demo.css`.
+
+## Field inputs
 
 Source: `research/specs/record-detail.md` → Create and edit forms, Visual layout
 (Lead Information rows, Composite inputs, Country panel, Standard picklist,
@@ -6,7 +66,7 @@ Owner dropdown). Typography: `research/specs/typography.md` → List and detail
 text roles. Interactive primitives remain inside `components/ui` (ADR 0003).
 No data loading, API paths or runtime core imports exist in these components.
 
-## FieldInput props
+### FieldInput props
 
 `field: FieldDefinition`, `value: FieldValue`, `onChange(value)` are controlled.
 `disabled` and metadata `readOnly` prevent edits. `errorMessage` enables the
@@ -15,6 +75,10 @@ existing invalid appearance and links its explanation to the control.
 Text `maxLength` comes from metadata. Empty strings and cleared numbers emit
 `null`; booleans emit booleans; numeric primitives parse numbers on commit.
 
+`id?` sets the focusable control id (`input`, picklist trigger, or checkbox).
+`hideLabel?` keeps the accessible name and hides the visible label (`sr-only`);
+use with `FormRow` so only one label is visible.
+
 `options` overrides metadata `picklist` in supplied order. `searchable` opts
 into a panel search (Country and State callers set it; no module-specific
 inference). Published `-None-` placeholders collapse into one first `null`
@@ -22,7 +86,7 @@ option. Saved unlisted strings append to the inventory. An empty inventory
 contains only `-None-`. `searchLabel` overrides the search input label.
 
 `users` supplies `{id, name, email}` owner options; selected IDs remain opaque.
-`onOpenPicker` enables the adjacent action; omit it when the picker is unavailable.
+`onOpenPicker` enables the in-field picker action; omit it when unavailable.
 `pickerLabel` and `searchLabel` provide its copy. The default search label is
 `Search Users`. A saved owner missing from the supplied inventory is shown by ID.
 `currencyPrefix` / `currencyInformation` supply the currency annotation and
@@ -44,13 +108,14 @@ All copy/data may be supplied through props; fallback copy is generic English.
 | profileimage | 48px noninteractive original portrait placeholder |
 | lookup, multi_module_lookup, datetime, bigint | Nothing; absent from the observed Leads form |
 
-## Composite inputs
+### Composite inputs
 
 `PrefixInput` extends TextField with independent `prefixLabel`, `prefixValue`,
-`onPrefixChange` and `options`. Empty Salutation uses muted placeholder ink.
-`TextPrefixInput` attaches a literal prefix (such as `@`) outside the value.
-`CoordinatesInput` takes `label`, `latitude`, `longitude`, `onChange` and optional
-`disabled`, `errorMessage`, `latitudeLabel`, `longitudeLabel`, `clearLabel`.
+`onPrefixChange` and `options`. Supports `id?` and `hideLabel?` like `FieldInput`.
+Empty Salutation uses muted placeholder ink.
+`TextPrefixInput` attaches a literal prefix (such as `@`). `CoordinatesInput` takes
+`label`, `latitude`, `longitude`, `onChange` and optional `disabled`,
+`errorMessage`, `latitudeLabel`, `longitudeLabel`, `clearLabel`, `id?`, `hideLabel?`.
 Changes preserve the other coordinate; Clear All emits both coordinates as null.
 
 The `/dev/ui` field-input demo has empty, filled, required and disabled states
@@ -59,7 +124,7 @@ composites and an invalid field. Open any list to inspect its panel state.
 The demo picker callback changes a synthetic owner to make the integration visible;
 the actual dialog belongs to MEP-139.
 
-## Interim
+### Interim
 
 - Searchable picklists use a case-insensitive substring of the displayed label.
   A search term was not entered in the reference CRM research. The null choice
@@ -69,15 +134,17 @@ the actual dialog belongs to MEP-139.
   role, `--text-md` / `--font-weight-normal`. Unmeasured row/avatar geometry uses
   the existing spacing scale, 32px avatar and minimum 48px row. Selected owner
   names use the nearest selected picklist role (`--font-weight-semibold`).
+- Currency value inset after the measured divider was not captured; it uses
+  `--space-3` like other framed inputs.
 
-## Empty selection contrast (MEP-157)
+### Empty selection contrast (MEP-157)
 
 Empty Salutation prefix ink stays on `--color-text-placeholder` (`#8C91AB`, 3.11:1
 on a panel). A selected prefix uses `--color-text`. ADR 0003 §8 covers the
 empty-value text; gallery scans exclude only `[data-part=empty-value]`, not the
 surrounding trigger.
 
-## Deviations and deferred controls
+### Deviations and deferred controls
 
 - Form row columns and label placement: MEP-138 (parity checklist rows 20–21).
   This component gallery is not the final page layout.

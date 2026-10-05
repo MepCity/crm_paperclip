@@ -104,6 +104,37 @@ function RecordUser(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Filled portrait silhouette clipped inside the Lead Image ring. */
+function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      {...props}
+    >
+      <circle cx="24" cy="17" r="7.5" />
+      <path d="M8 48c0-12 7.2-18 16-18s16 6 16 18H8z" />
+    </svg>
+  );
+}
+
+/** Filled downward caret for form picklists (8 × 5 px measured). */
+function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 8 5"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M0 0h8L4 5Z" />
+    </svg>
+  );
+}
+
 function RecordChevron(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -152,6 +183,8 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   recordUser: RecordUser,
+  recordPortraitSilhouette: RecordPortraitSilhouette,
+  recordFormCaret: RecordFormCaret,
   recordChevron: RecordChevron,
   recordCheck: RecordCheck,
   recordInfo: RecordInfo,

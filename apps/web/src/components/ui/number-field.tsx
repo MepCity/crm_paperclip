@@ -25,6 +25,7 @@ export interface NumberFieldProps extends AriaNumberFieldProps {
   label: string;
   prefix?: ReactNode;
   suffix?: ReactNode;
+  endAction?: ReactNode;
   placeholder?: string;
   hideLabel?: boolean;
   description?: string;
@@ -42,6 +43,7 @@ export function NumberField({
   label,
   prefix,
   suffix,
+  endAction,
   placeholder,
   hideLabel = false,
   description,
@@ -66,10 +68,12 @@ export function NumberField({
       <div
         className="record-control record-input-frame"
         data-required={props.isRequired || undefined}
+        data-invalid={props.isInvalid || undefined}
       >
-        {prefix && <span className="record-prefix">{prefix}</span>}
+        {prefix}
         <Input placeholder={placeholder} className={styles.input} />
-        {suffix && <span className="record-prefix">{suffix}</span>}
+        {suffix}
+        {endAction}
       </div>
       {description && (
         <Text slot="description" className={styles.description}>

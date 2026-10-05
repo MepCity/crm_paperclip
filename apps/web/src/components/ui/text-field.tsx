@@ -17,6 +17,7 @@ export interface TextFieldProps extends AriaTextFieldProps {
   label: string;
   prefix?: ReactNode;
   suffix?: ReactNode;
+  endAction?: ReactNode;
   hideLabel?: boolean;
   placeholder?: string;
   variant?: "default" | "filter-search";
@@ -28,6 +29,7 @@ export function TextField({
   label,
   prefix,
   suffix,
+  endAction,
   hideLabel = false,
   placeholder,
   variant = "default",
@@ -57,10 +59,12 @@ export function TextField({
         <div
           className="record-control record-input-frame"
           data-required={props.isRequired || undefined}
+          data-invalid={props.isInvalid || undefined}
         >
-          {prefix && <span className="record-prefix">{prefix}</span>}
+          {prefix}
           <Input placeholder={placeholder} className="record-control" />
-          {suffix && <span className="record-prefix">{suffix}</span>}
+          {suffix}
+          {endAction}
         </div>
       )}
       {description && (
