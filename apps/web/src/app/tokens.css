@@ -300,6 +300,30 @@
   --size-button-ellipsis-width: 44px;
   --size-button-ellipsis-height: 32px;
 
+  /* record-detail.md, Visual layout: Lead Information rows and dropdown panels. */
+  --color-form-required: #ff5d5a;
+  --color-form-caret: #838892;
+  --color-form-input-end: #f0f4ff;
+  --color-form-portrait-ring: #b4b4b4;
+  --size-form-required-bar: 3px;
+  --size-form-option-height: 32px;
+  --size-form-list-padding: 6px;
+  --size-form-country-height: 270px;
+  --size-form-owner-height: 179px;
+  --size-form-prefix-width: 110px;
+  --size-form-prefix-divider-offset: 94px;
+  --size-form-prefix-caret-gap: 11px;
+  --size-form-caret-width: 8px;
+  --size-form-caret-height: 5px;
+  --size-form-caret-inset-end: 12px;
+  --size-form-input-end: 32px;
+  --size-form-input-end-icon: 16px;
+  --size-form-currency-prefix-inset: 12px;
+  --size-form-currency-divider-gap: 9.5px;
+  --size-form-currency-divider-height: 20px;
+  --size-form-currency-divider-top: 7px;
+  --size-form-owner-caret-gap: 9px;
+
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
