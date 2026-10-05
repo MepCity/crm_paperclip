@@ -38,6 +38,9 @@ the child control so the label association works.
 
 Measured geometry uses tokens from `app/tokens.css` (source:
 `research/specs/record-detail.md` › Layout › Visual layout › Create/edit form).
+The `--size-form-column-gap` token is the measured span from the left input’s
+right edge to the right input’s left edge (right label column plus label gap);
+`FormGrid` does not add a separate flex gap between columns.
 
 ## FieldGroup
 

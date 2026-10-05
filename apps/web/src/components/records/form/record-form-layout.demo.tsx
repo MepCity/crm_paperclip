@@ -29,7 +29,10 @@ export default function RecordFormLayoutDemo() {
   };
   return (
     <div className="space-y-8">
-      <div data-record-form-demo="scroll" className="max-h-112 overflow-y-auto bg-bg">
+      <div
+        data-record-form-demo="scroll"
+        className="record-form-layout-demo__scroll max-h-112 overflow-y-auto bg-bg"
+      >
         <RecordFormShell
           title="Create Lead"
           formAriaLabel="Create lead layout demo"

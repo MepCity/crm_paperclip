@@ -1,11 +1,11 @@
 /* Create/edit form layout — research/specs/record-detail.md › Layout › Visual layout */
 
 .record-form-shell {
+  /* Adjacent columns; 258.5px between inputs is the right column label + label gap, not flex gap. */
   --record-form-content-width: calc(
     var(--size-form-label-column-left) +
     var(--size-form-label-gap) +
     var(--size-form-input-left-width) +
-    var(--size-form-column-gap) +
     var(--size-form-label-column-right) +
     var(--size-form-label-gap) +
     var(--size-form-input-right-width)
@@ -79,7 +79,7 @@
 .record-form-grid {
   display: flex;
   align-items: flex-start;
-  gap: var(--size-form-column-gap);
+  gap: 0;
 }
 
 .record-form-column {
@@ -206,4 +206,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--size-form-row-gap);
+  margin-inline: calc(-1 * var(--size-form-field-group-padding));
+}
+
+/* Dev demo only: let the card reach its spec max-width inside the gallery container. */
+.record-form-layout-demo__scroll {
+  min-width: calc(
+    var(--size-form-label-column-left) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-left-width) +
+    var(--size-form-label-column-right) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-right-width) +
+    2 *
+    var(--size-form-card-inset)
+  );
 }
