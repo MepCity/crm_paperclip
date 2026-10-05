@@ -1,12 +1,28 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { expectType, tokenValue } from "./support/typography";
 
-async function verticalGap(fromBottom: () => Promise<number>, toTop: () => Promise<number>) {
-  const bottom = await fromBottom();
-  const top = await toTop();
-  return top - bottom;
-}
+const baselineY = (target: Locator) =>
+  target.evaluate((element) => {
+    const probe = document.createElement("span");
+    probe.style.cssText = "display:inline-block;width:0;height:0";
+    element.append(probe);
+    const y = probe.getBoundingClientRect().bottom;
+    probe.remove();
+    return y;
+  });
+
+const panelInnerTop = (panel: Locator) =>
+  panel.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.top + Number.parseFloat(style.borderTopWidth);
+  });
+
+const expectWithinOnePx = (actual: number, expected: number) => {
+  const delta = Math.abs(actual - expected);
+  expect(delta, `expected ${expected}±1 px, got ${actual}`).toBeLessThanOrEqual(1);
+};
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
   await page.goto("/dev/ui");
@@ -27,11 +43,19 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   }
   await expect(panel).toHaveCSS("padding-left", "18px");
   await expect(panel).toHaveCSS("padding-right", "15px");
-  await expect(panel).toHaveCSS("padding-top", "20.5px");
+  await expect(panel).toHaveCSS("padding-top", "0px");
 
-  const heading = panel.getByRole("heading", { name: "Filter Leads by" });
-  await expectType(page, heading, "--text-md", "--font-weight-bold");
-  await expect(heading).toHaveCSS("color", "rgb(49, 57, 73)");
+  const heading = panel.getByRole("heading", { name: "Filter Leads by" }).locator("span");
+  await expectType(
+    page,
+    panel.getByRole("heading", { name: "Filter Leads by" }),
+    "--text-md",
+    "--font-weight-bold",
+  );
+  await expect(panel.getByRole("heading", { name: "Filter Leads by" })).toHaveCSS(
+    "color",
+    "rgb(49, 57, 73)",
+  );
 
   const search = panel.getByRole("textbox", { name: "Search filter choices" });
   await expect(search).toHaveAttribute("placeholder", "Search");
@@ -48,33 +72,54 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   });
   expect(Math.abs(searchEndInset - 15)).toBeLessThanOrEqual(1);
 
-  const titleToSearch = await verticalGap(
-    () => heading.evaluate((element) => element.getBoundingClientRect().bottom),
-    () => search.evaluate((element) => element.getBoundingClientRect().top),
-  );
-  expect(Math.abs(titleToSearch - 21)).toBeLessThanOrEqual(1);
+  const innerTop = await panelInnerTop(panel);
+  const titleBaseline = await baselineY(heading);
+  const titleOffset = titleBaseline - innerTop;
+  expectWithinOnePx(titleOffset, 32);
 
-  const firstGroup = panel.getByRole("button", { name: "System Defined Filters" });
-  const searchToGroup = await verticalGap(
-    () => search.evaluate((element) => element.getBoundingClientRect().bottom),
-    () => firstGroup.evaluate((element) => element.getBoundingClientRect().top),
-  );
-  expect(Math.abs(searchToGroup - 21)).toBeLessThanOrEqual(1);
+  const searchTop = await search.evaluate((element) => element.getBoundingClientRect().top);
+  expectWithinOnePx(searchTop - titleBaseline, 21);
+  expectWithinOnePx(searchTop - innerTop, 53);
 
-  const firstRow = panel.getByRole("listitem").first();
-  const groupToRow = await verticalGap(
-    () => firstGroup.evaluate((element) => element.getBoundingClientRect().bottom),
-    () => firstRow.evaluate((element) => element.getBoundingClientRect().top),
-  );
-  expect(Math.abs(groupToRow - 12)).toBeLessThanOrEqual(1);
+  const searchBottom = await search.evaluate((element) => element.getBoundingClientRect().bottom);
 
-  const secondGroup = panel.getByRole("button", { name: "Filter By Fields" });
+  const groupLabels = [
+    "System Defined Filters",
+    "Filter By Fields",
+    "Filter By Related Modules",
+  ] as const;
+
+  const groupBaseline = async (name: (typeof groupLabels)[number]) =>
+    baselineY(panel.getByRole("button", { name }).locator("span"));
+
+  const firstGroupBaseline = await groupBaseline("System Defined Filters");
+  expectWithinOnePx(firstGroupBaseline - searchBottom, 33);
+
+  for (const name of groupLabels) {
+    const baseline = await groupBaseline(name);
+    const rowTop = await panel.getByRole("button", { name }).evaluate((button) => {
+      const disclosureRoot = button.parentElement?.parentElement;
+      const row = disclosureRoot?.querySelector("ul li");
+      return row?.getBoundingClientRect().top ?? Number.NaN;
+    });
+    expectWithinOnePx(rowTop - baseline, 12);
+  }
+
   const lastSystemRow = panel.getByRole("listitem").filter({ hasText: "Archived samples" });
-  const groupGap = await verticalGap(
-    () => lastSystemRow.evaluate((element) => element.getBoundingClientRect().bottom),
-    () => secondGroup.evaluate((element) => element.getBoundingClientRect().top),
+  const fieldsBaseline = await groupBaseline("Filter By Fields");
+  expectWithinOnePx(
+    fieldsBaseline -
+      (await lastSystemRow.evaluate((element) => element.getBoundingClientRect().bottom)),
+    31,
   );
-  expect(Math.abs(groupGap - 19)).toBeLessThanOrEqual(1);
+
+  const lastFieldsRow = panel.getByRole("listitem").filter({ hasText: "Sample code" });
+  const relatedBaseline = await groupBaseline("Filter By Related Modules");
+  expectWithinOnePx(
+    relatedBaseline -
+      (await lastFieldsRow.evaluate((element) => element.getBoundingClientRect().bottom)),
+    31,
+  );
 
   // Surface and line colors: search outline about 1 px #C5C4D3.
   await expect(search).toHaveCSS("border-top-width", "1px");
@@ -96,7 +141,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
     const style = getComputedStyle(element);
     return Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft);
   });
-  expect(Math.abs(textStart - 31)).toBeLessThanOrEqual(1);
+  expect(Math.abs(textStart - 32)).toBeLessThanOrEqual(1);
   const magnifier = search.locator("..").locator("svg");
   await expect(magnifier).toBeVisible();
   await expect(magnifier).toHaveAttribute("aria-hidden", "true");
@@ -145,6 +190,9 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   await expect(clippedLabel).toHaveCSS("text-overflow", "ellipsis");
   await expect(clippedLabel).toHaveCSS("overflow-x", "hidden");
   await expect(clippedLabel).toHaveCSS("white-space", "nowrap");
+  expect(await clippedLabel.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
+    true,
+  );
   const relatedLabel = panel
     .getByRole("button", { name: "Filter By Related Modules" })
     .locator("span");

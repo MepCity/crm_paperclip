@@ -41,13 +41,13 @@ export function FilterPanel({
   return (
     <section
       aria-labelledby={titleId}
-      className="box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface pl-(--size-list-filter-padding) pr-(--size-list-filter-search-end-inset) pt-(--size-list-filter-title-inset-top) pb-4"
+      className="box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface pl-(--size-list-filter-padding) pr-(--size-list-filter-search-end-inset) pb-4"
     >
       <h2
         id={titleId}
-        className="mb-(--size-list-filter-heading-to-search) text-md font-bold text-text"
+        className="m-0 pt-(--size-list-filter-title-inset-top) mb-(--size-list-filter-heading-to-search) text-md font-bold text-text"
       >
-        {title}
+        <span className="block leading-(--size-list-filter-title-line)">{title}</span>
       </h2>
       <TextField
         label={searchLabel}

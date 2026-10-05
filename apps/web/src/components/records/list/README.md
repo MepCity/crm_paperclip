@@ -193,9 +193,6 @@ open/closed groups and filtered results.
 
 - The expand triangle is `#000000` in the spec and `--color-text-strong` here. The
   magnifier and triangle are original drawings; no reference assets are copied.
-- Figtree at `--text-sm` fits **System Defined Filters** on one line in the 202 px
-  panel, so the reference clip **System Defined Fil...** does not appear. The heading
-  still truncates with an ellipsis when the label is wider than the row.
 - Page position and full Leads lists belong to the page task.
 
 ## View tab and toolbar

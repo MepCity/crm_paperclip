@@ -213,13 +213,14 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-search-width` | `167px` | list-views.md › Filter content › "167 px wide" | from spec |
 | `--size-list-filter-search-end-inset` | `15px` | list-views.md › Filter content › "15 px from its inner right edge" | from spec |
 | `--size-list-filter-title-inset-top` | `20.5px` | list-views.md › Filter content › "panel inner top edge to heading ink top 20.5 px" | from spec |
-| `--size-list-filter-heading-to-search` | `21px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" | from spec |
+| `--size-list-filter-title-line` | `13px` | list-views.md › Filter content › heading baseline 32 px − ink top 20.5 px, tuned for Figtree baseline probe | derived from spec |
+| `--size-list-filter-group-heading-line` | `12px` | list-views.md › Filter content › first group heading ink top to baseline (274 − 262 px) | derived from spec |
+| `--size-list-filter-heading-to-search` | `19.5px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" minus title line extent below baseline | derived from spec |
 | `--size-list-filter-search-to-group` | `21px` | list-views.md › Filter content › "search field's bottom edge to the first group heading's ink top 21 px" | from spec |
 | `--size-list-filter-group-to-row` | `12px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" | from spec |
 | `--size-list-filter-group-gap` | `19px` | list-views.md › Filter content › "a group's last row's bottom edge to the next group heading's ink top 19 px" | from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
 | `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
-| `--size-list-filter-row-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
 | `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |

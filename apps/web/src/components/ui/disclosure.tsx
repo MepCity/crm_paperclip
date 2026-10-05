@@ -52,7 +52,7 @@ export function Disclosure({
                   />
                 )}
                 <span
-                  className="min-w-0 flex-1 truncate pl-(--size-list-filter-heading-inset)"
+                  className="block min-w-0 flex-1 truncate pl-(--size-list-filter-heading-inset) leading-(--size-list-filter-group-heading-line)"
                   title={label}
                 >
                   {label}
