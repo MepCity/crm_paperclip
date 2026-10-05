@@ -92,12 +92,36 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const groupBaseline = async (name: (typeof groupLabels)[number]) =>
     baselineY(panel.getByRole("button", { name }).locator("span"));
 
+  const firstGroupTrigger = panel.getByRole("button", { name: "System Defined Filters" });
   const firstGroupBaseline = await groupBaseline("System Defined Filters");
   expectWithinOnePx(firstGroupBaseline - searchBottom, 33);
 
+  const firstGroupChevron = firstGroupTrigger.locator("svg");
+  const chevronEdges = await firstGroupChevron.evaluate((svg) => svg.getBoundingClientRect());
+  expectWithinOnePx(firstGroupBaseline - chevronEdges.top, 6);
+  expectWithinOnePx(firstGroupBaseline - chevronEdges.bottom, 1.5);
+
+  const groupHeadingLine = await tokenValue(
+    page,
+    "line-height",
+    "--size-list-filter-group-heading-line",
+  );
+
   for (const name of groupLabels) {
+    const trigger = panel.getByRole("button", { name });
+    const labelSpan = trigger.locator("span");
+    const metrics = await labelSpan.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        lineHeight: Number.parseFloat(style.lineHeight),
+        fontSize: Number.parseFloat(style.fontSize),
+      };
+    });
+    expect(metrics.lineHeight).toBeGreaterThanOrEqual(metrics.fontSize);
+    await expect(trigger).toHaveCSS("height", groupHeadingLine);
+
     const baseline = await groupBaseline(name);
-    const rowTop = await panel.getByRole("button", { name }).evaluate((button) => {
+    const rowTop = await trigger.evaluate((button) => {
       const disclosureRoot = button.parentElement?.parentElement;
       const row = disclosureRoot?.querySelector("ul li");
       return row?.getBoundingClientRect().top ?? Number.NaN;

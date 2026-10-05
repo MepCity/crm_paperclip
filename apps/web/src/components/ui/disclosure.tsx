@@ -43,12 +43,12 @@ export function Disclosure({
                 {isExpanded ? (
                   <Icons.filterChevronDown
                     aria-hidden
-                    className="absolute top-1/2 left-0 h-(--size-list-filter-chevron-height) w-(--size-list-filter-chevron-width) -translate-y-1/2"
+                    className="absolute top-1/2 left-0 mt-(--size-list-filter-chevron-offset) h-(--size-list-filter-chevron-height) w-(--size-list-filter-chevron-width) -translate-y-1/2"
                   />
                 ) : (
                   <Icons.filterChevronRight
                     aria-hidden
-                    className="absolute top-1/2 left-0 h-(--size-list-filter-chevron-width) w-(--size-list-filter-chevron-height) -translate-y-1/2"
+                    className="absolute top-1/2 left-0 mt-(--size-list-filter-chevron-offset) h-(--size-list-filter-chevron-width) w-(--size-list-filter-chevron-height) -translate-y-1/2"
                   />
                 )}
                 <span

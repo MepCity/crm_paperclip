@@ -316,6 +316,7 @@ const SIZE_GROUPS = [
       "--size-list-filter-row-padding",
       "--size-list-filter-chevron-width",
       "--size-list-filter-chevron-height",
+      "--size-list-filter-chevron-offset",
       "--size-list-filter-heading-inset",
       "--size-list-filter-button-width",
       "--size-list-filter-button-height",

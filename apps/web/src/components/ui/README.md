@@ -214,15 +214,16 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-search-end-inset` | `15px` | list-views.md › Filter content › "15 px from its inner right edge" | from spec |
 | `--size-list-filter-title-inset-top` | `20.5px` | list-views.md › Filter content › "panel inner top edge to heading ink top 20.5 px" | from spec |
 | `--size-list-filter-title-line` | `13px` | list-views.md › Filter content › heading baseline 32 px − ink top 20.5 px, tuned for Figtree baseline probe | derived from spec |
-| `--size-list-filter-group-heading-line` | `12px` | list-views.md › Filter content › first group heading ink top to baseline (274 − 262 px) | derived from spec |
+| `--size-list-filter-group-heading-line` | `20px` | list-views.md › Filter content › line box taller than 15.5 px heading; baseline 15 px below top, 5 px above bottom (no descender clip) | derived from spec |
 | `--size-list-filter-heading-to-search` | `19.5px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" minus title line extent below baseline | derived from spec |
-| `--size-list-filter-search-to-group` | `21px` | list-views.md › Filter content › "search field's bottom edge to the first group heading's ink top 21 px" | from spec |
-| `--size-list-filter-group-to-row` | `12px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" | from spec |
-| `--size-list-filter-group-gap` | `19px` | list-views.md › Filter content › "a group's last row's bottom edge to the next group heading's ink top 19 px" | from spec |
+| `--size-list-filter-search-to-group` | `18px` | list-views.md › Filter content › search bottom to first group baseline 33 px, minus 15 px baseline inset in group heading line box | derived from spec |
+| `--size-list-filter-group-to-row` | `7px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" minus 5 px below baseline in line box | derived from spec |
+| `--size-list-filter-group-gap` | `16px` | list-views.md › Filter content › last row bottom to next group baseline 31 px, minus 15 px baseline inset in line box | derived from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
 | `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
 | `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-offset` | `1.25px` | list-views.md › Filter content › triangle top 6 px above heading baseline; centers chevron in 20 px line box (3.75 px above baseline vs 5 px box center) | derived from spec |
 | `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
