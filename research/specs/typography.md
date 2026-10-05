@@ -298,7 +298,7 @@ The evidence supports six distinct size tiers and three weight groups across the
 
 ### Open questions for list and detail typography
 
-- In `record-detail.md`, the heading entries specify "cap/x 13/10, 18.5 px", but the direct measurement on the capture shows cap/x 14.5 / 11 px (matching Figtree 20.5–21 px). This conflict is noted as an open question; `record-detail.md` is left unchanged in this research task.
+- In `record-detail.md`, the heading entries specify "cap/x 13/10, 18.5 px", but the direct measurement on the capture shows cap/x 14.5 / 11 px (matching Figtree 20.5–21 px). `record-detail.md` was corrected to the measured values afterwards; the measured rows in this file remain the source.
 - White text rendered over solid background fills (Disabled Apply Filter button at `wght` 570 / stem 1.70 CSS px; Record primary command at `wght` 620 / stem 1.81 CSS px) sits between the semibold (520–560) and bold (640–660) clusters. Because each is supported by only a single label, whether button fills introduce a distinct intermediate weight or should map to semibold/bold remains an open question.
 - The list footer connector, header tag command, and timeline byline require an isolated, generic-label crop before a defensible cap/x-height and width fit can be measured.
 - Record and owner values without an isolated lowercase `l` support height-only sizes. Their weights remain unmeasured; no customer string or width is retained here.
