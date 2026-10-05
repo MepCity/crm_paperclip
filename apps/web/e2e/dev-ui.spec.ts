@@ -2,8 +2,9 @@ import { expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
-  // A loaded machine runs this gallery past the 30s default (~36s); allow 90s.
-  test.setTimeout(90_000);
+  // Two full-gallery axe scans plus keyboard flows exceed 90s after `pnpm verify`
+  // runs Vitest in parallel first; keep measurement thresholds, extend wall time only.
+  test.setTimeout(180_000);
   // Scan the settled colours, rather than the transient opacity of toast entry animations.
   await page.emulateMedia({ reducedMotion: "reduce" });
   const errors: string[] = [];
@@ -214,10 +215,10 @@ test("token demo renders the values measured in the shell and list specs", async
   // typography.md: adopted bold stem matches at 510; regular stays 400.
   await expect(sample("--font-weight-semibold")).toHaveCSS("font-weight", "510");
   await expect(sample("--font-weight-normal")).toHaveCSS("font-weight", "400");
-  // Text roles: toolbar labels and column headers are "medium".
-  await expect(sample("--font-weight-medium")).toHaveCSS("font-weight", "500");
-  // Text roles: "View tab about 13 px"; Table footer: "text about 13 px".
-  await expect(sample("--text-13")).toHaveCSS("font-size", "13px");
+  // typography.md → List and detail text roles → Weight and Size classes.
+  await expect(sample("--font-weight-bold")).toHaveCSS("font-weight", "650");
+  await expect(sample("--text-lg")).toHaveCSS("font-size", "15.5px");
+  await expect(sample("--text-2xl")).toHaveCSS("font-size", "20.5px");
 
   // Surface and line colors: "panel and table outline 1 px `#DCDBEE`".
   await expect(sample("--color-panel-border")).toHaveCSS("background-color", "rgb(220, 219, 238)");
@@ -294,7 +295,7 @@ test("type roles load one local variable font and preserve measured advances", a
   await page.goto("/dev/ui");
   // document.fonts.ready settles before a face is requested. Ask for the file and
   // poll until both measured weights check; a rejected load retries instead of failing.
-  const figTreeReady = async (weight: 400 | 510) => {
+  const figTreeReady = async (weight: 400 | 510 | 650) => {
     const probe = await page.evaluate(async (requested) => {
       const font = `${requested} 14.5px Figtree`;
       const faces = () =>
@@ -323,6 +324,9 @@ test("type roles load one local variable font and preserve measured advances", a
     .toEqual(expect.objectContaining({ check: true }));
   await expect
     .poll(() => figTreeReady(510), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
+  await expect
+    .poll(() => figTreeReady(650), { timeout: 30_000, message: fontMessage })
     .toEqual(expect.objectContaining({ check: true }));
   expect(
     await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily),
@@ -376,12 +380,14 @@ test("type roles load one local variable font and preserve measured advances", a
     const sample = element.cloneNode(true) as HTMLElement;
     sample.removeAttribute("data-type-role");
     element.after(sample);
-    const widths = ["var(--font-weight-normal)", "var(--font-weight-semibold)", "600"].map(
-      (weight) => {
-        sample.style.fontWeight = weight;
-        return sample.getBoundingClientRect().width;
-      },
-    );
+    const widths = [
+      "var(--font-weight-normal)",
+      "var(--font-weight-semibold)",
+      "var(--font-weight-bold)",
+    ].map((weight) => {
+      sample.style.fontWeight = weight;
+      return sample.getBoundingClientRect().width;
+    });
     sample.remove();
     return widths;
   });

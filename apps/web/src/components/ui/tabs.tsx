@@ -15,7 +15,7 @@ import {
 const tabListClass = "flex border-b border-border";
 
 const tabClass =
-  "px-4 py-2 text-sm font-medium text-text-muted outline-none border-b-2 border-border " +
+  "px-4 py-2 text-sm font-semibold text-text-muted outline-none border-b-2 border-border " +
   "data-hovered:text-text data-selected:border-primary data-selected:text-primary " +
   "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:opacity-50";
 

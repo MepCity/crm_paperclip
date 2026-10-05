@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <main className="flex min-h-dvh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <h1 className="text-lg font-medium text-text">{APP_NAME}</h1>
+          <h1 className="text-xl font-semibold text-text">{APP_NAME}</h1>
         </CardHeader>
         <CardContent>{children}</CardContent>
       </Card>

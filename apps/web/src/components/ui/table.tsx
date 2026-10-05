@@ -46,7 +46,7 @@ export function TableRow({ children }: { children: ReactNode }) {
 
 export function TableHead({ children }: { children: ReactNode }) {
   return (
-    <th scope="col" className="px-4 py-3 font-medium text-text-muted">
+    <th scope="col" className="px-4 py-3 font-semibold text-text-muted">
       {children}
     </th>
   );
