@@ -209,6 +209,7 @@ const RADIUS_TOKENS = [
   "--radius-xl",
   "--radius-full",
   "--radius-form-control",
+  "--radius-create-menu",
 ] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
@@ -443,6 +444,26 @@ const SIZE_GROUPS = [
       "--size-form-field-group-legend-inset",
       "--size-form-field-group-legend-padding",
       "--size-form-description-height",
+    ],
+  },
+  {
+    label: "Global create menu",
+    tokens: [
+      "--size-create-menu-width",
+      "--size-create-menu-height",
+      "--size-create-menu-offset",
+      "--size-create-menu-column-width",
+      "--size-create-menu-inset-inline",
+      "--size-create-menu-heading-top",
+      "--size-create-menu-search-top",
+      "--size-create-menu-search-width",
+      "--size-create-menu-search-height",
+      "--size-create-menu-list-top",
+      "--size-create-menu-list-height",
+      "--size-create-menu-row-height",
+      "--size-create-menu-row-icon",
+      "--size-create-menu-row-icon-inset",
+      "--size-create-menu-row-label-gap",
     ],
   },
   {

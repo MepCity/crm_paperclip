@@ -8,6 +8,7 @@ const expectedIcons = [
   "filterChevronDown",
   "filterChevronRight",
   "filterSearch",
+  "createRecordPlus",
   "building",
   "check",
   "chevronUp",

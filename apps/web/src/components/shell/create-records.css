@@ -1,0 +1,88 @@
+/* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
+   Absolute offsets are measured from the panel's border box; the padding edge sits one border
+   width inside it, so each offset subtracts Tailwind's 1 px border. Rules of 1 px are not tokens. */
+
+button.create-records-trigger {
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+/* The panel top sits at the top bar's lower edge. React Aria's own trigger offset is set to 0,
+   so this margin is the whole measured gap between the quick-create box bottom and the panel top. */
+div.create-records-panel {
+  margin-top: var(--size-create-menu-offset);
+  border-radius: 0 0 var(--radius-create-menu) var(--radius-create-menu);
+}
+
+/* React Aria renders the popover dialog as a section. The primitive's padding is replaced by the
+   measured insets, so every block below sits at its measured offset from the panel's padding edge. */
+section.create-records-content {
+  position: relative;
+  height: 100%;
+  padding: 0;
+}
+
+/* Left column header. line-height 1 puts the ink band at the measured inset. */
+.create-records-content h2 {
+  position: absolute;
+  top: calc(var(--size-create-menu-heading-top) - 1px);
+  left: calc(var(--size-create-menu-inset-inline) - 1px);
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  color: var(--color-text);
+}
+
+/* Search box. The magnifier inset and the text inset match the measured filter search. */
+.create-records-search {
+  position: absolute;
+  top: calc(var(--size-create-menu-search-top) - 1px);
+  left: calc(var(--size-create-menu-inset-inline) - 1px);
+  width: var(--size-create-menu-search-width);
+}
+
+.create-records-search div {
+  max-width: none;
+}
+
+.create-records-search input {
+  height: var(--size-create-menu-search-height);
+}
+
+/* The capture shows the box already focused when the menu opens, so the measured focus edge and
+   halo are drawn on focus instead of only on the keyboard focus-visible modality. */
+.create-records-search input[data-focused] {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+/* Module list. Rows repeat on the measured pitch and scroll inside the left column; the
+   configuration sections measured right of the divider at x 868.5 are later modules, so the
+   column keeps its measured width and the rest of the panel stays empty. */
+.create-records-list {
+  position: absolute;
+  top: calc(var(--size-create-menu-list-top) - 1px);
+  left: 0;
+  width: var(--size-create-menu-column-width);
+  height: var(--size-create-menu-list-height);
+  overflow-y: auto;
+}
+
+.create-records-row {
+  display: flex;
+  align-items: center;
+  height: var(--size-create-menu-row-height);
+  padding-left: calc(var(--size-create-menu-row-icon-inset) - 1px);
+  gap: var(--size-create-menu-row-label-gap);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+}
+
+.create-records-row-icon {
+  width: var(--size-create-menu-row-icon);
+  height: var(--size-create-menu-row-icon);
+  flex-shrink: 0;
+}

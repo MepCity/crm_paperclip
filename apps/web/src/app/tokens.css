@@ -134,6 +134,7 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   --radius-form-control: 5px;
+  --radius-create-menu: 4px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -366,4 +367,30 @@
   --size-form-field-group-legend-padding: 12.5px;
   /* Description textarea height is not measurable in the capture; demo placeholder only. */
   --size-form-description-height: 80px;
+
+  /* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
+     Offsets are panel-border-box coordinates minus the panel origin x 534, y 50. */
+  --size-create-menu-width: 670px;
+  --size-create-menu-height: 429px;
+  /* Panel top y 50 minus the quick-create box bottom y 38. */
+  --size-create-menu-offset: 12px;
+  /* Divider at x 868.5 minus the panel left edge x 534. */
+  --size-create-menu-column-width: 334.5px;
+  /* Search box x 565 minus panel x 534; the header ink starts 0.5 px later. */
+  --size-create-menu-inset-inline: 31px;
+  /* Header ink top y 63.5 minus panel y 50 is 13.5 px; the line box sits 2.2 px above the ink
+     at line-height 1, so the box inset is 11.3 px and the measured ink lands at 13.5 px. */
+  --size-create-menu-heading-top: 11.3px;
+  --size-create-menu-search-top: 40px;
+  --size-create-menu-search-width: 287.5px;
+  --size-create-menu-search-height: 30px;
+  /* First module row band y 125 minus panel y 50; visible rows end at y 475. */
+  --size-create-menu-list-top: 75px;
+  --size-create-menu-list-height: 350px;
+  --size-create-menu-row-height: 34px;
+  --size-create-menu-row-icon: 7px;
+  /* Plus glyph ink x 579.5 minus panel x 534. */
+  --size-create-menu-row-icon-inset: 45.5px;
+  /* Label ink x 599.5 minus the glyph ink end x 586.5. */
+  --size-create-menu-row-label-gap: 13px;
 }

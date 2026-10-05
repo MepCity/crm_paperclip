@@ -43,6 +43,21 @@ export const settingsNav: readonly NavLink[] = [
   },
 ];
 
+/**
+ * One row of the top-bar `Create Records` menu. Rows carry no icon: the spec measures the same
+ * plus glyph on every module row (record-detail.md › Global create menu › Module list). A module
+ * joins the menu by adding a row here; its page path stays with the module's own routes.
+ */
+export interface CreateRecordEntry {
+  id: string;
+  label: string;
+  path: (orgSlug: string) => string;
+}
+
+export const createRecordsNav: readonly CreateRecordEntry[] = [
+  { id: "Leads", label: "Lead", path: (slug) => `/crm/${slug}/tab/Leads/create` },
+];
+
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
   const href = link.href(orgSlug);
   return pathname === href || (link.match === "prefix" && pathname.startsWith(`${href}/`));
