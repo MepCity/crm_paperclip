@@ -1,6 +1,6 @@
 # Leads — Module 1 entry and scope
 
-Status: read-only Module 1 research complete. The conversion page's opening state is documented in `research/specs/lead-conversion.md`; its remaining states do not block Module 1. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
+Status: read-only Module 1 research complete. The conversion page's opening and expanded Deal states are documented in `research/specs/lead-conversion.md`; its remaining states do not block Module 1. This document links the approved Leads research rather than restating those screens. Capture names refer only to local research captures; no record values are retained here.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Leads is Module 1. Users reach a saved Leads list, open a Lead, work with its fi
 
 ## Layout
 
-The Leads list and record geometry is specified in `research/specs/list-views.md` and `research/specs/record-detail.md`. The list has a Leads toolbar with **Create Lead**, **More**, and **Actions**. The detail header places **Convert** between **Send Email** and **Edit**, with **More Options** after Edit. The header's identity and related rail follow the record-detail spec. The conversion page's observed regions and opening controls are in `research/specs/lead-conversion.md`.
+The Leads list and record geometry is specified in `research/specs/list-views.md` and `research/specs/record-detail.md`. The list has a Leads toolbar with **Create Lead**, **More**, and **Actions**. The detail header places **Convert** between **Send Email** and **Edit**, with **More Options** after Edit. The header's identity and related rail follow the record-detail spec. The conversion page's observed regions, opening controls, and expanded Deal subform are in `research/specs/lead-conversion.md`.
 
 ### Visual layout
 
@@ -19,7 +19,7 @@ All values in this subsection are **measured from screenshot** in CSS pixels usi
 | Detail Convert trigger | Interactive box x 1185–1266, y 70–102 (81 × 32); 1 px `#D5D8E9` edge on all four sides (left edge x 1184.5–1185.5, right edge x 1265–1266, top edge y 70–71, bottom edge y 101–102), approximately 6 px corners; interior vertical gradient from `#FDFDFE` (y 74–76) through `#F8F7FB` (y 86–88) to `#F1F0F7` (y 100–101), the same secondary header button described in `research/specs/record-detail.md`; label ink `#313949` runs from text start x 1199.5 to text end x 1251.5 and y 81–91, centered with about 14 px side padding. | Enabled in the observed record header; `leads-detail`. Its hover, focus, and disabled variants were not captured. |
 | Detail More Options menu | White `#FFFFFF` panel over the page surface `#EEF1F9`; a visible highlighted option uses `#F0F4FC` and text pixels include `#313949`. | Open menu; `detail-more`. Panel geometry and menu item rhythm are already specified in `research/specs/record-detail.md`. |
 | List Actions menu | White `#FFFFFF` panel with a 1 px `#CED0E1` border, outer bounds x 1251–1450, y 131.5–645.5 (199 × 514); 6 px padding above the first row; 32 px row pitch; highlighted first row fill `#F0F4FC` at x 1258–1443, y 138.5–170.5 (185 × 32, 6 px inside the border); row text `#313949` starts at x 1278.5; one 1 px group divider `#EDF0F4` at x 1262–1439, y 563.5–564.5, between the thirteenth and fourteenth rows. | Open menu; `list-actions`. List toolbar placement is in `research/specs/list-views.md`. |
-| Conversion page | Its opening-state dimensions, surfaces, spacing, typography, and controls are measured in `research/specs/lead-conversion.md`. | Dedicated route observed; optional Deal and owner picker states remain open. |
+| Conversion page | Its opening and expanded Deal state dimensions, surfaces, spacing, typography, and controls are measured in `research/specs/lead-conversion.md`. | Dedicated route observed; owner picker state remains open. |
 
 The measured palette above is local to the sampled components. The conversion page's styling is measured separately in `research/specs/lead-conversion.md`. Recreate icons for their functions; do not reuse reference assets.
 
@@ -36,10 +36,10 @@ The table includes fields directly relevant to the conversion entry and the mapp
 | Converted Account | `Converted_Account` | `lookup` | Optional / no unique constraint / read-only | Conversion bookkeeping field; hidden from Lead forms by all four view flags. |
 | Converted Contact | `Converted_Contact` | `lookup` | Optional / no unique constraint / read-only | Conversion bookkeeping field; hidden from Lead forms by all four view flags. |
 | Converted Deal | `Converted_Deal` | `lookup` | Optional / no unique constraint / read-only | Conversion bookkeeping field; hidden from Lead forms by all four view flags. |
-| Potential Name (mapping label) | `Deal_Name` | `text` | Required in target mapping and Deal metadata / no unique constraint / editable | `convert_mapping.Deals.fields` uses this label; Deal metadata calls the same API field **Deal Name**. Checked-state evidence remains open in `research/specs/lead-conversion.md`. |
-| Amount | `Amount` | `currency` | Optional / no unique constraint / editable | Deal mapping target; checked-state evidence remains open in `research/specs/lead-conversion.md`. |
-| Closing Date | `Closing_Date` | `date` | Optional / no unique constraint / editable | Deal mapping target; checked-state evidence remains open in `research/specs/lead-conversion.md`. |
-| Stage | `Stage` | `picklist` | Required in target mapping and Deal metadata / no unique constraint / editable | Deal mapping target; checked-state evidence remains open in `research/specs/lead-conversion.md`. |
+| Potential Name (mapping label) | `Deal_Name` | `text` | Required in target mapping and Deal metadata / no unique constraint / editable | `convert_mapping.Deals.fields` uses this label; Deal metadata and observed screen use **Deal Name**. Checked-state control documented in `research/specs/lead-conversion.md`. |
+| Amount | `Amount` | `currency` | Optional / no unique constraint / editable | Deal mapping target; checked-state control documented in `research/specs/lead-conversion.md`. |
+| Closing Date | `Closing_Date` | `date` | Optional / no unique constraint / editable | Deal mapping target; layout-required checked-state control documented in `research/specs/lead-conversion.md`. |
+| Stage | `Stage` | `picklist` | Required in target mapping and Deal metadata / no unique constraint / editable | Deal mapping target; checked-state control documented in `research/specs/lead-conversion.md`. |
 
 `convert_mapping` names one Standard target layout for each of Contacts, Accounts, and Deals. It enumerates four Deal target fields but no Account or Contact field list. This is a mapping declaration, not evidence of a particular dialog control or validation message.
 
@@ -64,7 +64,7 @@ The observed detail record's Notes, Cadences, Attachments, Products, Open Activi
 
 1. **Reach a Lead.** Select Leads in the shell, load the default or a saved view, then activate a named Lead link. The populated default list and unconverted detail render as described in the linked specs. The plain `/crm/<org>/tab/Leads/list` path is not the list route: the app treats `list` as a record id, requests `GET /crm/v2.2/Leads/list`, receives 404, and leaves the page body blank under the Leads title with no message (`leads-main`). The list route is `/crm/<org>/tab/Leads/custom-view/<viewId>/list`, reached from the rail link (`research/specs/app-shell.md`). Whether a non-existent numeric record id renders the same blank body is unobserved. Empty saved views retain headers and show **No Leads found.** with zero total. Network error states were not observed.
 2. **Inspect Leads actions.** Open **Actions** on the list or **More Options** on the detail page. Read the menu labels above; dismiss without selecting a result-producing command. No action-specific form, validation, success, empty, or error state was observed.
-3. **Conversion entry.** A **Convert** header control is visible and enabled on the observed Lead. The dedicated conversion page and its opening state are documented in `research/specs/lead-conversion.md`; its unobserved interactions remain open there.
+3. **Conversion entry.** A **Convert** header control is visible and enabled on the observed Lead. The dedicated conversion page, opening state, and expanded Deal subform are documented in `research/specs/lead-conversion.md`; unobserved interactions remain open there.
 4. **Converted views.** Select **Converted Leads** or **My Converted Leads** to see the empty view structure observed in this organization. No actual conversion was run; the behavior of a converted record, list navigation after conversion, duplicate matching, and errors is unknown.
 
 ### Module 1 capability and dependency table
@@ -99,7 +99,7 @@ The observed detail record's Notes, Cadences, Attachments, Products, Open Activi
 | Delete Lead (detail More Options) | Menu visible; not executed | Module 1 with Lead write API; confirmation dialog and post-delete navigation unobserved. |
 | Clone Lead | Menu visible; not executed | Module 1 with Lead write API; clone form unobserved. |
 | Mass Transfer, Mass Delete, Mass Update | Menu visible; not executed | Module 1 with row selection and bulk Lead write API; dialogs unobserved. |
-| Convert Lead to Contact/Account; optional Deal | Visible on the observed unconverted Lead; no conversion executed; opening page in `research/specs/lead-conversion.md` | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals. |
+| Convert Lead to Contact/Account; optional Deal | Visible on the observed unconverted Lead; no conversion executed; opening page and expanded Deal subform in `research/specs/lead-conversion.md` | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals. |
 | Converted-account/contact/deal bookkeeping and converted views | Fields and empty views configured | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals conversion; see `research/specs/lead-conversion.md`. |
 | Mass Convert | Menu visible; not executed | **Not feasible in Module 1.** Depends on Contacts, Accounts, and Deals conversion plus selection/bulk API; see `research/specs/lead-conversion.md`. |
 | Find and Merge Duplicates, Deduplicate Leads | Menu visible; not executed | Depends on duplicate matching/merge capability; details unobserved. |
@@ -138,7 +138,7 @@ New captures: `leads-main` (plain `/list` path: record request returns 404, blan
 
 ## Open questions
 
-1. **Conversion page:** Its observed opening state and remaining questions about Deal fields, owner picker, matching, validation, empty/loading/error states, submit contract, and post-conversion navigation are in `research/specs/lead-conversion.md`; these do not block Module 1.
+1. **Conversion page:** Its observed opening state, expanded Deal subform, and remaining questions about owner picker, matching, validation, empty/loading/error states, submit contract, and post-conversion navigation are in `research/specs/lead-conversion.md`; these do not block Module 1.
 2. In Module 1, should the detail header's **Convert** trigger remain visible but disabled, or be hidden? The reference shows it enabled, while Contacts, Accounts, and Deals are later dependencies; this requires a board decision.
 3. Which listed menu entries are genuinely unique to Leads rather than shared across modules? Only their presence on Leads has been inspected. What are their enabled/disabled states after selection or for converted records?
 4. Which three custom views have records, if any, and which views are actually used beyond Today's Leads, the only view whose `last_accessed_time` predates this research? The available metadata and captures do not establish that other configured views are unused.
