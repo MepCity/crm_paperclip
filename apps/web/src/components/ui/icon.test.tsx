@@ -6,6 +6,7 @@ afterEach(cleanup);
 
 const expectedIcons = [
   "avatarPerson",
+  "recordPortrait",
   "filterChevronDown",
   "filterChevronRight",
   "filterSearch",
