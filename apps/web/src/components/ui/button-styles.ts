@@ -27,6 +27,7 @@ export const buttonSizes = {
     "h-(--size-button-split-height) min-w-(--size-button-split-primary) text-md px-2 py-0",
   splitArrow: "h-(--size-button-split-height) w-(--size-button-split-arrow) text-sm p-0",
   actions: "h-(--size-button-ellipsis-height) w-(--size-button-ellipsis-width) text-sm p-0",
+  formAction: "h-(--size-form-action-height) text-md px-3 py-0",
   sm: "text-sm px-3 py-1.5",
   md: "text-base px-4 py-2",
 };

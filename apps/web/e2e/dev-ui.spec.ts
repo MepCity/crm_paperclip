@@ -19,7 +19,7 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
 
   // Each demo is a labelled region so screens and tests can address it.
-  const formRegion = page.getByRole("region", { name: "form" });
+  const formRegion = page.getByRole("region", { name: "form", exact: true });
   await expect(formRegion).toBeVisible();
 
   const form = formRegion.getByRole("form", { name: "Demo sign-in form" });

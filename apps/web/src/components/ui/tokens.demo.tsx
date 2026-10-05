@@ -110,6 +110,7 @@ const COLOUR_GROUPS = [
       "--color-text-strong",
       "--color-text-disabled",
       "--color-text-empty",
+      "--color-form-portrait",
     ],
   },
 ] as const;
@@ -206,6 +207,7 @@ const RADIUS_TOKENS = [
   "--radius-lg",
   "--radius-xl",
   "--radius-full",
+  "--radius-form-control",
 ] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
@@ -379,6 +381,35 @@ const SIZE_GROUPS = [
       "--size-popover-sort-cancel-width",
       "--size-popover-sort-apply-width",
       "--size-popover-sort-button-gap",
+    ],
+  },
+  {
+    label: "Create/edit form",
+    tokens: [
+      "--size-form-strip-height",
+      "--size-form-card-inset",
+      "--size-form-section-top",
+      "--size-form-section-gap",
+      "--size-form-section-title-gap",
+      "--size-form-portrait",
+      "--size-form-label-column-left",
+      "--size-form-label-column-right",
+      "--size-form-label-gap",
+      "--size-form-input-left-width",
+      "--size-form-input-right-width",
+      "--size-form-column-gap",
+      "--size-form-input-height",
+      "--size-form-row-gap",
+      "--size-form-row-pitch",
+      "--size-form-control-padding-inline",
+      "--size-form-control-padding-block",
+      "--size-form-action-height",
+      "--size-form-action-gap",
+      "--size-form-field-group-padding",
+      "--size-form-field-group-legend-inset",
+      "--size-form-field-group-legend-padding",
+      "--size-form-field-group-margin-top",
+      "--size-form-description-height",
     ],
   },
   {
