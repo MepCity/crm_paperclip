@@ -13,6 +13,6 @@ export async function createOrganization(
   await expect(slugField).not.toHaveValue("");
   const slug = await slugField.inputValue();
   await page.getByRole("button", { name: "Create organization" }).click();
-  await expect(page).toHaveURL(`/o/${slug}`);
+  await expect(page).toHaveURL(`/crm/${slug}`);
   return { name: organizationName, slug };
 }
