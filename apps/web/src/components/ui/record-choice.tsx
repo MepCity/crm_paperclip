@@ -99,9 +99,13 @@ export function RecordChoice({
               setQuery("");
             }
           }}
-          className={`record-control flex items-center justify-between text-left ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
+          className="record-control flex items-center justify-between text-left"
         >
-          <span id={valueId} className="truncate">
+          <span
+            id={valueId}
+            className={`truncate ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
+            {...(mutedEmpty && value === null ? { "data-part": "empty-value" } : {})}
+          >
             {selected?.label ?? value ?? "-None-"}
           </span>
           <Icons.recordChevron className="h-4 w-4 shrink-0 text-text-muted" aria-hidden />

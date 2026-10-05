@@ -1,0 +1,180 @@
+/* record-detail.md › Layout › Visual layout › Business card, Details card */
+
+.detail-demo-frame {
+  width: var(--size-detail-card-width);
+}
+
+.detail-card {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  padding-inline: var(--size-detail-card-padding);
+}
+
+.detail-business-card {
+  min-height: var(--size-detail-business-min-height);
+  padding-block: var(--size-detail-business-padding-block-start)
+    var(--size-detail-business-padding-block-end);
+  box-sizing: border-box;
+}
+
+.detail-field-label {
+  text-align: right;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  line-height: var(--size-list-line-height);
+}
+
+.detail-field-value {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+  line-height: var(--size-list-line-height);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-field-value-link {
+  color: var(--color-primary);
+}
+
+.detail-field-value-wrap {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.detail-business-row {
+  display: grid;
+  grid-template-columns:
+    var(--size-detail-business-label-width)
+    var(--size-detail-business-label-value-gap)
+    minmax(0, 1fr);
+  align-items: start;
+  min-height: var(--size-detail-business-row-pitch);
+}
+
+.detail-business-row > .detail-field-label {
+  grid-column: 1;
+}
+
+.detail-business-row > .detail-field-value-wrap {
+  grid-column: 3;
+}
+
+.detail-details-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  box-sizing: border-box;
+  padding-block: var(--size-detail-details-toggle-padding-block);
+  line-height: var(--size-list-line-height);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-strong);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.detail-details-divider {
+  height: 1px;
+  background: var(--color-detail-divider);
+  border: 0;
+  margin: 0;
+  margin-inline: calc(-1 * var(--size-detail-card-padding));
+}
+
+.detail-details-sections {
+  margin-block-start: var(--size-detail-details-sections-margin-top);
+}
+
+.detail-section-title {
+  margin-block: var(--size-detail-section-title-margin-block);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-strong);
+}
+
+.detail-two-column {
+  display: grid;
+  grid-template-columns: var(--size-detail-column-width) var(--size-detail-column-width);
+}
+
+.detail-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.detail-details-row {
+  display: grid;
+  grid-template-columns:
+    var(--size-detail-details-label-width)
+    var(--size-detail-details-label-value-gap)
+    minmax(0, 1fr);
+  align-items: start;
+  min-height: var(--size-detail-details-row-pitch);
+}
+
+.detail-details-row > .detail-field-label {
+  grid-column: 1;
+}
+
+.detail-details-row > .detail-field-value-wrap {
+  grid-column: 3;
+}
+
+.detail-details-row-full {
+  display: grid;
+  grid-template-columns:
+    var(--size-detail-details-label-width)
+    var(--size-detail-details-label-value-gap)
+    minmax(0, 1fr);
+  align-items: start;
+  min-height: var(--size-detail-details-row-pitch);
+}
+
+.detail-details-row-full > .detail-field-label {
+  grid-column: 1;
+}
+
+.detail-details-row-full > .detail-field-value-wrap {
+  grid-column: 3 / -1;
+}
+
+.detail-field-edit {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.detail-field-value-wrap:hover .detail-field-edit,
+.detail-field-value-wrap:focus-within .detail-field-edit {
+  opacity: 1;
+}
+
+.detail-audit-timestamp {
+  display: block;
+}
+
+.detail-multiline {
+  white-space: pre-wrap;
+}
+
+.detail-last-update {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  margin-block-end: 0.5rem;
+}

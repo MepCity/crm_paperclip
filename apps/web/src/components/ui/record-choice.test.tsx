@@ -1,5 +1,6 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { RecordChoice } from "./record-choice";
@@ -9,6 +10,47 @@ const options = [
   { value: null, label: "-None-" },
   { value: "a", label: "Alpha" },
 ];
+
+test("muted empty value uses placeholder ink on the value span only", () => {
+  render(
+    <RecordChoice
+      label="Salutation"
+      value={null}
+      onChange={() => {}}
+      options={options}
+      mutedEmpty
+    />,
+  );
+  const trigger = screen.getByRole("button", { name: "Salutation" });
+  const value = trigger.querySelector("[data-part=empty-value]");
+  expect(value).toBeTruthy();
+  expect((value as Element).classList.contains("record-prefix-empty")).toBe(true);
+  expect(trigger.classList.contains("record-prefix-empty")).toBe(false);
+});
+
+test("selected muted choice drops empty marker and uses value ink", async () => {
+  const user = userEvent.setup();
+  function Controlled() {
+    const [value, setValue] = useState<string | null>(null);
+    return (
+      <RecordChoice
+        label="Salutation"
+        value={value}
+        onChange={setValue}
+        options={options}
+        mutedEmpty
+      />
+    );
+  }
+  render(<Controlled />);
+  await user.click(screen.getByRole("button", { name: "Salutation" }));
+  await user.click(screen.getByRole("option", { name: "Alpha" }));
+  const trigger = screen.getByRole("button", { name: "Salutation" });
+  const span = document.getElementById(trigger.getAttribute("aria-describedby") ?? "");
+  expect(span?.getAttribute("data-part")).toBeNull();
+  expect(span?.classList.contains("record-prefix-empty")).toBe(false);
+});
+
 test("arrow opens a choice panel and Escape restores the trigger", async () => {
   const user = userEvent.setup();
   render(<RecordChoice label="Choice" value={null} onChange={() => {}} options={options} />);

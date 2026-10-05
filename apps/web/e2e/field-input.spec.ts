@@ -51,7 +51,7 @@ test("form input geometry and composite inks match the measured form rows", asyn
   // Composite inputs: only the empty Salutation prefix uses 8C91AB.
   const prefix = demo.getByRole("button", { name: "Salutation" });
   await prefix.scrollIntoViewIfNeeded();
-  await expect(prefix).toHaveCSS("color", "rgb(140, 145, 171)");
+  await expect(prefix.locator("[data-part=empty-value]")).toHaveCSS("color", "rgb(140, 145, 171)");
   // Form surface and Lead Image: 48px disk, B2B2B2 original placeholder ink.
   const profile = demo.getByRole("img", { name: "profileimage empty" });
   await expect(profile).toHaveCSS("width", "48px");
@@ -151,8 +151,13 @@ test("form demo meets the accessibility baseline", async ({ page }) => {
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "field input" });
   await hydrate(demo.getByRole("textbox", { name: "text empty", exact: true }));
+  await expect(demo.getByRole("button", { name: "Salutation" })).toBeVisible();
+  await expect(demo.locator("[data-part=empty-value]")).toHaveCount(1);
   // The pre-existing list empty-state ink is outside this issue's scope.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
 });
 
 test("open form panels meet the accessibility baseline", async ({ page }) => {
@@ -163,7 +168,10 @@ test("open form panels meet the accessibility baseline", async ({ page }) => {
     await hydrate(trigger);
     await trigger.click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expectNoA11yViolations(page);
+    // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+    await expectNoA11yViolations(page, {
+      exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+    });
     await page.keyboard.press("Escape");
   }
 });

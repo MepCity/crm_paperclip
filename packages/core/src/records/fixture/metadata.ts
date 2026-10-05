@@ -1,14 +1,16 @@
 import type { ModuleMetadata } from "../contract";
 import { leadsPicklists } from "./picklists";
 
-// Transcribed only from the permitted Leads field specification.
+// Field constraints and view flags follow the permitted specification and metadata.
 export const leadsMetadata: ModuleMetadata = {
   apiName: "Leads",
   singularLabel: "Lead",
   pluralLabel: "Leads",
+  businessCardFields: ["Owner", "Email", "Phone", "Mobile", "Lead_Status"],
   fields: [
     {
       apiName: "Record_Image",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Lead Image",
       dataType: "profileimage",
       required: false,
@@ -18,6 +20,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Owner",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Lead Owner",
       dataType: "ownerlookup",
       required: false,
@@ -27,6 +30,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Company",
+      views: { view: true, create: true, edit: true, quickCreate: true },
       label: "Company",
       dataType: "text",
       required: true,
@@ -36,6 +40,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "First_Name",
+      views: { view: false, create: true, edit: true, quickCreate: true },
       label: "First Name",
       dataType: "text",
       required: false,
@@ -45,6 +50,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Last_Name",
+      views: { view: false, create: true, edit: true, quickCreate: true },
       label: "Last Name",
       dataType: "text",
       required: true,
@@ -54,6 +60,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Full_Name",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Full Name",
       dataType: "text",
       required: false,
@@ -63,6 +70,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Designation",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Title",
       dataType: "text",
       required: false,
@@ -72,6 +80,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Email",
+      views: { view: true, create: true, edit: true, quickCreate: true },
       label: "Email",
       dataType: "email",
       required: false,
@@ -81,6 +90,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Phone",
+      views: { view: true, create: true, edit: true, quickCreate: true },
       label: "Phone",
       dataType: "phone",
       required: false,
@@ -90,6 +100,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Fax",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Fax",
       dataType: "text",
       required: false,
@@ -99,6 +110,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Mobile",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Mobile",
       dataType: "phone",
       required: false,
@@ -108,6 +120,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Website",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Website",
       dataType: "website",
       required: false,
@@ -117,6 +130,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Lead_Source",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Lead Source",
       dataType: "picklist",
       required: false,
@@ -126,6 +140,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Lead_Status",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Lead Status",
       dataType: "picklist",
       required: false,
@@ -135,6 +150,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Industry",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Industry",
       dataType: "picklist",
       required: false,
@@ -144,6 +160,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "No_of_Employees",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "No. of Employees",
       dataType: "integer",
       required: false,
@@ -153,6 +170,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Annual_Revenue",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Annual Revenue",
       dataType: "currency",
       required: false,
@@ -162,6 +180,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Rating",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Rating",
       dataType: "picklist",
       required: false,
@@ -171,6 +190,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Tag",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Tag",
       dataType: "text",
       required: false,
@@ -180,6 +200,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Created_By",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Created By",
       dataType: "ownerlookup",
       required: false,
@@ -189,6 +210,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Email_Opt_Out",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Email Opt Out",
       dataType: "boolean",
       required: false,
@@ -198,6 +220,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Skype_ID",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Skype ID",
       dataType: "text",
       required: false,
@@ -207,6 +230,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Modified_By",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Modified By",
       dataType: "ownerlookup",
       required: false,
@@ -216,6 +240,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Created_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Created Time",
       dataType: "datetime",
       required: false,
@@ -225,6 +250,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Modified_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Modified Time",
       dataType: "datetime",
       required: false,
@@ -234,6 +260,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Salutation",
+      views: { view: false, create: true, edit: true, quickCreate: false },
       label: "Salutation",
       dataType: "picklist",
       required: false,
@@ -243,6 +270,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Secondary_Email",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Secondary Email",
       dataType: "email",
       required: false,
@@ -252,6 +280,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Twitter",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Twitter",
       dataType: "text",
       required: false,
@@ -261,6 +290,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Last_Activity_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Last Activity Time",
       dataType: "datetime",
       required: false,
@@ -270,6 +300,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Converted_Date_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Converted Date Time",
       dataType: "datetime",
       required: false,
@@ -279,6 +310,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Lead_Conversion_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Lead Conversion Time",
       dataType: "integer",
       required: false,
@@ -288,6 +320,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Unsubscribed_Mode",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Unsubscribed Mode",
       dataType: "picklist",
       required: false,
@@ -297,6 +330,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Unsubscribed_Time",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Unsubscribed Time",
       dataType: "datetime",
       required: false,
@@ -306,6 +340,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Converted_Account",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Converted Account",
       dataType: "lookup",
       required: false,
@@ -318,6 +353,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Converted_Contact",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Converted Contact",
       dataType: "lookup",
       required: false,
@@ -330,6 +366,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Converted_Deal",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Converted Deal",
       dataType: "lookup",
       required: false,
@@ -342,6 +379,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "id",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Record Id",
       dataType: "bigint",
       required: false,
@@ -351,6 +389,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Converted__s",
+      views: { view: true, create: false, edit: false, quickCreate: false },
       label: "Is Converted",
       dataType: "boolean",
       required: false,
@@ -360,6 +399,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Connected_To__s",
+      views: { view: true, create: true, edit: false, quickCreate: false },
       label: "Connected To",
       dataType: "multi_module_lookup",
       required: false,
@@ -369,6 +409,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Latitude",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Latitude",
       dataType: "double",
       required: false,
@@ -378,6 +419,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Longitude",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Longitude",
       dataType: "double",
       required: false,
@@ -387,6 +429,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Address",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address",
       dataType: "textarea",
       required: false,
@@ -396,6 +439,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Country",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Country / Region",
       dataType: "picklist",
       required: false,
@@ -405,6 +449,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Flat_House_No_Building_Apartment_Name",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Flat / House No./ Building / Apartment Name",
       dataType: "text",
       required: false,
@@ -414,6 +459,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Street",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Street Address",
       dataType: "text",
       required: false,
@@ -423,6 +469,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "City",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - City",
       dataType: "text",
       required: false,
@@ -432,6 +479,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "State",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - State / Province",
       dataType: "picklist",
       required: false,
@@ -441,6 +489,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Zip_Code",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Zip / Postal Code",
       dataType: "text",
       required: false,
@@ -450,6 +499,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Coordinates",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Address - Coordinates",
       dataType: "textarea",
       required: false,
@@ -459,6 +509,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Description",
+      views: { view: true, create: true, edit: true, quickCreate: false },
       label: "Description",
       dataType: "textarea",
       required: false,
@@ -468,6 +519,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Change_Log_Time__s",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Change Log Time",
       dataType: "datetime",
       required: false,
@@ -477,6 +529,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Locked__s",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Locked",
       dataType: "boolean",
       required: false,
@@ -486,6 +539,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Last_Enriched_Time__s",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Last Enriched Time",
       dataType: "datetime",
       required: false,
@@ -495,6 +549,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Enrich_Status__s",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Enrich Status",
       dataType: "picklist",
       required: false,
@@ -504,6 +559,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "nearby_distance__s",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Distance",
       dataType: "double",
       required: false,
@@ -513,6 +569,7 @@ export const leadsMetadata: ModuleMetadata = {
     },
     {
       apiName: "Lead_Status_Modified_Time",
+      views: { view: false, create: false, edit: false, quickCreate: false },
       label: "Lead Status Modified Time",
       dataType: "datetime",
       required: false,
@@ -525,11 +582,41 @@ export const leadsMetadata: ModuleMetadata = {
     {
       label: "Lead Image",
       columnCount: 1,
+      columns: [["Record_Image"]],
       fields: ["Record_Image"],
     },
     {
       label: "Lead Information",
       columnCount: 2,
+      columns: [
+        [
+          "Owner",
+          "First_Name",
+          "Designation",
+          "Phone",
+          "Mobile",
+          "Lead_Source",
+          "Industry",
+          "Annual_Revenue",
+          "Email_Opt_Out",
+          "Modified_By",
+        ],
+        [
+          "Company",
+          "Last_Name",
+          "Full_Name",
+          "Email",
+          "Fax",
+          "Website",
+          "Lead_Status",
+          "No_of_Employees",
+          "Rating",
+          "Created_By",
+          "Skype_ID",
+          "Secondary_Email",
+          "Twitter",
+        ],
+      ],
       fields: [
         "Owner",
         "Company",
@@ -574,6 +661,20 @@ export const leadsMetadata: ModuleMetadata = {
     {
       label: "Address Information",
       columnCount: 2,
+      columns: [
+        [
+          "Address",
+          "Country",
+          "Flat_House_No_Building_Apartment_Name",
+          "Street",
+          "City",
+          "State",
+          "Zip_Code",
+          "Latitude",
+          "Longitude",
+        ],
+        [],
+      ],
       // Sequence numbers are all 1, so this is the editor order: the composite
       // address, the eight visible sub-fields, then hidden Coordinates.
       fields: [
@@ -592,6 +693,7 @@ export const leadsMetadata: ModuleMetadata = {
     {
       label: "Description Information",
       columnCount: 1,
+      columns: [["Description"]],
       fields: ["Description"],
     },
   ],

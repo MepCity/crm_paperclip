@@ -28,6 +28,8 @@ const types: FieldDataType[] = [
   "profileimage",
 ];
 
+const formFieldViews = { view: true, create: true, edit: true, quickCreate: false } as const;
+
 function example(type: FieldDataType): FieldValue {
   switch (type) {
     case "integer":
@@ -69,6 +71,7 @@ function Sample({
     readOnly: false,
     unique: false,
     picklist: options,
+    views: formFieldViews,
   };
   return (
     <FieldInput
@@ -94,6 +97,7 @@ function SearchableSample({ state }: { state: "empty" | "filled" | "required" | 
         required: state === "required",
         readOnly: false,
         unique: false,
+        views: formFieldViews,
       }}
       value={value}
       onChange={setValue}
@@ -136,6 +140,7 @@ export default function FieldInputDemo() {
           required: false,
           readOnly: false,
           unique: false,
+          views: formFieldViews,
         }}
         value={null}
         onChange={() => {}}
@@ -160,6 +165,7 @@ export default function FieldInputDemo() {
           required: true,
           readOnly: false,
           unique: false,
+          views: formFieldViews,
         }}
         value={null}
         onChange={() => {}}

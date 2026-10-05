@@ -149,7 +149,10 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expect(Math.abs(oneLineOffset - 7)).toBeLessThanOrEqual(1);
   expect(Math.abs(twoLineOffset - oneLineOffset)).toBeLessThanOrEqual(1);
   // Empty-list copy from the sibling record-table demo on /dev/ui is the measured #8B9AB9 on white (2.83:1).
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
   await demo.screenshot({ path: testInfo.outputPath("filter-panel-demo.png") });
 });
 

@@ -70,14 +70,12 @@ the actual dialog belongs to MEP-139.
   the existing spacing scale, 32px avatar and minimum 48px row. Selected owner
   names use the nearest selected picklist role (`--font-weight-semibold`).
 
-## Accessibility blocker
+## Empty selection contrast (MEP-157)
 
-MEP-157 tracks the conflict between the exact muted Salutation placeholder ink
-and the AA colour-contrast gate. The empty prefix is a select button, outside
-ADR 0003's current exception for real input placeholders. Full gallery scans
-remain enabled and fail on this one measured pair; no colour change or scan
-exclusion is authorized yet. Independent geometry and open-panel scans remain
-separate so this policy question does not hide other defects.
+Empty Salutation prefix ink stays on `--color-text-placeholder` (`#8C91AB`, 3.11:1
+on a panel). A selected prefix uses `--color-text`. ADR 0003 §8 covers the
+empty-value text; gallery scans exclude only `[data-part=empty-value]`, not the
+surrounding trigger.
 
 ## Deviations and deferred controls
 

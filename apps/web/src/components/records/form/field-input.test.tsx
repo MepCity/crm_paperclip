@@ -19,6 +19,7 @@ function field(dataType: FieldDataType): FieldDefinition {
     readOnly: false,
     unique: false,
     picklist: options,
+    views: { view: true, create: true, edit: true, quickCreate: false },
   };
 }
 function Controlled({
