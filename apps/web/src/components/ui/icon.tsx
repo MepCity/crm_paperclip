@@ -187,6 +187,7 @@ export const Icons = {
   recordChevron: RecordChevron,
   recordCheck: RecordCheck,
   recordInfo: RecordInfo,
+  recordPortrait: RecordPortrait,
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
@@ -217,6 +218,22 @@ export const Icons = {
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
 };
+
+/** Original silhouette, kept inline rather than adding an image asset. */
+function RecordPortrait(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      {...props}
+    >
+      <circle cx="24" cy="17" r="9" />
+      <path d="M7 46v-7c0-9 7-15 17-15s17 6 17 15v7Z" />
+    </svg>
+  );
+}
 
 // Original line drawings for the list chrome; no reference icon assets are used.
 function ListGlyph({ children, ...props }: SVGProps<SVGSVGElement>) {
