@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatDateTime, formatRelativeTime, formatTime } from "./index";
+import {
+  formatDate,
+  formatDateTime,
+  formatRecordAuditDateTime,
+  formatRelativeTime,
+  formatTime,
+} from "./index";
 
 // 22:30 in UTC is already the next day in Istanbul and still the same day in Los Angeles.
 const INSTANT = "2026-03-01T22:30:00Z";
@@ -67,6 +73,19 @@ describe("formatDate", () => {
       for (const value of values) {
         expect(() => formatDate(value, { locale, timeZone: "UTC" })).toThrow(RangeError);
       }
+    }
+  });
+});
+
+describe("formatRecordAuditDateTime", () => {
+  it("renders weekday, date and 12-hour time in the given time zone", () => {
+    const cases = [
+      ["en-US", "UTC", "Sun, 01 Mar 2026 10:30 PM"],
+      ["en-US", "Europe/Istanbul", "Mon, 02 Mar 2026 01:30 AM"],
+    ] as const;
+
+    for (const [locale, timeZone, expected] of cases) {
+      expect(formatRecordAuditDateTime(INSTANT, { locale, timeZone })).toBe(expected);
     }
   });
 });

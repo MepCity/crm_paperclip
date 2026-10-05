@@ -1,5 +1,5 @@
 import { isAppError } from "@crm/core/errors";
-import { decodeError } from "@/lib/api/wire/errors";
+import { decodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
 
 export const CRM_ORG_HEADER = "X-CRM-ORG";
 
@@ -54,5 +54,6 @@ export async function apiFetch(
 
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (isAppError(error)) return false;
+  if (error instanceof UnexpectedApiError && error.status < 500) return false;
   return failureCount < 3;
 }

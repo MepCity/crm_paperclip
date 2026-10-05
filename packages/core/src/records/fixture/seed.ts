@@ -15,7 +15,9 @@ const STATUS_CYCLE: readonly (string | null)[] = [
 ];
 
 export function fullName(fields: Readonly<Record<string, FieldValue>>): string {
-  return fields.First_Name ? `${fields.First_Name} ${fields.Last_Name}` : String(fields.Last_Name);
+  return [fields.Salutation, fields.First_Name, fields.Last_Name]
+    .filter((value) => typeof value === "string" && value.length > 0)
+    .join(" ");
 }
 
 function iso(ms: number | null): string | null {

@@ -27,9 +27,8 @@ separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbo
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
-The vertical gaps and search-field width measured in Filter content are not applied yet
-and use the existing scale; open question 17 records the uncaptured closed group and
-checked checkbox.
+Vertical gaps, search-field width and end inset use the measured Filter content tokens.
+Open question 17 records the uncaptured closed group and checked checkbox.
 
 ## Token sources
 
@@ -124,6 +123,8 @@ what the "no colour constants" rule forbids.
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
+| `--color-form-portrait` | `#b2b2b2` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "drawn in gray `#B2B2B2`" | from spec |
+| `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
 | `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
@@ -143,6 +144,7 @@ what the "no colour constants" rule forbids.
 | `--radius-lg` | `0.5rem` (8px) | list-views.md › View edit form › "8 px corners" | from spec |
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
+| `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
@@ -211,12 +213,20 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
 | `--size-list-filter-search-icon-inset` | `11.5px` | list-views.md › Filter content › "starting 11.5 px inside the field's outer left edge" | from spec |
 | `--size-list-filter-search-padding` | `31px` | list-views.md › Filter content › "the placeholder text starting 32 px inside that edge". Padding is that inset minus the 1 px border | from spec |
+| `--size-list-filter-search-width` | `167px` | list-views.md › Filter content › "167 px wide" | from spec |
+| `--size-list-filter-search-end-inset` | `15px` | list-views.md › Filter content › "15 px from its inner right edge" | from spec |
+| `--size-list-filter-title-inset-top` | `20.5px` | list-views.md › Filter content › "panel inner top edge to heading ink top 20.5 px" | from spec |
+| `--size-list-filter-title-line` | `13px` | list-views.md › Filter content › heading baseline 32 px − ink top 20.5 px, tuned for Figtree baseline probe | derived from spec |
+| `--size-list-filter-group-heading-line` | `20px` | list-views.md › Filter content › line box taller than 15.5 px heading; baseline 15 px below top, 5 px above bottom (no descender clip) | derived from spec |
+| `--size-list-filter-heading-to-search` | `19.5px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" minus title line extent below baseline | derived from spec |
+| `--size-list-filter-search-to-group` | `18px` | list-views.md › Filter content › search bottom to first group baseline 33 px, minus 15 px baseline inset in group heading line box | derived from spec |
+| `--size-list-filter-group-to-row` | `7px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" minus 5 px below baseline in line box | derived from spec |
+| `--size-list-filter-group-gap` | `16px` | list-views.md › Filter content › last row bottom to next group baseline 31 px, minus 15 px baseline inset in line box | derived from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
 | `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
-| `--size-list-filter-row-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
-| `--size-list-filter-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
 | `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-offset` | `1.25px` | list-views.md › Filter content › triangle top 6 px above heading baseline; centers chevron in 20 px line box (3.75 px above baseline vs 5 px box center) | derived from spec |
 | `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
@@ -245,6 +255,22 @@ what the "no colour constants" rule forbids.
 | `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
+| `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
+| `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
+| `--size-detail-business-label-value-gap` | `45.5px` | record-detail.md › Business card › values start x 771, labels end x 725.5 | from spec |
+| `--size-detail-business-row-pitch` | `44.5px` | record-detail.md › Business card › "44.5 px average row pitch" | from spec |
+| `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
+| `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
+| `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
+| `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
+| `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
+| `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
+| `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
+| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
+| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -256,6 +282,8 @@ what the "no colour constants" rule forbids.
 | `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
+| `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
+| `--size-checkbox-label-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
@@ -277,6 +305,36 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
+| `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
+| `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
+| `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
+| `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
+| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
+| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
+| `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
+| `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
+| `--size-form-label-gap` | `37px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "37 px before their input" | from spec |
+| `--size-form-input-left-width` | `320px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Left inputs x 553–873 (320 px wide)" | from spec |
+| `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
+| `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
+| `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
+| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
+| `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
+| `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
+| `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
+| `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
+| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
+| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
+| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
+| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
+| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
+| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
 
 ### Typeface
 

@@ -187,19 +187,12 @@ open/closed groups and filtered results.
   remain unobserved and are excluded. Checked checkbox appearance keeps the existing
   primitive (16 px box, 1 px border); the spec measures only the unchecked box, and a
   checked box was not captured.
-- The vertical gaps between the heading, the search field, the group headings and the
-  rows, the group-heading size and the search field's 15 px right inset are measured in
-  the spec (list-views.md → Visual layout → Filter content) but not applied here yet;
-  they keep the existing spacing scale. Open question 17 records what was not captured:
-  a closed group and a checked checkbox.
+- Open question 17 records what was not captured: a closed group and a checked checkbox.
 
 ### Deviations
 
 - The expand triangle is `#000000` in the spec and `--color-text-strong` here. The
   magnifier and triangle are original drawings; no reference assets are copied.
-- Figtree at `--text-sm` fits **System Defined Filters** on one line in the 202 px
-  panel, so the reference clip **System Defined Fil...** does not appear. The heading
-  still truncates with an ellipsis when the label is wider than the row.
 - Page position and full Leads lists belong to the page task.
 
 ## View tab and toolbar

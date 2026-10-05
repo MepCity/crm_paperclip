@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { decodeView, encodeCriteria } from "./codec";
+import { decodeView, encodeCriteria, encodeModule } from "./codec";
 import { encodeError } from "./errors";
 import { type OperationDeps, type OperationRequest, operationPath, operations } from "./operations";
 
@@ -34,7 +34,7 @@ describe("wire operations", () => {
     const module = await operations.module.run(deps, input());
     expect(json(module)).toEqual({
       status: 200,
-      body: { modules: [{ api_name: "Leads", singular_label: "Lead", plural_label: "Leads" }] },
+      body: { modules: [encodeModule(await deps.records.getModule("Leads"))] },
     });
     expect(json(await operations.views.run(deps, input())).body.custom_views[0]).toEqual({
       id: "all-leads",
