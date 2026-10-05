@@ -42,7 +42,9 @@ export function DetailFieldRow({
           format={format}
           auditTimestamp={auditTimestamp}
         />
-        {onEdit ? <FieldPencil label={`Edit ${field.label}`} /> : null}
+        {onEdit ? (
+          <FieldPencil label={`Edit ${field.label}`} onClick={() => onEdit(field.apiName)} />
+        ) : null}
       </div>
     </div>
   );

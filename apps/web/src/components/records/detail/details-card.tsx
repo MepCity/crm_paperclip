@@ -48,7 +48,7 @@ export function DetailsCard({
       </button>
       <hr className="detail-details-divider" data-detail-divider />
       {expanded ? (
-        <div data-detail-sections>
+        <div className="detail-details-sections" data-detail-sections>
           {sections.map((section) => (
             <div key={section.title}>
               <h3 className="detail-section-title">{section.title}</h3>

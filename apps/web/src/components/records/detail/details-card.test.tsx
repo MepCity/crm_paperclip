@@ -16,6 +16,7 @@ function textField(apiName: string, label: string): FieldDefinition {
     required: false,
     readOnly: false,
     unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
   };
 }
 
@@ -43,7 +44,7 @@ test("Hide Details toggles sections and aria-expanded", async () => {
   expect(screen.getByRole("button", { name: "Show Details" })).toBeTruthy();
 });
 
-test("pencil icon is omitted without onEdit", () => {
+test("pencil control is omitted without onEdit", () => {
   render(
     <DetailsCard
       format={DEFAULT_FORMAT}
@@ -55,14 +56,16 @@ test("pencil icon is omitted without onEdit", () => {
       ]}
     />,
   );
-  expect(screen.queryByRole("img", { name: /Edit Title/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Edit Title" })).toBeNull();
 });
 
-test("pencil icon appears when onEdit is provided", () => {
+test("pencil button calls onEdit with the field api name", async () => {
+  const user = userEvent.setup();
+  const edits: string[] = [];
   render(
     <DetailsCard
       format={DEFAULT_FORMAT}
-      onEdit={() => {}}
+      onEdit={(apiName) => edits.push(apiName)}
       sections={[
         {
           title: "Lead Information",
@@ -71,7 +74,8 @@ test("pencil icon appears when onEdit is provided", () => {
       ]}
     />,
   );
-  expect(screen.getByRole("img", { name: "Edit Title" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Edit Title" }));
+  expect(edits).toEqual(["Title"]);
 });
 
 test("two-column sections keep left and right fields in separate columns", () => {

@@ -63,9 +63,5 @@ export function FieldValueView({
     return <span className="detail-field-value detail-multiline">{rendered.text}</span>;
   }
 
-  const text =
-    field.dataType === "boolean" && value === true && rendered.kind === "text"
-      ? "Yes"
-      : rendered.text;
-  return <span className="detail-field-value">{text}</span>;
+  return <span className="detail-field-value">{rendered.text}</span>;
 }

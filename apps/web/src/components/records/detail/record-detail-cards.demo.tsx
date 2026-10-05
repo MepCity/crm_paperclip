@@ -21,6 +21,7 @@ function field(
     required: false,
     readOnly: false,
     unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
     ...extra,
   };
 }

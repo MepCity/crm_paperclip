@@ -71,20 +71,20 @@ export function formatRecordAuditDateTime(
   options: FormatOptions,
 ): string {
   if (value === null || value === undefined) return "";
-  return render(
-    options.locale,
-    options.timeZone,
-    {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    },
-    instant(value),
-  );
+  const formatter = new Intl.DateTimeFormat(options.locale, {
+    timeZone: options.timeZone,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const parts = formatter.formatToParts(instant(value));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? "";
+  return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")} ${part("hour")}:${part("minute")} ${part("dayPeriod")}`;
 }
 
 /** Formats an instant as a date and a time of day in `options.timeZone`. */

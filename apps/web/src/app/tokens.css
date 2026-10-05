@@ -267,9 +267,13 @@
   --size-detail-details-label-width: 129px;
   --size-detail-details-label-value-gap: 36.5px;
   --size-detail-details-row-pitch: 44px;
-  --size-detail-columns-gap: 20px;
-  --size-detail-hide-details-padding-block: 12px;
-  --size-detail-section-title-margin-block: 12px 8px;
+  --size-detail-column-width: 433.5px;
+  --size-detail-business-min-height: 287px;
+  --size-detail-business-padding-block-start: 42.75px;
+  --size-detail-business-padding-block-end: 21.75px;
+  --size-detail-details-toggle-padding-block: 12.75px;
+  --size-detail-details-sections-margin-top: 39px;
+  --size-detail-section-title-margin-block: 16px 8px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;

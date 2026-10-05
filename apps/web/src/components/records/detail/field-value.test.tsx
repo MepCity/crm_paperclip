@@ -1,3 +1,4 @@
+import { formatRecordAuditDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
@@ -20,6 +21,7 @@ function field(
     required: false,
     readOnly: false,
     unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
     ...extra,
   };
 }
@@ -70,11 +72,48 @@ test("email and website values use links", () => {
 });
 
 test("Created_By renders user and audit timestamp on two lines", () => {
-  show(field("Created_By", "ownerlookup"), "user-1", {
-    auditTimestamp: "2026-03-01T22:30:00Z",
-  });
+  const auditTimestamp = "2026-03-01T22:30:00Z";
+  show(field("Created_By", "ownerlookup"), "user-1", { auditTimestamp });
   expect(screen.getByText("Alex Morgan")).toBeTruthy();
-  expect(screen.getByText(/Mar 02, 2026/)).toBeTruthy();
+  expect(screen.getByText(formatRecordAuditDateTime(auditTimestamp, DEFAULT_FORMAT))).toBeTruthy();
+});
+
+test("renders common field types for detail rows", () => {
+  show(field("Phone", "phone"), "555-0100");
+  expect(screen.getByText("555-0100")).toBeTruthy();
+
+  cleanup();
+  show(
+    field("Lead_Source", "picklist", {
+      picklist: [{ storedValue: "web", displayValue: "Web" }],
+    }),
+    "web",
+  );
+  expect(screen.getByText("Web")).toBeTruthy();
+
+  cleanup();
+  show(field("Owner", "ownerlookup"), "user-1");
+  expect(screen.getByText("Alex Morgan")).toBeTruthy();
+
+  cleanup();
+  show(field("Employees", "integer"), 42);
+  expect(screen.getByText("42")).toBeTruthy();
+
+  cleanup();
+  show(field("Revenue", "currency"), 99.5);
+  expect(screen.getByText("99.5")).toBeTruthy();
+
+  cleanup();
+  show(field("Active", "boolean"), true);
+  expect(screen.getByText("true")).toBeTruthy();
+});
+
+test("full-width address row uses the multiline layout class", () => {
+  const { container } = show(
+    field("Address", "textarea"),
+    "100 Market St, Springfield, IL 62701, United States",
+  );
+  expect(container.querySelector(".detail-multiline")).toBeTruthy();
 });
 
 test("textarea values preserve line breaks", () => {

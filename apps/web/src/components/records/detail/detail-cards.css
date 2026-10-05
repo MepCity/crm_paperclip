@@ -11,6 +11,13 @@
   padding-inline: var(--size-detail-card-padding);
 }
 
+.detail-business-card {
+  min-height: var(--size-detail-business-min-height);
+  padding-block: var(--size-detail-business-padding-block-start)
+    var(--size-detail-business-padding-block-end);
+  box-sizing: border-box;
+}
+
 .detail-field-label {
   text-align: right;
   font-size: var(--text-md);
@@ -61,9 +68,11 @@
   display: flex;
   width: 100%;
   align-items: center;
-  padding-block: var(--size-detail-hide-details-padding-block);
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-semibold);
+  box-sizing: border-box;
+  padding-block: var(--size-detail-details-toggle-padding-block);
+  line-height: var(--size-list-line-height);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-strong);
   text-align: left;
   background: transparent;
@@ -76,19 +85,23 @@
   background: var(--color-detail-divider);
   border: 0;
   margin: 0;
+  margin-inline: calc(-1 * var(--size-detail-card-padding));
+}
+
+.detail-details-sections {
+  margin-block-start: var(--size-detail-details-sections-margin-top);
 }
 
 .detail-section-title {
   margin-block: var(--size-detail-section-title-margin-block);
   font-size: var(--text-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-strong);
 }
 
 .detail-two-column {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: var(--size-detail-columns-gap);
+  grid-template-columns: var(--size-detail-column-width) var(--size-detail-column-width);
 }
 
 .detail-column {
@@ -136,8 +149,13 @@
 .detail-field-edit {
   margin-inline-start: auto;
   flex-shrink: 0;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
   opacity: 0;
   color: var(--color-text-muted);
+  cursor: pointer;
 }
 
 .detail-field-value-wrap:hover .detail-field-edit,

@@ -36,6 +36,8 @@ export function formatFieldValue(
     multiline?: boolean;
     /** Detail rows link website values; list cells keep them as plain text. */
     linkWebsite?: boolean;
+    /** ISO 4217 code; when omitted, currency values use plain number formatting. */
+    currencyCode?: string;
   },
 ): FieldFormattedValue {
   if (isFieldValueEmpty(field, value)) return { kind: "empty" };
@@ -50,7 +52,7 @@ export function formatFieldValue(
   }
 
   if (options?.href) {
-    const text = valueText(field, value, ownerNames, format);
+    const text = valueText(field, value, ownerNames, format, options);
     if (text === null) return { kind: "empty" };
     return { kind: "link", link: { href: options.href, text } };
   }
@@ -65,7 +67,7 @@ export function formatFieldValue(
     if (href) return { kind: "link", link: { href, text: value } };
   }
 
-  const text = valueText(field, value, ownerNames, format);
+  const text = valueText(field, value, ownerNames, format, options);
   if (text === null) return { kind: "empty" };
   if (options?.multiline || field.dataType === "textarea") {
     return { kind: "multiline", text };
@@ -82,6 +84,9 @@ function valueText(
   value: FieldValue,
   ownerNames: Readonly<Record<string, string>>,
   format: FormatOptions,
+  options?: {
+    currencyCode?: string;
+  },
 ): string | null {
   if (value === null || value === "") return null;
 
@@ -98,20 +103,15 @@ function valueText(
     return option?.displayValue ?? value;
   }
 
-  if (field.dataType === "integer" && typeof value === "number") {
+  if (field.dataType === "currency" && typeof value === "number") {
+    if (options?.currencyCode) {
+      return formatCurrency(value, options.currencyCode, format);
+    }
     return formatNumber(value, format);
   }
 
-  if (field.dataType === "currency" && typeof value === "number") {
-    return formatCurrency(value, "USD", format);
-  }
-
-  if (field.dataType === "boolean") {
-    return value ? "true" : null;
-  }
-
   if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (typeof value === "object" && value !== null && "id" in value) return value.id;
   return null;
 }

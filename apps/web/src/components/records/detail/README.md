@@ -22,6 +22,7 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 | --- | --- |
 | Record detail | Phone and Mobile call buttons not drawn. |
 | Record detail | Skype icon not drawn. |
+| Record detail | Checked boolean display not observed in reference captures. |
 
 ## Interim
 

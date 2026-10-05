@@ -80,8 +80,8 @@ describe("formatDate", () => {
 describe("formatRecordAuditDateTime", () => {
   it("renders weekday, date and 12-hour time in the given time zone", () => {
     const cases = [
-      ["en-US", "UTC", "Sun, Mar 01, 2026, 10:30 PM"],
-      ["en-US", "Europe/Istanbul", "Mon, Mar 02, 2026, 01:30 AM"],
+      ["en-US", "UTC", "Sun, 01 Mar 2026 10:30 PM"],
+      ["en-US", "Europe/Istanbul", "Mon, 02 Mar 2026 01:30 AM"],
     ] as const;
 
     for (const [locale, timeZone, expected] of cases) {
