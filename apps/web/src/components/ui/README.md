@@ -430,9 +430,11 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-panel-border` `#dcdbee` on `--color-surface` | 1.36:1 | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`" |
 | `--color-row-separator` `#edf0f4` on `--color-surface` | 1.14:1 | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`" |
 
-No component consumes either placeholder token yet and `text-primary` is only rendered on a panel,
-so nothing on `/dev/ui` fails AA today. The three placeholder rows fall under the ADR 0003 §8
-exception: the tokens are used only for the placeholder of a real input. The last row does not:
+`text-primary` is only rendered on a panel. The three placeholder rows fall under the ADR 0003 §8
+exception: the tokens are used only for the placeholder of a real input and for the empty-value
+text of a selection control where the spec measures that ink (record-detail.md › Composite inputs:
+the empty Salutation prefix, 3.11:1 on a panel). The scan leaves out only the element that holds
+that text (`[data-part=empty-value]`); the trigger around it stays in the scan. The last row does not:
 primary-coloured text needs `--color-surface` behind it. In the list, Lead Name and Email stay on
 `--color-text` when they are links (Text roles), so `--color-primary` is not a link colour there
 either. It is the active presentation glyph on `--color-primary-subtle` (4.18:1, non-text).
