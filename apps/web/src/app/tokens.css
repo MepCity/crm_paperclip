@@ -106,22 +106,21 @@
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* typography.md fits bold stems at weight 510. The list spec also measures medium
-     for toolbar labels and column headers. A type style's CSS line-height is not a
+  /* typography.md adopts semibold at 510 and bold headings at 650. Regular table
+     text and field labels use 400. A type style's CSS line-height is not a
      --leading-* token; the list row's 18 px line pitch is --size-list-line-height. */
   --font-weight-normal: 400;
-  --font-weight-medium: 500;
   --font-weight-semibold: 510;
+  --font-weight-bold: 650;
 
   --text-2xs: 0.53125rem;
   --text-xs: 0.71875rem;
-  --text-13: 0.8125rem;
   --text-sm: 0.84375rem;
   --text-md: 0.90625rem;
   --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-lg: 0.96875rem;
   --text-xl: 1.15625rem;
-  --text-2xl: 1.5rem;
+  --text-2xl: 1.28125rem;
   --text-3xl: 1.875rem;
 
   /* Measured corners: 2–3 px (--radius-sm, kept at 2 px), about 6 px (--radius-md),

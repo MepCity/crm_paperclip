@@ -33,7 +33,7 @@ const LOAD_DEBOUNCE_MS = 300;
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-sm font-medium text-text",
+  label: "text-md font-normal text-text",
   group:
     "flex items-center rounded-md border border-border bg-surface " +
     "focus-within:border-primary focus-within:ring-2 focus-within:ring-focus-ring " +

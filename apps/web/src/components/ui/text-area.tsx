@@ -12,7 +12,7 @@ import {
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-sm font-medium text-text",
+  label: "text-md font-normal text-text",
   input:
     "resize-y border border-border rounded-md px-3 py-2 outline-none bg-surface text-text " +
     "data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
