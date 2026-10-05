@@ -1,3 +1,4 @@
+import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
@@ -36,6 +37,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "record-detail": RecordDetailDemo,
   "filter-panel": FilterPanelDemo,
   tokens: TokensDemo,
   icon: IconDemo,
