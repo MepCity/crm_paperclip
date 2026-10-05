@@ -81,13 +81,13 @@ separate so this policy question does not hide other defects.
 
 ## Deviations and deferred controls
 
-- Form row columns and label placement: MEP-138 (parity checklist row 19).
+- Form row columns and label placement: MEP-138 (parity checklist rows 20–21).
   This component gallery is not the final page layout.
-- Owner picker dialog: MEP-139 (row 21). Action is rendered only with a callback.
-- Create/edit page actions and save: MEP-145 (row 19).
-- Measured validation appearance: MEP-146 (row 19); existing invalid primitive
+- Owner picker dialog: MEP-139 (row 19). Action is rendered only with a callback.
+- Create/edit page actions and save: MEP-145 (rows 20–21).
+- Measured validation appearance: MEP-146 (row 22); existing invalid primitive
   colour and accessible explanation remain in this issue.
-- Image upload: later image/attachment module (row 19); placeholder only.
+- Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported lookup/multi-module/date-time/long-integer controls: absent from
   Leads form; their corresponding later modules must supply primitives.
