@@ -8,6 +8,7 @@ import { RecordTable } from "./record-table";
 const columns: FieldDefinition[] = [
   {
     apiName: "Full_Name",
+    views: { view: true, create: false, edit: false, quickCreate: false },
     label: "Name",
     dataType: "text",
     required: false,
@@ -16,6 +17,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Company",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Company",
     dataType: "text",
     required: false,
@@ -24,6 +26,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Email",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Email",
     dataType: "email",
     required: false,
@@ -32,6 +35,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Phone",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Phone",
     dataType: "phone",
     required: false,
@@ -40,6 +44,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Lead_Source",
+    views: { view: true, create: true, edit: true, quickCreate: false },
     label: "Source",
     dataType: "picklist",
     required: false,
@@ -49,6 +54,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Owner",
+    views: { view: true, create: true, edit: true, quickCreate: false },
     label: "Owner",
     dataType: "ownerlookup",
     required: false,
@@ -57,6 +63,7 @@ const columns: FieldDefinition[] = [
   },
   {
     apiName: "Created_Time",
+    views: { view: true, create: false, edit: false, quickCreate: false },
     label: "Created",
     dataType: "datetime",
     required: false,

@@ -1,0 +1,119 @@
+"use client";
+
+import type {
+  ListQuery,
+  ModuleApiName,
+  ModuleMetadata,
+  RecordData,
+  RecordId,
+  RecordInput,
+} from "@crm/core/records";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { OrgMember } from "./http-record-service";
+import { useClientRecordService } from "./provider";
+import { apiKeys } from "./query-keys";
+
+export function useModule(module: ModuleApiName) {
+  const service = useClientRecordService();
+  return useQuery<ModuleMetadata>({
+    queryKey: apiKeys.module(module),
+    queryFn: () => service.getModule(module),
+  });
+}
+
+export function useViews(module: ModuleApiName) {
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.views(module),
+    queryFn: () => service.listViewSummaries(module),
+  });
+}
+
+export function useView(module: ModuleApiName, viewId: string) {
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.view(module, viewId),
+    queryFn: () => service.getView(module, viewId),
+    enabled: Boolean(viewId),
+  });
+}
+
+export function useRecordList(module: ModuleApiName, query: ListQuery) {
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.list(module, query),
+    queryFn: () => service.list(module, query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRecordCount(
+  module: ModuleApiName,
+  query: Pick<ListQuery, "viewId" | "filters" | "search">,
+) {
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.count(module, query),
+    queryFn: () => service.count(module, query),
+  });
+}
+
+export function useRecord(module: ModuleApiName, id: RecordId) {
+  const service = useClientRecordService();
+  return useQuery<RecordData>({
+    queryKey: apiKeys.record(module, id),
+    queryFn: () => service.get(module, id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useUsers() {
+  const service = useClientRecordService();
+  return useQuery<readonly OrgMember[]>({
+    queryKey: apiKeys.users,
+    queryFn: () => service.listUsers(),
+  });
+}
+
+function invalidateModuleLists(
+  queryClient: ReturnType<typeof useQueryClient>,
+  module: ModuleApiName,
+  recordId?: RecordId,
+) {
+  void queryClient.invalidateQueries({ queryKey: [...apiKeys.module(module), "list"] });
+  void queryClient.invalidateQueries({ queryKey: [...apiKeys.module(module), "count"] });
+  if (recordId) void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, recordId) });
+}
+
+export function useCreateRecord(module: ModuleApiName) {
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RecordInput) => service.create(module, input),
+    onSuccess: (record) => invalidateModuleLists(queryClient, module, record.id),
+  });
+}
+
+export function useUpdateRecord(module: ModuleApiName) {
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: RecordId; input: RecordInput }) =>
+      service.update(module, id, input),
+    onSuccess: (record) => invalidateModuleLists(queryClient, module, record.id),
+  });
+}
+
+export function useDeleteRecords(module: ModuleApiName) {
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: readonly RecordId[]) => service.delete(module, ids),
+    onSuccess: (_result, ids) => {
+      invalidateModuleLists(queryClient, module);
+      for (const id of ids) {
+        void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, id) });
+      }
+    },
+  });
+}

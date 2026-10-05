@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { ValidationError } from "../errors";
+import { NotFoundError, ValidationError } from "../errors";
 import type {
   Criteria,
   CriteriaToken,
@@ -29,6 +29,79 @@ const input = (extra: RecordInput = {}): RecordInput => ({
   ...extra,
 });
 describeRecordServiceContract("fixture", createFixtureRecordService);
+
+describe("Leads surface metadata", () => {
+  it("publishes the exact surface counts and observed layout columns", async () => {
+    const metadata = await make().getModule("Leads");
+    expect(metadata.fields).toHaveLength(56);
+    for (const [surface, count] of Object.entries({
+      view: 44,
+      create: 34,
+      edit: 33,
+      quickCreate: 5,
+    }))
+      expect(
+        metadata.fields.filter((field) => field.views[surface as keyof typeof field.views]),
+      ).toHaveLength(count);
+    expect(metadata.businessCardFields).toEqual([
+      "Owner",
+      "Email",
+      "Phone",
+      "Mobile",
+      "Lead_Status",
+    ]);
+    expect(metadata.layout.map((section) => section.columns)).toEqual([
+      [["Record_Image"]],
+      [
+        [
+          "Owner",
+          "First_Name",
+          "Designation",
+          "Phone",
+          "Mobile",
+          "Lead_Source",
+          "Industry",
+          "Annual_Revenue",
+          "Email_Opt_Out",
+          "Modified_By",
+        ],
+        [
+          "Company",
+          "Last_Name",
+          "Full_Name",
+          "Email",
+          "Fax",
+          "Website",
+          "Lead_Status",
+          "No_of_Employees",
+          "Rating",
+          "Created_By",
+          "Skype_ID",
+          "Secondary_Email",
+          "Twitter",
+        ],
+      ],
+      [
+        [
+          "Address",
+          "Country",
+          "Flat_House_No_Building_Apartment_Name",
+          "Street",
+          "City",
+          "State",
+          "Zip_Code",
+          "Latitude",
+          "Longitude",
+        ],
+        [],
+      ],
+      [["Description"]],
+    ]);
+    expect(
+      metadata.fields.filter((field) => field.views.quickCreate).map((field) => field.apiName),
+    ).toEqual(["Company", "First_Name", "Last_Name", "Email", "Phone"]);
+  });
+});
 
 describe("interim fixture policies (not reference parity)", () => {
   it("generates 250 repeatable synthetic records with a seeded generator", async () => {
@@ -519,19 +592,91 @@ describe("interim fixture policies (not reference parity)", () => {
         });
     }
   });
-  it("recomputes Full_Name on create/update without salutation", async () => {
+  it("recomputes Full_Name in salutation, first name, last name order", async () => {
     const service = make();
     const record = await service.create(
       "Leads",
       input({ First_Name: "Example", Last_Name: "Lead", Salutation: "Dr." }),
     );
-    expect(record.fields.Full_Name).toBe("Example Lead");
+    expect(record.fields.Full_Name).toBe("Dr. Example Lead");
     expect(
       (await service.update("Leads", record.id, { Last_Name: "Updated" })).fields.Full_Name,
-    ).toBe("Example Updated");
+    ).toBe("Dr. Example Updated");
     expect((await service.update("Leads", record.id, { First_Name: null })).fields.Full_Name).toBe(
-      "Updated",
+      "Dr. Updated",
     );
+  });
+  it("composes names without salutation and with only a last name", async () => {
+    const service = make();
+    const created = await service.create(
+      "Leads",
+      input({ First_Name: "Example", Last_Name: "Lead" }),
+    );
+    expect(created.fields.Full_Name).toBe("Example Lead");
+    expect((await service.update("Leads", created.id, { First_Name: null })).fields.Full_Name).toBe(
+      "Lead",
+    );
+    expect(
+      (await service.update("Leads", created.id, { Salutation: "Dr." })).fields.Full_Name,
+    ).toBe("Dr. Lead");
+    expect(
+      (await service.update("Leads", created.id, { Salutation: "", First_Name: "" })).fields
+        .Full_Name,
+    ).toBe("Lead");
+  });
+  it("validates Owner against the live membership source on every write", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "owners",
+      orgName: "Owner Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let members = ["actor", "other-member"];
+    const service = createFixtureRecordService(ctx, { listMemberIds: async () => members });
+    const created = await service.create("Leads", input({ Owner: "other-member" }));
+    expect(created.fields.Owner).toBe("other-member");
+    expect(created.fields.Created_By).toBe("actor");
+    members = ["actor"];
+    await expect(service.create("Leads", input({ Owner: "other-member" }))).rejects.toMatchObject({
+      fieldErrors: { Owner: expect.any(Array) },
+    });
+    await expect(
+      service.update("Leads", created.id, { Owner: "other-member", Company: "Changed" }),
+    ).rejects.toMatchObject({ fieldErrors: { Owner: expect.any(Array) } });
+    expect(await service.get("Leads", created.id)).toEqual(created);
+    expect((await service.update("Leads", created.id, { Owner: "actor" })).fields.Owner).toBe(
+      "actor",
+    );
+  });
+  it("preserves intervening updates and does not resurrect deletes during Owner validation", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "owner-race",
+      orgName: "Owner Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let resolveMembers: (members: readonly string[]) => void = () => {};
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: () =>
+        new Promise((resolve) => {
+          resolveMembers = resolve;
+        }),
+    });
+    const created = await service.create("Leads", input());
+    const ownerWrite = service.update("Leads", created.id, { Owner: "other-member" });
+    await service.update("Leads", created.id, { Company: "Intervening Company" });
+    resolveMembers(["actor", "other-member"]);
+    expect((await ownerWrite).fields).toMatchObject({
+      Owner: "other-member",
+      Company: "Intervening Company",
+    });
+    const pendingWrite = service.update("Leads", created.id, { Owner: "actor" });
+    await service.delete("Leads", [created.id]);
+    resolveMembers(["actor", "other-member"]);
+    await expect(pendingWrite).rejects.toBeInstanceOf(NotFoundError);
+    await expect(service.get("Leads", created.id)).rejects.toBeInstanceOf(NotFoundError);
   });
   it("searches only Full_Name, Company, Email and Phone, trims search and combines restrictions", async () => {
     const service = make();
@@ -716,7 +861,6 @@ describe("interim fixture policies (not reference parity)", () => {
     const service = make();
     const record = await service.create("Leads", input());
     for (const field of [
-      "Owner",
       "Created_By",
       "Modified_By",
       "Created_Time",
