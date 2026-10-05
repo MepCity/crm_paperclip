@@ -47,10 +47,13 @@ right edge to the right input’s left edge (right label column plus label gap);
 `field-group.tsx`
 
 Bordered group with a legend straddling the top edge (for example `Address`). It
-spans the left column width. Children are usually additional `FormRow` entries.
+spans the left column width. Rows inside the group use the narrower
+`--size-form-input-group-width` control column while keeping the same label
+geometry as the main grid.
 
 ## Demo
 
 `/dev/ui` › `record-form-layout` shows a synthetic Create Lead layout with long
-labels, an Address group, Description, and a scroll host to exercise the sticky
-strip. Styles live in `form.css`.
+labels, Address Information (bordered group), Description Information, and a
+scroll host to exercise the sticky strip. Layout styles live in `form.css`;
+demo-only control chrome lives in `record-form-layout.demo.css`.

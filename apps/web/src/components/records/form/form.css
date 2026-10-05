@@ -20,8 +20,10 @@
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--record-form-content-width) + 2 * var(--size-form-card-inset));
   height: var(--size-form-strip-height);
-  padding-inline: var(--size-form-card-inset);
+  padding-inline: 0 var(--size-form-strip-padding-end);
   border-bottom: 1px solid var(--color-row-separator);
   background-color: var(--color-bg);
 }
@@ -49,7 +51,7 @@
 }
 
 .record-form-card__body {
-  padding: var(--size-form-section-top) var(--size-form-card-inset) var(--size-form-card-inset);
+  padding: 0 var(--size-form-card-inset) var(--size-form-card-inset);
 }
 
 .record-form-section {
@@ -63,10 +65,27 @@
 }
 
 .record-form-section__title {
-  margin: 0 0 var(--size-form-section-title-gap);
   font-size: var(--text-md);
   font-weight: var(--font-weight-bold);
+  line-height: 1;
   color: var(--color-text-strong);
+}
+
+.record-form-section:first-child {
+  position: relative;
+  padding-top: var(--size-form-first-content-top);
+}
+
+.record-form-section:first-child .record-form-section__title {
+  position: absolute;
+  top: var(--size-form-first-title-center);
+  left: 0;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+.record-form-section:not(:first-child) .record-form-section__title {
+  margin: 0 0 var(--size-form-section-title-gap);
 }
 
 .record-form-portrait {
@@ -80,12 +99,14 @@
   display: flex;
   align-items: flex-start;
   gap: 0;
+  /* Measured title gap is baseline-to-content; trim heading line box (MEP-172). */
+  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
 }
 
 .record-form-column {
   display: flex;
   flex-direction: column;
-  gap: var(--size-form-row-gap);
+  gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
   min-width: 0;
 }
 
@@ -107,7 +128,7 @@
 
 .record-form-row {
   display: grid;
-  align-items: center;
+  align-items: start;
   min-height: var(--size-form-input-height);
   margin: 0;
 }
@@ -135,9 +156,10 @@
 
 .record-form-row__label {
   justify-self: end;
-  padding: 0;
+  padding: var(--size-form-label-padding-top) 0 0;
   font-size: var(--text-md);
   font-weight: var(--font-weight-normal);
+  line-height: var(--size-form-label-line-height);
   color: var(--color-text-muted);
   text-align: right;
 }
@@ -151,31 +173,6 @@
   grid-column: 3;
 }
 
-.record-form-control {
-  box-sizing: border-box;
-  width: 100%;
-  height: var(--size-form-input-height);
-  padding-inline: var(--size-form-control-padding-inline);
-  border: 1px solid var(--color-control-border);
-  border-radius: var(--radius-form-control);
-  background-color: var(--color-surface);
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-text);
-  outline: none;
-}
-
-.record-form-control:focus-visible {
-  border-color: var(--color-focus-ring);
-  box-shadow: 0 0 0 1px var(--color-focus-ring);
-}
-
-.record-form-control--textarea {
-  height: var(--size-form-description-height);
-  padding-block: var(--size-form-control-padding-block);
-  resize: vertical;
-}
-
 .record-form-field-group {
   position: relative;
   box-sizing: border-box;
@@ -184,10 +181,14 @@
     var(--size-form-label-gap) +
     var(--size-form-input-left-width)
   );
-  margin: var(--size-form-field-group-margin-top) 0 0;
-  padding: var(--size-form-field-group-padding);
-  border: 1px solid var(--color-control-border);
+  margin: 0;
+  padding: 0 var(--size-form-field-group-padding-end) 0 0;
+  border: 1px solid var(--color-form-field-group-border);
   border-radius: var(--radius-form-control);
+}
+
+.record-form-section:not(:first-child) > .record-form-field-group {
+  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
 }
 
 .record-form-field-group__legend {
@@ -196,8 +197,8 @@
   left: var(--size-form-field-group-legend-inset);
   padding: 0 var(--size-form-field-group-legend-padding);
   font-size: var(--text-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-strong);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
   background-color: var(--color-surface);
   transform: translateY(-50%);
 }
@@ -205,20 +206,12 @@
 .record-form-field-group__body {
   display: flex;
   flex-direction: column;
-  gap: var(--size-form-row-gap);
-  margin-inline: calc(-1 * var(--size-form-field-group-padding));
+  gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
+  padding-top: var(--size-form-field-group-body-top);
 }
 
-/* Dev demo only: let the card reach its spec max-width inside the gallery container. */
-.record-form-layout-demo__scroll {
-  min-width: calc(
-    var(--size-form-label-column-left) +
-    var(--size-form-label-gap) +
-    var(--size-form-input-left-width) +
-    var(--size-form-label-column-right) +
-    var(--size-form-label-gap) +
-    var(--size-form-input-right-width) +
-    2 *
-    var(--size-form-card-inset)
-  );
+.record-form-field-group .record-form-row--left {
+  grid-template-columns:
+    var(--size-form-label-column-left) var(--size-form-label-gap)
+    var(--size-form-input-group-width);
 }

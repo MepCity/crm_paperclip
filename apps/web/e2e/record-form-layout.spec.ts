@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectType, tokenValue } from "./support/typography";
 
-// record-detail.md › Layout › Visual layout › Create/edit form
+// record-detail.md › Layout › Visual layout › Create/edit form; MEP-172 interim vertical measures
 test.use({ viewport: { width: 1470, height: 835 } });
 
 function px(value: string) {
@@ -67,11 +67,24 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const cancel = shell.getByRole("button", { name: "Cancel" });
   const save = shell.getByRole("button", { name: "Save", exact: true });
   const stripTitle = shell.locator("[data-record-form-title]");
+  const portrait = shell.locator("[data-record-form-portrait]");
   const streetInput = demo.locator("#demo-street");
+  const fieldGroup = shell.locator("[data-record-form-field-group]");
+  const longLabel = demo.getByText("Very long synthetic field label for overflow", { exact: true });
+  const longInput = demo.locator("#demo-long-label");
+  const afterLongRow = demo
+    .locator("#demo-after-long")
+    .locator("xpath=ancestor::*[@data-record-form-row][1]");
   const mutedInk = await color(page, "--color-text-muted");
   const strongInk = await color(page, "--color-text-strong");
+  const groupBorderInk = await color(page, "--color-form-field-group-border");
   const columnGap = px(await length(page, "--size-form-column-gap"));
   const cardInset = px(await length(page, "--size-form-card-inset"));
+  const groupInputWidth = px(await length(page, "--size-form-input-group-width"));
+  const groupPaddingEnd = px(await length(page, "--size-form-field-group-padding-end"));
+  const groupBodyTop = px(await length(page, "--size-form-field-group-body-top"));
+  const actionPaddingX = px(await length(page, "--size-form-action-padding-inline"));
+  const stripPaddingEnd = px(await length(page, "--size-form-strip-padding-end"));
   const contentWidth =
     px(await length(page, "--size-form-label-column-left")) +
     px(await length(page, "--size-form-label-gap")) +
@@ -80,7 +93,6 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
     px(await length(page, "--size-form-label-gap")) +
     px(await length(page, "--size-form-input-right-width"));
   const expectedCardWidth = contentWidth + 2 * cardInset;
-  const actionPaddingX = px(await length(page, "--space-3"));
 
   await expect(shell).toBeVisible();
   await boxHeight(strip, 57);
@@ -95,7 +107,14 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   await boxWidth(card, expectedCardWidth);
   const stripTitleBox = await stripTitle.boundingBox();
   expect(stripTitleBox).not.toBeNull();
-  expect(Math.abs((stripTitleBox?.x ?? 0) - (titleBox?.x ?? 0))).toBeLessThanOrEqual(1);
+  expect(Math.abs((stripTitleBox?.x ?? 0) - (cardBox?.x ?? 0))).toBeLessThanOrEqual(1);
+  const portraitBox = await portrait.boundingBox();
+  expect(portraitBox).not.toBeNull();
+  expect(Math.abs((portraitBox?.y ?? 0) - ((cardBox?.y ?? 0) + 63))).toBeLessThanOrEqual(1);
+  const ownerBox = await leftInput.boundingBox();
+  expect(ownerBox).not.toBeNull();
+  expect(Math.abs((ownerBox?.y ?? 0) - ((cardBox?.y ?? 0) + 205))).toBeLessThanOrEqual(1);
+  expect(Math.abs((ownerBox?.y ?? 0) - ((portraitBox?.y ?? 0) + 48 + 94))).toBeLessThanOrEqual(1);
   await boxWidth(leftInput, 320);
   await boxWidth(rightInput, 314.5);
   await boxHeight(leftInput, 34);
@@ -103,9 +122,7 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   expect(labelGap).toBe(37);
   const inputColumnGap = await horizontalGap(leftInput, rightInput);
   expect(Math.abs(inputColumnGap - columnGap)).toBeLessThanOrEqual(1);
-  const ownerBox = await leftInput.boundingBox();
   const streetBox = await streetInput.boundingBox();
-  expect(ownerBox).not.toBeNull();
   expect(streetBox).not.toBeNull();
   expect(Math.abs((streetBox?.x ?? 0) - (ownerBox?.x ?? 0))).toBeLessThanOrEqual(1);
   await expect(leftLabel).toHaveCSS("color", mutedInk);
@@ -136,6 +153,54 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   );
   await expect(cancel).toHaveCSS("padding-left", `${actionPaddingX}px`);
   await expect(cancel).toHaveCSS("padding-right", `${actionPaddingX}px`);
+  const saveBox = await save.boundingBox();
+  expect(saveBox).not.toBeNull();
+  expect(cardBox).not.toBeNull();
+  expect(
+    Math.abs(
+      (cardBox?.x ?? 0) +
+        expectedCardWidth -
+        stripPaddingEnd -
+        ((saveBox?.x ?? 0) + (saveBox?.width ?? 0)),
+    ),
+  ).toBeLessThanOrEqual(2);
+
+  await expect(fieldGroup).toHaveCSS("border-color", groupBorderInk);
+  const legend = fieldGroup.locator("legend");
+  await expect(legend).toHaveCSS("color", mutedInk);
+  await expectType(page, legend, "--text-md", "--font-weight-normal");
+  await boxWidth(streetInput, groupInputWidth);
+  const groupBox = await fieldGroup.boundingBox();
+  expect(groupBox).not.toBeNull();
+  expect(streetBox).not.toBeNull();
+  expect(
+    Math.abs(
+      (groupBox?.x ?? 0) +
+        (groupBox?.width ?? 0) -
+        ((streetBox?.x ?? 0) + (streetBox?.width ?? 0)) -
+        groupPaddingEnd,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(Math.abs((streetBox?.y ?? 0) - ((groupBox?.y ?? 0) + groupBodyTop))).toBeLessThanOrEqual(
+    1,
+  );
+
+  const longRowBox = await longInput
+    .locator("xpath=ancestor::*[@data-record-form-row][1]")
+    .boundingBox();
+  const longInputBox = await longInput.boundingBox();
+  const longLabelBox = await longLabel.boundingBox();
+  const afterLongRowBox = await afterLongRow.boundingBox();
+  expect(longRowBox).not.toBeNull();
+  expect(longInputBox).not.toBeNull();
+  expect(longLabelBox).not.toBeNull();
+  expect(afterLongRowBox).not.toBeNull();
+  expect(Math.abs((longInputBox?.y ?? 0) - (longRowBox?.y ?? 0))).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      (afterLongRowBox?.y ?? 0) - ((longLabelBox?.y ?? 0) + (longLabelBox?.height ?? 0) + 20),
+    ),
+  ).toBeLessThanOrEqual(2);
 
   const scrollHost = demo.locator('[data-record-form-demo="scroll"]');
   const stripYBefore = (await strip.boundingBox())?.y ?? 0;

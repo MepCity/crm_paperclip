@@ -6,18 +6,19 @@ import { FormGrid } from "./form-grid";
 import { FormRow } from "./form-row";
 import { FormSection } from "./form-section";
 import { RecordFormShell } from "./record-form-shell";
+import "./record-form-layout.demo.css";
 
 function DemoControl({ id, multiline = false }: { id: string; multiline?: boolean }) {
   if (multiline) {
     return (
       <textarea
         id={id}
-        className="record-form-control record-form-control--textarea"
+        className="record-form-layout-demo__control record-form-layout-demo__control--textarea"
         defaultValue=""
       />
     );
   }
-  return <input id={id} className="record-form-control" type="text" defaultValue="" />;
+  return <input id={id} className="record-form-layout-demo__control" type="text" defaultValue="" />;
 }
 
 export default function RecordFormLayoutDemo() {
@@ -64,14 +65,9 @@ export default function RecordFormLayoutDemo() {
                   >
                     <DemoControl id="demo-long-label" />
                   </FormRow>
-                  <FieldGroup name="Address">
-                    <FormRow label="Street" controlId="demo-street" column="left">
-                      <DemoControl id="demo-street" />
-                    </FormRow>
-                    <FormRow label="City" controlId="demo-city" column="left">
-                      <DemoControl id="demo-city" />
-                    </FormRow>
-                  </FieldGroup>
+                  <FormRow label="After long label" controlId="demo-after-long" column="left">
+                    <DemoControl id="demo-after-long" />
+                  </FormRow>
                 </>
               }
               right={
@@ -99,7 +95,17 @@ export default function RecordFormLayoutDemo() {
               }
             />
           </FormSection>
-          <FormSection title="Description" layout="single">
+          <FormSection title="Address Information" layout="single">
+            <FieldGroup name="Address">
+              <FormRow label="Street" controlId="demo-street" column="left">
+                <DemoControl id="demo-street" />
+              </FormRow>
+              <FormRow label="City" controlId="demo-city" column="left">
+                <DemoControl id="demo-city" />
+              </FormRow>
+            </FieldGroup>
+          </FormSection>
+          <FormSection title="Description Information" layout="single">
             <FormRow label="Description" controlId="demo-description" column="full">
               <DemoControl id="demo-description" multiline />
             </FormRow>
