@@ -6,6 +6,7 @@ import {
 } from "@crm/core/errors";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { encodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
+import { operationPath, operations } from "@/lib/api/wire/operations";
 import { apiFetch, CRM_ORG_HEADER, shouldRetryQuery } from "./fetch";
 
 const orgSlug = "test-org";
@@ -50,7 +51,7 @@ describe("apiFetch", () => {
       return new Response(JSON.stringify({ count: 1 }), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
-    await apiFetch(orgSlug, "/crm/v2.2/Leads/actions/count", {
+    await apiFetch(orgSlug, operationPath(operations.count, { module: "Leads" }), {
       method: "POST",
       body: { filters: { field: "x" } },
     });
@@ -104,6 +105,17 @@ describe("apiFetch", () => {
     );
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(UnexpectedApiError);
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.not.toBeInstanceOf(SyntaxError);
+  });
+
+  it("throws UnexpectedApiError with HTTP status for non-JSON success bodies", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<html>", { status: 200 })),
+    );
+    await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toMatchObject({
+      status: 200,
+    });
+    await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(UnexpectedApiError);
   });
 
   it("redirects to sign-in on 401 without a JSON body", async () => {
@@ -162,5 +174,16 @@ describe("shouldRetryQuery", () => {
     expect(shouldRetryQuery(0, new ValidationError({ x: ["y"] }))).toBe(false);
     expect(shouldRetryQuery(0, new Error("network"))).toBe(true);
     expect(shouldRetryQuery(3, new Error("network"))).toBe(false);
+  });
+
+  it("does not retry unreadable client responses", () => {
+    expect(shouldRetryQuery(0, new UnexpectedApiError(401))).toBe(false);
+    expect(shouldRetryQuery(0, new UnexpectedApiError(200))).toBe(false);
+    expect(shouldRetryQuery(0, new UnexpectedApiError(404))).toBe(false);
+  });
+
+  it("retries server and unreadable 5xx responses up to three times", () => {
+    expect(shouldRetryQuery(0, new UnexpectedApiError(500))).toBe(true);
+    expect(shouldRetryQuery(3, new UnexpectedApiError(500))).toBe(false);
   });
 });
