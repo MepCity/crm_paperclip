@@ -296,6 +296,16 @@ update the address; Refresh Custom View calls `router.refresh()` on the same URL
 - Organization paths use `/o/[orgSlug]/…` instead of ADR 0004’s `/crm/[orgSlug]/…`
   target until MEP-89 lands.
 
+### Page layout
+
+The list page uses measured viewport coordinates from the visual layout table.
+Tab strip and toolbar sit flush under the shell top bar (no top inset). Horizontal
+insets are 12 px for the view pill, 15 px for the filter/table lane, 73 px before
+the toolbar’s right edge, and 16 px (`--size-list-inset`) on the table’s trailing
+edge. A 15 px gap separates the toolbar from the filter/table row. The page fills the
+shell main height; the table card grows in the body row and keeps the footer on
+the card bottom while record rows scroll inside the card.
+
 ### Page deviations
 
 - Panel closed: table widening beside the filter lane was not verified in the
