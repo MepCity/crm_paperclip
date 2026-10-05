@@ -100,6 +100,7 @@
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
+  --color-detail-timeline-filter-surface: #f9faff;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
@@ -300,4 +301,34 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+
+  /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
+  --size-detail-timeline-width: 906px;
+  --size-detail-timeline-subtab-inset: 26px;
+  --size-detail-timeline-subtab-gap: 24px;
+  --size-detail-timeline-subtab-padding-block: 12px;
+  --size-detail-timeline-history-padding-block: 20px;
+  --size-detail-timeline-history-padding-inline: 26px;
+  --size-detail-timeline-filter-button-width: 42px;
+  --size-detail-timeline-filter-button-height: 32px;
+  --size-detail-timeline-filter-button-gap: 12px;
+  --size-detail-timeline-filter-panel-gap: 12px;
+  --size-detail-timeline-filter-panel-padding: 16px;
+  --size-detail-timeline-filter-row-gap: 12px;
+  --size-detail-timeline-filter-selector-width: 250px;
+  --size-detail-timeline-filter-selector-height: 34px;
+  --size-detail-timeline-filter-selector-padding-inline: 12px;
+  --size-detail-timeline-apply-padding-inline: 16px;
+  --size-detail-timeline-track-gap: 24px;
+  --size-detail-timeline-day-gap: 16px;
+  --size-detail-timeline-date-badge-gap: 8px;
+  --size-detail-timeline-date-badge-padding-block: 4px;
+  --size-detail-timeline-date-badge-padding-inline: 12px;
+  --size-detail-timeline-time-column: 48px;
+  --size-detail-timeline-track-column: 36px;
+  --size-detail-timeline-event-column-gap: 8px;
+  --size-detail-timeline-event-icon: 36px;
+  --size-detail-timeline-event-time-offset: 8px;
+  --size-detail-timeline-event-body-gap: 16px;
+  --size-detail-timeline-byline-gap: 4px;
 }

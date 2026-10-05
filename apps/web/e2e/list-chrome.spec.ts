@@ -158,8 +158,8 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   await expect(sortByLabel).not.toHaveClass(/sr-only/);
   const labelBox = await sortByLabel.boundingBox();
   expect(Math.abs((labelBox?.x ?? 0) - (fieldBox?.x ?? 0))).toBeLessThanOrEqual(1);
-  const cancel = page.getByRole("button", { name: "Cancel" });
-  const apply = page.getByRole("button", { name: "Apply" });
+  const cancel = popover.getByRole("button", { name: "Cancel" });
+  const apply = popover.getByRole("button", { name: "Apply", exact: true });
   const cancelBox = await cancel.boundingBox();
   const applyBox = await apply.boundingBox();
   expect(cancelBox).not.toBeNull();
@@ -190,13 +190,13 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
     await popover.screenshot({ path: join(process.env.LIST_CHROME_ARTIFACT_DIR, "list-sort.png") });
   await field.click();
   await page.getByRole("option", { name: "Company", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Apply" })).toBeEnabled();
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(apply).toBeEnabled();
+  await cancel.click();
   await expect(popover).toHaveCount(0);
   await trigger.click();
   await expect(field).toContainText("None");
   await field.click();
   await page.getByRole("option", { name: "Company", exact: true }).click();
-  await page.getByRole("button", { name: "Apply" }).click();
+  await apply.click();
   await expect(demo.getByRole("status")).toContainText("Company: asc");
 });

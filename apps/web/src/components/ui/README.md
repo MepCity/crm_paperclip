@@ -124,6 +124,7 @@ what the "no colour constants" rule forbids.
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
+| `--color-detail-timeline-filter-surface` | `#f9faff` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "fill `#F9FAFF`" | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
 | `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
@@ -277,6 +278,34 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" (906 px wide) | from spec |
+| `--size-detail-timeline-subtab-inset` | `26px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › History underline starts x 583; surface starts x 552 | from spec |
+| `--size-detail-timeline-subtab-gap` | `24px` | record-detail.md › Layout › Visual layout › Timeline › subtabs spacing (derived from measured underline band) | from spec |
+| `--size-detail-timeline-subtab-padding-block` | `12px` | record-detail.md › Layout › Visual layout › Timeline › subtab line y 222 relative to surface y 185 | from spec |
+| `--size-detail-timeline-history-padding-block` | `20px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading top ink y 256 relative to surface | from spec |
+| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading starts x 578; surface starts x 552 | from spec |
+| `--size-detail-timeline-filter-button-width` | `42px` | record-detail.md › Layout › Visual layout › Timeline › History controls › filter icon button x 703–745 | from spec |
+| `--size-detail-timeline-filter-button-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "32 px high" | from spec |
+| `--size-detail-timeline-filter-button-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap | from spec |
+| `--size-detail-timeline-filter-panel-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › panel top y 293.5 below filter button | from spec |
+| `--size-detail-timeline-filter-panel-padding` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › inner padding to selectors | from spec |
+| `--size-detail-timeline-filter-row-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › second-row Sources y 400.5 below first row | from spec |
+| `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "each 250 px wide" | from spec |
+| `--size-detail-timeline-filter-selector-height` | `34px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33–34 px high including their 1 px border" | from spec |
+| `--size-detail-timeline-filter-selector-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › selector label inset | from spec |
+| `--size-detail-timeline-apply-padding-inline` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter label band | from spec |
+| `--size-detail-timeline-track-gap` | `24px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge to first event | from spec |
+| `--size-detail-timeline-day-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › day groups | from spec |
+| `--size-detail-timeline-date-badge-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge to connector | from spec |
+| `--size-detail-timeline-date-badge-padding-block` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge y 475–501 | from spec |
+| `--size-detail-timeline-date-badge-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge x 577–707 | from spec |
+| `--size-detail-timeline-time-column` | `48px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time left of connector | from spec |
+| `--size-detail-timeline-track-column` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circular icon" | from spec |
+| `--size-detail-timeline-event-column-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title begins x 712 after connector | from spec |
+| `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circular icon" | from spec |
+| `--size-detail-timeline-event-time-offset` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time vertical alignment to icon | from spec |
+| `--size-detail-timeline-event-body-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch between events | from spec |
+| `--size-detail-timeline-byline-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title to byline | from spec |
 
 ### Typeface
 

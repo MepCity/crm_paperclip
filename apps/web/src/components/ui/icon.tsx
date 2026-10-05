@@ -99,6 +99,8 @@ export const Icons = {
   list: ListIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
+  timelineImage: TimelineImageIcon,
+  timelineGeneric: TimelineGenericIcon,
 };
 
 // Original line drawings for the list chrome; no reference icon assets are used.
@@ -152,6 +154,24 @@ function EllipsisIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <ListGlyph {...props}>
       <path d="M5 12h.1M12 12h.1M19 12h.1" strokeWidth="3" />
+    </ListGlyph>
+  );
+}
+
+function TimelineImageIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <rect x="5" y="6" width="14" height="12" rx="1.5" />
+      <path d="m5 15 4-4 3 3 2-2 5 5" />
+      <circle cx="9" cy="10" r="1.25" fill="currentColor" stroke="none" />
+    </ListGlyph>
+  );
+}
+
+function TimelineGenericIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <circle cx="12" cy="12" r="4" />
     </ListGlyph>
   );
 }
