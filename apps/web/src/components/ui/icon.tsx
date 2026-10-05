@@ -68,9 +68,75 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Original user silhouette for form placeholders and picker action. */
+function RecordUser(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...props}
+    >
+      <circle cx="12" cy="7" r="4" />
+      <path d="M4 22v-3a8 8 0 0 1 16 0v3M2 22h20" />
+    </svg>
+  );
+}
+
+function RecordChevron(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m4 6 4 4 4-4" />
+    </svg>
+  );
+}
+function RecordCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m3 8 3 3 7-7" />
+    </svg>
+  );
+}
+function RecordInfo(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 7v4M8 4v1" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
+  recordUser: RecordUser,
+  recordChevron: RecordChevron,
+  recordCheck: RecordCheck,
+  recordInfo: RecordInfo,
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,

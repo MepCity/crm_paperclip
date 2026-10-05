@@ -1,0 +1,102 @@
+# Record form inputs
+
+Source: `research/specs/record-detail.md` → Create and edit forms, Visual layout
+(Lead Information rows, Composite inputs, Country panel, Standard picklist,
+Owner dropdown). Typography: `research/specs/typography.md` → List and detail
+text roles. Interactive primitives remain inside `components/ui` (ADR 0003).
+No data loading, API paths or runtime core imports exist in these components.
+
+## FieldInput props
+
+`field: FieldDefinition`, `value: FieldValue`, `onChange(value)` are controlled.
+`disabled` and metadata `readOnly` prevent edits. `errorMessage` enables the
+existing invalid appearance and links its explanation to the control.
+`field.required` draws the required strip; validation belongs to the caller.
+Text `maxLength` comes from metadata. Empty strings and cleared numbers emit
+`null`; booleans emit booleans; numeric primitives parse numbers on commit.
+
+`options` overrides metadata `picklist` in supplied order. `searchable` opts
+into a panel search (Country and State callers set it; no module-specific
+inference). Published `-None-` placeholders collapse into one first `null`
+option. Saved unlisted strings append to the inventory. An empty inventory
+contains only `-None-`. `searchLabel` overrides the search input label.
+
+`users` supplies `{id, name, email}` owner options; selected IDs remain opaque.
+`onOpenPicker` enables the adjacent action; omit it when the picker is unavailable.
+`pickerLabel` and `searchLabel` provide its copy. The default search label is
+`Search Users`. A saved owner missing from the supplied inventory is shown by ID.
+`currencyPrefix` / `currencyInformation` supply the currency annotation and
+information icon's accessible label; no organization currency is assumed.
+`textPrefix` supplies an attached text marker. `placeholder` supplies input copy.
+`defaultOpen` supports isolated panel-state examples; it never overrides disabled.
+All copy/data may be supplied through props; fallback copy is generic English.
+
+| Data type | UI |
+| --- | --- |
+| text, email, phone, website | TextField (text, email, tel, url) |
+| textarea | TextArea with lower-corner resize handle |
+| integer, double | NumberField without grouping; integer uses integer precision |
+| currency | NumberField with optional prefix/information annotation |
+| boolean | Checkbox |
+| picklist | RecordChoice without search; ordered list and null first option |
+| picklist + searchable | RecordChoice with focused search and scrolling list |
+| ownerlookup | RecordChoice with name/email/avatar and selected checkmark |
+| profileimage | 48px noninteractive original portrait placeholder |
+| lookup, multi_module_lookup, datetime, bigint | Nothing; absent from the observed Leads form |
+
+## Composite inputs
+
+`PrefixInput` extends TextField with independent `prefixLabel`, `prefixValue`,
+`onPrefixChange` and `options`. Empty Salutation uses muted placeholder ink.
+`TextPrefixInput` attaches a literal prefix (such as `@`) outside the value.
+`CoordinatesInput` takes `label`, `latitude`, `longitude`, `onChange` and optional
+`disabled`, `errorMessage`, `latitudeLabel`, `longitudeLabel`, `clearLabel`.
+Changes preserve the other coordinate; Clear All emits both coordinates as null.
+
+The `/dev/ui` field-input demo has empty, filled, required and disabled states
+for every rendered field type, plus searchable inventories, unlisted saved value,
+composites and an invalid field. Open any list to inspect its panel state.
+The demo picker callback changes a synthetic owner to make the integration visible;
+the actual dialog belongs to MEP-139.
+
+## Interim
+
+- Searchable picklists use a case-insensitive substring of the displayed label.
+  A search term was not entered in the reference CRM research. The null choice
+  remains visible when filtering.
+- Owner search uses a case-insensitive substring of name or email.
+- Owner secondary typography is unmeasurable. Use its primary value's adjacent
+  role, `--text-md` / `--font-weight-normal`. Unmeasured row/avatar geometry uses
+  the existing spacing scale, 32px avatar and minimum 48px row. Selected owner
+  names use the nearest selected picklist role (`--font-weight-semibold`).
+
+## Accessibility blocker
+
+MEP-157 tracks the conflict between the exact muted Salutation placeholder ink
+and the AA colour-contrast gate. The empty prefix is a select button, outside
+ADR 0003's current exception for real input placeholders. Full gallery scans
+remain enabled and fail on this one measured pair; no colour change or scan
+exclusion is authorized yet. Independent geometry and open-panel scans remain
+separate so this policy question does not hide other defects.
+
+## Deviations and deferred controls
+
+- Form row columns and label placement: MEP-138 (parity checklist row 19).
+  This component gallery is not the final page layout.
+- Owner picker dialog: MEP-139 (row 21). Action is rendered only with a callback.
+- Create/edit page actions and save: MEP-145 (row 19).
+- Measured validation appearance: MEP-146 (row 19); existing invalid primitive
+  colour and accessible explanation remain in this issue.
+- Image upload: later image/attachment module (row 19); placeholder only.
+- Country/State inventories and dependency: ADR 0002. Props supply inventories.
+- Unsupported lookup/multi-module/date-time/long-integer controls: absent from
+  Leads form; their corresponding later modules must supply primitives.
+- Currency prefix/information content is supplied by callers; the spec does not
+  publish the organization currency. Company stays a text field (suggestions unseen).
+- Own user silhouette and shared icon components replace reference assets. No
+  reference logo, image, icon or font files are added. Font advances may differ.
+- Dropdown border, option geometry and panel heights are measured. Unmeasured
+  horizontal padding, owner row gaps, icon sizes and disabled appearance use the
+  existing scale. Panel placement adapts to the available viewport; standard
+  panels open above when below cannot fit. Shadow blur remains unmeasurable
+  and is omitted. No separate 14px or 15px typography token is introduced.

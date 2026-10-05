@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useState } from "react";
  * authored value with `getComputedStyle` so no value is repeated as a literal here.
  */
 const COLOUR_GROUPS = [
+  { label: "Record forms", tokens: ["--color-form-required", "--color-form-profile"] },
   {
     label: "Page, surfaces and ink",
     tokens: [
@@ -201,6 +202,7 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
+  "--radius-form-input",
   "--radius-sm",
   "--radius-md",
   "--radius-lg",
@@ -351,6 +353,14 @@ const SIZE_GROUPS = [
       "--size-button-gap",
       "--size-button-ellipsis-width",
       "--size-button-ellipsis-height",
+      "--size-form-input-height",
+      "--size-form-required-bar",
+      "--size-form-option-height",
+      "--size-form-list-padding",
+      "--size-form-country-height",
+      "--size-form-owner-height",
+      "--size-form-prefix-width",
+      "--size-form-profile-image",
       "--size-checkbox",
       "--size-checkbox-border",
       "--size-dialog-width",

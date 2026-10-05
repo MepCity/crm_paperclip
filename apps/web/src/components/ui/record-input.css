@@ -1,0 +1,154 @@
+/* Geometry: record-detail.md, Visual layout → Lead Information rows. */
+.record-control {
+  box-sizing: border-box;
+  height: var(--size-form-input-height);
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-form-input);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  padding: 0 var(--space-3);
+  outline: none;
+}
+.record-control:focus,
+.record-control[data-focused],
+.record-control[data-focus-visible] {
+  border-color: var(--color-focus-ring);
+}
+.record-control[aria-required="true"],
+.record-control[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
+.record-control[aria-invalid="true"],
+.record-control[data-invalid] {
+  border-color: var(--color-danger);
+}
+.record-control:disabled,
+.record-control[data-disabled] {
+  background: var(--color-surface-hover);
+  opacity: 0.5;
+}
+.record-control::placeholder {
+  color: var(--color-text-placeholder);
+}
+.record-label {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+}
+.record-textarea {
+  height: auto;
+  min-height: var(--size-form-input-height);
+  padding-block: var(--space-2);
+  resize: both;
+}
+.record-input-frame {
+  display: flex;
+  align-items: center;
+}
+.record-input-frame > .record-control {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  height: 100%;
+}
+.record-input-frame:has(:focus) {
+  border-color: var(--color-focus-ring);
+}
+.record-input-frame:has([aria-invalid="true"]) {
+  border-color: var(--color-danger);
+}
+.record-input-frame:has(:disabled) {
+  background: var(--color-surface-hover);
+  opacity: 0.5;
+}
+.record-prefix {
+  flex: none;
+}
+.record-profile {
+  width: var(--size-form-profile-image);
+  height: var(--size-form-profile-image);
+}
+/* Dropdown panel rows: Country panel, Standard picklist, Owner dropdown. */
+.record-choice-panel {
+  width: var(--trigger-width);
+  max-height: var(--available-height);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  outline: none;
+}
+.record-choice-list {
+  max-height: 100%;
+  overflow: auto;
+  padding-block: var(--size-form-list-padding);
+  outline: none;
+}
+.record-choice-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--size-form-option-height);
+  padding-inline: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  outline: none;
+  cursor: default;
+}
+.record-choice-row[data-selected],
+.record-choice-row[data-focused] {
+  background: var(--color-surface-selected);
+}
+.record-choice-row[data-selected] {
+  font-weight: var(--font-weight-semibold);
+}
+.record-search-panel {
+  height: var(--size-form-country-height);
+}
+.record-owner-panel {
+  height: var(--size-form-owner-height);
+}
+.record-search-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: var(--available-height);
+  min-height: 0;
+  outline: none;
+}
+.record-panel-search {
+  margin: var(--space-3);
+  margin-top: calc(var(--space-3) - 1px);
+}
+.record-search-dialog .record-choice-list {
+  flex: 1;
+  min-height: 0;
+}
+.record-owner-row {
+  height: auto;
+  min-height: var(--size-form-profile-image);
+}
+.record-owner-name {
+  font-weight: var(--font-weight-normal);
+}
+.record-owner-row[data-selected] .record-owner-name {
+  font-weight: var(--font-weight-semibold);
+}
+.record-prefix-select {
+  width: var(--size-form-prefix-width);
+  flex: none;
+}
+.record-prefix-select .record-control {
+  border: 0;
+  height: calc(var(--size-form-input-height) - 2px);
+  padding-left: 0;
+}
+.record-prefix-empty {
+  color: var(--color-text-placeholder);
+}
+
+.record-input-frame:has(.record-prefix-select) {
+  padding-left: 0;
+}

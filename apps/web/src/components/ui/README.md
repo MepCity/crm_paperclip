@@ -254,6 +254,17 @@ what the "no colour constants" rule forbids.
 | `--size-button-gap` | `8.5px` | list-views.md › Create and action buttons › "An 8.5 px gap separates it from the ellipsis button" | from spec |
 | `--size-button-ellipsis-width` | `44px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
 | `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
+| `--color-form-required` | `#ff5d5a` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--color-form-profile` | `#b2b2b2` | record-detail.md › Form surface and Lead Image › portrait ink | from spec |
+| `--radius-form-input` | `5px` | record-detail.md › Lead Information rows › corners | from spec |
+| `--size-form-input-height` | `34px` | record-detail.md › Lead Information rows / Country panel › input height | from spec |
+| `--size-form-required-bar` | `3px` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--size-form-option-height` | `32px` | record-detail.md › Country panel / Standard picklist › row pitch | from spec |
+| `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
+| `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
+| `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-form-prefix-width` | `110px` | record-detail.md › Standard picklist › Salutation x 554–664 | from spec |
+| `--size-form-profile-image` | `48px` | record-detail.md › Lead Image › circular placeholder | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |

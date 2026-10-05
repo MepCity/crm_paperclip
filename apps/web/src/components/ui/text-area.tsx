@@ -1,5 +1,7 @@
 "use client";
 
+import "./record-input.css";
+
 import {
   TextArea as AriaTextArea,
   TextField as AriaTextField,
@@ -12,11 +14,8 @@ import {
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-md font-normal text-text",
-  input:
-    "resize-y border border-border rounded-md px-3 py-2 outline-none bg-surface text-text " +
-    "data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
-    "data-disabled:opacity-50 data-disabled:bg-surface-hover data-invalid:border-danger",
+  label: "record-label text-md",
+  input: "record-control record-textarea",
   description: "text-sm text-text-muted",
   error: "text-sm text-danger",
 } as const;
