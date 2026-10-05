@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import * as core from "@crm/core";
 import { removeMember } from "@crm/core";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
 import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
@@ -85,17 +86,66 @@ describe("operation routes", () => {
   });
   it("has a thin, force-dynamic wrapped route for every operation", () => {
     expect(handlers).toHaveLength(Object.keys(operations).length);
-    for (const op of Object.values(operations)) {
+    for (const [name, op] of Object.entries(operations)) {
       const file = resolve(
         "apps/web/src/app",
         op.path.replace(/^\//, "").replace(/\{([^}]+)\}/g, "[$1]"),
         "route.ts",
       );
       const source = readFileSync(file, "utf8");
-      expect(source).toContain(`export const ${op.method} = apiRoute`);
+      expect(source).toContain(`export const ${op.method} = operationRoute(operations.${name});`);
       expect(source).toContain('export const dynamic = "force-dynamic"');
-      expect(source).toContain("@/lib/api/");
+      expect(source).toContain("@/lib/api/operation-route");
+      expect(source).not.toMatch(/listMembers|getRecordService|@crm\/core/);
       expect(source).not.toMatch(/request\.json|X-CRM-ORG|\.list\(|\.create\(|\.count\(|\/crm\/v/);
+    }
+  });
+  it.each([operations.module, operations.fields, operations.count])(
+    "does not load members for $path",
+    async (op) => {
+      const members = vi.spyOn(core, "listMembers");
+      try {
+        const response = await call(op, a);
+        expect(response.status).toBe(200);
+        expect(members).not.toHaveBeenCalled();
+      } finally {
+        members.mockRestore();
+      }
+    },
+  );
+  it.each([operations.bulk, operations.users, operations.record])(
+    "loads members once for $path",
+    async (op) => {
+      const record = (
+        await getRecordService(a.ctx).list("Leads", {
+          viewId: "all-leads",
+          page: 1,
+          perPage: 20,
+        })
+      ).records[0];
+      if (!record) throw new Error("Missing fixture record");
+      const members = vi.spyOn(core, "listMembers");
+      try {
+        const response = await call(op, a, { recordId: record.id });
+        expect(response.status).toBe(200);
+        expect(members).toHaveBeenCalledExactlyOnceWith(a.ctx);
+      } finally {
+        members.mockRestore();
+      }
+    },
+  );
+  it("does not load members for an empty bulk page or a missing record", async () => {
+    const members = vi.spyOn(core, "listMembers");
+    try {
+      const empty = await call(operations.bulk, a, {
+        body: { search: "No_Record_Can_Match_This" },
+      });
+      expect(empty.status).toBe(204);
+      expect(await empty.text()).toBe("");
+      expect((await call(operations.record, a)).status).toBe(404);
+      expect(members).not.toHaveBeenCalled();
+    } finally {
+      members.mockRestore();
     }
   });
   it("checks Owner against actual tenant membership on create and update routes", async () => {

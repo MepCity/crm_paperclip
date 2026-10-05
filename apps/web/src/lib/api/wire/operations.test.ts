@@ -25,7 +25,7 @@ beforeEach(() => {
       },
       { now: () => new Date("2026-10-04T12:00:00.000Z") },
     ),
-    members: [{ userId: "wire-user", name: "Wire User", email: "wire@example.test" }],
+    members: async () => [{ userId: "wire-user", name: "Wire User", email: "wire@example.test" }],
   };
 });
 
@@ -255,7 +255,7 @@ describe("wire operations", () => {
       status: 204,
       body: null,
     });
-    expect(await operations.users.run({ ...deps, members: [] }, input())).toEqual({
+    expect(await operations.users.run({ ...deps, members: async () => [] }, input())).toEqual({
       status: 204,
       body: null,
     });
