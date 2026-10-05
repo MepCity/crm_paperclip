@@ -18,7 +18,7 @@ test("a new user creates an organization and returns to it from home", async ({ 
   await expectNoA11yViolations(page);
 
   await page.goto("/");
-  await expect(page).toHaveURL(`/o/${organization.slug}`);
+  await expect(page).toHaveURL(`/crm/${organization.slug}`);
   await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
 });
 
@@ -53,11 +53,11 @@ test("a member of another organization sees the same not-found page", async ({ p
   const other = await otherContext.newPage();
   try {
     await signUpNewUser(other);
-    await other.goto(`/o/${organization.slug}`);
+    await other.goto(`/crm/${organization.slug}`);
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     await expect(other.getByText("The page you are looking for does not exist.")).toBeVisible();
 
-    await other.goto("/o/missing-organization");
+    await other.goto("/crm/missing-organization");
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     await expect(other.getByText("The page you are looking for does not exist.")).toBeVisible();
   } finally {

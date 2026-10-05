@@ -37,7 +37,7 @@ export function OrganizationSwitcher({
         selectionMode="single"
         selectedKeys={[currentSlug]}
         onAction={(key) =>
-          router.push(key === ":create-organization" ? "/orgs/new" : `/o/${String(key)}`)
+          router.push(key === ":create-organization" ? "/orgs/new" : `/crm/${String(key)}`)
         }
       >
         {organizations.map((org) => (

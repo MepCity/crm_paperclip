@@ -23,6 +23,7 @@ export interface SelectUserDialogProps {
   selectedUserLabel: string;
   selectColumnLabel: string;
   columnUserName: string;
+  columnAvatarLabel: string;
   columnRole: string;
   columnEmail: string;
   columnProfile: string;
@@ -47,6 +48,7 @@ export function SelectUserDialog({
   selectedUserLabel,
   selectColumnLabel,
   columnUserName,
+  columnAvatarLabel,
   columnRole,
   columnEmail,
   columnProfile,
@@ -104,10 +106,8 @@ export function SelectUserDialog({
         </div>
         <div className="select-user-summary" aria-live="polite">
           <span className="select-user-summary-label">{selectedUserLabel}</span>
-          <span className="select-user-summary-name-wrap">
-            <UserAvatarPlaceholder />
-            <span className="select-user-summary-name">{summaryUser?.name ?? ""}</span>
-          </span>
+          <UserAvatarPlaceholder />
+          <span className="select-user-summary-name">{summaryUser?.name ?? ""}</span>
         </div>
       </div>
 
@@ -133,7 +133,10 @@ export function SelectUserDialog({
                   <th scope="col" className="select-user-th-radio">
                     <span className="sr-only">{selectColumnLabel}</span>
                   </th>
-                  <th scope="col" colSpan={2} className="select-user-th-name">
+                  <th scope="col" className="select-user-th-avatar">
+                    <span className="sr-only">{columnAvatarLabel}</span>
+                  </th>
+                  <th scope="col" className="select-user-th-name">
                     {columnUserName}
                   </th>
                   <th scope="col">{columnRole}</th>
@@ -163,10 +166,20 @@ export function SelectUserDialog({
       </div>
 
       <div className="select-user-footer">
-        <Button variant="secondary" size="toolbar" onPress={onCancel}>
+        <Button
+          variant="secondary"
+          size="formAction"
+          className="select-user-footer-action"
+          onPress={onCancel}
+        >
           {cancelLabel}
         </Button>
-        <Button size="toolbar" isDisabled={!selectionChanged} onPress={() => onDone(draftId)}>
+        <Button
+          size="formAction"
+          className="select-user-footer-action"
+          isDisabled={!selectionChanged}
+          onPress={() => onDone(draftId)}
+        >
           {doneLabel}
         </Button>
       </div>

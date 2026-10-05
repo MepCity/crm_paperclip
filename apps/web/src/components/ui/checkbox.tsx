@@ -20,7 +20,7 @@ const styles = {
     "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
   buttonFirstLine:
-    "flex w-full min-w-0 cursor-default items-start gap-(--size-list-filter-label-gap) rounded-sm outline-none " +
+    "flex w-full min-w-0 cursor-default items-start gap-(--size-checkbox-label-gap) rounded-sm outline-none " +
     "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
   box: "flex shrink-0 items-center justify-center rounded-sm bg-surface",
@@ -37,7 +37,7 @@ const styles = {
   boxChecked: "bg-primary",
   check: "h-3 w-3 text-primary-text",
   label: "text-sm text-text",
-  labelFirstLine: "min-w-0 text-sm leading-(--size-list-filter-row-line)! text-text",
+  labelFirstLine: "min-w-0 text-md font-normal leading-(--size-checkbox-label-line) text-text",
   description: "text-sm text-text-muted",
   error: "text-sm text-danger",
 } as const;

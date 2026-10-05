@@ -37,6 +37,7 @@ const labels = {
   selectedUserLabel: "Selected User:",
   selectColumnLabel: "Select",
   columnUserName: "User Name",
+  columnAvatarLabel: "Avatar",
   columnRole: "Role",
   columnEmail: "Email",
   columnProfile: "Profile",

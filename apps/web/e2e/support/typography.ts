@@ -1,7 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /** Computed value of a token applied to a temporary element. */
-export async function tokenValue(page: Page, property: "font-size" | "font-weight", token: string) {
+export async function tokenValue(
+  page: Page,
+  property: "font-size" | "font-weight" | "line-height",
+  token: string,
+) {
   return page.evaluate(
     ({ property, token }) => {
       const probe = document.createElement("span");

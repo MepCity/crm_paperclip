@@ -222,12 +222,20 @@
   --size-list-filter-search-icon: 13.5px;
   --size-list-filter-search-icon-inset: 11.5px;
   --size-list-filter-search-padding: 31px;
+  --size-list-filter-search-width: 167px;
+  --size-list-filter-search-end-inset: 15px;
+  --size-list-filter-title-inset-top: 20.5px;
+  --size-list-filter-title-line: 13px;
+  --size-list-filter-group-heading-line: 20px;
+  --size-list-filter-heading-to-search: 19.5px;
+  --size-list-filter-search-to-group: 18px;
+  --size-list-filter-group-to-row: 7px;
+  --size-list-filter-group-gap: 16px;
   --size-list-filter-row-height: 30px;
   --size-list-filter-row-padding: 6px;
-  --size-list-filter-row-line: 16px;
-  --size-list-filter-label-gap: 8.5px;
   --size-list-filter-chevron-width: 8px;
   --size-list-filter-chevron-height: 4.5px;
+  --size-list-filter-chevron-offset: 1.25px;
   --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
@@ -295,6 +303,8 @@
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
+  --size-checkbox-label-gap: 8.5px;
+  --size-checkbox-label-line: 16px;
 
   /* Manage Columns dialog */
   --size-dialog-width: 400px;
@@ -324,15 +334,20 @@
   --size-popover-sort-button-gap: 8px;
 
   /* Select User dialog — record-detail.md › Layout › Visual layout › Select User dialog */
+  --size-select-user-panel-max-height: 100dvh;
+  --size-select-user-summary-text-offset: 20px;
+  --size-select-user-summary-label-margin-top: 5px;
   --size-select-user-dialog-width: 882px;
   --radius-select-user-dialog-bottom: 12px;
   --size-select-user-dialog-inset: 31px;
   --size-select-user-title-cap-top: 29px;
+  --size-select-user-title-cap-inset: 3px;
   --size-select-user-search-top: 64px;
   --size-select-user-search-width: 300px;
   --size-select-user-search-height: 34px;
   --size-select-user-table-top: 119px;
   --size-select-user-table-header-band: 32px;
+  --size-select-user-table-header-cap-adjust: 2px;
   --size-select-user-table-header-rule: 2px;
   --size-select-user-table-row-height: 38px;
   --size-select-user-table-row-divider: 1px;
@@ -354,6 +369,7 @@
   --color-select-user-table-border: #d9e0eb;
   --color-select-user-row-divider: #eef1f7;
   --size-select-user-table-radio-inset: 20px;
+  --size-select-user-table-radio-row-inset: 13px;
   --size-select-user-table-radio-column: 36px;
   --size-select-user-table-avatar-column: 60px;
   --size-select-user-table-name-column: 141.5px;
