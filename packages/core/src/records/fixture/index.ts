@@ -10,6 +10,7 @@ import { leadsViews } from "./views";
 interface FixtureStore {
   records: Map<string, RecordData>;
   nextId: bigint;
+  memberIds: Set<string>;
 }
 const storeKey = Symbol.for("mepcity.records.fixture.stores");
 const runtime = globalThis as typeof globalThis & {
@@ -41,6 +42,8 @@ const normalizeInput = (input: RecordInput): RecordInput =>
 export interface FixtureRecordServiceOptions {
   /** Clock for seed times, write timestamps and date tokens. Defaults to the system clock. */
   now?: () => Date;
+  /** Live membership source; defaults to authorized contexts opened in this fixture org. */
+  listMemberIds?: () => Promise<readonly string[]>;
 }
 
 export function createFixtureRecordService(
@@ -67,10 +70,18 @@ export function createFixtureRecordService(
         ]),
       ),
       nextId: 200000000000000000n,
+      memberIds: new Set(),
     };
     stores.set(ctx.orgId, store);
   }
   const state = store;
+  state.memberIds.add(ctx.userId);
+  const validateOwner = async (input: RecordInput) => {
+    if (!Object.hasOwn(input, "Owner")) return;
+    const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
+    if (typeof input.Owner !== "string" || !members.includes(input.Owner))
+      throw new ValidationError({ Owner: ["Choose a member of this organization."] });
+  };
   const moduleExists = (module: string) => {
     if (module !== "Leads") throw new NotFoundError("Module not found.");
   };
@@ -154,6 +165,7 @@ export function createFixtureRecordService(
       moduleExists(module);
       const normalized = normalizeInput(input);
       validateInput(normalized, false);
+      await validateOwner(normalized);
       const id = String(state.nextId++);
       const fields: Record<string, FieldValue> = Object.fromEntries(
         leadsMetadata.fields.map((field) => [field.apiName, null]),
@@ -161,7 +173,7 @@ export function createFixtureRecordService(
       const stamp = clock().toISOString();
       Object.assign(fields, normalized, {
         id,
-        Owner: ctx.userId,
+        Owner: normalized.Owner ?? ctx.userId,
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
         Created_Time: stamp,
@@ -175,9 +187,12 @@ export function createFixtureRecordService(
       return copy(record);
     },
     async update(module, id, input) {
-      const record = recordFor(module, id);
+      recordFor(module, id);
       const normalized = normalizeInput(input);
       validateInput(normalized, true);
+      await validateOwner(normalized);
+      // Membership resolution may yield; preserve intervening partial writes/deletes.
+      const record = recordFor(module, id);
       const fields: Record<string, FieldValue> = {
         ...record.fields,
         ...normalized,

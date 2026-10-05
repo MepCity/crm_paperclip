@@ -87,6 +87,8 @@ export function encodeInput(
   for (const [name, value] of Object.entries(input)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
     if (!field) invalid(name, "Unknown field.");
+    if (field.dataType === "ownerlookup" && value !== null && typeof value !== "string")
+      invalid(name, "Expected a user ID.");
     result[name] = encodeValue(field, value, []);
   }
   return result;
@@ -114,6 +116,12 @@ export function encodeField(field: FieldDefinition): WireField {
     system_mandatory: field.required,
     read_only: field.readOnly,
     unique: field.unique ? { enforced: true } : {},
+    view_type: {
+      view: field.views.view,
+      create: field.views.create,
+      edit: field.views.edit,
+      quick_create: field.views.quickCreate,
+    },
     ...(field.maxLength === undefined ? {} : { length: field.maxLength }),
     ...(field.picklist === undefined
       ? {}
@@ -136,6 +144,12 @@ export function decodeField(field: WireField): FieldDefinition {
     required: field.system_mandatory,
     readOnly: field.read_only,
     unique: field.unique.enforced === true,
+    views: {
+      view: field.view_type.view,
+      create: field.view_type.create,
+      edit: field.view_type.edit,
+      quickCreate: field.view_type.quick_create,
+    },
     ...(field.length === undefined ? {} : { maxLength: field.length }),
     ...(field.pick_list_values === undefined
       ? {}
@@ -153,6 +167,7 @@ export function encodeModule(metadata: ModuleMetadata): WireModule {
     api_name: metadata.apiName,
     singular_label: metadata.singularLabel,
     plural_label: metadata.pluralLabel,
+    business_card_fields: metadata.businessCardFields.map((api_name) => ({ api_name })),
   };
 }
 export function encodeLayout(metadata: ModuleMetadata): WireLayout {
@@ -160,6 +175,7 @@ export function encodeLayout(metadata: ModuleMetadata): WireLayout {
     sections: metadata.layout.map((section) => ({
       display_label: section.label,
       column_count: section.columnCount,
+      columns: section.columns.map((column) => [...column]),
       fields: section.fields.map((name) => {
         const field = metadata.fields.find((candidate) => candidate.apiName === name);
         if (!field) throw new Error(`Layout field is absent from metadata: ${name}`);
@@ -177,10 +193,12 @@ export function decodeModule(
     apiName: module.api_name,
     singularLabel: module.singular_label,
     pluralLabel: module.plural_label,
+    businessCardFields: module.business_card_fields.map((field) => field.api_name),
     fields: fields.map(decodeField),
     layout: layout.sections.map((section) => ({
       label: section.display_label,
       columnCount: section.column_count,
+      columns: section.columns.map((column) => [...column]),
       fields: section.fields.map((field) => field.api_name),
     })),
   };

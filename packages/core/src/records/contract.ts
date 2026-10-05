@@ -42,7 +42,15 @@ export interface PicklistOption {
   storedValue: string;
 }
 
+export interface FieldViewFlags {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  quickCreate: boolean;
+}
+
 export interface FieldDefinition {
+  views: FieldViewFlags;
   apiName: string;
   label: string;
   dataType: FieldDataType;
@@ -57,6 +65,7 @@ export interface FieldDefinition {
 export interface LayoutSection {
   label: string;
   columnCount: number;
+  columns: readonly (readonly string[])[];
   fields: readonly string[];
 }
 
@@ -64,6 +73,7 @@ export interface ModuleMetadata {
   apiName: ModuleApiName;
   singularLabel: string;
   pluralLabel: string;
+  businessCardFields: readonly string[];
   fields: readonly FieldDefinition[];
   layout: readonly LayoutSection[];
 }

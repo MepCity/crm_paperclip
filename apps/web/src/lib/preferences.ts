@@ -68,6 +68,8 @@ function safeSetItem(storageKey: string, value: PreferenceValue): void {
 }
 
 const memoryValues = new Map<string, PreferenceValue>();
+/** Keys read from storage with no valid persisted value (per-consumer defaults apply). */
+const storageReadWithoutValue = new Set<string>();
 const listeners = new Map<string, Set<() => void>>();
 
 function subscribe(storageKey: string, listener: () => void): () => void {
@@ -91,15 +93,6 @@ function notify(storageKey: string): void {
   }
 }
 
-function loadPersistedValue<T extends PreferenceValue>(storageKey: string, defaultValue: T): T {
-  const raw = safeGetItem(storageKey);
-  if (raw === null) {
-    return defaultValue;
-  }
-  const parsed = parseStoredValue(raw, defaultValue);
-  return parsed ?? defaultValue;
-}
-
 function readSnapshot<T extends PreferenceValue>(
   storageKey: string,
   defaultValue: T,
@@ -112,10 +105,22 @@ function readSnapshot<T extends PreferenceValue>(
     }
     return defaultValue;
   }
+  if (storageReadWithoutValue.has(storageKey)) {
+    return defaultValue;
+  }
   if (canPersist) {
-    const loaded = loadPersistedValue(storageKey, defaultValue);
-    memoryValues.set(storageKey, loaded);
-    return loaded;
+    const raw = safeGetItem(storageKey);
+    if (raw === null) {
+      storageReadWithoutValue.add(storageKey);
+      return defaultValue;
+    }
+    const parsed = parseStoredValue(raw, defaultValue);
+    if (parsed === null) {
+      storageReadWithoutValue.add(storageKey);
+      return defaultValue;
+    }
+    memoryValues.set(storageKey, parsed);
+    return parsed;
   }
   return defaultValue;
 }
@@ -123,6 +128,7 @@ function readSnapshot<T extends PreferenceValue>(
 /** Clears in-memory preference state between tests. */
 export function resetPreferenceStoreForTests(): void {
   memoryValues.clear();
+  storageReadWithoutValue.clear();
   listeners.clear();
 }
 
@@ -150,14 +156,20 @@ export function usePreference<T extends PreferenceValue>(
   const storageKey = buildStorageKey(scope, key);
   const canPersist = scope !== null;
 
+  const subscribeToStore = useCallback(
+    (onStoreChange: () => void) => subscribe(storageKey, onStoreChange),
+    [storageKey],
+  );
+
   const value = useSyncExternalStore(
-    (onStoreChange) => subscribe(storageKey, onStoreChange),
+    subscribeToStore,
     () => readSnapshot(storageKey, defaultValue, canPersist),
     () => defaultValue,
   );
 
   const setValue = useCallback(
     (next: T) => {
+      storageReadWithoutValue.delete(storageKey);
       memoryValues.set(storageKey, next);
       if (canPersist) {
         safeSetItem(storageKey, next);
