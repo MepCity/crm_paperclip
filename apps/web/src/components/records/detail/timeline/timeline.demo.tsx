@@ -1,8 +1,11 @@
 "use client";
 
+import { DEFAULT_FORMAT } from "@/lib/locale";
 import { TimelineHistory } from "./timeline-history";
 import { TimelineSurface } from "./timeline-surface";
 import type { TimelineEvent, TimelineFilterOption } from "./types";
+
+const IST_FORMAT = { locale: "en-US", timeZone: "Europe/Istanbul" };
 
 const moduleOptions: TimelineFilterOption[] = [
   { id: "notes", label: "Notes" },
@@ -60,6 +63,13 @@ const events: TimelineEvent[] = [
     title: "Task completed",
     actorName: "Sample Reviewer",
   },
+  {
+    id: "e6",
+    at: "2026-10-04T22:30:00.000Z",
+    kind: "task",
+    title: "Late night update",
+    actorName: "Sample Owner",
+  },
 ];
 
 const subtabs = [{ id: "history", label: "History" }];
@@ -87,6 +97,7 @@ export default function TimelineHistoryDemo() {
             heading="Timeline History"
             filterButtonLabel="History filter"
             events={events}
+            format={DEFAULT_FORMAT}
             initialFilterExpanded={false}
             {...filterLabels}
           />
@@ -98,6 +109,7 @@ export default function TimelineHistoryDemo() {
             heading="Timeline History"
             filterButtonLabel="History filter"
             events={events}
+            format={IST_FORMAT}
             initialFilterExpanded={true}
             {...filterLabels}
           />

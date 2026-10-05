@@ -52,6 +52,24 @@ function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function FieldEdit(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 12.5 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M1.5 10.5h1.2l6.6-6.6-1.2-1.2-6.6 6.6v1.2zM9.9 3.3l1.2-1.2c.3-.3.3-.8 0-1.1l-.9-.9c-.3-.3-.8-.3-1.1 0l-1.2 1.2 1.2 1.2z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 function FilterSearch(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -74,6 +92,7 @@ export const Icons = {
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
+  fieldEdit: FieldEdit,
   building: Building2,
   check: Check,
   chevronUp: ChevronUp,
@@ -99,7 +118,7 @@ export const Icons = {
   list: ListIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
-  timelineImage: TimelineImageIcon,
+  timelinePencil: TimelinePencilIcon,
   timelineGeneric: TimelineGenericIcon,
 };
 
@@ -158,12 +177,11 @@ function EllipsisIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function TimelineImageIcon(props: SVGProps<SVGSVGElement>) {
+function TimelinePencilIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <ListGlyph {...props}>
-      <rect x="5" y="6" width="14" height="12" rx="1.5" />
-      <path d="m5 15 4-4 3 3 2-2 5 5" />
-      <circle cx="9" cy="10" r="1.25" fill="currentColor" stroke="none" />
+      <path d="m14.5 5.5-2 2 4 4 2-2-4-4Z" />
+      <path d="M7 13 5 19l6-2 7.5-7.5-4-4L7 13Z" />
     </ListGlyph>
   );
 }

@@ -1,4 +1,4 @@
-import { expectNoA11yViolations } from "./support/a11y";
+import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
@@ -16,10 +16,10 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await page.goto("/dev/ui");
   await expect(page).toHaveTitle(/Component Gallery/);
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
 
   // Each demo is a labelled region so screens and tests can address it.
-  const formRegion = page.getByRole("region", { name: "form" });
+  const formRegion = page.getByRole("region", { name: "form", exact: true });
   await expect(formRegion).toBeVisible();
 
   const form = formRegion.getByRole("form", { name: "Demo sign-in form" });
@@ -137,7 +137,7 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   // already visible above; requiring the first one to still be mounted
   // afterwards races that lifetime and fails when the scan is slow.
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   // A pointer resting on the toast pauses its timer. Park it clear of the
   // region so auto-dismiss runs from whatever time is left.
   await page.mouse.move(0, 0);
@@ -398,7 +398,7 @@ test("type roles load one local variable font and preserve measured advances", a
   await expect(tokens.locator('[data-token="--text-2xs"]')).toHaveCSS("font-size", "8.5px");
   await expect(tokens.locator('[data-token="--text-xs"]')).toHaveCSS("font-size", "11.5px");
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   expect(fontResponses).toHaveLength(1);
   expect(fontResponses[0]?.status).toBe(200);
   const origin = new URL(page.url()).origin;

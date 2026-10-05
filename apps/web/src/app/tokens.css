@@ -101,6 +101,13 @@
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
   --color-detail-timeline-filter-surface: #f9faff;
+  --color-detail-timeline-muted-border: #d6d6e3;
+  --color-detail-timeline-badge-text: #434d5f;
+  --color-detail-timeline-caret-placeholder: #a0a8b8;
+  --color-detail-timeline-caret-value: #838892;
+  --color-form-portrait: #b2b2b2;
+  /* MEP-172 interim: Address field group border on create/edit form. */
+  --color-form-field-group-border: #797883;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
@@ -131,6 +138,7 @@
   --radius-lg: 0.5rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
+  --radius-form-control: 5px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -258,6 +266,24 @@
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
 
+  /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
+  --color-detail-divider: #d6d6e3;
+  --size-detail-card-width: 906px;
+  --size-detail-card-padding: 20px;
+  --size-detail-business-label-width: 153.5px;
+  --size-detail-business-label-value-gap: 45.5px;
+  --size-detail-business-row-pitch: 44.5px;
+  --size-detail-details-label-width: 129px;
+  --size-detail-details-label-value-gap: 36.5px;
+  --size-detail-details-row-pitch: 44px;
+  --size-detail-column-width: 433.5px;
+  --size-detail-business-min-height: 287px;
+  --size-detail-business-padding-block-start: 42.75px;
+  --size-detail-business-padding-block-end: 21.75px;
+  --size-detail-details-toggle-padding-block: 12.75px;
+  --size-detail-details-sections-margin-top: 39px;
+  --size-detail-section-title-margin-block: 16px 8px;
+
   /* View edit form */
   --size-list-view-name-width: 600px;
   --size-list-column-lane-width: 280px;
@@ -304,31 +330,79 @@
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;
-  --size-detail-timeline-subtab-inset: 26px;
-  --size-detail-timeline-subtab-gap: 24px;
-  --size-detail-timeline-subtab-padding-block: 12px;
-  --size-detail-timeline-history-padding-block: 20px;
+  --size-detail-timeline-subtab-row-height: 38.5px;
+  --size-detail-timeline-subtab-inset: 30px;
+  --size-detail-timeline-subtab-padding-inline: 6px;
+  --size-detail-timeline-subtab-underline-height: 3px;
+  --size-detail-timeline-history-padding-top: 25px;
   --size-detail-timeline-history-padding-inline: 26px;
   --size-detail-timeline-filter-button-width: 42px;
-  --size-detail-timeline-filter-button-height: 32px;
-  --size-detail-timeline-filter-button-gap: 12px;
-  --size-detail-timeline-filter-panel-gap: 12px;
-  --size-detail-timeline-filter-panel-padding: 16px;
-  --size-detail-timeline-filter-row-gap: 12px;
+  --size-detail-timeline-filter-button-height: 30px;
+  --size-detail-timeline-filter-button-gap: 11px;
+  --size-detail-timeline-filter-panel-gap: 15px;
+  --size-detail-timeline-filter-panel-min-height: 156px;
+  --size-detail-timeline-filter-panel-padding: 20px;
+  --size-detail-timeline-filter-panel-padding-bottom: 16px;
+  --size-detail-timeline-filter-field-label-offset: 19px;
+  --size-detail-timeline-filter-field-row2-label-offset: 18px;
+  --size-detail-timeline-filter-selector-top: 38px;
+  --size-detail-timeline-filter-selector-row-gap: 8px;
+  --size-detail-timeline-filter-row2-margin-top: 0px;
   --size-detail-timeline-filter-selector-width: 250px;
   --size-detail-timeline-filter-selector-height: 34px;
   --size-detail-timeline-filter-selector-padding-inline: 12px;
+  --size-detail-timeline-filter-caret-width: 9px;
+  --size-detail-timeline-filter-caret-height: 5px;
+  --size-detail-timeline-filter-caret-inset: 12px;
+  --size-detail-timeline-apply-height: 32px;
   --size-detail-timeline-apply-padding-inline: 16px;
-  --size-detail-timeline-track-gap: 24px;
-  --size-detail-timeline-day-gap: 16px;
-  --size-detail-timeline-date-badge-gap: 8px;
-  --size-detail-timeline-date-badge-padding-block: 4px;
-  --size-detail-timeline-date-badge-padding-inline: 12px;
-  --size-detail-timeline-time-column: 48px;
-  --size-detail-timeline-track-column: 36px;
-  --size-detail-timeline-event-column-gap: 8px;
+  --size-detail-timeline-apply-gap: 8px;
+  --size-detail-timeline-track-offset: 25px;
+  --size-detail-timeline-date-badge-width: 130px;
+  --size-detail-timeline-date-badge-height: 27px;
+  --size-detail-timeline-date-badge-offset-inline: 25px;
+  --size-detail-timeline-connector-height: 25px;
+  --size-detail-timeline-track-center: 125.5px;
+  --size-detail-timeline-time-column-end: 98.5px;
   --size-detail-timeline-event-icon: 36px;
-  --size-detail-timeline-event-time-offset: 8px;
+  --size-detail-timeline-event-icon-offset-inline: 108px;
+  --size-detail-timeline-event-column-gap: 17.5px;
+  --size-detail-timeline-event-title-offset-inline: 161.5px;
+  --size-detail-timeline-event-line-height: 18px;
+  --size-detail-timeline-day-gap: 16px;
   --size-detail-timeline-event-body-gap: 16px;
-  --size-detail-timeline-byline-gap: 4px;
+
+  /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-strip-height: 57px;
+  --size-form-strip-padding-end: 8px;
+  --size-form-card-inset: 12px;
+  /* MEP-172 interim vertical rhythm on create/edit form. */
+  --size-form-first-title-center: 30px;
+  --size-form-first-content-top: 63px;
+  --size-form-section-gap: 55.5px;
+  --size-form-section-title-gap: 28px;
+  --size-form-section-title-box-trim: 4px;
+  --size-form-portrait: 48px;
+  --size-form-label-column-left: 172px;
+  --size-form-label-column-right: 221.5px;
+  --size-form-label-gap: 37px;
+  --size-form-input-left-width: 320px;
+  --size-form-input-right-width: 314.5px;
+  --size-form-column-gap: 258.5px;
+  --size-form-label-line-height: 17.5px;
+  --size-form-label-padding-top: 8px;
+  --size-form-input-group-width: 303px;
+  --size-form-input-height: 34px;
+  --size-form-row-pitch: 54px;
+  --size-form-control-padding-inline: 10px;
+  --size-form-control-padding-block: 8px;
+  --size-form-action-height: 32px;
+  --size-form-action-gap: 10px;
+  --size-form-action-padding-inline: 14.5px;
+  --size-form-field-group-padding-end: 16px;
+  --size-form-field-group-body-top: 31px;
+  --size-form-field-group-legend-inset: 18.5px;
+  --size-form-field-group-legend-padding: 12.5px;
+  /* Description textarea height is not measurable in the capture; demo placeholder only. */
+  --size-form-description-height: 80px;
 }

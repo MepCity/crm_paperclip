@@ -1,5 +1,6 @@
 "use client";
 
+import type { FormatOptions } from "@crm/core/format";
 import { useState } from "react";
 import { Icons } from "@/components/ui/icon";
 import { TimelineEventTrack } from "./timeline-event-track";
@@ -14,6 +15,7 @@ export interface TimelineHistoryProps extends TimelineHistoryFilterProps {
   heading: string;
   filterButtonLabel: string;
   events: readonly TimelineEvent[];
+  format: FormatOptions;
   initialFilterExpanded?: boolean;
 }
 
@@ -21,6 +23,7 @@ export function TimelineHistory({
   heading,
   filterButtonLabel,
   events,
+  format,
   initialFilterExpanded = false,
   ...filterProps
 }: TimelineHistoryProps) {
@@ -41,7 +44,7 @@ export function TimelineHistory({
         </button>
       </div>
       {filterExpanded && <TimelineHistoryFilterPanel {...filterProps} />}
-      <TimelineEventTrack events={events} />
+      <TimelineEventTrack events={events} format={format} />
     </div>
   );
 }

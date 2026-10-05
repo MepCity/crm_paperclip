@@ -123,8 +123,14 @@ what the "no colour constants" rule forbids.
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
-| `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
-| `--color-detail-timeline-filter-surface` | `#f9faff` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "fill `#F9FAFF`" | from spec |
+| `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › All Modules and All Sources placeholders `#8B9AB9` | from spec |
+| `--color-detail-timeline-filter-surface` | `#f9faff` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "fill `#F9FAFF`"; Event track › date badge and icon fill | from spec |
+| `--color-detail-timeline-muted-border` | `#d6d6e3` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge border, connector, icon border | from spec |
+| `--color-detail-timeline-badge-text` | `#434d5f` | record-detail.md › Layout › Visual layout › Timeline › Event track › "badge date ink `#434D5F`" | from spec |
+| `--color-detail-timeline-caret-placeholder` | `#a0a8b8` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Modules/Sources caret | from spec |
+| `--color-detail-timeline-caret-value` | `#838892` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Users/Time caret | from spec |
+| `--color-form-portrait` | `#b2b2b2` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "drawn in gray `#B2B2B2`" | from spec |
+| `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
 | `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
@@ -144,6 +150,7 @@ what the "no colour constants" rule forbids.
 | `--radius-lg` | `0.5rem` (8px) | list-views.md › View edit form › "8 px corners" | from spec |
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
+| `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
@@ -246,6 +253,22 @@ what the "no colour constants" rule forbids.
 | `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
+| `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
+| `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
+| `--size-detail-business-label-value-gap` | `45.5px` | record-detail.md › Business card › values start x 771, labels end x 725.5 | from spec |
+| `--size-detail-business-row-pitch` | `44.5px` | record-detail.md › Business card › "44.5 px average row pitch" | from spec |
+| `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
+| `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
+| `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
+| `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
+| `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
+| `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
+| `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
+| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
+| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -278,34 +301,78 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
-| `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" (906 px wide) | from spec |
-| `--size-detail-timeline-subtab-inset` | `26px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › History underline starts x 583; surface starts x 552 | from spec |
-| `--size-detail-timeline-subtab-gap` | `24px` | record-detail.md › Layout › Visual layout › Timeline › subtabs spacing (derived from measured underline band) | from spec |
-| `--size-detail-timeline-subtab-padding-block` | `12px` | record-detail.md › Layout › Visual layout › Timeline › subtab line y 222 relative to surface y 185 | from spec |
-| `--size-detail-timeline-history-padding-block` | `20px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading top ink y 256 relative to surface | from spec |
-| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading starts x 578; surface starts x 552 | from spec |
-| `--size-detail-timeline-filter-button-width` | `42px` | record-detail.md › Layout › Visual layout › Timeline › History controls › filter icon button x 703–745 | from spec |
-| `--size-detail-timeline-filter-button-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "32 px high" | from spec |
-| `--size-detail-timeline-filter-button-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap | from spec |
-| `--size-detail-timeline-filter-panel-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › panel top y 293.5 below filter button | from spec |
-| `--size-detail-timeline-filter-panel-padding` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › inner padding to selectors | from spec |
-| `--size-detail-timeline-filter-row-gap` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › second-row Sources y 400.5 below first row | from spec |
-| `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "each 250 px wide" | from spec |
-| `--size-detail-timeline-filter-selector-height` | `34px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33–34 px high including their 1 px border" | from spec |
-| `--size-detail-timeline-filter-selector-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › selector label inset | from spec |
+| `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
+| `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
+| `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
+| `--size-detail-timeline-subtab-padding-inline` | `6px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "about 6 px past the label ink on each side" | from spec |
+| `--size-detail-timeline-subtab-underline-height` | `3px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "underline is 3 px thick" | from spec |
+| `--size-detail-timeline-history-padding-top` | `25px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "button's top edge is 25 px below the subtab line" | from spec |
+| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading starts x 578 | from spec |
+| `--size-detail-timeline-filter-button-width` | `42px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
+| `--size-detail-timeline-filter-button-height` | `30px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
+| `--size-detail-timeline-filter-button-gap` | `11px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap (measured) | from spec |
+| `--size-detail-timeline-filter-panel-gap` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "15 px below the filter button" | from spec |
+| `--size-detail-timeline-filter-panel-min-height` | `156px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "856 × 156 px" | from spec |
+| `--size-detail-timeline-filter-panel-padding` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › first selector starts 21 px inside panel left edge | from spec |
+| `--size-detail-timeline-filter-panel-padding-bottom` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "bottom edge is 16 px below the row-2 controls" | from spec |
+| `--size-detail-timeline-filter-field-label-offset` | `19px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 label cap top below panel top | from spec |
+| `--size-detail-timeline-filter-field-row2-label-offset` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 label below row-1 selectors | from spec |
+| `--size-detail-timeline-filter-selector-top` | `38px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 selector top below panel top | from spec |
+| `--size-detail-timeline-filter-selector-row-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px gaps" between row-1 selectors | from spec |
+| `--size-detail-timeline-filter-row2-margin-top` | `0px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 block spacing below row-1 selectors (derived from 36 px selector offset) | from spec |
+| `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "250 px wide" | from spec |
+| `--size-detail-timeline-filter-selector-height` | `34px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33–34 px high" | from spec |
+| `--size-detail-timeline-filter-selector-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "text starts 12 px inside the selector" | from spec |
+| `--size-detail-timeline-filter-caret-width` | `9px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "9 px wide" caret | from spec |
+| `--size-detail-timeline-filter-caret-height` | `5px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "5 px high" caret | from spec |
+| `--size-detail-timeline-filter-caret-inset` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › caret right tip 12 px inside selector | from spec |
+| `--size-detail-timeline-apply-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" | from spec |
 | `--size-detail-timeline-apply-padding-inline` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter label band | from spec |
-| `--size-detail-timeline-track-gap` | `24px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge to first event | from spec |
-| `--size-detail-timeline-day-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › day groups | from spec |
-| `--size-detail-timeline-date-badge-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge to connector | from spec |
-| `--size-detail-timeline-date-badge-padding-block` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge y 475–501 | from spec |
-| `--size-detail-timeline-date-badge-padding-inline` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Event track › date badge x 577–707 | from spec |
-| `--size-detail-timeline-time-column` | `48px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time left of connector | from spec |
-| `--size-detail-timeline-track-column` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circular icon" | from spec |
-| `--size-detail-timeline-event-column-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title begins x 712 after connector | from spec |
-| `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circular icon" | from spec |
-| `--size-detail-timeline-event-time-offset` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time vertical alignment to icon | from spec |
-| `--size-detail-timeline-event-body-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch between events | from spec |
-| `--size-detail-timeline-byline-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title to byline | from spec |
+| `--size-detail-timeline-apply-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px right of Sources" | from spec |
+| `--size-detail-timeline-track-offset` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge starts 25 px below filter panel or button | from spec |
+| `--size-detail-timeline-date-badge-width` | `130px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
+| `--size-detail-timeline-date-badge-height` | `27px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
+| `--size-detail-timeline-date-badge-offset-inline` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge x 577; surface x 552 | from spec |
+| `--size-detail-timeline-connector-height` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › connector runs 25 px from badge bottom to icon top | from spec |
+| `--size-detail-timeline-track-center` | `125.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › connector at x 677–678; surface x 552 | from spec |
+| `--size-detail-timeline-time-column-end` | `98.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time ends 9.5 px left of icon at x 660 | from spec |
+| `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circle" | from spec |
+| `--size-detail-timeline-event-icon-offset-inline` | `108px` | record-detail.md › Layout › Visual layout › Timeline › Event track › icon x 660–696; surface x 552 | from spec |
+| `--size-detail-timeline-event-column-gap` | `17.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title x 713.5; icon ends x 696 | from spec |
+| `--size-detail-timeline-event-title-offset-inline` | `161.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title starts x 713.5; surface x 552 | from spec |
+| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title and byline baselines about 18 px apart | from spec |
+| `--size-detail-timeline-day-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › day groups | Interim |
+| `--size-detail-timeline-event-body-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch between events | Interim |
+| `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
+| `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
+| `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
+| `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
+| `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
+| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
+| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
+| `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
+| `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
+| `--size-form-label-gap` | `37px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "37 px before their input" | from spec |
+| `--size-form-input-left-width` | `320px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Left inputs x 553–873 (320 px wide)" | from spec |
+| `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
+| `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
+| `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
+| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
+| `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
+| `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
+| `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
+| `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
+| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
+| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
+| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
+| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
+| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
+| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
 
 ### Typeface
 
@@ -433,11 +500,11 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | Pair | Ratio | Where the reference uses it |
 | --- | --- | --- |
 | `--color-text-placeholder` `#8c91ab` on `--color-bg` `#eef1f9` | 2.75:1 | Top bar/global search › Footprint › "placeholder approx. 14 px regular, `#8C91AB` approx." |
-| `--color-text-placeholder` `#8c91ab` on `--color-surface` | 3.11:1 | The same placeholder token on a panel |
+| `--color-text-placeholder` `#8c91ab` on `--color-surface` | 3.11:1 | Global search placeholder on a panel; record-detail.md › Timeline filter › All Users placeholder |
 | `--color-rail-placeholder` `#7a859b` on `--color-rail-surface` | 3.33:1 | Rail/local Search › Input box › "`#7A859B` approx." |
 | `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface. list-views.md › Text roles measures Lead Name and Email in the body colour even when linked ("rather than the blue action color"), so there is no separate link token |
 | `--color-text-disabled` `#b5b8be` on `--color-surface` | 1.99:1 | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" |
-| `--color-text-empty` `#8b9ab9` on `--color-surface` | 2.83:1 | list-views.md › Empty view › "message in #8B9AB9" |
+| `--color-text-empty` `#8b9ab9` on `--color-surface` | 2.83:1 | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Timeline filter › All Modules and All Sources placeholders |
 | `--color-primary-text` `#ffffff` on `--color-primary-gradient-start` `#5767f6` | 4.49:1 | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top to `#154EC5` at bottom, white `#FFFFFF` label". The darker end of the same gradient passes at 7.17:1 |
 | `--color-primary-text` `#ffffff` on `--color-primary-disabled` `#adb3ee` | 2.01:1 | list-views.md › Sort popover › "flat `#ADB3EE` fill and a white `#FFFFFF` label". Disabled controls are inactive text; the fill stays as measured |
 | `--color-popover-sort-border` `#ced0e1` on `--color-surface` | 1.53:1 | list-views.md › Sort popover › "1 px `#CED0E1` border" |

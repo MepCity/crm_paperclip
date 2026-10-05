@@ -1,12 +1,16 @@
+import { formatDate, formatTime } from "@crm/core/format";
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { TimelineHistory } from "./timeline-history";
 import { TimelineSurface } from "./timeline-surface";
 import type { TimelineEvent, TimelineFilterOption } from "./types";
 
 afterEach(cleanup);
+
+const IST_FORMAT = { locale: "en-US", timeZone: "Europe/Istanbul" };
 
 const moduleOptions: TimelineFilterOption[] = [
   { id: "notes", label: "Notes" },
@@ -39,16 +43,28 @@ const baseEvents: TimelineEvent[] = [
     title: "Prior day",
     actorName: "Actor B",
   },
+  {
+    id: "istanbul-midnight",
+    at: "2026-10-04T22:30:00.000Z",
+    kind: "task",
+    title: "Istanbul midnight edge",
+    actorName: "Actor A",
+  },
 ];
 
-function renderHistory(initialFilterExpanded = false) {
+function renderHistory(
+  initialFilterExpanded = false,
+  format = DEFAULT_FORMAT,
+  events: TimelineEvent[] = baseEvents,
+) {
   const onApply = vi.fn();
   render(
     <TimelineSurface subtabs={[{ id: "history", label: "History" }]} activeSubtabId="history">
       <TimelineHistory
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={baseEvents}
+        events={events}
+        format={format}
         initialFilterExpanded={initialFilterExpanded}
         modulesLabel="Modules"
         modulesAllLabel="All Modules"
@@ -108,16 +124,62 @@ test("filter selectors start with default labels and Apply stays disabled until 
   });
 });
 
-test("groups events by day in descending day order with newest first within a day", () => {
+test("module checkbox selection enables Apply with moduleIds", async () => {
+  const user = userEvent.setup();
+  const { onApply } = renderHistory(true);
+  const apply = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  await user.click(screen.getByRole("button", { name: "Modules" }));
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  expect(apply.disabled).toBe(false);
+  await user.click(apply);
+  expect(onApply).toHaveBeenCalledWith({
+    moduleIds: ["notes"],
+    userId: null,
+    time: "any",
+    sourceIds: [],
+  });
+});
+
+test("groups events by formatted day with counts per section", () => {
   renderHistory();
+  const sections = document.querySelectorAll(".timeline-event-day");
+  expect(sections.length).toBe(3);
+  expect(sections[0]?.querySelectorAll(".timeline-event-title").length).toBe(1);
+  expect(sections[1]?.querySelectorAll(".timeline-event-title").length).toBe(2);
+  expect(sections[2]?.querySelectorAll(".timeline-event-title").length).toBe(1);
   const titles = [...document.querySelectorAll(".timeline-event-title")].map(
     (node) => node.textContent,
   );
-  expect(titles).toEqual(["Late event", "Early event", "Prior day"]);
+  expect(titles).toEqual(["Istanbul midnight edge", "Late event", "Early event", "Prior day"]);
 });
 
-test("unknown event kind still renders the generic icon track", () => {
+test("unknown event kind renders the generic icon marker", () => {
   renderHistory();
   expect(screen.getByText("Prior day")).toBeTruthy();
-  expect(document.querySelector("[data-timeline-event-track] svg")).toBeTruthy();
+  expect(document.querySelector('[data-kind-icon="generic"]')).toBeTruthy();
+  expect(document.querySelector('[data-kind-icon="pencil"]')).toBeNull();
+});
+
+test("formats istanbul midnight event on the next calendar day", () => {
+  renderHistory(false, IST_FORMAT);
+  const sections = [...document.querySelectorAll(".timeline-event-day")];
+  const oct5Label = formatDate("2026-10-04T22:30:00.000Z", IST_FORMAT);
+  const oct5Section = sections.find((section) =>
+    section.querySelector(".timeline-event-date-badge")?.textContent?.includes(oct5Label),
+  );
+  expect(oct5Section).toBeTruthy();
+  expect(
+    within(oct5Section as HTMLElement).getByText(
+      formatTime("2026-10-04T22:30:00.000Z", IST_FORMAT),
+    ),
+  ).toBeTruthy();
+  expect(screen.getByText("Istanbul midnight edge")).toBeTruthy();
+});
+
+test("shows visible filter field labels", () => {
+  renderHistory(true);
+  const labels = [...document.querySelectorAll(".timeline-history-filter-field-label")].map(
+    (node) => node.textContent,
+  );
+  expect(labels).toEqual(["Modules", "Users", "Time", "Sources"]);
 });

@@ -1,5 +1,5 @@
 import type { Locator } from "@playwright/test";
-import { expectNoA11yViolations } from "./support/a11y";
+import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 /**
@@ -40,7 +40,7 @@ test("dev ui gallery is accessible with the data entry primitives", async ({ pag
 
   await whenHydrated(page.getByRole("region", { name: "combo box" }).getByRole("combobox").first());
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
 });
 
 test("number field steps and submits from the keyboard", async ({ page }) => {
