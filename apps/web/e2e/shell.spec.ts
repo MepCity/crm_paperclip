@@ -43,7 +43,7 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   const slug = new URL(page.url()).pathname.split("/")[2] ?? "";
   const name = await page.getByRole("button", { name: "Organization switcher" }).innerText();
   await page.getByRole("link", { name: "Settings", exact: true }).click();
-  await expect(page).toHaveURL(`/o/${slug}/settings`);
+  await expect(page).toHaveURL(`/crm/${slug}/settings`);
   await expect(page.getByRole("banner").getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(page).toHaveTitle("Settings | MepCity CRM");
   await expect(page.getByRole("link", { name: "General" })).toHaveAttribute("aria-current", "page");
@@ -65,7 +65,7 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   // pending-announcement workaround
   await page.reload();
   await expectNoA11yViolations(page);
-  await page.goto(`/o/${slug}/settings`);
+  await page.goto(`/crm/${slug}/settings`);
   await expect(page).toHaveURL(/\/sign-in\?next=/);
 });
 
@@ -90,7 +90,7 @@ test("the organization menu switches between two memberships and offers creation
   );
   await expectNoA11yViolations(page);
   await page.getByRole("menuitemradio", { name: firstName, exact: true }).click();
-  await expect(page).toHaveURL(`/o/${firstSlug}`);
+  await expect(page).toHaveURL(`/crm/${firstSlug}`);
   await expect(switcher).toContainText(firstName);
   await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
   await expectNoA11yViolations(page);
@@ -195,7 +195,7 @@ test("an unknown page keeps the shell and a non-member sees a generic 404", asyn
 }) => {
   const slug = new URL(page.url()).pathname.split("/")[2] ?? "";
   // Next streams this authorized layout before rendering not-found content.
-  await page.goto(`/o/${slug}/missing-page`);
+  await page.goto(`/crm/${slug}/missing-page`);
   await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", "noindex");
   await expect(
     page.getByRole("banner").getByRole("heading", { name: "Page not found" }),
@@ -207,7 +207,7 @@ test("an unknown page keeps the shell and a non-member sees a generic 404", asyn
   const other = await context.newPage();
   try {
     await signUpNewUser(other);
-    await other.goto(`/o/${slug}/settings`);
+    await other.goto(`/crm/${slug}/settings`);
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     await expect(other.getByRole("button", { name: "Organization switcher" })).toHaveCount(0);
     await expectNoA11yViolations(other);

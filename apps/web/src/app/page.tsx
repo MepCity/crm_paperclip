@@ -10,5 +10,5 @@ export default async function HomePage() {
   const organizations = await listOrganizationsForUser(session.user.id);
   const first = organizations[0];
   if (!first) redirect("/orgs/new");
-  redirect(`/o/${first.slug}`);
+  redirect(`/crm/${first.slug}`);
 }

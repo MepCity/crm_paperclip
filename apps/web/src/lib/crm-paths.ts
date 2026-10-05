@@ -1,8 +1,5 @@
-/**
- * Organization-scoped CRM page paths. The prefix is interim until MEP-89 moves
- * pages from `/o` to `/crm` (ADR 0004 §2 target shape).
- */
-export const CRM_ORG_PATH_PREFIX = "/o";
+/** Organization-scoped CRM page paths (ADR 0004 §2). */
+export const CRM_ORG_PATH_PREFIX = "/crm";
 
 export function orgBasePath(orgSlug: string): string {
   return `${CRM_ORG_PATH_PREFIX}/${encodeURIComponent(orgSlug)}`;

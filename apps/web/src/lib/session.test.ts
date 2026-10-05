@@ -44,5 +44,5 @@ it("renders not found when access is missing", async () => {
 it("redirects a signed-out visitor to sign in with the organization path", async () => {
   mocks.readOrgContext.mockRejectedValue(new UnauthenticatedError());
   await expect(requireOrgContext("alpha")).rejects.toThrow("NEXT_REDIRECT");
-  expect(mocks.redirect).toHaveBeenCalledWith("/sign-in?next=%2Fo%2Falpha");
+  expect(mocks.redirect).toHaveBeenCalledWith("/sign-in?next=%2Fcrm%2Falpha");
 });

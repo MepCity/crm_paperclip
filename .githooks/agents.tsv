@@ -8,5 +8,6 @@ ad929b3b-3a11-4234-95ff-53c894298892	CRM Analyst	gemini-3.8-flash-high (Antigrav
 dcc9c193-9f99-4261-8d39-26cb5e838b02	Cursor Engineer	composer-2.5 (Cursor)
 f8b071bd-40ec-43fc-847c-d459ff03d3db	Grok QA	grok-4.7-high (Cursor)
 ac04743c-c12e-4c47-82e3-d1878f507fb4	Gemini Reviewer	gemini-3.8-flash-high (Antigravity)
-edd4b958-5bef-4629-95ab-03b5ef9d7380	UI Lead	claude-opus-5-5
+edd4b958-5bef-4629-95ab-03b5ef9d7380	UI Lead	gpt-6.1-sol (high, Codex)
 a3e6fd2d-f255-42a5-ad49-10c3d4ac4b80	Platform Lead	claude-opus-5-5
+f9b42f43-b469-4b58-9a0a-0a5fb95b8cf8	Qwen Engineer	qwen3.8-flash (Qwen Code)

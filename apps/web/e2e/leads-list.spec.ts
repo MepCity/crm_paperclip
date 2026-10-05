@@ -96,7 +96,7 @@ test.describe("Leads list page", () => {
       .getAttribute("href");
     if (!recordHref) throw new Error("Expected a record link href.");
     const second = await createOrganization(page);
-    const crossOrgPath = recordHref.replace(`/o/${first.slug}/`, `/o/${second.slug}/`);
+    const crossOrgPath = recordHref.replace(`/crm/${first.slug}/`, `/crm/${second.slug}/`);
     await page.goto(crossOrgPath);
     await expect(page.getByText(/could not be found/i)).toBeVisible();
   });

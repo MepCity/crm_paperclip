@@ -32,7 +32,7 @@ export interface NavConfig {
 
 export const shellNav: NavConfig = {
   links: [
-    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/o/${slug}`, match: "exact" },
+    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/crm/${slug}`, match: "exact" },
   ],
   sections: [
     {
@@ -64,7 +64,7 @@ export const settingsNav: readonly NavLink[] = [
     id: "general",
     label: "General",
     icon: Icons.settings,
-    href: (slug) => `/o/${slug}/settings`,
+    href: (slug) => `/crm/${slug}/settings`,
     match: "exact",
   },
 ];

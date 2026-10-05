@@ -273,8 +273,8 @@ existing size until their screen typography task.
 ## Module list page (Leads)
 
 Routes live under the organization shell with a single `ApiProvider` on
-`app/o/[orgSlug]/tab/layout.tsx`. Page paths are built with `lib/crm-paths.ts`
-(interim `/o` prefix until MEP-89). Leads-only labels and filter rows sit in
+`app/crm/[orgSlug]/tab/layout.tsx`. Page paths are built with `lib/crm-paths.ts`.
+Leads-only labels and filter rows sit in
 `modules/leads/list-config.ts` and `modules/leads/list-filters.ts`.
 
 ### Address state
@@ -293,8 +293,6 @@ update the address; Refresh Custom View calls `router.refresh()` on the same URL
 - Filter panel rows are drawn disabled; checking them does not filter records.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
-- Organization paths use `/o/[orgSlug]/…` instead of ADR 0004’s `/crm/[orgSlug]/…`
-  target until MEP-89 lands.
 
 ### Page layout
 
