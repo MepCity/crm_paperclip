@@ -85,6 +85,8 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(field.label).not.toBe("");
         expect(typeof field.required).toBe("boolean");
         expect(typeof field.readOnly).toBe("boolean");
+        expect(Object.keys(field.views).sort()).toEqual(["create", "edit", "quickCreate", "view"]);
+        for (const value of Object.values(field.views)) expect(typeof value).toBe("boolean");
         expect(field.unique).toBe(false);
         if (field.picklist)
           for (const option of field.picklist) {
@@ -94,8 +96,14 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       }
       for (const section of metadata.layout) {
         expect(section.columnCount).toBeGreaterThan(0);
+        expect(section.columns).toHaveLength(section.columnCount);
+        const placed = section.columns.flat();
+        expect(new Set(placed).size).toBe(placed.length);
+        for (const field of placed) expect(section.fields).toContain(field);
         for (const field of section.fields) expect(names).toContain(field);
       }
+      for (const name of metadata.businessCardFields)
+        expect(metadata.fields.find((field) => field.apiName === name)?.views.view).toBe(true);
       expect(new Set(views.map((view) => view.id)).size).toBe(views.length);
       expect(views.filter((view) => view.isDefault)).toHaveLength(1);
       for (const view of views) {
@@ -130,6 +138,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       fields.Company = "Changed";
       expect(await service.get("Leads", created.id)).toEqual(created);
     });
+    // The HTTP harness performs hundreds of JSON write/read round trips per size.
     for (const perPage of [10, 20, 30, 40, 50, 100]) {
       it(`paginates at ${perPage}, with consistent counts and no duplicate or missing records`, async () => {
         const query = {
@@ -169,7 +178,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           moreRecords: false,
           sort: { field: "id", order: "desc" },
         });
-      });
+      }, 15_000);
     }
     it("finds created records by case-insensitive Company search and counts an empty result", async () => {
       const marker = `Search-${randomUUID()}`;
@@ -332,6 +341,30 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       await validation(service.update("Leads", created.id, { Company: null }), "Company");
       expect(await service.get("Leads", created.id)).toEqual(updated);
     });
+    it("creates and updates Owner using organization members, with a context default", async () => {
+      const secondMember = await makeService({ ...ctx, userId: "second-member" });
+      await secondMember.getModule("Leads");
+      const created = await service.create("Leads", input({ Owner: "second-member" }));
+      expect(created.fields.Owner).toBe("second-member");
+      expect(created.fields.Created_By).toBe(ctx.userId);
+      const updated = await service.update("Leads", created.id, { Owner: ctx.userId });
+      expect(updated.fields.Owner).toBe(ctx.userId);
+      expect(updated.fields.Created_By).toBe(ctx.userId);
+      expect(updated.fields.Modified_By).toBe(ctx.userId);
+      expect((await service.create("Leads", input())).fields.Owner).toBe(ctx.userId);
+      const foreign = await makeService({ ...context(), userId: "foreign-member" });
+      // A known user in another organization must not qualify for this one.
+      await foreign.create("Leads", input({ Owner: "foreign-member" }));
+      await validation(service.create("Leads", input({ Owner: "foreign-member" })), "Owner");
+      await validation(service.update("Leads", created.id, { Owner: "foreign-member" }), "Owner");
+      for (const Owner of [null, "", 3, { module: "Contacts", id: "second-member" }]) {
+        await validation(service.create("Leads", input({ Owner })), "Owner");
+        await validation(service.update("Leads", created.id, { Owner }), "Owner");
+      }
+      expect(await service.get("Leads", created.id)).toEqual(updated);
+      for (const name of ["Created_By", "Modified_By"])
+        await validation(service.update("Leads", created.id, { [name]: ctx.userId }), name);
+    });
     it("deletes records and updates count", async () => {
       const created = await service.create("Leads", forView(defaultView));
       const before = await service.count("Leads", { viewId: defaultView.id });
@@ -374,6 +407,13 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       expect(await service.get("Leads", row.id)).toEqual(original);
       const definition = metadata.fields[0];
       if (!definition) throw new Error("Expected fields.");
+      const originalModule = await service.getModule("Leads");
+      definition.views.view = !definition.views.view;
+      const column = metadata.layout[0]?.columns[0];
+      if (!column) throw new Error("Expected a layout column.");
+      (column as string[]).push("changed-placement");
+      (metadata.businessCardFields as string[]).push("changed-card");
+      expect(await service.getModule("Leads")).toEqual(originalModule);
       definition.label = "changed-metadata";
       (defaultView.columns as string[]).push("changed-columns");
       expect((await service.getModule("Leads")).fields[0]?.label).not.toBe("changed-metadata");

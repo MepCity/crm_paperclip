@@ -90,10 +90,10 @@ function operationDeps(ctx: OrgContext, options?: { now?: () => Date }): Operati
   };
 }
 
-describeRecordServiceContract("http", (ctx: OrgContext, options) =>
-  createHttpRecordService({
+describeRecordServiceContract("http", (ctx: OrgContext, options) => {
+  const deps = operationDeps(ctx, options);
+  return createHttpRecordService({
     orgSlug: ctx.orgSlug,
-    fetch: (path, requestOptions) =>
-      operationApiFetch(operationDeps(ctx, options), path, requestOptions),
-  }),
-);
+    fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
+  });
+});
