@@ -1,23 +1,11 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
+import { expectType, tokenValue } from "./support/typography";
 
-/** Resolved custom property, so typography expectations follow the token. */
-async function computedToken(
-  page: Page,
-  property: "font-size" | "font-weight",
-  token: "--text-md" | "--text-sm" | "--font-weight-semibold",
-): Promise<string> {
-  return page.evaluate(
-    ({ property, token }) => {
-      const probe = document.createElement("span");
-      probe.style.setProperty(property, `var(${token})`);
-      document.body.append(probe);
-      const value = getComputedStyle(probe).getPropertyValue(property);
-      probe.remove();
-      return value;
-    },
-    { property, token },
-  );
+async function verticalGap(fromBottom: () => Promise<number>, toTop: () => Promise<number>) {
+  const bottom = await fromBottom();
+  const top = await toTop();
+  return top - bottom;
 }
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
@@ -37,22 +25,68 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
     // Surface and line colors: panel outline #DCDBEE.
     await expect(panel).toHaveCSS(`border-${side}-color`, "rgb(220, 219, 238)");
   }
-  for (const side of ["left", "right"]) await expect(panel).toHaveCSS(`padding-${side}`, "18px");
+  await expect(panel).toHaveCSS("padding-left", "18px");
+  await expect(panel).toHaveCSS("padding-right", "15px");
+  await expect(panel).toHaveCSS("padding-top", "20.5px");
 
-  // Filter content: title about 15 px semibold maps to --text-md / --font-weight-semibold.
   const heading = panel.getByRole("heading", { name: "Filter Leads by" });
-  const titleSize = await computedToken(page, "font-size", "--text-md");
-  const semibold = await computedToken(page, "font-weight", "--font-weight-semibold");
-  const bodySize = await computedToken(page, "font-size", "--text-sm");
-  await expect(heading).toHaveCSS("font-size", titleSize);
-  await expect(heading).toHaveCSS("font-weight", semibold);
+  await expectType(page, heading, "--text-md", "--font-weight-bold");
   await expect(heading).toHaveCSS("color", "rgb(49, 57, 73)");
+
   const search = panel.getByRole("textbox", { name: "Search filter choices" });
   await expect(search).toHaveAttribute("placeholder", "Search");
   await expect(search).toHaveCSS("height", "34px");
+  await expect(search).toHaveCSS("width", "167px");
+  const searchEndInset = await panel.evaluate((element) => {
+    const field = element.querySelector("input");
+    if (!field) return Number.NaN;
+    const panelRect = element.getBoundingClientRect();
+    const fieldRect = field.getBoundingClientRect();
+    const innerRight =
+      panelRect.right - Number.parseFloat(getComputedStyle(element).borderRightWidth);
+    return innerRight - fieldRect.right;
+  });
+  expect(Math.abs(searchEndInset - 15)).toBeLessThanOrEqual(1);
+
+  const titleToSearch = await verticalGap(
+    () => heading.evaluate((element) => element.getBoundingClientRect().bottom),
+    () => search.evaluate((element) => element.getBoundingClientRect().top),
+  );
+  expect(Math.abs(titleToSearch - 21)).toBeLessThanOrEqual(1);
+
+  const firstGroup = panel.getByRole("button", { name: "System Defined Filters" });
+  const searchToGroup = await verticalGap(
+    () => search.evaluate((element) => element.getBoundingClientRect().bottom),
+    () => firstGroup.evaluate((element) => element.getBoundingClientRect().top),
+  );
+  expect(Math.abs(searchToGroup - 21)).toBeLessThanOrEqual(1);
+
+  const firstRow = panel.getByRole("listitem").first();
+  const groupToRow = await verticalGap(
+    () => firstGroup.evaluate((element) => element.getBoundingClientRect().bottom),
+    () => firstRow.evaluate((element) => element.getBoundingClientRect().top),
+  );
+  expect(Math.abs(groupToRow - 12)).toBeLessThanOrEqual(1);
+
+  const secondGroup = panel.getByRole("button", { name: "Filter By Fields" });
+  const lastSystemRow = panel.getByRole("listitem").filter({ hasText: "Archived samples" });
+  const groupGap = await verticalGap(
+    () => lastSystemRow.evaluate((element) => element.getBoundingClientRect().bottom),
+    () => secondGroup.evaluate((element) => element.getBoundingClientRect().top),
+  );
+  expect(Math.abs(groupGap - 19)).toBeLessThanOrEqual(1);
+
   // Surface and line colors: search outline about 1 px #C5C4D3.
   await expect(search).toHaveCSS("border-top-width", "1px");
   await expect(search).toHaveCSS("border-top-color", "rgb(197, 196, 211)");
+  const placeholderSize = await tokenValue(page, "font-size", "--text-md");
+  const placeholderWeight = await tokenValue(page, "font-weight", "--font-weight-normal");
+  expect(
+    await search.evaluate((element) => getComputedStyle(element, "::placeholder").fontSize),
+  ).toBe(placeholderSize);
+  expect(
+    await search.evaluate((element) => getComputedStyle(element, "::placeholder").fontWeight),
+  ).toBe(placeholderWeight);
   // Text roles: placeholder #8C91AB.
   expect(await search.evaluate((element) => getComputedStyle(element, "::placeholder").color)).toBe(
     "rgb(140, 145, 171)",
@@ -66,6 +100,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const magnifier = search.locator("..").locator("svg");
   await expect(magnifier).toBeVisible();
   await expect(magnifier).toHaveAttribute("aria-hidden", "true");
+  expect(await magnifier.getAttribute("role")).toBeNull();
   await expect(magnifier).toHaveCSS("width", "13.5px");
   await expect(magnifier).toHaveCSS("height", "13.5px");
   await expect(magnifier).toHaveCSS("color", "rgb(49, 57, 73)");
@@ -84,14 +119,13 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
 
   const triggers = panel.getByRole("button");
   for (const trigger of await triggers.all()) {
-    // Filter content: group headings about 14 px semibold #202123 via --text-sm / --font-weight-semibold.
-    await expect(trigger).toHaveCSS("font-size", bodySize);
-    await expect(trigger).toHaveCSS("font-weight", semibold);
+    await expectType(page, trigger, "--text-lg", "--font-weight-bold");
     await expect(trigger).toHaveCSS("color", "rgb(32, 33, 35)");
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
     const arrow = trigger.locator("svg");
     await expect(arrow).toBeVisible();
     await expect(arrow).toHaveAttribute("aria-hidden", "true");
+    expect(await arrow.getAttribute("role")).toBeNull();
     await expect(arrow).toHaveCSS("width", "8px");
     await expect(arrow).toHaveCSS("height", "4.5px");
     expect(await arrow.locator("title").count()).toBe(0);
@@ -108,11 +142,15 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const clippedLabel = panel
     .getByRole("button", { name: "System Defined Filters" })
     .locator("span");
-  // Figtree fits this label, so the reference clip is a letter-width deviation.
-  // The heading still ellipsizes when the text is wider than the row.
   await expect(clippedLabel).toHaveCSS("text-overflow", "ellipsis");
   await expect(clippedLabel).toHaveCSS("overflow-x", "hidden");
   await expect(clippedLabel).toHaveCSS("white-space", "nowrap");
+  const relatedLabel = panel
+    .getByRole("button", { name: "Filter By Related Modules" })
+    .locator("span");
+  expect(await relatedLabel.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
+    true,
+  );
   const headingText = panel.getByRole("button", { name: "Filter By Fields" }).locator("span");
   await expect(headingText).toHaveCSS("padding-left", "17.5px");
   const longLabel = "Sample related records action";
@@ -125,6 +163,8 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
         if (!box) return Number.NaN;
         return box.getBoundingClientRect().top - element.getBoundingClientRect().top;
       });
+  const bodySize = await tokenValue(page, "font-size", "--text-md");
+  const bodyWeight = await tokenValue(page, "font-weight", "--font-weight-normal");
   for (const row of await panel.getByRole("listitem").all()) {
     const name = (await row.innerText()).replace(/\s+/g, " ").trim();
     const box = row.locator('span[aria-hidden="true"]');
@@ -133,9 +173,10 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
       await expect(row).toHaveCSS("height", "44px");
       await expect(row.getByText(longLabel)).toHaveCSS("line-height", "16px");
     } else {
-      // Filter content: one-line checkbox rows stay about 30 px; text role is --text-sm.
+      // Filter content: one-line checkbox rows stay about 30 px; text role is --text-md / normal.
       await expect(row).toHaveCSS("height", "30px");
       await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-size", bodySize);
+      await expect(row.getByText(/samples|Sample/)).toHaveCSS("font-weight", bodyWeight);
     }
     // Selected / disabled: unselected boxes 15 × 15, 2 px #C5C4D3, 2–3 px corners.
     await expect(box).toHaveCSS("width", "15px");

@@ -38,7 +38,7 @@ export function Disclosure({
             <Heading level={3}>
               <AriaButton
                 slot="trigger"
-                className="relative flex w-full min-w-0 items-center rounded-sm py-2 text-left text-sm font-semibold text-text-strong outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus-ring"
+                className="relative flex w-full min-w-0 items-center rounded-sm py-0 text-left text-lg font-bold text-text-strong outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus-ring"
               >
                 {isExpanded ? (
                   <Icons.filterChevronDown

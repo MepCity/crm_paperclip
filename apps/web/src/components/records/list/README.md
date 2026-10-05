@@ -187,11 +187,7 @@ open/closed groups and filtered results.
   remain unobserved and are excluded. Checked checkbox appearance keeps the existing
   primitive (16 px box, 1 px border); the spec measures only the unchecked box, and a
   checked box was not captured.
-- The vertical gaps between the heading, the search field, the group headings and the
-  rows, the group-heading size and the search field's 15 px right inset are measured in
-  the spec (list-views.md → Visual layout → Filter content) but not applied here yet;
-  they keep the existing spacing scale. Open question 17 records what was not captured:
-  a closed group and a checked checkbox.
+- Open question 17 records what was not captured: a closed group and a checked checkbox.
 
 ### Deviations
 

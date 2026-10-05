@@ -218,10 +218,16 @@
   --size-list-filter-search-icon: 13.5px;
   --size-list-filter-search-icon-inset: 11.5px;
   --size-list-filter-search-padding: 31px;
+  --size-list-filter-search-width: 167px;
+  --size-list-filter-search-end-inset: 15px;
+  --size-list-filter-title-inset-top: 20.5px;
+  --size-list-filter-heading-to-search: 21px;
+  --size-list-filter-search-to-group: 21px;
+  --size-list-filter-group-to-row: 12px;
+  --size-list-filter-group-gap: 19px;
   --size-list-filter-row-height: 30px;
   --size-list-filter-row-padding: 6px;
   --size-list-filter-row-line: 16px;
-  --size-list-filter-label-gap: 8.5px;
   --size-list-filter-chevron-width: 8px;
   --size-list-filter-chevron-height: 4.5px;
   --size-list-filter-heading-inset: 17.5px;
@@ -273,6 +279,8 @@
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
+  --size-checkbox-label-gap: 8.5px;
+  --size-checkbox-label-line: 16px;
 
   /* Manage Columns dialog */
   --size-dialog-width: 400px;

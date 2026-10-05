@@ -23,44 +23,43 @@ import {
 } from "lucide-react";
 import type { SVGProps } from "react";
 
+/** Named filter glyphs only expose `role="img"` when given an accessible name. */
+function filterIconRoleProps(props: SVGProps<SVGSVGElement>) {
+  const label = props["aria-label"];
+  return label ? { role: "img" as const, "aria-label": label } : {};
+}
+
 /** Original filled triangles and magnifier; no reference icon assets or titles. */
 function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
   return (
-    <svg
-      role="img"
-      aria-label={props["aria-label"]}
-      viewBox="0 0 8 4.5"
-      fill="currentColor"
-      {...props}
-    >
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 8 4.5" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
       <path d="M0 0h8L4 4.5Z" />
     </svg>
   );
 }
 
 function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
   return (
-    <svg
-      role="img"
-      aria-label={props["aria-label"]}
-      viewBox="0 0 4.5 8"
-      fill="currentColor"
-      {...props}
-    >
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 4.5 8" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
       <path d="M0 0v8l4.5-4Z" />
     </svg>
   );
 }
 
 function FilterSearch(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 13.5 13.5"
       fill="none"
       stroke="currentColor"
-      {...props}
+      {...filterIconRoleProps(props)}
+      {...rest}
     >
       <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
       <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />

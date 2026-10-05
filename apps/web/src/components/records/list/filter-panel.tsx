@@ -41,9 +41,12 @@ export function FilterPanel({
   return (
     <section
       aria-labelledby={titleId}
-      className="box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface px-(--size-list-filter-padding) py-4"
+      className="box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface pl-(--size-list-filter-padding) pr-(--size-list-filter-search-end-inset) pt-(--size-list-filter-title-inset-top) pb-4"
     >
-      <h2 id={titleId} className="mb-3 text-md font-semibold text-text">
+      <h2
+        id={titleId}
+        className="mb-(--size-list-filter-heading-to-search) text-md font-bold text-text"
+      >
         {title}
       </h2>
       <TextField
@@ -53,45 +56,49 @@ export function FilterPanel({
         value={query}
         onChange={setQuery}
       />
-      <div className="mt-3">
-        {visibleGroups.map((group) => (
-          <Disclosure
-            variant="filter"
+      <div className="mt-(--size-list-filter-search-to-group)">
+        {visibleGroups.map((group, index) => (
+          <div
             key={group.id}
-            label={group.label}
-            isExpanded={!collapsedIds.has(group.id)}
-            onExpandedChange={(expanded) => {
-              setCollapsedIds((current) => {
-                const next = new Set(current);
-                if (expanded) next.delete(group.id);
-                else next.add(group.id);
-                return next;
-              });
-            }}
+            className={index === 0 ? undefined : "mt-(--size-list-filter-group-gap)"}
           >
-            <ul className="min-w-0">
-              {group.items.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
-                >
-                  <Checkbox
-                    align="first-line"
-                    label={item.label}
-                    isDisabled={item.disabled}
-                    isSelected={selectedIds.includes(item.id)}
-                    onChange={(selected) => {
-                      onSelectionChange(
-                        selected
-                          ? [...selectedIds, item.id]
-                          : selectedIds.filter((id) => id !== item.id),
-                      );
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          </Disclosure>
+            <Disclosure
+              variant="filter"
+              label={group.label}
+              isExpanded={!collapsedIds.has(group.id)}
+              onExpandedChange={(expanded) => {
+                setCollapsedIds((current) => {
+                  const next = new Set(current);
+                  if (expanded) next.delete(group.id);
+                  else next.add(group.id);
+                  return next;
+                });
+              }}
+            >
+              <ul className="min-w-0 pt-(--size-list-filter-group-to-row)">
+                {group.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
+                  >
+                    <Checkbox
+                      align="first-line"
+                      label={item.label}
+                      isDisabled={item.disabled}
+                      isSelected={selectedIds.includes(item.id)}
+                      onChange={(selected) => {
+                        onSelectionChange(
+                          selected
+                            ? [...selectedIds, item.id]
+                            : selectedIds.filter((id) => id !== item.id),
+                        );
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </Disclosure>
+          </div>
         ))}
       </div>
     </section>
