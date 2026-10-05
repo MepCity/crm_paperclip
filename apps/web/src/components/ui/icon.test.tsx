@@ -20,6 +20,7 @@ const expectedIcons = [
   "settings",
   "spinner",
   "error",
+  "fieldEdit",
   "success",
   "info",
   "warning",
