@@ -13,7 +13,10 @@ import {
 } from "./codec";
 import type { WireMember } from "./types";
 
-export type OperationDeps = { records: RecordService; members: readonly WireMember[] };
+export type OperationDeps = {
+  records: RecordService;
+  members: () => Promise<readonly WireMember[]>;
+};
 export type OperationRequest = {
   params?: Record<string, string>;
   query: Record<string, string>;
@@ -174,8 +177,9 @@ export const operations = {
       };
       const result = await records.list(module, query);
       if (!result.records.length) return empty();
+      const recordMembers = await members();
       return ok({
-        data: result.records.map((row) => encodeRecord(row, metadata, members)),
+        data: result.records.map((row) => encodeRecord(row, metadata, recordMembers)),
         info: encodeInfo(result, result.records.length),
       });
     },
@@ -199,7 +203,9 @@ export const operations = {
       const module = moduleOf(input);
       const metadata = await records.getModule(module);
       return ok({
-        data: [encodeRecord(await records.get(module, recordIdOf(input)), metadata, members)],
+        data: [
+          encodeRecord(await records.get(module, recordIdOf(input)), metadata, await members()),
+        ],
       });
     },
   },
@@ -208,7 +214,7 @@ export const operations = {
     path: "/crm/v9/users",
     async run({ members }, input) {
       return collection(
-        members.map((member) => ({
+        (await members()).map((member) => ({
           id: member.userId,
           full_name: member.name,
           email: member.email,

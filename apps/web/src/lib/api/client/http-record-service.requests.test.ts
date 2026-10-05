@@ -94,7 +94,7 @@ const ctx: OrgContext = {
 function deps(): OperationDeps {
   return {
     records: createFixtureRecordService(ctx),
-    members: [{ userId: ctx.userId, name: "Request User", email: "req@example.test" }],
+    members: async () => [{ userId: ctx.userId, name: "Request User", email: "req@example.test" }],
   };
 }
 

@@ -72,11 +72,11 @@ field ordering and picklist display/stored values are preserved. `encodeView` /
 Comparators `equal`, `contains`, `not_contains` and `less_equal` pass through
 unchanged (view definitions in `research/specs/list-views.md`).
 
-### Observed criteria tokens
-
 `info.sort_by` and `info.sort_order` come only from `ListResult.sort`; `decodeList`
 restores that applied order. Unknown fields returned by the service in a record
 or layout are server errors, not caller validation errors.
+
+### Observed criteria tokens
 
 | Port value | Wire `value` |
 | --- | --- |

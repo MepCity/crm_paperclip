@@ -26,23 +26,21 @@ Every response sets `Cache-Control: no-store`. No CORS header is set.
 
 ## Writing a handler
 
-A route file is the wrapper plus one service call. Do not read the session or the
-organization header there.
+A route file delegates to `operationRoute`, which binds the operation to the
+authenticated record service and a lazy member loader. Do not read the session or
+the organization header there.
 
 ```ts
-import { listMembers } from "@crm/core";
-import { apiRoute } from "@/lib/api/server";
+import { operationRoute } from "@/lib/api/operation-route";
 import { operations } from "@/lib/api/wire/operations";
-import { getRecordService } from "@/lib/records";
 
 export const dynamic = "force-dynamic";
 
-export const POST = apiRoute(async (input) => (
-  await operations.count.run({ records: getRecordService(input.ctx), members: await listMembers(input.ctx) }, input)
-).body);
+export const POST = operationRoute(operations.count);
 ```
 
-The count route now delegates to `operations.count`. The operation validates
-`cvid` (a missing value is keyed by the port's `viewId`) and optionally reads
-JSON `{ filters?, search? }`. Paths and methods are defined only by the inventory
-in `wire/operations.ts`; the browser can use `operationPath` to build URLs.
+The wire member loader runs only for operations that encode member data. The
+count route delegates to `operations.count`. The operation validates `cvid` (a missing value is keyed by
+the port's `viewId`) and optionally reads JSON `{ filters?, search? }`. Paths and
+methods are defined only by the inventory in `wire/operations.ts`; the browser can
+use `operationPath` to build URLs.
