@@ -70,12 +70,11 @@
   --font-mono: var(--font-mono);
 
   --font-weight-normal: var(--font-weight-normal);
-  --font-weight-medium: var(--font-weight-medium);
   --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
 
   --text-2xs: var(--text-2xs);
   --text-xs: var(--text-xs);
-  --text-13: var(--text-13);
   --text-sm: var(--text-sm);
   --text-md: var(--text-md);
   --text-base: var(--text-base);

@@ -14,7 +14,7 @@ export default async function SignInPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium text-text">Sign in</h2>
+      <h2 className="text-xl font-semibold text-text">Sign in</h2>
       <SignInForm next={next} />
       <p className="text-sm text-text-muted">
         No account yet?{" "}

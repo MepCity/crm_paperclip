@@ -48,10 +48,10 @@ const badgeColumn = [
 const headerBox = [
   "relative h-(--size-list-header-height) overflow-hidden",
   "border-b-(length:--size-list-header-border) border-b-panel-border",
-  "text-left align-middle text-sm font-medium text-text-strong",
+  "text-left align-middle text-md font-normal text-text-strong",
 ].join(" ");
 
-const bodyBox = "border-b border-b-row-separator align-top text-sm font-normal text-text";
+const bodyBox = "border-b border-b-row-separator align-top text-md font-normal text-text";
 
 const inset = "ps-(--size-list-cell-inset)";
 

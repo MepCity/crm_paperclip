@@ -35,7 +35,7 @@ export function Popover({
       <AriaDialog className={`p-4 outline-none ${contentClassName ?? ""}`}>
         <Heading
           slot="title"
-          className={hideTitle ? "sr-only" : "mb-2 text-base font-medium text-text"}
+          className={hideTitle ? "sr-only" : "mb-2 text-base font-semibold text-text"}
         >
           {title}
         </Heading>
