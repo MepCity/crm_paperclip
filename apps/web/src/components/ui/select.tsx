@@ -40,7 +40,7 @@ export function Select<T extends object>({
     <AriaSelect {...props} className="flex flex-col gap-1">
       {({ isInvalid }: SelectRenderProps) => (
         <>
-          <Label className={hideLabel ? "sr-only" : "text-sm font-medium text-text"}>{label}</Label>
+          <Label className={hideLabel ? "sr-only" : "text-md font-normal text-text"}>{label}</Label>
           {/* The trigger draws the border, but React Aria only reports the resolved
               invalid state (prop or Form validationErrors) on the Select root. */}
           <Button

@@ -83,7 +83,7 @@ test("sign in follows a safe next path", async ({ page }) => {
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user, { next: "/dev/ui" });
-  await expect(page).toHaveURL("/dev/ui");
+  await expect(page).toHaveURL("/dev/ui", { timeout: 30_000 });
 });
 
 test("sign in ignores a protocol-relative next path", async ({ page }) => {

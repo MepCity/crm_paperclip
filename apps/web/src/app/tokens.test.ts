@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 
@@ -29,8 +29,6 @@ const LIST_PASS = {
   "--color-surface-active": "#edf0f9",
   "--color-text-strong": "#202123",
   "--color-text-disabled": "#b5b8be",
-  "--font-weight-medium": "500",
-  "--text-13": "0.8125rem",
   "--radius-xl": "1rem",
   "--size-popover-sort-field-top": "57px",
   "--size-popover-sort-inset-inline": "31px",
@@ -120,4 +118,46 @@ test("list-spec quotations in the source table occur in the visual layout sectio
     }
   }
   expect(missing).toEqual([]);
+});
+
+// Binding CTO mapping from typography.md → List and detail text roles.
+test("adopted typography tokens keep their exact values", () => {
+  const byName = new Map(declared.map((token) => [token.name, token.value]));
+  for (const [name, value] of Object.entries({
+    "--font-weight-normal": "400",
+    "--font-weight-semibold": "510",
+    "--font-weight-bold": "650",
+    "--text-sm": "0.84375rem",
+    "--text-md": "0.90625rem",
+    "--text-base": "1rem",
+    "--text-lg": "0.96875rem",
+    "--text-xl": "1.15625rem",
+    "--text-2xl": "1.28125rem",
+    "--text-3xl": "1.875rem",
+  })) {
+    expect(byName.get(name), name).toBe(value);
+  }
+  expect(byName.has("--font-weight-medium")).toBe(false);
+  expect(byName.has("--text-13")).toBe(false);
+});
+
+test("retired typography tokens and utilities never fall back to framework defaults", () => {
+  const forbidden = ["--font-weight-medium", "--text-13", "font-medium", "text-13"];
+  const thisFile = fileURLToPath(import.meta.url);
+  const violations: string[] = [];
+  function scan(folder: string) {
+    for (const entry of readdirSync(folder, { withFileTypes: true })) {
+      const path = resolve(folder, entry.name);
+      if (entry.isDirectory()) scan(path);
+      else if (entry.isFile() && path !== thisFile) {
+        const source = readFileSync(path, "utf8");
+        for (const token of forbidden) {
+          if (source.includes(token)) violations.push(`${relative(directory, path)}: ${token}`);
+        }
+      }
+    }
+  }
+  scan(resolve(directory, ".."));
+  scan(resolve(directory, "../../e2e"));
+  expect(violations).toEqual([]);
 });

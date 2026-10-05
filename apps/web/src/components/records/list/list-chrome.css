@@ -35,7 +35,7 @@
 }
 
 /* React Aria renders the field label as a span, not a native label. */
-.record-sort-fields span.text-sm:not(.sr-only) {
+.record-sort-fields span.text-md:not(.sr-only) {
   position: absolute;
   left: 0;
   bottom: calc(100% + var(--size-popover-sort-label-gap));
