@@ -85,10 +85,49 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Original outlined thumb, with no copied icon asset. */
+function ThumbDown(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 28.5 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path
+        d="M22 1h5v8h-5zM22 2h-8L5 1C3 1 2 2 2 4l1 4c0 1 1 2 3 2h7l-1 3h3l5-5h2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Original checkmark sized to the status menu's measured ink box. */
+function StatusCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 10 6.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path d="m0.6 3.3 2.9 2.6L9.4 0.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
   recordPortrait: RecordPortrait,
+  thumbDown: ThumbDown,
+  statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,

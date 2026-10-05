@@ -383,6 +383,49 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
+| `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-terminal-fill` | `#ffecec` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-terminal-icon` | `#ff5d5a` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-check` | `#333333` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--radius-status-control` | `4px` | record-detail.md › Visual layout › Terminal control / menus |
+| `--size-status-card-height` | `68px` | record-detail.md › Visual layout › Status strip card |
+| `--size-status-card-inset` | `20px` | record-detail.md › Visual layout › Status strip card |
+| `--size-status-band-height` | `28px` | record-detail.md › Visual layout › Status ribbon chevrons |
+| `--size-status-chevron-tip` | `6px` | record-detail.md › Visual layout › Status ribbon chevrons / apex |
+| `--size-status-stage-inset` | `18px` | record-detail.md › Visual layout › Status ribbon chevrons / label inset (interim natural widths) |
+| `--size-status-label-gap` | `6.5px` | record-detail.md › Visual layout › Stage highlight and checkmark / icon to label |
+| `--size-status-stage-thumb` | `14px` | record-detail.md › Visual layout › Terminal control / icon height, nearest stage icon |
+| `--size-status-terminal-gap` | `11px` | record-detail.md › Visual layout › Status ribbon chevrons / terminal box gap |
+| `--size-status-terminal-width` | `52px` | record-detail.md › Visual layout › Terminal control |
+| `--size-status-terminal-height` | `27px` | record-detail.md › Visual layout › Terminal control |
+| `--size-status-terminal-icon-width` | `28.5px` | record-detail.md › Visual layout › Terminal control / icon ink |
+| `--size-status-terminal-icon-height` | `14px` | record-detail.md › Visual layout › Terminal control / icon ink |
+| `--size-status-scroll-width` | `20px` | record-detail.md › Visual layout › Status strip card / inset (interim scroll control width) |
+| `--size-status-stage-menu-width` | `207px` | record-detail.md › Visual layout › Stage dropdown panel |
+| `--size-status-stage-menu-height` | `244px` | record-detail.md › Visual layout › Stage dropdown panel |
+| `--size-status-stage-search-height` | `31px` | record-detail.md › Visual layout › Stage search input |
+| `--size-status-terminal-menu-width` | `215.5px` | record-detail.md › Visual layout › Terminal popover |
+| `--size-status-terminal-search-height` | `30.5px` | record-detail.md › Visual layout › Terminal search input |
+| `--size-status-pointer-width` | `17px` | record-detail.md › Visual layout › Upward pointer / caret |
+| `--size-status-pointer-height` | `8.5px` | record-detail.md › Visual layout › Upward pointer / caret |
+| `--size-status-pointer-right` | `18px` | record-detail.md › Visual layout › Upward pointer / caret / right inset |
+| `--size-status-option-height` | `35px` | record-detail.md › Visual layout › Stage option rows |
+| `--size-status-option-inset` | `31.5px` | record-detail.md › Visual layout › Stage option rows / Terminal options |
+| `--size-status-search-icon-inset` | `10px` | record-detail.md › Visual layout › Stage search input / nearest checkmark inset (interim) |
+| `--size-status-options-padding` | `5px` | record-detail.md › Visual layout › Stage highlight and checkmark / top gap |
+| `--size-status-check-inset` | `9px` | record-detail.md › Visual layout › Stage highlight and checkmark / left inset |
+| `--size-status-check-width` | `10px` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--size-status-check-height` | `6.5px` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--size-status-group-inset` | `10.5px` | record-detail.md › Visual layout › Terminal group headers |
+| `--size-status-terminal-options-top` | `6px` | record-detail.md › Visual layout › Terminal group headers / top offset |
+| `--size-status-terminal-options-bottom` | `8px` | record-detail.md › Visual layout › Terminal options / panel bottom offset |
+| `--size-status-terminal-header-height` | `29.5px` | record-detail.md › Visual layout › Terminal options / header to option pitch |
+| `--size-status-terminal-option-height` | `29.5px` | record-detail.md › Visual layout › Terminal options / row pitch |
+| `--size-status-terminal-divider-top` | `8.5px` | record-detail.md › Visual layout › Terminal divider / offset after option row |
+| `--size-status-terminal-divider-bottom` | `6px` | record-detail.md › Visual layout › Terminal divider / next header offset |
+| `--size-status-demo-wide` | `1126px` | record-detail.md › Visual layout › Hidden-rail layout / Status strip card |
+| `--size-status-demo-narrow` | `906px` | record-detail.md › Visual layout › Record page / Status strip |
 
 ### Measured values that carry no token
 
@@ -551,3 +594,16 @@ Shared tokens used here: panel border, surface, background, text, strong text, b
 border, primary gradient start, surface-active rail selection, surface-hover menu row,
 menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
 Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.
+
+## Status ribbon picklist menu
+
+`PicklistMenu` owns the React Aria dialog, search and single-selection menu.
+Search receives focus; Arrow Down/Up enters the list, Enter selects, Escape or
+outside interaction closes and restores trigger focus. Groups are nonselectable
+section headers. All strings and stored values come from props.
+
+Measured status pairs also stay at their reference values: current-stage text
+`#5464F2` on `#EEEFFC` is 4.10:1, and the terminal icon `#FF5D5A` on `#FFECEC`
+is 2.65:1. They are below the AA text/control thresholds and are not covered by
+the placeholder/separator exception in ADR 0003 §8. No accessibility check is
+disabled. The CTO must carry these pairs to the board at the module gate.
