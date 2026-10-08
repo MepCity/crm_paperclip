@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { ValidationError } from "@crm/core/errors";
 import type {
+  Comparator,
   Criteria,
+  CriteriaPeriod,
   CriteriaToken,
   FieldDataType,
   FieldDefinition,
@@ -102,7 +104,7 @@ describe("wire codec", () => {
       expect(decodeCriteria(json(encodeCriteria(plain)))).toEqual(plain);
     },
   );
-  it.each([-31, 0, 0.5, 1e21])("round-trips AGEINDAYS offset %s", (offset) => {
+  it.each([0, 1, 31, 1e21])("round-trips AGEINDAYS offset %s", (offset) => {
     const leaf: Criteria = {
       field: "Created_Time",
       comparator: "less_equal",
@@ -124,10 +126,125 @@ describe("wire codec", () => {
     `\${CATEGORY.}`,
     `\${CATEGORY.Junk}\n`,
     `\${CATEGORY.Junk}suffix`,
-    `\${UNKNOWN}`,
   ])("retains a non-token string %j", (value) => {
     const leaf: Criteria = { field: "text", comparator: "equal", value };
     expect(decodeCriteria(json(encodeCriteria(leaf)))).toEqual(leaf);
+  });
+  it.each([
+    "not_equal",
+    "starts_with",
+    "ends_with",
+    "is_empty",
+    "is_not_empty",
+    "less_than",
+    "greater_than",
+    "greater_equal",
+    "between",
+    "not_between",
+  ] as const)("round-trips panel comparator %s in a nested group", (comparator) => {
+    const criteria: Criteria = {
+      groupOperator: "and",
+      group: [
+        {
+          groupOperator: "and",
+          group: [
+            {
+              field: "Example",
+              comparator,
+              value:
+                comparator === "between" || comparator === "not_between"
+                  ? [10, 20]
+                  : comparator === "is_empty" || comparator === "is_not_empty"
+                    ? null
+                    : "x",
+            },
+          ],
+        },
+      ],
+    };
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+    expect(encodeCriteria(criteria)).toMatchObject({
+      group_operator: "AND",
+      group: [{ group_operator: "AND", group: [{ comparator }] }],
+    });
+  });
+  it.each([
+    "TOMORROW",
+    "YESTERDAY",
+    "TILL_YESTERDAY",
+    "STARTING_TOMORROW",
+    "THIS_WEEK",
+    "PREVIOUS_WEEK",
+    "THIS_MONTH",
+    "PREVIOUS_MONTH",
+    "THIS_YEAR",
+    "PREVIOUS_YEAR",
+    "NEXT_YEAR",
+  ] as const)("round-trips panel period %s with exact token spelling", (name: CriteriaPeriod) => {
+    const criteria: Criteria = {
+      field: "Created_Time",
+      comparator: "equal",
+      value: { token: "PERIOD", name },
+    };
+    expect(encodeCriteria(criteria)).toEqual({
+      field: { api_name: "Created_Time" },
+      comparator: "equal",
+      value: `\${PERIOD.${name}}`,
+    });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([0, 1, 31, 1e21])("round-trips DUEINDAYS offset %s", (offset) => {
+    const criteria: Criteria = {
+      field: "Created_Time",
+      comparator: "less_equal",
+      value: { token: "DUEINDAYS", offset },
+    };
+    expect(encodeCriteria(criteria)).toEqual({
+      field: { api_name: "Created_Time" },
+      comparator: "less_equal",
+      value: `\${DUEINDAYS}+${offset}`,
+    });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
+    `\${UNKNOWN}`,
+    `\${PERIOD.CURRENT_FY}`,
+    `\${DUEINDAYS}-1`,
+    `\${DUEINDAYS}+0.5`,
+    { token: "UNKNOWN" },
+    { name: `\${UNKNOWN}` },
+  ])("rejects unknown or invalid wire token %j with filters key", (value) => {
+    expect(() =>
+      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
+    ).toThrow(ValidationError);
+    try {
+      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value });
+    } catch (error) {
+      expect(error).toMatchObject({ fieldErrors: { filters: expect.any(Array) } });
+    }
+  });
+  it("rejects unknown comparators and domain tokens on encode and decode", () => {
+    const criteria = { field: "Company", comparator: "unknown" as Comparator, value: "x" };
+    expect(() => encodeCriteria(criteria)).toThrow(ValidationError);
+    expect(() =>
+      decodeCriteria({ field: { api_name: "Company" }, comparator: "unknown", value: "x" }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      encodeCriteria({
+        ...criteria,
+        comparator: "equal",
+        value: { token: "UNKNOWN" } as unknown as CriteriaToken,
+      }),
+    ).toThrow(ValidationError);
+    for (const token of ["AGEINDAYS", "DUEINDAYS"] as const)
+      for (const offset of [-1, 0.5, NaN, Infinity])
+        expect(() =>
+          encodeCriteria({
+            field: "Created_Time",
+            comparator: "less_equal",
+            value: { token, offset },
+          }),
+        ).toThrow(ValidationError);
   });
   it("decodes exact literal token strings as tokens and preserves category spaces", () => {
     for (const { port, wire } of tokens.filter(({ wire }) => typeof wire === "string"))
