@@ -8,6 +8,16 @@ import { type ReactNode, useEffect, useState } from "react";
  */
 const COLOUR_GROUPS = [
   {
+    label: "Record forms",
+    tokens: [
+      "--color-form-required",
+      "--color-form-portrait",
+      "--color-form-caret",
+      "--color-form-input-end",
+      "--color-form-portrait-ring",
+    ],
+  },
+  {
     label: "Record detail",
     tokens: [
       "--color-record-primary-end",
@@ -417,6 +427,25 @@ const SIZE_GROUPS = [
       "--size-button-gap",
       "--size-button-ellipsis-width",
       "--size-button-ellipsis-height",
+      "--size-form-input-height",
+      "--size-form-required-bar",
+      "--size-form-option-height",
+      "--size-form-list-padding",
+      "--size-form-country-height",
+      "--size-form-owner-height",
+      "--size-form-prefix-width",
+      "--size-form-prefix-divider-offset",
+      "--size-form-prefix-caret-gap",
+      "--size-form-caret-width",
+      "--size-form-caret-height",
+      "--size-form-caret-inset-end",
+      "--size-form-input-end",
+      "--size-form-input-end-icon",
+      "--size-form-currency-prefix-inset",
+      "--size-form-currency-divider-gap",
+      "--size-form-currency-divider-height",
+      "--size-form-currency-divider-top",
+      "--size-form-owner-caret-gap",
       "--size-checkbox",
       "--size-checkbox-border",
       "--size-checkbox-label-gap",

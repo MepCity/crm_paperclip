@@ -1,16 +1,6 @@
-import { listMembers } from "@crm/core";
-import { apiRoute } from "@/lib/api/server";
+import { operationRoute } from "@/lib/api/operation-route";
 import { operations } from "@/lib/api/wire/operations";
-import { getRecordService } from "@/lib/records";
 
 export const dynamic = "force-dynamic";
 
-export const GET = apiRoute(
-  async (input) =>
-    (
-      await operations.fields.run(
-        { records: getRecordService(input.ctx), members: await listMembers(input.ctx) },
-        input,
-      )
-    ).body,
-);
+export const GET = operationRoute(operations.fields);

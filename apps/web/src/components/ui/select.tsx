@@ -1,5 +1,7 @@
 "use client";
 
+import "./record-input.css";
+
 import type { ReactNode } from "react";
 import {
   Select as AriaSelect,
@@ -40,12 +42,13 @@ export function Select<T extends object>({
     <AriaSelect {...props} className="flex flex-col gap-1">
       {({ isInvalid }: SelectRenderProps) => (
         <>
-          <Label className={hideLabel ? "sr-only" : "text-md font-normal text-text"}>{label}</Label>
+          <Label className={hideLabel ? "sr-only" : "record-label text-md"}>{label}</Label>
           {/* The trigger draws the border, but React Aria only reports the resolved
               invalid state (prop or Form validationErrors) on the Select root. */}
           <Button
             data-invalid={isInvalid || undefined}
-            className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left outline-none data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:bg-surface-hover data-disabled:opacity-50 data-invalid:border-danger"
+            data-required={props.isRequired || undefined}
+            className="record-control flex items-center justify-between text-left"
           >
             <SelectValue className="truncate" />
             <Icons.chevronDown className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />

@@ -40,7 +40,10 @@ test("dev ui gallery is accessible with the data entry primitives", async ({ pag
 
   await whenHydrated(page.getByRole("region", { name: "combo box" }).getByRole("combobox").first());
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
 });
 
 test("number field steps and submits from the keyboard", async ({ page }) => {
