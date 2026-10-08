@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
-import { signUpNewUser } from "./support/auth";
+import { AUTH_NAVIGATION_TIMEOUT_MS, signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -54,7 +54,7 @@ test("two people join through an invitation and manage membership", async ({ pag
     await bea.getByRole("textbox", { name: "Email" }).fill(beaEmail);
     await bea.getByLabel("Password").fill(PASSWORD);
     await bea.getByRole("button", { name: "Sign up" }).click();
-    await expect(bea).toHaveURL(inviteUrl);
+    await expect(bea).toHaveURL(inviteUrl, { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
     await bea.getByRole("button", { name: `Join ${organization.name}` }).click();
     await expect(bea).toHaveURL(`/crm/${organization.slug}`);
     await expect(bea.getByRole("button", { name: "Organization switcher" })).toContainText(
