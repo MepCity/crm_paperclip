@@ -1,5 +1,5 @@
 import { type Icon, Icons } from "@/components/ui/icon";
-import { moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { LEADS_MODULE } from "@/modules/leads/list-config";
 
 export interface NavLink {
@@ -88,7 +88,7 @@ export interface CreateRecordEntry {
 }
 
 export const createRecordsNav: readonly CreateRecordEntry[] = [
-  { id: "Leads", label: "Lead", path: (slug) => `/crm/${slug}/tab/Leads/create` },
+  { id: "Leads", label: "Lead", path: (slug) => moduleCreatePath(slug, LEADS_MODULE) },
 ];
 
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
