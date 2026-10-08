@@ -229,10 +229,10 @@ test("Mobile rail starts hidden and changes with viewport width", () => {
 });
 
 test("Settings navigation links to Members and keeps General exact", () => {
-  navigation.path = "/o/example/settings/members";
+  navigation.path = "/crm/example/settings/members";
   render(<SettingsNavigation orgSlug="example" />);
   const members = screen.getByRole("link", { name: "Members" });
-  expect(members.getAttribute("href")).toBe("/o/example/settings/members");
+  expect(members.getAttribute("href")).toBe("/crm/example/settings/members");
   expect(members.getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
 });

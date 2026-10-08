@@ -45,7 +45,7 @@ export const settingsNav: readonly NavLink[] = [
     id: "members",
     label: "Members",
     icon: Icons.users,
-    href: (slug) => `/o/${slug}/settings/members`,
+    href: (slug) => `/crm/${slug}/settings/members`,
     match: "exact",
   },
 ];

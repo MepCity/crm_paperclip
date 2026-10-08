@@ -22,7 +22,7 @@ test("two people join through an invitation and manage membership", async ({ pag
   test.setTimeout(180_000);
   const ada = await signUpNewUser(page, { name: "Ada Admin" });
   const organization = await createOrganization(page, "Northwind");
-  const membersUrl = `/o/${organization.slug}/settings/members`;
+  const membersUrl = `/crm/${organization.slug}/settings/members`;
 
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   await page.getByRole("link", { name: "Members" }).click();
@@ -58,7 +58,7 @@ test("two people join through an invitation and manage membership", async ({ pag
     await bea.getByRole("button", { name: "Sign up" }).click();
     await expect(bea).toHaveURL(inviteUrl);
     await bea.getByRole("button", { name: `Join ${organization.name}` }).click();
-    await expect(bea).toHaveURL(`/o/${organization.slug}`);
+    await expect(bea).toHaveURL(`/crm/${organization.slug}`);
     await expect(bea.getByRole("button", { name: "Organization switcher" })).toContainText(
       organization.name,
     );
@@ -109,7 +109,7 @@ test("two people join through an invitation and manage membership", async ({ pag
     await expect(bea.getByRole("row").filter({ hasText: ada.email })).toHaveCount(0);
     const removed = await page.context().newPage();
     try {
-      await removed.goto(`/o/${organization.slug}`);
+      await removed.goto(`/crm/${organization.slug}`);
       await expect(removed.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     } finally {
       await removed.close();
