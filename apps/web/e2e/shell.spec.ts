@@ -60,6 +60,7 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   await expectNoA11yViolations(page);
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expectNoA11yViolations(page);
   await page.goto(`/crm/${slug}/settings`);
   await expect(page).toHaveURL(/\/sign-in\?next=/);

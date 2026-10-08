@@ -31,24 +31,6 @@ function formatTarget(target: AxeTarget): string {
  * clock until a short-lived toast has already gone. Infinite animations,
  * such as a spinner, never finish and are left running.
  */
-/** Drops assertive nodes whose aria-labelledby still points at an unmounted control. */
-async function removeStalePendingAnnouncements(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const root = document.querySelector('[data-live-announcer="true"]');
-    const assertive = root?.querySelector('[aria-live="assertive"]');
-    if (!assertive) return;
-    for (const node of assertive.querySelectorAll('[role="img"][aria-labelledby]')) {
-      const ids = node.getAttribute("aria-labelledby")?.split(/\s+/) ?? [];
-      for (const id of ids) {
-        if (id && !document.getElementById(id)) {
-          node.remove();
-          break;
-        }
-      }
-    }
-  });
-}
-
 async function settleFiniteAnimations(page: Page): Promise<void> {
   await page.evaluate(() => {
     for (const animation of document.getAnimations()) {
@@ -87,7 +69,6 @@ export async function expectNoA11yViolations(
   page: Page,
   options?: A11yCheckOptions,
 ): Promise<void> {
-  await removeStalePendingAnnouncements(page);
   await settleFiniteAnimations(page);
   const builder = new AxeBuilder({ page }).withTags(WCAG_21_A_AND_AA);
   for (const selector of options?.exclude ?? []) {
