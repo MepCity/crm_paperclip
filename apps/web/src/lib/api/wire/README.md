@@ -9,33 +9,33 @@ An error body has the keys `code`, `details`, `message` and `status`. All four a
 present on every error we send. An unknown record was observed as HTTP 404. The
 values inside `code` and `details` were not observed.
 
-## Interim
+## Writes and errors
 
-`code`, the layout of `details`, and the status codes other than the observed 404
-are ours until evidence exists (ADR 0004 §5, open question 1).
+ADR 0004 §5 records the complete operation/error tables with source columns and
+remaining Interim decisions. The board selected public developer documentation
+on 2026-10-04. A10/A11 of `research/specs/leads-write-behaviour.md` are the write
+sources; observed request shapes still take precedence.
 
-| `code` | HTTP status | `details` |
-| --- | --- | --- |
-| `validation` | 400 | `{ "fields": { "<field>": ["message", "..."] } }` |
-| `unauthenticated` | 401 | `{}` |
-| `forbidden` | 403 | `{}` |
-| `not_found` | 404 | `{}` |
-| `conflict` | 409 | `{}` |
+Errors use exactly `code`, `details`, `message`, `status`; body status is the string
+`error` (literal Interim), and HTTP status is read from the response line.
 
-`validation` carries `ValidationError.fieldErrors` without loss: several fields, and
-several messages on one field. The body `status` is the same number as the HTTP status.
+| code | HTTP | details | Source |
+| --- | --- | --- | --- |
+| MANDATORY_NOT_FOUND | 400 | fields map | A10; details.fields Interim |
+| INVALID_DATA | 400 | fields map | A11 D2/D17; details.fields Interim |
+| LIMIT_EXCEEDED | 400 | fields map | Interim for 1–500 IDs |
+| DUPLICATE_DATA | 400 | empty | A10 |
+| NO_PERMISSION | 403 | empty | A10 |
+| AUTHENTICATION_FAILURE | 401 | empty | A11 |
+| not_found | 404 | empty | observed HTTP; code Interim |
+| INTERNAL_ERROR | 500 | empty | A10 |
 
-`internal_error` is not an `ErrorCode`. `encodeError` writes it only for a value that
-is not an `AppError`: HTTP 500, `details` `{}`, and a fixed message. The original
-message and stack stay in the server log and are not copied into the body.
-
-`decodeError` returns an `AppError` subclass only when the body is that four-key
-object, `code` is one of the five codes above, and both the HTTP status and the body
-`status` equal that code's status. Everything else is an `UnexpectedApiError`: HTTP
-500, `internal_error`, a body that is missing or not the four-key object, an unknown
-`code`, or a status that does not match the code. `UnexpectedApiError` is not an
-`AppError` (`isAppError` is false). Its `status` is the HTTP status of the response,
-and its message is fixed — the body message is not copied.
+ValidationError's internal reason selects mandatory/limit/other validation codes;
+it is restored from the wire code without adding another wire key. `details.fields`
+preserves every field and message. No undocumented field-detail location is inferred.
+The strict decoder rejects unknown/malformed bodies, mismatched HTTP/code pairs,
+and internal failures as UnexpectedApiError with a fixed safe message. The server
+logs unexpected causes and emits only `Something went wrong.`.
 
 ## Observed resource keys
 
@@ -47,7 +47,7 @@ are emitted; the captures do not justify synthesizing the remaining properties.
 | Endpoint operation | Emitted spec keys | Omitted |
 | --- | --- | --- |
 | module | `modules[].api_name`, `singular_label`, `plural_label`, `business_card_fields[]{api_name}` | Other module properties, identifiers, profiles, permissions, embedded views and related lists |
-| fields | `fields[].api_name`, `field_label`, `data_type`, `system_mandatory`, `read_only`, `unique`, `view_type{view,edit,create,quick_create}`, optional `length`, `pick_list_values[]{display_value,actual_value}`, `lookup.module.api_name` | Field IDs, permissions, other UI flags, dependencies, currency settings, category objects and other configuration |
+| fields | `fields[].api_name`, `field_label`, `data_type`, `system_mandatory`, `read_only`, `mass_update`, `unique`, `view_type{view,edit,create,quick_create}`, optional `length`, `pick_list_values[]{display_value,actual_value}`, `lookup.module.api_name` | Field IDs, permissions, other UI flags, dependencies, currency settings, category objects and other configuration |
 | layouts | `layouts[].sections[]{display_label,column_count,fields[]}` and interim `columns[][]`; fields use the field codec | Layout ID/name, section API name/ID, profiles, layout-specific field/UI flags |
 | views | `custom_views[]{id,name,system_defined,default}`, `info{per_page,count,page,more_records,default}` | Access/share/favorite/pin/history and translation properties, field IDs |
 | view | `custom_views[]{id,name,system_defined,default,fields[]{api_name},criteria,sort_by,sort_order}` | Access/share/favorite/pin/history and field identifiers |
@@ -55,9 +55,9 @@ are emitted; the captures do not justify synthesizing the remaining properties.
 | count | `count` | None |
 | record | Singleton `data[]{id,<field API names>}` | All `$` flags/properties and port-absent row fields |
 | users | `users[]{id,full_name,email}`, `info{per_page,count,page,more_records}` | Roles/profiles, names split into parts, locale/shift/preferences/status and other user properties |
-| create | Interim `data[]{id}` | Full record (read separately) |
-| update | Interim `data[]{id}` | Full record (read separately) |
-| delete | Interim `data[]{id}` | Full record |
+| create | `data[]{code,details{Modified_Time,Modified_By,Created_Time,id,Created_By},message,status}` (A11 D2) | Full record (read separately) |
+| update | Same success keys, message `record updated` (A11 D17) | Full record (read separately) |
+| delete / massDelete / massUpdate / changeOwner | `data[]{code,details{id},message,status}`; source/interim distinctions in ADR §5 | Full record, jobs |
 
 Owners carry `{id,name,email}` when the member exists. When it is unavailable,
 only its ID is emitted: no placeholder display name or email is invented.
@@ -87,11 +87,11 @@ or layout are server errors, not caller validation errors.
 
 ## Interim resource behavior
 
-- Write method/path and JSON `{data:[{...}]}` envelopes follow ADR 0004 §5.
-  Create/update accept exactly one record, matching the single-record port.
-  Writes return only IDs, with a separate detail read for the complete record.
-  Delete accepts comma-separated `ids` and returns their IDs after successful
-  atomic port deletion. None of these write shapes were captured.
+- Write methods/paths and envelopes follow ADR 0004 §5. Create/update accept one
+  record and emit SUCCESS details, then clients read the full record separately.
+  Delete uses record DELETE or `actions/mass_delete` with IDs. Mass update accepts
+  exactly one eligible field; owner change accepts an organization member.
+  All batch actions use the port's atomic validation and 1–500 limit.
 - `encodeInput` / `decodeInput` carry write field values in both directions;
   owner and single-module lookup inputs use `{id}` without display names.
   Write request bodies were not captured, so this behavior is not listed under
@@ -129,8 +129,8 @@ or layout are server errors, not caller validation errors.
   preserves the domain round trip; it is not evidence of captured detail parity.
 - No timezone conversion, numeric formatting, tag-array interpretation or
   additional field constraints are inferred; the service validates writes.
-- Error `details.fields` and error codes/statuses retain the interim error codec
-  described above. The code discriminator survives duplicate module instances.
+- Error `details.fields` remains Interim; documented codes and HTTP statuses use
+  the table above. The internal code discriminator survives duplicate module instances.
 
 ## Omitted resource keys
 
@@ -166,3 +166,6 @@ body names and `details.fields` are interim additions described above.
 fields are documented as interim fixture selection in the record-service README.
 Owner display names and email are never sent in a write. These new interim keys
 do not assert reference write parity.
+
+`FieldDefinition.massUpdate` maps losslessly to observed `fields[].mass_update`,
+including layout fields. Fixture values come from metadata, not field-type guesses.

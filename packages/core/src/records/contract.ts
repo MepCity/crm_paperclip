@@ -50,6 +50,7 @@ export interface FieldViewFlags {
 }
 
 export interface FieldDefinition {
+  massUpdate: boolean;
   views: FieldViewFlags;
   apiName: string;
   label: string;
@@ -151,6 +152,8 @@ export interface RecordService {
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
   create(module: ModuleApiName, input: RecordInput): Promise<RecordData>;
   update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData>;
+  massUpdate(module: ModuleApiName, ids: readonly RecordId[], input: RecordInput): Promise<void>;
+  changeOwner(module: ModuleApiName, ids: readonly RecordId[], ownerId: string): Promise<void>;
   delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void>;
 }
 

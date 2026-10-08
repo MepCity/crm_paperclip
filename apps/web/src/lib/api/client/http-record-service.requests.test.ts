@@ -11,6 +11,7 @@ type RecordedRequest = {
   method: string;
   pathname: string;
   queryKeys: readonly string[];
+  body?: unknown;
 };
 
 function resolveOperation(
@@ -108,6 +109,7 @@ function createTrackedService(onRequest: (entry: RecordedRequest) => void) {
         method: requestOptions?.method ?? "GET",
         pathname: url.pathname,
         queryKeys: [...url.searchParams.keys()].sort(),
+        body: requestOptions?.body,
       });
       return operationApiFetch(operationDeps, path, requestOptions);
     },
@@ -154,6 +156,7 @@ function onRequestLogged(log: RecordedRequest[], url: URL, requestOptions?: ApiF
     method: requestOptions?.method ?? "GET",
     pathname: url.pathname,
     queryKeys: [...url.searchParams.keys()].sort(),
+    body: requestOptions?.body,
   });
 }
 
@@ -243,15 +246,77 @@ describe("http record service requests", () => {
 
     log.length = 0;
     await service.delete(module, [recordId]);
-    const deleteCalls = entriesForOperation(log, operations.delete, { module });
+    const deleteCalls = entriesForOperation(log, operations.delete, { module, recordId });
     expect(deleteCalls).toHaveLength(1);
-    expectQueryKeys(logEntry(deleteCalls, 0), ["ids"]);
+    expectQueryKeys(logEntry(deleteCalls, 0), []);
 
     log.length = 0;
     await service.listUsers();
     expect(log).toHaveLength(1);
     expectPath(logEntry(log, 0), operations.users, {});
     expectQueryKeys(logEntry(log, 0), ["page", "per_page", "type"]);
+  });
+
+  it("sends exact documented write methods, paths and bodies", async () => {
+    const log: RecordedRequest[] = [];
+    const service = createTrackedService((entry) => log.push(entry));
+    const module = "Leads";
+    await service.getModule(module);
+    log.length = 0;
+    const created = await service.create(module, { Company: "Payload Test", Last_Name: "Example" });
+    expect(log[0]).toEqual({
+      method: "POST",
+      pathname: "/crm/v2.2/Leads",
+      queryKeys: [],
+      body: { data: [{ Company: "Payload Test", Last_Name: "Example" }] },
+    });
+    expect(log[1]?.pathname).toBe(`/crm/v2.2/Leads/${created.id}`);
+    log.length = 0;
+    await service.update(module, created.id, { Phone: "123" });
+    expect(log[0]).toEqual({
+      method: "PUT",
+      pathname: `/crm/v2.2/Leads/${created.id}`,
+      queryKeys: [],
+      body: { data: [{ Phone: "123" }] },
+    });
+    expect(log[1]?.pathname).toBe(`/crm/v2.2/Leads/${created.id}`);
+    const other = await service.create(module, { Company: "Payload Test", Last_Name: "Other" });
+    const ids = [other.id, created.id];
+    for (const [action, body, run] of [
+      [
+        "mass_update",
+        { data: [{ Company: "Batch" }], ids },
+        () => service.massUpdate(module, ids, { Company: "Batch" }),
+      ],
+      [
+        "change_owner",
+        { ids, owner: { id: ctx.userId } },
+        () => service.changeOwner(module, ids, ctx.userId),
+      ],
+      [
+        "change_owner",
+        { ids: [created.id], owner: { id: ctx.userId } },
+        () => service.changeOwner(module, [created.id], ctx.userId),
+      ],
+      ["mass_delete", { ids }, () => service.delete(module, ids)],
+    ] as const) {
+      log.length = 0;
+      await run();
+      expect(log).toEqual([
+        { method: "POST", pathname: `/crm/v2.2/Leads/actions/${action}`, queryKeys: [], body },
+      ]);
+    }
+    const single = await service.create(module, { Company: "Payload Test", Last_Name: "Single" });
+    log.length = 0;
+    await service.delete(module, [single.id]);
+    expect(log).toEqual([
+      {
+        method: "DELETE",
+        pathname: `/crm/v2.2/Leads/${single.id}`,
+        queryKeys: [],
+        body: undefined,
+      },
+    ]);
   });
 
   it("sends bulk paging query names without sort when sort is omitted", async () => {
