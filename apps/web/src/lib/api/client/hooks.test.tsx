@@ -5,7 +5,15 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "./client-record-service";
-import { useCreateRecord, useRecord, useRecordCount, useRecordList } from "./hooks";
+import {
+  useChangeOwner,
+  useCreateRecord,
+  useDeleteRecords,
+  useMassUpdate,
+  useRecord,
+  useRecordCount,
+  useRecordList,
+} from "./hooks";
 import type { ClientRecordService } from "./http-record-service";
 import { ApiProvider } from "./provider";
 
@@ -90,6 +98,60 @@ describe("record hooks", () => {
     await waitFor(() => expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore));
     await waitFor(() => expect(countSpy.mock.calls.length).toBeGreaterThan(countCallsBefore));
   });
+
+  it.each(["massUpdate", "changeOwner", "delete"] as const)(
+    "invalidates lists, counts and each selected record after %s",
+    async (action) => {
+      const service = createService();
+      const records = await Promise.all(
+        ["First", "Second"].map((Last_Name) =>
+          service.create("Leads", { Last_Name, Company: "Hook Batch" }),
+        ),
+      );
+      const ids = records.map((row) => row.id);
+      const query = { viewId: "all-leads", page: 1, perPage: 10 };
+      const list = vi.spyOn(service, "list");
+      const count = vi.spyOn(service, "count");
+      const get = vi.spyOn(service, "get");
+      const { result } = renderHook(
+        () => ({
+          list: useRecordList("Leads", query),
+          count: useRecordCount("Leads", query),
+          first: useRecord("Leads", ids[0] as string),
+          second: useRecord("Leads", ids[1] as string),
+          mass: useMassUpdate("Leads"),
+          owner: useChangeOwner("Leads"),
+          remove: useDeleteRecords("Leads"),
+        }),
+        { wrapper: wrapper(service) },
+      );
+      await waitFor(() =>
+        expect(
+          result.current.first.isSuccess &&
+            result.current.second.isSuccess &&
+            result.current.list.isSuccess &&
+            result.current.count.isSuccess,
+        ).toBe(true),
+      );
+      list.mockClear();
+      count.mockClear();
+      get.mockClear();
+      if (action === "massUpdate")
+        await result.current.mass.mutateAsync({ ids, input: { Company: "Hook Changed" } });
+      else if (action === "changeOwner")
+        await result.current.owner.mutateAsync({ ids, ownerId: ctx.userId });
+      else await result.current.remove.mutateAsync(ids);
+      await waitFor(() => {
+        expect(list).toHaveBeenCalled();
+        expect(count).toHaveBeenCalled();
+        for (const id of ids) expect(get).toHaveBeenCalledWith("Leads", id);
+      });
+      if (action === "massUpdate")
+        await waitFor(() => expect(result.current.first.data?.fields.Company).toBe("Hook Changed"));
+      if (action === "delete")
+        await waitFor(() => expect(result.current.first.error).toBeInstanceOf(NotFoundError));
+    },
+  );
 
   it("surfaces NotFoundError on the record query", async () => {
     const service = createService();
