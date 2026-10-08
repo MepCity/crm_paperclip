@@ -245,3 +245,18 @@ test("FormRow pairs with text, picklist and owner inputs through hideLabel", asy
   await user.click(screen.getByLabelText("Owner"));
   expect(screen.getByRole("listbox")).toBeTruthy();
 });
+
+test("checkbox inside a form row has one accessible label", () => {
+  render(
+    <FormRow label="Example" controlId="example-checkbox" column="left">
+      <FieldInput
+        id="example-checkbox"
+        hideLabel
+        field={field("boolean")}
+        value={false}
+        onChange={() => {}}
+      />
+    </FormRow>,
+  );
+  expect(screen.getByRole("checkbox", { name: "Example" })).toBeTruthy();
+});

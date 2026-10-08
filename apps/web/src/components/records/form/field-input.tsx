@@ -148,7 +148,14 @@ export function FieldInput({
         />
       );
     case "boolean":
-      return <Checkbox {...common} isSelected={value === true} onChange={onChange} />;
+      return (
+        <Checkbox
+          {...common}
+          aria-label={field.label}
+          isSelected={value === true}
+          onChange={onChange}
+        />
+      );
     case "picklist":
       return (
         <RecordChoice
