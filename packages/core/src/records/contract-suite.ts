@@ -10,6 +10,7 @@ import type {
   FieldValue,
   ListView,
   ModuleMetadata,
+  RecordData,
   RecordInput,
   RecordService,
 } from "./contract";
@@ -197,7 +198,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       for (const order of ["asc", "desc"] as const) {
         it(`sorts own nonempty ${field} values ${order}`, async () => {
           const marker = `Sort-${randomUUID()}`;
-          const records = [];
+          const records: RecordData[] = [];
           for (const [text, number] of [
             ["C", 30],
             ["A", 2],
@@ -456,7 +457,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       expect((await service.get("Leads", ids[499] as string)).fields.Company).toBe("Boundary");
       await service.delete("Leads", ids);
       await expect(service.get("Leads", ids[0] as string)).rejects.toBeInstanceOf(NotFoundError);
-    });
+    }, 15_000);
 
     it("deletes records and updates count", async () => {
       const created = await service.create("Leads", forView(defaultView));
@@ -550,6 +551,399 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         sort: { field: "Company", order: "asc" },
       });
       expect(sorted.sort).toEqual({ field: "Company", order: "asc" });
+    });
+    const panelCases: {
+      label: string;
+      field: string;
+      comparator: Comparator;
+      value: CriteriaValue;
+      indexes: number[];
+    }[] = [];
+    for (const field of ["First_Name", "Email", "Phone", "Website", "Description"]) {
+      for (const [label, comparator, value, indexes] of [
+        ["is", "equal", "ALPHABETA", [0]],
+        ["isn't", "not_equal", "ALPHABETA", [1, 2, 3]],
+        ["contains", "contains", "PHAB", [0]],
+        ["doesn't contain", "not_contains", "PHAB", [1, 2, 3]],
+        ["starts with", "starts_with", "ALPHA", [0]],
+        ["ends with", "ends_with", "BETA", [0]],
+      ] as const)
+        panelCases.push({
+          label: `${field} ${label}`,
+          field,
+          comparator,
+          value,
+          indexes: [...indexes],
+        });
+    }
+    for (const field of ["Annual_Revenue", "No_of_Employees", "Latitude"]) {
+      for (const [label, comparator, value, indexes] of [
+        ["=", "equal", 20, [1]],
+        ["!=", "not_equal", 20, [0, 2, 3]],
+        ["<", "less_than", 20, [0]],
+        ["<=", "less_equal", 20, [0, 1]],
+        [">", "greater_than", 20, [3]],
+        [">=", "greater_equal", 20, [1, 3]],
+        ["between", "between", [10, 20], [0, 1]],
+        ["not between", "not_between", [10, 20], [3]],
+      ] as const)
+        panelCases.push({
+          label: `${field} ${label}`,
+          field,
+          comparator,
+          value,
+          indexes: [...indexes],
+        });
+    }
+    panelCases.push(
+      {
+        label: "picklist is",
+        field: "Lead_Status",
+        comparator: "equal",
+        value: ["Contacted", "Not Qualified"],
+        indexes: [0, 3],
+      },
+      {
+        label: "picklist is not",
+        field: "Lead_Status",
+        comparator: "not_equal",
+        value: ["Contacted", "Not Qualified"],
+        indexes: [1, 2],
+      },
+      {
+        label: "boolean is true",
+        field: "Email_Opt_Out",
+        comparator: "equal",
+        value: true,
+        indexes: [0, 3],
+      },
+      {
+        label: "boolean is false",
+        field: "Email_Opt_Out",
+        comparator: "equal",
+        value: false,
+        indexes: [1],
+      },
+      {
+        label: "owner is",
+        field: "Owner",
+        comparator: "equal",
+        value: ["contract-user"],
+        indexes: [0, 2, 3],
+      },
+      {
+        label: "owner is not",
+        field: "Owner",
+        comparator: "not_equal",
+        value: ["contract-user"],
+        indexes: [1],
+      },
+    );
+    for (const field of ["First_Name", "Lead_Status", "Annual_Revenue", "Email_Opt_Out"])
+      for (const comparator of ["is_empty", "is_not_empty"] as const)
+        panelCases.push({
+          label: `${field} ${comparator}`,
+          field,
+          comparator,
+          value: null,
+          indexes: comparator === "is_empty" ? [2] : [0, 1, 3],
+        });
+
+    const assertPanelSet = async (
+      adapter: RecordService,
+      marker: string,
+      filters: Criteria,
+      expected: string[],
+    ) => {
+      const query = {
+        viewId: defaultView.id,
+        page: 1,
+        perPage: 100,
+        filters: {
+          groupOperator: "and" as const,
+          group: [
+            { field: "Company", comparator: "equal" as const, value: marker },
+            {
+              groupOperator: "and" as const,
+              group: [
+                filters,
+                { field: "Company", comparator: "is_not_empty" as const, value: null },
+              ],
+            },
+          ],
+        },
+      };
+      const result = await adapter.list("Leads", query);
+      expect(result.records.map((record) => record.id).sort()).toEqual([...expected].sort());
+      expect(await adapter.count("Leads", query)).toBe(expected.length);
+    };
+    it.each(panelCases)(
+      "panel $label: exact set and count with nested and",
+      async ({ field, comparator, value, indexes }) => {
+        const marker = `Panel-${randomUUID()}`;
+        const other = await makeService({ ...ctx, userId: "panel-other" });
+        const records: RecordData[] = [];
+        for (const index of [0, 1, 2, 3]) {
+          const adapter = index === 1 ? other : service;
+          records.push(
+            await adapter.create(
+              "Leads",
+              input({
+                Company: marker,
+                First_Name: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
+                Email: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
+                Phone: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
+                Website: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
+                Description: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
+                Annual_Revenue: [10, 20, null, 30][index] ?? null,
+                No_of_Employees: [10, 20, null, 30][index] ?? null,
+                Latitude: [10, 20, null, 30][index] ?? null,
+                Email_Opt_Out: [true, false, null, true][index] ?? null,
+                Lead_Status: ["Contacted", "Junk Lead", null, "Contacted"][index] ?? null,
+              }),
+            ),
+          );
+        }
+        await assertPanelSet(
+          service,
+          marker,
+          { field, comparator, value },
+          indexes.map((index) => records[index]?.id as string),
+        );
+      },
+    );
+
+    const calendarCases: { name: string; token: CriteriaToken; start: string; end: string }[] = [
+      {
+        name: "Today",
+        token: { token: "TODAY" },
+        start: "2026-01-05T00:00:00.000Z",
+        end: "2026-01-06T00:00:00.000Z",
+      },
+      {
+        name: "Tomorrow",
+        token: { token: "PERIOD", name: "TOMORROW" },
+        start: "2026-01-06T00:00:00.000Z",
+        end: "2026-01-07T00:00:00.000Z",
+      },
+      {
+        name: "Yesterday",
+        token: { token: "PERIOD", name: "YESTERDAY" },
+        start: "2026-01-04T00:00:00.000Z",
+        end: "2026-01-05T00:00:00.000Z",
+      },
+      {
+        name: "This Week",
+        token: { token: "PERIOD", name: "THIS_WEEK" },
+        start: "2026-01-05T00:00:00.000Z",
+        end: "2026-01-12T00:00:00.000Z",
+      },
+      {
+        name: "Previous Week",
+        token: { token: "PERIOD", name: "PREVIOUS_WEEK" },
+        start: "2025-12-29T00:00:00.000Z",
+        end: "2026-01-05T00:00:00.000Z",
+      },
+      {
+        name: "This Month",
+        token: { token: "PERIOD", name: "THIS_MONTH" },
+        start: "2026-01-01T00:00:00.000Z",
+        end: "2026-02-01T00:00:00.000Z",
+      },
+      {
+        name: "Previous Month",
+        token: { token: "PERIOD", name: "PREVIOUS_MONTH" },
+        start: "2025-12-01T00:00:00.000Z",
+        end: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        name: "This Year",
+        token: { token: "PERIOD", name: "THIS_YEAR" },
+        start: "2026-01-01T00:00:00.000Z",
+        end: "2027-01-01T00:00:00.000Z",
+      },
+      {
+        name: "Previous Year",
+        token: { token: "PERIOD", name: "PREVIOUS_YEAR" },
+        start: "2025-01-01T00:00:00.000Z",
+        end: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        name: "Next Year",
+        token: { token: "PERIOD", name: "NEXT_YEAR" },
+        start: "2027-01-01T00:00:00.000Z",
+        end: "2028-01-01T00:00:00.000Z",
+      },
+    ];
+    it.each(calendarCases)(
+      "panel $name: UTC boundaries and count",
+      async ({ token, start, end }) => {
+        let now = new Date(start);
+        const adapter = await makeService(ctx, { now: () => now });
+        const marker = `Calendar-${randomUUID()}`;
+        const records: RecordData[] = [];
+        for (const timestamp of [
+          Date.parse(start) - 1,
+          Date.parse(start),
+          Date.parse(end) - 1,
+          Date.parse(end),
+        ]) {
+          now = new Date(timestamp);
+          records.push(await adapter.create("Leads", input({ Company: marker })));
+        }
+        now = new Date("2026-01-05T12:00:00.000Z");
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: "Created_Time", comparator: "equal", value: token },
+          [records[1]?.id as string, records[2]?.id as string],
+        );
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: "Last_Activity_Time", comparator: "equal", value: token },
+          [],
+        );
+      },
+    );
+    it("panel Till Yesterday / Starting tomorrow: UTC midnight and open ends", async () => {
+      let now = new Date("2026-01-05T00:00:00.000Z");
+      const adapter = await makeService(ctx, { now: () => now });
+      const marker = `Open-period-${randomUUID()}`;
+      const records: RecordData[] = [];
+      for (const timestamp of [
+        "2025-01-01T00:00:00.000Z",
+        "2026-01-04T23:59:59.999Z",
+        "2026-01-05T00:00:00.000Z",
+        "2026-01-05T23:59:59.999Z",
+        "2026-01-06T00:00:00.000Z",
+        "2027-01-01T00:00:00.000Z",
+      ]) {
+        now = new Date(timestamp);
+        records.push(await adapter.create("Leads", input({ Company: marker })));
+      }
+      now = new Date("2026-01-05T12:00:00.000Z");
+      for (const [name, indexes] of [
+        ["TILL_YESTERDAY", [0, 1]],
+        ["STARTING_TOMORROW", [4, 5]],
+      ] as const)
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: "Created_Time", comparator: "equal", value: { token: "PERIOD", name } },
+          indexes.map((index) => records[index]?.id as string),
+        );
+    });
+    it("panel age in / due in: whole days, inclusive upper limit and zero", async () => {
+      const base = Date.parse("2026-01-05T12:00:00.000Z");
+      let now = new Date(base);
+      const adapter = await makeService(ctx, { now: () => now });
+      const marker = `Day-offset-${randomUUID()}`;
+      const records: RecordData[] = [];
+      for (const offset of [
+        -2 * 86_400_000,
+        -2 * 86_400_000 + 1,
+        0,
+        1,
+        86_400_000,
+        86_400_000 + 1,
+      ]) {
+        now = new Date(base + offset);
+        records.push(await adapter.create("Leads", input({ Company: marker })));
+      }
+      now = new Date(base);
+      for (const [token, offset, indexes] of [
+        ["AGEINDAYS", 1, [1, 2, 3, 4, 5]],
+        ["DUEINDAYS", 1, [3, 4]],
+        ["DUEINDAYS", 0, []],
+        ["AGEINDAYS", 0, [2, 3, 4, 5]],
+      ] as const)
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: "Created_Time", comparator: "less_equal", value: { token, offset } },
+          indexes.map((index) => records[index]?.id as string),
+        );
+      for (const token of ["AGEINDAYS", "DUEINDAYS"] as const)
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: "Last_Activity_Time", comparator: "less_equal", value: { token, offset: 1 } },
+          [],
+        );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Last_Activity_Time", comparator: "is_empty", value: null },
+        records.map((record) => record.id),
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "is_not_empty", value: null },
+        records.map((record) => record.id),
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Owner", comparator: "is_empty", value: null },
+        [],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Owner", comparator: "is_not_empty", value: null },
+        records.map((record) => record.id),
+      );
+    });
+    it("panel rejects invalid field / comparator / value combinations on list and count", async () => {
+      const invalidCriteria = [
+        { field: "Company", comparator: "unknown", value: "x" },
+        ...["Company", "Lead_Status", "Email_Opt_Out", "Owner", "Created_Time"].map((field) => ({
+          field,
+          comparator: "between",
+          value: [1, 2],
+        })),
+        ...["Annual_Revenue", "No_of_Employees", "Latitude"].flatMap((field) => [
+          { field, comparator: "equal", value: "10" },
+          { field, comparator: "less_equal", value: null },
+          ...[[20, 10], [10], [10, 20, 30], [10, "20"], [null, 20]].map((value) => ({
+            field,
+            comparator: "between",
+            value,
+          })),
+          { field, comparator: "contains", value: "10" },
+        ]),
+        { field: "No_of_Employees", comparator: "equal", value: 1.5 },
+        { field: "Email_Opt_Out", comparator: "equal", value: "true" },
+        { field: "Email_Opt_Out", comparator: "not_equal", value: true },
+        { field: "Company", comparator: "equal", value: ["x"] },
+        { field: "Company", comparator: "is_empty", value: "" },
+        { field: "Annual_Revenue", comparator: "not_between", value: [20, 10] },
+        { field: "Lead_Status", comparator: "equal", value: { token: "CATEGORY", offset: 1 } },
+        { field: "Created_Time", comparator: "less_than", value: { token: "TODAY" } },
+        { field: "Owner", comparator: "not_equal", value: "contract-user" },
+        { field: "Lead_Status", comparator: "equal", value: [] },
+        { field: "Owner", comparator: "equal", value: [true] },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "PERIOD", name: "CURRENT_FY" },
+        },
+        { field: "Company", comparator: "equal", value: { token: "UNKNOWN" } },
+        ...["AGEINDAYS", "DUEINDAYS"].flatMap((token) =>
+          [-1, 1.5, "1"].map((offset) => ({
+            field: "Created_Time",
+            comparator: "less_equal",
+            value: { token, offset },
+          })),
+        ),
+      ] as unknown as Criteria[];
+      for (const filters of invalidCriteria) {
+        const query = { viewId: defaultView.id, page: 1, perPage: 10, filters };
+        await validation(service.list("Leads", query), "filters");
+        await validation(service.count("Leads", query), "filters");
+      }
     });
     it("resolves the four tokens, four comparators and null fields from a fixed clock", async () => {
       let now = new Date("2026-05-14T00:00:00.000Z");

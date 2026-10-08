@@ -775,7 +775,7 @@ describe("interim fixture policies (not reference parity)", () => {
         records.length,
     );
   });
-  it("implements case-sensitive exact is, null, any-of arrays and nested and/or groups", async () => {
+  it("implements case-insensitive text is, null and nested and/or groups", async () => {
     const service = make();
     const marker = randomUUID().slice(0, 20);
     const a = await service.create("Leads", input({ Company: marker, First_Name: "Alpha" }));
@@ -795,7 +795,7 @@ describe("interim fixture policies (not reference parity)", () => {
       (await query({ field: "First_Name", comparator: "equal", value: "Alpha" })).records.map(
         (row) => row.id,
       ),
-    ).toEqual([a.id]);
+    ).toEqual([c.id, a.id]);
     expect(
       (await query({ field: "First_Name", comparator: "equal", value: null })).records.map(
         (row) => row.id,
@@ -806,7 +806,7 @@ describe("interim fixture policies (not reference parity)", () => {
         await query({
           groupOperator: "or",
           group: [
-            { field: "First_Name", comparator: "equal", value: ["Alpha", "alpha"] },
+            { field: "First_Name", comparator: "equal", value: "ALPHA" },
             { field: "First_Name", comparator: "equal", value: null },
           ],
         })

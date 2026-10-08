@@ -76,6 +76,37 @@ User names for owner fields come from `GET /crm/v9/users?type=&page=&per_page=` 
 
 Interim, because the transport was not observed: a changed sort is sent as `sort_by` and `sort_order` in the query (the names appear in `info` and on the notes request); ad-hoc filters and a search text are sent as a JSON body on `bulk` and `count`, with filters in the criteria shape of saved views (`comparator`, `field`, `value`; `group_operator`, `group[]`).
 
+
+Interim **panel filter values** (MEP-195): the labels were observed, but neither
+an applied-filter request nor its result was captured. These new values are
+implementation choices, not observed wire literals. They use the same saved-view
+leaf/group body on `bulk` and `actions/count`; `field` carries `api_name` and
+`group_operator` remains `AND` / `OR`.
+
+- Comparators: `not_equal`, `starts_with`, `ends_with`, `is_empty`, `is_not_empty`,
+  `less_than`, `greater_than`, `greater_equal`, `between`, `not_between`.
+- Existing `less_equal` also accepts a numeric value and the new day-offset
+  token string `${DUEINDAYS}+N`. N is a nonnegative integer; the due window is
+  strictly after now and inclusive at now + N complete days (N=0 is empty).
+- Named periods use `equal` and one token family: `${PERIOD.TOMORROW}`,
+  `${PERIOD.YESTERDAY}`, `${PERIOD.TILL_YESTERDAY}`,
+  `${PERIOD.STARTING_TOMORROW}`, `${PERIOD.THIS_WEEK}`,
+  `${PERIOD.PREVIOUS_WEEK}`, `${PERIOD.THIS_MONTH}`,
+  `${PERIOD.PREVIOUS_MONTH}`, `${PERIOD.THIS_YEAR}`,
+  `${PERIOD.PREVIOUS_YEAR}`, `${PERIOD.NEXT_YEAR}`.
+- Empty predicates carry `value: null`; membership predicates carry string arrays;
+  numeric ranges carry exactly `[lower, upper]`, inclusive at both ends.
+- Text-family comparisons ignore case. Empty means null or empty string; negative
+  text/picklist/owner comparisons match empties. Empty numbers match only `!=`
+  among numeric operators, not `not between`. Calendar periods use UTC, weeks
+  begin Monday, and intervals include their start and exclude the next start.
+
+The observed comparators `equal`, `contains`, `not_contains`, `less_equal`, tokens
+`${TODAY}`, `${AGEINDAYS}+31`, `${CATEGORY.<name>}` and object
+`{ "name": "${CURRENTUSER}" }` retain their spelling. Age-in uses the existing
+`less_equal` + `AGEINDAYS` rule unchanged. The complete interim semantic table
+and validation rules live in `packages/core/src/records/README.md`.
+
 ### 5. Writes and errors
 
 Decided, whatever later evidence shows:
@@ -229,5 +260,5 @@ Verification:
 
 1. The board selected public developer documentation on 2026-10-04 (§5). It describes the external API; browser write requests remain unobserved because the reference CRM is read-only. Remaining undocumented details are explicitly Interim above.
 2. Request header names are not in the captures. `X-CRM-ORG` is our choice; only `server.ts` and the fetch wrapper know it.
-3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)?
+3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)? Which comparator/token literals and empty/date/range semantics does an applied panel filter use? Panel labels were observed, but no applied request or result was captured; all panel filter values listed in §4 and their semantic table remain Interim pending evidence.
 4. Which value does `info.sort_by` carry when neither the request nor the view sets a sort? The observed default view returns strings. Until known we send `null`.
