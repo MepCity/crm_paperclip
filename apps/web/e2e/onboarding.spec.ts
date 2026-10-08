@@ -1,5 +1,5 @@
 import { expectNoA11yViolations } from "./support/a11y";
-import { signUpNewUser } from "./support/auth";
+import { AUTH_NAVIGATION_TIMEOUT_MS, signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -75,7 +75,7 @@ test("organization creation requires sign-in and returns there afterwards", asyn
   await page.getByRole("textbox", { name: "Email" }).fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });
 
