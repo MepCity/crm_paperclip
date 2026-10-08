@@ -43,9 +43,13 @@ and `research/specs/list-views.md`; fitted type values come from `research/specs
 Recommendation and Variable-weight stem check. A list row is quoted by its element name. Detail and form
 specs are not incorporated yet.
 
-`Status` is `from spec` when the value is measured in that row and `not yet measured` when the specs
-do not measure it yet — those tokens keep the value they had in the skeleton and must not be
-invented. Hex digits are lower-case in `tokens.css` and upper-case in the spec; compare them
+`Status` is `from spec` when the value is measured in that row, `derived from spec` when it is that
+measurement with a fixed box part taken off (a 1 px border or a line-box inset), `lead decision`
+when no spec row states the box and the domain lead set it in issue review, `Interim` when the
+reference state was never captured, and `not yet measured` when the specs do not measure it yet —
+those tokens keep the value they had in the skeleton and must not be invented. A `lead decision`
+cell names the issue and the review item so the box can be re-checked when the spec measures it.
+Hex digits are lower-case in `tokens.css` and upper-case in the spec; compare them
 case-insensitively. Sizes are quoted in CSS px, and type sizes keep the `rem` of `tokens.css` with
 the measured px in brackets.
 
@@ -338,39 +342,39 @@ what the "no colour constants" rule forbids.
 | `--size-detail-timeline-subtab-padding-inline` | `6px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "about 6 px past the label ink on each side" | from spec |
 | `--size-detail-timeline-subtab-underline-height` | `3px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "underline is 3 px thick" | from spec |
 | `--size-detail-timeline-history-padding-top` | `25px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "button's top edge is 25 px below the subtab line" | from spec |
-| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading starts x 578 | from spec |
+| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "`Timeline History` text starts x 578" (26 px inside the surface at x 552); the filter panel shares this inset, so it sits 1 px farther in than the spec's "x 577–1433" and measures 854 px wide against 856 px | from spec |
 | `--size-detail-timeline-filter-button-width` | `42px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
 | `--size-detail-timeline-filter-button-height` | `30px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
 | `--size-detail-timeline-filter-button-gap` | `11px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap (measured) | from spec |
 | `--size-detail-timeline-filter-panel-gap` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "15 px below the filter button" | from spec |
-| `--size-detail-timeline-filter-panel-padding-block-start` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-1 label cap top 19 px below panel top (15 px padding + 4 px field gap) | from spec |
-| `--size-detail-timeline-filter-panel-padding-inline` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › first selector starts 21 px inside panel left edge | from spec |
-| `--size-detail-timeline-filter-panel-padding-bottom` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "bottom edge is 16 px below the row-2 controls" | from spec |
-| `--size-detail-timeline-filter-field-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › label box to selector top | from spec |
+| `--size-detail-timeline-filter-panel-padding-block-start` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "its cap top is 19 px below the panel's top edge in row 1" measures the glyph, not the box; the 15 px panel padding + 4 px field gap that land the label box there is the UI Lead's box model (MEP-143 review round 2, item 4) | lead decision |
+| `--size-detail-timeline-filter-panel-padding-inline` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "the first starts 21 px inside the panel's left edge" minus the panel's 1 px border | derived from spec |
+| `--size-detail-timeline-filter-panel-padding-bottom` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "The panel's bottom edge is 16 px below the row-2 controls" measures the outer edge, but this token is the inner padding: the panel's 1 px border adds a px, so the delivered gap under row 2 measures 17 px against the spec's 16 px (UI Lead approval measurement A3: +1 px, kept inside the ±1 px threshold) | lead decision |
+| `--size-detail-timeline-filter-field-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › the row states label caps only; the 4 px label-box to selector-top gap is the UI Lead's box model (MEP-143 review round 2, item 5) and is what keeps the row-1 cap at the spec's 19 px | lead decision |
 | `--size-detail-timeline-filter-selector-row-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px gaps" between row-1 selectors | from spec |
-| `--size-detail-timeline-filter-row2-margin-top` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Sources label top 18 px below row-1 selector bottom edges | from spec |
+| `--size-detail-timeline-filter-row2-margin-top` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 label "18 px below the bottom edge of the row-1 selectors" measures the cap; the UI Lead's box target is 14–15 px (MEP-143 review round 2, item 1), shipped as 14 px above the label box | lead decision |
 | `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "250 px wide" | from spec |
 | `--size-detail-timeline-filter-selector-height` | `33px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33 px high" (Modules, Sources) | from spec |
-| `--size-detail-timeline-filter-selector-padding-inline` | `11px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "text ink starts 12 px right of the selector's outer left edge" (11 px + 1 px border) | from spec |
-| `--size-detail-timeline-filter-caret-width` | `9px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "9 px wide" caret | from spec |
+| `--size-detail-timeline-filter-selector-padding-inline` | `11px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "Selector text ink starts 12 px right of the selector's outer left edge" minus the selector's 1 px border (UI Lead review round 2, item 13 states the box) | derived from spec |
+| `--size-detail-timeline-filter-caret-width` | `9px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "9 px wide" caret; the CSS triangle is two half-pixel side borders, so it measures 8 px on screen (UI Lead approval measurement A7: −1 px, within the ±1 px threshold) | from spec |
 | `--size-detail-timeline-filter-caret-height` | `5px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "5 px high" caret | from spec |
 | `--size-detail-timeline-filter-caret-inset` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › caret right tip 12 px inside selector | from spec |
 | `--size-detail-timeline-apply-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" | from spec |
-| `--size-detail-timeline-apply-padding-inline` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" width | from spec |
+| `--size-detail-timeline-apply-padding-inline` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter measures 103 × 32 px; the spec gives the width, never the padding — 14 px is the UI Lead's box target (MEP-143 review round 2, item 12) and renders 103.1875 px wide | lead decision |
 | `--size-detail-timeline-track-offset` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge starts 25 px below filter panel or button | from spec |
 | `--size-detail-timeline-date-badge-width` | `130px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
 | `--size-detail-timeline-date-badge-height` | `27px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
 | `--size-detail-timeline-date-badge-offset-inline` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge x 577; surface x 552 | from spec |
-| `--size-detail-timeline-connector-height` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › connector runs 25 px from badge bottom to icon top | from spec |
+| `--size-detail-timeline-connector-height` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "runs 25 px from the badge's bottom edge to the icon's top edge". The same 25 px is reused for the rail segment between two icons on one day; the capture holds one event per day, so that same-day pitch is unmeasured | Interim (same-day reuse) |
 | `--size-detail-timeline-track-center` | `125.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › connector at x 677–678; surface x 552 | from spec |
 | `--size-detail-timeline-time-column-end` | `98.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time ends 9.5 px left of icon at x 660 | from spec |
 | `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circle" | from spec |
 | `--size-detail-timeline-event-icon-offset-inline` | `108px` | record-detail.md › Layout › Visual layout › Timeline › Event track › icon x 660–696; surface x 552 | from spec |
 | `--size-detail-timeline-event-column-gap` | `17.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title x 713.5; icon ends x 696 | from spec |
-| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › byline cap 29 px below icon top (7 px body padding + 18 px title line) | from spec |
-| `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap top below icon top (measured box) | from spec |
-| `--size-detail-timeline-event-row-padding-bottom` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › row pitch (7 px title offset + 36 px icon + 18 px) yields 25 px between icons | from spec |
-| `--size-detail-timeline-day-gap` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Event track › day groups | Interim |
+| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "the title's cap top is 10 px and the byline's cap top 29 px below the icon's top edge"; the spec gives cap positions, the 18 px line box that reproduces them is the UI Lead's box model (MEP-143 review round 2, item 10). The filter-field label reuses this box | lead decision |
+| `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap 10 px below the icon's top edge is the spec measure; the 7 px body offset that produces it is the UI Lead's box model (MEP-143 review round 2, item 10) | lead decision |
+| `--size-detail-timeline-event-row-padding-bottom` | `18px` | no spec row measures the row box: 7 px body offset + 36 px icon + 18 px = a 61 px pitch, which is how the same-day icons land 25 px apart (UI Lead review round 2, item 11). The capture holds one event per day | Interim |
+| `--size-detail-timeline-day-gap` | `16px` | no spec row measures the space between day groups and the capture holds one event per day, so the group gap is unobserved | Interim |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
