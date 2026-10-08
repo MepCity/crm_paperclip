@@ -39,7 +39,7 @@ function renderScreen(service: ClientRecordService, recordId: string) {
     );
   }
   return render(
-    <div className="h-[835px]">
+    <div>
       <LeadRecordScreen
         orgSlug={ctx.orgSlug}
         recordId={recordId}
