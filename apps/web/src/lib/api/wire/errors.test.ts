@@ -38,15 +38,42 @@ describe("encodeError / decodeError", () => {
     expect(isAppError(decoded)).toBe(true);
     expect(decoded.message).toBe(error.message);
     expect(encoded.status).toBe(
-      { unauthenticated: 401, forbidden: 403, not_found: 404, conflict: 409, validation: 400 }[
+      { unauthenticated: 401, forbidden: 403, not_found: 404, conflict: 400, validation: 400 }[
         error.code
       ],
     );
-    expect(encoded.body.status).toBe(encoded.status);
+    expect(encoded.body.status).toBe("error");
     expect(Object.keys(encoded.body).sort()).toEqual(["code", "details", "message", "status"]);
     if (error instanceof ValidationError && decoded instanceof ValidationError) {
       expect(decoded.fieldErrors).toEqual(error.fieldErrors);
       expect(decoded.fieldErrors).not.toBe(error.fieldErrors);
+    }
+  });
+
+  it.each([
+    [
+      new ValidationError({ Company: ["This field is required."] }, undefined, "mandatory"),
+      400,
+      "MANDATORY_NOT_FOUND",
+    ],
+    [new ValidationError(fieldErrors), 400, "INVALID_DATA"],
+    [
+      new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit"),
+      400,
+      "LIMIT_EXCEEDED",
+    ],
+    [new ConflictError("Duplicate."), 400, "DUPLICATE_DATA"],
+    [new ForbiddenError(), 403, "NO_PERMISSION"],
+    [new UnauthenticatedError(), 401, "AUTHENTICATION_FAILURE"],
+    [new NotFoundError(), 404, "not_found"],
+    [new Error("Unexpected."), 500, "INTERNAL_ERROR"],
+  ] as const)("maps %s to HTTP %s and %s", (error, status, code) => {
+    const encoded = encodeError(error);
+    expect(encoded).toMatchObject({ status, body: { code, status: "error" } });
+    const restored = decodeError(status, JSON.stringify(encoded.body));
+    if (error instanceof ValidationError) {
+      expect(restored).toBeInstanceOf(ValidationError);
+      expect(restored).toMatchObject({ fieldErrors: error.fieldErrors, reason: error.reason });
     }
   });
 
@@ -84,7 +111,7 @@ describe("encodeError / decodeError", () => {
       code: INTERNAL_ERROR_CODE,
       details: {},
       message: INTERNAL_ERROR_MESSAGE,
-      status: 500,
+      status: "error",
     });
     expect(serialized).not.toContain("secret-host");
     expect(serialized).not.toContain("ECONNREFUSED");
@@ -100,7 +127,7 @@ describe("decodeError unexpected responses", () => {
     code: "not_found",
     details: {},
     message: leaked,
-    status: 404,
+    status: "error",
   };
 
   it.each([
@@ -120,10 +147,10 @@ describe("decodeError unexpected responses", () => {
       "invalid field messages",
       400,
       {
-        code: "validation",
+        code: "INVALID_DATA",
         details: { fields: { name: "Enter a name." } },
         message: leaked,
-        status: 400,
+        status: "error",
       },
     ],
   ] as const)("returns UnexpectedApiError for %s", (_label, status, body) => {
@@ -139,7 +166,7 @@ describe("decodeError unexpected responses", () => {
 
   it("rejects a prototype field name instead of restoring a validation error", () => {
     const body = JSON.parse(
-      '{"code":"validation","details":{"fields":{"__proto__":["owned"],"name":["ok"]}},"message":"UNIQUE_BODY_MESSAGE_secret","status":400}',
+      '{"code":"INVALID_DATA","details":{"fields":{"__proto__":["owned"],"name":["ok"]}},"message":"UNIQUE_BODY_MESSAGE_secret","status":"error"}',
     );
     const decoded = decodeError(400, body);
     expect(decoded).toBeInstanceOf(UnexpectedApiError);

@@ -58,10 +58,16 @@ export class ConflictError extends AppError {
 export class ValidationError extends AppError {
   override name = "ValidationError";
   readonly fieldErrors: FieldErrors;
+  readonly reason: "invalid" | "mandatory" | "limit";
 
-  constructor(fieldErrors: FieldErrors, message = "Check the highlighted fields.") {
+  constructor(
+    fieldErrors: FieldErrors,
+    message = "Check the highlighted fields.",
+    reason: "invalid" | "mandatory" | "limit" = "invalid",
+  ) {
     super("validation", message);
     this.fieldErrors = fieldErrors;
+    this.reason = reason;
   }
 }
 

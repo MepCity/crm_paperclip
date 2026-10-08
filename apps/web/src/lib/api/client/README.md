@@ -44,6 +44,8 @@ export function LeadsListScreen() {
 | `useCreateRecord` | Create; invalidates list, count and the new record |
 | `useUpdateRecord` | Update; invalidates list, count and the record |
 | `useDeleteRecords` | Delete; invalidates list, count and each record |
+| `useMassUpdate` | Update one eligible field; invalidates list, count and each selected record |
+| `useChangeOwner` | Transfer ownership; invalidates list, count and each selected record |
 
 ## Rules
 
@@ -62,3 +64,20 @@ export function LeadsListScreen() {
   Refresh behaviour will be decided when the customization module lands.
 - `AppError` and `UnexpectedApiError` with `status < 500` are not retried. Other
   query failures retry at most three times. Write requests are not retried.
+
+## Documented writes and batch hooks
+
+Write paths and envelopes follow ADR 0004 §5 and A11 of
+`research/specs/leads-write-behaviour.md`. Create/update decode `details.id` from
+the SUCCESS result, then fetch the full record. Update does not send body `id`.
+Delete uses record DELETE for one ID and POST `actions/mass_delete` for multiple
+IDs; an empty batch is rejected by the service. `massUpdate` posts `{data:[input],ids}`
+to `actions/mass_update`; `changeOwner` posts `{ids,owner:{id}}` to
+`actions/change_owner`, even for one record. No trigger/notification/related module,
+view-wide or scheduler parameters are sent.
+
+`useMassUpdate`, `useChangeOwner` and `useDeleteRecords` invalidate module list/count
+queries and every selected record query after success. On failure they preserve
+cache contents. Error decoding uses the HTTP status and code; body status is a
+string. A 400 DUPLICATE_DATA restores ConflictError, and validation maps retain
+all field messages. Remaining Interim choices are listed in ADR 0004 §5.

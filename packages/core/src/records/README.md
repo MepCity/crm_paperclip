@@ -7,7 +7,8 @@ accept module API names and opaque record IDs, never organization parameters.
 components can import it without loading authentication, a database or a service.
 The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendment.
 
-Metadata describes fields, ordered picklist display/stored values, layout sections
+Metadata includes `FieldDefinition.massUpdate`, copied from metadata `mass_update`
+(15 eligible Leads fields), and describes fields, ordered picklist display/stored values, layout sections
 and ordered field API names. Each field has `views` flags (`view`, `create`, `edit`,
 `quickCreate`), independent of `readOnly`. A section keeps its complete `fields`
 list and exposes `columns` in observed top-to-bottom order, with one array per
@@ -94,7 +95,15 @@ Unknown modules, views and records raise `NotFoundError`. Validation raises
 A future uniqueness violation must use the existing `ConflictError`. This Leads
 fixture has no unique fields and permits duplicate Email on create and update.
 Returned metadata, views, records and nested values are detached copies; write
-inputs are copied before storage. Bulk delete validates every ID before deleting.
+inputs are copied before storage. Bulk delete validates every ID before deleting. `delete`, `massUpdate` and
+`changeOwner` require 1–500 IDs. `massUpdate` accepts exactly one writable field
+whose massUpdate flag is true, with the same value/required/length/type/picklist
+validation as update. `changeOwner` accepts an active organization member ID;
+removed/unknown/foreign owners fail under Owner. All three batch writes are atomic:
+unknown/foreign IDs fail with NotFoundError before any write. This atomicity remains
+Interim until per-record failure behavior is documented (ADR 0004 §5).
+ValidationError has an optional internal reason (`invalid`, `mandatory`, `limit`)
+to distinguish error wire codes without inspecting translated message text.
 
 ## Adapter verification
 
@@ -227,5 +236,5 @@ not evidence of reference CRM behavior and must not determine screen parity.
 
 Storage, schemas/migrations, identity-generation strategy, HTTP paths/methods,
 authorization and role rules, event processing, routes, screens, conversions,
-bulk actions, import/export and non-Leads modules are outside this delivery.
+other bulk actions, import/export and non-Leads modules are outside this delivery.
 The database package and route tree remain unchanged. No dependencies are added.

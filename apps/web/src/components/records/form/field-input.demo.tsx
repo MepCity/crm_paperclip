@@ -69,6 +69,7 @@ function Sample({
     dataType: type,
     required: state === "required",
     readOnly: false,
+    massUpdate: false,
     unique: false,
     picklist: options,
     views: formFieldViews,
@@ -96,6 +97,7 @@ function SearchableSample({ state }: { state: "empty" | "filled" | "required" | 
         dataType: "picklist",
         required: state === "required",
         readOnly: false,
+        massUpdate: false,
         unique: false,
         views: formFieldViews,
       }}
@@ -139,6 +141,7 @@ export default function FieldInputDemo() {
           dataType: "picklist",
           required: false,
           readOnly: false,
+          massUpdate: false,
           unique: false,
           views: formFieldViews,
         }}
@@ -164,6 +167,7 @@ export default function FieldInputDemo() {
           dataType: "text",
           required: true,
           readOnly: false,
+          massUpdate: false,
           unique: false,
           views: formFieldViews,
         }}
