@@ -112,11 +112,11 @@ test("picking a new role submits it once with the member id and keeps the consol
 
   const trigger = roleTrigger("Bea Member");
   await user.click(trigger);
-  await user.click(screen.getByRole("option", { name: "Member", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Member" }));
   expect(onChangeRole).not.toHaveBeenCalled();
 
   await user.click(trigger);
-  await user.click(screen.getByRole("option", { name: "Admin", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Admin" }));
 
   await waitFor(() => expect(onChangeRole).toHaveBeenCalledTimes(1));
   expect(onChangeRole.mock.calls[0]?.[0]).toBe("bea");
@@ -144,7 +144,7 @@ test("a failed role change warns above the table and keeps the selected role", a
   );
 
   await user.click(roleTrigger("Ada Admin"));
-  await user.click(screen.getByRole("option", { name: "Member", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Member" }));
 
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("An organization must have an admin.");
@@ -179,7 +179,7 @@ test("role and remove failures share one warning that a new action clears", asyn
   );
 
   await user.click(roleTrigger("Ada Admin"));
-  await user.click(screen.getByRole("option", { name: "Member", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Member" }));
   await screen.findByRole("alert");
 
   await user.click(screen.getByRole("button", { name: "Remove Ada Admin" }));
