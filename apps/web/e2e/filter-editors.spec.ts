@@ -9,6 +9,9 @@ test.use({ viewport: { width: 1470, height: 835 } });
 test("field filter editors match measured rows, keyboard, sticky actions and accessibility", async ({
   page,
 }, testInfo) => {
+  // Two full-gallery accessibility scans and editor interactions need the same
+  // wall-time budget as the gallery smoke test on the shared test machine.
+  test.setTimeout(180_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
