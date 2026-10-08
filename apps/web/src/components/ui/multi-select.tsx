@@ -35,7 +35,9 @@ export function MultiSelect({ label, placeholder, options, value, onChange }: Mu
         data-empty={value.length === 0 || undefined}
         className="filter-multi-trigger"
       >
-        <span className="truncate">{selectedLabel || placeholder}</span>
+        <span data-part={value.length === 0 ? "empty-value" : undefined} className="truncate">
+          {selectedLabel || placeholder}
+        </span>
         <Icons.chevronDown aria-hidden className="h-3 w-3 shrink-0" />
       </Button>
       <Popover title={label} hideTitle className="w-(--size-filter-operator-list-width)">

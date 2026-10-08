@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { expectNoA11yViolations } from "./support/a11y";
+import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expectType } from "./support/typography";
 
 const near = (actual: number, expected: number) =>
@@ -103,7 +103,10 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
     "is empty",
     "is not empty",
   ]);
-  await expectNoA11yViolations(page);
+  // ADR 0003 §8: measured placeholder ink #8C91AB on white is 3.11:1.
+  // Exclude only empty text spans (including the two multi-select placeholders)
+  // and the other measured gallery placeholders; their triggers stay scanned.
+  await expectNoA11yViolations(page, { exclude: DEV_UI_A11Y_EXCLUDE });
   const screenshotPath = testInfo.outputPath("field-filter-editors.png");
   await page.screenshot({ path: screenshotPath });
   await testInfo.attach("field-filter-editors", {
@@ -142,9 +145,64 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   // The closed-popup scan includes the other gallery demos. Their empty-list
   // #8B9AB9 and empty-selection #8C91AB inks on white retain the measured
   // contrast exceptions from ADR 0003 §8, as in the gallery smoke test.
-  // Only those text elements are excluded; filter controls remain included.
+  // Only those text elements are excluded; filter triggers and selected values remain included.
   await expectNoA11yViolations(page, {
-    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+    exclude: DEV_UI_A11Y_EXCLUDE,
   });
   expect(errors).toEqual([]);
+});
+
+test("filter multi-select placeholders use measured ink until an option is selected", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  const measurements = [];
+  for (const [field, placeholder] of [
+    ["picklist", "None"],
+    ["ownerlookup", "Click to Select Users."],
+  ] as const) {
+    const trigger = panel.getByRole("button", { name: `Sample ${field} value`, exact: true });
+    const label = trigger.locator("span");
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(label).toHaveText(placeholder);
+    await expect(trigger).toHaveAttribute("data-empty");
+    // list-views.md > Visual layout > Filter value input: placeholder #8C91AB.
+    await expect(label).toHaveCSS("color", "rgb(140, 145, 171)");
+    await expect(label).toHaveAttribute("data-part", "empty-value");
+    // The decorative arrow retains the normal control ink.
+    await expect(trigger.locator("svg")).toHaveCSS("color", "rgb(49, 57, 73)");
+    const emptyColor = await label.evaluate((element) => getComputedStyle(element).color);
+    const screenshotPath = testInfo.outputPath(`filter-${field}-placeholder.png`);
+    await page.screenshot({ path: screenshotPath });
+    await testInfo.attach(`filter-${field}-placeholder`, {
+      path: screenshotPath,
+      contentType: "image/png",
+    });
+    await trigger.click();
+    const option = page
+      .getByRole("listbox", { name: `Sample ${field} value`, exact: true })
+      .getByRole("option", { name: "Sample One", exact: true });
+    await option.click();
+    await page.keyboard.press("Escape");
+    await expect(label).toHaveText("Sample One");
+    await expect(trigger).not.toHaveAttribute("data-empty");
+    await expect(label).not.toHaveAttribute("data-part", "empty-value");
+    // Same spec row: completed selection text #313949.
+    await expect(label).toHaveCSS("color", "rgb(49, 57, 73)");
+    const selectedColor = await label.evaluate((element) => getComputedStyle(element).color);
+    await trigger.click();
+    await option.click();
+    await page.keyboard.press("Escape");
+    await expect(label).toHaveText(placeholder);
+    await expect(label).toHaveCSS("color", "rgb(140, 145, 171)");
+    measurements.push({ field, placeholder, emptyColor, selectedColor });
+  }
+  const measurementPath = testInfo.outputPath("filter-placeholder-colors.json");
+  await writeFile(measurementPath, JSON.stringify(measurements, null, 2));
+  await testInfo.attach("filter-placeholder-colors", {
+    path: measurementPath,
+    contentType: "application/json",
+  });
 });

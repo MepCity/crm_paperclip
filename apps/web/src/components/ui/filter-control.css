@@ -100,3 +100,7 @@
 .filter-multi-trigger[data-focus-visible] {
   outline: 2px solid var(--color-focus-ring);
 }
+/* Filter value input: empty selection text uses the measured placeholder ink. */
+.filter-multi-trigger[data-empty] > [data-part="empty-value"] {
+  color: var(--color-text-placeholder);
+}
