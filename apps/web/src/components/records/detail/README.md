@@ -14,8 +14,10 @@ and page placement live in MEP-144.
 | Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
 
-The route file wraps this screen in `ApiProvider` after `requireOrgContext`. Phase B
-adds `/crm/[orgSlug]/tab/Leads/[recordId]` and E2E once the list page is on `main`.
+The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
+`requireOrgContext` and renders `LeadsDetailClient` (`modules/leads/leads-detail-client.tsx`).
+`ApiProvider` comes from `app/crm/[orgSlug]/tab/layout.tsx`. Edit uses
+`moduleRecordEditPath` from `lib/crm-paths.ts`.
 
 ## Components
 
