@@ -217,6 +217,19 @@
   /* Filter panel. Width includes the 1 px borders. */
   --size-list-filter-width: 202px;
   --size-list-filter-gap: 10px;
+  /* list-views.md: Checked filter checkbox, Filter operator dropdown,
+     Filter value input, Open operator list and their coordinate differences. */
+  --size-filter-editor-inset: 23px;
+  --size-filter-editor-top-gap: 8px;
+  --size-filter-editor-value-gap: 7px;
+  --size-filter-control-height: 24px;
+  --size-filter-contains-width: 79px;
+  --size-filter-control-min-width: 36px;
+  --radius-filter-control: 3px;
+  --size-filter-operator-list-width: 146px;
+  --size-filter-operator-list-height: 220px;
+  --size-filter-operator-row-height: 27px;
+  --size-filter-operator-list-offset: 1px;
   --size-list-filter-padding: 18px;
   --size-list-filter-search-height: 34px;
   --size-list-filter-search-icon: 13.5px;

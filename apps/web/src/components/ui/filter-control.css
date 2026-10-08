@@ -1,0 +1,102 @@
+/* list-views.md > Visual layout > Filter operator dropdown, Filter value input,
+   Open operator list. Typography uses the neighboring Status stage value role. */
+.filter-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+}
+.filter-operator-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  height: var(--size-filter-control-height);
+  min-width: var(--size-filter-control-min-width);
+  max-width: 100%;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-filter-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  outline: none;
+}
+.filter-operator-control[data-focus-visible] {
+  outline: 2px solid var(--color-focus-ring);
+}
+.filter-operator-control[data-value="contains"] {
+  min-width: var(--size-filter-contains-width);
+}
+.filter-operator-popover {
+  width: var(--size-filter-operator-list-width);
+  max-height: var(--size-filter-operator-list-height);
+  padding-bottom: var(--space-1);
+  overflow: auto;
+  background: var(--color-surface);
+  outline: none;
+}
+.filter-operator-list {
+  padding: 0;
+  outline: none;
+}
+.filter-operator-option {
+  display: flex;
+  align-items: center;
+  height: var(--size-filter-operator-row-height);
+  padding: 0 var(--space-2);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  outline: none;
+}
+.filter-operator-option[data-selected],
+.filter-operator-option[data-hovered],
+.filter-operator-option[data-focused] {
+  background: var(--color-surface-selected);
+}
+.filter-operator-option[data-focus-visible] {
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+}
+/* The outer frame owns the border for text and number fields. */
+.filter-value > div {
+  gap: 0;
+}
+.filter-value .record-control {
+  height: var(--size-filter-control-height);
+  border-radius: var(--radius-filter-control);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  padding-inline: var(--space-1);
+}
+.filter-value .record-input-frame {
+  padding: 0;
+}
+.filter-value .record-input-frame > input.record-control {
+  height: 100%;
+  border-radius: 0;
+}
+.filter-value .record-control::placeholder {
+  color: var(--color-text-placeholder);
+}
+.filter-multi-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  width: 100%;
+  height: var(--size-filter-control-height);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-filter-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  outline: none;
+}
+.filter-multi-trigger[data-focus-visible] {
+  outline: 2px solid var(--color-focus-ring);
+}

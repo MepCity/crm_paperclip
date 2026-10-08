@@ -1,0 +1,24 @@
+/* list-views.md > Visual layout > checked filter / operator / value coordinates. */
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.filter-panel-content {
+  overflow: auto;
+  min-height: 0;
+  padding-bottom: var(--space-4);
+}
+.filter-panel-actions {
+  flex-shrink: 0;
+}
+.filter-editor {
+  margin-left: var(--size-filter-editor-inset);
+  /* Checkbox: 1 px top inset + 15 px box; row label line is 16 px. */
+  margin-top: var(--size-filter-editor-top-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  min-width: 0;
+  align-self: stretch;
+}

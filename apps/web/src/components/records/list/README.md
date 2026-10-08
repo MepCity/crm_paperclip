@@ -157,7 +157,7 @@ Measured values come from `research/specs/list-views.md` → Layout → Visual l
 
 Presentation-only panel, sourced from `research/specs/list-views.md`: Layout → Visual
 layout (Filter panel, Filter content, Surface and line colors, Selected / disabled),
-Left filters, Search and Flow 6. No data access or criteria controls.
+Left filters, Search, Filter operators by field type and Flow 6. No data access or port mapping.
 
 ### Props
 
@@ -165,8 +165,11 @@ Left filters, Search and Flow 6. No data access or criteria controls.
 | --- | --- |
 | `title` | Visible panel heading and accessible region name. |
 | `searchLabel` / `searchPlaceholder` | Accessible input label and visible placeholder, supplied by the caller. |
-| `groups` | Ordered `{ id, label, items: { id, label, disabled? }[] }[]`; group IDs and item IDs must each be unique across the panel. |
+| `groups` | Ordered `{ id, label, items: { id, label, disabled?, editor? }[] }[]`; group IDs and item IDs must each be unique across the panel. |
 | `selectedIds` | Controlled selected item IDs. Selection remains intact when searching or collapsing. |
+| `onApply` | Optional callback receiving ordered `AppliedFilter[]`: `{ itemId, operatorId, value }`. No record query is made. Omit to omit Apply. |
+| `onClear` | Optional notification after the panel discards all drafts and calls `onSelectionChange([])`. |
+| `groups[].items[].editor` | Optional `{ fieldType: FilterFieldType, options?: { id, label }[], currencyCode?: string }`. Without this definition the item remains a checkbox only. |
 | `onSelectionChange` | Receives the next complete ID array; adds at the end or removes the toggled item, retaining other IDs. Disabled rows never call it. |
 
 Groups start open. The filled triangle precedes the heading label: open points down,
@@ -183,17 +186,86 @@ open/closed groups and filtered results.
   without matching rows. No term was entered in the reference capture; this is the
   task-authorized provisional behavior. An empty result shows no groups. Clearing
   restores rows and prior group expansion state. No filter is applied to records.
-- Operators, values, AND/OR, apply controls, counters and persisted panel preferences
-  remain unobserved and are excluded. Checked checkbox appearance keeps the existing
-  primitive (16 px box, 1 px border); the spec measures only the unchecked box, and a
-  checked box was not captured.
-- Open question 17 records what was not captured: a closed group and a checked checkbox.
+- AND/OR and persisted panel preferences remain unobserved and are excluded.
+- Open question 17 still covers closed groups; checked boxes and the default editors
+  are now described by the four measured field-filter rows.
+
+### Field editor catalog
+
+`lib/records/filter-operators.ts` is pure data; `FilterFieldType`, `FilterOperatorId`,
+`AppliedFilter`, and `AppliedFilterValue` are safe browser contracts, independent of
+any service port. IDs are stable. Option values are option IDs, never display labels.
+
+| Type | Labels → IDs in screen order | Default | Value |
+| --- | --- | --- | --- |
+| text | is → equal; isn't → not_equal; contains → contains; doesn't contain → not_contains; starts with → starts_with; ends with → ends_with; is empty → is_empty; is not empty → is_not_empty | contains | string, Type here |
+| email, phone | Same eight text operators | equal | string, Type here |
+| picklist | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable multiple choice, None |
+| currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
+| boolean | is → equal | equal | true, Selected |
+| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable users, Click to Select Users. |
+| datetime | age in → age_in; due in → due_in; Today → today; Tomorrow → tomorrow; Till Yesterday → till_yesterday; Starting tomorrow → starting_tomorrow; Yesterday → yesterday; This Week → this_week; This Month → this_month; Previous Week → previous_week; Previous Month → previous_month; This Year → this_year; Previous Year → previous_year; Next Year → next_year; is empty → is_empty; is not empty → is_not_empty | age_in | nonnegative integer days for age/due, otherwise null |
+
+Empty operators always have no value control and emit null. Checking starts a
+fresh default draft. Changing the operator discards the old value. Unchecking,
+external deselection, and Clear discard drafts; search and group collapse keep them.
+Drafts are internal: the caller controls only item selection. Apply uses panel order,
+including checked fields hidden by search. Whitespace-only text is incomplete;
+currency requires finite numbers, ranges require two finite numbers, choices require
+at least one supplied option ID, and days require a nonnegative safe integer. The
+Selected state is complete immediately. Invalid numeric drafts are never emitted.
+The page must supply synchronous option labels and IDs; these components never load
+options. Clear does not change the search query or group expansion.
+
+### Interim
+
+The behavior after reference controls are clicked is unobserved; the task-authorized
+rules above are provisional until the Module 1 gate. The unmeasured appearance uses
+existing primitive tokens:
+
+- Apply Filter / Clear size and placement: existing small buttons, footer outside
+  the scrollable group content. A constrained-height parent makes only the rows scroll.
+- Multiple choice, users, state and unit open lists use existing popover/list styling.
+- Currency ranges stack two equally sized inputs with the measured 7px value gap.
+- The days unit sits next to the numeric input with the existing smallest spacing.
+- Valueless operators draw only the operator selector.
+- Apply stays disabled until every checked editable row is complete.
+- Multiple field rows can be open simultaneously.
+- Board-authorized reversible assumption (MEP-198): rows without an editor keep
+  their existing checkbox selection contract. Apply emits only checked editable
+  rows; the footer appears only when an editable row is checked. Clear resets
+  all rows, including checkbox-only selections. No operator is invented for
+  unobserved field types.
+
+`/dev/ui` → filter editors starts all eight supported rows checked, shows disabled
+Apply and the fixed footer, and lets reviewers open an operator list or Clear and
+select two rows. Only synthetic data appears in demos and tests.
+
+### Not drawn
+
+- Email is blocked / is not blocked: email module (M10).
+- belongs to Role / does not belong to Role / belongs to Group: role/group
+  definitions; no parity checklist module has been assigned.
+- Date Previous / Next / On / before / after / between / not between: unobserved
+  value editors. Fiscal Current FY / Current FQ / Previous FY / Previous FQ /
+  Next FY / Next FQ: fiscal-year settings dependency.
+- State options other than Selected and units other than days: unobserved.
+- System-defined and related-module editors: their respective modules.
+- textarea, website, integer, double, bigint, lookup, multi_module_lookup,
+  profileimage: no observed operator catalog.
 
 ### Deviations
 
 - The expand triangle is `#000000` in the spec and `--color-text-strong` here. The
   magnifier and triangle are original drawings; no reference assets are copied.
 - Page position and full Leads lists belong to the page task.
+- Operator/value/list text has no typography table role. It uses the neighboring
+  Status stage value role (`--text-sm`, `--font-weight-normal`), matching the
+  measured 13–14 px regular class. Footer buttons retain their existing text role.
+- Operator intrinsic widths follow the original font and chevron drawing; the
+  source lists variable widths for examples, rather than a fixed selector width.
+- Open operator shadow parameters retain the existing soft-shadow token; they are
+  not measured.
 
 ## View tab and toolbar
 
