@@ -24,7 +24,7 @@ arrive through props only; no record page wiring or timeline API calls in this f
 - **Day groups:** The space between day groups (`--size-detail-timeline-day-gap`) is unmeasured for
   the same reason.
 
-## Delivered geometry (MEP-143 review round 3, UI Lead measurements)
+## Delivered geometry (UI Lead approval measurements on MEP-143)
 
 CSS px, measured from the white surface's top-left corner at the 1470 × 835 gallery viewport. Every
 value here is inside the ±1 px threshold the UI Lead accepted; MEP-184 changed no geometry.
