@@ -11,10 +11,12 @@ export async function acceptInvitationAction(
   _formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser(`/invite/${encodeURIComponent(token)}`);
+  let destination: string;
   try {
     const accepted = await acceptInvitation(user, { token });
-    redirect(`/crm/${accepted.orgSlug}`);
+    destination = `/crm/${accepted.orgSlug}`;
   } catch (error) {
     return toActionState(error);
   }
+  redirect(destination);
 }

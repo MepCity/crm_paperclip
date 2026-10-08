@@ -3,17 +3,21 @@ import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
+test("organization creation passes accessibility right after redirect", async ({ page }) => {
+  await signUpNewUser(page);
+  const organization = await createOrganization(page, "Çağrı Şirketi Örnek");
+  expect(organization).toEqual({ name: "Çağrı Şirketi Örnek", slug: "cagri-sirketi-ornek" });
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
+  await expectNoA11yViolations(page);
+});
+
 test("a new user creates an organization and returns to it from home", async ({ page }) => {
   await signUpNewUser(page);
-  // A full load drops the submit button's temporary live announcement.
-  // That node points at the previous screen for several seconds.
   await page.goto("/orgs/new");
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
   await expectNoA11yViolations(page);
 
-  const organization = await createOrganization(page, "Çağrı Şirketi Örnek");
-  expect(organization).toEqual({ name: "Çağrı Şirketi Örnek", slug: "cagri-sirketi-ornek" });
-  await page.reload();
+  const organization = await createOrganization(page);
   await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
   await expectNoA11yViolations(page);
 
@@ -45,7 +49,10 @@ test("a slug that is already in use is reported on the slug field", async ({ pag
   }
 });
 
-test("a member of another organization sees the same not-found page", async ({ page, browser }) => {
+test("a user without organization membership sees the same not-found page", async ({
+  page,
+  browser,
+}) => {
   await signUpNewUser(page);
   const organization = await createOrganization(page);
 

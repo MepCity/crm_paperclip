@@ -24,8 +24,6 @@ test.beforeEach(async ({ page }) => {
   });
   await signUpNewUser(page);
   await createOrganization(page);
-  // pending-announcement workaround
-  await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
   expect(warnings).toEqual([]);
 });
@@ -62,8 +60,6 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   await expectNoA11yViolations(page);
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
-  // pending-announcement workaround
-  await page.reload();
   await expectNoA11yViolations(page);
   await page.goto(`/crm/${slug}/settings`);
   await expect(page).toHaveURL(/\/sign-in\?next=/);
@@ -75,8 +71,6 @@ test("the organization menu switches between two memberships and offers creation
   const firstSlug = new URL(page.url()).pathname.split("/")[2] ?? "";
   const firstName = await page.getByRole("button", { name: "Organization switcher" }).innerText();
   const second = await createOrganization(page);
-  // pending-announcement workaround
-  await page.reload();
   const switcher = page.getByRole("button", { name: "Organization switcher" });
   await expect(switcher).toContainText(second.name);
   await switcher.click();

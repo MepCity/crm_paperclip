@@ -1,6 +1,7 @@
 "use client";
 
 import type { Ref } from "react";
+import { useEffect, useRef } from "react";
 import {
   Button as AriaButton,
   type ButtonProps as AriaButtonProps,
@@ -10,6 +11,19 @@ import { buttonSizes, buttonStyles } from "./button-styles";
 import { Spinner } from "./spinner";
 
 export { buttonSizes, buttonStyles };
+
+/** Drops assertive live-region nodes left by react-aria pending announcements. */
+function clearAssertiveLiveAnnouncer(): void {
+  const root = document.querySelector('[data-live-announcer="true"]');
+  const assertive = root?.querySelector('[aria-live="assertive"]');
+  if (assertive) assertive.innerHTML = "";
+}
+
+/** Clears now and again after RAC's delayed pending announce (~100ms). */
+function scheduleClearAssertiveLiveAnnouncer(): void {
+  clearAssertiveLiveAnnouncer();
+  window.setTimeout(clearAssertiveLiveAnnouncer, 150);
+}
 
 const buttonBase =
   "inline-flex items-center justify-center outline-none transition-colors " +
@@ -28,11 +42,21 @@ export function Button({
   size = "md",
   className,
   children,
+  isPending,
   ...props
 }: ButtonProps) {
+  const isPendingRef = useRef(isPending ?? false);
+  isPendingRef.current = isPending ?? false;
+  useEffect(() => {
+    return () => {
+      if (isPendingRef.current) scheduleClearAssertiveLiveAnnouncer();
+    };
+  }, []);
+
   return (
     <AriaButton
       {...props}
+      isPending={isPending}
       className={composeRenderProps(
         className,
         (extra) => `${buttonBase} ${buttonStyles[variant]} ${buttonSizes[size]} ${extra ?? ""}`,
