@@ -85,15 +85,45 @@ export interface RecordData {
   fields: Readonly<Record<string, FieldValue>>;
 }
 
-/** Wire literals used by saved view definitions (list-views.md › View definitions). */
-export type Comparator = "equal" | "contains" | "not_contains" | "less_equal";
+/** Saved-view wire literals plus interim filter-panel comparators. */
+export type Comparator =
+  | "equal"
+  | "contains"
+  | "not_contains"
+  | "less_equal"
+  | "not_equal"
+  | "starts_with"
+  | "ends_with"
+  | "is_empty"
+  | "is_not_empty"
+  | "less_than"
+  | "greater_than"
+  | "greater_equal"
+  | "between"
+  | "not_between";
+
+/** Interim UTC calendar periods; TODAY retains its existing standalone token. */
+export type CriteriaPeriod =
+  | "TOMORROW"
+  | "YESTERDAY"
+  | "TILL_YESTERDAY"
+  | "STARTING_TOMORROW"
+  | "THIS_WEEK"
+  | "PREVIOUS_WEEK"
+  | "THIS_MONTH"
+  | "PREVIOUS_MONTH"
+  | "THIS_YEAR"
+  | "PREVIOUS_YEAR"
+  | "NEXT_YEAR";
 
 /** A `${…}` value of a view definition; the adapter resolves it when the query runs. */
 export type CriteriaToken =
   | { token: "CURRENTUSER" }
   | { token: "TODAY" }
   | { token: "AGEINDAYS"; offset: number }
-  | { token: "CATEGORY"; name: string };
+  | { token: "CATEGORY"; name: string }
+  | { token: "DUEINDAYS"; offset: number }
+  | { token: "PERIOD"; name: CriteriaPeriod };
 
 export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
 

@@ -109,15 +109,17 @@ or layout are server errors, not caller validation errors.
 - The bulk operation projects view columns union requested `fields` names.
   Without `fields`, only view columns are projected (not captured). Empty or
   unknown names are rejected, not silently removed. The port always includes ID.
-- Negative `AGEINDAYS` offsets were not observed. They encode as
-  `"${AGEINDAYS}-<n>"` and decode to the corresponding negative offset.
-- `AGEINDAYS` offsets are written with JavaScript number formatting, so decimal
-  and exponential forms also decode as tokens; only `+31` was observed on the wire.
+- Day offsets sent by the port must be nonnegative integers. `AGEINDAYS` retains
+  its observed `+31` spelling and existing floor-based runtime behavior. The decoder
+  recognizes legacy negative/decimal age-token spellings; the service rejects them
+  as invalid filters. Neither encode path emits them.
 - A `CATEGORY` token whose name contains `{`, `}` or a line break is returned
   from the wire as a plain string unchanged.
 - Only exact token forms decode as tokens; other strings remain plain values.
-  A plain string exactly matching `${TODAY}`, `${AGEINDAYS}+<n>`,
-  `${AGEINDAYS}-<n>` or `${CATEGORY.<name>}` consequently returns as a token.
+  A plain string exactly matching a known TODAY, AGEINDAYS, CATEGORY, DUEINDAYS
+  or PERIOD spelling consequently returns as a token. Unknown standalone token
+  names, unknown periods and invalid due-token forms raise keyed filter validation
+  errors. Existing non-token literal forms remain unchanged.
   The wire cannot distinguish those literal strings from token values.
 - Populated lookup keys were not captured. Single-module lookup uses `{id}`;
   connected-module lookup retains `{module,id}` to preserve domain identity.
@@ -169,3 +171,26 @@ do not assert reference write parity.
 
 `FieldDefinition.massUpdate` maps losslessly to observed `fields[].mass_update`,
 including layout fields. Fixture values come from metadata, not field-type guesses.
+
+
+## Interim panel filter values
+
+ADR 0004 §4 enumerates every new comparator and token spelling; applied panel
+requests/results were not observed. `encodeCriteria` / `decodeCriteria` carry
+`not_equal`, `starts_with`, `ends_with`, `is_empty`, `is_not_empty`, `less_than`,
+`greater_than`, `greater_equal`, `between`, `not_between` unchanged, including
+nested groups. Both bulk and actions/count send JSON `{filters: <criteria>}`.
+
+| Port token | Interim wire value |
+| --- | --- |
+| `{ token: "DUEINDAYS", offset: N }` | `"${DUEINDAYS}+N"` |
+| `{ token: "PERIOD", name: P }` | `"${PERIOD.P}"` |
+
+P is exactly one of `TOMORROW`, `YESTERDAY`, `TILL_YESTERDAY`,
+`STARTING_TOMORROW`, `THIS_WEEK`, `PREVIOUS_WEEK`, `THIS_MONTH`,
+`PREVIOUS_MONTH`, `THIS_YEAR`, `PREVIOUS_YEAR`, `NEXT_YEAR`. TODAY remains its
+existing token, and age-in introduces no new wire value. Due uses `less_equal`;
+periods use `equal`. Empty predicates use null; membership uses nonempty string
+arrays; inclusive numeric ranges use two numbers. Unknown comparator/token values
+fail with `ValidationError` keyed by `filters`. Field-family validation and UTC
+semantics are the service's responsibility, documented in the record-service README.

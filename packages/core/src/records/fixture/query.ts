@@ -14,7 +14,36 @@ import { categoryStoredValues } from "./picklists";
 import { acceptsFieldValue } from "./validation";
 
 const DAY_MS = 86_400_000;
-const COMPARATORS = new Set<Comparator>(["equal", "contains", "not_contains", "less_equal"]);
+const COMPARATORS = new Set<Comparator>([
+  "equal",
+  "contains",
+  "not_contains",
+  "less_equal",
+  "not_equal",
+  "starts_with",
+  "ends_with",
+  "is_empty",
+  "is_not_empty",
+  "less_than",
+  "greater_than",
+  "greater_equal",
+  "between",
+  "not_between",
+]);
+const NUMBER_TYPES = new Set(["integer", "double", "currency"]);
+const PERIODS = new Set([
+  "TOMORROW",
+  "YESTERDAY",
+  "TILL_YESTERDAY",
+  "STARTING_TOMORROW",
+  "THIS_WEEK",
+  "PREVIOUS_WEEK",
+  "THIS_MONTH",
+  "PREVIOUS_MONTH",
+  "THIS_YEAR",
+  "PREVIOUS_YEAR",
+  "NEXT_YEAR",
+]);
 const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
@@ -35,8 +64,15 @@ function isCriteriaToken(value: CriteriaValue): value is CriteriaToken {
   const record = value as unknown as Record<string, unknown>;
   const keys = Object.keys(record);
   if (record.token === "CURRENTUSER" || record.token === "TODAY") return keys.length === 1;
-  if (record.token === "AGEINDAYS")
-    return keys.length === 2 && typeof record.offset === "number" && Number.isFinite(record.offset);
+  if (record.token === "AGEINDAYS" || record.token === "DUEINDAYS")
+    return (
+      keys.length === 2 &&
+      typeof record.offset === "number" &&
+      Number.isInteger(record.offset) &&
+      record.offset >= 0
+    );
+  if (record.token === "PERIOD")
+    return keys.length === 2 && typeof record.name === "string" && PERIODS.has(record.name);
   if (record.token === "CATEGORY") return keys.length === 2 && typeof record.name === "string";
   return false;
 }
@@ -46,18 +82,54 @@ function comparatorFits(
   comparator: Comparator,
   value: CriteriaValue,
 ): boolean {
-  if (comparator === "contains" || comparator === "not_contains")
+  if (comparator === "is_empty" || comparator === "is_not_empty") return value === null;
+  if (["contains", "not_contains", "starts_with", "ends_with"].includes(comparator))
     return TEXT_TYPES.has(field.dataType) && typeof value === "string";
-  if (comparator === "less_equal")
-    return field.dataType === "datetime" && isCriteriaToken(value) && value.token === "AGEINDAYS";
-  if (isValueList(value)) return value.every((item) => acceptsFieldValue(field, item));
-  if (isCriteriaToken(value)) {
-    if (value.token === "CURRENTUSER") return field.dataType === "ownerlookup";
-    if (value.token === "TODAY") return field.dataType === "datetime";
-    if (value.token === "CATEGORY") return field.dataType === "picklist";
-    return false;
+  if (field.dataType === "datetime") {
+    if (!isCriteriaToken(value)) return false;
+    return comparator === "less_equal"
+      ? value.token === "AGEINDAYS" || value.token === "DUEINDAYS"
+      : comparator === "equal" && (value.token === "TODAY" || value.token === "PERIOD");
   }
-  return acceptsFieldValue(field, value);
+  if (NUMBER_TYPES.has(field.dataType)) {
+    const number = (item: FieldValue) => typeof item === "number" && acceptsFieldValue(field, item);
+    if (comparator === "between" || comparator === "not_between")
+      return (
+        isValueList(value) &&
+        value.length === 2 &&
+        value.every(number) &&
+        (value[0] as number) <= (value[1] as number)
+      );
+    return (
+      ["equal", "not_equal", "less_than", "less_equal", "greater_than", "greater_equal"].includes(
+        comparator,
+      ) &&
+      typeof value === "number" &&
+      number(value)
+    );
+  }
+  if (comparator !== "equal" && comparator !== "not_equal") return false;
+  if (TEXT_TYPES.has(field.dataType))
+    return typeof value === "string" || (comparator === "equal" && value === null);
+  if (field.dataType === "picklist" || field.dataType === "ownerlookup") {
+    if (isValueList(value))
+      return value.length > 0 && value.every((item) => typeof item === "string");
+    // Retain existing scalar equality and saved-view tokens.
+    if (comparator !== "equal") return false;
+    if (isCriteriaToken(value))
+      return field.dataType === "picklist"
+        ? value.token === "CATEGORY"
+        : value.token === "CURRENTUSER";
+    return typeof value === "string" || value === null;
+  }
+  if (field.dataType === "boolean") return comparator === "equal" && typeof value === "boolean";
+  // Existing scalar equality (not panel operators) remains available for IDs/references.
+  return (
+    comparator === "equal" &&
+    !isValueList(value) &&
+    !isCriteriaToken(value) &&
+    acceptsFieldValue(field, value as FieldValue)
+  );
 }
 
 export function validateCriteria(criteria: Criteria): void {
@@ -82,12 +154,37 @@ function equalValues(left: FieldValue, right: FieldValue): boolean {
   return left === right;
 }
 
-function utcDay(value: FieldValue | Date): string | null {
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (typeof value !== "string") return null;
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) return null;
-  return new Date(parsed).toISOString().slice(0, 10);
+function periodBounds(expected: CriteriaToken, now: Date): readonly [number, number] | null {
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  if (expected.token === "TODAY") return [start, start + DAY_MS];
+  if (expected.token !== "PERIOD") return null;
+  const week = start - ((now.getUTCDay() + 6) % 7) * DAY_MS;
+  switch (expected.name) {
+    case "TOMORROW":
+      return [start + DAY_MS, start + 2 * DAY_MS];
+    case "YESTERDAY":
+      return [start - DAY_MS, start];
+    case "TILL_YESTERDAY":
+      return [-Infinity, start];
+    case "STARTING_TOMORROW":
+      return [start + DAY_MS, Infinity];
+    case "THIS_WEEK":
+      return [week, week + 7 * DAY_MS];
+    case "PREVIOUS_WEEK":
+      return [week - 7 * DAY_MS, week];
+    case "THIS_MONTH":
+      return [Date.UTC(year, month, 1), Date.UTC(year, month + 1, 1)];
+    case "PREVIOUS_MONTH":
+      return [Date.UTC(year, month - 1, 1), Date.UTC(year, month, 1)];
+    case "THIS_YEAR":
+      return [Date.UTC(year, 0, 1), Date.UTC(year + 1, 0, 1)];
+    case "PREVIOUS_YEAR":
+      return [Date.UTC(year - 1, 0, 1), Date.UTC(year, 0, 1)];
+    case "NEXT_YEAR":
+      return [Date.UTC(year + 1, 0, 1), Date.UTC(year + 2, 0, 1)];
+  }
 }
 
 function matchesEqual(
@@ -99,11 +196,21 @@ function matchesEqual(
   if (isValueList(expected)) return expected.some((option) => equalValues(value, option));
   if (isCriteriaToken(expected)) {
     if (expected.token === "CURRENTUSER") return value === runtime.userId;
-    if (expected.token === "TODAY") return utcDay(value) === utcDay(runtime.now);
+    if (expected.token === "TODAY" || expected.token === "PERIOD") {
+      const bounds = periodBounds(expected, runtime.now);
+      const parsed = typeof value === "string" ? Date.parse(value) : NaN;
+      return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
+    }
     if (expected.token === "CATEGORY")
       return categoryStoredValues(field, expected.name).some((stored) => value === stored);
     return false;
   }
+  if (
+    TEXT_TYPES.has(fieldByName.get(field)?.dataType ?? "") &&
+    typeof value === "string" &&
+    typeof expected === "string"
+  )
+    return value.toLowerCase() === expected.toLowerCase();
   return equalValues(value, expected);
 }
 
@@ -116,10 +223,18 @@ function matchesContains(value: FieldValue, expected: CriteriaValue): boolean {
 }
 
 function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: CriteriaRuntime): boolean {
-  if (!isCriteriaToken(expected) || expected.token !== "AGEINDAYS" || typeof value !== "string")
+  if (
+    !isCriteriaToken(expected) ||
+    (expected.token !== "AGEINDAYS" && expected.token !== "DUEINDAYS") ||
+    typeof value !== "string"
+  )
     return false;
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) return false;
+  if (expected.token === "DUEINDAYS")
+    return (
+      parsed > runtime.now.getTime() && parsed <= runtime.now.getTime() + expected.offset * DAY_MS
+    );
   return Math.floor((runtime.now.getTime() - parsed) / DAY_MS) <= expected.offset;
 }
 
@@ -135,12 +250,48 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
   switch (criteria.comparator) {
     case "equal":
       return matchesEqual(criteria.field, value, criteria.value, runtime);
+    case "not_equal":
+      return !matchesEqual(criteria.field, value, criteria.value, runtime);
+    case "is_empty":
+      return value === null || value === "";
+    case "is_not_empty":
+      return value !== null && value !== "";
+    case "starts_with":
+    case "ends_with":
+      return (
+        typeof value === "string" &&
+        typeof criteria.value === "string" &&
+        (criteria.comparator === "starts_with"
+          ? value.toLowerCase().startsWith(criteria.value.toLowerCase())
+          : value.toLowerCase().endsWith(criteria.value.toLowerCase()))
+      );
+    case "less_than":
+      return (
+        typeof value === "number" && typeof criteria.value === "number" && value < criteria.value
+      );
+    case "greater_than":
+      return (
+        typeof value === "number" && typeof criteria.value === "number" && value > criteria.value
+      );
+    case "greater_equal":
+      return (
+        typeof value === "number" && typeof criteria.value === "number" && value >= criteria.value
+      );
+    case "between":
+    case "not_between": {
+      if (typeof value !== "number" || !isValueList(criteria.value)) return false;
+      const inside =
+        value >= (criteria.value[0] as number) && value <= (criteria.value[1] as number);
+      return criteria.comparator === "between" ? inside : !inside;
+    }
     case "contains":
       return matchesContains(value, criteria.value);
     case "not_contains":
       return !matchesContains(value, criteria.value);
     case "less_equal":
-      return matchesAge(value, criteria.value, runtime);
+      return typeof criteria.value === "number"
+        ? typeof value === "number" && value <= criteria.value
+        : matchesAge(value, criteria.value, runtime);
     default:
       return false;
   }
