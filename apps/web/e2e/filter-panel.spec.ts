@@ -25,6 +25,8 @@ const expectWithinOnePx = (actual: number, expected: number) => {
 };
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
+  // Full-gallery axe after measurements can exceed 90s once more demos land on /dev/ui.
+  test.setTimeout(180_000);
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "filter panel", exact: true });
   const panel = demo.getByRole("region", { name: "Filter Leads by" });
@@ -262,6 +264,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expect(Math.abs(oneLineOffset - 7)).toBeLessThanOrEqual(1);
   expect(Math.abs(twoLineOffset - oneLineOffset)).toBeLessThanOrEqual(1);
   // Empty-list copy from the sibling record-table demo on /dev/ui is the measured #8B9AB9 on white (2.83:1).
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   await demo.screenshot({ path: testInfo.outputPath("filter-panel-demo.png") });
 });
