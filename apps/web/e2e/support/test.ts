@@ -10,6 +10,14 @@ export function assertNoPageErrors(errors: readonly string[]): void {
   throw new Error(`Browser page errors (${errors.length}):\n${lines}`);
 }
 
+/** Drop console errors for failed HTTP responses with the given status codes. */
+export function ignoreFailedResponses(errors: string[], statuses: readonly number[]) {
+  const next = errors.filter(
+    (error) => !statuses.some((status) => error.includes(`status of ${status}`)),
+  );
+  errors.splice(0, errors.length, ...next);
+}
+
 export const test = base.extend<{ pageErrors: string[] }>({
   pageErrors: [
     async ({ page }, use) => {

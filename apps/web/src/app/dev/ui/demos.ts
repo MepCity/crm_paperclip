@@ -1,7 +1,9 @@
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
+import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
@@ -41,6 +43,7 @@ export const demos: Record<string, React.ComponentType> = {
   "field-input": FieldInputDemo,
   "record-detail": RecordDetailDemo,
   "filter-panel": FilterPanelDemo,
+  "filter-editors": FilterEditorsDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
@@ -76,4 +79,5 @@ export const demos: Record<string, React.ComponentType> = {
   "list-chrome": ListChromeDemo,
   "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
+  "timeline-history": TimelineHistoryDemo,
 };

@@ -25,6 +25,7 @@ const expectedIcons = [
   "showMenu",
   "plus",
   "settings",
+  "users",
   "spinner",
   "error",
   "fieldEdit",
@@ -41,6 +42,8 @@ const expectedIcons = [
   "list",
   "refresh",
   "ellipsis",
+  "timelineGeneric",
+  "timelinePencil",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Users,
   X,
 } from "lucide-react";
 import type { SVGProps } from "react";
@@ -202,6 +203,7 @@ export const Icons = {
   showMenu: PanelLeftOpen,
   plus: Plus,
   settings: Settings,
+  users: Users,
   spinner: Loader2,
   error: AlertCircle,
   success: CheckCircle2,
@@ -217,6 +219,8 @@ export const Icons = {
   list: ListIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
+  timelinePencil: TimelinePencilIcon,
+  timelineGeneric: TimelineGenericIcon,
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
@@ -286,6 +290,23 @@ function EllipsisIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <ListGlyph {...props}>
       <path d="M5 12h.1M12 12h.1M19 12h.1" strokeWidth="3" />
+    </ListGlyph>
+  );
+}
+
+function TimelinePencilIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <path d="m14.5 5.5-2 2 4 4 2-2-4-4Z" />
+      <path d="M7 13 5 19l6-2 7.5-7.5-4-4L7 13Z" />
+    </ListGlyph>
+  );
+}
+
+function TimelineGenericIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <circle cx="12" cy="12" r="4" />
     </ListGlyph>
   );
 }

@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test";
-import { expectNoA11yViolations } from "./support/a11y";
+import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expectType, tokenValue } from "./support/typography";
 
 const baselineY = (target: Locator) =>
@@ -25,6 +25,9 @@ const expectWithinOnePx = (actual: number, expected: number) => {
 };
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
+  // Detailed geometry checks plus the growing gallery's accessibility scan
+  // use the gallery smoke test budget; keep every measured threshold intact.
+  test.setTimeout(180_000);
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "filter panel", exact: true });
   const panel = demo.getByRole("region", { name: "Filter Leads by" });
@@ -263,9 +266,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expect(Math.abs(twoLineOffset - oneLineOffset)).toBeLessThanOrEqual(1);
   // Empty-list copy from the sibling record-table demo on /dev/ui is the measured #8B9AB9 on white (2.83:1).
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
-  await expectNoA11yViolations(page, {
-    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
-  });
+  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   await demo.screenshot({ path: testInfo.outputPath("filter-panel-demo.png") });
 });
 
@@ -285,13 +286,13 @@ test("filter demo exposes closed, searched, selected and disabled states", async
   await demo.getByText("Recent samples", { exact: true }).click();
   await expect(recent).toBeChecked();
   await expect(demo.getByRole("status")).toHaveText("Selected: recent");
-  // Selected appearance was not measured: preserve the primitive's prior 16 px / 1 px style.
+  // list-views.md > Checked filter checkbox: 15 px / 2 px in the scoped filter variant.
   const checkedBox = demo
     .getByRole("listitem")
     .filter({ hasText: "Recent samples" })
     .locator('span[aria-hidden="true"]');
-  await expect(checkedBox).toHaveCSS("width", "16px");
-  await expect(checkedBox).toHaveCSS("border-top-width", "1px");
+  await expect(checkedBox).toHaveCSS("width", "15px");
+  await expect(checkedBox).toHaveCSS("border-top-width", "2px");
   const search = demo.getByRole("textbox", { name: "Search filter choices" });
   await search.fill("CoD");
   await expect(demo.getByRole("checkbox")).toHaveCount(1);

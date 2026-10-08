@@ -13,6 +13,7 @@ const columns: FieldDefinition[] = [
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -22,6 +23,7 @@ const columns: FieldDefinition[] = [
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -31,6 +33,7 @@ const columns: FieldDefinition[] = [
     dataType: "email",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -40,6 +43,7 @@ const columns: FieldDefinition[] = [
     dataType: "phone",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -49,6 +53,7 @@ const columns: FieldDefinition[] = [
     dataType: "picklist",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
     picklist: [{ displayValue: "Web", storedValue: "web" }],
   },
@@ -59,6 +64,7 @@ const columns: FieldDefinition[] = [
     dataType: "ownerlookup",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -68,6 +74,7 @@ const columns: FieldDefinition[] = [
     dataType: "datetime",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
 ];

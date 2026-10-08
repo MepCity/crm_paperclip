@@ -159,7 +159,7 @@ test("Sort popover matches its measured size and supports Apply and Cancel", asy
   const labelBox = await sortByLabel.boundingBox();
   expect(Math.abs((labelBox?.x ?? 0) - (fieldBox?.x ?? 0))).toBeLessThanOrEqual(1);
   const cancel = popover.getByRole("button", { name: "Cancel" });
-  const apply = popover.getByRole("button", { name: "Apply" });
+  const apply = popover.getByRole("button", { name: "Apply", exact: true });
   const cancelBox = await cancel.boundingBox();
   const applyBox = await apply.boundingBox();
   expect(cancelBox).not.toBeNull();

@@ -17,6 +17,7 @@ const columns: FieldDefinition[] = [
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -26,6 +27,7 @@ const columns: FieldDefinition[] = [
     dataType: "email",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
@@ -35,6 +37,7 @@ const columns: FieldDefinition[] = [
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
 ];
