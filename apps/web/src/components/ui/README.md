@@ -43,9 +43,13 @@ and `research/specs/list-views.md`; fitted type values come from `research/specs
 Recommendation and Variable-weight stem check. A list row is quoted by its element name. Detail and form
 specs are not incorporated yet.
 
-`Status` is `from spec` when the value is measured in that row and `not yet measured` when the specs
-do not measure it yet — those tokens keep the value they had in the skeleton and must not be
-invented. Hex digits are lower-case in `tokens.css` and upper-case in the spec; compare them
+`Status` is `from spec` when the value is measured in that row, `derived from spec` when it is that
+measurement with a fixed box part taken off (a 1 px border or a line-box inset), `lead decision`
+when no spec row states the box and the domain lead set it in issue review, `Interim` when the
+reference state was never captured, and `not yet measured` when the specs do not measure it yet —
+those tokens keep the value they had in the skeleton and must not be invented. A `lead decision`
+cell names the issue and the review item so the box can be re-checked when the spec measures it.
+Hex digits are lower-case in `tokens.css` and upper-case in the spec; compare them
 case-insensitively. Sizes are quoted in CSS px, and type sizes keep the `rem` of `tokens.css` with
 the measured px in brackets.
 
@@ -122,7 +126,12 @@ what the "no colour constants" rule forbids.
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
-| `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
+| `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › All Modules and All Sources placeholders `#8B9AB9` | from spec |
+| `--color-detail-timeline-filter-surface` | `#f9faff` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "fill `#F9FAFF`"; Event track › date badge and icon fill | from spec |
+| `--color-detail-timeline-muted-border` | `#d6d6e3` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge border, connector, icon border | from spec |
+| `--color-detail-timeline-badge-text` | `#434d5f` | record-detail.md › Layout › Visual layout › Timeline › Event track › "badge date ink `#434D5F`" | from spec |
+| `--color-detail-timeline-caret-placeholder` | `#a0a8b8` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Modules/Sources caret | from spec |
+| `--color-detail-timeline-caret-value` | `#838892` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Users/Time caret | from spec |
 | `--color-form-portrait` | `#b2b2b2` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "drawn in gray `#B2B2B2`" | from spec |
 | `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
@@ -211,6 +220,17 @@ what the "no colour constants" rule forbids.
 | `--size-list-toolbar-height` | `47px` | list-views.md › Toolbar › "About 47 px high below tab strip" | from spec |
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
+| `--size-filter-editor-inset` | `23px` | list-views.md › Visual layout › Checked filter checkbox / Filter operator dropdown: x 354 → 377 | from spec |
+| `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
+| `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
+| `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
+| `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
+| `--size-filter-operator-list-height` | `220px` | list-views.md › Visual layout › Open operator list, scrollable dropdown body | from spec |
+| `--size-filter-operator-row-height` | `27px` | list-views.md › Visual layout › Open operator list, item rows | from spec |
+| `--size-filter-operator-list-offset` | `1px` | list-views.md › Visual layout › Filter operator dropdown / Open operator list: y 559 → 560 | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
 | `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
@@ -330,6 +350,45 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
+| `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
+| `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
+| `--size-detail-timeline-subtab-padding-inline` | `6px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "about 6 px past the label ink on each side" | from spec |
+| `--size-detail-timeline-subtab-underline-height` | `3px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "underline is 3 px thick" | from spec |
+| `--size-detail-timeline-history-padding-top` | `25px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "button's top edge is 25 px below the subtab line" | from spec |
+| `--size-detail-timeline-history-padding-inline` | `26px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "`Timeline History` text starts x 578" (26 px inside the surface at x 552); the filter panel shares this inset, so it sits 1 px farther in than the spec's "x 577–1433" and measures 854 px wide against 856 px | from spec |
+| `--size-detail-timeline-filter-button-width` | `42px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
+| `--size-detail-timeline-filter-button-height` | `30px` | record-detail.md › Layout › Visual layout › Timeline › History controls › "42 × 30 px" | from spec |
+| `--size-detail-timeline-filter-button-gap` | `11px` | record-detail.md › Layout › Visual layout › Timeline › History controls › heading to filter button gap (measured) | from spec |
+| `--size-detail-timeline-filter-panel-gap` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "15 px below the filter button" | from spec |
+| `--size-detail-timeline-filter-panel-padding-block-start` | `15px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "its cap top is 19 px below the panel's top edge in row 1" measures the glyph, not the box; the 15 px panel padding + 4 px field gap that land the label box there is the UI Lead's box model (MEP-143 review round 2, item 4) | lead decision |
+| `--size-detail-timeline-filter-panel-padding-inline` | `20px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "the first starts 21 px inside the panel's left edge" minus the panel's 1 px border | derived from spec |
+| `--size-detail-timeline-filter-panel-padding-bottom` | `16px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "The panel's bottom edge is 16 px below the row-2 controls" measures the outer edge, but this token is the inner padding: the panel's 1 px border adds a px, so the delivered gap under row 2 measures 17 px against the spec's 16 px (UI Lead approval measurement A3: +1 px, kept inside the ±1 px threshold) | lead decision |
+| `--size-detail-timeline-filter-field-gap` | `4px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › the row states label caps only; the 4 px label-box to selector-top gap is the UI Lead's box model (MEP-143 review round 2, item 5) and is what keeps the row-1 cap at the spec's 19 px | lead decision |
+| `--size-detail-timeline-filter-selector-row-gap` | `8px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "8 px gaps" between row-1 selectors | from spec |
+| `--size-detail-timeline-filter-row2-margin-top` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › row-2 label "18 px below the bottom edge of the row-1 selectors" measures the cap; the UI Lead's box target is 14–15 px (MEP-143 review round 2, item 1), shipped as 14 px above the label box | lead decision |
+| `--size-detail-timeline-filter-selector-width` | `250px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "250 px wide" | from spec |
+| `--size-detail-timeline-filter-selector-height` | `33px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "33 px high" (Modules, Sources) | from spec |
+| `--size-detail-timeline-filter-selector-padding-inline` | `11px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "Selector text ink starts 12 px right of the selector's outer left edge" minus the selector's 1 px border (UI Lead review round 2, item 13 states the box) | derived from spec |
+| `--size-detail-timeline-filter-caret-width` | `9px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "9 px wide" caret; the CSS triangle is two half-pixel side borders, so it measures 8 px on screen (UI Lead approval measurement A7: −1 px, within the ±1 px threshold) | from spec |
+| `--size-detail-timeline-filter-caret-height` | `5px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › "5 px high" caret | from spec |
+| `--size-detail-timeline-filter-caret-inset` | `12px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › caret right tip 12 px inside selector | from spec |
+| `--size-detail-timeline-apply-height` | `32px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter "103 × 32 px" | from spec |
+| `--size-detail-timeline-apply-padding-inline` | `14px` | record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › Apply Filter measures 103 × 32 px; the spec gives the width, never the padding — 14 px is the UI Lead's box target (MEP-143 review round 2, item 12) and renders 103.1875 px wide | lead decision |
+| `--size-detail-timeline-track-offset` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge starts 25 px below filter panel or button | from spec |
+| `--size-detail-timeline-date-badge-width` | `130px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
+| `--size-detail-timeline-date-badge-height` | `27px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "130 × 27 px" badge | from spec |
+| `--size-detail-timeline-date-badge-offset-inline` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › badge x 577; surface x 552 | from spec |
+| `--size-detail-timeline-connector-height` | `25px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "runs 25 px from the badge's bottom edge to the icon's top edge". The same 25 px is reused for the rail segment between two icons on one day; the capture holds one event per day, so that same-day pitch is unmeasured | Interim (same-day reuse) |
+| `--size-detail-timeline-track-center` | `125.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › connector at x 677–678; surface x 552 | from spec |
+| `--size-detail-timeline-time-column-end` | `98.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › time ends 9.5 px left of icon at x 660 | from spec |
+| `--size-detail-timeline-event-icon` | `36px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "36 px circle" | from spec |
+| `--size-detail-timeline-event-icon-offset-inline` | `108px` | record-detail.md › Layout › Visual layout › Timeline › Event track › icon x 660–696; surface x 552 | from spec |
+| `--size-detail-timeline-event-column-gap` | `17.5px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title x 713.5; icon ends x 696 | from spec |
+| `--size-detail-timeline-event-line-height` | `18px` | record-detail.md › Layout › Visual layout › Timeline › Event track › "the title's cap top is 10 px and the byline's cap top 29 px below the icon's top edge"; the spec gives cap positions, the 18 px line box that reproduces them is the UI Lead's box model (MEP-143 review round 2, item 10). The filter-field label reuses this box | lead decision |
+| `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap 10 px below the icon's top edge is the spec measure; the 7 px body offset that produces it is the UI Lead's box model (MEP-143 review round 2, item 10) | lead decision |
+| `--size-detail-timeline-event-row-padding-bottom` | `18px` | no spec row measures the row box: 7 px body offset + 36 px icon + 18 px = a 61 px pitch, which is how the same-day icons land 25 px apart (UI Lead review round 2, item 11). The capture holds one event per day | Interim |
+| `--size-detail-timeline-day-gap` | `16px` | no spec row measures the space between day groups and the capture holds one event per day, so the group gap is unobserved | Interim |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
@@ -532,11 +591,11 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | Pair | Ratio | Where the reference uses it |
 | --- | --- | --- |
 | `--color-text-placeholder` `#8c91ab` on `--color-bg` `#eef1f9` | 2.75:1 | Top bar/global search › Footprint › "placeholder approx. 14 px regular, `#8C91AB` approx." |
-| `--color-text-placeholder` `#8c91ab` on `--color-surface` | 3.11:1 | The same placeholder token on a panel |
+| `--color-text-placeholder` `#8c91ab` on `--color-surface` | 3.11:1 | Global search placeholder on a panel; record-detail.md › Timeline filter › All Users placeholder |
 | `--color-rail-placeholder` `#7a859b` on `--color-rail-surface` | 3.33:1 | Rail/local Search › Input box › "`#7A859B` approx." |
 | `--color-primary` on `--color-bg` | 4.15:1 | The primary colour is measured as an icon, a border and an outline, never as text on the page surface. list-views.md › Text roles measures Lead Name and Email in the body colour even when linked ("rather than the blue action color"), so there is no separate link token |
 | `--color-text-disabled` `#b5b8be` on `--color-surface` | 1.99:1 | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" |
-| `--color-text-empty` `#8b9ab9` on `--color-surface` | 2.83:1 | list-views.md › Empty view › "message in #8B9AB9" |
+| `--color-text-empty` `#8b9ab9` on `--color-surface` | 2.83:1 | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Timeline filter › All Modules and All Sources placeholders |
 | `--color-primary-text` `#ffffff` on `--color-primary-gradient-start` `#5767f6` | 4.49:1 | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top to `#154EC5` at bottom, white `#FFFFFF` label". The darker end of the same gradient passes at 7.17:1 |
 | `--color-primary-text` `#ffffff` on `--color-primary-disabled` `#adb3ee` | 2.01:1 | list-views.md › Sort popover › "flat `#ADB3EE` fill and a white `#FFFFFF` label". Disabled controls are inactive text; the fill stays as measured |
 | `--color-popover-sort-border` `#ced0e1` on `--color-surface` | 1.53:1 | list-views.md › Sort popover › "1 px `#CED0E1` border" |
@@ -593,3 +652,17 @@ Shared tokens used here: panel border, surface, background, text, strong text, b
 border, primary gradient start, surface-active rail selection, surface-hover menu row,
 menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
 Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.
+
+## Field filter primitive additions
+
+- `Checkbox.variant="filter"` uses the measured 15px, 2px-border checked box;
+  other checkbox variants keep their current sizing.
+- `Select.variant="filter"` and `SelectItem.variant="filter"` provide a compact
+  selector and measured operator list; default Select stays unchanged.
+- `MultiSelect({ label, placeholder, options, value, onChange })` searches local
+  `{ id, label }` options and emits multiple IDs. Arrow keys navigate the list,
+  Space toggles an option, Escape dismisses, and selected IDs survive search.
+  It loads no data. Its open appearance is Interim, using existing popup tokens.
+
+These compact controls use the neighboring Status stage value typography role
+(`--text-sm`, `--font-weight-normal`); no operator typography role is measured.

@@ -28,6 +28,13 @@ To use your own PostgreSQL 18 instead, set `DATABASE_URL` (see `.env.example`).
 
 Without a global pnpm, prefix every command with `corepack`, for example `corepack pnpm dev`.
 
+## First run
+
+1. `corepack pnpm dev`
+2. Open the printed address, then sign up.
+3. Create an organization.
+4. Open Settings, then Members, and invite someone. Copy the invitation link and share it yourself; the app does not send email.
+
 ## Commands
 
 | Command | What it does |

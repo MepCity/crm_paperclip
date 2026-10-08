@@ -263,28 +263,44 @@ export function createHttpRecordService({
       const write = (await request(path, {
         method: operations.create.method,
         body: { data: [encodeInput(input, metadata)] },
-      })) as { data: readonly { id: string }[] };
-      return service.get(module, requiredWire(write.data[0], "Created record").id);
+      })) as import("../wire/types").WireWriteResult;
+      return service.get(module, requiredWire(write.data[0], "Created record").details.id);
     },
 
     async update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData> {
       const metadata = await loadModuleMetadata(module);
       const path = operationPath(operations.update, { module, recordId: id });
-      await request(path, {
+      const write = (await request(path, {
         method: operations.update.method,
         body: { data: [encodeInput(input, metadata)] },
-      });
-      return service.get(module, id);
+      })) as import("../wire/types").WireWriteResult;
+      return service.get(module, requiredWire(write.data[0], "Updated record").details.id);
     },
 
     async delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void> {
-      if (!ids.length) {
-        await loadModuleMetadata(module);
-        return;
+      if (ids.length === 1) {
+        const path = operationPath(operations.delete, { module, recordId: ids[0] as string });
+        await request(path, { method: operations.delete.method });
+      } else {
+        const path = operationPath(operations.massDelete, { module });
+        await request(path, { method: operations.massDelete.method, body: { ids } });
       }
-      const path = operationPath(operations.delete, { module });
-      await request(`${path}${queryString({ ids: ids.join(",") })}`, {
-        method: operations.delete.method,
+    },
+
+    async massUpdate(module, ids, input) {
+      const metadata = await loadModuleMetadata(module);
+      const path = operationPath(operations.massUpdate, { module });
+      await request(path, {
+        method: operations.massUpdate.method,
+        body: { data: [encodeInput(input, metadata)], ids },
+      });
+    },
+
+    async changeOwner(module, ids, ownerId) {
+      const path = operationPath(operations.changeOwner, { module });
+      await request(path, {
+        method: operations.changeOwner.method,
+        body: { ids, owner: { id: ownerId } },
       });
     },
 

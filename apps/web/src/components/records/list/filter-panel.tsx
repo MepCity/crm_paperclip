@@ -1,14 +1,26 @@
 "use client";
 
-import { useId, useState } from "react";
+import "./filter-panel.css";
+
+import { useEffect, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclosure } from "@/components/ui/disclosure";
 import { TextField } from "@/components/ui/text-field";
+import type { AppliedFilter } from "@/lib/records/filter-operators";
+import {
+  draftOperator,
+  type FilterDraft,
+  FilterEditor,
+  type FilterEditorDefinition,
+  initialFilterDraft,
+  isFilterComplete,
+} from "./filter-editor";
 
 export interface FilterGroup {
   id: string;
   label: string;
-  items: { id: string; label: string; disabled?: boolean }[];
+  items: { id: string; label: string; disabled?: boolean; editor?: FilterEditorDefinition }[];
 }
 
 export interface FilterPanelProps {
@@ -18,6 +30,8 @@ export interface FilterPanelProps {
   groups: readonly FilterGroup[];
   selectedIds: readonly string[];
   onSelectionChange: (selectedIds: string[]) => void;
+  onApply?: (filters: AppliedFilter[]) => void;
+  onClear?: () => void;
 }
 
 export function FilterPanel({
@@ -27,8 +41,26 @@ export function FilterPanel({
   groups,
   selectedIds,
   onSelectionChange,
+  onApply,
+  onClear,
 }: FilterPanelProps) {
   const titleId = useId();
+  const [drafts, setDrafts] = useState<Record<string, FilterDraft>>({});
+  // External deselection (including page-level reset) must discard drafts too.
+  useEffect(() => {
+    setDrafts((current) => {
+      const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
+      return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
+    });
+  }, [selectedIds]);
+  const selectedItems = groups
+    .flatMap((group) => group.items)
+    .filter((item) => selectedIds.includes(item.id) && item.editor);
+  const completed = selectedItems.every(
+    (item) =>
+      item.editor &&
+      isFilterComplete(item.editor, drafts[item.id] ?? initialFilterDraft(item.editor)),
+  );
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
   const visibleGroups = groups
@@ -41,7 +73,7 @@ export function FilterPanel({
   return (
     <section
       aria-labelledby={titleId}
-      className="box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface pl-(--size-list-filter-padding) pr-(--size-list-filter-search-end-inset) pb-4"
+      className="filter-panel box-border w-(--size-list-filter-width) shrink-0 rounded-md border border-panel-border bg-surface pl-(--size-list-filter-padding) pr-(--size-list-filter-search-end-inset)"
     >
       <h2
         id={titleId}
@@ -56,7 +88,7 @@ export function FilterPanel({
         value={query}
         onChange={setQuery}
       />
-      <div className="mt-(--size-list-filter-search-to-group)">
+      <div className="filter-panel-content mt-(--size-list-filter-search-to-group)">
         {visibleGroups.map((group, index) => (
           <div
             key={group.id}
@@ -79,14 +111,22 @@ export function FilterPanel({
                 {group.items.map((item) => (
                   <li
                     key={item.id}
-                    className="flex min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
+                    className="flex flex-col min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
                   >
                     <Checkbox
                       align="first-line"
+                      variant="filter"
                       label={item.label}
                       isDisabled={item.disabled}
                       isSelected={selectedIds.includes(item.id)}
                       onChange={(selected) => {
+                        setDrafts((current) => {
+                          const next = { ...current };
+                          if (selected && item.editor)
+                            next[item.id] = initialFilterDraft(item.editor);
+                          else delete next[item.id];
+                          return next;
+                        });
                         onSelectionChange(
                           selected
                             ? [...selectedIds, item.id]
@@ -94,6 +134,16 @@ export function FilterPanel({
                         );
                       }}
                     />
+                    {selectedIds.includes(item.id) && item.editor && (
+                      <FilterEditor
+                        label={item.label}
+                        editor={item.editor}
+                        draft={drafts[item.id] ?? initialFilterDraft(item.editor)}
+                        onChange={(draft) =>
+                          setDrafts((current) => ({ ...current, [item.id]: draft }))
+                        }
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -101,6 +151,48 @@ export function FilterPanel({
           </div>
         ))}
       </div>
+      {selectedItems.length > 0 && (
+        <div className="filter-panel-actions flex items-center gap-2 py-3">
+          {onApply && (
+            <Button
+              size="sm"
+              isDisabled={!completed}
+              onPress={() => {
+                if (!completed) return;
+                onApply(
+                  selectedItems.flatMap((item) => {
+                    if (!item.editor) return [];
+                    const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
+                    return [
+                      {
+                        itemId: item.id,
+                        operatorId: draft.operatorId,
+                        value:
+                          draftOperator(item.editor, draft)?.control === "none"
+                            ? null
+                            : draft.value,
+                      },
+                    ];
+                  }),
+                );
+              }}
+            >
+              Apply Filter
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onPress={() => {
+              setDrafts({});
+              onSelectionChange([]);
+              onClear?.();
+            }}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

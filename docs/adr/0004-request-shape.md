@@ -1,6 +1,6 @@
 # ADR 0004 — Request shape: browser requests that resemble the reference CRM
 
-- Status: Accepted (§5 holds interim shapes; the deviations listed at the end await the board)
+- Status: Accepted (§5 combines documented and interim shapes; the deviations listed at the end await the board)
 - Date: 2026-10-04
 - Decider: CTO
 - Issue: MEP-69
@@ -65,11 +65,47 @@ Mapping of the record service port:
 | `list` | `POST /crm/v2.2/{module}/bulk?cvid=&page=&per_page=&fields=` | `200` `data[]`, `info`; `204` when empty |
 | `count` | `POST /crm/v2.2/{module}/actions/count?cvid=` | `{count}` |
 | `get` | `GET /crm/v2.2/{module}/{recordId}` | `data[]` with one item |
-| `create`, `update`, `delete` | not observed, see §5 | |
+| `create` | `POST /crm/v2.2/{module}` | Write result, see §5 |
+| `update` | `PUT /crm/v2.2/{module}/{recordId}` | Write result, see §5 |
+| `delete` (one ID) | `DELETE /crm/v2.2/{module}/{recordId}` | Write result, see §5 |
+| `delete` (multiple IDs) | `POST /crm/v2.2/{module}/actions/mass_delete` | Write result, see §5 |
+| `massUpdate` | `POST /crm/v2.2/{module}/actions/mass_update` | Write result, see §5 |
+| `changeOwner` | `POST /crm/v2.2/{module}/actions/change_owner` | Write result, see §5 |
 
 User names for owner fields come from `GET /crm/v9/users?type=&page=&per_page=` (`users[]`, `info`).
 
 Interim, because the transport was not observed: a changed sort is sent as `sort_by` and `sort_order` in the query (the names appear in `info` and on the notes request); ad-hoc filters and a search text are sent as a JSON body on `bulk` and `count`, with filters in the criteria shape of saved views (`comparator`, `field`, `value`; `group_operator`, `group[]`).
+
+
+Interim **panel filter values** (MEP-195): the labels were observed, but neither
+an applied-filter request nor its result was captured. These new values are
+implementation choices, not observed wire literals. They use the same saved-view
+leaf/group body on `bulk` and `actions/count`; `field` carries `api_name` and
+`group_operator` remains `AND` / `OR`.
+
+- Comparators: `not_equal`, `starts_with`, `ends_with`, `is_empty`, `is_not_empty`,
+  `less_than`, `greater_than`, `greater_equal`, `between`, `not_between`.
+- Existing `less_equal` also accepts a numeric value and the new day-offset
+  token string `${DUEINDAYS}+N`. N is a nonnegative integer; the due window is
+  strictly after now and inclusive at now + N complete days (N=0 is empty).
+- Named periods use `equal` and one token family: `${PERIOD.TOMORROW}`,
+  `${PERIOD.YESTERDAY}`, `${PERIOD.TILL_YESTERDAY}`,
+  `${PERIOD.STARTING_TOMORROW}`, `${PERIOD.THIS_WEEK}`,
+  `${PERIOD.PREVIOUS_WEEK}`, `${PERIOD.THIS_MONTH}`,
+  `${PERIOD.PREVIOUS_MONTH}`, `${PERIOD.THIS_YEAR}`,
+  `${PERIOD.PREVIOUS_YEAR}`, `${PERIOD.NEXT_YEAR}`.
+- Empty predicates carry `value: null`; membership predicates carry string arrays;
+  numeric ranges carry exactly `[lower, upper]`, inclusive at both ends.
+- Text-family comparisons ignore case. Empty means null or empty string; negative
+  text/picklist/owner comparisons match empties. Empty numbers match only `!=`
+  among numeric operators, not `not between`. Calendar periods use UTC, weeks
+  begin Monday, and intervals include their start and exclude the next start.
+
+The observed comparators `equal`, `contains`, `not_contains`, `less_equal`, tokens
+`${TODAY}`, `${AGEINDAYS}+31`, `${CATEGORY.<name>}` and object
+`{ "name": "${CURRENTUSER}" }` retain their spelling. Age-in uses the existing
+`less_equal` + `AGEINDAYS` rule unchanged. The complete interim semantic table
+and validation rules live in `packages/core/src/records/README.md`.
 
 ### 5. Writes and errors
 
@@ -81,12 +117,89 @@ Decided, whatever later evidence shows:
 
 Observed: an error body is `{"code", "details", "message", "status"}`, and an unknown record is `404`. Every error we send uses these four keys.
 
-Interim shapes. Basis: analogy with the observed read envelope and general knowledge of the reference CRM's public API conventions. Nobody has verified them.
+The board selected the public developer documentation as write/error evidence on
+2026-10-04 (MEP-27). Source precedence is observed captures, then documented A10/A11
+of `research/specs/leads-write-behaviour.md`, then explicitly Interim choices.
+The error body's `status` is an observed string; HTTP status comes from the response
+line. Documentation describes the external API, not captured browser writes.
 
-- `POST /crm/v2.2/{module}` creates, `PUT /crm/v2.2/{module}/{recordId}` updates, `DELETE /crm/v2.2/{module}?ids=` deletes. The request body is `{"data": [{<field API name>: <value>}]}`.
-- Errors other than the observed one: status `400` validation, `401` unauthenticated, `403` forbidden, `409` conflict; an unexpected failure is `500` with empty `details`. The values of `code` and the layout of `details` for field errors are ours.
+All paths below use `/crm/v2.2` according to §2. `W` denotes
+`{data:[{code:"SUCCESS",details:{Modified_Time,Modified_By,Created_Time,id,Created_By},message,status:"success"}]}`.
+`I(message, ids)` denotes `{data:[{code:"SUCCESS",details:{id},message,status:"success"}]}`,
+with one item per supplied ID, in input order. User-valued details use the existing
+owner codec (`{id,name,email}` for known members, `{id}` otherwise); this value shape
+is Interim because A11 only shows objects, without a supported member leaf inventory.
 
-They become final when evidence exists (open question 1). Until Phase 6 publishes the API, our own browser layer is the only consumer, so a change costs the codec and its tests.
+| Operation | Request | Success response | Source |
+| --- | --- | --- | --- |
+| create | `POST /{module}`; `{data:[{<field>:<value>}]}` | `W`, message `record added` | A11 D2 |
+| update | `PUT /{module}/{recordId}`; `{data:[{<field>:<value>}]}` | `W`, message `record updated` | A11 D17; omission of body `id` on this path is Interim |
+| delete, one ID | `DELETE /{module}/{recordId}`; no body | `I("record deleted", ids)` | A11 D3 |
+| delete, multiple IDs | `POST /{module}/actions/mass_delete`; `{ids:[…]}` | `I("record is deleted", ids)` | Request/message A11 D8; envelope/cardinality Interim (no ID-based sample envelope documented) |
+| massUpdate | `POST /{module}/actions/mass_update`; `{data:[{<field>:<value>}],ids:[…]}` | `I("record updated", ids)` | Request A11 D7; response entirely Interim (ID-based sample, key positions and message not documented) |
+| changeOwner | `POST /{module}/actions/change_owner`; `{ids:[…],owner:{id:<userId>}}` | `I("owner is successfully updated", ids)` | A11 D18; use for one ID and one item per ID Interim |
+
+Create/update still return `RecordData` at the port. The HTTP adapter reads
+`details.id` from the success result and performs the existing GET record request.
+Collection `DELETE /{module}?ids=` is removed. `trigger`, `$append_values`,
+`apply_feature_execution`, `skip_feature_execution`, `notify`, `related_modules`,
+`over_write`, `cvid` and `job_id` are neither sent nor synthesized for these writes:
+the port has no corresponding features and Module 1 has no view-wide operation or
+multi-select field. HTTP success is 200 (Interim, not documented).
+
+Errors always use `{code,details,message,status:"error"}`. `details.fields` retains
+the full `fieldErrors` map without loss, including multiple messages per field.
+No `api_name`, `json_path`, `expected_fields` or `ambiguity_due_to` is added: A11 does
+not document their position/types. The HTTP status and wire code together restore
+the original `AppError` subclass (including 400 + `DUPLICATE_DATA` as `ConflictError`).
+
+| AppError / failure | HTTP | code | Source |
+| --- | --- | --- | --- |
+| ValidationError, empty required field | 400 | `MANDATORY_NOT_FOUND` | A10 / A11 D2, D17 |
+| ValidationError, other field/input failures | 400 | `INVALID_DATA` | A11 D2, D17 |
+| ValidationError, ID count outside 1–500 | 400 | `LIMIT_EXCEEDED` | Interim; D7 documents it only for the 50,000 limit |
+| ConflictError | 400 | `DUPLICATE_DATA` | A10 |
+| ForbiddenError | 403 | `NO_PERMISSION` | A10 |
+| UnauthenticatedError | 401 | `AUTHENTICATION_FAILURE` | A11 |
+| NotFoundError | 404 | `not_found` | Observed HTTP status; code Interim |
+| Unexpected failure | 500 | `INTERNAL_ERROR`; empty details | A10 |
+
+Remaining Interim decisions:
+
+- Success HTTP 200 and error `status:"error"`: literal error status is not documented.
+- `not_found` with 404 for unknown records takes observed precedence over documented
+  write-invalid-ID 400 + `INVALID_DATA`; A11 lists no unknown-record 404 code.
+- `details.fields` is our lossless field-error addition; no documented detail leaf
+  location or type is inferred. ValidationError's internal `reason` (`invalid`,
+  `mandatory`, `limit`) selects the wire code and is restored from it without an
+  additional wire key; existing constructor arguments remain valid.
+- Missing required values take precedence when a validation map also has other
+  failures. Existing safe domain validation messages pass through unchanged.
+- All mass operations validate 1–500 IDs and are atomic: an unknown/foreign target
+  yields NotFoundError before any change. Per-record failure behavior is undocumented.
+- Mass update returns the ID-only success envelope with `record updated`, in input
+  order. Its ID-based response key positions, cardinality and message are undocumented.
+- Mass delete uses the single-delete envelope, with documented `record is deleted`,
+  one item per input ID; its ID-based response envelope/cardinality are undocumented.
+- Change owner uses the batch path even for one ID and returns one item per ID;
+  A11 documents a separate single-record path and does not state result cardinality.
+- Update omits body `id` on the record-specific PUT path; D17 requires it only on
+  the module-level PUT path and is silent for the record-specific path.
+- Write user details and Owner input use the existing owner object codec as above.
+- Our fixed unexpected message is `Something went wrong.`; an unreadable response
+  becomes `UnexpectedApiError` with `The response could not be read.`. These are
+  local safe messages, not documented reference messages. An unknown/malformed
+  error body or mismatched HTTP/code pair also becomes UnexpectedApiError.
+- New local validation messages are `Choose between 1 and 500 records.`,
+  `Choose exactly one field.`, and `This field cannot be mass updated.`. Existing
+  codec messages (`Invalid value.`, `Send valid JSON.`, `Send exactly one record.`,
+  `Unknown field.`, `Expected a user ID.`) remain local validation text, not parity claims.
+
+Field definitions expose observed `mass_update` as `FieldDefinition.massUpdate`;
+all 56 fixture fields match the local metadata export, including 15 true flags.
+Mass update requires exactly one eligible, writable field and uses update validation.
+Owner transfer requires an active organization member (the live membership source);
+unknown, removed and foreign users fail under `Owner`. Related records are untouched.
 
 ### 6. Code layout
 
@@ -145,7 +258,7 @@ Verification:
 
 ## Open questions
 
-1. Which evidence source settles the write shapes and the error details (§5)? The reference CRM cannot be written to. Candidates: its public developer documentation, a network record the board makes itself, or keeping our interim design.
+1. The board selected public developer documentation on 2026-10-04 (§5). It describes the external API; browser write requests remain unobserved because the reference CRM is read-only. Remaining undocumented details are explicitly Interim above.
 2. Request header names are not in the captures. `X-CRM-ORG` is our choice; only `server.ts` and the fetch wrapper know it.
-3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)?
+3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)? Which comparator/token literals and empty/date/range semantics does an applied panel filter use? Panel labels were observed, but no applied request or result was captured; all panel filter values listed in §4 and their semantic table remain Interim pending evidence.
 4. Which value does `info.sort_by` carry when neither the request nor the view sets a sort? The observed default view returns strings. Until known we send `null`.

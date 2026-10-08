@@ -23,7 +23,7 @@ const styles = {
     "flex w-full min-w-0 cursor-default items-start gap-(--size-checkbox-label-gap) rounded-sm outline-none " +
     "data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
-  box: "flex shrink-0 items-center justify-center rounded-sm bg-surface",
+  box: "flex shrink-0 items-center justify-center rounded-sm",
   boxFirstLine: "mt-px",
   boxSize: {
     unselected: "h-(--size-checkbox) w-(--size-checkbox) border-(length:--size-checkbox-border)",
@@ -35,6 +35,7 @@ const styles = {
     invalid: "border-danger",
   },
   boxChecked: "bg-primary",
+  boxUnchecked: "bg-surface",
   check: "h-3 w-3 text-primary-text",
   label: "text-sm text-text",
   labelFirstLine: "min-w-0 text-md font-normal leading-(--size-checkbox-label-line) text-text",
@@ -57,6 +58,7 @@ export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" |
   errorMessage?: string;
   /** `first-line` keeps the box on the first wrapped line. The default stays centered. */
   align?: "center" | "first-line";
+  variant?: "default" | "filter";
 }
 
 export function Checkbox({
@@ -65,6 +67,7 @@ export function Checkbox({
   description,
   errorMessage,
   align = "center",
+  variant = "default",
   ...props
 }: CheckboxProps) {
   const wraps = align === "first-line";
@@ -79,8 +82,8 @@ export function Checkbox({
           <>
             <span
               aria-hidden="true"
-              className={`${styles.box} ${wraps ? styles.boxFirstLine : ""} ${styles.boxSize[isSelected ? "selected" : "unselected"]} ${styles.boxBorder[boxBorder(isSelected, isInvalid)]} ${
-                isSelected ? styles.boxChecked : ""
+              className={`${styles.box} ${wraps ? styles.boxFirstLine : ""} ${styles.boxSize[isSelected && variant !== "filter" ? "selected" : "unselected"]} ${styles.boxBorder[boxBorder(isSelected, isInvalid)]} ${
+                isSelected ? styles.boxChecked : styles.boxUnchecked
               }`}
             >
               {isSelected && <Icons.check className={styles.check} />}
