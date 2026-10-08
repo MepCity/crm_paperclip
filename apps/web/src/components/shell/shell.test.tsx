@@ -66,6 +66,10 @@ const config: NavConfig = {
   ],
 };
 
+function classes(element: HTMLElement): Set<string> {
+  return new Set(element.className.split(/\s+/));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   navigation.path = "/crm/example";
@@ -235,6 +239,34 @@ test("Settings navigation links to Members and keeps General exact", () => {
   expect(members.getAttribute("href")).toBe("/crm/example/settings/members");
   expect(members.getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
+});
+
+test("Settings navigation marks only the current page with fill and bold", () => {
+  navigation.path = "/crm/example/settings/members";
+  const view = render(<SettingsNavigation orgSlug="example" />);
+
+  const members = classes(screen.getByRole("link", { name: "Members" }));
+  const general = classes(screen.getByRole("link", { name: "General" }));
+  expect(members.has("bg-surface-hover")).toBe(true);
+  expect(members.has("font-semibold")).toBe(true);
+  expect(members.has("text-text-muted")).toBe(false);
+  expect(general.has("bg-surface-hover")).toBe(false);
+  expect(general.has("font-semibold")).toBe(false);
+  expect(general.has("text-text-muted")).toBe(true);
+  expect(general.has("data-hovered:bg-surface-hover")).toBe(true);
+  for (const link of [members, general]) {
+    expect(link.has("px-3")).toBe(true);
+    expect(link.has("py-2")).toBe(true);
+  }
+
+  navigation.path = "/crm/example/settings";
+  view.rerender(<SettingsNavigation orgSlug="example" />);
+  const activeGeneral = classes(screen.getByRole("link", { name: "General" }));
+  expect(activeGeneral.has("bg-surface-hover")).toBe(true);
+  expect(activeGeneral.has("font-semibold")).toBe(true);
+  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-surface-hover")).toBe(
+    false,
+  );
 });
 
 test("PageHeader supplies description and actions without repeating a title", () => {
