@@ -10,6 +10,8 @@ export default defineConfig({
   timeout: 90_000,
   testDir: "./e2e",
   fullyParallel: true,
+  // Several agents share one machine; cap browsers per run. Override with MEP_TEST_WORKERS.
+  workers: Number(process.env.MEP_TEST_WORKERS ?? 2),
   forbidOnly: Boolean(process.env.CI),
   reporter: [["list"]],
   outputDir: "./test-results",
