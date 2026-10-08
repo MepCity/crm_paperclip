@@ -30,6 +30,26 @@ Visual layout → Filter content, Surface and line colors, Selected / disabled.
 Vertical gaps, search-field width and end inset use the measured Filter content tokens.
 Open question 17 records the uncaptured closed group and checked checkbox.
 
+## Confirm dialog
+
+`confirm-dialog.tsx` builds a measured confirmation alert on the shared modal
+primitive. Props: `title`, `message`, `confirmLabel`, `cancelLabel`,
+`tone` (`danger` | `default`), optional `busy`, optional `errorMessage`,
+`onConfirm`, and optional controlled `isOpen` / `onOpenChange`. Escape and the
+secondary button close; focus opens on the secondary button; both buttons
+disable while `busy` or while an async `onConfirm` is pending. `errorMessage`
+renders as form error text above the actions. Geometry follows
+`record-detail.md` › Visual layout › Unsaved changes modal via
+`--size-dialog-width`, `--size-confirm-dialog-*`, and `--radius-create-menu`.
+Use inside `DialogTrigger` for trigger-driven flows, or pass `isOpen` for
+page-owned delete confirmation.
+
+### Interim
+
+Destructive fill uses the shared `danger` button variant rather than the
+sampled red gradient; hover and shadow parameters stay on the primitive
+defaults because they are not measured for this modal.
+
 ## Token sources
 
 Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
@@ -332,6 +352,12 @@ what the "no colour constants" rule forbids.
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
+| `--size-confirm-dialog-padding-block-start` | `29.5px` | record-detail.md › Unsaved changes modal › "Top padding 29.5 px" | from spec |
+| `--size-confirm-dialog-padding-inline` | `26.5px` | record-detail.md › Unsaved changes modal › "left padding 26.5 px" | from spec |
+| `--size-confirm-dialog-padding-block-end` | `26px` | record-detail.md › Unsaved changes modal › "26 px bottom" | from spec |
+| `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
+| `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
+| `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |

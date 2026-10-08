@@ -1,6 +1,6 @@
 import { NotFoundError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -120,6 +120,60 @@ describe("ModuleListScreen", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/could not be found/i)).toBeTruthy();
+    });
+  });
+
+  it("shows the selection bar and restores the toolbar after Clear", async () => {
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rowBoxes = screen.getAllByRole("checkbox", { name: /Select / });
+    const firstRow = rowBoxes[1];
+    if (!firstRow) throw new Error("Expected a row checkbox.");
+    await user.click(firstRow);
+    expect(screen.getByText("1 Lead Selected")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.getByRole("button", { name: "Filter" })).toBeTruthy();
+  });
+
+  it("deletes selected records after confirmation", async () => {
+    const records = createFixtureRecordService(ctx);
+    const deleteSpy = vi.spyOn(records, "delete");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    const first = rows[1];
+    const second = rows[2];
+    if (!first || !second) throw new Error("Expected row checkboxes.");
+    await user.click(first);
+    await user.click(second);
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(deleteSpy).toHaveBeenCalled();
+    });
+    const deletedIds = deleteSpy.mock.calls.at(-1)?.[1];
+    expect(deletedIds?.length).toBe(2);
+    await waitFor(() => {
+      expect(screen.queryByRole("alertdialog")).toBeNull();
     });
   });
 

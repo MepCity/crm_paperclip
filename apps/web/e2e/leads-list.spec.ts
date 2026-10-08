@@ -226,6 +226,40 @@ test.describe("Leads list page", () => {
     ignoreFailedResponses(pageErrors, [404]);
   });
 
+  test("bulk delete from the selection bar", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const rowChecks = page.getByRole("checkbox", { name: /Select / });
+    const deletedIds: string[] = [];
+    await rowChecks.nth(1).check({ force: true });
+    await rowChecks.nth(2).check({ force: true });
+    await expect(page.getByText("2 Leads Selected")).toBeVisible();
+    await expectNoA11yViolations(page);
+    await expect(page.getByRole("button", { name: "Filter", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Delete" }).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByText("2 Leads Selected")).toBeVisible();
+    const deleteDone = page.waitForResponse(async (response) => {
+      if (response.request().method() !== "POST") return false;
+      if (!response.url().includes("/actions/mass_delete")) return false;
+      const body = response.request().postDataJSON() as { ids?: string[] } | null;
+      deletedIds.length = 0;
+      deletedIds.push(...(body?.ids ?? []));
+      return response.ok();
+    });
+    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+    await deleteDone;
+    expect(deletedIds).toHaveLength(2);
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByText(/Leads Selected/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Filter", exact: true })).toBeVisible();
+  });
+
   test("toggles the filter panel and supports row selection", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
