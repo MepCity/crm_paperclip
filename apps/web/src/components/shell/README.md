@@ -36,6 +36,13 @@ MEP-145, so the address currently resolves to the organization's not-found scree
   the capture shows the box already focused when the menu opens. The measured 1 px `#5464F2` focus
   edge and its halo are therefore drawn on `data-focused`, not only on the keyboard
   focus-visible modality.
+- **Focus halo.** The spec measures the edge (1 px `#5464F2`) and that the halo "fades over approx.
+  7.5 px", but not its blur, spread or opacity. The box therefore uses `--shadow-create-menu-focus`
+  (15 px blur, no spread) instead of the primitive's flat 2 px ring, in both mouse and keyboard
+  opens; a shadow without spread fades over about half its blur radius. The halo opacity is interim.
+- **Search box corners.** The create menu's search box is measured at 4 px
+  (`--radius-create-menu-search`), while the shared `filter-search` variant keeps the 6 px corners
+  the list spec measures for list filters, so list filters are unchanged.
 - **Ink versus box.** The header sits at `line-height: 1`, so its measured ink band, not its line
   box, fixes the inset. `--size-create-menu-heading-top` is the box inset that puts the ink at the
   measured y 63.5–75.

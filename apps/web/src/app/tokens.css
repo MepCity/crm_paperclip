@@ -135,11 +135,16 @@
   --radius-full: 9999px;
   --radius-form-control: 5px;
   --radius-create-menu: 4px;
+  --radius-create-menu-search: 4px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* Global create menu search focus halo. A shadow with no spread fades out over about half its
+     blur radius, so twice the measured 7.5 px halo depth is used as blur. The halo colour is the
+     measured 1 px focus edge colour #5464F2; its opacity is not measurable from capture. */
+  --shadow-create-menu-focus: 0 0 15px rgba(84, 100, 242, 0.35);
 
   /* Generic spacing scale. Measured gaps carry their own --size-* token below. */
   --space-1: 0.25rem;

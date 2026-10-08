@@ -49,13 +49,17 @@ section.create-records-content {
 
 .create-records-search input {
   height: var(--size-create-menu-search-height);
+  /* The shared filter search keeps its measured 6 px corners; the create menu box is 4 px. */
+  border-radius: var(--radius-create-menu-search);
 }
 
-/* The capture shows the box already focused when the menu opens, so the measured focus edge and
-   halo are drawn on focus instead of only on the keyboard focus-visible modality. */
+/* The capture shows the box already focused when the menu opens, so the measured focus edge and its
+   halo are drawn on focus instead of only on the keyboard focus-visible modality. This unlayered
+   rule also replaces the primitive's flat 2 px ring utility, so no sharp ring returns in either
+   modality; the halo fades over the measured ~7.5 px instead. */
 .create-records-search input[data-focused] {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-focus-ring);
+  box-shadow: var(--shadow-create-menu-focus);
 }
 
 /* Module list. Rows repeat on the measured pitch and scroll inside the left column; the

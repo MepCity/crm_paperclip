@@ -232,9 +232,15 @@ const RADIUS_TOKENS = [
   "--radius-full",
   "--radius-form-control",
   "--radius-create-menu",
+  "--radius-create-menu-search",
 ] as const;
 
-const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
+const SHADOW_TOKENS = [
+  "--shadow-sm",
+  "--shadow-md",
+  "--shadow-lg",
+  "--shadow-create-menu-focus",
+] as const;
 
 const SIZE_GROUPS = [
   {

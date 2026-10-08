@@ -115,13 +115,14 @@ test("the open menu matches every measured Global create menu row", async ({ pag
   await expect(header).toHaveCSS("color", "rgb(49, 57, 73)");
   await expectType(page, header, "--text-lg", "--font-weight-bold");
 
-  // Search box: 287.5 × 30 at x 565–852.5, y 90–120; focused edge 1 px #5464F2.
+  // Search box: 287.5 × 30 at x 565–852.5, y 90–120; focused edge 1 px #5464F2, 4 px corners.
   await expectInset(search, panel, { x: 31, y: 40, width: 287.5, height: 30 });
-  await expect(search).toHaveCSS("border-width", "1px");
-  await expect(search).toHaveCSS("border-color", "rgb(84, 100, 242)");
+  await expect(search).toHaveCSS("border-radius", "4px");
   await expectType(page, search, "--text-md", "--font-weight-normal");
   // Placeholder ink #8C91AB, candidate 14.5 px/400 → --text-md, --font-weight-normal.
   await expectPlaceholder(page, search);
+  // Focused halo: 1 px edge plus a soft fade over the measured ~7.5 px, not a flat ring.
+  await expectSoftFocusHalo(search);
 
   // Magnifier: ink x 576.5–590, y 98–111.5 (13.5 × 13.5), #313949.
   await expectInset(panel.locator(".create-records-search svg"), panel, {
@@ -141,6 +142,21 @@ test("the open menu matches every measured Global create menu row", async ({ pag
   await expectInk(label, panel, { top: 86.5, bottom: 97 });
   await expect(row).toHaveCSS("color", "rgb(49, 57, 73)");
   await expectType(page, row, "--text-md", "--font-weight-normal");
+  await expectNoA11yViolations(page);
+
+  // The halo is identical when the menu is opened from the keyboard: Escape returns focus to the
+  // trigger, Enter reopens it with the focus-visible modality set, and the primitive's flat 2 px
+  // ring must not come back over the measured soft fade.
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(panel).toBeVisible();
+  const keyboardSearch = panel.getByRole("textbox", { name: "Search" });
+  await expect(keyboardSearch).toBeFocused();
+  await expect(keyboardSearch).toHaveAttribute("data-focus-visible", "true");
+  await expectSoftFocusHalo(keyboardSearch);
+  await expect(keyboardSearch).toHaveCSS("border-radius", "4px");
   await expectNoA11yViolations(page);
 
   // Review evidence only; no screenshot comparison or snapshot assertion.
@@ -313,5 +329,27 @@ async function expectPlaceholder(page: Page, target: Locator) {
   );
   expect(style.fontWeight, `placeholder weight ${style.fontWeight}`).toBe(
     await tokenValue(page, "font-weight", "--font-weight-normal"),
+  );
+}
+
+/**
+ * Search box focus style. record-detail.md → Global create menu → Search box: "1 px focus border
+ * #5464F2" and a "focused halo [that] fades over approx. 7.5 px". A box-shadow without spread fades
+ * out over about half its blur radius, so --shadow-create-menu-focus is a 15 px blur of that border
+ * colour; a flat ring (zero blur, 2 px spread) is the failure this guards against.
+ */
+async function expectSoftFocusHalo(target: Locator) {
+  const style = await target.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return {
+      borderColor: computed.borderTopColor,
+      borderWidth: computed.borderTopWidth,
+      boxShadow: computed.boxShadow,
+    };
+  });
+  expect(style.borderWidth, `focus edge width ${style.borderWidth}`).toBe("1px");
+  expect(style.borderColor, `focus edge colour ${style.borderColor}`).toBe("rgb(84, 100, 242)");
+  expect(style.boxShadow, `focus halo ${style.boxShadow}`).toBe(
+    "rgba(84, 100, 242, 0.35) 0px 0px 15px 0px",
   );
 }
