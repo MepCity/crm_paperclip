@@ -26,6 +26,7 @@ import {
   parseListSearchParams,
   searchParamsFromListState,
 } from "@/lib/records/list-search-params";
+import { resolveSortFieldLabels } from "@/lib/records/sort-fields";
 import { RecordTable } from "./record-table";
 import { ViewTabStrip } from "./view-tab-strip";
 
@@ -43,7 +44,8 @@ export interface ModuleListScreenConfig {
   createLabel: string;
   filterTitle: string;
   filterGroups: readonly FilterGroup[];
-  nonSortableFields: ReadonlySet<string>;
+  sortFieldLabels: readonly string[];
+  linkFieldLabel: string;
   paths: ModuleListPaths;
 }
 
@@ -106,14 +108,14 @@ function ModuleListScreenLoaded({
   const view = viewQuery.data;
 
   const columnApiNames = view?.columns ?? [];
-  const eligibleSortFields = useMemo(() => {
-    const fields = moduleQuery.data?.fields ?? [];
-    return new Set(
-      fields
-        .filter((field) => !config.nonSortableFields.has(field.apiName))
-        .map((field) => field.apiName),
-    );
-  }, [config.nonSortableFields, moduleQuery.data?.fields]);
+  const sortFields = useMemo(
+    () => resolveSortFieldLabels(config, moduleQuery.data?.fields ?? []),
+    [config, moduleQuery.data?.fields],
+  );
+  const eligibleSortFields = useMemo(
+    () => new Set(sortFields.map((field) => field.apiName)),
+    [sortFields],
+  );
 
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
@@ -140,14 +142,6 @@ function ModuleListScreenLoaded({
       .map((apiName) => byName.get(apiName))
       .filter((field): field is FieldDefinition => field !== undefined);
   }, [columnApiNames, moduleQuery.data?.fields]);
-
-  const sortFields = useMemo(
-    () =>
-      (moduleQuery.data?.fields ?? [])
-        .filter((field) => !config.nonSortableFields.has(field.apiName))
-        .map((field) => ({ apiName: field.apiName, label: field.label })),
-    [config.nonSortableFields, moduleQuery.data?.fields],
-  );
 
   const listBasePath = useMemo(() => {
     if (routeViewId) return config.paths.customList(orgSlug, config.module, routeViewId);
