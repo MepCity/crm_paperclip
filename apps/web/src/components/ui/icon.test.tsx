@@ -12,6 +12,8 @@ const expectedIcons = [
   "recordCheck",
   "recordInfo",
   "recordPortrait",
+  "thumbDown",
+  "statusCheck",
   "filterChevronDown",
   "filterChevronRight",
   "filterSearch",
