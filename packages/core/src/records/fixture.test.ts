@@ -34,6 +34,25 @@ describe("Leads surface metadata", () => {
   it("publishes the exact surface counts and observed layout columns", async () => {
     const metadata = await make().getModule("Leads");
     expect(metadata.fields).toHaveLength(56);
+    expect(
+      metadata.fields.filter((field) => field.massUpdate).map((field) => field.apiName),
+    ).toEqual([
+      "Company",
+      "Designation",
+      "Phone",
+      "Fax",
+      "Mobile",
+      "Website",
+      "Lead_Source",
+      "Lead_Status",
+      "Industry",
+      "No_of_Employees",
+      "Annual_Revenue",
+      "Rating",
+      "Email_Opt_Out",
+      "Skype_ID",
+      "Salutation",
+    ]);
     for (const [surface, count] of Object.entries({
       view: 44,
       create: 34,
@@ -677,6 +696,42 @@ describe("interim fixture policies (not reference parity)", () => {
     resolveMembers(["actor", "other-member"]);
     await expect(pendingWrite).rejects.toBeInstanceOf(NotFoundError);
     await expect(service.get("Leads", created.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+  it("keeps ownership batches atomic across asynchronous membership checks", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "batch-race",
+      orgName: "Batch Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let resolveMembers: (members: readonly string[]) => void = () => {};
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: () =>
+        new Promise((resolve) => {
+          resolveMembers = resolve;
+        }),
+    });
+    const first = await service.create("Leads", input());
+    const second = await service.create("Leads", input());
+    const ids = [first.id, second.id];
+    const pending = service.changeOwner("Leads", ids, "new-owner");
+    ids.splice(0, ids.length);
+    await service.update("Leads", first.id, { Company: "Concurrent Change" });
+    resolveMembers(["actor", "new-owner"]);
+    await pending;
+    expect((await service.get("Leads", first.id)).fields).toMatchObject({
+      Owner: "new-owner",
+      Company: "Concurrent Change",
+    });
+    expect((await service.get("Leads", second.id)).fields.Owner).toBe("new-owner");
+    const before = await service.get("Leads", first.id);
+    const deletedTarget = service.changeOwner("Leads", [first.id, second.id], "actor");
+    await service.delete("Leads", [second.id]);
+    resolveMembers(["actor", "new-owner"]);
+    await expect(deletedTarget).rejects.toBeInstanceOf(NotFoundError);
+    expect(await service.get("Leads", first.id)).toEqual(before);
+    await expect(service.get("Leads", second.id)).rejects.toBeInstanceOf(NotFoundError);
   });
   it("searches only Full_Name, Company, Email and Phone, trims search and combines restrictions", async () => {
     const service = make();

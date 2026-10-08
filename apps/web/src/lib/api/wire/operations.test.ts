@@ -227,7 +227,7 @@ describe("wire operations", () => {
       expect(error).toBeInstanceOf(ValidationError);
       expect(encodeError(error)).toMatchObject({
         status: 400,
-        body: { code: "validation", details: { fields: { filters: expect.any(Array) } } },
+        body: { code: "INVALID_DATA", details: { fields: { filters: expect.any(Array) } } },
       });
     }
   });
@@ -327,15 +327,22 @@ describe("wire operations", () => {
       await expect(operations.create.run(deps, input({}, body))).rejects.toBeInstanceOf(
         ValidationError,
       );
-    await expect(operations.delete.run(deps, input({ ids: "" }))).rejects.toBeInstanceOf(
-      ValidationError,
-    );
+    await expect(
+      operations.delete.run(deps, { ...input(), params: { module: "Leads" } }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
   it("returns 404 for unknown modules, views and records", async () => {
     for (const op of Object.values(operations).filter((op) => op !== operations.users)) {
       await expect(
         op.run(deps, {
-          ...input({ ids: "missing" }, { data: [{ Company: "Example", Last_Name: "Example" }] }),
+          ...input(
+            { ids: "missing" },
+            {
+              data: [{ Company: "Example", Last_Name: "Example" }],
+              ids: ["missing"],
+              owner: { id: "wire-user" },
+            },
+          ),
           params: { module: "Never_A_Module", viewId: "missing", recordId: "missing" },
         }),
       ).rejects.toBeInstanceOf(NotFoundError);
@@ -348,15 +355,33 @@ describe("wire operations", () => {
     );
     await expect(operations.record.run(deps, input())).rejects.toBeInstanceOf(NotFoundError);
   });
-  it("creates, reads, updates and deletes using the interim write envelope", async () => {
+  it("creates, reads, updates and deletes using the documented write envelope", async () => {
     const created = json(
       await operations.create.run(
         deps,
         input({}, { data: [{ Company: "CRUD Example", Last_Name: "Original" }] }),
       ),
     );
-    expect(created).toEqual({ status: 200, body: { data: [{ id: expect.any(String) }] } });
-    const id = created.body.data[0].id;
+    expect(created).toMatchObject({
+      status: 200,
+      body: {
+        data: [
+          {
+            code: "SUCCESS",
+            details: {
+              id: expect.any(String),
+              Modified_Time: expect.any(String),
+              Created_Time: expect.any(String),
+              Modified_By: { id: "wire-user" },
+              Created_By: { id: "wire-user" },
+            },
+            message: "record added",
+            status: "success",
+          },
+        ],
+      },
+    });
+    const id = created.body.data[0].details.id;
     const request = { ...input(), params: { module: "Leads", recordId: id } };
     expect(json(await operations.record.run(deps, request)).body.data[0]).toMatchObject({
       id,
@@ -364,16 +389,50 @@ describe("wire operations", () => {
     });
     expect(
       await operations.update.run(deps, { ...request, body: { data: [{ Last_Name: "Updated" }] } }),
-    ).toEqual({ status: 200, body: { data: [{ id }] } });
+    ).toMatchObject({
+      status: 200,
+      body: {
+        data: [{ code: "SUCCESS", details: { id }, message: "record updated", status: "success" }],
+      },
+    });
     expect(json(await operations.record.run(deps, request)).body.data[0]).toMatchObject({
       id,
       Last_Name: "Updated",
     });
-    expect(await operations.delete.run(deps, input({ ids: id }))).toEqual({
+    expect(await operations.delete.run(deps, request)).toEqual({
       status: 200,
-      body: { data: [{ id }] },
+      body: {
+        data: [{ code: "SUCCESS", details: { id }, message: "record deleted", status: "success" }],
+      },
     });
     await expect(operations.record.run(deps, request)).rejects.toBeInstanceOf(NotFoundError);
+  });
+  it("resolves write response members before persisting create or update", async () => {
+    const broken = {
+      ...deps,
+      members: async () => {
+        throw new Error("Member source unavailable.");
+      },
+    };
+    const create = vi.spyOn(deps.records, "create");
+    await expect(
+      operations.create.run(
+        broken,
+        input({}, { data: [{ Company: "Example", Last_Name: "Example" }] }),
+      ),
+    ).rejects.toThrow("Member source unavailable.");
+    expect(create).not.toHaveBeenCalled();
+    const record = await deps.records.create("Leads", { Company: "Example", Last_Name: "Example" });
+    const update = vi.spyOn(deps.records, "update");
+    await expect(
+      operations.update.run(broken, {
+        ...input(),
+        params: { module: "Leads", recordId: record.id },
+        body: { data: [{ Company: "Rejected" }] },
+      }),
+    ).rejects.toThrow("Member source unavailable.");
+    expect(update).not.toHaveBeenCalled();
+    expect(await deps.records.get("Leads", record.id)).toEqual(record);
   });
   it("builds escaped browser paths from the inventory", () => {
     expect(operationPath(operations.record, { module: "Leads", recordId: "id/with space" })).toBe(

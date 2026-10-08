@@ -108,6 +108,26 @@ export function createFixtureRecordService(
         matchesSearch(record, query.search),
     );
   };
+  const validateIds = (ids: readonly string[]) => {
+    if (ids.length < 1 || ids.length > 500)
+      throw new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit");
+  };
+  const writeBatch = (module: string, ids: readonly string[], input: RecordInput) => {
+    // Resolve every target after asynchronous membership checks, before any write.
+    const records = ids.map((id) => recordFor(module, id));
+    const stamp = clock().toISOString();
+    const updates = records.map((record) => {
+      const fields: Record<string, FieldValue> = {
+        ...record.fields,
+        ...input,
+        Modified_By: ctx.userId,
+        Modified_Time: stamp,
+      };
+      fields.Full_Name = fullName(fields);
+      return { id: record.id, fields };
+    });
+    for (const record of updates) state.records.set(record.id, record);
+  };
   return {
     async getModule(module) {
       moduleExists(module);
@@ -204,8 +224,33 @@ export function createFixtureRecordService(
       state.records.set(id, updated);
       return copy(updated);
     },
+    async massUpdate(module, ids, input) {
+      moduleExists(module);
+      const targets = [...ids];
+      validateIds(targets);
+      const normalized = normalizeInput(input);
+      const names = Object.keys(normalized);
+      if (names.length !== 1) throw new ValidationError({ data: ["Choose exactly one field."] });
+      const name = names[0] as string;
+      const field = leadsMetadata.fields.find((candidate) => candidate.apiName === name);
+      if (!field?.massUpdate)
+        throw new ValidationError({ [name]: ["This field cannot be mass updated."] });
+      validateInput(normalized, true);
+      await validateOwner(normalized);
+      writeBatch(module, targets, normalized);
+    },
+    async changeOwner(module, ids, ownerId) {
+      moduleExists(module);
+      const targets = [...ids];
+      validateIds(targets);
+      const input = { Owner: ownerId };
+      validateInput(input, true);
+      await validateOwner(input);
+      writeBatch(module, targets, input);
+    },
     async delete(module, ids) {
       moduleExists(module);
+      validateIds(ids);
       for (const id of ids) recordFor(module, id);
       for (const id of ids) state.records.delete(id);
     },

@@ -3,4 +3,4 @@ import { operations } from "@/lib/api/wire/operations";
 
 export const dynamic = "force-dynamic";
 
-export const POST = operationRoute(operations.create);
+export const POST = operationRoute(operations.massUpdate);
