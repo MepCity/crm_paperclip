@@ -281,6 +281,28 @@ what the "no colour constants" rule forbids.
 | `--size-button-gap` | `8.5px` | list-views.md › Create and action buttons › "An 8.5 px gap separates it from the ellipsis button" | from spec |
 | `--size-button-ellipsis-width` | `44px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
 | `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
+| `--color-form-required` | `#ff5d5a` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--color-form-caret` | `#838892` | record-detail.md › Lead Information rows › picklist caret | from spec |
+| `--color-form-input-end` | `#f0f4ff` | record-detail.md › Composite inputs › owner picker and currency end section | from spec |
+| `--color-form-portrait-ring` | `#b4b4b4` | record-detail.md › Form surface and Lead Image › portrait ring | from spec |
+| `--size-form-required-bar` | `3px` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--size-form-option-height` | `32px` | record-detail.md › Country panel / Standard picklist › row pitch | from spec |
+| `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
+| `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
+| `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-form-prefix-width` | `110px` | record-detail.md › Composite inputs › Salutation panel width | from spec |
+| `--size-form-prefix-divider-offset` | `94px` | record-detail.md › Composite inputs › Salutation divider from outer left | from spec |
+| `--size-form-prefix-caret-gap` | `11px` | record-detail.md › Composite inputs › Salutation caret before divider | from spec |
+| `--size-form-caret-width` | `8px` | record-detail.md › Lead Information rows › picklist caret width | from spec |
+| `--size-form-caret-height` | `5px` | record-detail.md › Lead Information rows › picklist caret height | from spec |
+| `--size-form-caret-inset-end` | `12px` | record-detail.md › Lead Information rows › caret inset from outer right | from spec |
+| `--size-form-input-end` | `32px` | record-detail.md › Composite inputs › owner/currency end section width | from spec |
+| `--size-form-input-end-icon` | `16px` | record-detail.md › Composite inputs › end-section icon size | from spec |
+| `--size-form-currency-prefix-inset` | `12px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
+| `--size-form-currency-divider-gap` | `9.5px` | record-detail.md › Composite inputs › currency divider after prefix text | from spec |
+| `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
+| `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
+| `--size-form-owner-caret-gap` | `9px` | record-detail.md › Composite inputs › owner caret before end section | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
 | `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
@@ -369,6 +391,36 @@ To replace the typeface, update `--font-sans`, the single `@font-face` in `token
 and the font folder with the official file and license. Then refit the size and weight
 measurements in `typography.md`, update the tokens and this table, and verify the checksums,
 rendered widths and weight axis. Components inherit `--font-sans` and need no family edits.
+
+| `--color-record-primary-end` | `#134dc4` | record-detail.md › Header buttons › Primary bottom fill | from spec |
+| `--color-record-secondary-start` | `#fdfdfe` | record-detail.md › Header buttons › Secondary top fill | from spec |
+| `--color-record-secondary-end` | `#f1f0f7` | record-detail.md › Header buttons › Secondary bottom fill | from spec |
+| `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
+| `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
+| `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
+| `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
+| `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
+| `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
+| `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
+| `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
+| `--size-record-tab-row-height` | `62px` | record-detail.md › Canvas and tab row; Status strip › 185 − 123 card offset | from spec |
+| `--size-record-tab-top` | `14px` | record-detail.md › Canvas and tab row › 137 − 123 pill offset | from spec |
+| `--size-record-toggle-slot` | `36px` | record-detail.md › Canvas and tab row › 588 − 552 reserved slot | from spec |
+| `--size-record-tab-width` | `222.5px` | record-detail.md › Hidden-rail layout › Outer tab pill › 222.5 wide; same pill with rail shown | from spec |
+| `--size-record-tab-height` | `37px` | record-detail.md › Hidden-rail layout › Outer tab pill › 37 high | from spec |
+| `--size-record-tab-inset` | `3px` | record-detail.md › Hidden-rail layout › Tab slices › 384 − 380 minus 1px border | from spec |
+| `--size-record-tab-slice-width` | `108px` | record-detail.md › Canvas and tab row › 712 − 604 selected slice | from spec |
+| `--size-record-tab-slice-height` | `29px` | record-detail.md › Hidden-rail layout › Tab slices › 29 high | from spec |
+| `--size-record-menu-width` | `217px` | record-detail.md › More Options menu › Popover › 1380 − 1163 | from spec |
+| `--radius-record-menu` | `4px` | record-detail.md › More Options menu › Popover › 4 px corners | from spec |
+| `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
+| `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
+| `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
+| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 
 ### Measured values that carry no token
 
@@ -493,9 +545,11 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-panel-border` `#dcdbee` on `--color-surface` | 1.36:1 | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`" |
 | `--color-row-separator` `#edf0f4` on `--color-surface` | 1.14:1 | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`" |
 
-No component consumes either placeholder token yet and `text-primary` is only rendered on a panel,
-so nothing on `/dev/ui` fails AA today. The three placeholder rows fall under the ADR 0003 §8
-exception: the tokens are used only for the placeholder of a real input. The last row does not:
+`text-primary` is only rendered on a panel. The three placeholder rows fall under the ADR 0003 §8
+exception: the tokens are used only for the placeholder of a real input and for the empty-value
+text of a selection control where the spec measures that ink (record-detail.md › Composite inputs:
+the empty Salutation prefix, 3.11:1 on a panel). The scan leaves out only the element that holds
+that text (`[data-part=empty-value]`); the trigger around it stays in the scan. The last row does not:
 primary-coloured text needs `--color-surface` behind it. In the list, Lead Name and Email stay on
 `--color-text` when they are links (Text roles), so `--color-primary` is not a link colour there
 either. It is the active presentation glyph on `--color-primary-subtle` (4.18:1, non-text).
@@ -528,3 +582,12 @@ opacity, with the same white label, instead of a faded copy of the enabled gradi
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
 menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
+
+
+## Record detail extensions
+
+Record-specific button, menu and tab appearances preserve the measured detail values.
+Shared tokens used here: panel border, surface, background, text, strong text, button
+border, primary gradient start, surface-active rail selection, surface-hover menu row,
+menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
+Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.

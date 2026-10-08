@@ -8,6 +8,27 @@ import { type ReactNode, useEffect, useState } from "react";
  */
 const COLOUR_GROUPS = [
   {
+    label: "Record forms",
+    tokens: [
+      "--color-form-required",
+      "--color-form-portrait",
+      "--color-form-caret",
+      "--color-form-input-end",
+      "--color-form-portrait-ring",
+    ],
+  },
+  {
+    label: "Record detail",
+    tokens: [
+      "--color-record-primary-end",
+      "--color-record-secondary-start",
+      "--color-record-secondary-end",
+      "--color-record-arrow-disabled",
+      "--color-record-tab-selected",
+      "--color-record-tab-border",
+    ],
+  },
+  {
     label: "Page, surfaces and ink",
     tokens: [
       "--color-bg",
@@ -203,6 +224,7 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
+  "--radius-record-menu",
   "--radius-sm",
   "--radius-md",
   "--radius-lg",
@@ -215,6 +237,33 @@ const RADIUS_TOKENS = [
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
 const SIZE_GROUPS = [
+  {
+    label: "Record detail",
+    tokens: [
+      "--size-record-header-height",
+      "--size-record-portrait",
+      "--size-record-back-region",
+      "--size-record-title-gap",
+      "--size-record-rail-width",
+      "--size-record-rail-heading-height",
+      "--size-record-rail-text-inset",
+      "--size-record-tab-row-height",
+      "--size-record-tab-top",
+      "--size-record-toggle-slot",
+      "--size-record-tab-width",
+      "--size-record-tab-height",
+      "--size-record-tab-inset",
+      "--size-record-tab-slice-width",
+      "--size-record-tab-slice-height",
+      "--size-record-menu-width",
+      "--size-record-menu-inset",
+      "--size-record-menu-inset-inline",
+      "--size-record-menu-text-inset",
+      "--size-record-scroll-top",
+      "--size-record-scroll-offset",
+      "--size-record-demo-height",
+    ],
+  },
   {
     label: "Shell positions",
     tokens: [
@@ -379,6 +428,25 @@ const SIZE_GROUPS = [
       "--size-button-gap",
       "--size-button-ellipsis-width",
       "--size-button-ellipsis-height",
+      "--size-form-input-height",
+      "--size-form-required-bar",
+      "--size-form-option-height",
+      "--size-form-list-padding",
+      "--size-form-country-height",
+      "--size-form-owner-height",
+      "--size-form-prefix-width",
+      "--size-form-prefix-divider-offset",
+      "--size-form-prefix-caret-gap",
+      "--size-form-caret-width",
+      "--size-form-caret-height",
+      "--size-form-caret-inset-end",
+      "--size-form-input-end",
+      "--size-form-input-end-icon",
+      "--size-form-currency-prefix-inset",
+      "--size-form-currency-divider-gap",
+      "--size-form-currency-divider-height",
+      "--size-form-currency-divider-top",
+      "--size-form-owner-caret-gap",
       "--size-checkbox",
       "--size-checkbox-border",
       "--size-checkbox-label-gap",

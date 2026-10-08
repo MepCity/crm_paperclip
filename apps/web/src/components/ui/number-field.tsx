@@ -1,5 +1,8 @@
 "use client";
 
+import "./record-input.css";
+
+import type { ReactNode } from "react";
 import {
   NumberField as AriaNumberField,
   type NumberFieldProps as AriaNumberFieldProps,
@@ -12,17 +15,19 @@ import {
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-md font-normal text-text",
-  input:
-    "w-full border border-border rounded-md px-3 py-2 outline-none bg-surface text-text " +
-    "data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
-    "data-disabled:opacity-50 data-disabled:bg-surface-hover data-invalid:border-danger",
+  label: "record-label text-md",
+  input: "record-control",
   description: "text-sm text-text-muted",
   error: "text-sm text-danger",
 } as const;
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
   label: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  endAction?: ReactNode;
+  placeholder?: string;
+  hideLabel?: boolean;
   description?: string;
   errorMessage?: string;
   /** Fixes how many decimal digits are shown and accepted, e.g. 2 for an amount. */
@@ -36,6 +41,11 @@ export interface NumberFieldProps extends AriaNumberFieldProps {
 
 export function NumberField({
   label,
+  prefix,
+  suffix,
+  endAction,
+  placeholder,
+  hideLabel = false,
   description,
   errorMessage,
   decimalPlaces,
@@ -54,8 +64,17 @@ export function NumberField({
       formatOptions={{ ...formatOptions, ...fractionDigits }}
       className={styles.field}
     >
-      <Label className={styles.label}>{label}</Label>
-      <Input className={styles.input} />
+      <Label className={hideLabel ? "sr-only" : styles.label}>{label}</Label>
+      <div
+        className="record-control record-input-frame"
+        data-required={props.isRequired || undefined}
+        data-invalid={props.isInvalid || undefined}
+      >
+        {prefix}
+        <Input placeholder={placeholder} className={styles.input} />
+        {suffix}
+        {endAction}
+      </div>
       {description && (
         <Text slot="description" className={styles.description}>
           {description}

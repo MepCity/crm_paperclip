@@ -301,6 +301,30 @@
   --size-button-ellipsis-width: 44px;
   --size-button-ellipsis-height: 32px;
 
+  /* record-detail.md, Visual layout: Lead Information rows and dropdown panels. */
+  --color-form-required: #ff5d5a;
+  --color-form-caret: #838892;
+  --color-form-input-end: #f0f4ff;
+  --color-form-portrait-ring: #b4b4b4;
+  --size-form-required-bar: 3px;
+  --size-form-option-height: 32px;
+  --size-form-list-padding: 6px;
+  --size-form-country-height: 270px;
+  --size-form-owner-height: 179px;
+  --size-form-prefix-width: 110px;
+  --size-form-prefix-divider-offset: 94px;
+  --size-form-prefix-caret-gap: 11px;
+  --size-form-caret-width: 8px;
+  --size-form-caret-height: 5px;
+  --size-form-caret-inset-end: 12px;
+  --size-form-input-end: 32px;
+  --size-form-input-end-icon: 16px;
+  --size-form-currency-prefix-inset: 12px;
+  --size-form-currency-divider-gap: 9.5px;
+  --size-form-currency-divider-height: 20px;
+  --size-form-currency-divider-top: 7px;
+  --size-form-owner-caret-gap: 9px;
+
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
@@ -393,4 +417,36 @@
   --size-create-menu-row-icon-inset: 45.5px;
   /* Label ink x 599.5 minus the glyph ink end x 586.5. */
   --size-create-menu-row-label-gap: 13px;
+
+  /* record-detail.md > Visual layout > Record page and More Options menu. */
+  --color-record-primary-end: #134dc4;
+  --color-record-secondary-start: #fdfdfe;
+  --color-record-secondary-end: #f1f0f7;
+  --color-record-arrow-disabled: #adb0b6;
+  --color-record-tab-selected: #ebedff;
+  --color-record-tab-border: #a3acff;
+  --size-record-header-height: 73px;
+  --size-record-portrait: 48px;
+  --size-record-back-region: 52px;
+  --size-record-title-gap: 15px;
+  --size-record-rail-width: 220px;
+  --size-record-rail-heading-height: 38px;
+  --size-record-rail-text-inset: 8.5px;
+  --size-record-tab-row-height: 62px;
+  --size-record-tab-top: 14px;
+  --size-record-toggle-slot: 36px;
+  --size-record-tab-width: 222.5px;
+  --size-record-tab-height: 37px;
+  --size-record-tab-inset: 3px;
+  --size-record-tab-slice-width: 108px;
+  --size-record-tab-slice-height: 29px;
+  --size-record-menu-width: 217px;
+  --radius-record-menu: 4px;
+  --size-record-menu-inset: 5px;
+  --size-record-menu-inset-inline: 5.75px;
+  --size-record-menu-text-inset: 10.25px;
+  /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
+  --size-record-scroll-top: 36px;
+  --size-record-scroll-offset: 16px;
+  --size-record-demo-height: 560px;
 }
