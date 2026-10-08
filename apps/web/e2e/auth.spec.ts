@@ -1,17 +1,6 @@
 import { expectNoA11yViolations } from "./support/a11y";
 import { signIn, signUpNewUser } from "./support/auth";
-import { expect, test } from "./support/test";
-
-/**
- * Chromium reports a failed auth response as a console error.
- * The screen does not call console.error; drop only that status line.
- */
-function ignoreFailedResponses(errors: string[], statuses: readonly number[]) {
-  const next = errors.filter(
-    (error) => !statuses.some((status) => error.includes(`status of ${status}`)),
-  );
-  errors.splice(0, errors.length, ...next);
-}
+import { expect, ignoreFailedResponses, test } from "./support/test";
 
 test("sign up opens organization creation", async ({ page }) => {
   await signUpNewUser(page, { name: "Ada Lovelace" });

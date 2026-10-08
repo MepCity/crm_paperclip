@@ -310,9 +310,9 @@ the scoped list CSS applies the measured selector dimensions.
 
 - No view selector/options, View Settings or unconfirmed presentation controls, as scoped.
 - Icons are original line drawings. No reference logo, image, font or icon asset is added.
-- Typography uses the board-selected Figtree token. The loaded reference family remains an
-  open research question. Label lengths can change intrinsic widths. The measured minimums
-  reproduce the All Leads pill and Create Lead split button; longer labels grow.
+- Typography uses the Figtree type tokens (`research/specs/typography.md`); glyph widths can
+  differ from the reference by up to 2 px. Label lengths can change intrinsic widths. The
+  measured minimums reproduce the All Leads pill and Create Lead split button; longer labels grow.
 - Sort content insets, the selector gap, button size and the outer border follow the Sort
   popover row. Page coordinates still belong to the page integration task.
 - The second selector's initial `#F5F6F8` fill and `#D2D9F1` border are an open question:
@@ -341,3 +341,49 @@ Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
 are retained. Toolbar labels map the measured 14px to the existing 14.5px token;
 no separate 14px size is introduced. The Sort popover action buttons retain their
 existing size until their screen typography task.
+
+## Module list page (Leads)
+
+Routes live under the organization shell with a single `ApiProvider` on
+`app/crm/[orgSlug]/tab/layout.tsx`. Page paths are built with `lib/crm-paths.ts`.
+Leads-only labels and filter rows sit in
+`modules/leads/list-config.ts` and `modules/leads/list-filters.ts`.
+
+### Address state
+
+Query names mirror the reference list requests: `page` (default 1), `per_page`
+(default 30; allowed 10, 20, 30, 40, 50, 100), `sort_by`, `sort_order`.
+Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
+Invalid values fall back to defaults. Sort Apply and footer Previous / Next
+update the address; Refresh Custom View re-requests the open view's list and
+count queries without changing the URL.
+
+### Interim
+
+- Refresh re-requests `bulk` and `count` for the open view; the reference's
+  refresh requests were not observed.
+- Page size default 30 is captured preference, not persisted user choice.
+- Sort By options are all module fields except the nine non-sortable API names in
+  `list-views.md` › Sorting; the reference menu contents were not observed.
+- Filter panel rows are drawn disabled; checking them does not filter records.
+- Split Create arrow, Actions menu, view selector, View Settings, and activity
+  ribbon are not drawn on the page.
+
+### Page layout
+
+The list page uses measured viewport coordinates from the visual layout table.
+Tab strip and toolbar sit flush under the shell top bar (no top inset). Horizontal
+insets are 12 px for the view pill, 15 px for the filter/table lane, 73 px before
+the toolbar’s right edge, and 16 px (`--size-list-inset`) on the table’s trailing
+edge. A 15 px gap separates the toolbar from the filter/table row. The page fills the
+shell main height; the table card grows in the body row and keeps the footer on
+the card bottom while record rows scroll inside the card.
+
+### Page deviations
+
+- Panel closed: table widening beside the filter lane was not verified in the
+  reference; our table grows into the freed horizontal space.
+- Create Lead control x position is not compared while the split arrow and Actions
+  control remain out of scope.
+- Column header copy follows field metadata labels (for example **Full Name** for
+  `Full_Name`), not the reference list label **Lead Name**.
