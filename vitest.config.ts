@@ -39,9 +39,6 @@ export default defineConfig({
             "./packages/db/src/vitest-setup.ts",
             "./packages/core/src/vitest-auth-setup.ts",
           ],
-          alias: {
-            "@": path.resolve(__dirname, "./apps/web/src"),
-          },
           maxWorkers: 2,
           sequence: { groupOrder: 1 },
           testTimeout: 30_000,
