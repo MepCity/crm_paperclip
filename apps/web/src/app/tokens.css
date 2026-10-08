@@ -139,11 +139,17 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   --radius-form-control: 5px;
+  --radius-create-menu: 4px;
+  --radius-create-menu-search: 4px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* Global create menu search focus halo. A shadow with no spread fades out over about half its
+     blur radius, so twice the measured 7.5 px halo depth is used as blur. The halo colour is the
+     measured 1 px focus edge colour #5464F2; its opacity is not measurable from capture. */
+  --shadow-create-menu-focus: 0 0 15px rgba(84, 100, 242, 0.35);
 
   /* Generic spacing scale. Measured gaps carry their own --size-* token below. */
   --space-1: 0.25rem;
@@ -449,6 +455,33 @@
   --size-form-field-group-legend-padding: 12.5px;
   /* Description textarea height is not measurable in the capture; demo placeholder only. */
   --size-form-description-height: 80px;
+
+  /* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
+     Offsets are panel-border-box coordinates minus the panel origin x 534, y 50. */
+  --size-create-menu-width: 670px;
+  --size-create-menu-height: 429px;
+  /* Panel top y 50 minus the quick-create box bottom y 38. */
+  --size-create-menu-offset: 12px;
+  /* Divider at x 868.5 minus the panel left edge x 534. */
+  --size-create-menu-column-width: 334.5px;
+  /* Search box x 565 minus panel x 534; the header ink starts 0.5 px later. */
+  --size-create-menu-inset-inline: 31px;
+  /* Header ink top y 63.5 minus panel y 50 is 13.5 px; the line box sits 2.2 px above the ink
+     at line-height 1, so the box inset is 11.3 px and the measured ink lands at 13.5 px. */
+  --size-create-menu-heading-top: 11.3px;
+  --size-create-menu-search-top: 40px;
+  --size-create-menu-search-width: 287.5px;
+  --size-create-menu-search-height: 30px;
+  /* First module row band y 125 minus panel y 50; visible rows end at y 475. */
+  --size-create-menu-list-top: 75px;
+  --size-create-menu-list-height: 350px;
+  --size-create-menu-row-height: 34px;
+  --size-create-menu-row-icon: 7px;
+  /* Plus glyph ink x 579.5 minus panel x 534. */
+  --size-create-menu-row-icon-inset: 45.5px;
+  /* Label ink x 599.5 minus the glyph ink end x 586.5. */
+  --size-create-menu-row-label-gap: 13px;
+
   /* record-detail.md > Visual layout > Record page and More Options menu. */
   --color-record-primary-end: #134dc4;
   --color-record-secondary-start: #fdfdfe;
