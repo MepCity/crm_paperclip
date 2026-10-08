@@ -66,3 +66,22 @@
 .record-sort-actions button:last-of-type {
   width: var(--size-popover-sort-apply-width);
 }
+
+/* Sort By field dropdown, from list-views.md › Sort By field dropdown. The panel keeps the
+   shared popover chrome (white surface, 1 px border, shadow); only the inner padding changes. */
+.record-sort-field-dropdown .record-sort-field-dialog {
+  height: 100%;
+  padding: 0;
+}
+
+.record-sort-field-list {
+  color: var(--color-text);
+}
+
+/* React Aria keeps data-selected="false" on unselected rows, so presence alone is not enough.
+   The shared list item bolds a selected row; this list keeps the regular weight of the
+   neighbouring searchable option list (filter-control.css › .filter-operator-option). */
+.record-sort-field-list [data-selected]:not([data-selected="false"]) {
+  background-color: var(--color-surface-selected);
+  font-weight: var(--font-weight-normal);
+}

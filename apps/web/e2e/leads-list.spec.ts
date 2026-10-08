@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
+import { expectType } from "./support/typography";
 
 type ElementBox = NonNullable<
   Awaited<ReturnType<import("@playwright/test").Locator["boundingBox"]>>
@@ -99,6 +100,17 @@ function isSettingsOrUsersRequest(request: CrmRequest): boolean {
   );
 }
 
+async function colorToken(page: import("@playwright/test").Page, token: string): Promise<string> {
+  return page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, token);
+}
+
 async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
   const companyIndex = await page
     .locator("thead [data-part=column]")
@@ -187,7 +199,8 @@ test.describe("Leads list page", () => {
     await page.getByRole("button", { name: "Sort", exact: true }).click();
     const sortBy = page.getByRole("button", { name: /Sort By/ });
     await sortBy.click();
-    await page.getByRole("option", { name: "Company" }).click();
+    await page.getByRole("textbox", { name: "Search fields" }).fill("Company");
+    await page.getByRole("option", { name: "Company", exact: true }).click();
     await page.getByRole("button", { name: "Apply" }).click();
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_by")).toBe("Company");
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_order")).toBe("asc");
@@ -204,6 +217,127 @@ test.describe("Leads list page", () => {
     const bulkParams = new URL(lastBulk).searchParams;
     expect(bulkParams.get("sort_by")).toBe("Company");
     expect(bulkParams.get("sort_order")).toBe("asc");
+    // The applied field stays marked when the list is opened again.
+    await page.getByRole("button", { name: "Sort", exact: true }).click();
+    await sortBy.click();
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expectNoA11yViolations(page);
+  });
+
+  test("Sort By field dropdown matches the measured panel, rows and colours", async ({
+    page,
+  }, testInfo) => {
+    // list-views.md › Layout › Visual layout › Sort By field dropdown.
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.getByRole("button", { name: "Sort", exact: true }).click();
+    const sortBy = page.getByRole("button", { name: /Sort By/ });
+    await sortBy.click();
+    const dropdown = page.locator(".record-sort-field-dropdown");
+    const dropdownBox = requireBox(await dropdown.boundingBox(), "Sort By dropdown");
+    expectEdge(dropdownBox.width, 380);
+    expectEdge(dropdownBox.height, 268);
+    await expect(dropdown).toHaveCSS("border-top-width", "1px");
+    await expect(dropdown).toHaveCSS("border-top-color", "rgb(206, 208, 225)");
+    await expect(dropdown).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    const selectorBox = requireBox(await sortBy.boundingBox(), "Sort By selector");
+    expectEdge(dropdownBox.x, selectorBox.x);
+    expectEdge(dropdownBox.y, selectorBox.y + selectorBox.height);
+
+    const list = page.getByRole("listbox", { name: "Sort By options" });
+    const listBox = requireBox(await list.boundingBox(), "Sort By list body");
+    expectEdge(listBox.width, 378);
+    expectEdge(listBox.height, 220);
+
+    const search = page.getByRole("textbox", { name: "Search fields" });
+    const searchBox = requireBox(await search.boundingBox(), "Sort By search input");
+    expect(searchBox.y).toBeGreaterThan(dropdownBox.y);
+    expect(searchBox.y + searchBox.height).toBeLessThanOrEqual(listBox.y + 1);
+
+    // None is the first option, then the module's fields in the configured order.
+    const options = list.getByRole("option");
+    await expect(options).toHaveCount(40);
+    await expect(options.first()).toHaveText("None");
+    await expect(options.nth(1)).toHaveText("Address - City");
+    await expect(options.nth(2)).toHaveText("Address - Country / Region");
+    await expect(options.nth(22)).toHaveText("Lead Name");
+    await expect(options.last()).toHaveText("Website");
+    const company = options.filter({ hasText: "Company" }).first();
+    const rowInk = await colorToken(page, "--color-text");
+    const rowFill = await colorToken(page, "--color-surface-selected");
+    const hoverFill = await colorToken(page, "--color-surface-hover");
+    await expect(company).toHaveCSS("color", rowInk);
+    // Nearest role in typography.md › List and detail text roles: the searchable option row
+    // is drawn with the same regular size and weight as the filter operator list.
+    await expectType(page, company, "--text-sm", "--font-weight-normal");
+    await company.hover();
+    await expect(company).toHaveCSS("background-color", hoverFill);
+
+    const firstOptionBox = requireBox(await options.first().boundingBox(), "Sort By option row");
+    const optionStyle = await options.first().evaluate((node) => {
+      const computed = getComputedStyle(node);
+      return {
+        color: computed.color,
+        fontFamily: computed.fontFamily,
+        fontSize: computed.fontSize,
+        fontWeight: computed.fontWeight,
+        paddingTop: computed.paddingTop,
+        paddingLeft: computed.paddingLeft,
+      };
+    });
+    const measurements = {
+      viewport: { width: 1470, height: 835 },
+      spec: "list-views.md › Layout › Visual layout › Sort By field dropdown",
+      panel: dropdownBox,
+      panelBorderWidth: "1px",
+      panelBorderColor: await dropdown.evaluate((node) => getComputedStyle(node).borderTopColor),
+      panelSurface: await dropdown.evaluate((node) => getComputedStyle(node).backgroundColor),
+      listBody: listBox,
+      searchInput: searchBox,
+      optionRowHeight: firstOptionBox.height,
+      optionRowCount: await options.count(),
+      optionText: optionStyle,
+      hoveredRowFill: await company.evaluate((node) => getComputedStyle(node).backgroundColor),
+      labels: await options.allInnerTexts(),
+    };
+    console.log(`SORT_FIELD_DROPDOWN_MEASUREMENTS ${JSON.stringify(measurements)}`);
+    await testInfo.attach("sort-field-dropdown-measurements", {
+      body: JSON.stringify(measurements, null, 2),
+      contentType: "application/json",
+    });
+    await page.screenshot({ path: testInfo.outputPath("sort-field-dropdown.png"), fullPage: true });
+
+    await company.click();
+    await sortBy.click();
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveCSS(
+      "background-color",
+      rowFill,
+    );
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await expectType(page, company, "--text-sm", "--font-weight-normal");
+
+    // The search filters labels case-insensitively and an empty match leaves the list empty.
+    await search.fill("wEbs");
+    await expect(options).toHaveCount(1);
+    await expect(options.first()).toHaveText("Website");
+    await search.fill("nothing");
+    await expect(options).toHaveCount(0);
+
+    // None keeps Apply disabled.
+    await search.fill("");
+    await options.first().click();
+    await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+    await expectNoA11yViolations(page);
   });
 
   test("custom view route shows that view columns", async ({ page }) => {

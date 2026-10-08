@@ -278,14 +278,27 @@ select two rows. Only synthetic data appears in demos and tests.
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
-  `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
-  from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
+  `{ apiName, label }` in the order the caller supplies — the component never sorts it;
+  `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
+  defaults to None and Ascending. Apply requires a field in the current
   collection and emits `{ field, order: "asc" | "desc" }`. Cancel, Escape and outside
   dismissal leave the applied value alone. The page supplies eligible sort fields.
   Only the Sort By label is visible; the order selector keeps the accessible name Order
   without a visible label, and the two selectors share a row. Insets, selector gap, button
   size and the disabled Apply fill come from the Sort popover tokens. A portaled field list
   does not dismiss the draft.
+- Sort By field list: the first option is `None`, then the given fields in the given order.
+  A search input above the list filters option labels case-insensitively; with no match the
+  list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
+  has to confirm it; choosing `None` disables Apply again. The selected option is marked and
+  the list scrolls. Panel size, list height, border and row colours come from the Sort By
+  field dropdown tokens and `list-views.md` › Sort By field dropdown; the panel keeps the
+  shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow) and sits directly below
+  the selector, left-aligned with it. The spec gives no font size or weight for the option
+  rows, so they keep the shared list item role (`--text-sm`, regular) — the same pair as the
+  neighbouring searchable option list in `filter-control.css` › `.filter-operator-option`.
+  The shared item bolds a selected row; this list overrides that back to regular because the
+  spec only measures a selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -357,14 +370,30 @@ Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
 Invalid values fall back to defaults. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
 count queries without changing the URL.
+`sort_by` is accepted only for a field in the Sort By list, so the address and
+the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
+module's ordered `sortFieldLabels` against field metadata by label, and
+`Lead Name` resolves to the config's `linkField`.
 
 ### Interim
 
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.
-- Sort By options are all module fields except the nine non-sortable API names in
-  `list-views.md` › Sorting; the reference menu contents were not observed.
+- The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
+  Sorting), none dropped: every label resolves to a Leads metadata field. A label
+  without a metadata field would leave the list out and be named here.
+- The Sort By search input reuses the filter search tokens (34 px high, magnifier
+  inset) because the spec measures only the panel and the list body; the band the
+  input sits in is the leftover `268 − 2 − 220` = 46 px.
+- An empty search result shows an empty list; the reference's no-match state was
+  not captured (no message is drawn).
+- Choosing `None` cannot clear an applied sort: Apply stays disabled, so the sort
+  in the address can only be replaced by another field. Clearing through Sort
+  was not observed.
+- While the field list is open, React Aria hides the rest of the Sort dialog from
+  assistive technology (nested overlay). Escape closes the list first, back to the
+  dialog and then to the page.
 - Filter panel rows are drawn disabled; checking them does not filter records.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
