@@ -30,12 +30,11 @@ function clearStalePendingAnnouncements(): void {
 /** Observes and cleans live region announcements after RAC's delayed pending announce. */
 function scheduleClearPendingAnnouncements(): void {
   clearStalePendingAnnouncements();
-  const target = document.querySelector('[data-live-announcer="true"]') ?? document.body;
-  if (!target) return;
+  if (typeof document === "undefined" || !document.body) return;
   const observer = new MutationObserver(() => {
     clearStalePendingAnnouncements();
   });
-  observer.observe(target, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true });
   window.setTimeout(() => {
     clearStalePendingAnnouncements();
     observer.disconnect();
@@ -62,11 +61,18 @@ export function Button({
   isPending,
   ...props
 }: ButtonProps) {
-  const isPendingRef = useRef(isPending ?? false);
-  isPendingRef.current = isPending ?? false;
+  const wasPendingRef = useRef(isPending ?? false);
+  if (isPending) wasPendingRef.current = true;
+
+  useEffect(() => {
+    if (!isPending && wasPendingRef.current) {
+      scheduleClearPendingAnnouncements();
+    }
+  }, [isPending]);
+
   useEffect(() => {
     return () => {
-      if (isPendingRef.current) scheduleClearPendingAnnouncements();
+      if (wasPendingRef.current) scheduleClearPendingAnnouncements();
     };
   }, []);
 
