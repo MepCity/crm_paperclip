@@ -24,9 +24,175 @@ import {
 } from "lucide-react";
 import type { SVGProps } from "react";
 
+/** Named filter glyphs only expose `role="img"` when given an accessible name. */
+function filterIconRoleProps(props: SVGProps<SVGSVGElement>) {
+  const label = props["aria-label"];
+  return label ? { role: "img" as const, "aria-label": label } : {};
+}
+
+/** Original filled triangles and magnifier; no reference icon assets or titles. */
+function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 8 4.5" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M0 0h8L4 4.5Z" />
+    </svg>
+  );
+}
+
+function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 4.5 8" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M0 0v8l4.5-4Z" />
+    </svg>
+  );
+}
+
+function FieldEdit(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 12.5 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M1.5 10.5h1.2l6.6-6.6-1.2-1.2-6.6 6.6v1.2zM9.9 3.3l1.2-1.2c.3-.3.3-.8 0-1.1l-.9-.9c-.3-.3-.8-.3-1.1 0l-1.2 1.2 1.2 1.2z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function FilterSearch(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 13.5 13.5"
+      fill="none"
+      stroke="currentColor"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
+      <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Original user silhouette for form placeholders and picker action. */
+function RecordUser(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...props}
+    >
+      <circle cx="12" cy="7" r="4" />
+      <path d="M4 22v-3a8 8 0 0 1 16 0v3M2 22h20" />
+    </svg>
+  );
+}
+
+/** Filled portrait silhouette clipped inside the Lead Image ring. */
+function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      {...props}
+    >
+      <circle cx="24" cy="23" r="8" />
+      <path d="M19.75 29h8.5v1.5C31.5 31 34.5 31.8 36 33c1.8 1.5 3.05 2.5 3.75 3L44 48H4l4.25-12C9 35.5 10.2 34.5 12 33c1.5-1.2 4.5-2 7.75-2.5Z" />
+    </svg>
+  );
+}
+
+/** Filled downward caret for form picklists (8 × 5 px measured). */
+function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 8 5"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M0 0h8L4 5Z" />
+    </svg>
+  );
+}
+
+function RecordChevron(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m4 6 4 4 4-4" />
+    </svg>
+  );
+}
+function RecordCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m3 8 3 3 7-7" />
+    </svg>
+  );
+}
+function RecordInfo(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 7v4M8 4v1" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
+  recordUser: RecordUser,
+  recordPortraitSilhouette: RecordPortraitSilhouette,
+  recordFormCaret: RecordFormCaret,
+  recordChevron: RecordChevron,
+  recordCheck: RecordCheck,
+  recordInfo: RecordInfo,
+  recordPortrait: RecordPortrait,
+  filterChevronDown: FilterChevronDown,
+  filterChevronRight: FilterChevronRight,
+  filterSearch: FilterSearch,
+  fieldEdit: FieldEdit,
   building: Building2,
   check: Check,
   chevronUp: ChevronUp,
@@ -54,6 +220,22 @@ export const Icons = {
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
 };
+
+/** Original silhouette, kept inline rather than adding an image asset. */
+function RecordPortrait(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      {...props}
+    >
+      <circle cx="24" cy="17" r="9" />
+      <path d="M7 46v-7c0-9 7-15 17-15s17 6 17 15v7Z" />
+    </svg>
+  );
+}
 
 // Original line drawings for the list chrome; no reference icon assets are used.
 function ListGlyph({ children, ...props }: SVGProps<SVGSVGElement>) {

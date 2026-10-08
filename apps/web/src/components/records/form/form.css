@@ -1,0 +1,217 @@
+/* Create/edit form layout — research/specs/record-detail.md › Layout › Visual layout */
+
+.record-form-shell {
+  /* Adjacent columns; 258.5px between inputs is the right column label + label gap, not flex gap. */
+  --record-form-content-width: calc(
+    var(--size-form-label-column-left) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-left-width) +
+    var(--size-form-label-column-right) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-right-width)
+  );
+}
+
+.record-form-strip {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--record-form-content-width) + 2 * var(--size-form-card-inset));
+  height: var(--size-form-strip-height);
+  padding-inline: 0 var(--size-form-strip-padding-end);
+  border-bottom: 1px solid var(--color-row-separator);
+  background-color: var(--color-bg);
+}
+
+.record-form-strip__title {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-strong);
+}
+
+.record-form-strip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-form-action-gap);
+}
+
+.record-form-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--record-form-content-width) + 2 * var(--size-form-card-inset));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background-color: var(--color-surface);
+}
+
+.record-form-card__body {
+  padding: 0 var(--size-form-card-inset) var(--size-form-card-inset);
+}
+
+.record-form-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.record-form-section + .record-form-section {
+  margin-top: var(--size-form-section-gap);
+}
+
+.record-form-section__title {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  color: var(--color-text-strong);
+}
+
+.record-form-section:first-child {
+  position: relative;
+  padding-top: var(--size-form-first-content-top);
+}
+
+.record-form-section:first-child .record-form-section__title {
+  position: absolute;
+  top: var(--size-form-first-title-center);
+  left: 0;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+.record-form-section:not(:first-child) .record-form-section__title {
+  margin: 0 0 var(--size-form-section-title-gap);
+}
+
+.record-form-portrait {
+  width: var(--size-form-portrait);
+  height: var(--size-form-portrait);
+  border-radius: var(--radius-full);
+  background-color: var(--color-form-portrait);
+}
+
+.record-form-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  /* Measured title gap is baseline-to-content; trim heading line box (MEP-172). */
+  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
+}
+
+.record-form-column {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
+  min-width: 0;
+}
+
+.record-form-column--left {
+  width: calc(
+    var(--size-form-label-column-left) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-left-width)
+  );
+}
+
+.record-form-column--right {
+  width: calc(
+    var(--size-form-label-column-right) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-right-width)
+  );
+}
+
+.record-form-row {
+  display: grid;
+  align-items: start;
+  min-height: var(--size-form-input-height);
+  margin: 0;
+}
+
+.record-form-row--left {
+  grid-template-columns:
+    var(--size-form-label-column-left) var(--size-form-label-gap)
+    var(--size-form-input-left-width);
+}
+
+.record-form-row--right {
+  grid-template-columns:
+    var(--size-form-label-column-right) var(--size-form-label-gap)
+    var(--size-form-input-right-width);
+}
+
+.record-form-row--full {
+  grid-template-columns: var(--size-form-label-column-left) var(--size-form-label-gap) minmax(
+      0,
+      1fr
+    );
+  width: 100%;
+  max-width: var(--record-form-content-width);
+}
+
+.record-form-row__label {
+  justify-self: end;
+  padding: var(--size-form-label-padding-top) 0 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--size-form-label-line-height);
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.record-form-row__control {
+  grid-column: 3;
+  min-width: 0;
+}
+
+.record-form-row--full .record-form-row__control {
+  grid-column: 3;
+}
+
+.record-form-field-group {
+  position: relative;
+  box-sizing: border-box;
+  width: calc(
+    var(--size-form-label-column-left) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-left-width)
+  );
+  margin: 0;
+  padding: 0 var(--size-form-field-group-padding-end) 0 0;
+  border: 1px solid var(--color-form-field-group-border);
+  border-radius: var(--radius-form-control);
+}
+
+.record-form-section:not(:first-child) > .record-form-field-group {
+  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
+}
+
+.record-form-field-group__legend {
+  position: absolute;
+  top: 0;
+  left: var(--size-form-field-group-legend-inset);
+  padding: 0 var(--size-form-field-group-legend-padding);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  transform: translateY(-50%);
+}
+
+.record-form-field-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
+  padding-top: var(--size-form-field-group-body-top);
+}
+
+.record-form-field-group .record-form-row--left {
+  grid-template-columns:
+    var(--size-form-label-column-left) var(--size-form-label-gap)
+    var(--size-form-input-group-width);
+}

@@ -19,6 +19,7 @@ function field(
     required: false,
     readOnly: false,
     unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
     ...extra,
   };
 }
@@ -118,6 +119,31 @@ test("datetime uses the shared formatter", () => {
   show("datetime", value);
   expect(screen.getByText(formatDateTime(value, DEFAULT_FORMAT))).toBeTruthy();
   expect(screen.queryByText(value)).toBeNull();
+});
+
+test("integer, boolean, currency and Created_By match shared field formatting", () => {
+  const { rerender } = show("integer", 12_345);
+  expect(screen.getByText("12345")).toBeTruthy();
+
+  rerender(<CellValue field={field("boolean")} value={true} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("true")).toBeTruthy();
+
+  rerender(<CellValue field={field("boolean")} value={false} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("false")).toBeTruthy();
+
+  rerender(<CellValue field={field("currency")} value={1200.5} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("1,200.5")).toBeTruthy();
+
+  rerender(
+    <CellValue
+      field={field("ownerlookup", { apiName: "Created_By", label: "Created By" })}
+      value="user-1"
+      format={DEFAULT_FORMAT}
+      ownerNames={{ "user-1": "Owner One" }}
+    />,
+  );
+  expect(screen.getByText("Owner One")).toBeTruthy();
+  expect(screen.queryByText(/Mar 2026/)).toBeNull();
 });
 
 test("types outside the list columns stay plain text", () => {

@@ -35,7 +35,7 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * Every response is `Cache-Control: no-store`. No CORS header is set.
  */
 export function apiRoute<Params extends Record<string, string>>(handler: ApiHandler<Params>) {
-  return async (request: Request, context: { params: Promise<Params> }): Promise<Response> => {
+  return async (request: Request, context: { params?: Promise<Params> }): Promise<Response> => {
     try {
       assertSameOrigin(request);
       const session = await getSession(request.headers);
@@ -45,7 +45,7 @@ export function apiRoute<Params extends Record<string, string>>(handler: ApiHand
         throw new ValidationError({ organization: ["An organization header is required."] });
       }
       const ctx = await requireOrgContext(request.headers, orgSlug);
-      const params = await context.params;
+      const params = (await context.params) ?? ({} as Params);
       const result = await handler({ ctx, request, params, query: readQuery(request) });
       if (result === null) return new Response(null, { status: 204, headers: NO_STORE });
       return Response.json(result, { status: 200, headers: NO_STORE });

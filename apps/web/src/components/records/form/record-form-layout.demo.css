@@ -1,0 +1,39 @@
+/* Dev demo only — not used by production create/edit pages (MEP-145). */
+
+.record-form-layout-demo__scroll {
+  min-width: calc(
+    var(--size-form-label-column-left) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-left-width) +
+    var(--size-form-label-column-right) +
+    var(--size-form-label-gap) +
+    var(--size-form-input-right-width) +
+    2 *
+    var(--size-form-card-inset)
+  );
+}
+
+.record-form-layout-demo__control {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--size-form-input-height);
+  padding-inline: var(--size-form-control-padding-inline);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-form-control);
+  background-color: var(--color-surface);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+  outline: none;
+}
+
+.record-form-layout-demo__control:focus-visible {
+  border-color: var(--color-focus-ring);
+  box-shadow: 0 0 0 1px var(--color-focus-ring);
+}
+
+.record-form-layout-demo__control--textarea {
+  height: var(--size-form-description-height);
+  padding-block: var(--size-form-control-padding-block);
+  resize: vertical;
+}

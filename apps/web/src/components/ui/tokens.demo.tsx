@@ -8,6 +8,27 @@ import { type ReactNode, useEffect, useState } from "react";
  */
 const COLOUR_GROUPS = [
   {
+    label: "Record forms",
+    tokens: [
+      "--color-form-required",
+      "--color-form-portrait",
+      "--color-form-caret",
+      "--color-form-input-end",
+      "--color-form-portrait-ring",
+    ],
+  },
+  {
+    label: "Record detail",
+    tokens: [
+      "--color-record-primary-end",
+      "--color-record-secondary-start",
+      "--color-record-secondary-end",
+      "--color-record-arrow-disabled",
+      "--color-record-tab-selected",
+      "--color-record-tab-border",
+    ],
+  },
+  {
     label: "Page, surfaces and ink",
     tokens: [
       "--color-bg",
@@ -110,6 +131,8 @@ const COLOUR_GROUPS = [
       "--color-text-strong",
       "--color-text-disabled",
       "--color-text-empty",
+      "--color-form-portrait",
+      "--color-form-field-group-border",
     ],
   },
 ] as const;
@@ -117,7 +140,6 @@ const COLOUR_GROUPS = [
 const TEXT_TOKENS = [
   "--text-2xs",
   "--text-xs",
-  "--text-13",
   "--text-sm",
   "--text-md",
   "--text-base",
@@ -129,8 +151,8 @@ const TEXT_TOKENS = [
 
 const WEIGHT_TOKENS = [
   "--font-weight-normal",
-  "--font-weight-medium",
   "--font-weight-semibold",
+  "--font-weight-bold",
 ] as const;
 
 /** Adopted roles from typography.md, Recommendation. Values come only from tokens. */
@@ -202,16 +224,45 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
+  "--radius-record-menu",
   "--radius-sm",
   "--radius-md",
   "--radius-lg",
   "--radius-xl",
   "--radius-full",
+  "--radius-form-control",
 ] as const;
 
 const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
 
 const SIZE_GROUPS = [
+  {
+    label: "Record detail",
+    tokens: [
+      "--size-record-header-height",
+      "--size-record-portrait",
+      "--size-record-back-region",
+      "--size-record-title-gap",
+      "--size-record-rail-width",
+      "--size-record-rail-heading-height",
+      "--size-record-rail-text-inset",
+      "--size-record-tab-row-height",
+      "--size-record-tab-top",
+      "--size-record-toggle-slot",
+      "--size-record-tab-width",
+      "--size-record-tab-height",
+      "--size-record-tab-inset",
+      "--size-record-tab-slice-width",
+      "--size-record-tab-slice-height",
+      "--size-record-menu-width",
+      "--size-record-menu-inset",
+      "--size-record-menu-inset-inline",
+      "--size-record-menu-text-inset",
+      "--size-record-scroll-top",
+      "--size-record-scroll-offset",
+      "--size-record-demo-height",
+    ],
+  },
   {
     label: "Shell positions",
     tokens: [
@@ -301,7 +352,24 @@ const SIZE_GROUPS = [
       "--size-list-filter-gap",
       "--size-list-filter-padding",
       "--size-list-filter-search-height",
+      "--size-list-filter-search-icon",
+      "--size-list-filter-search-icon-inset",
+      "--size-list-filter-search-padding",
+      "--size-list-filter-search-width",
+      "--size-list-filter-search-end-inset",
+      "--size-list-filter-title-inset-top",
+      "--size-list-filter-title-line",
+      "--size-list-filter-group-heading-line",
+      "--size-list-filter-heading-to-search",
+      "--size-list-filter-search-to-group",
+      "--size-list-filter-group-to-row",
+      "--size-list-filter-group-gap",
       "--size-list-filter-row-height",
+      "--size-list-filter-row-padding",
+      "--size-list-filter-chevron-width",
+      "--size-list-filter-chevron-height",
+      "--size-list-filter-chevron-offset",
+      "--size-list-filter-heading-inset",
       "--size-list-filter-button-width",
       "--size-list-filter-button-height",
       "--size-list-header-height",
@@ -329,6 +397,22 @@ const SIZE_GROUPS = [
       "--size-list-chevron-width",
       "--size-list-chevron-height",
       "--size-list-view-icon",
+      "--color-detail-divider",
+      "--size-detail-card-width",
+      "--size-detail-card-padding",
+      "--size-detail-business-label-width",
+      "--size-detail-business-label-value-gap",
+      "--size-detail-business-row-pitch",
+      "--size-detail-details-label-width",
+      "--size-detail-details-label-value-gap",
+      "--size-detail-details-row-pitch",
+      "--size-detail-column-width",
+      "--size-detail-business-min-height",
+      "--size-detail-business-padding-block-start",
+      "--size-detail-business-padding-block-end",
+      "--size-detail-details-toggle-padding-block",
+      "--size-detail-details-sections-margin-top",
+      "--size-detail-section-title-margin-block",
       "--size-list-view-name-width",
       "--size-list-column-lane-width",
     ],
@@ -343,8 +427,29 @@ const SIZE_GROUPS = [
       "--size-button-gap",
       "--size-button-ellipsis-width",
       "--size-button-ellipsis-height",
+      "--size-form-input-height",
+      "--size-form-required-bar",
+      "--size-form-option-height",
+      "--size-form-list-padding",
+      "--size-form-country-height",
+      "--size-form-owner-height",
+      "--size-form-prefix-width",
+      "--size-form-prefix-divider-offset",
+      "--size-form-prefix-caret-gap",
+      "--size-form-caret-width",
+      "--size-form-caret-height",
+      "--size-form-caret-inset-end",
+      "--size-form-input-end",
+      "--size-form-input-end-icon",
+      "--size-form-currency-prefix-inset",
+      "--size-form-currency-divider-gap",
+      "--size-form-currency-divider-height",
+      "--size-form-currency-divider-top",
+      "--size-form-owner-caret-gap",
       "--size-checkbox",
       "--size-checkbox-border",
+      "--size-checkbox-label-gap",
+      "--size-checkbox-label-line",
       "--size-dialog-width",
       "--size-dialog-height",
       "--size-dialog-padding",
@@ -371,6 +476,41 @@ const SIZE_GROUPS = [
       "--size-popover-sort-cancel-width",
       "--size-popover-sort-apply-width",
       "--size-popover-sort-button-gap",
+    ],
+  },
+  {
+    label: "Create/edit form",
+    tokens: [
+      "--size-form-strip-height",
+      "--size-form-strip-padding-end",
+      "--size-form-card-inset",
+      "--size-form-first-title-center",
+      "--size-form-first-content-top",
+      "--size-form-section-gap",
+      "--size-form-section-title-gap",
+      "--size-form-section-title-box-trim",
+      "--size-form-portrait",
+      "--size-form-label-column-left",
+      "--size-form-label-column-right",
+      "--size-form-label-gap",
+      "--size-form-label-line-height",
+      "--size-form-label-padding-top",
+      "--size-form-input-left-width",
+      "--size-form-input-right-width",
+      "--size-form-input-group-width",
+      "--size-form-column-gap",
+      "--size-form-input-height",
+      "--size-form-row-pitch",
+      "--size-form-control-padding-inline",
+      "--size-form-control-padding-block",
+      "--size-form-action-height",
+      "--size-form-action-gap",
+      "--size-form-action-padding-inline",
+      "--size-form-field-group-padding-end",
+      "--size-form-field-group-body-top",
+      "--size-form-field-group-legend-inset",
+      "--size-form-field-group-legend-padding",
+      "--size-form-description-height",
     ],
   },
   {
@@ -411,7 +551,7 @@ export default function TokensDemo() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Colours</h3>
+        <h3 className="text-xl font-semibold text-text">Colours</h3>
         {COLOUR_GROUPS.map((group) => (
           <Group key={group.label} label={group.label}>
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -437,7 +577,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Type scale</h3>
+        <h3 className="text-xl font-semibold text-text">Type scale</h3>
         <ul className="space-y-2">
           {TEXT_TOKENS.map((token) => (
             <li key={token} className="flex flex-wrap items-baseline gap-x-4">
@@ -489,7 +629,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4" aria-label="Type roles">
-        <h3 className="text-lg font-semibold text-text">Type roles</h3>
+        <h3 className="text-xl font-semibold text-text">Type roles</h3>
         <ul className="space-y-2">
           {TYPE_ROLES.flatMap(({ role, labels, size, weight }) =>
             labels.map((label) => (
@@ -509,7 +649,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Corner radii</h3>
+        <h3 className="text-xl font-semibold text-text">Corner radii</h3>
         <ul className="flex flex-wrap gap-6">
           {RADIUS_TOKENS.map((token) => (
             <li key={token} className="space-y-1">
@@ -528,7 +668,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Shadows</h3>
+        <h3 className="text-xl font-semibold text-text">Shadows</h3>
         <ul className="flex flex-wrap gap-6">
           {SHADOW_TOKENS.map((token) => (
             <li key={token} className="space-y-1">
@@ -547,7 +687,7 @@ export default function TokensDemo() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-text">Layout dimensions</h3>
+        <h3 className="text-xl font-semibold text-text">Layout dimensions</h3>
         {SIZE_GROUPS.map((group) => (
           <Group key={group.label} label={group.label}>
             <ul className="space-y-2">

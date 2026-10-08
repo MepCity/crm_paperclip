@@ -16,7 +16,24 @@ This directory contains the headless-first design system components, built on `r
 - **Do not introduce heavy styling libraries** (e.g., styled-components, emotion). Tailwind + variables is enough.
 - **Do not import from `@crm/core` in client components**, except for types or `@crm/core/errors`.
 
+## Filter panel primitives
+
+`Disclosure` supplies a clipped, fully labelled keyboard-accessible heading with a
+controlled or uncontrolled panel. The expand mark is an original filled triangle, with no
+tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
+disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
+search height, a decorative magnifier, control border and placeholder tokens) and a
+separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
+keeps that box on the first line when a filter label wraps. Sources: list-views.md →
+Visual layout → Filter content, Surface and line colors, Selected / disabled.
+Vertical gaps, search-field width and end inset use the measured Filter content tokens.
+Open question 17 records the uncaptured closed group and checked checkbox.
+
 ## Token sources
+
+Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
+This keeps measured color fixtures outside the component directory's no-literal scan.
 
 Every token declared in `apps/web/src/app/tokens.css`, in file order, with the row it comes from. The
 **Visual layout** section of a spec is the only source of token values (ADR 0003, §2). Rows are
@@ -106,26 +123,28 @@ what the "no colour constants" rule forbids.
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9" | from spec |
+| `--color-form-portrait` | `#b2b2b2` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "drawn in gray `#B2B2B2`" | from spec |
+| `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
-| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular" | from spec |
-| `--font-weight-medium` | `500` | list-views.md › Text roles › "toolbar labels about 14 px medium"; "column headers about 14 px medium"; Figtree fit pending (MEP-95) | from spec |
-| `--font-weight-semibold` | `510` | typography.md › Variable-weight stem check › `wght` 510, stem 1.69 CSS px; Recommendation › bold roles | from spec |
+| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
+| `--font-weight-semibold` | `510` | typography.md › Variable-weight stem check › `wght` 510, stem 1.69 CSS px; Recommendation › shell semibold roles; List and detail text roles › List toolbar Filter / Sort, List primary button; Weight classes › Semibold | from spec |
+| `--font-weight-bold` | `650` | typography.md › List and detail text roles › List view tab; Weight classes › Bold headings (640–660) | from spec |
 | `--text-2xs` | `0.53125rem` (8.5px) | typography.md › Recommendation › Utility label › 8.5px / 400 | from spec |
 | `--text-xs` | `0.71875rem` (11.5px) | typography.md › Recommendation › Help utility label › 11.5px / 510 | from spec |
-| `--text-13` | `0.8125rem` (13px) | list-views.md › Text roles › "View tab about 13 px semibold"; Table footer › "text about 13 px"; Figtree fit pending (MEP-95) | from spec |
-| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400 | from spec |
-| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px | from spec |
+| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400; List and detail text roles › List view tab (13.5px) | from spec |
+| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px; List and detail text roles › List toolbar Filter / Sort, List primary button, Table column header, Table cell value, Footer fixed label, Create form field label (14.5px; toolbar 14px maps to this token by CTO decision) | from spec |
 | `--text-base` | `1rem` (16px, provisional) | typography.md › Recommendation › Product selector, Teamspace selector › 16px (provisional); generic selector text could not be measured | from spec |
-| `--text-lg` | `1.125rem` (18px) | No measured 18 px style. The list spec does not measure an 18 px style either | not yet measured |
+| `--text-lg` | `0.96875rem` (15.5px) | typography.md › List and detail text roles › Size classes › 15.5px | from spec |
 | `--text-xl` | `1.15625rem` (18.5px) | typography.md › Recommendation › Page title › 18.5px / 510 | from spec |
-| `--text-2xl` | `1.5rem` (24px) | No measured 24 px style. The list spec does not measure a 24 px style either | not yet measured |
+| `--text-2xl` | `1.28125rem` (20.5px) | typography.md › List and detail text roles › Size classes › 20.5–21.0px | from spec |
 | `--text-3xl` | `1.875rem` (30px) | No measured 30 px style. The list spec does not measure a 30 px style either | not yet measured |
 | `--radius-sm` | `0.125rem` (2px) | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px with 2 px `#C5C4D3` border and 2–3 px radius". The token keeps the 2 px end of that range | from spec |
 | `--radius-md` | `0.375rem` (6px) | app-shell.md › Rail/active row › "approx. 6 px radius"; the same radius is measured on Rail/local Search, Top bar/right controls (quick create), Teamspace More Actions menu and its highlighted row, Top bar/global search, and Global search panel; list-views.md › Header and tab strip › "6 px corners"; Filter panel, Records table, Create and action buttons, View options popover, Create More / Actions menus, View Settings popover and Sort popover use the same 6 px corners | from spec |
 | `--radius-lg` | `0.5rem` (8px) | list-views.md › View edit form › "8 px corners" | from spec |
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
+| `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
@@ -190,8 +209,25 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
-| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "placeholder about 34 px high" | from spec |
+| `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
+| `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
+| `--size-list-filter-search-icon-inset` | `11.5px` | list-views.md › Filter content › "starting 11.5 px inside the field's outer left edge" | from spec |
+| `--size-list-filter-search-padding` | `31px` | list-views.md › Filter content › "the placeholder text starting 32 px inside that edge". Padding is that inset minus the 1 px border | from spec |
+| `--size-list-filter-search-width` | `167px` | list-views.md › Filter content › "167 px wide" | from spec |
+| `--size-list-filter-search-end-inset` | `15px` | list-views.md › Filter content › "15 px from its inner right edge" | from spec |
+| `--size-list-filter-title-inset-top` | `20.5px` | list-views.md › Filter content › "panel inner top edge to heading ink top 20.5 px" | from spec |
+| `--size-list-filter-title-line` | `13px` | list-views.md › Filter content › heading baseline 32 px − ink top 20.5 px, tuned for Figtree baseline probe | derived from spec |
+| `--size-list-filter-group-heading-line` | `20px` | list-views.md › Filter content › line box taller than 15.5 px heading; baseline 15 px below top, 5 px above bottom (no descender clip) | derived from spec |
+| `--size-list-filter-heading-to-search` | `19.5px` | list-views.md › Filter content › "heading baseline to the search field's top edge 21 px" minus title line extent below baseline | derived from spec |
+| `--size-list-filter-search-to-group` | `18px` | list-views.md › Filter content › search bottom to first group baseline 33 px, minus 15 px baseline inset in group heading line box | derived from spec |
+| `--size-list-filter-group-to-row` | `7px` | list-views.md › Filter content › "group heading baseline to its first row's top edge 12 px" minus 5 px below baseline in line box | derived from spec |
+| `--size-list-filter-group-gap` | `16px` | list-views.md › Filter content › last row bottom to next group baseline 31 px, minus 15 px baseline inset in line box | derived from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
+| `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
+| `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
+| `--size-list-filter-chevron-offset` | `1.25px` | list-views.md › Filter content › triangle top 6 px above heading baseline; centers chevron in 20 px line box (3.75 px above baseline vs 5 px box center) | derived from spec |
+| `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-header-height` | `37px` | list-views.md › Table header and rows › "Header 37 px high: 35 px white plus a 2 px `#DCDBEE` bottom border". The 37 px box includes that border | from spec |
@@ -219,6 +255,22 @@ what the "no colour constants" rule forbids.
 | `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
+| `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
+| `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
+| `--size-detail-business-label-value-gap` | `45.5px` | record-detail.md › Business card › values start x 771, labels end x 725.5 | from spec |
+| `--size-detail-business-row-pitch` | `44.5px` | record-detail.md › Business card › "44.5 px average row pitch" | from spec |
+| `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
+| `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
+| `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
+| `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
+| `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
+| `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
+| `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
+| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
+| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -228,8 +280,32 @@ what the "no colour constants" rule forbids.
 | `--size-button-gap` | `8.5px` | list-views.md › Create and action buttons › "An 8.5 px gap separates it from the ellipsis button" | from spec |
 | `--size-button-ellipsis-width` | `44px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
 | `--size-button-ellipsis-height` | `32px` | list-views.md › Create and action buttons › "ellipsis button, which is 44 × 32 px" | from spec |
+| `--color-form-required` | `#ff5d5a` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--color-form-caret` | `#838892` | record-detail.md › Lead Information rows › picklist caret | from spec |
+| `--color-form-input-end` | `#f0f4ff` | record-detail.md › Composite inputs › owner picker and currency end section | from spec |
+| `--color-form-portrait-ring` | `#b4b4b4` | record-detail.md › Form surface and Lead Image › portrait ring | from spec |
+| `--size-form-required-bar` | `3px` | record-detail.md › Lead Information rows › Required left bar | from spec |
+| `--size-form-option-height` | `32px` | record-detail.md › Country panel / Standard picklist › row pitch | from spec |
+| `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
+| `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
+| `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-form-prefix-width` | `110px` | record-detail.md › Composite inputs › Salutation panel width | from spec |
+| `--size-form-prefix-divider-offset` | `94px` | record-detail.md › Composite inputs › Salutation divider from outer left | from spec |
+| `--size-form-prefix-caret-gap` | `11px` | record-detail.md › Composite inputs › Salutation caret before divider | from spec |
+| `--size-form-caret-width` | `8px` | record-detail.md › Lead Information rows › picklist caret width | from spec |
+| `--size-form-caret-height` | `5px` | record-detail.md › Lead Information rows › picklist caret height | from spec |
+| `--size-form-caret-inset-end` | `12px` | record-detail.md › Lead Information rows › caret inset from outer right | from spec |
+| `--size-form-input-end` | `32px` | record-detail.md › Composite inputs › owner/currency end section width | from spec |
+| `--size-form-input-end-icon` | `16px` | record-detail.md › Composite inputs › end-section icon size | from spec |
+| `--size-form-currency-prefix-inset` | `12px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
+| `--size-form-currency-divider-gap` | `9.5px` | record-detail.md › Composite inputs › currency divider after prefix text | from spec |
+| `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
+| `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
+| `--size-form-owner-caret-gap` | `9px` | record-detail.md › Composite inputs › owner caret before end section | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
+| `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
+| `--size-checkbox-label-line` | `16px` | list-views.md › Filter content › "with lines 16 px apart" | from spec |
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
@@ -251,6 +327,36 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
+| `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
+| `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
+| `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
+| `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
+| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
+| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
+| `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
+| `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
+| `--size-form-label-gap` | `37px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "37 px before their input" | from spec |
+| `--size-form-input-left-width` | `320px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Left inputs x 553–873 (320 px wide)" | from spec |
+| `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
+| `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
+| `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
+| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
+| `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
+| `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
+| `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
+| `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
+| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
+| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
+| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
+| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
+| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
+| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
 
 ### Typeface
 
@@ -269,6 +375,36 @@ To replace the typeface, update `--font-sans`, the single `@font-face` in `token
 and the font folder with the official file and license. Then refit the size and weight
 measurements in `typography.md`, update the tokens and this table, and verify the checksums,
 rendered widths and weight axis. Components inherit `--font-sans` and need no family edits.
+
+| `--color-record-primary-end` | `#134dc4` | record-detail.md › Header buttons › Primary bottom fill | from spec |
+| `--color-record-secondary-start` | `#fdfdfe` | record-detail.md › Header buttons › Secondary top fill | from spec |
+| `--color-record-secondary-end` | `#f1f0f7` | record-detail.md › Header buttons › Secondary bottom fill | from spec |
+| `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
+| `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
+| `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
+| `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
+| `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
+| `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
+| `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
+| `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
+| `--size-record-tab-row-height` | `62px` | record-detail.md › Canvas and tab row; Status strip › 185 − 123 card offset | from spec |
+| `--size-record-tab-top` | `14px` | record-detail.md › Canvas and tab row › 137 − 123 pill offset | from spec |
+| `--size-record-toggle-slot` | `36px` | record-detail.md › Canvas and tab row › 588 − 552 reserved slot | from spec |
+| `--size-record-tab-width` | `222.5px` | record-detail.md › Hidden-rail layout › Outer tab pill › 222.5 wide; same pill with rail shown | from spec |
+| `--size-record-tab-height` | `37px` | record-detail.md › Hidden-rail layout › Outer tab pill › 37 high | from spec |
+| `--size-record-tab-inset` | `3px` | record-detail.md › Hidden-rail layout › Tab slices › 384 − 380 minus 1px border | from spec |
+| `--size-record-tab-slice-width` | `108px` | record-detail.md › Canvas and tab row › 712 − 604 selected slice | from spec |
+| `--size-record-tab-slice-height` | `29px` | record-detail.md › Hidden-rail layout › Tab slices › 29 high | from spec |
+| `--size-record-menu-width` | `217px` | record-detail.md › More Options menu › Popover › 1380 − 1163 | from spec |
+| `--radius-record-menu` | `4px` | record-detail.md › More Options menu › Popover › 4 px corners | from spec |
+| `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
+| `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
+| `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
+| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 
 ### Measured values that carry no token
 
@@ -393,9 +529,11 @@ measured look; ADR 0003 §8 records that exception and its limits.
 | `--color-panel-border` `#dcdbee` on `--color-surface` | 1.36:1 | list-views.md › Surface and line colors › "panel and table outline 1 px `#DCDBEE`" |
 | `--color-row-separator` `#edf0f4` on `--color-surface` | 1.14:1 | list-views.md › Surface and line colors › "horizontal row separators 1 px `#EDF0F4`" |
 
-No component consumes either placeholder token yet and `text-primary` is only rendered on a panel,
-so nothing on `/dev/ui` fails AA today. The three placeholder rows fall under the ADR 0003 §8
-exception: the tokens are used only for the placeholder of a real input. The last row does not:
+`text-primary` is only rendered on a panel. The three placeholder rows fall under the ADR 0003 §8
+exception: the tokens are used only for the placeholder of a real input and for the empty-value
+text of a selection control where the spec measures that ink (record-detail.md › Composite inputs:
+the empty Salutation prefix, 3.11:1 on a panel). The scan leaves out only the element that holds
+that text (`[data-part=empty-value]`); the trigger around it stays in the scan. The last row does not:
 primary-coloured text needs `--color-surface` behind it. In the list, Lead Name and Email stay on
 `--color-text` when they are links (Text roles), so `--color-primary` is not a link colour there
 either. It is the active presentation glyph on `--color-primary-subtle` (4.18:1, non-text).
@@ -413,7 +551,6 @@ outline or split a control, and `--color-text-disabled`, `--color-text-empty` pl
 `--color-primary-gradient-start` (4.49:1) are text. The board decides under the one-to-one look
 rule; the CTO carries the list to the module gate.
 
-
 ## List chrome primitive composition
 
 `SplitButton` composes a primary button or link, an optional 1 px token divider and a
@@ -424,8 +561,17 @@ keyboard tests cover both trigger parts, plain creation and link navigation.
 Button primary and secondary variants use the measured vertical gradients from the
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
-opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
+opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
 `--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
 menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
+
+
+## Record detail extensions
+
+Record-specific button, menu and tab appearances preserve the measured detail values.
+Shared tokens used here: panel border, surface, background, text, strong text, button
+border, primary gradient start, surface-active rail selection, surface-hover menu row,
+menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
+Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.

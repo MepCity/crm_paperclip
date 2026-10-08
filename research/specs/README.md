@@ -13,3 +13,5 @@ Template:
 - **Capture refs** — capture slugs used
 
 No customer data, no copied text blocks, no screenshots in the repo.
+
+- [leads-write-behaviour.md](leads-write-behaviour.md) — Write behaviours: delete, clone, mass actions, post-save (from public documentation).

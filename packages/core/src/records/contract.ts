@@ -42,7 +42,15 @@ export interface PicklistOption {
   storedValue: string;
 }
 
+export interface FieldViewFlags {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  quickCreate: boolean;
+}
+
 export interface FieldDefinition {
+  views: FieldViewFlags;
   apiName: string;
   label: string;
   dataType: FieldDataType;
@@ -57,6 +65,7 @@ export interface FieldDefinition {
 export interface LayoutSection {
   label: string;
   columnCount: number;
+  columns: readonly (readonly string[])[];
   fields: readonly string[];
 }
 
@@ -64,6 +73,7 @@ export interface ModuleMetadata {
   apiName: ModuleApiName;
   singularLabel: string;
   pluralLabel: string;
+  businessCardFields: readonly string[];
   fields: readonly FieldDefinition[];
   layout: readonly LayoutSection[];
 }
@@ -74,11 +84,20 @@ export interface RecordData {
   fields: Readonly<Record<string, FieldValue>>;
 }
 
-/** The only comparator observed in the list specification. */
-export type Comparator = "is";
+/** Wire literals used by saved view definitions (list-views.md › View definitions). */
+export type Comparator = "equal" | "contains" | "not_contains" | "less_equal";
+
+/** A `${…}` value of a view definition; the adapter resolves it when the query runs. */
+export type CriteriaToken =
+  | { token: "CURRENTUSER" }
+  | { token: "TODAY" }
+  | { token: "AGEINDAYS"; offset: number }
+  | { token: "CATEGORY"; name: string };
+
+export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
 
 export type Criteria =
-  | { field: string; comparator: Comparator; value: FieldValue | readonly FieldValue[] }
+  | { field: string; comparator: Comparator; value: CriteriaValue }
   | { groupOperator: "and" | "or"; group: readonly Criteria[] };
 
 export interface SortSpec {
@@ -102,6 +121,8 @@ export interface ListQuery {
   page: number;
   /** One of the six page sizes documented in the list specification. */
   perPage: number;
+  /** Field projection; id is always included. Omitted returns all fields. */
+  fields?: readonly string[];
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;
@@ -112,6 +133,8 @@ export interface ListResult {
   page: number;
   perPage: number;
   moreRecords: boolean;
+  /** The order the adapter applied: query sort, else view sort, else the default. */
+  sort: SortSpec;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;

@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { NotFoundError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import type {
+  Comparator,
   Criteria,
+  CriteriaToken,
+  CriteriaValue,
   FieldValue,
   ListView,
   ModuleMetadata,
@@ -11,7 +14,10 @@ import type {
   RecordService,
 } from "./contract";
 
-type ContractFactory = (ctx: OrgContext) => RecordService | Promise<RecordService>;
+type ContractFactory = (
+  ctx: OrgContext,
+  options?: { now?: () => Date },
+) => RecordService | Promise<RecordService>;
 function context(): OrgContext {
   const id = randomUUID();
   return {
@@ -22,24 +28,22 @@ function context(): OrgContext {
     role: "admin",
   };
 }
-function criterionInput(criteria: Criteria): Record<string, FieldValue> {
-  if ("group" in criteria) return Object.assign({}, ...criteria.group.map(criterionInput));
-  return {
-    [criteria.field]: Array.isArray(criteria.value)
-      ? (criteria.value[0] ?? null)
-      : (criteria.value as FieldValue),
-  };
+function isToken(value: CriteriaValue): value is CriteriaToken {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && "token" in value;
 }
-function unmetCriteria(criteria: Criteria): Record<string, FieldValue> {
-  if ("group" in criteria) {
-    const [child] = criteria.group;
-    if (!child) return {};
-    return criteria.groupOperator === "or"
-      ? Object.assign({}, ...criteria.group.map(unmetCriteria))
-      : unmetCriteria(child);
-  }
-  const matched = Array.isArray(criteria.value) ? criteria.value[0] : criteria.value;
-  return { [criteria.field]: matched === null ? "present" : null };
+function criterionInput(criteria: Criteria, metadata: ModuleMetadata): Record<string, FieldValue> {
+  if ("group" in criteria)
+    return Object.assign({}, ...criteria.group.map((child) => criterionInput(child, metadata)));
+  if (isToken(criteria.value) || Array.isArray(criteria.value)) return {};
+  const field = metadata.fields.find((item) => item.apiName === criteria.field);
+  if (!field || field.readOnly || typeof criteria.value === "object") return {};
+  return { [criteria.field]: criteria.value };
+}
+function mentionsCategory(criteria: Criteria, name: string): boolean {
+  if ("group" in criteria) return criteria.group.some((child) => mentionsCategory(child, name));
+  return (
+    isToken(criteria.value) && criteria.value.token === "CATEGORY" && criteria.value.name === name
+  );
 }
 
 /** Public-method tests shared by fixture and future persistent adapters. */
@@ -65,7 +69,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       ...extra,
     });
     const forView = (view: ListView, extra: RecordInput = {}): RecordInput =>
-      input({ ...(view.criteria ? criterionInput(view.criteria) : {}), ...extra });
+      input({ ...(view.criteria ? criterionInput(view.criteria, metadata) : {}), ...extra });
     const validation = async (promise: Promise<unknown>, field: string) => {
       await expect(promise).rejects.toBeInstanceOf(ValidationError);
       await expect(promise).rejects.toMatchObject({ fieldErrors: { [field]: expect.any(Array) } });
@@ -81,6 +85,8 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(field.label).not.toBe("");
         expect(typeof field.required).toBe("boolean");
         expect(typeof field.readOnly).toBe("boolean");
+        expect(Object.keys(field.views).sort()).toEqual(["create", "edit", "quickCreate", "view"]);
+        for (const value of Object.values(field.views)) expect(typeof value).toBe("boolean");
         expect(field.unique).toBe(false);
         if (field.picklist)
           for (const option of field.picklist) {
@@ -90,8 +96,14 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       }
       for (const section of metadata.layout) {
         expect(section.columnCount).toBeGreaterThan(0);
+        expect(section.columns).toHaveLength(section.columnCount);
+        const placed = section.columns.flat();
+        expect(new Set(placed).size).toBe(placed.length);
+        for (const field of placed) expect(section.fields).toContain(field);
         for (const field of section.fields) expect(names).toContain(field);
       }
+      for (const name of metadata.businessCardFields)
+        expect(metadata.fields.find((field) => field.apiName === name)?.views.view).toBe(true);
       expect(new Set(views.map((view) => view.id)).size).toBe(views.length);
       expect(views.filter((view) => view.isDefault)).toHaveLength(1);
       for (const view of views) {
@@ -101,13 +113,43 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(await service.getView("Leads", view.id)).toEqual(view);
       }
     });
+    it("projects fields, always includes id and rejects unknown names", async () => {
+      const created = await service.create("Leads", forView(defaultView));
+      const query = {
+        viewId: defaultView.id,
+        page: 1,
+        perPage: 10,
+        filters: {
+          field: "id",
+          comparator: "equal" as const,
+          value: created.id,
+        },
+      };
+      const projected = await service.list("Leads", { ...query, fields: ["Company"] });
+      expect(projected.records).toEqual([
+        { id: created.id, fields: { id: created.id, Company: created.fields.Company } },
+      ]);
+      expect((await service.list("Leads", { ...query, fields: [] })).records).toEqual([
+        { id: created.id, fields: { id: created.id } },
+      ]);
+      expect((await service.list("Leads", query)).records).toEqual([created]);
+      await validation(service.list("Leads", { ...query, fields: ["Unknown_Field"] }), "fields");
+      const fields = projected.records[0]?.fields as Record<string, FieldValue>;
+      fields.Company = "Changed";
+      expect(await service.get("Leads", created.id)).toEqual(created);
+    });
+    // The HTTP harness performs hundreds of JSON write/read round trips per size.
     for (const perPage of [10, 20, 30, 40, 50, 100]) {
       it(`paginates at ${perPage}, with consistent counts and no duplicate or missing records`, async () => {
         const query = {
           viewId: defaultView.id,
           page: 1,
           perPage,
-          filters: { field: "Company", comparator: "is" as const, value: `Page-${randomUUID()}` },
+          filters: {
+            field: "Company",
+            comparator: "equal" as const,
+            value: `Page-${randomUUID()}`,
+          },
         };
         for (let index = 0; index < 211; index++) {
           await service.create("Leads", forView(defaultView, { Company: query.filters.value }));
@@ -121,6 +163,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           expect(result.perPage).toBe(perPage);
           expect(result.records).toHaveLength(Math.min(perPage, count - (page - 1) * perPage));
           expect(result.moreRecords).toBe(page * perPage < count);
+          expect(result.sort).toEqual({ field: "id", order: "desc" });
           expect(result).not.toHaveProperty("count");
           expect(result).not.toHaveProperty("total");
           expect(await service.list("Leads", { ...query, page })).toEqual(result);
@@ -130,8 +173,12 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(new Set(ids).size).toBe(count);
         expect(
           await service.list("Leads", { ...query, page: Math.ceil(count / perPage) + 1 }),
-        ).toMatchObject({ records: [], moreRecords: false });
-      });
+        ).toMatchObject({
+          records: [],
+          moreRecords: false,
+          sort: { field: "id", order: "desc" },
+        });
+      }, 15_000);
     }
     it("finds created records by case-insensitive Company search and counts an empty result", async () => {
       const marker = `Search-${randomUUID()}`;
@@ -167,7 +214,11 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
             );
           const query = {
             viewId: defaultView.id,
-            filters: { field: "Email", comparator: "is" as const, value: `${marker}@example.org` },
+            filters: {
+              field: "Email",
+              comparator: "equal" as const,
+              value: `${marker}@example.org`,
+            },
             page: 1,
             perPage: 10,
             sort: { field, order },
@@ -179,23 +230,30 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         });
       }
     it("applies a discovered view's criteria and combines extra filters with and", async () => {
-      const view = views.find((view) => view.criteria !== null);
+      const view = views.find(
+        (candidate) => candidate.criteria && mentionsCategory(candidate.criteria, "Junk"),
+      );
       expect(view).toBeDefined();
-      if (!view?.criteria) throw new Error("A criteria-bearing view is required.");
+      if (!view?.criteria) throw new Error("A category view is required.");
       const marker = `Criteria-${randomUUID()}`;
-      const values = criterionInput(view.criteria);
-      const included = await service.create("Leads", input({ ...values, Company: marker }));
-      await service.create("Leads", input({ ...values, Company: `${marker}-other` }));
+      const included = await service.create(
+        "Leads",
+        input({ Lead_Status: "Junk Lead", Company: marker }),
+      );
+      await service.create(
+        "Leads",
+        input({ Lead_Status: "Junk Lead", Company: `${marker}-other` }),
+      );
       const excluded = await service.create(
         "Leads",
-        input({ ...unmetCriteria(view.criteria), Company: marker }),
+        input({ Lead_Status: "Not Qualified", Company: marker }),
       );
       const query = {
         viewId: view.id,
         page: 1,
         perPage: 100,
         search: marker,
-        filters: { field: "Company", comparator: "is" as const, value: marker },
+        filters: { field: "Company", comparator: "equal" as const, value: marker },
       };
       const result = await service.list("Leads", query);
       expect(result.records.map((record) => record.id)).toEqual([included.id]);
@@ -283,6 +341,30 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       await validation(service.update("Leads", created.id, { Company: null }), "Company");
       expect(await service.get("Leads", created.id)).toEqual(updated);
     });
+    it("creates and updates Owner using organization members, with a context default", async () => {
+      const secondMember = await makeService({ ...ctx, userId: "second-member" });
+      await secondMember.getModule("Leads");
+      const created = await service.create("Leads", input({ Owner: "second-member" }));
+      expect(created.fields.Owner).toBe("second-member");
+      expect(created.fields.Created_By).toBe(ctx.userId);
+      const updated = await service.update("Leads", created.id, { Owner: ctx.userId });
+      expect(updated.fields.Owner).toBe(ctx.userId);
+      expect(updated.fields.Created_By).toBe(ctx.userId);
+      expect(updated.fields.Modified_By).toBe(ctx.userId);
+      expect((await service.create("Leads", input())).fields.Owner).toBe(ctx.userId);
+      const foreign = await makeService({ ...context(), userId: "foreign-member" });
+      // A known user in another organization must not qualify for this one.
+      await foreign.create("Leads", input({ Owner: "foreign-member" }));
+      await validation(service.create("Leads", input({ Owner: "foreign-member" })), "Owner");
+      await validation(service.update("Leads", created.id, { Owner: "foreign-member" }), "Owner");
+      for (const Owner of [null, "", 3, { module: "Contacts", id: "second-member" }]) {
+        await validation(service.create("Leads", input({ Owner })), "Owner");
+        await validation(service.update("Leads", created.id, { Owner }), "Owner");
+      }
+      expect(await service.get("Leads", created.id)).toEqual(updated);
+      for (const name of ["Created_By", "Modified_By"])
+        await validation(service.update("Leads", created.id, { [name]: ctx.userId }), name);
+    });
     it("deletes records and updates count", async () => {
       const created = await service.create("Leads", forView(defaultView));
       const before = await service.count("Leads", { viewId: defaultView.id });
@@ -325,6 +407,13 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       expect(await service.get("Leads", row.id)).toEqual(original);
       const definition = metadata.fields[0];
       if (!definition) throw new Error("Expected fields.");
+      const originalModule = await service.getModule("Leads");
+      definition.views.view = !definition.views.view;
+      const column = metadata.layout[0]?.columns[0];
+      if (!column) throw new Error("Expected a layout column.");
+      (column as string[]).push("changed-placement");
+      (metadata.businessCardFields as string[]).push("changed-card");
+      expect(await service.getModule("Leads")).toEqual(originalModule);
       definition.label = "changed-metadata";
       (defaultView.columns as string[]).push("changed-columns");
       expect((await service.getModule("Leads")).fields[0]?.label).not.toBe("changed-metadata");
@@ -347,7 +436,6 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           .flatMap((field) => field.picklist ?? [])
           .map((option) => option.storedValue),
       ).not.toContain("changed-picklist");
-
       const updateInput = { Connected_To__s: { module: "Contacts", id: "updated-contact" } };
       const updated = await service.update("Leads", created.id, updateInput);
       updateInput.Connected_To__s.id = "changed-update-input";
@@ -356,6 +444,137 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         Company: "Contract Company",
         Connected_To__s: { module: "Contacts", id: "updated-contact" },
       });
+    });
+    it("orders an unsorted list by id descending and echoes an explicit sort", async () => {
+      const created = await service.create("Leads", forView(defaultView));
+      const page = await service.list("Leads", { viewId: defaultView.id, page: 1, perPage: 10 });
+      expect(page.sort).toEqual({ field: "id", order: "desc" });
+      expect(page.records[0]?.id).toBe(created.id);
+      const sorted = await service.list("Leads", {
+        viewId: defaultView.id,
+        page: 1,
+        perPage: 10,
+        sort: { field: "Company", order: "asc" },
+      });
+      expect(sorted.sort).toEqual({ field: "Company", order: "asc" });
+    });
+    it("resolves the four tokens, four comparators and null fields from a fixed clock", async () => {
+      let now = new Date("2026-05-14T00:00:00.000Z");
+      const timed = context();
+      const timedService = await makeService(timed, { now: () => now });
+      const marker = `Token-${randomUUID()}`;
+      const outside = await timedService.create(
+        "Leads",
+        input({ Company: marker, Lead_Status: "Junk Lead", First_Name: "Alpha" }),
+      );
+      now = new Date("2026-05-15T00:00:00.000Z");
+      const inside = await timedService.create(
+        "Leads",
+        input({ Company: marker, Lead_Status: "Contacted", First_Name: null }),
+      );
+      now = new Date("2026-06-15T00:30:00.000Z");
+      const today = await timedService.create(
+        "Leads",
+        input({ Company: marker, Lead_Status: "Not Qualified", First_Name: "Later" }),
+      );
+      const ids = async (filters: Criteria) =>
+        (
+          await timedService.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 20,
+            filters: {
+              groupOperator: "and",
+              group: [{ field: "Company", comparator: "equal", value: marker }, filters],
+            },
+          })
+        ).records.map((record) => record.id);
+      expect(
+        await ids({ field: "Created_Time", comparator: "equal", value: { token: "TODAY" } }),
+      ).toEqual([today.id]);
+      expect(
+        await ids({
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 31 },
+        }),
+      ).toEqual([today.id, inside.id]);
+      expect(
+        await ids({ field: "Owner", comparator: "equal", value: { token: "CURRENTUSER" } }),
+      ).toEqual([today.id, inside.id, outside.id]);
+      expect(await ids({ field: "Owner", comparator: "equal", value: "someone-else" })).toEqual([]);
+      expect(
+        await ids({
+          field: "Lead_Status",
+          comparator: "equal",
+          value: { token: "CATEGORY", name: "Junk" },
+        }),
+      ).toEqual([outside.id]);
+      expect(
+        await ids({
+          field: "Lead_Status",
+          comparator: "equal",
+          value: { token: "CATEGORY", name: "Open" },
+        }),
+      ).toEqual([inside.id]);
+      expect(await ids({ field: "First_Name", comparator: "contains", value: "alp" })).toEqual([
+        outside.id,
+      ]);
+      expect(await ids({ field: "First_Name", comparator: "not_contains", value: "alp" })).toEqual([
+        today.id,
+        inside.id,
+      ]);
+      expect(await ids({ field: "First_Name", comparator: "equal", value: null })).toEqual([
+        inside.id,
+      ]);
+      expect(
+        await ids({
+          field: "Last_Activity_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 31 },
+        }),
+      ).toEqual([]);
+      expect(
+        await ids({
+          groupOperator: "or",
+          group: [
+            {
+              field: "Lead_Status",
+              comparator: "equal",
+              value: { token: "CATEGORY", name: "Junk" },
+            },
+            {
+              groupOperator: "and",
+              group: [
+                {
+                  field: "Lead_Status",
+                  comparator: "equal",
+                  value: { token: "CATEGORY", name: "Open" },
+                },
+                { field: "First_Name", comparator: "not_contains", value: "z" },
+              ],
+            },
+          ],
+        }),
+      ).toEqual([inside.id, outside.id]);
+      const query = { viewId: defaultView.id, page: 1, perPage: 10 };
+      for (const filters of [
+        { field: "Company", comparator: "between" as Comparator, value: marker },
+        { field: "Missing", comparator: "equal" as const, value: null },
+        { field: "Email_Opt_Out", comparator: "contains" as const, value: "true" },
+        {
+          field: "Company",
+          comparator: "less_equal" as const,
+          value: { token: "AGEINDAYS" as const, offset: 1 },
+        },
+        {
+          field: "Created_Time",
+          comparator: "less_equal" as const,
+          value: "2026-06-15T00:00:00.000Z",
+        },
+        { field: "Company", comparator: "equal" as const, value: { token: "TODAY" as const } },
+      ])
+        await validation(timedService.list("Leads", { ...query, filters }), "filters");
     });
   });
 }

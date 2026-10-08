@@ -2,7 +2,7 @@ import { NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
 import { leadsMetadata } from "./metadata";
-import { matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { fullName, generateFixtureLeads } from "./seed";
 import { validateInput } from "./validation";
 import { leadsViews } from "./views";
@@ -10,6 +10,7 @@ import { leadsViews } from "./views";
 interface FixtureStore {
   records: Map<string, RecordData>;
   nextId: bigint;
+  memberIds: Set<string>;
 }
 const storeKey = Symbol.for("mepcity.records.fixture.stores");
 const runtime = globalThis as typeof globalThis & {
@@ -38,13 +39,24 @@ const normalizeInput = (input: RecordInput): RecordInput =>
     ),
   );
 
-export function createFixtureRecordService(context: OrgContext): RecordService {
+export interface FixtureRecordServiceOptions {
+  /** Clock for seed times, write timestamps and date tokens. Defaults to the system clock. */
+  now?: () => Date;
+  /** Live membership source; defaults to authorized contexts opened in this fixture org. */
+  listMemberIds?: () => Promise<readonly string[]>;
+}
+
+export function createFixtureRecordService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): RecordService {
   const ctx = { ...context };
+  const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
   if (!store) {
     store = {
       records: new Map(
-        generateFixtureLeads().map((record) => [
+        generateFixtureLeads(68, clock()).map((record) => [
           record.id,
           {
             ...record,
@@ -58,10 +70,18 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
         ]),
       ),
       nextId: 200000000000000000n,
+      memberIds: new Set(),
     };
     stores.set(ctx.orgId, store);
   }
   const state = store;
+  state.memberIds.add(ctx.userId);
+  const validateOwner = async (input: RecordInput) => {
+    if (!Object.hasOwn(input, "Owner")) return;
+    const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
+    if (typeof input.Owner !== "string" || !members.includes(input.Owner))
+      throw new ValidationError({ Owner: ["Choose a member of this organization."] });
+  };
   const moduleExists = (module: string) => {
     if (module !== "Leads") throw new NotFoundError("Module not found.");
   };
@@ -80,10 +100,11 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
   const matching = (module: string, query: Pick<ListQuery, "viewId" | "filters" | "search">) => {
     const view = viewFor(module, query.viewId);
     if (query.filters) validateCriteria(query.filters);
+    const runtime = { userId: ctx.userId, now: clock() };
     return [...state.records.values()].filter(
       (record) =>
-        (!view.criteria || matches(record, view.criteria)) &&
-        (!query.filters || matches(record, query.filters)) &&
+        (!view.criteria || matches(record, view.criteria, runtime)) &&
+        (!query.filters || matches(record, query.filters, runtime)) &&
         matchesSearch(record, query.search),
     );
   };
@@ -106,14 +127,32 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
         errors.page = ["Choose a positive integer page."];
       if (![10, 20, 30, 40, 50, 100].includes(query.perPage))
         errors.perPage = ["Choose a supported page size."];
+      if (
+        query.fields?.some((name) => !leadsMetadata.fields.some((field) => field.apiName === name))
+      )
+        errors.fields = ["Choose known field API names."];
       if (Object.keys(errors).length) throw new ValidationError(errors);
-      const rows = sortRecords(matching(module, query), query.sort ?? view.sort);
+      const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
+      const rows = sortRecords(matching(module, query), applied);
       const start = (query.page - 1) * query.perPage;
       return copy({
-        records: rows.slice(start, start + query.perPage),
+        records: rows.slice(start, start + query.perPage).map((record) =>
+          query.fields === undefined
+            ? record
+            : {
+                id: record.id,
+                fields: Object.fromEntries(
+                  ["id", ...query.fields].map((name) => [
+                    name,
+                    name === "id" ? record.id : (record.fields[name] ?? null),
+                  ]),
+                ),
+              },
+        ),
         page: query.page,
         perPage: query.perPage,
         moreRecords: start + query.perPage < rows.length,
+        sort: applied,
       });
     },
     async count(module, query) {
@@ -126,18 +165,21 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
       moduleExists(module);
       const normalized = normalizeInput(input);
       validateInput(normalized, false);
+      await validateOwner(normalized);
       const id = String(state.nextId++);
       const fields: Record<string, FieldValue> = Object.fromEntries(
         leadsMetadata.fields.map((field) => [field.apiName, null]),
       );
-      const now = new Date().toISOString();
+      const stamp = clock().toISOString();
       Object.assign(fields, normalized, {
         id,
-        Owner: ctx.userId,
+        Owner: normalized.Owner ?? ctx.userId,
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
-        Created_Time: now,
-        Modified_Time: now,
+        Created_Time: stamp,
+        Modified_Time: stamp,
+        Converted__s: false,
+        Locked__s: false,
       });
       fields.Full_Name = fullName(fields);
       const record = { id, fields };
@@ -145,14 +187,17 @@ export function createFixtureRecordService(context: OrgContext): RecordService {
       return copy(record);
     },
     async update(module, id, input) {
-      const record = recordFor(module, id);
+      recordFor(module, id);
       const normalized = normalizeInput(input);
       validateInput(normalized, true);
+      await validateOwner(normalized);
+      // Membership resolution may yield; preserve intervening partial writes/deletes.
+      const record = recordFor(module, id);
       const fields: Record<string, FieldValue> = {
         ...record.fields,
         ...normalized,
         Modified_By: ctx.userId,
-        Modified_Time: new Date().toISOString(),
+        Modified_Time: clock().toISOString(),
       };
       fields.Full_Name = fullName(fields);
       const updated = { id, fields };

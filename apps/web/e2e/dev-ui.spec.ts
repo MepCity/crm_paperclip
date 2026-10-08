@@ -2,8 +2,9 @@ import { expectNoA11yViolations } from "./support/a11y";
 import { expect, test } from "./support/test";
 
 test("dev ui gallery has no console errors and form demo works", async ({ page }) => {
-  // A loaded machine runs this gallery past the 30s default (~36s); allow 90s.
-  test.setTimeout(90_000);
+  // Two full-gallery axe scans plus keyboard flows exceed 90s after `pnpm verify`
+  // runs Vitest in parallel first; keep measurement thresholds, extend wall time only.
+  test.setTimeout(180_000);
   // Scan the settled colours, rather than the transient opacity of toast entry animations.
   await page.emulateMedia({ reducedMotion: "reduce" });
   const errors: string[] = [];
@@ -15,10 +16,13 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await page.goto("/dev/ui");
   await expect(page).toHaveTitle(/Component Gallery/);
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
 
   // Each demo is a labelled region so screens and tests can address it.
-  const formRegion = page.getByRole("region", { name: "form" });
+  const formRegion = page.getByRole("region", { name: "form", exact: true });
   await expect(formRegion).toBeVisible();
 
   const form = formRegion.getByRole("form", { name: "Demo sign-in form" });
@@ -48,9 +52,9 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
     .getByRole("region", { name: "text field" })
     .getByRole("textbox", { name: "With Error" });
   await expect(invalidInput).toHaveAttribute("aria-invalid", "true");
-  const invalidBorderColor = await invalidInput.evaluate(
-    (element) => getComputedStyle(element).borderTopColor,
-  );
+  const invalidBorderColor = await invalidInput
+    .locator("..")
+    .evaluate((element) => getComputedStyle(element).borderTopColor);
 
   const selectRegion = page.getByRole("region", { name: "select" });
   const invalidTrigger = selectRegion.getByRole("button", { name: /Invalid choice/ });
@@ -136,7 +140,10 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   // already visible above; requiring the first one to still be mounted
   // afterwards races that lifetime and fails when the scan is slow.
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
   // A pointer resting on the toast pauses its timer. Park it clear of the
   // region so auto-dismiss runs from whatever time is left.
   await page.mouse.move(0, 0);
@@ -214,10 +221,10 @@ test("token demo renders the values measured in the shell and list specs", async
   // typography.md: adopted bold stem matches at 510; regular stays 400.
   await expect(sample("--font-weight-semibold")).toHaveCSS("font-weight", "510");
   await expect(sample("--font-weight-normal")).toHaveCSS("font-weight", "400");
-  // Text roles: toolbar labels and column headers are "medium".
-  await expect(sample("--font-weight-medium")).toHaveCSS("font-weight", "500");
-  // Text roles: "View tab about 13 px"; Table footer: "text about 13 px".
-  await expect(sample("--text-13")).toHaveCSS("font-size", "13px");
+  // typography.md → List and detail text roles → Weight and Size classes.
+  await expect(sample("--font-weight-bold")).toHaveCSS("font-weight", "650");
+  await expect(sample("--text-lg")).toHaveCSS("font-size", "15.5px");
+  await expect(sample("--text-2xl")).toHaveCSS("font-size", "20.5px");
 
   // Surface and line colors: "panel and table outline 1 px `#DCDBEE`".
   await expect(sample("--color-panel-border")).toHaveCSS("background-color", "rgb(220, 219, 238)");
@@ -292,9 +299,41 @@ test("type roles load one local variable font and preserve measured advances", a
     }
   });
   await page.goto("/dev/ui");
-  await page.evaluate(() => document.fonts.ready);
-  expect(await page.evaluate(() => document.fonts.check("400 14.5px Figtree"))).toBe(true);
-  expect(await page.evaluate(() => document.fonts.check("510 14.5px Figtree"))).toBe(true);
+  // document.fonts.ready settles before a face is requested. Ask for the file and
+  // poll until both measured weights check; a rejected load retries instead of failing.
+  const figTreeReady = async (weight: 400 | 510 | 650) => {
+    const probe = await page.evaluate(async (requested) => {
+      const font = `${requested} 14.5px Figtree`;
+      const faces = () =>
+        [...document.fonts]
+          .filter((face) => face.family.replaceAll('"', "") === "Figtree")
+          .map((face) => ({ weight: face.weight, status: face.status }));
+      try {
+        await document.fonts.load(font);
+      } catch {
+        return { check: false, faces: faces() };
+      }
+      return { check: document.fonts.check(font), faces: faces() };
+    }, weight);
+    return {
+      check: probe.check,
+      faces: probe.faces,
+      fontResponses: fontResponses.map((response) => ({
+        url: response.url,
+        status: response.status,
+      })),
+    };
+  };
+  const fontMessage = "Figtree FontFace.status values and fontResponses";
+  await expect
+    .poll(() => figTreeReady(400), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
+  await expect
+    .poll(() => figTreeReady(510), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
+  await expect
+    .poll(() => figTreeReady(650), { timeout: 30_000, message: fontMessage })
+    .toEqual(expect.objectContaining({ check: true }));
   expect(
     await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily),
   ).toMatch(/^"?Figtree"?,/);
@@ -347,12 +386,14 @@ test("type roles load one local variable font and preserve measured advances", a
     const sample = element.cloneNode(true) as HTMLElement;
     sample.removeAttribute("data-type-role");
     element.after(sample);
-    const widths = ["var(--font-weight-normal)", "var(--font-weight-semibold)", "600"].map(
-      (weight) => {
-        sample.style.fontWeight = weight;
-        return sample.getBoundingClientRect().width;
-      },
-    );
+    const widths = [
+      "var(--font-weight-normal)",
+      "var(--font-weight-semibold)",
+      "var(--font-weight-bold)",
+    ].map((weight) => {
+      sample.style.fontWeight = weight;
+      return sample.getBoundingClientRect().width;
+    });
     sample.remove();
     return widths;
   });
@@ -363,7 +404,10 @@ test("type roles load one local variable font and preserve measured advances", a
   await expect(tokens.locator('[data-token="--text-2xs"]')).toHaveCSS("font-size", "8.5px");
   await expect(tokens.locator('[data-token="--text-xs"]')).toHaveCSS("font-size", "11.5px");
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
-  await expectNoA11yViolations(page, { exclude: ["[data-part=empty]"] });
+  // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
   expect(fontResponses).toHaveLength(1);
   expect(fontResponses[0]?.status).toBe(200);
   const origin = new URL(page.url()).origin;

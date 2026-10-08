@@ -12,7 +12,7 @@ export default async function OrganizationLayout({
 }) {
   const { orgSlug } = await params;
   await requireOrgContext(orgSlug);
-  const user = await requireUser(`/o/${orgSlug}`);
+  const user = await requireUser(`/crm/${orgSlug}`);
   const organizations = await listOrganizationsForUser(user.id);
   return (
     <AppShell

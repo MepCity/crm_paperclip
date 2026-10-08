@@ -1,3 +1,8 @@
+import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
+import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import FieldInputDemo from "@/components/records/form/field-input.demo";
+import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
+import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
 import AlertDemo from "@/components/ui/alert.demo";
@@ -33,6 +38,9 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "field-input": FieldInputDemo,
+  "record-detail": RecordDetailDemo,
+  "filter-panel": FilterPanelDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
@@ -55,6 +63,7 @@ export const demos: Record<string, React.ComponentType> = {
   menu: MenuDemo,
   table: TableDemo,
   "record-table": RecordTableDemo,
+  "record-detail-cards": RecordDetailCardsDemo,
   spinner: SpinnerDemo,
   tabs: TabsDemo,
   tooltip: TooltipDemo,
@@ -65,5 +74,6 @@ export const demos: Record<string, React.ComponentType> = {
   "empty-state": EmptyStateDemo,
   skeleton: SkeletonDemo,
   "list-chrome": ListChromeDemo,
+  "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
 };

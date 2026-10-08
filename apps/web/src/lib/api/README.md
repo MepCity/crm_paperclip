@@ -14,7 +14,8 @@ is not session state. Only this wrapper, its tests and this document know that n
    organization or a user who is not a member is `404`.
 
 The handler receives `{ ctx, request, params, query }`. A query key it does not read
-is ignored. Repeated keys keep the first value.
+is ignored. Repeated keys keep the first value. Static routes receive an empty
+`params` object when Next provides no route parameters.
 
 Return `null` for `204` with no body, or any other value for `200` JSON. Throw an
 `AppError` for an expected failure. Any other error is `500` with empty `details`;
@@ -25,20 +26,21 @@ Every response sets `Cache-Control: no-store`. No CORS header is set.
 
 ## Writing a handler
 
-A route file is the wrapper plus one service call. Do not read the session or the
-organization header there.
+A route file delegates to `operationRoute`, which binds the operation to the
+authenticated record service and a lazy member loader. Do not read the session or
+the organization header there.
 
 ```ts
-import { ValidationError } from "@crm/core/errors";
-import { apiRoute } from "./server";
-import { getRecordService } from "../records";
+import { operationRoute } from "@/lib/api/operation-route";
+import { operations } from "@/lib/api/wire/operations";
 
-export const POST = apiRoute<{ module: string }>(async ({ ctx, params, query }) => {
-  const viewId = query.cvid;
-  if (!viewId) throw new ValidationError({ cvid: ["Choose a view."] });
-  return { count: await getRecordService(ctx).count(params.module, { viewId }) };
-});
+export const dynamic = "force-dynamic";
+
+export const POST = operationRoute(operations.count);
 ```
 
-`POST /crm/v2.2/{module}/actions/count` is that pattern. `cvid` is required. The
-request body is not read.
+The wire member loader runs only for operations that encode member data. The
+count route delegates to `operations.count`. The operation validates `cvid` (a missing value is keyed by
+the port's `viewId`) and optionally reads JSON `{ filters?, search? }`. Paths and
+methods are defined only by the inventory in `wire/operations.ts`; the browser can
+use `operationPath` to build URLs.

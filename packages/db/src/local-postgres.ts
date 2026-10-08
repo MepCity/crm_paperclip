@@ -10,10 +10,15 @@ const USER = "postgres";
 const PASSWORD = "postgres";
 const HOST = "127.0.0.1";
 
-// Empty LANG/LC_ALL makes initdb choose SQL_ASCII. ICU collations such as
-// und-x-icu exist only for UTF-8, so every cluster uses the ICU root locale
-// and does not follow the process locale.
-const UTF8_INITDB_FLAGS = ["--encoding=UTF8", "--locale-provider=icu", "--icu-locale=und"];
+// initdb otherwise follows libc locale from the environment (e.g. LATIN1 under
+// ISO-8859-1), which conflicts with --encoding=UTF8. ICU collations such as
+// und-x-icu exist only for UTF-8, so libc locale is pinned to C and ICU to und.
+const UTF8_INITDB_FLAGS = [
+  "--encoding=UTF8",
+  "--locale=C",
+  "--locale-provider=icu",
+  "--icu-locale=und",
+];
 
 const failureExitGuard = Symbol.for("crm.failureExitGuard");
 

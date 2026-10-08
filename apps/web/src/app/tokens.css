@@ -100,28 +100,30 @@
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
+  --color-form-portrait: #b2b2b2;
+  /* MEP-172 interim: Address field group border on create/edit form. */
+  --color-form-field-group-border: #797883;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* typography.md fits bold stems at weight 510. The list spec also measures medium
-     for toolbar labels and column headers. A type style's CSS line-height is not a
+  /* typography.md adopts semibold at 510 and bold headings at 650. Regular table
+     text and field labels use 400. A type style's CSS line-height is not a
      --leading-* token; the list row's 18 px line pitch is --size-list-line-height. */
   --font-weight-normal: 400;
-  --font-weight-medium: 500;
   --font-weight-semibold: 510;
+  --font-weight-bold: 650;
 
   --text-2xs: 0.53125rem;
   --text-xs: 0.71875rem;
-  --text-13: 0.8125rem;
   --text-sm: 0.84375rem;
   --text-md: 0.90625rem;
   --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-lg: 0.96875rem;
   --text-xl: 1.15625rem;
-  --text-2xl: 1.5rem;
+  --text-2xl: 1.28125rem;
   --text-3xl: 1.875rem;
 
   /* Measured corners: 2–3 px (--radius-sm, kept at 2 px), about 6 px (--radius-md),
@@ -131,6 +133,7 @@
   --radius-lg: 0.5rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
+  --radius-form-control: 5px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -216,7 +219,24 @@
   --size-list-filter-gap: 10px;
   --size-list-filter-padding: 18px;
   --size-list-filter-search-height: 34px;
+  --size-list-filter-search-icon: 13.5px;
+  --size-list-filter-search-icon-inset: 11.5px;
+  --size-list-filter-search-padding: 31px;
+  --size-list-filter-search-width: 167px;
+  --size-list-filter-search-end-inset: 15px;
+  --size-list-filter-title-inset-top: 20.5px;
+  --size-list-filter-title-line: 13px;
+  --size-list-filter-group-heading-line: 20px;
+  --size-list-filter-heading-to-search: 19.5px;
+  --size-list-filter-search-to-group: 18px;
+  --size-list-filter-group-to-row: 7px;
+  --size-list-filter-group-gap: 16px;
   --size-list-filter-row-height: 30px;
+  --size-list-filter-row-padding: 6px;
+  --size-list-filter-chevron-width: 8px;
+  --size-list-filter-chevron-height: 4.5px;
+  --size-list-filter-chevron-offset: 1.25px;
+  --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
 
@@ -249,6 +269,24 @@
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
 
+  /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
+  --color-detail-divider: #d6d6e3;
+  --size-detail-card-width: 906px;
+  --size-detail-card-padding: 20px;
+  --size-detail-business-label-width: 153.5px;
+  --size-detail-business-label-value-gap: 45.5px;
+  --size-detail-business-row-pitch: 44.5px;
+  --size-detail-details-label-width: 129px;
+  --size-detail-details-label-value-gap: 36.5px;
+  --size-detail-details-row-pitch: 44px;
+  --size-detail-column-width: 433.5px;
+  --size-detail-business-min-height: 287px;
+  --size-detail-business-padding-block-start: 42.75px;
+  --size-detail-business-padding-block-end: 21.75px;
+  --size-detail-details-toggle-padding-block: 12.75px;
+  --size-detail-details-sections-margin-top: 39px;
+  --size-detail-section-title-margin-block: 16px 8px;
+
   /* View edit form */
   --size-list-view-name-width: 600px;
   --size-list-column-lane-width: 280px;
@@ -262,9 +300,35 @@
   --size-button-ellipsis-width: 44px;
   --size-button-ellipsis-height: 32px;
 
+  /* record-detail.md, Visual layout: Lead Information rows and dropdown panels. */
+  --color-form-required: #ff5d5a;
+  --color-form-caret: #838892;
+  --color-form-input-end: #f0f4ff;
+  --color-form-portrait-ring: #b4b4b4;
+  --size-form-required-bar: 3px;
+  --size-form-option-height: 32px;
+  --size-form-list-padding: 6px;
+  --size-form-country-height: 270px;
+  --size-form-owner-height: 179px;
+  --size-form-prefix-width: 110px;
+  --size-form-prefix-divider-offset: 94px;
+  --size-form-prefix-caret-gap: 11px;
+  --size-form-caret-width: 8px;
+  --size-form-caret-height: 5px;
+  --size-form-caret-inset-end: 12px;
+  --size-form-input-end: 32px;
+  --size-form-input-end-icon: 16px;
+  --size-form-currency-prefix-inset: 12px;
+  --size-form-currency-divider-gap: 9.5px;
+  --size-form-currency-divider-height: 20px;
+  --size-form-currency-divider-top: 7px;
+  --size-form-owner-caret-gap: 9px;
+
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
+  --size-checkbox-label-gap: 8.5px;
+  --size-checkbox-label-line: 16px;
 
   /* Manage Columns dialog */
   --size-dialog-width: 400px;
@@ -292,4 +356,69 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+
+  /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-strip-height: 57px;
+  --size-form-strip-padding-end: 8px;
+  --size-form-card-inset: 12px;
+  /* MEP-172 interim vertical rhythm on create/edit form. */
+  --size-form-first-title-center: 30px;
+  --size-form-first-content-top: 63px;
+  --size-form-section-gap: 55.5px;
+  --size-form-section-title-gap: 28px;
+  --size-form-section-title-box-trim: 4px;
+  --size-form-portrait: 48px;
+  --size-form-label-column-left: 172px;
+  --size-form-label-column-right: 221.5px;
+  --size-form-label-gap: 37px;
+  --size-form-input-left-width: 320px;
+  --size-form-input-right-width: 314.5px;
+  --size-form-column-gap: 258.5px;
+  --size-form-label-line-height: 17.5px;
+  --size-form-label-padding-top: 8px;
+  --size-form-input-group-width: 303px;
+  --size-form-input-height: 34px;
+  --size-form-row-pitch: 54px;
+  --size-form-control-padding-inline: 10px;
+  --size-form-control-padding-block: 8px;
+  --size-form-action-height: 32px;
+  --size-form-action-gap: 10px;
+  --size-form-action-padding-inline: 14.5px;
+  --size-form-field-group-padding-end: 16px;
+  --size-form-field-group-body-top: 31px;
+  --size-form-field-group-legend-inset: 18.5px;
+  --size-form-field-group-legend-padding: 12.5px;
+  /* Description textarea height is not measurable in the capture; demo placeholder only. */
+  --size-form-description-height: 80px;
+  /* record-detail.md > Visual layout > Record page and More Options menu. */
+  --color-record-primary-end: #134dc4;
+  --color-record-secondary-start: #fdfdfe;
+  --color-record-secondary-end: #f1f0f7;
+  --color-record-arrow-disabled: #adb0b6;
+  --color-record-tab-selected: #ebedff;
+  --color-record-tab-border: #a3acff;
+  --size-record-header-height: 73px;
+  --size-record-portrait: 48px;
+  --size-record-back-region: 52px;
+  --size-record-title-gap: 15px;
+  --size-record-rail-width: 220px;
+  --size-record-rail-heading-height: 38px;
+  --size-record-rail-text-inset: 8.5px;
+  --size-record-tab-row-height: 62px;
+  --size-record-tab-top: 14px;
+  --size-record-toggle-slot: 36px;
+  --size-record-tab-width: 222.5px;
+  --size-record-tab-height: 37px;
+  --size-record-tab-inset: 3px;
+  --size-record-tab-slice-width: 108px;
+  --size-record-tab-slice-height: 29px;
+  --size-record-menu-width: 217px;
+  --radius-record-menu: 4px;
+  --size-record-menu-inset: 5px;
+  --size-record-menu-inset-inline: 5.75px;
+  --size-record-menu-text-inset: 10.25px;
+  /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
+  --size-record-scroll-top: 36px;
+  --size-record-scroll-offset: 16px;
+  --size-record-demo-height: 560px;
 }

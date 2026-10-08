@@ -13,7 +13,7 @@ import { SettingsNavigation } from "./settings-navigation";
 import { UserMenu } from "./user-menu";
 
 const navigation = vi.hoisted(() => ({
-  path: "/o/example",
+  path: "/crm/example",
   push: vi.fn(),
   replace: vi.fn(),
   refresh: vi.fn(),
@@ -33,12 +33,12 @@ const leadsLink = {
   id: "leads",
   label: "Leads",
   icon: Icons.building,
-  href: (slug: string) => `/o/${slug}/leads`,
+  href: (slug: string) => `/crm/${slug}/leads`,
   match: "prefix" as const,
 };
 const config: NavConfig = {
   links: [
-    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/o/${slug}`, match: "exact" },
+    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/crm/${slug}`, match: "exact" },
   ],
   sections: [
     {
@@ -54,7 +54,7 @@ const config: NavConfig = {
               id: "leads",
               label: "Leads",
               icon: Icons.building,
-              href: (slug) => `/o/${slug}/leads`,
+              href: (slug) => `/crm/${slug}/leads`,
               match: "prefix",
             },
           ],
@@ -68,7 +68,7 @@ const config: NavConfig = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  navigation.path = "/o/example";
+  navigation.path = "/crm/example";
   vi.stubGlobal(
     "matchMedia",
     vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
@@ -83,16 +83,16 @@ afterEach(() => {
 test("Navigation renders configured links and populated groups, with correct active paths", () => {
   const view = render(<Navigation orgSlug="example" config={config} />);
   const home = screen.getByRole("link", { name: "Home" });
-  expect(home.getAttribute("href")).toBe("/o/example");
+  expect(home.getAttribute("href")).toBe("/crm/example");
   expect(home.getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("aria-current")).toBeNull();
   expect(screen.queryByText("Empty group")).toBeNull();
   expect(screen.queryByText("Empty section")).toBeNull();
-  navigation.path = "/o/example/leads/record";
+  navigation.path = "/crm/example/leads/record";
   view.rerender(<Navigation orgSlug="example" config={config} />);
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("aria-current")).toBe("page");
   expect(home.getAttribute("aria-current")).toBeNull();
-  expect(isNavLinkActive(leadsLink, "example", "/o/example/leads-other")).toBe(false);
+  expect(isNavLinkActive(leadsLink, "example", "/crm/example/leads-other")).toBe(false);
 });
 
 test("Navigation groups collapse and expand with mouse and keyboard", async () => {
@@ -126,7 +126,7 @@ test("Organization switcher lists organizations, marks the current one and selec
     screen.getByRole("menuitemradio", { name: "Second team" }).getAttribute("aria-checked"),
   ).toBe("false");
   await keyboard.keyboard("{Home}{ArrowDown}{Enter}");
-  expect(navigation.push).toHaveBeenCalledWith("/o/second");
+  expect(navigation.push).toHaveBeenCalledWith("/crm/second");
 });
 
 test("Organization switcher creates organizations and does not confuse a slug named create", async () => {
@@ -135,7 +135,7 @@ test("Organization switcher creates organizations and does not confuse a slug na
   const trigger = screen.getByRole("button", { name: "Organization switcher" });
   await keyboard.click(trigger);
   await keyboard.click(screen.getByRole("menuitemradio", { name: "Create team" }));
-  expect(navigation.push).toHaveBeenLastCalledWith("/o/create");
+  expect(navigation.push).toHaveBeenLastCalledWith("/crm/create");
   await keyboard.click(trigger);
   await keyboard.keyboard("{End}{Enter}");
   expect(navigation.push).toHaveBeenLastCalledWith("/orgs/new");

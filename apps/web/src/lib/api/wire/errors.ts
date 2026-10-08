@@ -140,7 +140,9 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
   if (isAppError(error)) {
     const status = STATUS_BY_CODE[error.code];
     const details =
-      error instanceof ValidationError ? { fields: copyFieldErrors(error.fieldErrors) } : {};
+      error.code === "validation"
+        ? { fields: copyFieldErrors((error as ValidationError).fieldErrors) }
+        : {};
     return {
       status,
       body: {

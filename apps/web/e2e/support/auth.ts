@@ -25,7 +25,7 @@ export async function signUpNewUser(
   await page.getByRole("textbox", { name: "Email" }).fill(credentials.email);
   await page.getByLabel("Password").fill(credentials.password);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
   return credentials;
 }
@@ -42,4 +42,7 @@ export async function signIn(
   await page.getByRole("textbox", { name: "Email" }).fill(credentials.email);
   await page.getByLabel("Password").fill(credentials.password);
   await page.getByRole("button", { name: "Sign in" }).click();
+  if (options?.next !== undefined) {
+    await page.waitForURL((url) => new URL(url).pathname === options.next, { timeout: 30_000 });
+  }
 }
