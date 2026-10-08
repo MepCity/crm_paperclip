@@ -67,6 +67,13 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings`,
     match: "exact",
   },
+  {
+    id: "members",
+    label: "Members",
+    icon: Icons.users,
+    href: (slug) => `/crm/${slug}/settings/members`,
+    match: "exact",
+  },
 ];
 
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {

@@ -7,6 +7,12 @@ export type ActionState =
 
 export const initialActionState: ActionState = { status: "idle" };
 
+/**
+ * Lets several actions on one screen share a single message slot: pass the new
+ * message, or `null` to clear it when the next action starts.
+ */
+export type ReportError = (message: string | null) => void;
+
 export function toActionState(error: unknown): ActionState {
   if (isAppError(error)) {
     if (error instanceof ValidationError) {
