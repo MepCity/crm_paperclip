@@ -1,5 +1,5 @@
 import { expectNoA11yViolations } from "./support/a11y";
-import { signIn, signUpNewUser } from "./support/auth";
+import { AUTH_NAVIGATION_TIMEOUT_MS, signIn, signUpNewUser } from "./support/auth";
 import { expect, test } from "./support/test";
 
 /**
@@ -83,7 +83,7 @@ test("sign in follows a safe next path", async ({ page }) => {
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user, { next: "/dev/ui" });
-  await expect(page).toHaveURL("/dev/ui", { timeout: 30_000 });
+  await expect(page).toHaveURL("/dev/ui", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
 });
 
 test("sign in ignores a protocol-relative next path", async ({ page }) => {
@@ -95,7 +95,7 @@ test("sign in ignores a protocol-relative next path", async ({ page }) => {
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
@@ -108,7 +108,7 @@ test("sign in ignores a next path that hides a host behind a tab", async ({ page
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 
   await page.goto("/sign-in?next=/%09/example.org");
@@ -125,7 +125,7 @@ test("sign in ignores a next path that resolves to a protocol-relative URL", asy
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 
   await page.goto("/sign-in?next=/.//example.org");
@@ -142,7 +142,7 @@ test("sign in ignores an absolute next URL", async ({ page }) => {
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 

@@ -52,7 +52,8 @@ async function main(): Promise<number> {
     if ((await run("next", ["build"], env)) !== 0) return 1;
     if (interrupted) return 130;
     console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
-    return await run("playwright", ["test"], env);
+    const playwrightArgs = ["test", ...process.argv.slice(2)];
+    return await run("playwright", playwrightArgs, env);
   } finally {
     await postgres.stop();
   }
