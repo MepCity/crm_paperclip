@@ -139,6 +139,12 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   await footer.click();
   await expect(demo.getByRole("status")).toContainText('"value":"sample"');
   await expect(demo.getByRole("status")).toContainText('"value":true');
-  await expectNoA11yViolations(page);
+  // The closed-popup scan includes the other gallery demos. Their empty-list
+  // #8B9AB9 and empty-selection #8C91AB inks on white retain the measured
+  // contrast exceptions from ADR 0003 §8, as in the gallery smoke test.
+  // Only those text elements are excluded; filter controls remain included.
+  await expectNoA11yViolations(page, {
+    exclude: ["[data-part=empty]", "[data-part=empty-value]"],
+  });
   expect(errors).toEqual([]);
 });

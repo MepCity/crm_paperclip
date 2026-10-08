@@ -25,6 +25,9 @@ const expectWithinOnePx = (actual: number, expected: number) => {
 };
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
+  // Detailed geometry checks plus the growing gallery's accessibility scan
+  // use the gallery smoke test budget; keep every measured threshold intact.
+  test.setTimeout(180_000);
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "filter panel", exact: true });
   const panel = demo.getByRole("region", { name: "Filter Leads by" });
