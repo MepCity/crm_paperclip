@@ -1,47 +1,43 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog, DialogTrigger } from "@/components/ui/dialog";
-import type { ActionState } from "@/lib/action";
+import type { ActionState, ReportError } from "@/lib/action";
 
 export function RemoveMemberButton({
   name,
   onRemove,
+  report,
 }: {
   name: string;
   onRemove: () => Promise<ActionState>;
+  report: ReportError;
 }) {
   const router = useRouter();
-  const [message, setMessage] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col gap-2">
-      {message ? <Alert variant="danger">{message}</Alert> : null}
-      <DialogTrigger>
-        <Button variant="ghost" size="sm" aria-label={`Remove ${name}`}>
-          Remove
-        </Button>
-        <ConfirmDialog
-          title={`Remove ${name}`}
-          confirmLabel="Remove"
-          cancelLabel="Cancel"
-          variant="danger"
-          onConfirm={async () => {
-            const result = await onRemove();
-            if (result.status === "error") {
-              setMessage(result.message);
-              return;
-            }
-            setMessage(null);
-            router.refresh();
-          }}
-        >
-          {name} will lose access to this organization.
-        </ConfirmDialog>
-      </DialogTrigger>
-    </div>
+    <DialogTrigger>
+      <Button variant="ghost" size="sm" aria-label={`Remove ${name}`}>
+        Remove
+      </Button>
+      <ConfirmDialog
+        title={`Remove ${name}`}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={async () => {
+          report(null);
+          const result = await onRemove();
+          if (result.status === "error") {
+            report(result.message);
+            return;
+          }
+          router.refresh();
+        }}
+      >
+        {name} will lose access to this organization.
+      </ConfirmDialog>
+    </DialogTrigger>
   );
 }

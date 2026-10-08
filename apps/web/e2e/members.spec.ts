@@ -90,18 +90,17 @@ test("two people join through an invitation and manage membership", async ({ pag
     await expect(page.getByRole("button", { name: "Invite member" })).toHaveCount(0);
 
     await bea.reload();
+    const warnings = bea.getByRole("main").getByRole("alert");
     await bea.getByRole("button", { name: "Role for Bea Member" }).click();
     await bea.getByRole("option", { name: "Member", exact: true }).click();
-    await expect(bea.getByRole("main").getByRole("alert")).toContainText(
-      "An organization must have an admin.",
-    );
+    await expect(warnings).toHaveCount(1);
+    await expect(warnings).toContainText("An organization must have an admin.");
     await expect(bea.getByRole("button", { name: "Role for Bea Member" })).toContainText("Admin");
 
     await bea.getByRole("button", { name: "Remove Bea Member" }).click();
     await bea.getByRole("alertdialog").getByRole("button", { name: "Remove" }).click();
-    await expect(bea.getByRole("main").getByRole("alert").last()).toContainText(
-      "An organization must have an admin.",
-    );
+    await expect(warnings).toHaveCount(1);
+    await expect(warnings).toContainText("An organization must have an admin.");
     await expect(bea.getByRole("row").filter({ hasText: beaEmail })).toBeVisible();
 
     await bea.getByRole("button", { name: "Remove Ada Admin" }).click();

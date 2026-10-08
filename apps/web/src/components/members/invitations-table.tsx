@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type ActionState, initialActionState } from "@/lib/action";
+import { type ActionState, initialActionState, type ReportError } from "@/lib/action";
 import { type MemberRole, roleLabel } from "./roles";
 
 export type InvitationRow = {
@@ -37,12 +37,19 @@ export function InvitationsTable({
   invitations: readonly InvitationRow[];
   onRevoke: RevokeInvitationAction;
 }) {
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <Card className="mt-8">
       <CardHeader>
         <CardTitle>Pending invitations</CardTitle>
       </CardHeader>
       <CardContent>
+        {error ? (
+          <div className="mb-4">
+            <Alert variant="danger">{error}</Alert>
+          </div>
+        ) : null}
         <Table>
           <TableHeader>
             <TableRow>
@@ -54,7 +61,12 @@ export function InvitationsTable({
           </TableHeader>
           <TableBody columnCount={4} emptyMessage="No pending invitations.">
             {invitations.map((invitation) => (
-              <InvitationRowView key={invitation.id} invitation={invitation} onRevoke={onRevoke} />
+              <InvitationRowView
+                key={invitation.id}
+                invitation={invitation}
+                onRevoke={onRevoke}
+                report={setError}
+              />
             ))}
           </TableBody>
         </Table>
@@ -66,12 +78,13 @@ export function InvitationsTable({
 function InvitationRowView({
   invitation,
   onRevoke,
+  report,
 }: {
   invitation: InvitationRow;
   onRevoke: RevokeInvitationAction;
+  report: ReportError;
 }) {
   const router = useRouter();
-  const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   return (
@@ -82,32 +95,29 @@ function InvitationRowView({
       </TableCell>
       <TableCell>{invitation.expiresAt}</TableCell>
       <TableCell>
-        <div className="flex flex-col gap-2">
-          {message ? <Alert variant="danger">{message}</Alert> : null}
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Revoke ${invitation.email}`}
-            isPending={pending}
-            onPress={() => {
-              setPending(true);
-              void onRevoke(invitation.id, initialActionState, new FormData()).then(
-                (result) => {
-                  setPending(false);
-                  if (result.status === "error") {
-                    setMessage(result.message);
-                    return;
-                  }
-                  setMessage(null);
-                  router.refresh();
-                },
-                () => setPending(false),
-              );
-            }}
-          >
-            Revoke
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Revoke ${invitation.email}`}
+          isPending={pending}
+          onPress={() => {
+            setPending(true);
+            report(null);
+            void onRevoke(invitation.id, initialActionState, new FormData()).then(
+              (result) => {
+                setPending(false);
+                if (result.status === "error") {
+                  report(result.message);
+                  return;
+                }
+                router.refresh();
+              },
+              () => setPending(false),
+            );
+          }}
+        >
+          Revoke
+        </Button>
       </TableCell>
     </TableRow>
   );

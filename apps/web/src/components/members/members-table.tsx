@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -42,11 +44,17 @@ export function MembersTable({
   onChangeRole?: ChangeRoleAction;
   onRemove?: RemoveMemberAction;
 }) {
+  const [error, setError] = useState<string | null>(null);
   const columnCount = canManage ? 5 : 4;
 
   return (
     <Card>
       <CardContent>
+        {error ? (
+          <div className="mb-4">
+            <Alert variant="danger">{error}</Alert>
+          </div>
+        ) : null}
         <Table>
           <TableHeader>
             <TableRow>
@@ -79,9 +87,11 @@ export function MembersTable({
                         name={member.name}
                         role={member.role}
                         onChangeRole={onChangeRole}
+                        report={setError}
                       />
                       <RemoveMemberButton
                         name={member.name}
+                        report={setError}
                         onRemove={() => onRemove(member.userId, initialActionState, new FormData())}
                       />
                     </div>
