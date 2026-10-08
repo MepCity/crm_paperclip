@@ -117,3 +117,31 @@ export function useDeleteRecords(module: ModuleApiName) {
     },
   });
 }
+
+export function useMassUpdate(module: ModuleApiName) {
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, input }: { ids: readonly RecordId[]; input: RecordInput }) =>
+      service.massUpdate(module, ids, input),
+    onSuccess: (_result, { ids }) => {
+      invalidateModuleLists(queryClient, module);
+      for (const id of ids)
+        void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, id) });
+    },
+  });
+}
+
+export function useChangeOwner(module: ModuleApiName) {
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, ownerId }: { ids: readonly RecordId[]; ownerId: string }) =>
+      service.changeOwner(module, ids, ownerId),
+    onSuccess: (_result, { ids }) => {
+      invalidateModuleLists(queryClient, module);
+      for (const id of ids)
+        void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, id) });
+    },
+  });
+}

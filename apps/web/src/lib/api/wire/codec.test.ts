@@ -37,6 +37,7 @@ const field = (apiName: string, dataType: FieldDataType): FieldDefinition => ({
   dataType,
   required: false,
   readOnly: false,
+  massUpdate: false,
   unique: false,
   views: { view: true, create: false, edit: true, quickCreate: false },
 });
@@ -246,7 +247,7 @@ describe("wire codec", () => {
         expect(error).not.toBeInstanceOf(ValidationError);
         expect(encodeError(error)).toMatchObject({
           status: 500,
-          body: { code: "internal_error", details: {}, status: 500 },
+          body: { code: "INTERNAL_ERROR", details: {}, status: "error" },
         });
       }
     }
@@ -353,6 +354,7 @@ describe("wire codec", () => {
       data_type: "picklist",
       system_mandatory: true,
       read_only: true,
+      mass_update: false,
       unique: { enforced: true },
       view_type: { view: true, create: false, edit: true, quick_create: false },
       length: 20,
