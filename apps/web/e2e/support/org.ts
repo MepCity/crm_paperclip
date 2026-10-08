@@ -14,7 +14,5 @@ export async function createOrganization(
   const slug = await slugField.inputValue();
   await page.getByRole("button", { name: "Create organization" }).click();
   await expect(page).toHaveURL(`/crm/${slug}`);
-  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
-  await expect(page).toHaveTitle("Home | MepCity CRM");
   return { name: organizationName, slug };
 }

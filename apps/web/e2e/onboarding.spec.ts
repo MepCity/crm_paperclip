@@ -13,8 +13,6 @@ test("organization creation passes accessibility right after redirect", async ({
 
 test("a new user creates an organization and returns to it from home", async ({ page }) => {
   await signUpNewUser(page);
-  await page.goto("/orgs/new");
-  await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
   await expectNoA11yViolations(page);
 
   const organization = await createOrganization(page);

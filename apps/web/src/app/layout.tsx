@@ -6,10 +6,7 @@ import { UiProvider } from "../components/ui/ui-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: {
-    default: APP_NAME,
-    template: `%s | ${APP_NAME}`,
-  },
+  title: APP_NAME,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
