@@ -403,6 +403,54 @@
   --size-detail-timeline-event-row-padding-bottom: 18px;
   --size-detail-timeline-day-gap: 16px;
 
+  /* Select User dialog — record-detail.md › Layout › Visual layout › Select User dialog */
+  --size-select-user-panel-max-height: 100dvh;
+  --size-select-user-summary-text-offset: 20px;
+  --size-select-user-summary-label-margin-top: 5px;
+  --size-select-user-dialog-width: 882px;
+  --radius-select-user-dialog-bottom: 12px;
+  --size-select-user-dialog-inset: 31px;
+  --size-select-user-title-cap-top: 29px;
+  --size-select-user-title-cap-inset: 3px;
+  --size-select-user-search-top: 64px;
+  --size-select-user-search-width: 300px;
+  --size-select-user-search-height: 34px;
+  --size-select-user-table-top: 119px;
+  --size-select-user-table-header-band: 32px;
+  --size-select-user-table-header-cap-adjust: 2px;
+  --size-select-user-table-header-rule: 2px;
+  --size-select-user-table-row-height: 38px;
+  --size-select-user-table-row-divider: 1px;
+  --size-select-user-table-footer-gap: 20px;
+  --size-select-user-dialog-bottom-padding: 30.5px;
+  --size-select-user-done-height: 32px;
+  --size-select-user-done-width: 63.5px;
+  --size-select-user-cancel-width: 74.5px;
+  --size-select-user-footer-gap: 10.5px;
+  --size-select-user-summary-search-gap: 16px;
+  --size-select-user-summary-label-width: 92px;
+  --size-select-user-summary-label-avatar-gap: 8px;
+  --size-select-user-summary-avatar-name-gap: 11px;
+  --size-select-user-avatar: 30px;
+  --size-select-user-radio: 15px;
+  --size-select-user-radio-ring-selected: 4px;
+  --size-select-user-radio-ring-unselected: 2px;
+  --size-select-user-radio-centre: 7px;
+  --color-select-user-table-border: #d9e0eb;
+  --color-select-user-row-divider: #eef1f7;
+  --size-select-user-table-radio-inset: 20px;
+  --size-select-user-table-radio-row-inset: 13px;
+  --size-select-user-table-radio-column: 36px;
+  --size-select-user-table-avatar-column: 60px;
+  --size-select-user-table-name-column: 141.5px;
+  --size-select-user-table-role-column: 164.5px;
+  --size-select-user-table-email-column: 253px;
+  --size-select-user-table-name-header-inset: 31px;
+  --size-select-user-table-avatar-inset: 30px;
+  --size-select-user-table-name-text-inset: 11px;
+  /* Frame outer height minus row sum; record-detail.md › User table › y 119–270.5 with three rows. */
+  --size-select-user-table-frame-adjust: 1.5px;
+
   /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
   --size-form-strip-height: 57px;
   --size-form-strip-padding-end: 8px;

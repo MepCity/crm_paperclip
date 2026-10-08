@@ -51,12 +51,33 @@ spans the left column width. Rows inside the group use the narrower
 `--size-form-input-group-width` control column while keeping the same label
 geometry as the main grid.
 
+## Select User dialog (`select-user-dialog.tsx`)
+
+Presentation-only owner picker opened from the Lead Owner field icon. Data and copy
+arrive through props; no API or `@crm/core` runtime imports.
+
+### Interim: search filtering
+
+Search keeps users whose **name** or **email** contains the query as a
+case-insensitive substring. The reference capture showed an empty search field with
+no typed filter term, so exact reference behaviour for partial matches is unknown
+until a later capture confirms it.
+
+### Interim: dismiss and growth
+
+Backdrop click does not close the dialog (only **Cancel** and **Escape**). With
+more than three rows the dialog grows with the table; if the table would exceed the
+viewport, the table body scrolls inside its frame (not observed in the reference capture).
+
 ## Demo
 
 `/dev/ui` › `record-form-layout` shows a synthetic Create Lead layout with long
 labels, Address Information (bordered group), Description Information, and a
 scroll host to exercise the sticky strip. Layout styles live in `form.css`;
 demo-only control chrome lives in `record-form-layout.demo.css`.
+
+`/dev/ui` › `select-user-dialog` opens the owner picker with three-user and
+five-user synthetic lists.
 
 ## Field inputs
 
