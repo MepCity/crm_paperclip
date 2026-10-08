@@ -124,9 +124,12 @@ These points are evidence, separate from the interim policies below.
   every definition in `research/specs/list-views.md`. MEP-71.
 - Applied order is `query.sort`, otherwise the view's `sort`, otherwise record id
   descending (`{ field: "id", order: "desc" }`). Identifiers are decimal text and
-  compare as `BigInt`. The id-descending default was observed on the default view
-  when the list request carried no sort parameter (`info.sort_by` `id`,
-  `info.sort_order` `desc`). The same rule is an assumption for the other 13 views.
+  compare as `BigInt`. The id-descending default was observed on the five views
+  that held records when captured (All Leads, Mailing Labels, My Leads, Open Leads,
+  Unread Leads): no list request carried a sort parameter and each response
+  reported `info.sort_by` `id`, `info.sort_order` `desc`. The other nine views were
+  empty and answer 204 with no body, so the same rule is an assumption for them.
+  See `research/specs/list-views.md` › Saved and response sort evidence.
   MEP-71.
 
 ## Interim fixture policies (not reference parity)

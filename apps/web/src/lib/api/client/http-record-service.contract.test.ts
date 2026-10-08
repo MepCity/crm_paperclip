@@ -80,7 +80,7 @@ async function operationApiFetch(
 function operationDeps(ctx: OrgContext, options?: { now?: () => Date }): OperationDeps {
   return {
     records: createFixtureRecordService(ctx, options),
-    members: [
+    members: async () => [
       {
         userId: ctx.userId,
         name: "Contract User",
