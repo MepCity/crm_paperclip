@@ -6,3 +6,5 @@ export const dynamic = "force-dynamic";
 export const GET = operationRoute(operations.record);
 
 export const PUT = operationRoute(operations.update);
+
+export const DELETE = operationRoute(operations.delete);
