@@ -85,6 +85,7 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         expect(field.label).not.toBe("");
         expect(typeof field.required).toBe("boolean");
         expect(typeof field.readOnly).toBe("boolean");
+        expect(typeof field.massUpdate).toBe("boolean");
         expect(Object.keys(field.views).sort()).toEqual(["create", "edit", "quickCreate", "view"]);
         for (const value of Object.values(field.views)) expect(typeof value).toBe("boolean");
         expect(field.unique).toBe(false);
@@ -271,6 +272,8 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         service.create("Unknown", input()),
         service.update("Unknown", "missing", {}),
         service.delete("Unknown", []),
+        service.massUpdate("Unknown", ["missing"], { Company: "Example" }),
+        service.changeOwner("Unknown", ["missing"], ctx.userId),
       ])
         await expect(request).rejects.toBeInstanceOf(NotFoundError);
     });
@@ -365,6 +368,96 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       for (const name of ["Created_By", "Modified_By"])
         await validation(service.update("Leads", created.id, { [name]: ctx.userId }), name);
     });
+    it("mass updates one eligible field and applies ordinary update validation", async () => {
+      const first = await service.create("Leads", input());
+      const second = await service.create("Leads", input());
+      const ids = [second.id, first.id];
+      await service.massUpdate("Leads", ids, { Company: "Mass Updated" });
+      for (const id of ids)
+        expect((await service.get("Leads", id)).fields.Company).toBe("Mass Updated");
+      await validation(service.massUpdate("Leads", ids, {}), "data");
+      await validation(
+        service.massUpdate("Leads", ids, { Company: "Example", Phone: "123" }),
+        "data",
+      );
+      for (const field of metadata.fields.filter((field) => !field.massUpdate))
+        await validation(
+          service.massUpdate("Leads", ids, { [field.apiName]: null }),
+          field.apiName,
+        );
+      await validation(
+        service.massUpdate("Leads", ids, { Unknown_Field: "Example" }),
+        "Unknown_Field",
+      );
+      for (const value of [null, "", " ", 42, "x".repeat(201)])
+        await validation(service.massUpdate("Leads", ids, { Company: value }), "Company");
+      await validation(
+        service.massUpdate("Leads", ids, { Lead_Status: "Unknown Option" }),
+        "Lead_Status",
+      );
+      await validation(
+        service.massUpdate("Leads", ids, { No_of_Employees: 1.5 }),
+        "No_of_Employees",
+      );
+      await service.massUpdate("Leads", ids, { Phone: "" });
+      for (const id of ids) expect((await service.get("Leads", id)).fields.Phone).toBeNull();
+      expect((await service.get("Leads", first.id)).fields.Company).toBe("Mass Updated");
+    });
+
+    it("changes ownership only to an active organization member", async () => {
+      await makeService({ ...ctx, userId: "batch-owner" });
+      const first = await service.create("Leads", input());
+      const second = await service.create("Leads", input());
+      await service.changeOwner("Leads", [first.id, second.id], "batch-owner");
+      for (const id of [first.id, second.id]) {
+        const record = await service.get("Leads", id);
+        expect(record.fields.Owner).toBe("batch-owner");
+        expect(record.fields.Modified_By).toBe(ctx.userId);
+        expect(record.fields.Created_By).toBe(ctx.userId);
+      }
+      for (const owner of ["unknown-user", ""])
+        await validation(service.changeOwner("Leads", [first.id, second.id], owner), "Owner");
+      expect((await service.get("Leads", first.id)).fields.Owner).toBe("batch-owner");
+    });
+
+    it("validates all batch targets before changing any record", async () => {
+      const first = await service.create("Leads", input());
+      const foreign = await makeService(context());
+      await foreign.create("Leads", input());
+      const foreignRecord = await foreign.create("Leads", input());
+      for (const missing of ["missing", foreignRecord.id]) {
+        const ids = [first.id, missing];
+        for (const run of [
+          () => service.massUpdate("Leads", ids, { Company: "Must Not Persist" }),
+          () => service.changeOwner("Leads", ids, ctx.userId),
+          () => service.delete("Leads", ids),
+        ]) {
+          await expect(run()).rejects.toBeInstanceOf(NotFoundError);
+          expect(await service.get("Leads", first.id)).toEqual(first);
+        }
+      }
+      expect(await foreign.get("Leads", foreignRecord.id)).toEqual(foreignRecord);
+    });
+
+    it("enforces 1–500 IDs for every batch operation, including deletion", async () => {
+      const record = await service.create("Leads", input());
+      for (const ids of [[], Array.from({ length: 501 }, () => record.id)]) {
+        await validation(service.massUpdate("Leads", ids, { Company: "Rejected" }), "ids");
+        await validation(service.changeOwner("Leads", ids, ctx.userId), "ids");
+        await validation(service.delete("Leads", ids), "ids");
+        expect(await service.get("Leads", record.id)).toEqual(record);
+      }
+      const records = await Promise.all(
+        Array.from({ length: 500 }, () => service.create("Leads", input())),
+      );
+      const ids = records.map((row) => row.id);
+      await service.massUpdate("Leads", ids, { Company: "Boundary" });
+      await service.changeOwner("Leads", ids, ctx.userId);
+      expect((await service.get("Leads", ids[499] as string)).fields.Company).toBe("Boundary");
+      await service.delete("Leads", ids);
+      await expect(service.get("Leads", ids[0] as string)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
     it("deletes records and updates count", async () => {
       const created = await service.create("Leads", forView(defaultView));
       const before = await service.count("Leads", { viewId: defaultView.id });

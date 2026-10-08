@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Users,
   X,
 } from "lucide-react";
 import type { SVGProps } from "react";
@@ -202,6 +203,7 @@ export const Icons = {
   showMenu: PanelLeftOpen,
   plus: Plus,
   settings: Settings,
+  users: Users,
   spinner: Loader2,
   error: AlertCircle,
   success: CheckCircle2,

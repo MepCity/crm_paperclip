@@ -15,6 +15,7 @@ export type WireField = {
   data_type: FieldDataType;
   system_mandatory: boolean;
   read_only: boolean;
+  mass_update: boolean;
   unique: { enforced?: boolean };
   view_type: { view: boolean; create: boolean; edit: boolean; quick_create: boolean };
   length?: number;
@@ -55,7 +56,14 @@ export type WireInfo = {
 };
 export type WireUser = { id: string; full_name: string; email: string };
 export type WireWriteBody = { data: readonly Record<string, WireValue>[] };
-export type WireWriteResult = { data: readonly { id: string }[] };
+export type WireWriteResult = {
+  data: readonly {
+    code: "SUCCESS";
+    details: { id: string } & Record<string, WireValue>;
+    message: string;
+    status: "success";
+  }[];
+};
 
 export type WireViewSummary = Pick<WireView, "id" | "name" | "system_defined" | "default">;
 export type WirePageInfo = Pick<WireInfo, "per_page" | "count" | "page" | "more_records">;

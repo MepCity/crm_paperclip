@@ -115,6 +115,7 @@ export function encodeField(field: FieldDefinition): WireField {
     data_type: field.dataType,
     system_mandatory: field.required,
     read_only: field.readOnly,
+    mass_update: field.massUpdate,
     unique: field.unique ? { enforced: true } : {},
     view_type: {
       view: field.views.view,
@@ -143,6 +144,7 @@ export function decodeField(field: WireField): FieldDefinition {
     dataType: field.data_type,
     required: field.system_mandatory,
     readOnly: field.read_only,
+    massUpdate: field.mass_update,
     unique: field.unique.enforced === true,
     views: {
       view: field.view_type.view,
@@ -334,4 +336,30 @@ export function decodeList(
     moreRecords: info.more_records,
     sort: { field: info.sort_by, order: info.sort_order },
   };
+}
+
+export function encodeWriteResult(
+  ids: readonly string[],
+  message: string,
+): import("./types").WireWriteResult {
+  return {
+    data: ids.map((id) => ({ code: "SUCCESS", details: { id }, message, status: "success" })),
+  };
+}
+
+export function encodeRecordWriteResult(
+  record: RecordData,
+  metadata: ModuleMetadata,
+  members: readonly WireMember[],
+  message: string,
+): import("./types").WireWriteResult {
+  const row = encodeRecord(record, metadata, members);
+  const result = encodeWriteResult([record.id], message);
+  const entry = result.data[0];
+  if (!entry) throw new Error("Missing write result.");
+  for (const name of ["Modified_Time", "Modified_By", "Created_Time", "Created_By"]) {
+    const value = row[name];
+    if (value !== undefined) entry.details[name] = value;
+  }
+  return result;
 }

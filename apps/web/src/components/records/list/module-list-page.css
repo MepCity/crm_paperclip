@@ -1,0 +1,53 @@
+/* Measured page coordinates: research/specs/list-views.md › Visual layout */
+.module-list-page {
+  --list-tab-inset-start: 12px;
+  --list-content-inset-start: 15px;
+  --list-toolbar-inset-end: 73px;
+  --list-toolbar-body-gap: 15px;
+
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  padding-bottom: 13px;
+  background-color: var(--color-bg);
+}
+
+.module-list-page > [data-view-tab-strip] {
+  padding-inline-start: var(--list-tab-inset-start);
+}
+
+.module-list-page > [data-list-toolbar] {
+  padding-inline-start: var(--list-content-inset-start);
+  padding-inline-end: var(--list-toolbar-inset-end);
+}
+
+.module-list-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  gap: var(--size-list-filter-gap);
+  margin-top: var(--list-toolbar-body-gap);
+  padding-inline: var(--list-content-inset-start) var(--size-list-inset);
+}
+
+.module-list-table-host {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.module-list-table-host [data-part="card"] {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.module-list-table-host [data-part="card"] > section {
+  flex: 1;
+  min-height: 0;
+}

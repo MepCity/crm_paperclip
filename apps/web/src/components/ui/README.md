@@ -217,6 +217,17 @@ what the "no colour constants" rule forbids.
 | `--size-list-toolbar-height` | `47px` | list-views.md › Toolbar › "About 47 px high below tab strip" | from spec |
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
+| `--size-filter-editor-inset` | `23px` | list-views.md › Visual layout › Checked filter checkbox / Filter operator dropdown: x 354 → 377 | from spec |
+| `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
+| `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
+| `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
+| `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
+| `--size-filter-operator-list-height` | `220px` | list-views.md › Visual layout › Open operator list, scrollable dropdown body | from spec |
+| `--size-filter-operator-row-height` | `27px` | list-views.md › Visual layout › Open operator list, item rows | from spec |
+| `--size-filter-operator-list-offset` | `1px` | list-views.md › Visual layout › Filter operator dropdown / Open operator list: y 559 → 560 | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
 | `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
@@ -623,3 +634,17 @@ Shared tokens used here: panel border, surface, background, text, strong text, b
 border, primary gradient start, surface-active rail selection, surface-hover menu row,
 menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
 Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.
+
+## Field filter primitive additions
+
+- `Checkbox.variant="filter"` uses the measured 15px, 2px-border checked box;
+  other checkbox variants keep their current sizing.
+- `Select.variant="filter"` and `SelectItem.variant="filter"` provide a compact
+  selector and measured operator list; default Select stays unchanged.
+- `MultiSelect({ label, placeholder, options, value, onChange })` searches local
+  `{ id, label }` options and emits multiple IDs. Arrow keys navigate the list,
+  Space toggles an option, Escape dismisses, and selected IDs survive search.
+  It loads no data. Its open appearance is Interim, using existing popup tokens.
+
+These compact controls use the neighboring Status stage value typography role
+(`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
