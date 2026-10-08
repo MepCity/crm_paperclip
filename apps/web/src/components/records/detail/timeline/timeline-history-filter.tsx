@@ -35,6 +35,7 @@ interface FilterFieldProps {
 
 function FilterField({ label, tone, triggerLabel, menu }: FilterFieldProps) {
   const labelId = useId();
+  const valueId = useId();
   const [open, setOpen] = useState(false);
   return (
     <div className="timeline-history-filter-field">
@@ -43,8 +44,11 @@ function FilterField({ label, tone, triggerLabel, menu }: FilterFieldProps) {
       </p>
       <MenuTrigger isOpen={open} onOpenChange={setOpen}>
         <div className="timeline-filter-selector-wrap" data-tone={tone}>
-          <Button className="timeline-filter-selector" aria-labelledby={labelId}>
-            <span className="timeline-filter-selector-label">{triggerLabel}</span>
+          {/* The visible value is part of the name: "Modules" alone says which field, not what it holds. */}
+          <Button className="timeline-filter-selector" aria-labelledby={`${labelId} ${valueId}`}>
+            <span id={valueId} className="timeline-filter-selector-label">
+              {triggerLabel}
+            </span>
           </Button>
           <span className="timeline-filter-caret" aria-hidden="true" />
         </div>

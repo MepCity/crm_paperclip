@@ -27,6 +27,7 @@ const sourceOptions: TimelineFilterOption[] = [
   { id: "import", label: "Import" },
 ];
 
+// Main sample: five events spread over two days (3 on 4 Oct, 2 on 3 Oct at UTC+3).
 const events: TimelineEvent[] = [
   {
     id: "e1",
@@ -63,11 +64,22 @@ const events: TimelineEvent[] = [
     title: "Task completed",
     actorName: "Sample Reviewer",
   },
+];
+
+// Kept apart from the main sample: 22:30Z is still 4 Oct in UTC but already 5 Oct at UTC+3.
+const dayBoundaryEvents: TimelineEvent[] = [
   {
-    id: "e6",
+    id: "b1",
+    at: "2026-10-04T20:05:00.000Z",
+    kind: "task",
+    title: "Logged before local midnight",
+    actorName: "Sample Owner",
+  },
+  {
+    id: "b2",
     at: "2026-10-04T22:30:00.000Z",
     kind: "task",
-    title: "Late night update",
+    title: "Logged after local midnight",
     actorName: "Sample Owner",
   },
 ];
@@ -112,6 +124,21 @@ export default function TimelineHistoryDemo() {
             events={events}
             format={IST_FORMAT}
             initialFilterExpanded={true}
+            {...filterLabels}
+          />
+        </TimelineSurface>
+      </section>
+      <section
+        data-timeline-demo="day-boundary"
+        aria-label="Timeline History across the local day boundary"
+      >
+        <TimelineSurface subtabs={subtabs} activeSubtabId="history">
+          <TimelineHistory
+            heading="Timeline History"
+            filterButtonLabel="History filter"
+            events={dayBoundaryEvents}
+            format={IST_FORMAT}
+            initialFilterExpanded={false}
             {...filterLabels}
           />
         </TimelineSurface>

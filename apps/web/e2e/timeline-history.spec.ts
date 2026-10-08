@@ -100,7 +100,8 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
   const modulesLabelBox = await surfaceOffset(surface, modulesLabelEl);
   expect(Math.abs(modulesLabelBox.y - panelBox.y - 15)).toBeLessThanOrEqual(1);
 
-  const modules = open.getByRole("button", { name: "Modules" });
+  // Each selector's accessible name pairs its visible label with the value it holds.
+  const modules = open.getByRole("button", { name: "Modules All Modules", exact: true });
   const modulesBox = await surfaceOffset(surface, modules);
   expect(Math.abs(modulesBox.x - 46)).toBeLessThanOrEqual(1);
   expect(Math.abs(modulesBox.y - panelBox.y - 38)).toBeLessThanOrEqual(1);
@@ -118,15 +119,15 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
     Math.abs(modulesBox.y - (modulesLabelBox.y + modulesLabelBox.height + 4)),
   ).toBeLessThanOrEqual(1);
 
-  const users = open.getByRole("button", { name: "Users" });
+  const users = open.getByRole("button", { name: "Users All Users", exact: true });
   const usersBox = await surfaceOffset(surface, users);
   expect(Math.abs(usersBox.x - (modulesBox.x + modulesBox.width + 8))).toBeLessThanOrEqual(1);
   await expect(users).toHaveCSS("color", await colorVar(page, "--color-text-placeholder"));
 
-  const time = open.getByRole("button", { name: "Time" });
+  const time = open.getByRole("button", { name: "Time Any Time", exact: true });
   await expect(time).toHaveCSS("color", await colorVar(page, "--color-text"));
 
-  const sources = open.getByRole("button", { name: "Sources" });
+  const sources = open.getByRole("button", { name: "Sources All Sources", exact: true });
   const sourcesBox = await surfaceOffset(surface, sources);
   expect(Math.abs(sourcesBox.y - (modulesBox.y + modulesBox.height + 36))).toBeLessThanOrEqual(1);
   await expect(sources).toHaveCSS("color", await colorVar(page, "--color-text-empty"));
@@ -256,4 +257,47 @@ test("timeline history matches scoped Visual layout measurements", async ({ page
     .first()
     .evaluate((element) => getComputedStyle(element, "::before").height);
   expect(px(railConnectorHeight)).toBeCloseTo(25, 0);
+});
+
+test("selector accessible name follows the selection", async ({ page }) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "timeline history" });
+  const open = demo.locator('[data-timeline-demo="filter-open"]');
+  const modules = open.getByRole("button", { name: "Modules All Modules", exact: true });
+  await modules.scrollIntoViewIfNeeded();
+  await expect(modules).toBeVisible();
+
+  // The open option list is modal, so its trigger leaves the accessibility tree until it closes.
+  // Rows are toggled on their label: the checkbox input sits under the visual box.
+  await modules.click();
+  await page.getByRole("dialog").getByText("Notes", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  const selected = open.getByRole("button", { name: "Modules Notes", exact: true });
+  await expect(selected).toBeVisible();
+
+  await selected.click();
+  await page.getByRole("dialog").getByText("Tasks", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(
+    open.getByRole("button", { name: "Modules Notes, Tasks", exact: true }),
+  ).toBeVisible();
+});
+
+test("the day-boundary demo splits 22:30Z into the next local day", async ({ page }) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "timeline history" });
+  const boundary = demo.locator('[data-timeline-demo="day-boundary"]');
+  const days = boundary.locator(".timeline-event-day");
+  await expect(days).toHaveCount(2);
+  await expect(days.nth(0).locator(".timeline-event-title")).toHaveText([
+    "Logged after local midnight",
+  ]);
+  await expect(days.nth(1).locator(".timeline-event-title")).toHaveText([
+    "Logged before local midnight",
+  ]);
+  const badges = boundary.locator(".timeline-event-date-badge");
+  const newest = await badges.nth(0).textContent();
+  const prior = await badges.nth(1).textContent();
+  expect(newest).toBe("Oct 5, 2026");
+  expect(prior).toBe("Oct 4, 2026");
 });
