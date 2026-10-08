@@ -136,12 +136,8 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLinkOnPage1 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    const firstLink = page.locator("table tbody tr").first().getByRole("link").first();
+    const firstLinkOnPage1 = await firstLink.innerText();
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
@@ -150,24 +146,18 @@ test.describe("Leads list page", () => {
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkOnPage2 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    // The list keeps the previous page's rows on screen while the next page loads, so
+    // the row count alone never proves the swap. Wait for the content, then read it.
+    await expect.poll(() => firstLink.innerText()).not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstLink.innerText();
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
     await page.getByLabel("Previous").click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkBack = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    await expect.poll(() => firstLink.innerText()).toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstLink.innerText();
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
