@@ -12,6 +12,7 @@ import {
   useModule,
   useRecordCount,
   useRecordList,
+  useRefreshModuleListData,
   useUsers,
   useView,
   useViews,
@@ -93,6 +94,7 @@ function ModuleListScreenLoaded({
   viewId,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
   const router = useRouter();
+  const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
   const searchState = useMemo(() => parseListSearchParams(searchParams), [searchParams]);
   const [filterOpen, setFilterOpen] = useState(true);
@@ -159,7 +161,7 @@ function ModuleListScreenLoaded({
   }
 
   function refreshView() {
-    router.refresh();
+    refreshModuleListData();
   }
 
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
@@ -175,7 +177,13 @@ function ModuleListScreenLoaded({
   if (viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
     throw viewQuery.error;
   }
+  if (list.isError && list.error instanceof NotFoundError) {
+    return <ListNotFound />;
+  }
   if (list.isError) throw list.error;
+  if (count.isError && count.error instanceof NotFoundError) {
+    return <ListNotFound />;
+  }
   if (count.isError) throw count.error;
   if (users.isError) throw users.error;
   if (moduleQuery.isError) throw moduleQuery.error;

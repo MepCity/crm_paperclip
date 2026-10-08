@@ -11,7 +11,7 @@ import type {
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { OrgMember } from "./http-record-service";
 import { useClientRecordService } from "./provider";
-import { apiKeys } from "./query-keys";
+import { apiKeys, countQueriesPrefix, listQueriesPrefix } from "./query-keys";
 
 export function useModule(module: ModuleApiName) {
   const service = useClientRecordService();
@@ -85,9 +85,29 @@ function invalidateModuleLists(
   module: ModuleApiName,
   recordId?: RecordId,
 ) {
-  void queryClient.invalidateQueries({ queryKey: [...apiKeys.module(module), "list"] });
-  void queryClient.invalidateQueries({ queryKey: [...apiKeys.module(module), "count"] });
+  void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(module) });
+  void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(module) });
   if (recordId) void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, recordId) });
+}
+
+function isModuleListOrCountQuery(queryKey: readonly unknown[], module: ModuleApiName): boolean {
+  return (
+    queryKey.length >= 4 &&
+    queryKey[0] === "crm" &&
+    queryKey[1] === "module" &&
+    queryKey[2] === module &&
+    (queryKey[3] === "list" || queryKey[3] === "count")
+  );
+}
+
+/** Re-requests open list and count queries for a module; does not reload module metadata. */
+export function useRefreshModuleListData(module: ModuleApiName) {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({
+      predicate: (query) => isModuleListOrCountQuery(query.queryKey, module),
+    });
+  };
 }
 
 export function useCreateRecord(module: ModuleApiName) {

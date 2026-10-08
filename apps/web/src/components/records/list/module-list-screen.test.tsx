@@ -1,6 +1,7 @@
 import { NotFoundError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
@@ -38,6 +39,7 @@ function wrapper(service: ReturnType<typeof createClientRecordService>) {
 }
 
 afterEach(() => {
+  cleanup();
   navigation.params = new URLSearchParams();
   vi.restoreAllMocks();
 });
@@ -68,6 +70,37 @@ describe("ModuleListScreen", () => {
       expect(screen.getByText(/No Leads found\./)).toBeTruthy();
     });
     expect(screen.getByText("Total Records")).toBeTruthy();
+    expect(document.querySelector("[data-part=total-value]")?.textContent).toBe("0");
+  });
+
+  it("refresh re-fetches list and count without reloading module metadata", async () => {
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const getModuleSpy = vi.spyOn(service, "getModule");
+    const listSpy = vi.spyOn(service, "list");
+    const countSpy = vi.spyOn(service, "count");
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+      expect(getModuleSpy.mock.calls.length).toBeGreaterThan(0);
+    });
+    const listCallsBefore = listSpy.mock.calls.length;
+    const countCallsBefore = countSpy.mock.calls.length;
+    const moduleCallsBefore = getModuleSpy.mock.calls.length;
+    await user.click(screen.getByRole("button", { name: "Refresh Custom View" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.length).toBe(listCallsBefore + 1);
+      expect(countSpy.mock.calls.length).toBe(countCallsBefore + 1);
+    });
+    expect(getModuleSpy.mock.calls.length).toBe(moduleCallsBefore);
+    const lastListQuery = listSpy.mock.calls.at(-1)?.[1];
+    const priorListQuery = listSpy.mock.calls.at(-2)?.[1];
+    expect(lastListQuery).toEqual(priorListQuery);
   });
 
   it("shows not found for an unknown view id", async () => {

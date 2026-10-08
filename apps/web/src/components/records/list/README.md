@@ -283,10 +283,13 @@ Query names mirror the reference list requests: `page` (default 1), `per_page`
 (default 30; allowed 10, 20, 30, 40, 50, 100), `sort_by`, `sort_order`.
 Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
 Invalid values fall back to defaults. Sort Apply and footer Previous / Next
-update the address; Refresh Custom View calls `router.refresh()` on the same URL.
+update the address; Refresh Custom View re-requests the open view's list and
+count queries without changing the URL.
 
 ### Interim
 
+- Refresh re-requests `bulk` and `count` for the open view; the reference's
+  refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.
 - Sort By options are all module fields except the nine non-sortable API names in
   `list-views.md` › Sorting; the reference menu contents were not observed.
