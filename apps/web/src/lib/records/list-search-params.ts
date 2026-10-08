@@ -23,6 +23,12 @@ function parsePositiveInt(raw: string | null, fallback: number): number {
 
 function parsePerPage(raw: string | null): ListPerPage {
   const value = parsePositiveInt(raw, LIST_PER_PAGE_DEFAULT);
+  return normalizePerPage(value);
+}
+
+/** Page sizes outside the six the reference offers fall back to the default. Stored
+ * preferences are only type-checked by the preference helper, so the consumer clamps here. */
+function normalizePerPage(value: number): ListPerPage {
   return (LIST_PER_PAGE_OPTIONS as readonly number[]).includes(value)
     ? (value as ListPerPage)
     : LIST_PER_PAGE_DEFAULT;
@@ -33,12 +39,17 @@ function parseSortOrder(raw: string | null): "asc" | "desc" | null {
   return null;
 }
 
-export function parseListSearchParams(params: URLSearchParams): ListSearchState {
+export function parseListSearchParams(
+  params: URLSearchParams,
+  perPageFallback: number = LIST_PER_PAGE_DEFAULT,
+): ListSearchState {
   const sortBy = params.get("sort_by");
   const sortOrder = parseSortOrder(params.get("sort_order"));
   return {
     page: parsePositiveInt(params.get("page"), LIST_PAGE_DEFAULT),
-    perPage: parsePerPage(params.get("per_page")),
+    perPage: params.has("per_page")
+      ? parsePerPage(params.get("per_page"))
+      : normalizePerPage(perPageFallback),
     sortBy: sortBy && sortBy.length > 0 ? sortBy : null,
     sortOrder: sortBy ? (sortOrder ?? "asc") : null,
   };
