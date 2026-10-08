@@ -920,6 +920,109 @@ The `204` response has no body (`detail-attachments-card`).
 | `users[].zip` | null | `detail-create-owner` |
 | `users[].zuid` | string | `detail-create-owner` |
 
+## Record timeline
+
+- Method and path: `GET /crm/v9/<module>/<recordId>/timelines` (specifically `GET /crm/v9/Leads/<recordId>/timelines` in the observed captures).
+- Evidence: `detail-filter-modules-valid`, `detail-filter-sources-valid`, `detail-filter-time-valid`, `detail-interactions`, `detail-interactions-filter-valid`, `detail-timeline`, `detail-timeline-filter`.
+- Query parameters: `include` (`detail-timeline`), `include_inner_details` (`detail-timeline`), `include_timeline_types` (`detail-timeline`), `per_page` (`detail-timeline`).
+- Request body: none observed (`detail-timeline`). Request content type: not applicable.
+- Observed status: `200` (`detail-timeline`).
+
+### Request details and query parameters
+
+- **HTTP method and endpoint path:** `GET /crm/v9/<module>/<recordId>/timelines` (tested on Leads: `GET /crm/v9/Leads/<recordId>/timelines`).
+- **Query parameters:**
+  - `per_page`: positive integer (`25` in all 7 captures), specifying the page size for timeline history items.
+  - `include`: comma-separated string tokens (`extension,type` in all 7 captures), requesting inclusion of extension properties and event type classifications.
+  - `include_inner_details`: masked as `<v>` in network captures by capture query-parameter filtering rules (`SAFE_QUERY_KEYS`). Preserved parameter name indicates inclusion of inner detail objects; wire constant is not observable in captures.
+  - `include_timeline_types`: masked as `<v>` in network captures by capture query-parameter filtering rules. Preserved parameter name indicates event type filtering; wire constant is not observable in captures.
+- **Request volume and screen states:** Exactly 1 `timelines` request is dispatched per capture (7 requests total across the 7 captures), triggered under the following UI states:
+  - `detail-timeline` (1 request): Navigating from Leads list to record detail view and selecting the `Timeline` tab (the `History` subtab is open by default).
+  - `detail-timeline-filter` (1 request): On the `Timeline` tab, clicking `Filter Timeline History`. The request is the initial tab load; opening the filter panel is rendered client-side and dispatches no additional request.
+  - `detail-filter-modules-valid` (1 request): From `Filter Timeline History`, opening the `Modules` combobox dropdown. No network request is dispatched.
+  - `detail-filter-time-valid` (1 request): From `Filter Timeline History`, opening the `Any Time` combobox dropdown. No network request is dispatched.
+  - `detail-filter-sources-valid` (1 request): From `Filter Timeline History`, opening the `Sources` combobox dropdown. No network request is dispatched.
+  - `detail-interactions` (1 request): Selecting the `Timeline` tab and switching to the `Interactions` subtab. The timeline request is initiated upon opening the `Timeline` tab.
+  - `detail-interactions-filter-valid` (1 request): On `Interactions`, clicking `Filter Customer Interactions`. No network request is dispatched on opening the filter popup.
+
+### Response shape union
+
+| Response path | Observed type | Evidence |
+| --- | --- | --- |
+| `info` | object | `detail-timeline` |
+| `info.count` | number | `detail-timeline` |
+| `info.more_records` | boolean | `detail-timeline` |
+| `info.next_page_token` | null | `detail-timeline` |
+| `info.page` | number | `detail-timeline` |
+| `info.per_page` | number | `detail-timeline` |
+| `info.previous_page_token` | null | `detail-timeline` |
+| `timelines` | array<object> | `detail-timeline` |
+| `timelines[]` | object | `detail-timeline` |
+| `timelines[].action` | string | `detail-timeline` |
+| `timelines[].audited_time` | string | `detail-timeline` |
+| `timelines[].automation_details` | null | `detail-timeline` |
+| `timelines[].done_by` | object | `detail-timeline` |
+| `timelines[].done_by.id` | string | `detail-timeline` |
+| `timelines[].done_by.name` | string | `detail-timeline` |
+| `timelines[].done_by.profile` | object | `detail-timeline` |
+| `timelines[].done_by.profile.id` | string | `detail-timeline` |
+| `timelines[].done_by.profile.name` | string | `detail-timeline` |
+| `timelines[].done_by.type__s` | string | `detail-timeline` |
+| `timelines[].extension` | null | `detail-timeline` |
+| `timelines[].field_history` | null | `detail-timeline` |
+| `timelines[].id` | string | `detail-timeline` |
+| `timelines[].record` | object | `detail-timeline` |
+| `timelines[].record.display_label` | null | `detail-timeline` |
+| `timelines[].record.id` | string | `detail-timeline` |
+| `timelines[].record.module` | object | `detail-timeline` |
+| `timelines[].record.module.api_name` | string | `detail-timeline` |
+| `timelines[].record.module.id` | string | `detail-timeline` |
+| `timelines[].record.name` | string | `detail-timeline` |
+| `timelines[].related_record` | null | `detail-timeline` |
+| `timelines[].source` | string | `detail-timeline` |
+| `timelines[].type` | string | `detail-timeline` |
+
+All 7 captures share this identical 32-path schema without variation.
+- **Populated keys in every capture (7/7):** `info{count, more_records, page, per_page}`, `timelines`, `timelines[]{action, audited_time, done_by{id, name, profile{id, name}, type__s}, id, record{id, module{api_name, id}, name}, source, type}`.
+- **Null keys in every capture (7/7):** `info.next_page_token`, `info.previous_page_token`, `timelines[].automation_details`, `timelines[].extension`, `timelines[].field_history`, `timelines[].record.display_label`, `timelines[].related_record`.
+- Because the captured history entry records an initial image upload rather than a field modification, `timelines[].field_history` is `null` in every capture. Nested keys for `field_history[]{…}` (such as modified field name, old value, new value) are not observable in existing captures.
+
+### Structural value sets (`action`, `type`, `source`)
+
+- In `network.json`, response bodies are recorded as type shapes by the capture tool; primitive string leaves are recorded as `"string"`. The literal wire enum tokens returned in the JSON payload are therefore not preserved in the captures.
+- In all 7 captures, exactly 1 timeline entry is present (`info.count: 1`, `timelines: [<1 item>]`).
+- The corresponding rendered event text in `page.txt` displays: `"Lead Image uploaded"` authored by the record owner.
+- The filter panel accessibility trees (`aria.yml`) expose the client-side structural option sets for filtering timeline history:
+  - **Sources (19 options in `detail-filter-sources-valid`):** `API`, `Approval Processes`, `Assignment Rules`, `Blueprint`, `CPQ`, `Cadences`, `Calendar Bookings`, `CommandCenter`, `Connected Workflow`, `Functions`, `Import`, `Kiosk`, `Macro`, `Manual`, `Path Finder`, `Review Process`, `Scoring Rules`, `Wizards`, `Workflow Rules`.
+  - **Modules (6 options in `detail-filter-modules-valid`):** `Notes`, `Attachments`, `Tasks`, `Calls`, `Meetings`, `Emails`.
+  - **Time (7 options in `detail-filter-time-valid`):** `Any Time`, `Today`, `Yesterday`, `Last 7 days`, `Last 30 days`, `Custom Range`, `Specific date`.
+  - **Interactions view-by options (in `detail-interactions-filter-valid`):** Mediums (`All Mediums`), Users (`All Users`), Time (`Any Time`).
+- Literal user names, record names, and field values are excluded per project privacy rules.
+
+### Adjacent requests observed on the Timeline tab
+
+The following requests are observed in the same captures when activating the Timeline tab or switching between History and Interactions subtabs:
+
+| Method | Path | Query parameters | Status | Observed response shape | Evidence / module scope |
+| --- | --- | --- | --- | --- | --- |
+| GET | `/crm/v2/<module>/<recordId>/upcoming_actions/actions/count` | none | `200` | `count: number` | `detail-timeline` (all 7 captures). Provides count for the "Show Upcoming Automated Actions" header button. |
+| GET | `/crm/v9/<module>/<recordId>/__journeys` | `per_page=25` | `204` | none (`null`) | `detail-interactions`, `detail-interactions-filter-valid` (2 captures). Customer journeys list under Interactions subtab. |
+| GET | `/crm/v9/<module>/<recordId>/__journeys/actions/milestone_average_time` | none | `204` | none (`null`) | `detail-interactions`, `detail-interactions-filter-valid` (2 captures). Journey milestone timing under Interactions subtab. |
+| GET | `/crm/v9/<module>/<recordId>/__ownership_history` | `per_page=25` | `200` | `__ownership_history: array<object>`, `info: object` | `detail-interactions`, `detail-interactions-filter-valid` (2 captures). Ownership history entries (`done_by{id, name}`, `owned_from`, `user{email, id, name, zuid}`) under Interactions. |
+| GET | `/crm/v2/Social/accounts` | none | `200` | `accounts: array(empty)`, `brands: array(empty)`, `info: object`, `new_social: boolean` | `detail-interactions`, `detail-interactions-filter-valid` (2 captures). Social media integration accounts. |
+
+These adjacent requests are outside Module 1 Timeline scope and belong to subsequent module implementations (journeys, ownership history, automated actions, social).
+
+### Not observed (Timeline)
+
+- Request payload and URL query parameter serialization upon applying a filter (`Apply Filter` was disabled and unexercised).
+- Timeline event actions, types, and sources beyond the single captured image upload event (e.g. record creation, field edits, note additions, status conversions, stage transitions, workflow updates, cadences).
+- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all captures).
+- Nested structure of `automation_details`, `extension`, and `related_record` (`null` in all captures).
+- Pagination traversal with cursor tokens (`next_page_token`, `previous_page_token` are `null` in all captures).
+- Timeline requests for modules other than Leads.
+- When `research/specs/record-detail.md` Data needs table and `research/specs/request-shapes.md` diverge, `request-shapes.md` is the authoritative specification for wire shapes.
+
 ## Nested field configuration from metadata
 
 In the v2.2 field and v2.1 layout captures, the first field item's `auto_number`, `currency`, `formula`, `lookup`, `multi_module_lookup`, `multiselectlookup`, `rollup_summary`, and `unique` are each `object (empty in every capture)` (`list-view-edit-1`, `setup-leads-layout-rules`). The first `pick_list_values` array is empty in those captures; its item type is not observable **at those endpoints**. The Leads metadata export is the data-model source and shows populated configuration across all 56 fields: `pick_list_values` in 9 fields, `lookup` in 3, `currency` in 1, and `multi_module_lookup` in 1. The v4.0 and v2 field variants below independently expose some `pick_list_values[]` keys. The other five objects remain empty across all 56 metadata fields. These metadata rows enrich the configuration model; they are **not** keys observed in the first v2.2 field item or first v2.1 layout field item.
@@ -1041,3 +1144,4 @@ The error `details` object has no nested keys in these captures; its value conte
 - Nested fields behind a `<deep>` capture truncation: not observable in the captures.
 - Values and nullability of array items beyond the first retained item: not observable in the captures.
 - The source of Leads field definitions and Leads layout sections on ordinary list and detail screens: not observable in the captures.
+- Timeline filter transport (`Apply Filter` query and payload encoding), field history item keys (`field_history[]{…}`), pagination traversal with cursor tokens (`next_page_token`), and timeline event types outside the single captured sample event: not observable in the captures.
