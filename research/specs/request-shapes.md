@@ -1026,7 +1026,7 @@ These adjacent requests are outside Module 1 Timeline scope and belong to subseq
 
 ## Record timeline: documented, not observed
 
-All rows in this section originate from the public developer documentation (D1, D2) and were not observed in the captures. The documented API endpoints use `GET /{module_API_name}/{record_ID}/__timeline` and return `__timeline` (corresponding to the `GET /crm/v9/<module>/<recordId>/timelines` and `timelines` shape observed in the frontend captures).
+All rows in this section come from the public developer documentation (D1, D2) and are not observation claims; what the captures show is in `## Record timeline`. The documented endpoint is `GET /{module_API_name}/{record_ID}/__timeline` and its sample response names the event array `__timeline`; the captured interface call is `GET /crm/v9/<module>/<recordId>/timelines` with the array `timelines`. The documents describe the general API version and are not assumed to match the interface call. Event rows are written under the observed array name `timelines[]` so that they line up with the observed tables; in the documents the same keys sit under `__timeline[]`. A plain type is listed only where the sample response shows it; elsewhere the cell says what the documents do show.
 
 ### Documented response keys
 
@@ -1037,13 +1037,13 @@ All rows in this section originate from the public developer documentation (D1, 
 | `info` | object | D1, D2 |
 | `info.count` | number | D1, D2 |
 | `info.more_records` | boolean | D1, D2 |
-| `info.next_page_token` | string, null | D1, D2 |
+| `info.next_page_token` | null in the sample response; the `page_token` parameter (string) takes its value | D1, D2 |
 | `info.page` | number | D1, D2 |
 | `info.per_page` | number | D1, D2 |
-| `info.previous_page_token` | string, null | D1, D2 |
+| `info.previous_page_token` | null in the sample response; the `page_token` parameter (string) takes its value | D1, D2 |
 | `timelines[].action` | string | D1, D2 |
 | `timelines[].audited_time` | string | D1, D2 |
-| `timelines[].automation_details` | object, null | D1, D2 |
+| `timelines[].automation_details` | null in every sample event; no populated example, type and child keys not documented | D1, D2 |
 | `timelines[].done_by` | object | D1, D2 |
 | `timelines[].done_by.id` | string | D1, D2 |
 | `timelines[].done_by.name` | string | D1, D2 |
@@ -1051,7 +1051,7 @@ All rows in this section originate from the public developer documentation (D1, 
 | `timelines[].done_by.profile.id` | string | D1, D2 |
 | `timelines[].done_by.profile.name` | string | D1, D2 |
 | `timelines[].done_by.type__s` | string | D1, D2 |
-| `timelines[].extension` | object, null | D1, D2 |
+| `timelines[].extension` | not in the sample response; named only in the `include` text, type and place in the response not documented | D1, D2 |
 | `timelines[].field_history` | array<object>, null | D1, D2 |
 | `timelines[].field_history[]` | object | D1, D2 |
 | `timelines[].field_history[].api_name` | string | D1, D2 |
@@ -1068,7 +1068,7 @@ All rows in this section originate from the public developer documentation (D1, 
 | `timelines[].field_history[].pick_list_values[].sequence_number` | number | D1, D2 |
 | `timelines[].field_history[].pick_list_values[].type` | string | D1, D2 |
 | `timelines[].field_history[]._value` | object | D1, D2 |
-| `timelines[].field_history[]._value.new` | string, null | D1, D2 |
+| `timelines[].field_history[]._value.new` | string | D1, D2 |
 | `timelines[].field_history[]._value.old` | string, null | D1, D2 |
 | `timelines[].id` | string | D1, D2 |
 | `timelines[].record` | object | D1, D2 |
@@ -1084,53 +1084,57 @@ All rows in this section originate from the public developer documentation (D1, 
 | `timelines[].related_record.module.id` | string | D1, D2 |
 | `timelines[].related_record.name` | string | D1, D2 |
 | `timelines[].source` | string | D1, D2 |
-| `timelines[].type` | string | D1, D2 |
+| `timelines[].type` | not in the sample response; named only in the `include` text, type and place in the response not documented | D1, D2 |
 
 Notes on documented response structures:
 - `timelines[].field_history`: Populated when changes are made to record fields; `null` in sample events where no fields were modified (e.g. task/note addition). Requires `include_inner_details` parameter to populate `field_label`, `data_type`, `enable_colour_code`, and `pick_list_values`.
-- `timelines[].automation_details`: Documented as a JSON object representing that the record was modified through an automation action such as a workflow; `null` in all sample responses, and individual child keys are not detailed in developer documentation.
-- `timelines[].extension`: Documented under the `include` query parameter as carrying extension details (e.g. email insights) when updates occur via signals; sub-keys are not detailed in developer documentation.
+- `timelines[].automation_details`: Described as "Represents that the record was modified through an automation action such as a workflow"; `null` in every sample event, so its type when populated and its child keys are not documented.
+- `timelines[].extension` and `timelines[].type`: Absent from the sample response. The `include` parameter text says that after an update through a signal "the response will have details of the extension as email insights, while the type of update will be signals"; where these keys sit in the response, their types and their sub-keys are not documented.
+- `timelines[].field_history[]._value`: `old` is a string or `null` in the sample response; `new` is always a string there.
+- `timelines[].field_history[].pick_list_values[].type`: `used` in every sample item. It is an attribute of a picklist value, not an event `type`.
+- `info.next_page_token` and `info.previous_page_token`: `null` in the sample response; the `page_token` parameter is typed string and takes either value.
 - `timelines[].related_record`: Populated with parent record details (`id`, `name`, `module{api_name, id}`) when the timeline event represents a child activity (such as a task, meeting, call, or note) associated with a parent record; `null` for direct record updates.
 
 ### Documented event vocabulary (`action`, `type`, `source`)
 
+The documents present these lists as open, and none is stated to be complete: the `action` description begins "Some of the possible values are", the `source` description reads "The possible values include" and ends with "etc.", and the `filters` text introduces its `source` list with "The allowed values include". `migration` and `mass_addition_via_ui` are named only in the `source` description and are absent from the `filters` allowed values. The two documentation versions spell two `action` values differently: D1 lists `TaskAssigned` and `RelListAssociation added` where D2 lists `task_assigned` and `relatedrecords_added`; which spelling the interface returns is not observed. For the event-level `type` the documents name one value, `signals`. The second column names the key and the places where the value occurs in the documents.
+
 | Documented key or value | Documented type | Source |
 | --- | --- | --- |
-| `added` | action string (record or related entity added) | D1, D2 |
-| `owner_assigned` | action string (record owner assigned) | D1, D2 |
-| `relatedrecords_added` | action string (related records added; documented in D2) | D2 |
-| `RelListAssociation added` | action string (related list association added; documented in D1) | D1 |
-| `tag_added` | action string (tag added; documented in sample response) | D1, D2 |
-| `TaskAssigned` | action string (task assigned; PascalCase token in D1) | D1 |
-| `task_assigned` | action string (task assigned; snake_case token in D2) | D2 |
-| `updated` | action string (field or record updated) | D1, D2 |
-| `signals` | type string (update via signals; documented in include and include_timeline_type) | D1, D2 |
-| `used` | type string (picklist value status; documented in pick_list_values[].type) | D1, D2 |
-| `approval_process` | source string (approval process automation) | D1, D2 |
-| `assignment_rules` | source string (assignment rules automation) | D1, D2 |
-| `blueprint` | source string (blueprint process automation) | D1, D2 |
-| `bulk_action` | source string (bulk operation) | D1, D2 |
-| `bulkapi` | source string (bulk API) | D1, D2 |
-| `change_owner` | source string (ownership change operation) | D1, D2 |
-| `convert` | source string (lead conversion) | D1, D2 |
-| `crm_api` | source string (API operation) | D1, D2 |
-| `crm_ui` | source string (web user interface) | D1, D2 |
-| `custom_function` | source string (custom function execution) | D1, D2 |
-| `macro` | source string (macro execution) | D1, D2 |
-| `mass_addition_via_ui` | source string (mass creation via web user interface) | D1, D2 |
-| `mass_change_owner_via_scheduler` | source string (scheduled mass owner change) | D1, D2 |
-| `mass_delete_via_clean_up` | source string (data cleanup mass deletion) | D1, D2 |
-| `mass_delete_via_crm_api` | source string (API mass deletion) | D1, D2 |
-| `mass_update` | source string (mass update operation) | D1, D2 |
-| `mass_update_via_blueprint` | source string (blueprint mass update) | D1, D2 |
-| `mass_update_via_scheduler` | source string (scheduled mass update) | D1, D2 |
-| `massconvert` | source string (mass lead conversion) | D1, D2 |
-| `migration` | source string (data migration) | D1, D2 |
-| `orchestration` | source string (journey orchestration) | D1, D2 |
-| `review_process` | source string (review process automation) | D1, D2 |
-| `scoringrule` | source string (scoring rules automation) | D1, D2 |
-| `wizard` | source string (wizard process automation) | D1, D2 |
-| `workflow` | source string (workflow rules automation) | D1, D2 |
+| `added` | `action` value; in: `action` description, sample response | D1, D2 |
+| `owner_assigned` | `action` value; in: `action` description | D1, D2 |
+| `relatedrecords_added` | `action` value; in: `action` description | D2 |
+| `RelListAssociation added` | `action` value; in: `action` description | D1 |
+| `tag_added` | `action` value; in: sample response | D1, D2 |
+| `TaskAssigned` | `action` value; in: `action` description | D1 |
+| `task_assigned` | `action` value; in: `action` description | D2 |
+| `updated` | `action` value; in: `action` description, sample response | D1, D2 |
+| `signals` | event `type` value named in the `include` text; also the documented value of `include_timeline_type` | D1, D2 |
+| `approval_process` | `source` value; in: `filters` allowed values | D1, D2 |
+| `assignment_rules` | `source` value; in: `filters` allowed values | D1, D2 |
+| `blueprint` | `source` value; in: `filters` allowed values | D1, D2 |
+| `bulk_action` | `source` value; in: `filters` allowed values | D1, D2 |
+| `bulkapi` | `source` value; in: `filters` allowed values | D1, D2 |
+| `change_owner` | `source` value; in: `filters` allowed values | D1, D2 |
+| `convert` | `source` value; in: `filters` allowed values | D1, D2 |
+| `crm_api` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `crm_ui` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `custom_function` | `source` value; in: `filters` allowed values | D1, D2 |
+| `macro` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_addition_via_ui` | `source` value; in: `source` description | D1, D2 |
+| `mass_change_owner_via_scheduler` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_delete_via_clean_up` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_delete_via_crm_api` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_update` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `mass_update_via_blueprint` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_update_via_scheduler` | `source` value; in: `filters` allowed values | D1, D2 |
+| `massconvert` | `source` value; in: `filters` allowed values | D1, D2 |
+| `migration` | `source` value; in: `source` description | D1, D2 |
+| `orchestration` | `source` value; in: `filters` allowed values | D1, D2 |
+| `review_process` | `source` value; in: `filters` allowed values | D1, D2 |
+| `scoringrule` | `source` value; in: `filters` allowed values | D1, D2 |
+| `wizard` | `source` value; in: `filters` allowed values | D1, D2 |
+| `workflow` | `source` value; in: `filters` allowed values, `source` description | D1, D2 |
 
 ### Documented query parameters and parameter value formats
 
@@ -1147,13 +1151,13 @@ Notes on documented response structures:
 | `field_history.pick_list_values` | include_inner_details token: requests picklist value definitions | D1, D2 |
 | `filters` | JSON object (URL-encoded): `{field:{api_name}, comparator, value}` | D1, D2 |
 | `group_operator` | filter compound condition operator (`AND`) over `group` array | D1, D2 |
-| `include` | comma-separated word list: `extension`, `type` (mandatory with include_timeline_type) | D1, D2 |
-| `include_inner_details` | comma-separated token list for field_history and done_by inner details | D1, D2 |
+| `include` | string; possible values `extension` and `type`; mandatory when `include_timeline_type` is given; no multi-value example, separator not documented | D1, D2 |
+| `include_inner_details` | string, optional; possible values are the six `field_history.*` and `done_by.*` tokens in this table; the sample request joins them with a comma and a space | D1, D2 |
 | `include_timeline_type` | string: extra timeline type request flag (value: `signals`; plural `include_timeline_types` in v9 capture) | D1, D2 |
 | `page_token` | string: pagination cursor token (`next_page_token` or `previous_page_token`) | D1, D2 |
 | `per_page` | integer: page record size for first page (e.g. `200`) | D1, D2 |
 | `record.module.api_name` | filter comparators equal, in; values: `Notes`, `Attachments`, `Tasks`, `Calls`, `Events`, `Emails` | D1, D2 |
-| `sort_by` | string: sort field API name (`audited_time`) | D1, D2 |
+| `sort_by` | not listed under Parameters; occurs only in the sample request as `sort_by=audited_time`; type, other values and sort direction not documented | D1, D2 |
 | `source` | filter comparators equal, in; values: documented source tokens (e.g. `crm_ui`, `crm_api`) | D1, D2 |
 | `type` | include token: requests timeline entry type details | D1, D2 |
 
