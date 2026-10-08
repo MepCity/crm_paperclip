@@ -5,6 +5,12 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "recordUser",
+  "recordPortraitSilhouette",
+  "recordFormCaret",
+  "recordChevron",
+  "recordCheck",
+  "recordInfo",
   "recordPortrait",
   "filterChevronDown",
   "filterChevronRight",
@@ -19,6 +25,7 @@ const expectedIcons = [
   "showMenu",
   "plus",
   "settings",
+  "users",
   "spinner",
   "error",
   "fieldEdit",
@@ -35,6 +42,8 @@ const expectedIcons = [
   "list",
   "refresh",
   "ellipsis",
+  "timelineGeneric",
+  "timelinePencil",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

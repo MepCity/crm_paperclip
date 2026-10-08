@@ -100,6 +100,11 @@
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
+  --color-detail-timeline-filter-surface: #f9faff;
+  --color-detail-timeline-muted-border: #d6d6e3;
+  --color-detail-timeline-badge-text: #434d5f;
+  --color-detail-timeline-caret-placeholder: #a0a8b8;
+  --color-detail-timeline-caret-value: #838892;
   --color-form-portrait: #b2b2b2;
   /* MEP-172 interim: Address field group border on create/edit form. */
   --color-form-field-group-border: #797883;
@@ -217,6 +222,19 @@
   /* Filter panel. Width includes the 1 px borders. */
   --size-list-filter-width: 202px;
   --size-list-filter-gap: 10px;
+  /* list-views.md: Checked filter checkbox, Filter operator dropdown,
+     Filter value input, Open operator list and their coordinate differences. */
+  --size-filter-editor-inset: 23px;
+  --size-filter-editor-top-gap: 8px;
+  --size-filter-editor-value-gap: 7px;
+  --size-filter-control-height: 24px;
+  --size-filter-contains-width: 79px;
+  --size-filter-control-min-width: 36px;
+  --radius-filter-control: 3px;
+  --size-filter-operator-list-width: 146px;
+  --size-filter-operator-list-height: 220px;
+  --size-filter-operator-row-height: 27px;
+  --size-filter-operator-list-offset: 1px;
   --size-list-filter-padding: 18px;
   --size-list-filter-search-height: 34px;
   --size-list-filter-search-icon: 13.5px;
@@ -300,6 +318,30 @@
   --size-button-ellipsis-width: 44px;
   --size-button-ellipsis-height: 32px;
 
+  /* record-detail.md, Visual layout: Lead Information rows and dropdown panels. */
+  --color-form-required: #ff5d5a;
+  --color-form-caret: #838892;
+  --color-form-input-end: #f0f4ff;
+  --color-form-portrait-ring: #b4b4b4;
+  --size-form-required-bar: 3px;
+  --size-form-option-height: 32px;
+  --size-form-list-padding: 6px;
+  --size-form-country-height: 270px;
+  --size-form-owner-height: 179px;
+  --size-form-prefix-width: 110px;
+  --size-form-prefix-divider-offset: 94px;
+  --size-form-prefix-caret-gap: 11px;
+  --size-form-caret-width: 8px;
+  --size-form-caret-height: 5px;
+  --size-form-caret-inset-end: 12px;
+  --size-form-input-end: 32px;
+  --size-form-input-end-icon: 16px;
+  --size-form-currency-prefix-inset: 12px;
+  --size-form-currency-divider-gap: 9.5px;
+  --size-form-currency-divider-height: 20px;
+  --size-form-currency-divider-top: 7px;
+  --size-form-owner-caret-gap: 9px;
+
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
@@ -332,6 +374,47 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+
+  /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
+  --size-detail-timeline-width: 906px;
+  --size-detail-timeline-subtab-row-height: 38.5px;
+  --size-detail-timeline-subtab-inset: 30px;
+  --size-detail-timeline-subtab-padding-inline: 6px;
+  --size-detail-timeline-subtab-underline-height: 3px;
+  --size-detail-timeline-history-padding-top: 25px;
+  --size-detail-timeline-history-padding-inline: 26px;
+  --size-detail-timeline-filter-button-width: 42px;
+  --size-detail-timeline-filter-button-height: 30px;
+  --size-detail-timeline-filter-button-gap: 11px;
+  --size-detail-timeline-filter-panel-gap: 15px;
+  --size-detail-timeline-filter-panel-padding-block-start: 15px;
+  --size-detail-timeline-filter-panel-padding-inline: 20px;
+  --size-detail-timeline-filter-panel-padding-bottom: 16px;
+  --size-detail-timeline-filter-field-gap: 4px;
+  --size-detail-timeline-filter-selector-row-gap: 8px;
+  --size-detail-timeline-filter-row2-margin-top: 14px;
+  --size-detail-timeline-filter-selector-width: 250px;
+  --size-detail-timeline-filter-selector-height: 33px;
+  --size-detail-timeline-filter-selector-padding-inline: 11px;
+  --size-detail-timeline-filter-caret-width: 9px;
+  --size-detail-timeline-filter-caret-height: 5px;
+  --size-detail-timeline-filter-caret-inset: 12px;
+  --size-detail-timeline-apply-height: 32px;
+  --size-detail-timeline-apply-padding-inline: 14px;
+  --size-detail-timeline-track-offset: 25px;
+  --size-detail-timeline-date-badge-width: 130px;
+  --size-detail-timeline-date-badge-height: 27px;
+  --size-detail-timeline-date-badge-offset-inline: 25px;
+  --size-detail-timeline-connector-height: 25px;
+  --size-detail-timeline-track-center: 125.5px;
+  --size-detail-timeline-time-column-end: 98.5px;
+  --size-detail-timeline-event-icon: 36px;
+  --size-detail-timeline-event-icon-offset-inline: 108px;
+  --size-detail-timeline-event-column-gap: 17.5px;
+  --size-detail-timeline-event-line-height: 18px;
+  --size-detail-timeline-event-body-padding-top: 7px;
+  --size-detail-timeline-event-row-padding-bottom: 18px;
+  --size-detail-timeline-day-gap: 16px;
 
   /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
   --size-form-strip-height: 57px;

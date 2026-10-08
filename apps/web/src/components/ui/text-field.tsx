@@ -1,5 +1,8 @@
 "use client";
 
+import "./record-input.css";
+
+import type { ReactNode } from "react";
 import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps,
@@ -12,6 +15,10 @@ import { Icons } from "./icon";
 
 export interface TextFieldProps extends AriaTextFieldProps {
   label: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  endAction?: ReactNode;
+  hideLabel?: boolean;
   placeholder?: string;
   variant?: "default" | "filter-search";
   description?: string;
@@ -20,6 +27,10 @@ export interface TextFieldProps extends AriaTextFieldProps {
 
 export function TextField({
   label,
+  prefix,
+  suffix,
+  endAction,
+  hideLabel = false,
   placeholder,
   variant = "default",
   description,
@@ -31,7 +42,9 @@ export function TextField({
       {...props}
       className={variant === "filter-search" ? "flex flex-col gap-0" : "flex flex-col gap-1"}
     >
-      <Label className={variant === "filter-search" ? "sr-only" : "text-md font-normal text-text"}>
+      <Label
+        className={variant === "filter-search" || hideLabel ? "sr-only" : "record-label text-md"}
+      >
         {label}
       </Label>
       {variant === "filter-search" ? (
@@ -46,10 +59,16 @@ export function TextField({
           />
         </div>
       ) : (
-        <Input
-          placeholder={placeholder}
-          className="rounded-md border border-border bg-surface px-3 py-2 text-text outline-none data-disabled:bg-surface-hover data-disabled:opacity-50 data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
-        />
+        <div
+          className="record-control record-input-frame"
+          data-required={props.isRequired || undefined}
+          data-invalid={props.isInvalid || undefined}
+        >
+          {prefix}
+          <Input placeholder={placeholder} className="record-control" />
+          {suffix}
+          {endAction}
+        </div>
       )}
       {description && (
         <Text slot="description" className="text-sm text-text-muted">

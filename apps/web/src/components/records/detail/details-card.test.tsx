@@ -15,6 +15,7 @@ function textField(apiName: string, label: string): FieldDefinition {
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
     views: { view: true, create: true, edit: true, quickCreate: false },
   };

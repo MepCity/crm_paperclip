@@ -3,8 +3,13 @@ import { defineConfig } from "vitest/config";
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
 
+// Several agents run verify on this one machine at the same time. Without a cap each run
+// starts a worker per core and the machine stalls. Override with MEP_TEST_WORKERS.
+const maxWorkers = Number(process.env.MEP_TEST_WORKERS ?? 2);
+
 export default defineConfig({
   test: {
+    maxWorkers,
     projects: [
       {
         test: {

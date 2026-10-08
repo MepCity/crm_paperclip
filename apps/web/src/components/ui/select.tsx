@@ -1,6 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import "./record-input.css";
+import "./filter-control.css";
+
+import { type ReactNode, useLayoutEffect, useState } from "react";
 import {
   Select as AriaSelect,
   type SelectProps as AriaSelectProps,
@@ -19,6 +22,7 @@ import { Icons } from "./icon";
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
   label: string;
+  variant?: "default" | "filter";
   /** Keeps the accessible name and removes the label from the visual layout. */
   hideLabel?: boolean;
   description?: string;
@@ -29,6 +33,7 @@ export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, 
 
 export function Select<T extends object>({
   label,
+  variant = "default",
   hideLabel = false,
   description,
   errorMessage,
@@ -36,19 +41,49 @@ export function Select<T extends object>({
   children,
   ...props
 }: SelectProps<T>) {
+  const [filterMaxHeight, setFilterMaxHeight] = useState<number>();
+  useLayoutEffect(() => {
+    if (variant !== "filter") {
+      setFilterMaxHeight(undefined);
+      return;
+    }
+    // Positioning takes a numeric limit and writes it directly to the element.
+    const height = Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--size-filter-operator-list-height",
+      ),
+    );
+    setFilterMaxHeight(Number.isFinite(height) ? height : undefined);
+  }, [variant]);
   return (
-    <AriaSelect {...props} className="flex flex-col gap-1">
+    <AriaSelect
+      {...props}
+      className={variant === "filter" ? "filter-select" : "flex flex-col gap-1"}
+    >
       {({ isInvalid }: SelectRenderProps) => (
         <>
-          <Label className={hideLabel ? "sr-only" : "text-md font-normal text-text"}>{label}</Label>
+          <Label className={hideLabel ? "sr-only" : "record-label text-md"}>{label}</Label>
           {/* The trigger draws the border, but React Aria only reports the resolved
               invalid state (prop or Form validationErrors) on the Select root. */}
           <Button
+            data-value={variant === "filter" ? props.value : undefined}
             data-invalid={isInvalid || undefined}
-            className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left outline-none data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-disabled:bg-surface-hover data-disabled:opacity-50 data-invalid:border-danger"
+            data-required={props.isRequired || undefined}
+            className={
+              variant === "filter"
+                ? "filter-operator-control"
+                : "record-control flex items-center justify-between text-left"
+            }
           >
             <SelectValue className="truncate" />
-            <Icons.chevronDown className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
+            <Icons.chevronDown
+              className={
+                variant === "filter"
+                  ? "h-3 w-3 shrink-0 text-text"
+                  : "h-4 w-4 shrink-0 text-text-muted"
+              }
+              aria-hidden="true"
+            />
           </Button>
           {description && (
             <Text slot="description" className="text-sm text-text-muted">
@@ -56,8 +91,19 @@ export function Select<T extends object>({
             </Text>
           )}
           <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
-          <Popover className="max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none">
-            <ListBox items={items} className="p-1 outline-none">
+          <Popover
+            offset={variant === "filter" ? 1 : undefined}
+            maxHeight={filterMaxHeight}
+            className={
+              variant === "filter"
+                ? "filter-operator-popover shadow-lg"
+                : "max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none"
+            }
+          >
+            <ListBox
+              items={items}
+              className={variant === "filter" ? "filter-operator-list" : "p-1 outline-none"}
+            >
               {children}
             </ListBox>
           </Popover>
@@ -67,11 +113,18 @@ export function Select<T extends object>({
   );
 }
 
-export function SelectItem(props: ListBoxItemProps) {
+export function SelectItem({
+  variant = "default",
+  ...props
+}: ListBoxItemProps & { variant?: "default" | "filter" }) {
   return (
     <ListBoxItem
       {...props}
-      className="cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
+      className={
+        variant === "filter"
+          ? "filter-operator-option"
+          : "cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
+      }
     />
   );
 }

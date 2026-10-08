@@ -11,6 +11,7 @@ function textField(apiName: string, dataType: "text" | "integer" | "currency" | 
     dataType,
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
     views: { view: true, create: true, edit: true, quickCreate: false },
   };

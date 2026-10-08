@@ -7,13 +7,18 @@ import {
   encodeLayout,
   encodeModule,
   encodeRecord,
+  encodeRecordWriteResult,
   encodeView,
+  encodeWriteResult,
   invalid,
   object,
 } from "./codec";
 import type { WireMember } from "./types";
 
-export type OperationDeps = { records: RecordService; members: readonly WireMember[] };
+export type OperationDeps = {
+  records: RecordService;
+  members: () => Promise<readonly WireMember[]>;
+};
 export type OperationRequest = {
   params?: Record<string, string>;
   query: Record<string, string>;
@@ -98,6 +103,12 @@ function collection<T>(
   });
 }
 
+function idsOf(body: Record<string, unknown>): string[] {
+  if (!Array.isArray(body.ids) || body.ids.some((id) => typeof id !== "string" || !id))
+    invalid("ids");
+  return [...body.ids] as string[];
+}
+
 /** The sole API path inventory, shared with the browser HTTP adapter. */
 export const operations = {
   module: {
@@ -174,8 +185,9 @@ export const operations = {
       };
       const result = await records.list(module, query);
       if (!result.records.length) return empty();
+      const recordMembers = await members();
       return ok({
-        data: result.records.map((row) => encodeRecord(row, metadata, members)),
+        data: result.records.map((row) => encodeRecord(row, metadata, recordMembers)),
         info: encodeInfo(result, result.records.length),
       });
     },
@@ -199,7 +211,9 @@ export const operations = {
       const module = moduleOf(input);
       const metadata = await records.getModule(module);
       return ok({
-        data: [encodeRecord(await records.get(module, recordIdOf(input)), metadata, members)],
+        data: [
+          encodeRecord(await records.get(module, recordIdOf(input)), metadata, await members()),
+        ],
       });
     },
   },
@@ -208,7 +222,7 @@ export const operations = {
     path: "/crm/v9/users",
     async run({ members }, input) {
       return collection(
-        members.map((member) => ({
+        (await members()).map((member) => ({
           id: member.userId,
           full_name: member.name,
           email: member.email,
@@ -222,41 +236,78 @@ export const operations = {
   create: {
     method: "POST",
     path: "/crm/v2.2/{module}",
-    async run({ records }, input) {
+    async run({ records, members }, input) {
       const module = moduleOf(input);
       const metadata = await records.getModule(module);
       const body = object(await bodyOf(input), "data");
       if (!Array.isArray(body.data) || body.data.length !== 1)
         invalid("data", "Send exactly one record.");
+      const recordMembers = await members();
       const record = await records.create(module, decodeInput(body.data[0], metadata));
-      return ok({ data: [{ id: record.id }] });
+      return ok(encodeRecordWriteResult(record, metadata, recordMembers, "record added"));
     },
   },
   update: {
     method: "PUT",
     path: "/crm/v2.2/{module}/{recordId}",
-    async run({ records }, input) {
+    async run({ records, members }, input) {
       const module = moduleOf(input);
       const metadata = await records.getModule(module);
       const body = object(await bodyOf(input), "data");
       if (!Array.isArray(body.data) || body.data.length !== 1)
         invalid("data", "Send exactly one record.");
+      const recordMembers = await members();
       const record = await records.update(
         module,
         recordIdOf(input),
         decodeInput(body.data[0], metadata),
       );
-      return ok({ data: [{ id: record.id }] });
+      return ok(encodeRecordWriteResult(record, metadata, recordMembers, "record updated"));
     },
   },
   delete: {
     method: "DELETE",
-    path: "/crm/v2.2/{module}",
+    path: "/crm/v2.2/{module}/{recordId}",
     async run({ records }, input) {
-      const ids = input.query.ids?.split(",");
-      if (!ids?.length || ids.some((id) => !id)) invalid("ids");
+      const ids = [recordIdOf(input)];
       await records.delete(moduleOf(input), ids);
-      return ok({ data: ids.map((id) => ({ id })) });
+      return ok(encodeWriteResult(ids, "record deleted"));
+    },
+  },
+  massDelete: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/mass_delete",
+    async run({ records }, input) {
+      const body = object(await bodyOf(input), "ids");
+      const ids = idsOf(body);
+      await records.delete(moduleOf(input), ids);
+      return ok(encodeWriteResult(ids, "record is deleted"));
+    },
+  },
+  massUpdate: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/mass_update",
+    async run({ records }, input) {
+      const module = moduleOf(input);
+      const body = object(await bodyOf(input), "data");
+      const ids = idsOf(body);
+      if (!Array.isArray(body.data) || body.data.length !== 1)
+        invalid("data", "Send exactly one record.");
+      const metadata = await records.getModule(module);
+      await records.massUpdate(module, ids, decodeInput(body.data[0], metadata));
+      return ok(encodeWriteResult(ids, "record updated"));
+    },
+  },
+  changeOwner: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/change_owner",
+    async run({ records }, input) {
+      const body = object(await bodyOf(input), "ids");
+      const ids = idsOf(body);
+      const owner = object(body.owner, "Owner");
+      if (typeof owner.id !== "string") invalid("Owner");
+      await records.changeOwner(moduleOf(input), ids, owner.id);
+      return ok(encodeWriteResult(ids, "owner is successfully updated"));
     },
   },
 } satisfies Record<string, Operation>;

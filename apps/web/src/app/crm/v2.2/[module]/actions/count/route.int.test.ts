@@ -64,7 +64,7 @@ describe("POST /crm/v2.2/{module}/actions/count", () => {
       expect(response.status).toBe(400);
       expect(response.headers.get("cache-control")).toBe("no-store");
       const body = await response.json();
-      expect(body).toMatchObject({ code: "validation", status: 400 });
+      expect(body).toMatchObject({ code: "INVALID_DATA", status: "error" });
       const decoded = decodeError(response.status, body);
       expect(decoded).toBeInstanceOf(ValidationError);
       if (decoded instanceof ValidationError) {

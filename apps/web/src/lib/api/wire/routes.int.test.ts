@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import * as core from "@crm/core";
 import { removeMember } from "@crm/core";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
 import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
@@ -19,7 +20,10 @@ const handlers = [
   [operations.users, () => import("@/app/crm/v9/users/route")],
   [operations.create, () => import("@/app/crm/v2.2/[module]/route")],
   [operations.update, () => import("@/app/crm/v2.2/[module]/[recordId]/route")],
-  [operations.delete, () => import("@/app/crm/v2.2/[module]/route")],
+  [operations.delete, () => import("@/app/crm/v2.2/[module]/[recordId]/route")],
+  [operations.massDelete, () => import("@/app/crm/v2.2/[module]/actions/mass_delete/route")],
+  [operations.massUpdate, () => import("@/app/crm/v2.2/[module]/actions/mass_update/route")],
+  [operations.changeOwner, () => import("@/app/crm/v2.2/[module]/actions/change_owner/route")],
 ] as const;
 type Organization = Awaited<ReturnType<typeof createTestOrganization>>;
 const origin = new URL(process.env.APP_URL ?? "http://127.0.0.1:3000").origin;
@@ -32,6 +36,8 @@ async function call(
     viewId?: string;
     query?: Record<string, string>;
     body?: unknown;
+    origin?: string | null;
+    orgHeader?: string | null;
   } = {},
 ) {
   const entry = handlers.find(([candidate]) => candidate === op);
@@ -59,12 +65,13 @@ async function call(
     ...options.query,
   }))
     url.searchParams.set(key, value);
-  const headers = new Headers({ Origin: origin });
+  const headers = new Headers();
+  if (options.origin !== null) headers.set("Origin", options.origin ?? origin);
   if (org) {
     const cookie = org.admin.headers.get("cookie");
     if (!cookie) throw new Error("Missing test cookie");
     headers.set("cookie", cookie);
-    headers.set("X-CRM-ORG", org.org.slug);
+    if (options.orgHeader !== null) headers.set("X-CRM-ORG", options.orgHeader ?? org.org.slug);
   }
   return handler(
     new Request(url, {
@@ -85,17 +92,66 @@ describe("operation routes", () => {
   });
   it("has a thin, force-dynamic wrapped route for every operation", () => {
     expect(handlers).toHaveLength(Object.keys(operations).length);
-    for (const op of Object.values(operations)) {
+    for (const [name, op] of Object.entries(operations)) {
       const file = resolve(
         "apps/web/src/app",
         op.path.replace(/^\//, "").replace(/\{([^}]+)\}/g, "[$1]"),
         "route.ts",
       );
       const source = readFileSync(file, "utf8");
-      expect(source).toContain(`export const ${op.method} = apiRoute`);
+      expect(source).toContain(`export const ${op.method} = operationRoute(operations.${name});`);
       expect(source).toContain('export const dynamic = "force-dynamic"');
-      expect(source).toContain("@/lib/api/");
+      expect(source).toContain("@/lib/api/operation-route");
+      expect(source).not.toMatch(/listMembers|getRecordService|@crm\/core/);
       expect(source).not.toMatch(/request\.json|X-CRM-ORG|\.list\(|\.create\(|\.count\(|\/crm\/v/);
+    }
+  });
+  it.each([operations.module, operations.fields, operations.count])(
+    "does not load members for $path",
+    async (op) => {
+      const members = vi.spyOn(core, "listMembers");
+      try {
+        const response = await call(op, a);
+        expect(response.status).toBe(200);
+        expect(members).not.toHaveBeenCalled();
+      } finally {
+        members.mockRestore();
+      }
+    },
+  );
+  it.each([operations.bulk, operations.users, operations.record])(
+    "loads members once for $path",
+    async (op) => {
+      const record = (
+        await getRecordService(a.ctx).list("Leads", {
+          viewId: "all-leads",
+          page: 1,
+          perPage: 20,
+        })
+      ).records[0];
+      if (!record) throw new Error("Missing fixture record");
+      const members = vi.spyOn(core, "listMembers");
+      try {
+        const response = await call(op, a, { recordId: record.id });
+        expect(response.status).toBe(200);
+        expect(members).toHaveBeenCalledExactlyOnceWith(a.ctx);
+      } finally {
+        members.mockRestore();
+      }
+    },
+  );
+  it("does not load members for an empty bulk page or a missing record", async () => {
+    const members = vi.spyOn(core, "listMembers");
+    try {
+      const empty = await call(operations.bulk, a, {
+        body: { search: "No_Record_Can_Match_This" },
+      });
+      expect(empty.status).toBe(204);
+      expect(await empty.text()).toBe("");
+      expect((await call(operations.record, a)).status).toBe(404);
+      expect(members).not.toHaveBeenCalled();
+    } finally {
+      members.mockRestore();
     }
   });
   it("checks Owner against actual tenant membership on create and update routes", async () => {
@@ -109,7 +165,7 @@ describe("operation routes", () => {
       body: body({ Last_Name: "Owner Test", Company: "Synthetic Company", Owner: member.user.id }),
     });
     expect(response.status).toBe(200);
-    const id = (await response.json()).data[0].id as string;
+    const id = (await response.json()).data[0].details.id as string;
     expect((await service.get("Leads", id)).fields).toMatchObject({
       Owner: member.user.id,
       Created_By: a.ctx.userId,
@@ -145,7 +201,7 @@ describe("operation routes", () => {
       const response = await call(op);
       expect(response.status, `${op.method} ${op.path}`).toBe(401);
       expect(response.headers.get("cache-control")).toBe("no-store");
-      expect(await response.json()).toMatchObject({ code: "unauthenticated" });
+      expect(await response.json()).toMatchObject({ code: "AUTHENTICATION_FAILURE" });
     }
   });
   it("serves every authenticated read handler with its envelope", async () => {
@@ -155,9 +211,14 @@ describe("operation routes", () => {
     });
     for (const [op] of handlers.filter(
       ([op]) =>
-        ![operations.create, operations.update, operations.delete].includes(
-          op as typeof operations.create,
-        ),
+        ![
+          operations.create,
+          operations.update,
+          operations.delete,
+          operations.massDelete,
+          operations.massUpdate,
+          operations.changeOwner,
+        ].includes(op as typeof operations.create),
     )) {
       const response = await call(op, a, { recordId: created.id });
       expect(response.status, op.path).toBe(200);
@@ -238,8 +299,8 @@ describe("operation routes", () => {
       });
       expect(response.status).toBe(400);
       expect(await response.json()).toMatchObject({
-        code: "validation",
-        status: 400,
+        code: "INVALID_DATA",
+        status: "error",
         details: { fields: { filters: expect.any(Array) } },
       });
     }
@@ -263,19 +324,109 @@ describe("operation routes", () => {
     expect((await call(operations.record, a, { recordId: created.id })).status).toBe(200);
     expect((await call(operations.record, b, { recordId: created.id })).status).toBe(404);
   });
+  it("removes collection DELETE and its ids query route", async () => {
+    const route = await import("@/app/crm/v2.2/[module]/route");
+    expect(route).not.toHaveProperty("DELETE");
+  });
+  it.each([operations.massDelete, operations.massUpdate, operations.changeOwner])(
+    "guards Origin and X-CRM-ORG for $path",
+    async (op) => {
+      for (const supplied of [null, "https://other.example"]) {
+        const response = await call(op, a, { origin: supplied });
+        expect(response.status).toBe(403);
+        expect(await response.json()).toMatchObject({ code: "NO_PERMISSION", status: "error" });
+      }
+      const missing = await call(op, a, { orgHeader: null });
+      expect(missing.status).toBe(400);
+      expect(await missing.json()).toMatchObject({
+        details: { fields: { organization: expect.any(Array) } },
+      });
+      expect((await call(op, a, { orgHeader: b.org.slug })).status).toBe(404);
+    },
+  );
+  it("serves ordered action results and rejects removed owners and foreign batch targets atomically", async () => {
+    const service = getRecordService(a.ctx);
+    const first = await service.create("Leads", { Company: "Action Example", Last_Name: "First" });
+    const second = await service.create("Leads", {
+      Company: "Action Example",
+      Last_Name: "Second",
+    });
+    const ids = [second.id, first.id];
+    const member = await addTestMember(a.ctx, "member");
+    for (const [op, body, message] of [
+      [operations.massUpdate, { ids, data: [{ Company: "Action Changed" }] }, "record updated"],
+      [
+        operations.changeOwner,
+        { ids, owner: { id: member.user.id } },
+        "owner is successfully updated",
+      ],
+    ] as const) {
+      const response = await call(op, a, { body });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        data: ids.map((id) => ({ code: "SUCCESS", details: { id }, message, status: "success" })),
+      });
+    }
+    await removeMember(a.ctx, { userId: member.user.id });
+    const rejected = await call(operations.changeOwner, a, {
+      body: { ids, owner: { id: member.user.id } },
+    });
+    expect(rejected.status).toBe(400);
+    expect(await rejected.json()).toMatchObject({
+      code: "INVALID_DATA",
+      details: { fields: { Owner: expect.any(Array) } },
+    });
+    const before = await service.get("Leads", first.id);
+    let foreign = await getRecordService(b.ctx).create("Leads", {
+      Company: "Foreign",
+      Last_Name: "Record",
+    });
+    while (
+      await service.get("Leads", foreign.id).then(
+        () => true,
+        () => false,
+      )
+    )
+      foreign = await getRecordService(b.ctx).create("Leads", {
+        Company: "Foreign",
+        Last_Name: "Record",
+      });
+    for (const [op, body] of [
+      [operations.massUpdate, { ids: [first.id, foreign.id], data: [{ Company: "Rejected" }] }],
+      [operations.changeOwner, { ids: [first.id, foreign.id], owner: { id: a.ctx.userId } }],
+      [operations.massDelete, { ids: [first.id, foreign.id] }],
+    ] as const) {
+      expect((await call(op, a, { body })).status).toBe(404);
+      expect(await service.get("Leads", first.id)).toEqual(before);
+    }
+    const removed = await call(operations.massDelete, a, { body: { ids } });
+    expect(removed.status).toBe(200);
+    expect(await removed.json()).toEqual({
+      data: ids.map((id) => ({
+        code: "SUCCESS",
+        details: { id },
+        message: "record is deleted",
+        status: "success",
+      })),
+    });
+  });
   it("runs create, update and delete handlers and retains field validation", async () => {
     const create = await call(operations.create, a, {
       body: { data: [{ Company: "Route CRUD", Last_Name: "Original" }] },
     });
     expect(create.status).toBe(200);
     const body = await create.json();
-    const id = body.data[0].id;
-    expect(body).toEqual({ data: [{ id }] });
+    const id = body.data[0].details.id;
+    expect(body).toMatchObject({
+      data: [{ code: "SUCCESS", details: { id }, message: "record added", status: "success" }],
+    });
     const update = await call(operations.update, a, {
       recordId: id,
       body: { data: [{ Last_Name: "Updated" }] },
     });
-    expect(await update.json()).toEqual({ data: [{ id }] });
+    expect(await update.json()).toMatchObject({
+      data: [{ code: "SUCCESS", details: { id }, message: "record updated", status: "success" }],
+    });
     expect(
       (await (await call(operations.record, a, { recordId: id })).json()).data[0].Last_Name,
     ).toBe("Updated");
@@ -287,8 +438,8 @@ describe("operation routes", () => {
     expect(await invalid.json()).toMatchObject({
       details: { fields: { Last_Name: expect.any(Array) } },
     });
-    expect(await (await call(operations.delete, a, { query: { ids: id } })).json()).toEqual({
-      data: [{ id }],
+    expect(await (await call(operations.delete, a, { recordId: id })).json()).toEqual({
+      data: [{ code: "SUCCESS", details: { id }, message: "record deleted", status: "success" }],
     });
     expect((await call(operations.record, a, { recordId: id })).status).toBe(404);
   });

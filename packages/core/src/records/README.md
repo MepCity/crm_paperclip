@@ -7,7 +7,8 @@ accept module API names and opaque record IDs, never organization parameters.
 components can import it without loading authentication, a database or a service.
 The method signatures follow MEP-68; `ListView.isDefault` follows the K2 amendment.
 
-Metadata describes fields, ordered picklist display/stored values, layout sections
+Metadata includes `FieldDefinition.massUpdate`, copied from metadata `mass_update`
+(15 eligible Leads fields), and describes fields, ordered picklist display/stored values, layout sections
 and ordered field API names. Each field has `views` flags (`view`, `create`, `edit`,
 `quickCreate`), independent of `readOnly`. A section keeps its complete `fields`
 list and exposes `columns` in observed top-to-bottom order, with one array per
@@ -16,13 +17,64 @@ filter each column by the desired surface flag and handle composite name/address
 inputs separately. `businessCardFields` is the ordered list of card field API names.
 Exactly one view is default. List results carry page,
 page size and `moreRecords`; `count` is separate. Updates are partial. View criteria
-and extra filters combine with `and`. Comparators are the saved-view wire values
-`equal`, `contains`, `not_contains` and `less_equal`. `equal` is exact stored-value
-equality, case-sensitive for strings; an array matches any element; null matches an
-empty field. `contains` and `not_contains` are case-insensitive substrings of text
-fields: a null field fails `contains` and passes `not_contains`. `less_equal` applies
-only to a datetime field with an `AGEINDAYS` token. Tokens (`CURRENTUSER`, `TODAY`,
-`AGEINDAYS`, `CATEGORY`) are resolved when the query runs. Groups support `and` and `or`.
+and extra filters combine with `and`. The four saved-view comparators and tokens
+retain their spelling and saved-view meaning. Panel extensions and text equality
+follow the interim operator table below. Tokens are resolved when the query runs;
+groups support `and` and `or`. Existing scalar `equal` values for picklists,
+owner IDs, null and other metadata field types remain supported for callers.
+Panel picklist/owner membership uses nonempty arrays of strings. Equality on
+picklists and owner IDs is case-sensitive; text-family comparisons are
+case-insensitive (`toLowerCase`, no locale).
+
+## Interim panel filter operators
+
+All meanings and new wire values in this section are **Interim**, not observed
+applied-filter behavior (ADR 0004 §4 / open question 3). The database query compiler
+must implement this same table when its adapter ships; it is outside this issue.
+The tree and service method signatures are unchanged. Invalid field/comparator/value
+combinations raise `ValidationError` keyed by `filters` on both `list` and `count`.
+
+| Panel operator | Field family | Criterion (comparator + value shape) |
+| --- | --- | --- |
+| is / isn't | text, textarea, email, phone, website | `equal` / `not_equal`, string |
+| contains / doesn't contain | text family | `contains` / `not_contains`, string |
+| starts with / ends with | text family | `starts_with` / `ends_with`, string |
+| is empty / is not empty | every metadata field family | `is_empty` / `is_not_empty`, `null` |
+| is / is not | picklist | `equal` / `not_equal`, nonempty string array (stored values) |
+| = / != / < / <= / > / >= | integer, double, currency | `equal` / `not_equal` / `less_than` / `less_equal` / `greater_than` / `greater_equal`, finite number (integer fields require safe integers) |
+| between / not between | number family | `between` / `not_between`, exactly two numbers `[lower, upper]` with `lower <= upper` |
+| is | boolean | `equal`, boolean |
+| is / is not | ownerlookup | `equal` / `not_equal`, nonempty user-ID string array |
+| age in N days | datetime | `less_equal`, `{ token: "AGEINDAYS", offset: N }` (existing saved-view rule) |
+| due in N days | datetime | `less_equal`, `{ token: "DUEINDAYS", offset: N }` |
+| Today | datetime | `equal`, `{ token: "TODAY" }` (existing token) |
+| Tomorrow / Yesterday | datetime | `equal`, `{ token: "PERIOD", name: "TOMORROW" / "YESTERDAY" }` |
+| Till Yesterday / Starting tomorrow | datetime | `equal`, `PERIOD` name `TILL_YESTERDAY` / `STARTING_TOMORROW` |
+| This Week / Previous Week | datetime | `equal`, `PERIOD` name `THIS_WEEK` / `PREVIOUS_WEEK` |
+| This Month / Previous Month | datetime | `equal`, `PERIOD` name `THIS_MONTH` / `PREVIOUS_MONTH` |
+| This Year / Previous Year / Next Year | datetime | `equal`, `PERIOD` name `THIS_YEAR` / `PREVIOUS_YEAR` / `NEXT_YEAR` |
+
+Interim boundaries and empty-value behavior:
+
+- Empty means `null` or exactly `""`; missing row fields evaluate as null. Whitespace
+  is populated. Empty predicates use `null` as the unused criterion value, including
+  booleans and reference fields; false and zero are populated.
+- Empty text passes `not_equal` against a populated string and `not_contains`;
+  empty picklist/owner values pass negative membership. Empty numbers match only
+  `not_equal` among numeric comparisons; they fail both range operators.
+- Range endpoints are inclusive. Reversed or malformed ranges fail validation.
+- N is a nonnegative integer. `AGEINDAYS` keeps
+  `floor((now - field) / 86_400_000) <= N`, including its existing future-date behavior.
+  `DUEINDAYS` means `now < field <= now + N * 86_400_000`; N=0 matches nothing.
+- Calendar periods use UTC and half-open `[start, nextStart)` intervals. Weeks
+  start Monday 00:00 UTC. Months/years use calendar boundaries, including year
+  rollover and leap days. Till Yesterday is before today's UTC midnight; Starting
+  tomorrow includes tomorrow's UTC midnight and all later dates.
+- Null or unparseable datetimes never match date tokens. TODAY retains its existing
+  UTC-day boundary. Runtime clocks resolve tokens on each query.
+- Role/group membership, blocked email, arbitrary date offsets/dates/ranges,
+  fiscal periods, system filters and related-module filters are not introduced.
+
 
 `ListQuery.fields` projects field API names, always including `id`. Omission
 returns all fields; an empty list returns only `id`. Unknown names raise a
@@ -94,7 +146,15 @@ Unknown modules, views and records raise `NotFoundError`. Validation raises
 A future uniqueness violation must use the existing `ConflictError`. This Leads
 fixture has no unique fields and permits duplicate Email on create and update.
 Returned metadata, views, records and nested values are detached copies; write
-inputs are copied before storage. Bulk delete validates every ID before deleting.
+inputs are copied before storage. Bulk delete validates every ID before deleting. `delete`, `massUpdate` and
+`changeOwner` require 1–500 IDs. `massUpdate` accepts exactly one writable field
+whose massUpdate flag is true, with the same value/required/length/type/picklist
+validation as update. `changeOwner` accepts an active organization member ID;
+removed/unknown/foreign owners fail under Owner. All three batch writes are atomic:
+unknown/foreign IDs fail with NotFoundError before any write. This atomicity remains
+Interim until per-record failure behavior is documented (ADR 0004 §5).
+ValidationError has an optional internal reason (`invalid`, `mandatory`, `limit`)
+to distinguish error wire codes without inspecting translated message text.
 
 ## Adapter verification
 
@@ -124,9 +184,12 @@ These points are evidence, separate from the interim policies below.
   every definition in `research/specs/list-views.md`. MEP-71.
 - Applied order is `query.sort`, otherwise the view's `sort`, otherwise record id
   descending (`{ field: "id", order: "desc" }`). Identifiers are decimal text and
-  compare as `BigInt`. The id-descending default was observed on the default view
-  when the list request carried no sort parameter (`info.sort_by` `id`,
-  `info.sort_order` `desc`). The same rule is an assumption for the other 13 views.
+  compare as `BigInt`. The id-descending default was observed on the five views
+  that held records when captured (All Leads, Mailing Labels, My Leads, Open Leads,
+  Unread Leads): no list request carried a sort parameter and each response
+  reported `info.sort_by` `id`, `info.sort_order` `desc`. The other nine views were
+  empty and answer 204 with no body, so the same rule is an assumption for them.
+  See `research/specs/list-views.md` › Saved and response sort evidence.
   MEP-71.
 
 ## Interim fixture policies (not reference parity)
@@ -215,7 +278,7 @@ not evidence of reference CRM behavior and must not determine screen parity.
   Status picklist categories at query time (Open, Junk, Not Qualified). Empty
   status is not a member of those categories.
 - Replace interim search, date-token, unknown-field and tie-break policies when
-  researched. Filter-panel operators and sortable menu entries remain open. Saved
+  researched. Applied panel filter requests/results and sortable menu entries remain open. Saved
   view criteria and the recorded default sort are no longer open.
 - Add metadata-driven uniqueness enforcement using ConflictError and a genuine
   rejection contract test with the first authorized unique-field scope.
@@ -224,5 +287,5 @@ not evidence of reference CRM behavior and must not determine screen parity.
 
 Storage, schemas/migrations, identity-generation strategy, HTTP paths/methods,
 authorization and role rules, event processing, routes, screens, conversions,
-bulk actions, import/export and non-Leads modules are outside this delivery.
+other bulk actions, import/export and non-Leads modules are outside this delivery.
 The database package and route tree remain unchanged. No dependencies are added.

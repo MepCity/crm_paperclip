@@ -59,6 +59,7 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
 }
 export function validateInput(input: RecordInput, partial: boolean): void {
   const errors: FieldErrors = Object.create(null);
+  let mandatory = false;
   for (const name of Object.keys(input)) {
     if (!leadsMetadata.fields.some((field) => field.apiName === name))
       errors[name] = ["Unknown field."];
@@ -75,6 +76,7 @@ export function validateInput(input: RecordInput, partial: boolean): void {
       (!partial || present) &&
       (value == null || (typeof value === "string" && !value.trim()))
     ) {
+      mandatory = true;
       errors[field.apiName] = ["This field is required."];
     } else if (present) {
       if (value === undefined || !acceptsFieldValue(field, value))
@@ -89,5 +91,6 @@ export function validateInput(input: RecordInput, partial: boolean): void {
         errors[field.apiName] = ["Choose a listed option."];
     }
   }
-  if (Object.keys(errors).length) throw new ValidationError(errors);
+  if (Object.keys(errors).length)
+    throw new ValidationError(errors, undefined, mandatory ? "mandatory" : "invalid");
 }

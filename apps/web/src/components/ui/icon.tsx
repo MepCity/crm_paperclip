@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Users,
   X,
 } from "lucide-react";
 import type { SVGProps } from "react";
@@ -85,9 +86,108 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Original user silhouette for form placeholders and picker action. */
+function RecordUser(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...props}
+    >
+      <circle cx="12" cy="7" r="4" />
+      <path d="M4 22v-3a8 8 0 0 1 16 0v3M2 22h20" />
+    </svg>
+  );
+}
+
+/** Filled portrait silhouette clipped inside the Lead Image ring. */
+function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      {...props}
+    >
+      <circle cx="24" cy="23" r="8" />
+      <path d="M19.75 29h8.5v1.5C31.5 31 34.5 31.8 36 33c1.8 1.5 3.05 2.5 3.75 3L44 48H4l4.25-12C9 35.5 10.2 34.5 12 33c1.5-1.2 4.5-2 7.75-2.5Z" />
+    </svg>
+  );
+}
+
+/** Filled downward caret for form picklists (8 × 5 px measured). */
+function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 8 5"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M0 0h8L4 5Z" />
+    </svg>
+  );
+}
+
+function RecordChevron(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m4 6 4 4 4-4" />
+    </svg>
+  );
+}
+function RecordCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <path d="m3 8 3 3 7-7" />
+    </svg>
+  );
+}
+function RecordInfo(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      {...props}
+    >
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 7v4M8 4v1" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
+  recordUser: RecordUser,
+  recordPortraitSilhouette: RecordPortraitSilhouette,
+  recordFormCaret: RecordFormCaret,
+  recordChevron: RecordChevron,
+  recordCheck: RecordCheck,
+  recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
@@ -103,6 +203,7 @@ export const Icons = {
   showMenu: PanelLeftOpen,
   plus: Plus,
   settings: Settings,
+  users: Users,
   spinner: Loader2,
   error: AlertCircle,
   success: CheckCircle2,
@@ -118,6 +219,8 @@ export const Icons = {
   list: ListIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
+  timelinePencil: TimelinePencilIcon,
+  timelineGeneric: TimelineGenericIcon,
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
@@ -187,6 +290,23 @@ function EllipsisIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <ListGlyph {...props}>
       <path d="M5 12h.1M12 12h.1M19 12h.1" strokeWidth="3" />
+    </ListGlyph>
+  );
+}
+
+function TimelinePencilIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <path d="m14.5 5.5-2 2 4 4 2-2-4-4Z" />
+      <path d="M7 13 5 19l6-2 7.5-7.5-4-4L7 13Z" />
+    </ListGlyph>
+  );
+}
+
+function TimelineGenericIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <circle cx="12" cy="12" r="4" />
     </ListGlyph>
   );
 }
