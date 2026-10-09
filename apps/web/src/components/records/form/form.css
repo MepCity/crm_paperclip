@@ -55,13 +55,10 @@
 }
 
 .record-form-section {
+  display: flow-root;
   margin: 0;
   padding: 0;
   border: 0;
-}
-
-.record-form-section + .record-form-section {
-  margin-top: var(--size-form-section-gap);
 }
 
 .record-form-section__title {
@@ -85,7 +82,8 @@
 }
 
 .record-form-section:not(:first-child) .record-form-section__title {
-  margin: 0 0 var(--size-form-section-title-gap);
+  margin-top: calc(var(--size-form-section-title-center-above) - 0.5em);
+  margin-bottom: calc(var(--size-form-section-title-center-below) - 0.5em);
 }
 
 .record-form-portrait {
@@ -99,8 +97,6 @@
   display: flex;
   align-items: flex-start;
   gap: 0;
-  /* Measured title gap is baseline-to-content; trim heading line box (MEP-172). */
-  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
 }
 
 .record-form-column {
@@ -146,10 +142,9 @@
 }
 
 .record-form-row--full {
-  grid-template-columns: var(--size-form-label-column-left) var(--size-form-label-gap) minmax(
-      0,
-      1fr
-    );
+  grid-template-columns:
+    var(--size-form-label-column-left) var(--size-form-label-gap)
+    var(--size-form-input-full-width);
   width: 100%;
   max-width: var(--record-form-content-width);
 }
@@ -181,26 +176,24 @@
     var(--size-form-label-gap) +
     var(--size-form-input-left-width)
   );
-  margin: 0;
+  margin: 0 0 var(--size-form-field-group-margin-bottom);
   padding: 0 var(--size-form-field-group-padding-end) 0 0;
   border: 1px solid var(--color-form-field-group-border);
-  border-radius: var(--radius-form-control);
-}
-
-.record-form-section:not(:first-child) > .record-form-field-group {
-  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
+  border-radius: var(--radius-form-field-group);
 }
 
 .record-form-field-group__legend {
   position: absolute;
   top: 0;
   left: var(--size-form-field-group-legend-inset);
-  padding: 0 var(--size-form-field-group-legend-padding);
+  padding: 0 var(--size-form-field-group-legend-padding-end) 0
+    var(--size-form-field-group-legend-padding-start);
   font-size: var(--text-md);
   font-weight: var(--font-weight-normal);
+  line-height: 1;
   color: var(--color-text-muted);
   background-color: var(--color-surface);
-  transform: translateY(-50%);
+  transform: translateY(calc(-50% + 3px));
 }
 
 .record-form-field-group__body {

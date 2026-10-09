@@ -47,9 +47,17 @@ right edge to the right input’s left edge (right label column plus label gap);
 `field-group.tsx`
 
 Bordered group with a legend straddling the top edge (for example `Address`). It
-spans the left column width. Rows inside the group use the narrower
-`--size-form-input-group-width` control column while keeping the same label
-geometry as the main grid.
+spans the left column width (`529px` outer width with `--radius-form-field-group`
+`10px` corners). Legend text starts `18.5px` from the frame’s left edge; the
+legend background begins `10px` from the left with `8.5px` padding before the
+text. Rows inside the group use the narrower `--size-form-input-group-width`
+control column while keeping the same label geometry as the main grid. The frame
+adds `17px` margin below before the next section title.
+
+`FormRow column="full"` (Description) uses `--size-form-input-full-width`
+(`639px`) for the control slot, aligned with the left-column inputs. The layout
+demo textarea uses `--size-form-description-height` (`34px`) as its initial
+height with vertical resize unchanged.
 
 ## Select User dialog (`select-user-dialog.tsx`)
 
