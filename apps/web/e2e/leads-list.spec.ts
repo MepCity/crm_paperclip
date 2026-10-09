@@ -228,17 +228,78 @@ async function recordIdsInTable(page: import("@playwright/test").Page): Promise<
   return ids;
 }
 
-async function expectFilterResultsMatchResponses(
+type FilterRequestBody = { filters: unknown };
+
+function captureNextBulkSearchParams(page: import("@playwright/test").Page) {
+  return page
+    .waitForRequest((request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      return parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk");
+    })
+    .then((request) => new URL(request.url()).searchParams);
+}
+
+async function fetchIndependentFilterExpectations(
   page: import("@playwright/test").Page,
-  bulkResponse: import("@playwright/test").Response,
-  countResponse: import("@playwright/test").Response,
+  orgSlug: string,
+  bulkSearchParams: URLSearchParams,
+  body: FilterRequestBody,
+): Promise<{ ids: string[]; total: number }> {
+  const bulkParams = new URLSearchParams(bulkSearchParams);
+  bulkParams.set("page", "1");
+  const cvid = bulkParams.get("cvid");
+  if (!cvid) throw new Error("Expected cvid on bulk request.");
+  return page.evaluate(
+    async ({ org, bulkQuery, viewId, filterBody }) => {
+      const headers = {
+        "Content-Type": "application/json",
+        "X-CRM-ORG": org,
+      };
+      const [bulkResponse, countResponse] = await Promise.all([
+        fetch(`/crm/v2.2/Leads/bulk?${bulkQuery}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(filterBody),
+        }),
+        fetch(`/crm/v2.2/Leads/actions/count?cvid=${viewId}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(filterBody),
+        }),
+      ]);
+      if (!bulkResponse.ok) {
+        throw new Error(`bulk ${bulkResponse.status}: ${await bulkResponse.text()}`);
+      }
+      if (!countResponse.ok) {
+        throw new Error(`count ${countResponse.status}: ${await countResponse.text()}`);
+      }
+      const readJson = async (response: Response) => {
+        const text = await response.text();
+        return text ? (JSON.parse(text) as unknown) : null;
+      };
+      const bulkJson = (await readJson(bulkResponse)) as { data?: { id: string }[] } | null;
+      const countJson = (await readJson(countResponse)) as { count?: number } | null;
+      return {
+        ids: (bulkJson?.data ?? []).map((row) => row.id),
+        total: countJson?.count ?? 0,
+      };
+    },
+    {
+      org: orgSlug,
+      bulkQuery: bulkParams.toString(),
+      viewId: cvid,
+      filterBody: body,
+    },
+  );
+}
+
+async function expectFilterResultsInDom(
+  page: import("@playwright/test").Page,
+  expectations: { ids: string[]; total: number },
 ) {
-  const bulkJson = (await bulkResponse.json()) as { data: { id: string }[] };
-  const countJson = (await countResponse.json()) as { count: number };
-  const expectedIds = bulkJson.data.map((row) => row.id);
-  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectedIds);
-  await expect(page.locator("[data-part=total-value]")).toHaveText(String(countJson.count));
-  expect(expectedIds.length).toBeLessThanOrEqual(countJson.count);
+  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectations.ids);
+  await expect(page.locator("[data-part=total-value]")).toHaveText(String(expectations.total));
+  expect(expectations.ids.length).toBeLessThanOrEqual(expectations.total);
 }
 
 async function waitForFilteredListResponses(page: import("@playwright/test").Page) {
@@ -602,8 +663,11 @@ test.describe("Leads list page", () => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
     const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const bulkSearchParams = await bulkSearchParamsPromise;
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
     const initialRows = await page.locator("table tbody tr").count();
     const initialTotal = await page.locator("[data-part=total-value]").innerText();
     const sampleCompany = (
@@ -629,10 +693,25 @@ test.describe("Leads list page", () => {
         lastCountBody = request.postDataJSON();
       }
     });
+    const companyFilterBody: FilterRequestBody = {
+      filters: {
+        field: { api_name: "Company" },
+        comparator: "contains",
+        value: sampleCompany,
+      },
+    };
+    const companyExpectations = await fetchIndependentFilterExpectations(
+      page,
+      org.slug,
+      bulkSearchParams,
+      companyFilterBody,
+    );
     const companyResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [companyBulk, companyCount] = await companyResponses;
-    await expectFilterResultsMatchResponses(page, companyBulk, companyCount);
+    expect(companyBulk.ok()).toBe(true);
+    expect(companyCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, companyExpectations);
     const filteredRows = await page.locator("table tbody tr").count();
     expect(filteredRows).toBeGreaterThan(0);
     expect(filteredRows).toBeLessThan(initialRows);
@@ -652,6 +731,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -663,10 +743,25 @@ test.describe("Leads list page", () => {
     await selectPicklistValues(page, panel, "Lead Source", [leadSourceA, leadSourceB]);
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const leadSourceFilterBody: FilterRequestBody = {
+      filters: {
+        field: { api_name: "Lead_Source" },
+        comparator: "equal",
+        value: [leadSourceA, leadSourceB],
+      },
+    };
+    const leadSourceExpectations = await fetchIndependentFilterExpectations(
+      page,
+      org.slug,
+      bulkSearchParams,
+      leadSourceFilterBody,
+    );
     const leadSourceResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [leadSourceBulk, leadSourceCount] = await leadSourceResponses;
-    await expectFilterResultsMatchResponses(page, leadSourceBulk, leadSourceCount);
+    expect(leadSourceBulk.ok()).toBe(true);
+    expect(leadSourceCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, leadSourceExpectations);
     expect(lastBulkBody).toEqual(
       expect.objectContaining({
         filters: {
@@ -679,6 +774,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -687,10 +783,25 @@ test.describe("Leads list page", () => {
     await page.getByRole("option", { name: "Today", exact: true }).click();
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const todayFilterBody: FilterRequestBody = {
+      filters: {
+        field: { api_name: "Created_Time" },
+        comparator: "equal",
+        value: `\${TODAY}`,
+      },
+    };
+    const todayExpectations = await fetchIndependentFilterExpectations(
+      page,
+      org.slug,
+      bulkSearchParams,
+      todayFilterBody,
+    );
     const todayResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [todayBulk, todayCount] = await todayResponses;
-    await expectFilterResultsMatchResponses(page, todayBulk, todayCount);
+    expect(todayBulk.ok()).toBe(true);
+    expect(todayCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
       filters: {
         field: { api_name: "Created_Time" },
@@ -701,6 +812,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await openFilterRow(page, panel, "Company");
     await panel.getByRole("button", { name: /Company operator$/ }).click();
@@ -708,14 +820,17 @@ test.describe("Leads list page", () => {
     await panel.getByRole("textbox", { name: "Company value" }).fill("zzzz-no-match-zzzz");
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const noMatchExpectations = { ids: [] as string[], total: 0 };
     const noMatchResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
-    await noMatchResponses;
+    const [noMatchBulk, noMatchCount] = await noMatchResponses;
+    expect(noMatchBulk.ok()).toBe(true);
+    expect(noMatchCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, noMatchExpectations);
     await expect(page.getByText("No Leads found.")).toBeVisible();
-    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
-    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);

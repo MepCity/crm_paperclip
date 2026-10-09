@@ -43,6 +43,33 @@ function wrapper(service: ReturnType<typeof createClientRecordService>) {
   };
 }
 
+function recordIdsInDomTable(): string[] {
+  const table = screen.getByRole("table", { name: "Records" });
+  const links = within(table).getAllByRole("link");
+  const ids: string[] = [];
+  for (const link of links) {
+    const href = link.getAttribute("href") ?? "";
+    const match = href.match(/\/Leads\/([^/?#]+)/);
+    if (match?.[1]) ids.push(match[1]);
+  }
+  return ids;
+}
+
+async function fixturePageRecordIds(
+  records: ReturnType<typeof createFixtureRecordService>,
+  listSpy: ReturnType<typeof vi.spyOn>,
+): Promise<string[]> {
+  const query = listSpy.mock.calls.at(-1)?.[1];
+  if (!query) throw new Error("Expected list query.");
+  const page = await records.list("Leads", query);
+  return page.records.map((record) => record.id);
+}
+
+function rowSelectCheckboxForRecordName(name: string) {
+  const row = screen.getByRole("row", { name: new RegExp(name) });
+  return within(row).getByRole("checkbox", { name: /Select / });
+}
+
 async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRecordService>) {
   const module = await service.getModule("Leads");
   return {
@@ -158,10 +185,15 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const fixturePage = await records.list("Leads", listQuery);
+    const selectedRecord = fixturePage.records[0];
+    if (!selectedRecord) throw new Error("Expected a fixture record.");
+    const selectedName = String(selectedRecord.fields.Full_Name ?? "");
+    const rowSelect = rowSelectCheckboxForRecordName(selectedName);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
-    const rowSelect = screen.getAllByRole("checkbox", { name: /Select / })[1];
-    if (!rowSelect) throw new Error("Expected a row selection checkbox.");
     await user.click(rowSelect);
     await waitFor(() => {
       expect(screen.getByText("1 Record Selected")).toBeTruthy();
@@ -181,6 +213,7 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.queryByText("1 Record Selected")).toBeNull();
     });
+    expect(rowSelect.getAttribute("aria-checked")).not.toBe("true");
     expect(navigation.push).toHaveBeenCalled();
   });
 
@@ -199,8 +232,20 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
+    const baselineIds = await fixturePageRecordIds(records, listSpy);
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const fixturePage = await records.list("Leads", listQuery);
+    const selectedRecord = fixturePage.records[0];
+    if (!selectedRecord) throw new Error("Expected a fixture record.");
+    const selectedName = String(selectedRecord.fields.Full_Name ?? "");
+    const rowSelect = rowSelectCheckboxForRecordName(selectedName);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(rowSelect);
+    await waitFor(() => {
+      expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    });
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
@@ -209,7 +254,10 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
       expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(screen.queryByText("1 Record Selected")).toBeNull();
+      expect(recordIdsInDomTable()).toEqual(baselineIds);
     });
+    expect(rowSelect.getAttribute("aria-checked")).not.toBe("true");
   });
 
   it("resets applied filter, selection, and panel draft when the view changes", async () => {
@@ -233,8 +281,13 @@ describe("ModuleListScreen", () => {
     });
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
-    const rowSelect = screen.getAllByRole("checkbox", { name: /Select / })[1];
-    if (!rowSelect) throw new Error("Expected a row selection checkbox.");
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const fixturePage = await records.list("Leads", listQuery);
+    const selectedRecord = fixturePage.records[0];
+    if (!selectedRecord) throw new Error("Expected a fixture record.");
+    const selectedName = String(selectedRecord.fields.Full_Name ?? "");
+    const rowSelect = rowSelectCheckboxForRecordName(selectedName);
     await user.click(rowSelect);
     await waitFor(() => {
       expect(screen.getByText("1 Record Selected")).toBeTruthy();
@@ -247,6 +300,7 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.queryByText("1 Record Selected")).toBeNull();
     });
+    expect(rowSelect.getAttribute("aria-checked")).not.toBe("true");
     rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="converted-leads" />);
     await waitFor(() => {
       const query = listSpy.mock.calls.at(-1)?.[1];
@@ -337,18 +391,20 @@ describe("ModuleListScreen", () => {
     const config = await leadsConfigWithFilters(records);
     const originalList = records.list.bind(records);
     const originalCount = records.count.bind(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
     let releaseList: () => void = () => {};
     const listGate = new Promise<void>((resolve) => {
       releaseList = resolve;
     });
-    vi.spyOn(records, "list").mockImplementation(async (module, query) => {
+    listSpy.mockImplementation(async (module, query) => {
       if (query.filters) {
         await listGate;
         throw new ValidationError({ filters: ["Invalid list filter."] });
       }
       return originalList(module, query);
     });
-    vi.spyOn(records, "count").mockImplementation(async (module, query) => {
+    countSpy.mockImplementation(async (module, query) => {
       if (query.filters) return 42;
       return originalCount(module, query);
     });
@@ -363,21 +419,33 @@ describe("ModuleListScreen", () => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
     const totalBefore = document.querySelector("[data-part=total-value]")?.textContent;
-    const rowsBefore = screen.getAllByRole("row").length;
+    const baselineIds = await fixturePageRecordIds(records, listSpy);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
-      expect(document.querySelector("[data-part=total-value]")?.textContent).not.toBe("42");
+      expect(countSpy).toHaveBeenCalledWith(
+        "Leads",
+        expect.objectContaining({
+          filters: {
+            field: "Company",
+            comparator: "contains",
+            value: "Example",
+          },
+        }),
+      );
     });
-    expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+    await waitFor(() => {
+      expect(document.querySelector("[data-part=total-value]")?.textContent).not.toBe("42");
+      expect(recordIdsInDomTable()).toEqual(baselineIds);
+    });
     releaseList();
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toContain("Invalid list filter.");
     });
     expect(document.querySelector("[data-part=total-value]")?.textContent).toBe(totalBefore);
     expect(document.querySelector("[data-part=total-value]")?.textContent).not.toBe("42");
-    expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+    expect(recordIdsInDomTable()).toEqual(baselineIds);
   });
 
   it("keeps the prior snapshot when count rejects filters after list would succeed", async () => {
@@ -385,11 +453,13 @@ describe("ModuleListScreen", () => {
     const config = await leadsConfigWithFilters(records);
     const originalList = records.list.bind(records);
     const originalCount = records.count.bind(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
     let releaseCount: () => void = () => {};
     const countGate = new Promise<void>((resolve) => {
       releaseCount = resolve;
     });
-    vi.spyOn(records, "list").mockImplementation(async (module, query) => {
+    listSpy.mockImplementation(async (module, query) => {
       if (query.filters) {
         return {
           records: [],
@@ -401,7 +471,7 @@ describe("ModuleListScreen", () => {
       }
       return originalList(module, query);
     });
-    vi.spyOn(records, "count").mockImplementation(async (module, query) => {
+    countSpy.mockImplementation(async (module, query) => {
       if (query.filters) {
         await countGate;
         throw new ValidationError({ filters: ["Invalid count filter."] });
@@ -419,19 +489,31 @@ describe("ModuleListScreen", () => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
     const totalBefore = document.querySelector("[data-part=total-value]")?.textContent;
-    const rowsBefore = screen.getAllByRole("row").length;
+    const baselineIds = await fixturePageRecordIds(records, listSpy);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
-      expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+      expect(listSpy).toHaveBeenCalledWith(
+        "Leads",
+        expect.objectContaining({
+          filters: {
+            field: "Company",
+            comparator: "contains",
+            value: "Example",
+          },
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(recordIdsInDomTable()).toEqual(baselineIds);
     });
     releaseCount();
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toContain("Invalid count filter.");
     });
     expect(document.querySelector("[data-part=total-value]")?.textContent).toBe(totalBefore);
-    expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+    expect(recordIdsInDomTable()).toEqual(baselineIds);
   });
 
   it("resets to page 1 when Clear is pressed while the address is on page 2", async () => {
@@ -481,6 +563,7 @@ describe("ModuleListScreen", () => {
   it("shows the selection bar and restores the toolbar after Clear", async () => {
     navigation.params = new URLSearchParams("per_page=10");
     const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
@@ -491,14 +574,20 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
-    const rowBoxes = screen.getAllByRole("checkbox", { name: /Select / });
-    const firstRow = rowBoxes[1];
-    if (!firstRow) throw new Error("Expected a row checkbox.");
-    await user.click(firstRow);
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const fixturePage = await records.list("Leads", listQuery);
+    const selectedRecord = fixturePage.records[0];
+    if (!selectedRecord) throw new Error("Expected a fixture record.");
+    const selectedName = String(selectedRecord.fields.Full_Name ?? "");
+    const rowSelect = rowSelectCheckboxForRecordName(selectedName);
+    await user.click(rowSelect);
     expect(screen.getByText("1 Record Selected")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByRole("button", { name: "Filter" })).toBeTruthy();
+    expect(rowSelect.getAttribute("aria-checked")).not.toBe("true");
+    expect(screen.queryByText("1 Record Selected")).toBeNull();
   });
 
   it("clears selection when the list page changes", async () => {
