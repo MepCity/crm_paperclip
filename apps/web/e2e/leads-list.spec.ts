@@ -313,7 +313,7 @@ test.describe("Leads list page", () => {
   test("bulk delete from the selection bar", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
-    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     const totalValue = page.locator("[data-part=total-value]");
     await expect(totalValue).toBeVisible();
@@ -496,14 +496,18 @@ test.describe("Leads list page", () => {
     assertListDataRequests(seen);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
-    const page2Bulk = page.waitForResponse((response) => {
-      if (response.request().method() !== "POST") return false;
-      const parsed = parseCrmRequest(response.url(), response.request().method());
-      if (!parsed?.pathname.endsWith("/Leads/bulk")) return false;
-      return parsed.searchParams.get("page") === "2";
+    // Navigation updates the URL before the asynchronous bulk request completes.
+    const pageTwoResponse = page.waitForResponse((response) => {
+      const request = parseCrmRequest(response.url(), response.request().method());
+      return (
+        request?.method === "POST" &&
+        request.pathname.endsWith("/Leads/bulk") &&
+        request.searchParams.get("page") === "2"
+      );
     });
     await next.click();
-    const bulkResponse = await page2Bulk;
+    const bulkResponse = await pageTwoResponse;
+    expect(bulkResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const page2Request = parseCrmRequest(bulkResponse.url(), bulkResponse.request().method());
     expect(page2Request).not.toBeNull();

@@ -146,6 +146,7 @@ describe("ModuleListScreen", () => {
   });
 
   it("shows the selection bar and restores the toolbar after Clear", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
     const records = createFixtureRecordService(ctx);
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
@@ -168,6 +169,7 @@ describe("ModuleListScreen", () => {
   });
 
   it("clears selection when the list page changes", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
     const records = createFixtureRecordService(ctx);
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
@@ -184,7 +186,7 @@ describe("ModuleListScreen", () => {
     if (!firstRow) throw new Error("Expected a row checkbox.");
     await user.click(firstRow);
     expect(screen.getByText("1 Record Selected")).toBeTruthy();
-    navigation.params = new URLSearchParams("page=2");
+    navigation.params = new URLSearchParams("page=2&per_page=10");
     rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />);
     await waitFor(() => {
       expect(screen.queryByText(/Record Selected/)).toBeNull();
@@ -193,6 +195,7 @@ describe("ModuleListScreen", () => {
   });
 
   it("deletes selected records after confirmation with the selected ids", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
     const records = createFixtureRecordService(ctx);
     const deleteSpy = vi.spyOn(records, "delete");
     const listSpy = vi.spyOn(records, "list");
@@ -238,6 +241,7 @@ describe("ModuleListScreen", () => {
   });
 
   it("keeps the delete dialog open and selection when delete fails", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
     const records = createFixtureRecordService(ctx);
     vi.spyOn(records, "delete").mockRejectedValueOnce(new Error("Server error"));
     const service = createClientRecordService(records, {

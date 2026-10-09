@@ -170,7 +170,18 @@ export interface ListResult {
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
 
+/** The organization's home currency. `symbol` is configured display text, never derived from a locale. */
+export interface CurrencyDefinition {
+  /** ISO 4217 code; the argument `formatCurrency` expects. */
+  isoCode: string;
+  symbol: string;
+  name: string;
+  /** True when the symbol is written before the amount. */
+  prefixSymbol: boolean;
+}
+
 export interface RecordService {
+  getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
   listViews(module: ModuleApiName): Promise<readonly ListView[]>;
   getView(module: ModuleApiName, viewId: string): Promise<ListView>;

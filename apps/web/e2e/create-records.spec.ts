@@ -47,11 +47,15 @@ test("the toolbar plus button opens the Create Records menu", async ({ page }) =
   await expect(dialog).toBeHidden();
   const slug = new URL(page.url()).pathname.split("/")[2] ?? "";
   await expect(page).toHaveURL(`/crm/${slug}/tab/Leads/create`);
-  // MEP-145 delivers the Create Lead page; until it merges the route 404s inside the shell.
-  await expect(
-    page.getByRole("banner").getByRole("heading", { name: "Page not found" }),
-  ).toBeVisible();
-  await expectNoA11yViolations(page);
+  await expect(page.getByRole("heading", { name: "Create Lead", exact: true })).toBeVisible();
+  // ADR 0003 §8: measured Salutation placeholder ink and the newly measured
+  // Clear All pair reported to CTO; scan the controls, excluding only their text.
+  await expectNoA11yViolations(page, {
+    exclude: [
+      "#record-form-Salutation-value.record-prefix-empty",
+      ".record-form-clear-address > span",
+    ],
+  });
 });
 
 test("typing in the search box filters the module rows", async ({ page }) => {

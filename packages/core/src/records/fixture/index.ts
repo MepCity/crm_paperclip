@@ -129,6 +129,9 @@ export function createFixtureRecordService(
     for (const record of updates) state.records.set(record.id, record);
   };
   return {
+    async getHomeCurrency() {
+      return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
+    },
     async getModule(module) {
       moduleExists(module);
       return copy(leadsMetadata);

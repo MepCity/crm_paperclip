@@ -1,6 +1,6 @@
 import type { Criteria, OrgContext } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
 import type { Operation, OperationDeps } from "@/lib/api/wire/operations";
 import { operationPath, operations } from "@/lib/api/wire/operations";
@@ -530,4 +530,20 @@ describe("http record service requests", () => {
     }));
     await expect(service.listViewSummaries(module)).resolves.toEqual(expected);
   });
+});
+
+it("requests home currency by GET without module metadata or query parameters", async () => {
+  const fetch = vi.fn().mockResolvedValue({
+    currencies: [
+      { symbol: "TL", iso_code: "TRY", name: "Turkish Lira - TRY", prefix_symbol: true },
+    ],
+  });
+  const service = createHttpRecordService({ orgSlug: "currency-test", fetch });
+  expect(await service.getHomeCurrency()).toEqual({
+    isoCode: "TRY",
+    symbol: "TL",
+    name: "Turkish Lira - TRY",
+    prefixSymbol: true,
+  });
+  expect(fetch).toHaveBeenCalledExactlyOnceWith("/crm/v2.2/org/currencies", { method: "GET" });
 });

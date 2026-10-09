@@ -512,6 +512,17 @@
   --size-form-field-group-legend-padding: 12.5px;
   /* Description textarea height is not measurable in the capture; demo placeholder only. */
   --size-form-description-height: 80px;
+  /* record-detail.md › Address frame; Description Information and textarea. */
+  --size-form-address-footer-bottom: 15px;
+  --size-form-address-radius: 10px;
+  --size-form-coordinate-gap: 10px;
+  --color-form-clear-address: #a0a8b8;
+  --size-form-description-width: 639px;
+  --size-form-description-extra-gap: 17px;
+  --size-form-page-cancel-width: 74px;
+  --size-form-page-save-new-width: 119.5px;
+  --size-form-page-save-width: 59.5px;
+  --size-form-description-rule-gap: 40px;
 
   /* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
      Offsets are panel-border-box coordinates minus the panel origin x 534, y 50. */

@@ -1,19 +1,15 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { Button } from "./button";
 
 export interface ConfirmDialogProps {
   title: string;
   message?: string;
-  /** @deprecated Prefer `message`. */
-  children?: ReactNode;
   confirmLabel: string;
   cancelLabel: string;
   tone?: "danger" | "default";
-  /** @deprecated Prefer `tone`. */
-  variant?: "primary" | "danger";
   busy?: boolean;
   errorMessage?: string | null;
   onConfirm: () => void | Promise<void>;
@@ -23,20 +19,6 @@ export interface ConfirmDialogProps {
 
 function isPromise(value: void | Promise<void>): value is Promise<void> {
   return typeof (value as Promise<void> | undefined)?.then === "function";
-}
-
-function resolveMessage(message?: string, children?: ReactNode): string {
-  if (message !== undefined) return message;
-  if (typeof children === "string") return children;
-  return "";
-}
-
-function resolveTone(
-  tone: ConfirmDialogProps["tone"],
-  variant: ConfirmDialogProps["variant"],
-): "danger" | "default" {
-  if (tone) return tone;
-  return variant === "danger" ? "danger" : "default";
 }
 
 function ConfirmDialogBody({
@@ -51,7 +33,7 @@ function ConfirmDialogBody({
   close,
   descriptionId,
   onPendingChange,
-}: Omit<ConfirmDialogProps, "isOpen" | "onOpenChange" | "children" | "variant"> & {
+}: Omit<ConfirmDialogProps, "isOpen" | "onOpenChange"> & {
   message: string;
   tone: "danger" | "default";
   close: () => void;
@@ -141,12 +123,10 @@ function ConfirmDialogBody({
 
 export function ConfirmDialog({
   title,
-  message,
-  children,
+  message = "",
   confirmLabel,
   cancelLabel,
-  tone,
-  variant,
+  tone = "default",
   busy,
   errorMessage,
   onConfirm,
@@ -155,8 +135,6 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const descriptionId = useId();
   const [pending, setPending] = useState(false);
-  const resolvedMessage = resolveMessage(message, children);
-  const resolvedTone = resolveTone(tone, variant);
   const keyboardLocked = Boolean(busy) || pending;
 
   return (
@@ -179,10 +157,10 @@ export function ConfirmDialog({
           {({ close }) => (
             <ConfirmDialogBody
               title={title}
-              message={resolvedMessage}
+              message={message}
               confirmLabel={confirmLabel}
               cancelLabel={cancelLabel}
-              tone={resolvedTone}
+              tone={tone}
               busy={busy}
               errorMessage={errorMessage}
               onConfirm={onConfirm}

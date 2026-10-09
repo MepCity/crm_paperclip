@@ -194,3 +194,13 @@ periods use `equal`. Empty predicates use null; membership uses nonempty string
 arrays; inclusive numeric ranges use two numbers. Unknown comparator/token values
 fail with `ValidationError` keyed by `filters`. Field-family validation and UTC
 semantics are the service's responsibility, documented in the record-service README.
+
+## Organization currency (Interim)
+
+| Operation | Request | Response |
+| --- | --- | --- |
+| `currencies` | `GET /crm/v2.2/org/currencies` | `currencies[]` (one item: `symbol`, `iso_code`, `name`, `prefix_symbol`) |
+
+The field names and configured values come from the metadata export. The path
+and response envelope were not captured; see ADR 0004. The decoder rejects
+missing, malformed and unknown currency fields with the existing ValidationError.
