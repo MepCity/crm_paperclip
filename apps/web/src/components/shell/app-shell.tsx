@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { CreateRecordsMenu } from "./create-records";
 import { Navigation } from "./navigation";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
 import { PageTitleContext } from "./page-title";
@@ -93,6 +94,7 @@ export function AppShell({
               <h1 className="truncate text-xl font-semibold text-text">{title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-(--size-topbar-control-gap)">
+              <CreateRecordsMenu orgSlug={orgSlug} />
               <Link
                 variant="icon"
                 aria-label="Settings"
