@@ -66,11 +66,24 @@ const leadInfoLeft = [
 ];
 
 const leadInfoRight = [
+  {
+    column: "right" as const,
+    field: field("Lead_Name", "Lead Name", "text"),
+    value:
+      "Northwind Trading Company International Division Regional Procurement Office West Coast",
+  },
   { column: "right" as const, field: field("Company", "Company", "text"), value: "Example Corp" },
   {
     column: "right" as const,
+    field: field("Rating", "Rating", "picklist", {
+      picklist: [{ storedValue: "none", displayValue: "-None-" }],
+    }),
+    value: "",
+  },
+  {
+    column: "right" as const,
     field: field("Website", "Website", "website"),
-    value: "example.org",
+    value: "https://www.example.org/products/catalog/regional/west-coast-distribution-hub",
   },
   {
     column: "right" as const,
@@ -78,10 +91,24 @@ const leadInfoRight = [
     value: "user-1",
     auditTimestamp: "2026-02-15T09:15:00Z",
   },
+  {
+    column: "right" as const,
+    field: field("Twitter", "Twitter", "text"),
+    value: "@example",
+  },
 ];
 
-const longDescription =
-  "A long description value that wraps within its column only and does not affect the opposite column row height in the two-column layout.";
+const interSectionLeft = [
+  { column: "left" as const, field: field("Title", "Title", "text"), value: "Director" },
+];
+
+const interSectionRight = [
+  {
+    column: "right" as const,
+    field: field("Twitter", "Twitter", "text"),
+    value: "@example",
+  },
+];
 
 export default function RecordDetailCardsDemo() {
   return (
@@ -93,18 +120,11 @@ export default function RecordDetailCardsDemo() {
           <DetailsCard
             ownerNames={ownerNames}
             format={DEFAULT_FORMAT}
+            onEdit={() => undefined}
             sections={[
               {
                 title: "Lead Information",
-                fields: [
-                  ...leadInfoLeft,
-                  ...leadInfoRight,
-                  {
-                    column: "right",
-                    field: field("Description", "Description", "textarea"),
-                    value: longDescription,
-                  },
-                ],
+                fields: [...leadInfoLeft, ...leadInfoRight],
               },
               {
                 title: "Address Information",
@@ -116,8 +136,76 @@ export default function RecordDetailCardsDemo() {
                   },
                 ],
               },
+              {
+                title: "Description Information",
+                fields: [
+                  {
+                    column: "full",
+                    field: field("Description", "Description", "textarea"),
+                    value: "",
+                  },
+                ],
+              },
             ]}
           />
+          <div className="detail-demo-frame" data-detail-inter-section-demo>
+            <DetailsCard
+              ownerNames={ownerNames}
+              format={DEFAULT_FORMAT}
+              sections={[
+                {
+                  title: "Lead Information",
+                  fields: [...interSectionLeft, ...interSectionRight],
+                },
+                {
+                  title: "Address Information",
+                  fields: [
+                    {
+                      column: "full",
+                      field: field("Address", "Address", "textarea"),
+                      value: "100 Market St, Springfield, IL 62701, United States",
+                    },
+                  ],
+                },
+                {
+                  title: "Description Information",
+                  fields: [
+                    {
+                      column: "full",
+                      field: field("Description", "Description", "textarea"),
+                      value: "",
+                    },
+                  ],
+                },
+              ]}
+            />
+          </div>
+          <div
+            className="detail-demo-frame"
+            style={{ width: "var(--size-detail-card-width-rail-hidden)" }}
+            data-detail-rail-hidden-demo
+          >
+            <DetailsCard
+              ownerNames={ownerNames}
+              format={DEFAULT_FORMAT}
+              railLayout="hidden"
+              onEdit={() => undefined}
+              sections={[
+                {
+                  title: "Lead Information",
+                  fields: [
+                    {
+                      column: "right",
+                      field: field("Rating", "Rating", "picklist", {
+                        picklist: [{ storedValue: "none", displayValue: "-None-" }],
+                      }),
+                      value: "",
+                    },
+                  ],
+                },
+              ]}
+            />
+          </div>
           <div className="detail-demo-frame">
             <DetailsCard
               ownerNames={ownerNames}
