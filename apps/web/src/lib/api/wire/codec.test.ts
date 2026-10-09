@@ -242,15 +242,14 @@ describe("wire codec", () => {
     expect(encodeCriteria(criteria)).toMatchObject({ value: entry.wire });
     expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
   });
-  it.each([
-    `\${PREVIOUS.DAYS}+0`,
-    `\${NEXT.MONTHS}+1.5`,
-    `\${AGEINWEEKS}+1suffix`,
-  ])("rejects malformed interim datetime wire token %j", (value) => {
-    expect(() =>
-      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
-    ).toThrow(ValidationError);
-  });
+  it.each([`\${PREVIOUS.DAYS}+0`, `\${NEXT.MONTHS}+1.5`, `\${AGEINWEEKS}+1suffix`])(
+    "rejects malformed interim datetime wire token %j",
+    (value) => {
+      expect(() =>
+        decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
+      ).toThrow(ValidationError);
+    },
+  );
   it("round-trips calendar date strings unchanged", () => {
     const criteria: Criteria = {
       field: "Created_Time",
