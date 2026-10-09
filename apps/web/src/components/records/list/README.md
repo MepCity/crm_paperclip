@@ -289,7 +289,10 @@ select two rows. Only synthetic data appears in demos and tests.
   6 px below the toolbar control (`SORT_ANCHOR_OFFSET`): the spec puts its outer box top at
   y 138 while the toolbar row ends at y 132. A portaled field list
   does not dismiss the draft.
-- Sort By field list: the first option is `None`, then the given fields in the given order.
+- Sort By field list: the `SearchableSelect` primitive in `components/ui` draws it (ADR 0003
+  §1 keeps React Aria inside the primitive layer); this file only supplies the options, the
+  anchor offset and the classes the tokens below attach to. The first option is `None`, then
+  the given fields in the given order.
   A search input above the list filters option labels case-insensitively; with no match the
   list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
   has to confirm it; choosing `None` disables Apply again. The selected option is marked and
