@@ -57,6 +57,21 @@ function expectRange(value: number, min: number, max: number) {
   expect(value).toBeLessThanOrEqual(max + 1);
 }
 
+function px(value: string) {
+  return Number.parseFloat(value);
+}
+
+async function tokenLength(page: import("@playwright/test").Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("div");
+    probe.style.width = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).width;
+    probe.remove();
+    return value;
+  }, token);
+}
+
 function parseCrmRequest(url: string, method: string): CrmRequest | null {
   const parsed = new URL(url);
   if (!parsed.pathname.startsWith("/crm/v")) return null;
@@ -231,6 +246,15 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const totalValue = page.locator("[data-part=total-value]");
+    await expect(totalValue).toBeVisible();
+    const totalBefore = Number(await totalValue.innerText());
+    const firstRow = page.locator("table tbody tr").nth(0);
+    const secondRow = page.locator("table tbody tr").nth(1);
+    const deletedLabels = [
+      await firstRow.getByRole("link").first().innerText(),
+      await secondRow.getByRole("link").first().innerText(),
+    ];
     const rowChecks = page.getByRole("checkbox", { name: /Select / });
     const deletedIds: string[] = [];
     await rowChecks.nth(1).check({ force: true });
@@ -258,6 +282,10 @@ test.describe("Leads list page", () => {
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
     await expect(page.getByText(/Leads Selected/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Filter", exact: true })).toBeVisible();
+    for (const label of deletedLabels) {
+      await expect(page.getByRole("link", { name: label })).toHaveCount(0);
+    }
+    await expect.poll(async () => Number(await totalValue.innerText())).toBe(totalBefore - 2);
   });
 
   test("toggles the filter panel and supports row selection", async ({ page }) => {
@@ -396,19 +424,24 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     assertListDataRequests(seen);
-    const countBeforeNext = seen.length;
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
+    const page2Bulk = page.waitForResponse((response) => {
+      if (response.request().method() !== "POST") return false;
+      const parsed = parseCrmRequest(response.url(), response.request().method());
+      if (!parsed?.pathname.endsWith("/Leads/bulk")) return false;
+      return parsed.searchParams.get("page") === "2";
+    });
     await next.click();
+    const bulkResponse = await page2Bulk;
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
-    const afterNext = seen.slice(countBeforeNext);
-    expect(afterNext.length).toBeGreaterThan(0);
-    for (const request of afterNext) {
-      expect(request.method).toBe("POST");
-      expect(request.pathname.endsWith("/Leads/bulk")).toBe(true);
-      expect(request.searchParams.get("page")).toBe("2");
-    }
-    expect(afterNext.some((item) => isSettingsOrUsersRequest(item))).toBe(false);
+    const page2Request = parseCrmRequest(bulkResponse.url(), bulkResponse.request().method());
+    expect(page2Request).not.toBeNull();
+    if (!page2Request) throw new Error("Expected page-2 bulk request.");
+    expect(page2Request.method).toBe("POST");
+    expect(page2Request.pathname.endsWith("/Leads/bulk")).toBe(true);
+    expect(page2Request.searchParams.get("page")).toBe("2");
+    expect(isSettingsOrUsersRequest(page2Request)).toBe(false);
   });
 
   test("meets accessibility rules on the populated list", async ({ page }) => {
@@ -417,6 +450,82 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     await expectNoA11yViolations(page);
+  });
+
+  test("selection bar and delete confirm match visual layout at 1470×835", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    const listPage = page.locator(".module-list-page");
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const toolbar = listPage.locator("[data-list-toolbar]");
+    const toolbarBox = requireBox(await toolbar.boundingBox(), "list toolbar");
+    const toolbarHeight = px(await tokenLength(page, "--size-list-toolbar-height"));
+    expectEdge(toolbarBox.height, toolbarHeight);
+
+    await page
+      .getByRole("checkbox", { name: /Select / })
+      .nth(1)
+      .check({ force: true });
+    const selectionBar = listPage.locator("[data-selection-bar]");
+    await expect(selectionBar).toBeVisible();
+    const barBox = requireBox(await selectionBar.boundingBox(), "selection bar");
+    expectEdge(barBox.y, toolbarBox.y);
+    expectEdge(barBox.height, toolbarHeight);
+
+    await page.getByRole("button", { name: "Delete" }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toBeVisible();
+    const panel = dialog.locator("xpath=..");
+    const panelBox = requireBox(await panel.boundingBox(), "confirm panel");
+    const dialogWidth = px(await tokenLength(page, "--size-dialog-width"));
+    expectEdge(panelBox.width, dialogWidth);
+    const cornerRadius = px(await tokenLength(page, "--radius-create-menu"));
+    await expect(panel).toHaveCSS("border-radius", `${cornerRadius}px`);
+
+    const backdrop = dialog.locator('xpath=ancestor::*[contains(@class,"inset-0")][1]');
+    const backdropColor = await backdrop.evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    );
+    const referenceBackdrop = await page.evaluate(() => {
+      const probe = document.createElement("div");
+      probe.className = "bg-overlay/50";
+      document.body.append(probe);
+      const value = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return value;
+    });
+    expect(backdropColor).toBe(referenceBackdrop);
+
+    const title = dialog.getByRole("heading");
+    const message = dialog.locator("p").first();
+    const cancel = dialog.getByRole("button", { name: "Cancel" });
+    const confirmDelete = dialog.getByRole("button", { name: "Delete" });
+    const titleBox = requireBox(await title.boundingBox(), "confirm title");
+    const messageBox = requireBox(await message.boundingBox(), "confirm message");
+    const cancelBox = requireBox(await cancel.boundingBox(), "confirm cancel");
+    const confirmBox = requireBox(await confirmDelete.boundingBox(), "confirm delete");
+
+    const paddingTop = px(await tokenLength(page, "--size-confirm-dialog-padding-block-start"));
+    const paddingInline = px(await tokenLength(page, "--size-confirm-dialog-padding-inline"));
+    const paddingBottom = px(await tokenLength(page, "--size-confirm-dialog-padding-block-end"));
+    const titleGap = px(await tokenLength(page, "--size-confirm-dialog-title-gap"));
+    const messageActionsGap = px(
+      await tokenLength(page, "--size-confirm-dialog-message-actions-gap"),
+    );
+    const actionsGap = px(await tokenLength(page, "--size-confirm-dialog-actions-gap"));
+    const buttonHeight = px(await tokenLength(page, "--size-button-ellipsis-height"));
+
+    expectEdge(titleBox.y - panelBox.y, paddingTop);
+    expectEdge(titleBox.x - panelBox.x, paddingInline);
+    expectEdge(panelBox.y + panelBox.height - (confirmBox.y + confirmBox.height), paddingBottom);
+    expectEdge(messageBox.y - (titleBox.y + titleBox.height), titleGap);
+    expectEdge(cancelBox.y - (messageBox.y + messageBox.height), messageActionsGap);
+    expectEdge(confirmBox.x - (cancelBox.x + cancelBox.width), actionsGap);
+    expectEdge(cancelBox.height, buttonHeight);
+    expectEdge(confirmBox.height, buttonHeight);
   });
 
   test("layout matches list visual layout at 1470×835", async ({ page }) => {
