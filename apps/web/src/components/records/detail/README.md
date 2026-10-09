@@ -11,6 +11,7 @@ and page placement live in MEP-144.
 | Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
 | Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
+| More Options (Leads) | `lib/records/leads-record-more-options.ts` — spec-ordered menu definitions; the screen wires only implemented actions (MEP-163: `Delete`) |
 | Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
 
@@ -41,6 +42,10 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 
 ## Interim
 
+- Detail **Delete** (MEP-163): confirmation title `Delete Lead`, body
+  `Are you sure you want to delete this Lead?`, buttons `Cancel` and `Delete`; on
+  success navigate to the same list URL as Back (list context or default view) with
+  no toast. Child records (notes, activities) are not deleted in Module 1.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).

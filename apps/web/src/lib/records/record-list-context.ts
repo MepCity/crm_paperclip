@@ -68,6 +68,21 @@ export function writeRecordListContext(orgSlug: string, context: RecordListConte
   }
 }
 
+/** Drops one record id from stored list navigation context after a successful delete. */
+export function removeRecordFromListContext(
+  orgSlug: string,
+  module: ModuleApiName,
+  recordId: RecordId,
+): void {
+  const context = readRecordListContext(orgSlug, module);
+  if (!context) return;
+  if (!context.recordIds.includes(recordId)) return;
+  writeRecordListContext(orgSlug, {
+    ...context,
+    recordIds: context.recordIds.filter((id) => id !== recordId),
+  });
+}
+
 export function subscribeRecordListContext(
   orgSlug: string,
   module: ModuleApiName,

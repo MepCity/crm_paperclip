@@ -222,4 +222,76 @@ test.describe("Lead record detail page", () => {
     const detailsBox = requireBox(await detailsCard.boundingBox(), "details card");
     expect(Math.abs(detailsBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
   });
+
+  test("deletes a lead from More Options and returns to the list", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listPath = moduleListDefaultPath(org.slug, LEADS_MODULE);
+    await page.goto(listPath);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const totalValue = page.locator("[data-part=total-value]");
+    const totalBefore = Number(await totalValue.innerText());
+    const firstRow = page.locator("table tbody tr").first();
+    const deletedLabel = await firstRow.getByRole("link").first().innerText();
+    const recordHref = await firstRow.getByRole("link").first().getAttribute("href");
+    if (!recordHref) throw new Error("Expected record link href.");
+    const recordId = new URL(recordHref, page.url()).pathname.split("/").pop();
+    if (!recordId) throw new Error("Expected record id.");
+    await firstRow.getByRole("link").first().click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const header = page.locator("[data-record-header]");
+    const more = header.getByRole("button", { name: "More Options" });
+    await more.click();
+    const menu = page.getByRole("menu", { name: "More Options" });
+    await expect(menu.getByRole("menuitem", { name: "Delete" })).toBeVisible();
+    await menu.getByRole("menuitem", { name: "Delete" }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog.getByRole("heading", { name: "Delete Lead" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const deleteDone = page.waitForResponse(
+      (response) =>
+        response.request().method() === "DELETE" &&
+        response.url().includes(`/crm/v2.2/Leads/${recordId}`) &&
+        response.ok(),
+    );
+    await more.click();
+    await menu.getByRole("menuitem", { name: "Delete" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+    await deleteDone;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expect(page.getByRole("link", { name: deletedLabel })).toHaveCount(0);
+    await expect.poll(async () => Number(await totalValue.innerText())).toBe(totalBefore - 1);
+    await page.goto(moduleRecordPath(org.slug, LEADS_MODULE, recordId));
+    await expect(page.getByText(/could not be found/i)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [404]);
+    await expectNoA11yViolations(page);
+  });
+
+  test("More Options delete menu row matches visual layout at 1470×835", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    await page.evaluate(() => document.fonts.ready);
+    const header = page.locator("[data-record-header]");
+    const more = header.getByRole("button", { name: "More Options" });
+    await more.focus();
+    await page.keyboard.press("ArrowDown");
+    const menu = page.getByRole("menu", { name: "More Options" });
+    const popover = menu.locator("..");
+    await expect(popover).toHaveCSS("width", "217px");
+    await expect(popover).toHaveCSS("border-radius", "4px");
+    await expect(popover).toHaveCSS("border-color", "rgb(206, 208, 225)");
+    const item = menu.getByRole("menuitem", { name: "Delete" });
+    const itemBox = requireBox(await item.boundingBox(), "Delete menu row");
+    const popBox = requireBox(await popover.boundingBox(), "menu popover");
+    expectEdge(itemBox.height, 30);
+    expect(Math.abs(itemBox.width - 203.5)).toBeLessThanOrEqual(1);
+    expect(Math.abs(itemBox.x - popBox.x - 6.5)).toBeLessThanOrEqual(1);
+    expect(itemBox.y - popBox.y).toBe(6);
+    await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
+    await expect(item).toHaveCSS("padding-left", "10.25px");
+    await expectType(page, item, "--text-md", "--font-weight-normal");
+  });
 });
