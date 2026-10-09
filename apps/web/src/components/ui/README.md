@@ -352,6 +352,7 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
 | `--size-popover-sort-field-dropdown-width` | `380px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
 | `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
 | `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |

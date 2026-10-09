@@ -285,18 +285,24 @@ select two rows. Only synthetic data appears in demos and tests.
   dismissal leave the applied value alone. The page supplies eligible sort fields.
   Only the Sort By label is visible; the order selector keeps the accessible name Order
   without a visible label, and the two selectors share a row. Insets, selector gap, button
-  size and the disabled Apply fill come from the Sort popover tokens. A portaled field list
+  size and the disabled Apply fill come from the Sort popover tokens. The dialog opens
+  6 px below the toolbar control (`SORT_ANCHOR_OFFSET`): the spec puts its outer box top at
+  y 138 while the toolbar row ends at y 132. A portaled field list
   does not dismiss the draft.
 - Sort By field list: the first option is `None`, then the given fields in the given order.
   A search input above the list filters option labels case-insensitively; with no match the
   list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
   has to confirm it; choosing `None` disables Apply again. The selected option is marked and
-  the list scrolls. Panel size, list height, border and row colours come from the Sort By
-  field dropdown tokens and `list-views.md` › Sort By field dropdown; the panel keeps the
-  shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow) and sits directly below
-  the selector, left-aligned with it. The spec gives no font size or weight for the option
-  rows, so they keep the shared list item role (`--text-sm`, regular) — the same pair as the
-  neighbouring searchable option list in `filter-control.css` › `.filter-operator-option`.
+  the list scrolls. Panel size, the band above the list, list height, border and row colours
+  come from the Sort By field dropdown tokens and `list-views.md` › Sort By field dropdown.
+  The panel keeps the shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow), is
+  left-aligned with the selector and overlaps its bottom border by 1 px
+  (`SORT_FIELD_DROPDOWN_OFFSET`: panel top y 222, selector bottom y 223). The search band is
+  `--size-popover-sort-field-dropdown-list-offset` (panel y 222 → list y 268 = 46 px, minus the
+  panel border in `list-chrome.css`), so the list body starts on the measured edge. The spec
+  gives no font size or weight for the option rows, so they keep the shared list item role
+  (`--text-sm`, regular) — the same pair as the neighbouring searchable option list in
+  `filter-control.css` › `.filter-operator-option`.
   The shared item bolds a selected row; this list overrides that back to regular because the
   spec only measures a selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
@@ -384,8 +390,10 @@ module's ordered `sortFieldLabels` against field metadata by label, and
   Sorting), none dropped: every label resolves to a Leads metadata field. A label
   without a metadata field would leave the list out and be named here.
 - The Sort By search input reuses the filter search tokens (34 px high, magnifier
-  inset) because the spec measures only the panel and the list body; the band the
-  input sits in is the leftover `268 − 2 − 220` = 46 px.
+  inset) because the spec measures only the panel and the list body. The band it
+  sits in is measured (`--size-popover-sort-field-dropdown-list-offset`, 46 px from
+  the panel top to the list top); the input is centred in that band, so its own
+  inset (5.5 px above and below) is Interim.
 - An empty search result shows an empty list; the reference's no-match state was
   not captured (no message is drawn).
 - Choosing `None` cannot clear an applied sort: Apply stays disabled, so the sort

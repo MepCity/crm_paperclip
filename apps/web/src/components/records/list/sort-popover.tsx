@@ -20,6 +20,18 @@ import "./list-chrome.css";
 /** ListBox key for the None option; no field API name uses this spelling. */
 const NONE_KEY = "sort-none";
 
+/**
+ * Gap between the toolbar control and the Sort dialog. list-views.md › Sort popover measures
+ * the outer box at y 138; the toolbar row the control sits in ends at y 132 (Create Lead y 99–132).
+ */
+const SORT_ANCHOR_OFFSET = 6;
+
+/**
+ * list-views.md › Sort By field dropdown measures the panel top at y 222, one pixel above the
+ * selector's bottom edge (y 223), so the panel covers the selector's bottom border.
+ */
+const SORT_FIELD_DROPDOWN_OFFSET = -1;
+
 /** React Aria reports selection changes as a set even in single mode, so read its first key. */
 function firstKey(keys: Selection): string | null {
   if (keys == null) return null;
@@ -63,6 +75,7 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
       <Popover
         title="Sort"
         hideTitle
+        offset={SORT_ANCHOR_OFFSET}
         placement="bottom start"
         className="record-sort-popover w-(--size-popover-sort-width) h-(--size-popover-sort-height)"
         contentClassName="record-sort-dialog"
@@ -154,15 +167,15 @@ function SortByFieldSelect({
         <Popover
           title="Sort By fields"
           hideTitle
-          offset={0}
+          offset={SORT_FIELD_DROPDOWN_OFFSET}
           placement="bottom start"
           className="record-sort-field-dropdown w-(--size-popover-sort-field-dropdown-width) h-(--size-popover-sort-field-dropdown-height)"
           contentClassName="record-sort-field-dialog"
         >
           <TextField value={query} onChange={setQuery}>
             <Label className="sr-only">Search fields</Label>
-            <div className="p-1.5">
-              <div className="relative">
+            <div className="record-sort-field-search px-1.5">
+              <div className="relative flex-1">
                 <Icons.filterSearch
                   aria-hidden
                   className="pointer-events-none absolute top-1/2 left-(--size-list-filter-search-icon-inset) h-(--size-list-filter-search-icon) w-(--size-list-filter-search-icon) -translate-y-1/2 text-text"

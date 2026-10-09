@@ -501,6 +501,7 @@ const SIZE_GROUPS = [
       "--size-popover-sort-button-gap",
       "--size-popover-sort-field-dropdown-width",
       "--size-popover-sort-field-dropdown-height",
+      "--size-popover-sort-field-dropdown-list-offset",
       "--size-popover-sort-field-dropdown-list-height",
     ],
   },

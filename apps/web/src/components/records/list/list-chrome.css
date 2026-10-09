@@ -74,6 +74,14 @@
   padding: 0;
 }
 
+/* Band above the list: the panel top (y 222) and the list top (y 268) are 46 px apart.
+   The 1 px subtraction is the panel's border, so the list starts on the measured edge. */
+.record-sort-field-search {
+  display: flex;
+  align-items: center;
+  height: calc(var(--size-popover-sort-field-dropdown-list-offset) - 1px);
+}
+
 .record-sort-field-list {
   color: var(--color-text);
 }
