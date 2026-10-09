@@ -1,7 +1,8 @@
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import type { ClientRecordService } from "@/lib/api/client/http-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
@@ -51,8 +52,21 @@ function renderScreen(service: ClientRecordService, recordId: string) {
   );
 }
 
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    },
+  );
+});
+
 afterEach(() => {
+  cleanup();
   sessionStorage.clear();
+  vi.unstubAllGlobals();
 });
 
 describe("LeadRecordScreen", () => {
@@ -92,6 +106,55 @@ describe("LeadRecordScreen", () => {
     expect(screen.getByLabelText("Business card")).toBeTruthy();
     expect(screen.getByText("Lead Name")).toBeTruthy();
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("shows the status ribbon and updates Lead_Status from the stage menu", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[3];
+    if (!record) throw new Error("Expected seeded lead.");
+    const updateSpy = vi.spyOn(service, "update");
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
+    const current = record.fields.Lead_Status;
+    if (typeof current !== "string") throw new Error("Expected string status.");
+    expect(screen.getAllByText(current).length).toBeGreaterThan(0);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: "Contacted" }));
+    await waitFor(() =>
+      expect(updateSpy).toHaveBeenCalledWith("Leads", record.id, { Lead_Status: "Contacted" }),
+    );
+    expect(screen.getAllByText("Contacted").length).toBeGreaterThan(0);
+    updateSpy.mockClear();
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: "Contacted" }));
+    expect(updateSpy).not.toHaveBeenCalled();
+  });
+
+  it("reverts the ribbon and shows an error when the update fails", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[3];
+    if (!record) throw new Error("Expected seeded lead.");
+    const current = record.fields.Lead_Status;
+    if (typeof current !== "string") throw new Error("Expected string status.");
+    vi.spyOn(service, "update").mockRejectedValueOnce(new Error("Server error"));
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: "Pre-Qualified" }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toBe("Unable to update lead status."),
+    );
+    expect(screen.getAllByText(current).length).toBeGreaterThan(0);
   });
 
   it("shows not found for a missing record", async () => {

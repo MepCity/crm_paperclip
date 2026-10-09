@@ -13,6 +13,7 @@ and page placement live in MEP-144.
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
 | Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
+| Status ribbon | `leads/lead-status-ribbon-section.tsx` with `lib/records/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
 
 The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
 `requireOrgContext` and renders `LeadsDetailClient` (`modules/leads/leads-detail-client.tsx`).
@@ -41,6 +42,11 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 
 ## Interim
 
+- Lead status ribbon (MEP-167): stage changes apply immediately with no confirmation or toast;
+  failed writes revert the ribbon and show form-style error text beneath it; only the current-stage
+  and terminal menus change `Lead_Status` (other chevrons are not clickable); rejected-stage groups
+  (`Junk`, `Not Qualified`) are fixed in `leads-status-ribbon.ts` because metadata does not expose
+  `record_category_value` on the client.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
@@ -161,3 +167,46 @@ empty rail, tab roles/arrow keys and Scroll To Top visibility/callback.
 typography from tokens, real content scroll while the header/tab row remain still,
 related-card scrolling, and a working Scroll To Top. Optional screenshots and measured
 boxes are emitted into `RECORD_DETAIL_ARTIFACT_DIR`, never committed.
+## Status ribbon presentation
+
+`StatusRibbon` accepts metadata-ordered picklist options (including the null
+option), current stored value, terminal groups and accessible labels. The null
+option is excluded from the ribbon and retained in the flat menu. Selecting an
+option calls `onSelect(value)` and closes the menu. No record data access lives
+here. Integration and selection effects remain in MEP-134.
+
+The current stage alone opens the flat menu. Terminal stages carry an original
+thumb icon. ResizeObserver measures overflow after font loading and container or
+track resizing; both scroll controls appear only when needed. At either end the
+corresponding control is disabled. Long stage labels keep their natural width.
+
+### Interim decisions
+
+- Search uses a case-insensitive substring of each option label. No typed search
+  was observed in the reference CRM.
+- Search labels/options and group headings use the nearest typography roles:
+  Filter search placeholder / Filter checkbox row (`--text-md`, normal), and
+  Details subsection heading (`--text-md`, bold). These popup roles do not yet
+  have separate rows in typography.md.
+- Stage text uses Status stage value (`--text-sm`, normal). Natural text advances
+  determine stage widths; icon drawings and letter widths differ from the
+  reference (expected letter-width tolerance 2 px).
+- Scroll control width uses the measured 20 px card inset; scroll distance is
+  half the viewport. Scroll icon geometry, search icon inset and shadow parameters
+  are not separately measurable in the current spec.
+- `/dev/ui` includes rail-hidden width (1126 px), rail-shown width (906 px),
+  stage-menu-open and terminal-menu-open choices. Open examples mount only after
+  their button is pressed, so the gallery never opens overlays or takes focus on load.
+- A null or unknown value has no current-stage trigger. The terminal trigger
+  remains available; page integration and null-state behaviour await MEP-134.
+
+No control is omitted from this presentation scope. Record persistence, the
+source of terminal grouping and page integration belong to parity checklist
+row 14 / MEP-134.
+
+Measured wide-demo stage widths are 171.59, 142.20, 100.83, 117.73, 109.41,
+127.53, 115.91 and 137.80 px, compared with the spec's 173, 141.5, 101, 119,
+110.5, 126, 116 and 136 px. Each differs by at most 1.80 px with the adopted
+font; accumulated boundary drift reaches 3.23 px at the current stage's end.
+The generic component uses natural label widths; these differences are recorded
+for review. Absolute page placement belongs to MEP-134.
