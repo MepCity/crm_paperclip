@@ -150,6 +150,61 @@ function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Left arrow with shaft for record header Back (ink about 16 × 13.5 px). */
+function ArrowLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 13.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M15 6.75H2.5M2.5 6.75 6.25 3M2.5 6.75 6.25 10.5" />
+    </svg>
+  );
+}
+
+/** Record header previous/next chevron ink target 7 × 13 px. */
+function RecordHeaderChevronLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 7 13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M6 1 1 6.5 6 12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RecordHeaderChevronRight(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 7 13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M1 1 6 6.5 1 12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function RecordChevron(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -249,8 +304,11 @@ export const Icons = {
   warning: AlertTriangle,
   calendar: Calendar,
   chevronDown: ChevronDown,
+  arrowLeft: ArrowLeft,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  recordHeaderChevronLeft: RecordHeaderChevronLeft,
+  recordHeaderChevronRight: RecordHeaderChevronRight,
   close: X,
   filter: FilterIcon,
   sort: SortIcon,

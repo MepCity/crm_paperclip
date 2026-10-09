@@ -43,8 +43,22 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   const title = header.getByRole("heading", { level: 1 });
   const titleBox = await bounds(title);
   expect(titleBox.x - portraitBox.x - portraitBox.width).toBe(15);
-  await expect(title).toHaveCSS("color", "rgb(49, 57, 73)");
-  await expectType(page, title, "--text-2xl", "--font-weight-normal");
+  await expect(portrait).toHaveCSS("border-radius", "6px");
+  const titleName = title.locator("span").first();
+  const titleHyphen = title.locator("span").nth(1);
+  const titleCompany = title.locator("span").nth(2);
+  await expect(titleName).toHaveCSS("color", "rgb(49, 57, 73)");
+  await expectType(page, titleName, "--text-2xl", "--font-weight-bold");
+  await expectType(page, titleCompany, "--text-md", "--font-weight-normal");
+  const nameBox = await bounds(titleName);
+  const hyphenBox = await bounds(titleHyphen);
+  const companyBox = await bounds(titleCompany);
+  expect(Math.abs(hyphenBox.x - nameBox.x - nameBox.width - 6.5)).toBeLessThanOrEqual(1);
+  expect(Math.abs(companyBox.x - hyphenBox.x - hyphenBox.width - 6)).toBeLessThanOrEqual(1);
+  const backIcon = header.getByRole("link", { name: "Back" }).locator("svg");
+  const backIconBox = await bounds(backIcon);
+  expect(Math.abs(backIconBox.width - 16)).toBeLessThanOrEqual(1.5);
+  expect(Math.abs(backIconBox.height - 13.5)).toBeLessThanOrEqual(1.5);
   // Header buttons: 32 high, radius6; detail-specific primary/secondary gradients.
   const primary = header.getByRole("button", { name: "Primary action" });
   const secondary = header.getByRole("button", { name: "Edit", exact: true });
@@ -76,10 +90,19 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
     "rgb(173, 176, 182)",
   );
   await expect(header.getByRole("button", { name: "Previous Record" })).toHaveCSS("opacity", "1");
-  await expect(header.getByRole("link", { name: "Next Record" })).toHaveCSS(
-    "color",
-    "rgb(49, 57, 73)",
-  );
+  const nextRecord = header.getByRole("link", { name: "Next Record" });
+  await expect(nextRecord).toHaveCSS("color", "rgb(49, 57, 73)");
+  const nextBox = await bounds(nextRecord);
+  expect(
+    Math.abs(headerBox.x + headerBox.width - (nextBox.x + nextBox.width / 2) - 36),
+  ).toBeLessThanOrEqual(1);
+  for (const nav of [header.getByRole("button", { name: "Previous Record" }), nextRecord]) {
+    await metric("Record nav control", nav, 24, 24);
+    const navIconBox = await bounds(nav.locator("svg"));
+    expect(Math.abs(navIconBox.width - 24)).toBeLessThanOrEqual(1);
+    expect(Math.abs(navIconBox.height - 24)).toBeLessThanOrEqual(1);
+    measurements[`${await nav.getAttribute("aria-label")} icon box`] = navIconBox;
+  }
   // Related-list rail:220 width; pitch32; selected height30, fillEDF0F9; inset12/8.5.
   const rail = frame.locator("[data-record-rail]");
   await expect(rail).toHaveCSS("width", "220px");
@@ -139,6 +162,12 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   await page.keyboard.press("ArrowDown");
   const menu = page.getByRole("menu", { name: "More Options" });
   const popover = menu.locator("..");
+  const moreBox = await bounds(more);
+  const popBoxOpen = await bounds(popover);
+  expect(Math.abs(popBoxOpen.y - (moreBox.y + moreBox.height))).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(popBoxOpen.x + popBoxOpen.width - (moreBox.x + moreBox.width)),
+  ).toBeLessThanOrEqual(1);
   await expect(popover).toHaveCSS("width", "217px");
   await expect(popover).toHaveCSS("border-radius", "4px");
   await expect(popover).toHaveCSS("border-width", "1px");
@@ -151,10 +180,14 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   expect(itemBox.y - popBox.y).toBe(6);
   await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
   await expect(item).toHaveCSS("padding-left", "10.25px");
+  await expect(item).toHaveCSS("border-radius", "5px");
   await expectType(page, item, "--text-md", "--font-weight-normal");
   const item2 = await bounds(menu.getByRole("menuitem", { name: "Example Two" }));
   expect(item2.y - itemBox.y).toBe(30);
   const separator = menu.getByRole("separator");
+  const separatorBox = await bounds(separator);
+  expect(Math.abs(separatorBox.width - itemBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(separatorBox.x - itemBox.x)).toBeLessThanOrEqual(1);
   await expect(separator).toHaveCSS("height", "1px");
   await expect(separator).toHaveCSS("background-color", "rgb(206, 208, 225)");
   await expect(separator).toHaveCSS("margin-top", "5px");

@@ -563,6 +563,9 @@
   --size-record-portrait: 48px;
   --size-record-back-region: 52px;
   --size-record-title-gap: 15px;
+  --size-record-title-separator-gap: 6px;
+  --size-record-header-end: 24px;
+  --radius-record-menu-row: 5px;
   --size-record-rail-width: 220px;
   --size-record-rail-heading-height: 38px;
   --size-record-rail-text-inset: 8.5px;
