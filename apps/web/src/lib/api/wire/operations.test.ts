@@ -30,6 +30,18 @@ beforeEach(() => {
 });
 
 describe("wire operations", () => {
+  it("publishes the single home currency on the agreed GET path", async () => {
+    expect(operations.currencies.method).toBe("GET");
+    expect(operationPath(operations.currencies)).toBe("/crm/v2.2/org/currencies");
+    expect(await operations.currencies.run(deps)).toEqual({
+      status: 200,
+      body: {
+        currencies: [
+          { symbol: "TL", iso_code: "TRY", name: "Turkish Lira - TRY", prefix_symbol: true },
+        ],
+      },
+    });
+  });
   it("returns the observed envelopes for all read endpoints", async () => {
     const module = await operations.module.run(deps, input());
     expect(json(module)).toEqual({

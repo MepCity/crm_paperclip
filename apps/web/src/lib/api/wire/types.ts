@@ -80,3 +80,13 @@ export type WireCountResponse = { count: number };
 export type WireRecordResponse = { data: readonly WireRecord[] };
 export type WireUsersResponse = { users: readonly WireUser[]; info: WirePageInfo };
 export type WireRestrictions = { filters?: WireCriteria; search?: string };
+
+export interface WireCurrency {
+  symbol: string;
+  iso_code: string;
+  name: string;
+  prefix_symbol: boolean;
+}
+export interface WireCurrenciesResponse {
+  currencies: [WireCurrency];
+}

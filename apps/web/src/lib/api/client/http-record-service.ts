@@ -10,6 +10,7 @@ import type {
   RecordService,
 } from "@crm/core/records";
 import {
+  decodeCurrency,
   decodeList,
   decodeModule,
   decodeRecord,
@@ -21,6 +22,7 @@ import { operationPath, operations } from "@/lib/api/wire/operations";
 import type {
   WireBulkResponse,
   WireCountResponse,
+  WireCurrenciesResponse,
   WireField,
   WireFieldsResponse,
   WireLayout,
@@ -181,6 +183,12 @@ export function createHttpRecordService({
   }
 
   const service: ClientRecordService = {
+    async getHomeCurrency() {
+      const body = (await request(operationPath(operations.currencies), {
+        method: operations.currencies.method,
+      })) as WireCurrenciesResponse;
+      return decodeCurrency(requiredWire(body.currencies[0], "Currency"));
+    },
     getModule: loadModuleMetadata,
 
     async listViews(module: ModuleApiName): Promise<readonly ListView[]> {
