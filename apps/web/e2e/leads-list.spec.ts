@@ -384,8 +384,8 @@ test.describe("Leads list page", () => {
     await expect(next).toBeEnabled();
     await next.click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
+    await expect.poll(() => seen.slice(countBeforeNext).length).toBeGreaterThan(0);
     const afterNext = seen.slice(countBeforeNext);
-    expect(afterNext.length).toBeGreaterThan(0);
     for (const request of afterNext) {
       expect(request.method).toBe("POST");
       expect(request.pathname.endsWith("/Leads/bulk")).toBe(true);
