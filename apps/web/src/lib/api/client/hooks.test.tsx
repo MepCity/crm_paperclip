@@ -9,6 +9,7 @@ import {
   useChangeOwner,
   useCreateRecord,
   useDeleteRecords,
+  useHomeCurrency,
   useMassUpdate,
   useRecord,
   useRecordCount,
@@ -48,6 +49,19 @@ afterEach(() => {
 });
 
 describe("record hooks", () => {
+  it("returns the home currency", async () => {
+    const service = createService();
+    const { result } = renderHook(() => useHomeCurrency(), { wrapper: wrapper(service) });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(await service.getHomeCurrency());
+  });
+  it("leaves home currency data undefined on an error", async () => {
+    const service = createService();
+    vi.spyOn(service, "getHomeCurrency").mockRejectedValue(new NotFoundError());
+    const { result } = renderHook(() => useHomeCurrency(), { wrapper: wrapper(service) });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+  });
   it("keeps the previous list page while the next page loads", async () => {
     const service = createService();
     const views = await service.listViews("Leads");

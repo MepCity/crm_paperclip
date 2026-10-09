@@ -1,0 +1,16 @@
+.user-avatar-placeholder {
+  display: inline-flex;
+  height: var(--user-avatar-placeholder-size, var(--size-select-user-avatar));
+  width: var(--user-avatar-placeholder-size, var(--size-select-user-avatar));
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background-color: var(--color-avatar);
+  color: var(--color-surface);
+}
+
+.user-avatar-placeholder-glyph {
+  height: calc(var(--user-avatar-placeholder-size, var(--size-select-user-avatar)) * 0.55);
+  width: calc(var(--user-avatar-placeholder-size, var(--size-select-user-avatar)) * 0.55);
+}
