@@ -304,13 +304,30 @@
   --size-detail-details-label-width: 129px;
   --size-detail-details-label-value-gap: 36.5px;
   --size-detail-details-row-pitch: 44px;
+  --size-detail-details-wrapped-row-pitch: 60px;
   --size-detail-column-width: 433.5px;
   --size-detail-business-min-height: 287px;
   --size-detail-business-padding-block-start: 42.75px;
   --size-detail-business-padding-block-end: 21.75px;
   --size-detail-details-toggle-padding-block: 12.75px;
-  --size-detail-details-sections-margin-top: 39px;
-  --size-detail-section-title-margin-block: 16px 8px;
+  --size-detail-details-sections-margin-top: 18.25px;
+  --size-detail-section-title-margin-block: 0 32.5px;
+  --size-detail-inter-section-gap: 26px;
+  --size-detail-audit-line-pitch: 18.5px;
+  --size-detail-multiline-line-pitch: 15.5px;
+  --size-detail-wrapped-link-line-pitch: 19.5px;
+  --size-detail-cap-height: 10.5px;
+  --size-detail-card-width-rail-hidden: 1126px;
+  --size-detail-column-width-rail-hidden: 543px;
+  --size-detail-rail-hidden-value-width: 273px;
+  --size-detail-field-pencil-inset-from-card-end: 113px;
+  --size-detail-field-pencil-ink-left-rail-hidden: 1000.5px;
+  --size-detail-field-pencil-rail-hidden-translate-x: 10.5px;
+  --size-detail-description-label-width: 73px;
+  --size-detail-description-label-extend: 39px;
+  --size-detail-field-pencil-size: 11.5px;
+  --size-detail-field-pencil-aa-size: 12.5px;
+  --size-detail-field-pencil-above-label-cap: 1.5px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
