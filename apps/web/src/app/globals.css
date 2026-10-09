@@ -15,6 +15,8 @@
   --color-border: var(--color-border);
   --color-panel-border: var(--color-panel-border);
   --color-control-border: var(--color-control-border);
+  --color-select-user-table-border: var(--color-select-user-table-border);
+  --color-select-user-row-divider: var(--color-select-user-row-divider);
   --color-primary: var(--color-primary);
   --color-primary-text: var(--color-primary-text);
   --color-primary-hover: var(--color-primary-hover);
