@@ -389,6 +389,12 @@ edge. A 15 px gap separates the toolbar from the filter/table row. The page fill
 shell main height; the table card grows in the body row and keeps the footer on
 the card bottom while record rows scroll inside the card.
 
+The card does not reach the bottom of the content area. At 1470 × 835 the content
+area ends at y 807 and the card ends at y 794, so 13 px of canvas stays visible
+under the card. `--list-card-bottom-gap` carries that value and is applied as the
+page's `padding-bottom`; the body row flexes to fill the rest of the page height,
+so the gap under the card stays 13 px whatever the shell height.
+
 ### Page deviations
 
 - Panel closed: table widening beside the filter lane was not verified in the
