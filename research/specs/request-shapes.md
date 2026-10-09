@@ -986,7 +986,7 @@ The `204` response has no body (`detail-attachments-card`).
 All 15 captures share this identical 32-path schema without variation.
 - **Populated keys in every capture (15/15):** `info{count, more_records, page, per_page}`, `timelines`, `timelines[]{action, audited_time, done_by{id, name, profile{id, name}, type__s}, id, record{id, module{api_name, id}, name}, source, type}`.
 - **Null keys in every capture (15/15):** `info.next_page_token`, `info.previous_page_token`, `timelines[].automation_details`, `timelines[].extension`, `timelines[].field_history`, `timelines[].record.display_label`, `timelines[].related_record`.
-- Across all 8 sample records examined in `tl2-r1` through `tl2-r8` (and `detail-timeline`), `timelines[].field_history` is `null` in every capture (15/15). Because every tested sample record contains an initial image upload event rather than field edits, populated `field_history[]{…}` items and their nested keys (`api_name`, `data_type`, `enable_colour_code`, `field_label`, `id`, `pick_list_values`, `_value{old, new}`) were not observable in the wire captures.
+- Across all 9 distinct sample records examined in `detail-timeline` and `tl2-r1` through `tl2-r8`, `timelines[].field_history` is `null` in every capture (15/15). In all 15 captures the `timelines` array holds exactly 1 item and that item is an image upload event. Populated `field_history[]{…}` items and their nested keys (key names from D1, D2: `api_name`, `data_type`, `enable_colour_code`, `field_label`, `id`, `pick_list_values`, `_value{new, old}`) were not observable in the wire captures.
 
 ### Structural value sets (`action`, `type`, `source`)
 
@@ -1002,20 +1002,16 @@ All 15 captures share this identical 32-path schema without variation.
 
 ### Rendered event sentences
 
-The following sentence and line patterns appear in `page.txt` across the 9 timeline history captures (`detail-timeline`, `tl2-r1`–`tl2-r8`) where the history list is rendered. Literal customer names, user names, and timestamps are replaced by placeholders (`<field label>`, `<old>`, `<new>`, `<user>`, `<record>`).
+The following sentence and line patterns appear in `page.txt` across the 9 timeline history captures (`detail-timeline`, `tl2-r1`–`tl2-r8`) where the history list is rendered. Literal customer names, user names, and timestamps are replaced by placeholders (`<user>`, `<timestamp>`, `<time>`).
 
 | Event element | Rendered sentence pattern | Captures observed |
 | --- | --- | --- |
-| Event title | `<record> Image uploaded` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
-| Event actor attribution | `by <user> <timestamp>` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
-| Header update status | `Last Update : <n> day(s) ago` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
 | Event time prefix | `<time>` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
-| Field modification | `<field label> changed from <old> to <new>` | Not observed (0 captures; `timelines[].field_history` is `null` in all 15 captures across 8 sampled records) |
-| Field addition / initial value | `<field label> set to <new>` | Not observed (0 captures) |
-| Record creation | `<record> created` | Not observed (0 captures) |
+| Event title | `Lead Image uploaded` (literal; identical on 9 distinct records) | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
+| Event actor attribution | `by <user> <timestamp>` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
 
-- **Image upload event:** On Leads records, the title is rendered as `Lead Image uploaded`, accompanied by the attribution line `by <user> <timestamp>`. This was the only populated event type present across all 8 tested sample records (`tl2-r1` through `tl2-r8`) as well as `detail-timeline`.
-- **Field edit sentences:** No field modification events or populated `field_history` items were present in the tested records. Sentence patterns for field updates (such as `<field label> changed from <old> to <new>` or `<field label> set to <new>`) are not observable in the captures and remain documented only (D1, D2).
+- **Image upload event:** Across all 9 distinct sampled records (`detail-timeline` and `tl2-r1`–`tl2-r8`), the event line is rendered with time prefix `<time>`, literal title `Lead Image uploaded`, and attribution `by <user> <timestamp>`. Whether the word `Lead` derives from the module display label is not established. This was the only populated event type present across all 9 records.
+- Rendered sentences for any event other than the image upload event (field change, record creation, …): Not observed. The public documentation (D1, D2) describes the response, not the rendered text.
 
 ### Adjacent requests observed on the Timeline tab
 
@@ -1036,8 +1032,8 @@ These adjacent requests are outside Module 1 Timeline scope and belong to subseq
 - Request payload and URL query parameter serialization upon applying a filter (`Apply Filter` was disabled and unexercised; filter query parameter structure documented (D1, D2), not observed).
 - The literal values of `action`, `type` and `source` (the capture tool stores every response string as the type `string`), and any event other than the single captured image upload event (documented (D1, D2), not observed).
 - The values of `include_inner_details` and `include_timeline_types` (stored as `<v>`; documented (D1, D2), not observed).
-- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all 15 captures across 8 distinct sample records; documented (D1, D2), not observed).
-- Rendered event sentence templates for field modifications (`<field label> changed from <old> to <new>`, `<field label> set to <new>`): not observable in captures (0/15 captures).
+- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all 15 captures across 9 distinct sample records; documented (D1, D2), not observed).
+- Rendered sentences for any event other than the image upload event (field change, record creation, …): Not observed. The public documentation (D1, D2) describes the response, not the rendered text.
 - Nested structure of `automation_details`, `extension`, and `related_record` (`null` in all captures; `related_record` structure and `automation_details` / `extension` roles documented (D1, D2), not observed).
 - Pagination traversal with cursor tokens (`next_page_token`, `previous_page_token` are `null` in all captures; `page_token` parameter documented (D1, D2), not observed).
 - Timeline requests for modules other than Leads (supported modules documented (D1, D2), not observed).
@@ -1301,4 +1297,4 @@ The error `details` object has no nested keys in these captures; its value conte
 - Nested fields behind a `<deep>` capture truncation: not observable in the captures.
 - Values and nullability of array items beyond the first retained item: not observable in the captures.
 - The source of Leads field definitions and Leads layout sections on ordinary list and detail screens: not observable in the captures.
-- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), field modification rendered sentence patterns, pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures (documented (D1, D2), not observed).
+- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures (documented (D1, D2), not observed); field modification rendered sentence patterns: not observable in the captures.
