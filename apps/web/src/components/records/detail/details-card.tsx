@@ -24,6 +24,8 @@ export interface DetailsCardProps {
   format: FormatOptions;
   defaultDetailsHidden?: boolean;
   onEdit?: (apiName: string) => void;
+  /** Rail-hidden canvas uses a wider card and alternate pencil geometry. */
+  railLayout?: "shown" | "hidden";
 }
 
 export function DetailsCard({
@@ -32,12 +34,17 @@ export function DetailsCard({
   format,
   defaultDetailsHidden = false,
   onEdit,
+  railLayout = "shown",
 }: DetailsCardProps) {
   const [expanded, setExpanded] = useState(!defaultDetailsHidden);
   const toggleLabel = expanded ? "Hide Details" : "Show Details";
 
   return (
-    <section className="detail-card detail-details-card" aria-label="Details card">
+    <section
+      className={`detail-card detail-details-card${railLayout === "hidden" ? " detail-details-card--rail-hidden" : ""}`}
+      aria-label="Details card"
+      data-detail-rail={railLayout}
+    >
       <button
         type="button"
         className="detail-details-toggle"
@@ -50,7 +57,7 @@ export function DetailsCard({
       {expanded ? (
         <div className="detail-details-sections" data-detail-sections>
           {sections.map((section) => (
-            <div key={section.title}>
+            <div key={section.title} className="detail-details-section-block">
               <h3 className="detail-section-title">{section.title}</h3>
               <SectionFields
                 fields={section.fields}

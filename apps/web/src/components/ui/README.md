@@ -295,10 +295,21 @@ what the "no colour constants" rule forbids.
 | `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
 | `--size-detail-details-sections-margin-top` | `18.25px` | record-detail.md › Details divider & headings › divider bottom y 609 to first section heading cap y 631 (22 px to cap minus 3.75 px cap inset) | from spec |
 | `--size-detail-section-title-margin-block` | `0 32.5px` | record-detail.md › Details divider & headings › section heading baseline y 641.5 to first field label text top y 681.5 (40 px) minus 7.5 px line-box trim | derived from spec |
+| `--size-detail-inter-section-gap` | `26px` | record-detail.md › Details divider & headings › Twitter label cap to Address heading cap (70 px) minus row remainder | derived from spec |
 | `--size-detail-audit-line-pitch` | `18.5px` | record-detail.md › Details Created By / Modified By › cap-to-cap line pitch | from spec |
-| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped value cap-to-cap pitch | from spec |
+| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped Lead Name cap-to-cap pitch | from spec |
+| `--size-detail-wrapped-link-line-pitch` | `19.5px` | record-detail.md › Details value wrapping › wrapped Website cap-to-cap pitch | from spec |
+| `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
+| `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
+| `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
+| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
+| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
+| `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
+| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
+| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
 | `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
 | `--size-detail-description-label-extend` | `39.5px` | record-detail.md › Details full-width rows › Description label extends past x 701 label boundary | from spec |
+| `--size-detail-description-label-translate-x` | `49px` | record-detail.md › Details full-width rows › Description label ink end (E2E ink calibration with extend) | derived from spec |
 | `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
 | `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |

@@ -36,10 +36,12 @@ export function DetailFieldRow({
 
   const valueWrapRef = useRef<HTMLDivElement>(null);
   const [wrappedValue, setWrappedValue] = useState(false);
+  const [wrappedLink, setWrappedLink] = useState(false);
 
   useLayoutEffect(() => {
     if (layout === "business") {
       setWrappedValue(false);
+      setWrappedLink(false);
       return;
     }
     const wrap = valueWrapRef.current;
@@ -49,14 +51,18 @@ export function DetailFieldRow({
     }
 
     const measure = () => {
-      const valueEl = wrap.querySelector(".detail-field-value");
+      const valueEl = wrap.querySelector(".detail-field-value, .detail-field-value-link");
       if (!valueEl) {
         setWrappedValue(false);
+        setWrappedLink(false);
         return;
       }
       const lineHeight = Number.parseFloat(getComputedStyle(valueEl).lineHeight);
       const isAuditValue = valueEl.querySelector(".detail-audit-timestamp") !== null;
-      setWrappedValue(!isAuditValue && valueEl.scrollHeight > lineHeight + 1);
+      const isLink = valueEl.classList.contains("detail-field-value-link");
+      const wraps = !isAuditValue && valueEl.scrollHeight > lineHeight + 1;
+      setWrappedValue(wraps);
+      setWrappedLink(wraps && isLink);
     };
 
     measure();
@@ -73,6 +79,7 @@ export function DetailFieldRow({
       className={rowClass}
       data-detail-field={field.apiName}
       data-detail-wrapped={wrappedValue ? "true" : undefined}
+      data-detail-wrapped-link={wrappedLink ? "true" : undefined}
     >
       <div className="detail-field-label">{field.label}</div>
       <div className="detail-field-value-wrap" ref={valueWrapRef}>

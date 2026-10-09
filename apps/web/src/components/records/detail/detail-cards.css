@@ -93,6 +93,10 @@
   margin-block-start: var(--size-detail-details-sections-margin-top);
 }
 
+.detail-details-section-block + .detail-details-section-block {
+  margin-block-start: var(--size-detail-inter-section-gap);
+}
+
 .detail-section-title {
   margin-block: var(--size-detail-section-title-margin-block);
   line-height: var(--size-list-line-height);
@@ -123,7 +127,13 @@
 }
 
 .detail-details-row[data-detail-wrapped="true"] {
-  min-height: var(--size-detail-details-wrapped-row-pitch);
+  min-height: calc(
+    var(--size-detail-details-wrapped-row-pitch) -
+    (var(--size-list-line-height) - var(--size-detail-cap-height)) /
+    2 +
+    (var(--size-detail-multiline-line-pitch) - var(--size-detail-cap-height)) /
+    2
+  );
 }
 
 .detail-details-row > .detail-field-label {
@@ -134,16 +144,17 @@
   grid-column: 3;
 }
 
-.detail-details-row .detail-field-value-wrap > .detail-field-value,
-.detail-details-row-full .detail-field-value-wrap > .detail-field-value {
+.detail-details-row[data-detail-wrapped="true"]:not([data-detail-wrapped-link="true"])
+  .detail-field-value-wrap
+  > .detail-field-value,
+.detail-details-row-full[data-detail-wrapped="true"]:not([data-detail-wrapped-link="true"])
+  .detail-field-value-wrap
+  > .detail-field-value {
   line-height: var(--size-detail-multiline-line-pitch);
 }
 
-.detail-details-row .detail-field-value-wrap > .detail-field-value:has(.detail-audit-timestamp),
-.detail-details-row-full
-  .detail-field-value-wrap
-  > .detail-field-value:has(.detail-audit-timestamp) {
-  line-height: var(--size-list-line-height);
+.detail-details-row[data-detail-wrapped-link="true"] .detail-field-value-link {
+  line-height: var(--size-detail-wrapped-link-line-pitch);
 }
 
 .detail-details-row-full {
@@ -168,12 +179,13 @@
   width: var(--size-detail-description-label-width);
   justify-self: end;
   margin-inline-end: calc(-1 * var(--size-detail-description-label-extend));
+  translate: var(--size-detail-description-label-translate-x) 0;
 }
 
 .detail-field-edit {
   margin-inline-start: auto;
   margin-block-start: calc(
-    (var(--size-list-line-height) - 10.5px) /
+    (var(--size-list-line-height) - var(--size-detail-cap-height)) /
     2 -
     var(--size-detail-field-pencil-above-label-cap)
   );
@@ -197,6 +209,30 @@
 .detail-field-value-wrap:hover .detail-field-edit,
 .detail-field-value-wrap:focus-within .detail-field-edit {
   opacity: 1;
+}
+
+.detail-details-card--rail-hidden .detail-two-column,
+.detail-details-card[data-detail-rail="hidden"] .detail-two-column {
+  grid-template-columns:
+    var(--size-detail-column-width-rail-hidden)
+    var(--size-detail-column-width-rail-hidden);
+}
+
+.detail-details-card--rail-hidden,
+.detail-details-card[data-detail-rail="hidden"] {
+  position: relative;
+}
+
+.detail-details-card--rail-hidden [data-detail-column="right"] .detail-field-edit,
+.detail-details-card[data-detail-rail="hidden"] [data-detail-column="right"] .detail-field-edit {
+  position: absolute;
+  margin-inline-start: 0;
+  right: calc(
+    var(--size-detail-card-width-rail-hidden) -
+    var(--size-detail-field-pencil-ink-left-rail-hidden) -
+    var(--size-detail-field-pencil-size) -
+    var(--size-detail-card-padding)
+  );
 }
 
 .detail-details-row .detail-field-value .detail-audit-timestamp,

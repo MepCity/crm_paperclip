@@ -44,7 +44,7 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
-- Right-column value wrap container width remains `not measured` in
+- Left- and right-column value wrap container widths remain `not measured` in
   `record-detail.md`; we do not fix a max width beyond the column grid.
 - Description view-mode value start and wrapped right edge remain `not measured`
   when the sample field is blank or inline edit is active; Address uses the
