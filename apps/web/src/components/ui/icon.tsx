@@ -255,6 +255,8 @@ export const Icons = {
   filter: FilterIcon,
   sort: SortIcon,
   list: ListIcon,
+  settingsSliders: SettingsSlidersIcon,
+  eye: EyeIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
   timelinePencil: TimelinePencilIcon,
@@ -314,6 +316,28 @@ function ListIcon(props: SVGProps<SVGSVGElement>) {
     <ListGlyph {...props}>
       <path d="M9 6h12M9 12h12M9 18h12" />
       <path d="M3 6h1M3 12h1M3 18h1" strokeWidth="3" />
+    </ListGlyph>
+  );
+}
+
+/** View Settings: sliders inside a rounded frame, drawn in the inherited text colour. */
+function SettingsSlidersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="3.75" />
+      <path d="M6.75 9.5h10.5M6.75 14.5h10.5" />
+      <circle cx="10.25" cy="9.5" r="2" fill="currentColor" stroke="none" />
+      <circle cx="13.75" cy="14.5" r="2" fill="currentColor" stroke="none" />
+    </ListGlyph>
+  );
+}
+
+/** View Mode: an eye with a pupil, same 24 box and stroke as the other list glyphs. */
+function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <path d="M2.75 12.5C5.5 8.75 8.5 7 12 7s6.5 1.75 9.25 5.5C18.5 16.25 15.5 18 12 18s-6.5-1.75-9.25-5.5Z" />
+      <circle cx="12" cy="12.4" r="2.6" />
     </ListGlyph>
   );
 }

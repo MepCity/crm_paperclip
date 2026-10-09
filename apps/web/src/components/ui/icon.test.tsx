@@ -42,6 +42,8 @@ const expectedIcons = [
   "filter",
   "sort",
   "list",
+  "settingsSliders",
+  "eye",
   "refresh",
   "ellipsis",
   "timelineGeneric",
