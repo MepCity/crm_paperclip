@@ -17,6 +17,17 @@
 .record-control[data-focused],
 .record-control[data-focus-visible] {
   border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
+}
+.record-control[aria-required="true"]:focus,
+.record-control[aria-required="true"][data-focused],
+.record-control[aria-required="true"][data-focus-visible],
+.record-control[data-required]:focus,
+.record-control[data-required][data-focused],
+.record-control[data-required][data-focus-visible] {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
 }
 .record-control[aria-required="true"],
 .record-control[data-required] {
@@ -62,6 +73,13 @@
 }
 .record-input-frame:has(:focus) {
   border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
+}
+.record-input-frame:has([aria-required="true"]:focus),
+.record-input-frame:has([data-required]:focus) {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
 }
 .record-input-frame:has([aria-invalid="true"]) {
   border-color: var(--color-danger);
@@ -131,6 +149,7 @@
 }
 .record-choice-shell:has(:focus) {
   border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
 }
 .record-choice-shell[data-invalid] {
   border-color: var(--color-danger);
@@ -185,6 +204,7 @@
   width: var(--trigger-width);
   max-height: var(--available-height);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-form-control);
   background: var(--color-surface);
   outline: none;
 }
@@ -194,23 +214,70 @@
   padding-block: var(--size-form-list-padding);
   outline: none;
 }
+.record-search-panel .record-choice-list {
+  padding-block: 0 var(--size-form-panel-owner-content-bottom);
+  padding-top: var(--size-form-panel-list-first-gap);
+}
+.record-owner-panel .record-choice-list {
+  padding-block: 0 var(--size-form-panel-owner-content-bottom);
+  padding-top: var(--size-form-panel-owner-content-top);
+}
 .record-choice-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--size-form-panel-owner-name-gap);
   height: var(--size-form-option-height);
-  padding-inline: var(--space-3);
+  padding-inline-start: calc(var(--size-form-panel-option-text-inset) - 1px);
+  padding-inline-end: var(--size-form-panel-inset-inline);
   color: var(--color-text);
   font-size: var(--text-md);
   outline: none;
   cursor: default;
 }
-.record-choice-row[data-selected],
-.record-choice-row[data-focused] {
+.record-search-panel .record-choice-row[data-selected],
+.record-owner-panel .record-choice-row[data-selected] {
+  background: transparent;
+  font-weight: var(--font-weight-semibold);
+}
+.record-search-panel .record-choice-row[data-focused]:not([data-selected]),
+.record-owner-panel .record-choice-row[data-focused]:not([data-selected]) {
   background: var(--color-surface-selected);
 }
-.record-choice-row[data-selected] {
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
+  .record-choice-row[data-selected]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  right: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  height: var(--size-form-panel-selected-fill-height);
+  border-radius: var(--radius-form-control);
+  background: var(--color-surface-selected);
+  transform: translateY(-50%);
+}
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
+  .record-choice-row[data-selected] {
+  background: transparent;
   font-weight: var(--font-weight-semibold);
+}
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
+  .record-choice-row[data-focused]:not([data-selected]) {
+  background: var(--color-surface-selected);
+}
+.record-choice-check {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--size-form-panel-check-inset) - 1px);
+  width: var(--size-form-panel-check-width);
+  height: var(--size-form-panel-check-height);
+  color: var(--color-text);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.record-owner-row .record-choice-check {
+  left: calc(var(--size-form-panel-owner-check-inset) - 1px);
 }
 .record-search-panel {
   height: var(--size-form-country-height);
@@ -227,16 +294,56 @@
   outline: none;
 }
 .record-panel-search {
-  margin: var(--space-3);
-  margin-top: calc(var(--space-3) - 1px);
+  position: relative;
+  flex: none;
+  margin-inline: var(--size-form-panel-inset-inline);
+  margin-top: var(--size-form-panel-search-top);
+}
+.record-panel-search .record-control {
+  width: 100%;
+  height: var(--size-form-input-height);
+  padding-inline-start: var(--size-form-panel-search-text-inset);
+}
+.record-owner-panel .record-panel-search .record-control {
+  height: var(--size-form-panel-search-height-owner);
+}
+.record-panel-search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--size-form-panel-search-icon-inset);
+  width: var(--size-form-panel-search-icon-size);
+  height: var(--size-form-panel-search-icon-size);
+  color: var(--color-text);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 .record-search-dialog .record-choice-list {
   flex: 1;
   min-height: 0;
 }
 .record-owner-row {
-  height: auto;
-  min-height: var(--size-form-portrait);
+  height: var(--size-form-panel-owner-row-pitch);
+  min-height: var(--size-form-panel-owner-row-pitch);
+  padding-inline-start: calc(var(--size-form-panel-owner-avatar-inset) - 1px);
+  gap: var(--size-form-panel-owner-name-gap);
+}
+.record-owner-avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-form-panel-owner-avatar-size);
+  height: var(--size-form-panel-owner-avatar-size);
+  border-radius: var(--radius-full);
+  background: var(--color-avatar);
+  color: var(--color-surface);
+}
+.record-owner-avatar-icon {
+  width: calc(var(--size-form-panel-owner-avatar-size) * 0.55);
+  height: calc(var(--size-form-panel-owner-avatar-size) * 0.55);
+}
+.record-owner-row .record-owner-email {
+  color: var(--color-text-muted);
 }
 .record-owner-name {
   font-weight: var(--font-weight-normal);
