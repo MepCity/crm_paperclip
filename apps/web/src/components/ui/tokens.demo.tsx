@@ -477,6 +477,13 @@ const SIZE_GROUPS = [
       "--size-dialog-width",
       "--size-dialog-height",
       "--size-dialog-padding",
+      "--color-confirm-dialog-body",
+      "--size-confirm-dialog-padding-block-start",
+      "--size-confirm-dialog-padding-inline",
+      "--size-confirm-dialog-padding-block-end",
+      "--size-confirm-dialog-title-gap",
+      "--size-confirm-dialog-message-actions-gap",
+      "--size-confirm-dialog-actions-gap",
     ],
   },
   {
