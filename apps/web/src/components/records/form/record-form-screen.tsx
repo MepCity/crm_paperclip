@@ -2,7 +2,7 @@
 
 import { isAppError, type ValidationError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import {
   useCreateRecord,
@@ -97,10 +97,51 @@ function LoadedRecordForm({
   const rootRef = useRef<HTMLDivElement>(null);
   const pickerTrigger = useRef<HTMLElement | null>(null);
   const writeInFlight = useRef(false);
+  const errorFocusPending = useRef(false);
   const create = useCreateRecord(config.module);
   const update = useUpdateRecord(config.module);
   const saving = create.isPending || update.isPending;
   const title = `${record ? "Edit" : "Create"} ${metadata.singularLabel}`;
+
+  useEffect(() => {
+    if (saving || !errorFocusPending.current || Object.keys(errors).length === 0) return;
+    const frame = requestAnimationFrame(() => {
+      errorFocusPending.current = false;
+      const rows = rootRef.current?.querySelectorAll<HTMLElement>("[data-form-field]");
+      for (const row of rows ?? []) {
+        const fieldName = row.dataset.formField ?? "";
+        const prefixName =
+          config.rules.prefix?.field === fieldName ? config.rules.prefix.prefix : undefined;
+        const longitudeName =
+          config.rules.address?.latitude === fieldName ? config.rules.address.longitude : undefined;
+        const compositeError =
+          prefixName && errors[prefixName]
+            ? prefixName
+            : longitudeName && errors[longitudeName]
+              ? longitudeName
+              : undefined;
+        if (compositeError) {
+          const controlId = `record-form-${compositeError}`;
+          const controls = rootRef.current?.querySelectorAll<HTMLElement>("input,textarea,button");
+          const control = Array.from(controls ?? []).find(
+            (item) =>
+              item.id === controlId ||
+              item.getAttribute("aria-labelledby") === `${controlId}-label`,
+          );
+          control?.focus();
+          break;
+        }
+        if (!errors[fieldName]) continue;
+        row
+          .querySelector<HTMLElement>(
+            "input:not(:disabled),textarea:not(:disabled),button:not(:disabled)",
+          )
+          ?.focus();
+        break;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [errors, saving, config.rules]);
 
   function change(name: string, value: FieldValue) {
     setValues((previous) => ({ ...previous, [name]: value }));
@@ -136,44 +177,8 @@ function LoadedRecordForm({
         const messages = Object.fromEntries(
           Object.entries(fieldErrors).map(([name, items]) => [name, items.join(" ")]),
         );
+        errorFocusPending.current = true;
         setErrors(messages);
-        requestAnimationFrame(() => {
-          const rows = rootRef.current?.querySelectorAll<HTMLElement>("[data-form-field]");
-          for (const row of rows ?? []) {
-            const fieldName = row.dataset.formField ?? "";
-            const prefixName =
-              config.rules.prefix?.field === fieldName ? config.rules.prefix.prefix : undefined;
-            const longitudeName =
-              config.rules.address?.latitude === fieldName
-                ? config.rules.address.longitude
-                : undefined;
-            const compositeError =
-              prefixName && messages[prefixName]
-                ? prefixName
-                : longitudeName && messages[longitudeName]
-                  ? longitudeName
-                  : undefined;
-            if (compositeError) {
-              const controlId = `record-form-${compositeError}`;
-              const controls =
-                rootRef.current?.querySelectorAll<HTMLElement>("input,textarea,button");
-              const control = Array.from(controls ?? []).find(
-                (item) =>
-                  item.id === controlId ||
-                  item.getAttribute("aria-labelledby") === `${controlId}-label`,
-              );
-              control?.focus();
-              break;
-            }
-            if (!messages[fieldName]) continue;
-            row
-              .querySelector<HTMLElement>(
-                "input:not(:disabled),textarea:not(:disabled),button:not(:disabled)",
-              )
-              ?.focus();
-            break;
-          }
-        });
       } else setFormError(true);
     } finally {
       writeInFlight.current = false;
@@ -196,6 +201,7 @@ function LoadedRecordForm({
       const coordinates = metadata.fields.find((item) => item.apiName === address.coordinates);
       input = (
         <CoordinatesInput
+          hideClearAction
           id={id}
           label={coordinates && parent ? addressLabel(coordinates, parent) : "Coordinates"}
           latitudeLabel={label}
@@ -242,7 +248,7 @@ function LoadedRecordForm({
           errorMessage={errors[field.apiName]}
           onChange={(next) => change(field.apiName, next || null)}
           prefixId={`record-form-${prefix.apiName}`}
-          prefixDisabled={prefix.readOnly}
+          prefixDisabled={saving || prefix.readOnly}
           prefixErrorMessage={errors[prefix.apiName]}
           prefixLabel={prefix.label}
           prefixValue={textValue(values[prefix.apiName]) || null}
@@ -281,7 +287,7 @@ function LoadedRecordForm({
       );
     }
     return (
-      <div key={field.apiName} data-form-field={field.apiName}>
+      <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
         <FormRow label={label} controlId={id} column={column}>
           {input}
         </FormRow>
@@ -328,6 +334,19 @@ function LoadedRecordForm({
                     .flat()
                     .filter((field) => field.apiName !== address.apiName)
                     .map((field) => row(field, "left", address))}
+                  <button
+                    type="button"
+                    className="record-form-clear-address"
+                    disabled={saving}
+                    onClick={() => {
+                      for (const field of columns.flat()) {
+                        if (field.apiName !== address.apiName && !field.readOnly)
+                          change(field.apiName, null);
+                      }
+                    }}
+                  >
+                    <span>Clear All</span>
+                  </button>
                 </FieldGroup>
               ) : columns.length === 1 ? (
                 columns[0]?.map((field) => row(field, "full"))

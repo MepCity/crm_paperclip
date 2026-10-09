@@ -1,7 +1,7 @@
 import { ValidationError } from "@crm/core/errors";
 import type { RecordData } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
@@ -9,6 +9,8 @@ import { ApiProvider } from "@/lib/api/client/provider";
 import { render } from "@/test/render";
 import { leadsFormRules, leadsFormFields as names } from "./leads-form-rules";
 import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
+
+import { SelectUserDialog } from "./select-user-dialog";
 
 let counter = 0;
 function harness(record?: RecordData, options: Partial<RecordFormConfig> = {}) {
@@ -215,6 +217,37 @@ test("owner picker Done updates the form and Cancel restores focus without chang
   expect(screen.getByRole("button", { name: "Lead Owner" }).textContent).toContain("Other User");
 });
 
+test("approved owner dialog selects a member and writes its ID", async () => {
+  const { service } = harness(undefined, {
+    renderOwnerPicker: (props) => (
+      <SelectUserDialog
+        {...props}
+        title="Select User"
+        searchLabel="Search Users"
+        searchPlaceholder="Search Users"
+        selectedUserLabel="Selected User:"
+        selectColumnLabel="Select"
+        columnUserName="User Name"
+        columnAvatarLabel="Avatar"
+        columnRole="Role"
+        columnEmail="Email"
+        columnProfile="Profile"
+        cancelLabel="Cancel"
+        doneLabel="Done"
+      />
+    ),
+  });
+  const create = vi.spyOn(service, "create");
+  await ready();
+  const user = await required();
+  await user.click(screen.getByRole("button", { name: "Open owner picker" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Select User" }));
+  await user.click(dialog.getByRole("radio", { name: "Other User" }));
+  await user.click(dialog.getByRole("button", { name: "Done" }));
+  await user.click(screen.getByRole("button", { name: /^Save$/ }));
+  await waitFor(() => expect(create.mock.calls[0]?.[1]?.[names.owner]).toBe("other-user"));
+});
+
 test.each([
   [names.salutation, "Salutation rejected", "button", "Salutation"],
   [names.longitude, "Longitude rejected", "textbox", "Longitude"],
@@ -255,4 +288,25 @@ test("country/state show null only without a country, preserve saved inventory v
   await user.click(state);
   expect(screen.getAllByRole("option")).toHaveLength(1);
   expect(screen.getByRole("option", { name: "-None-" })).toBeTruthy();
+});
+
+test("Clear All clears writable address subfields without clearing identity", async () => {
+  harness({
+    id: "address-clear",
+    fields: {
+      Company: "Retained company",
+      Last_Name: "Retained lead",
+      [names.country]: "Synthetic Country",
+      [names.state]: "Synthetic State",
+      [names.latitude]: 12,
+      [names.longitude]: 34,
+    },
+  });
+  await ready();
+  await userEvent.setup().click(screen.getByRole("button", { name: "Clear All" }));
+  expect(screen.getByRole("button", { name: "Country / Region" }).textContent).toContain("-None-");
+  expect((screen.getByRole("textbox", { name: "Latitude" }) as HTMLInputElement).value).toBe("");
+  expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
+    "Retained company",
+  );
 });

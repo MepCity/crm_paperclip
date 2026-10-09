@@ -22,5 +22,6 @@
 }
 
 .top-aligned-modal-dialog {
+  min-height: inherit;
   outline: none;
 }

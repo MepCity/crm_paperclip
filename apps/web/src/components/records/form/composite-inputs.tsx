@@ -68,6 +68,7 @@ export interface CoordinatesInputProps {
   latitudeLabel?: string;
   longitudeLabel?: string;
   clearLabel?: string;
+  hideClearAction?: boolean;
   errorMessage?: string;
 }
 export function CoordinatesInput({
@@ -82,10 +83,11 @@ export function CoordinatesInput({
   latitudeLabel = "Latitude",
   longitudeLabel = "Longitude",
   clearLabel = "Clear All",
+  hideClearAction = false,
   errorMessage,
 }: CoordinatesInputProps) {
   return (
-    <fieldset aria-label={label} className="flex items-start gap-2">
+    <fieldset aria-label={label} className="record-form-coordinates flex items-start gap-2">
       <NumberField
         id={id}
         label={latitudeLabel}
@@ -112,13 +114,15 @@ export function CoordinatesInput({
         formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
         onChange={(next) => onChange({ latitude, longitude: Number.isFinite(next) ? next : null })}
       />
-      <Button
-        variant="ghost"
-        isDisabled={disabled}
-        onPress={() => onChange({ latitude: null, longitude: null })}
-      >
-        {clearLabel}
-      </Button>
+      {hideClearAction ? null : (
+        <Button
+          variant="ghost"
+          isDisabled={disabled}
+          onPress={() => onChange({ latitude: null, longitude: null })}
+        >
+          {clearLabel}
+        </Button>
+      )}
     </fieldset>
   );
 }

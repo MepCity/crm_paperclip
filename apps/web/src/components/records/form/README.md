@@ -187,7 +187,7 @@ surrounding trigger.
   panels open above when below cannot fit. Shadow blur remains unmeasurable
   and is omitted. No separate 14px or 15px typography token is introduced.
 
-## Record form screen (MEP-145, stage A)
+## Record form screen (MEP-145)
 
 `RecordFormScreen` loads metadata, the optional edit record and organization users
 through the browser hooks. Mount it inside the organization's `ApiProvider` and
@@ -199,9 +199,8 @@ and disabled, but never enter a write payload.
 `RecordFormConfig` supplies the module, presentation rules, navigation callback
 and `paths.detail(id)`, `paths.create`, `paths.cancel`. The route layer must use the
 shared page-path helper and determine the user's origin; the screen does not
-construct routes or inspect browser history. Stage B adds the create/edit routes,
-list/detail entry points, browser request checks and measured page coordinates
-when the list route dependency is merged. No alternate path helper is introduced.
+construct routes or inspect browser history. The Leads route adapter supplies create/edit routes,
+list/detail entry points, browser request checks and measured page coordinates. No alternate path helper is introduced.
 
 `form-model.ts` owns initial values, null/placeholder conversion, primitive value
 mapping and create/partial-update payloads. An edit form keeps its initial baseline
@@ -232,8 +231,7 @@ focus the first rendered error, including composite prefix and longitude control
 - `renderOwnerPicker` is an integration slot for the approved Select User dialog.
   Users come from `useUsers`. Done writes an opaque ID; Cancel preserves the
   previous owner; both return focus to the opening icon. The action is omitted
-  unless the slot is supplied. Stage A tests the slot's integration contract;
-  wiring and testing the real dialog waits for MEP-205's delivery into main.
+  unless the slot is supplied. Component tests exercise both the integration slot and the actual dialog.
 - Image upload (parity row 18, image/attachment module), auxiliary form-view and
   customization controls (rows 20–21, customization module), and Client Script
   (automation module) remain omitted as scoped deferred controls. Placeholder
@@ -245,5 +243,21 @@ Tests use an `ApiProvider` with the fixture service: create payload, populated e
 partial update, server error placement/focus, Save and New reset, origin cancel,
 write locking, owner dropdown and picker integration, composite errors and
 Country/State options. Unit tests independently cover metadata filtering/order,
-required/read-only flags, value mapping and explicit clears. Final page parity
-and end-to-end browser flows remain stage B acceptance checks.
+required/read-only flags, value mapping and explicit clears. Browser tests cover page geometry and end-to-end flows.
+
+### Leads route adapter
+
+`modules/leads/leads-form-client.tsx` uses `lib/crm-paths.ts` for the create,
+record and list destinations. Both server pages require organization membership
+and supply the session user ID. The existing list Create Lead and detail Edit
+links open these routes. Edit Cancel returns to that record; Create Cancel uses
+the list context's complete URL, including view, pagination and filters, with the
+default list as fallback for a direct form visit. Save and New preserves that
+list origin and resets values. The real Select User dialog receives organization
+members and its Done callback updates Owner.
+
+The route stylesheet applies the page's measured Address radius, border-box
+insets, coordinate widths, Description width/height and bottom separator.
+Interim: Clear All resets all writable members of the Address group locally;
+read-only fields and identity fields are preserved. Its measured low-contrast
+ink is reported under ADR 0003 §8; no reference write was performed to study it.

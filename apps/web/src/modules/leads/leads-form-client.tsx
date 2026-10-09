@@ -1,0 +1,66 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { leadsFormRules } from "@/components/records/form/leads-form-rules";
+import { RecordFormScreen } from "@/components/records/form/record-form-screen";
+import { SelectUserDialog } from "@/components/records/form/select-user-dialog";
+import { moduleCreatePath, moduleListDefaultPath, moduleRecordPath } from "@/lib/crm-paths";
+import { readRecordListContext } from "@/lib/records/record-list-context";
+import { LEADS_MODULE } from "./list-config";
+import "./leads-form-page.css";
+
+export function LeadsFormClient({
+  orgSlug,
+  currentUserId,
+  recordId,
+}: {
+  orgSlug: string;
+  currentUserId: string;
+  recordId?: string;
+}) {
+  const router = useRouter();
+  const defaultCancel = recordId
+    ? moduleRecordPath(orgSlug, LEADS_MODULE, recordId)
+    : moduleListDefaultPath(orgSlug, LEADS_MODULE);
+  return (
+    <div className="leads-form-page">
+      <RecordFormScreen
+        currentUserId={currentUserId}
+        recordId={recordId}
+        config={{
+          module: LEADS_MODULE,
+          rules: leadsFormRules,
+          paths: {
+            detail: (id) => moduleRecordPath(orgSlug, LEADS_MODULE, id),
+            create: moduleCreatePath(orgSlug, LEADS_MODULE),
+            cancel: defaultCancel,
+          },
+          navigate: (path) => {
+            const destination =
+              !recordId && path === defaultCancel
+                ? (readRecordListContext(orgSlug, LEADS_MODULE)?.listHref ?? path)
+                : path;
+            router.push(destination);
+          },
+          renderOwnerPicker: (props) => (
+            <SelectUserDialog
+              {...props}
+              title="Select User"
+              searchLabel="Search Users"
+              searchPlaceholder="Search Users"
+              selectedUserLabel="Selected User:"
+              selectColumnLabel="Select"
+              columnUserName="User Name"
+              columnAvatarLabel="Avatar"
+              columnRole="Role"
+              columnEmail="Email"
+              columnProfile="Profile"
+              cancelLabel="Cancel"
+              doneLabel="Done"
+            />
+          ),
+        }}
+      />
+    </div>
+  );
+}

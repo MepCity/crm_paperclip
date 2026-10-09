@@ -19,6 +19,7 @@ function field(apiName: string, options: Partial<FieldDefinition> = {}): FieldDe
     required: false,
     readOnly: false,
     unique: false,
+    massUpdate: false,
     views: { view: true, create: true, edit: true, quickCreate: false },
     ...options,
   };
