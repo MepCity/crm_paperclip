@@ -20,6 +20,45 @@ const UTF8_INITDB_FLAGS = [
   "--icu-locale=und",
 ];
 
+// macOS caps SysV IPC identifiers at kern.sysv.shmmni (32 here) and a postmaster that is
+// killed keeps its identifiers until they are reclaimed, so with the default sysv shared
+// memory initdb's bootstrap run fails on "could not create shared memory segment: No space
+// left on device" while other clusters on the machine are up. mmap keeps the main shared
+// area out of the identifier table: initdb then needs none, a running server still needs one.
+const IPC_SETTINGS = { shared_memory_type: "mmap" };
+
+/**
+ * A full identifier table clears itself when another run's cluster stops, so only that
+ * failure is retried. The waits stay under the integration project's 60s hook timeout.
+ */
+const IPC_RETRY_DELAYS_MS = [5_000, 10_000, 20_000];
+
+const IPC_EXHAUSTION_HINT =
+  "This host is out of SysV IPC identifiers (kern.sysv.shmmni): clusters still running, or leaked by killed postmasters, hold them.";
+
+function toFlags(settings: Record<string, string>): string[] {
+  return Object.entries(settings).flatMap(([name, value]) => ["-c", `${name}=${value}`]);
+}
+
+/** initdb arguments. initdb has no other way to reach the bootstrap run's shared memory type. */
+export function buildInitdbFlags(): string[] {
+  return [...UTF8_INITDB_FLAGS, ...toFlags(IPC_SETTINGS)];
+}
+
+/** `-c name=value` server arguments. A caller's setting wins over the default. */
+export function buildServerFlags(settings: Record<string, string> = {}): string[] {
+  return toFlags({ listen_addresses: HOST, ...IPC_SETTINGS, ...settings });
+}
+
+/** True when PostgreSQL failed because machine-wide SysV identifiers are taken. */
+export function isIpcExhausted(message: string): boolean {
+  return /could not create (shared memory segment|semaphore set)/.test(message);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const failureExitGuard = Symbol.for("crm.failureExitGuard");
 
 /**
@@ -138,29 +177,46 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     throw new Error(`port ${port} is already in use`);
   }
 
-  const flags = Object.entries({ listen_addresses: HOST, ...options.settings }).flatMap(
-    ([name, value]) => ["-c", `${name}=${value}`],
-  );
-  const server = new EmbeddedPostgres({
-    databaseDir: dataDir,
-    port,
-    user: USER,
-    password: PASSWORD,
-    persistent: true,
-    initdbFlags: UTF8_INITDB_FLAGS,
-    postgresFlags: flags,
-    onLog,
-    onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
-  });
+  const flags = buildServerFlags(options.settings);
+  const createCluster = () =>
+    new EmbeddedPostgres({
+      databaseDir: dataDir,
+      port,
+      user: USER,
+      password: PASSWORD,
+      persistent: true,
+      initdbFlags: buildInitdbFlags(),
+      postgresFlags: flags,
+      onLog,
+      onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
+    });
 
-  try {
-    if (!existsSync(join(dataDir, "PG_VERSION"))) await server.initialise();
-    await server.start();
-  } catch (error) {
-    await server.stop().catch(() => undefined);
-    const reason = error instanceof Error ? error.message : "server exited during start";
-    throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}`);
+  let server: EmbeddedPostgres | undefined;
+  let reason = "server exited during start";
+  for (let attempt = 0; attempt <= IPC_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      const delay = IPC_RETRY_DELAYS_MS[attempt - 1] ?? 0;
+      onLog(`SysV IPC identifiers are taken, retrying in ${delay}ms`);
+      await sleep(delay);
+    }
+    const candidate = createCluster();
+    try {
+      if (!existsSync(join(dataDir, "PG_VERSION"))) await candidate.initialise();
+      await candidate.start();
+      server = candidate;
+      break;
+    } catch (error) {
+      await candidate.stop().catch(() => undefined);
+      reason = error instanceof Error ? error.message : "server exited during start";
+      if (!isIpcExhausted(reason)) break;
+    }
   }
+
+  if (!server) {
+    const hint = isIpcExhausted(reason) ? `\n${IPC_EXHAUSTION_HINT}` : "";
+    throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}${hint}`);
+  }
+  const cluster = server;
 
   return {
     port,
@@ -169,12 +225,12 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     async stop() {
       // A Ctrl+C reaches the server directly (same process group) and it exits on its own;
       // embedded-postgres would then wait forever for an exit event it already missed.
-      const child = (server as unknown as { process?: ChildProcess }).process;
+      const child = (cluster as unknown as { process?: ChildProcess }).process;
       if (child && (child.exitCode !== null || child.signalCode !== null)) {
-        (server as unknown as { process?: ChildProcess }).process = undefined;
+        (cluster as unknown as { process?: ChildProcess }).process = undefined;
         return;
       }
-      await server.stop();
+      await cluster.stop();
     },
   };
 }
