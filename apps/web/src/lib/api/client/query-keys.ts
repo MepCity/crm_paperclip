@@ -3,6 +3,7 @@ import type { ListQuery } from "@crm/core/records";
 const root = ["crm"] as const;
 
 export const apiKeys = {
+  homeCurrency: [...root, "homeCurrency"] as const,
   users: [...root, "users"] as const,
   module: (module: string) => [...root, "module", module] as const,
   views: (module: string) => [...apiKeys.module(module), "views"] as const,

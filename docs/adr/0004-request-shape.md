@@ -37,6 +37,8 @@ The record service port (MEP-68) is independent of storage, so this decision doe
 
 ### 2. Paths
 
+- Organization home currency: `GET /crm/v2.2/org/currencies` (Interim).
+
 - A route handler's path is the observed path, version segment included: `/crm/v2.2/Leads/bulk` is served by `app/crm/v2.2/[module]/bulk/route.ts`. The version is a label, not a compatibility promise. An endpoint we need but never observed takes the version of the nearest observed endpoint of the same resource.
 - The module segment is the module API name. Handlers are generic over it (ADR 0001 §5.1 and §5.6); no handler is written for one module.
 - Pages move from `/o/[orgSlug]/…` to `/crm/[orgSlug]/…`. The rest of a page path follows the reference: `tab/<Module>/list`, `tab/<Module>/custom-view/<viewId>/list`, `tab/<Module>/create`, `tab/<Module>/<recordId>`. Organization slugs of the form `v<digits>` or `v<digits>.<digits>` are reserved.
@@ -255,6 +257,10 @@ Verification:
 1. The `.do` bootstrap endpoints are not reproduced; the shell data is rendered on the server.
 2. Parameters without meaning in our system are not sent (`approved`, `converted`, `formatted_currency`, `home_converted_currency`, `on_demand_properties`, `include…`).
 3. The organization segment of a page path is our slug, not the reference's identifier format.
+4. Home currency is obtained by the reference browser from a page bootstrap request
+   we do not reproduce. We use the public API organization currency resource at
+   `/crm/v2.2/org/currencies`; this path and response shape were not observed in a
+   capture (Interim).
 
 ## Open questions
 
