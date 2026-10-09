@@ -1,6 +1,6 @@
 import { NotFoundError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -143,6 +143,152 @@ describe("ModuleListScreen", () => {
     expect(parsed.viewId).toBe("all-leads");
     expect(parsed.recordIds.length).toBeGreaterThan(0);
     expect(parsed.listHref).toContain("/tab/Leads/list");
+  });
+
+  it("shows the selection bar and restores the toolbar after Clear", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rowBoxes = screen.getAllByRole("checkbox", { name: /Select / });
+    const firstRow = rowBoxes[1];
+    if (!firstRow) throw new Error("Expected a row checkbox.");
+    await user.click(firstRow);
+    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.getByRole("button", { name: "Filter" })).toBeTruthy();
+  });
+
+  it("clears selection when the list page changes", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />,
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const firstRow = screen.getAllByRole("checkbox", { name: /Select / })[1];
+    if (!firstRow) throw new Error("Expected a row checkbox.");
+    await user.click(firstRow);
+    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    navigation.params = new URLSearchParams("page=2&per_page=10");
+    rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />);
+    await waitFor(() => {
+      expect(screen.queryByText(/Record Selected/)).toBeNull();
+      expect(screen.getByRole("button", { name: "Filter" })).toBeTruthy();
+    });
+  });
+
+  it("deletes selected records after confirmation with the selected ids", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const deleteSpy = vi.spyOn(records, "delete");
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const page = await records.list("Leads", listQuery);
+    const selected = page.records.slice(0, 2);
+    const expectedIds = selected.map((record) => record.id);
+    const deletedNames = selected.map((record) => String(record.fields.Full_Name ?? ""));
+    const listCallsBefore = listSpy.mock.calls.length;
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    const first = rows[1];
+    const second = rows[2];
+    if (!first || !second) throw new Error("Expected row checkboxes.");
+    await user.click(first);
+    await user.click(second);
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(deleteSpy).toHaveBeenCalledWith("Leads", expectedIds);
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+    await waitFor(() => {
+      expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore);
+    });
+    for (const name of deletedNames) {
+      if (!name) continue;
+      expect(screen.queryByRole("link", { name })).toBeNull();
+    }
+  });
+
+  it("keeps the delete dialog open and selection when delete fails", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    vi.spyOn(records, "delete").mockRejectedValueOnce(new Error("Server error"));
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const firstRow = screen.getAllByRole("checkbox", { name: /Select / })[1];
+    if (!firstRow) throw new Error("Expected a row checkbox.");
+    await user.click(firstRow);
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("Server error");
+    });
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+  });
+
+  it("navigates to the previous page when every row on the page is deleted", async () => {
+    navigation.params = new URLSearchParams("page=2&per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(navigation.push).toHaveBeenCalled();
+    });
+    const lastHref = navigation.push.mock.calls.at(-1)?.[0] as string;
+    expect(lastHref).toContain("page=1");
   });
 
   it("passes list query fields and paging from the address", async () => {

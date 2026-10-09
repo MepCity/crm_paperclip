@@ -58,6 +58,7 @@ export const leadsListPageConfig = {
   // The reference names the record title field "Lead Name" in Sort By.
   linkFieldLabel: "Lead Name",
   pluralLabel: "Leads",
+  singularLabel: "Lead",
   createLabel: "Create Lead",
   filterTitle: "Filter Leads by",
   filterGroups: leadsFilterGroups,

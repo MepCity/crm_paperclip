@@ -1,4 +1,5 @@
 export {
+  moduleCreatePath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordEditPath,

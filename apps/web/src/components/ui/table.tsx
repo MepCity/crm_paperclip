@@ -1,8 +1,10 @@
 import { Children, type ReactNode } from "react";
 
 export function Table({ children, className = "" }: { children: ReactNode; className?: string }) {
+  // Paint containment keeps the scroll container authoritative for its subtree: without it
+  // Chromium adds a table's clipped spill to the document, so the page scrolls sideways.
   return (
-    <div className={`w-full overflow-auto ${className}`}>
+    <div className={`w-full overflow-auto contain-paint ${className}`}>
       <table className="w-full text-left text-sm">{children}</table>
     </div>
   );

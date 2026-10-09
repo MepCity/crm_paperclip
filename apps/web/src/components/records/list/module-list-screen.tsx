@@ -4,11 +4,14 @@ import { NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, ModuleApiName, SortSpec } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
+import { SelectionBar } from "./selection-bar";
 import "./module-list-page.css";
 import {
+  useDeleteRecords,
   useModule,
   useRecordCount,
   useRecordList,
@@ -42,6 +45,7 @@ export interface ModuleListScreenConfig {
   module: ModuleApiName;
   linkField: string;
   pluralLabel: string;
+  singularLabel: string;
   createLabel: string;
   filterTitle: string;
   filterGroups: readonly FilterGroup[];
@@ -103,6 +107,9 @@ function ModuleListScreenLoaded({
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteRecords = useDeleteRecords(config.module);
 
   const moduleQuery = useModule(config.module);
   const viewQuery = useView(config.module, viewId);
@@ -182,8 +189,25 @@ function ModuleListScreenLoaded({
     router.push(href);
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset selection when list context changes
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [
+    viewId,
+    searchState.page,
+    searchState.perPage,
+    searchState.sortBy,
+    searchState.sortOrder,
+    filterSelection,
+  ]);
+
   function refreshView() {
+    setSelectedIds([]);
     refreshModuleListData();
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
   }
 
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
@@ -220,6 +244,43 @@ function ModuleListScreenLoaded({
   const page = list.data.page;
   const perPage = list.data.perPage;
 
+  const pageRecordIds = new Set(records.map((record) => record.id));
+  const pageSelectedIds = selectedIds.filter((id) => pageRecordIds.has(id));
+  const selectionActive = pageSelectedIds.length > 0;
+
+  function openDeleteDialog() {
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    const ids = [...pageSelectedIds];
+    if (ids.length === 0) return;
+    setDeleteError(null);
+    try {
+      await deleteRecords.mutateAsync(ids);
+      setDeleteOpen(false);
+      const deletedAllOnPage = ids.length === records.length;
+      clearSelection();
+      if (deletedAllOnPage && page > 1) {
+        navigate({ ...searchState, page: page - 1 });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Delete failed.";
+      setDeleteError(message);
+      throw error;
+    }
+  }
+
+  const deleteTitle =
+    pageSelectedIds.length === 1
+      ? `Delete ${config.singularLabel}`
+      : `Delete ${config.pluralLabel}`;
+  const deleteMessage =
+    pageSelectedIds.length === 1
+      ? `Are you sure you want to delete the selected ${config.singularLabel}?`
+      : `Are you sure you want to delete the ${pageSelectedIds.length} selected ${config.pluralLabel}?`;
+
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
 
@@ -235,24 +296,48 @@ function ModuleListScreenLoaded({
   return (
     <div className="module-list-page">
       <ViewTabStrip viewName={view.name} />
-      <ListToolbar
-        filterOpen={filterOpen}
-        onFilterChange={setFilterOpen}
-        onRefresh={refreshView}
-        fields={sortFields}
-        sort={appliedSort}
-        onSortApply={(next: SortSpec) => {
-          navigate({
-            ...searchState,
-            sortBy: next.field,
-            sortOrder: next.order,
-          });
-        }}
-        create={{
-          label: config.createLabel,
-          href: config.paths.create(orgSlug, config.module),
-        }}
-      />
+      {selectionActive ? (
+        <SelectionBar
+          selectedCount={pageSelectedIds.length}
+          onClear={clearSelection}
+          onDelete={openDeleteDialog}
+        />
+      ) : (
+        <ListToolbar
+          filterOpen={filterOpen}
+          onFilterChange={setFilterOpen}
+          onRefresh={refreshView}
+          fields={sortFields}
+          sort={appliedSort}
+          onSortApply={(next: SortSpec) => {
+            navigate({
+              ...searchState,
+              sortBy: next.field,
+              sortOrder: next.order,
+            });
+          }}
+          create={{
+            label: config.createLabel,
+            href: config.paths.create(orgSlug, config.module),
+          }}
+        />
+      )}
+      {deleteOpen ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open && !deleteRecords.isPending) setDeleteOpen(false);
+          }}
+          title={deleteTitle}
+          message={deleteMessage}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          tone="danger"
+          busy={deleteRecords.isPending}
+          errorMessage={deleteError}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
       <div className="module-list-body">
         {filterOpen ? (
           <FilterPanel
@@ -270,8 +355,11 @@ function ModuleListScreenLoaded({
             records={records}
             linkField={config.linkField}
             rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
-            selectedIds={selectedIds}
-            onSelectedIdsChange={(ids) => setSelectedIds([...ids])}
+            selectedIds={pageSelectedIds}
+            onSelectedIdsChange={(ids) => {
+              const allowed = new Set(records.map((record) => record.id));
+              setSelectedIds([...ids].filter((id) => allowed.has(id)));
+            }}
             wrapText
             emptyMessage={emptyMessage}
             ownerNames={ownerNames}

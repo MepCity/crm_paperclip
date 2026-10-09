@@ -35,7 +35,8 @@ that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
 
 The header checkbox selects or clears every row on the page. A row checkbox
-selects that row. Nothing else changes: there is no selection toolbar.
+selects that row. The selection toolbar is composed on the module list page,
+not inside this table.
 
 The badge strip is an empty placeholder. No activity ribbon is drawn.
 
@@ -277,6 +278,11 @@ select two rows. Only synthetic data appears in demos and tests.
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
+- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
+  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
+  Selected` / `3 Records Selected`), a `Clear`
+  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
+  The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }` in the order the caller supplies — the component never sorts it;
   `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
@@ -386,6 +392,10 @@ module's ordered `sortFieldLabels` against field metadata by label, and
 
 ### Interim
 
+- Selection bar placement, counter copy (`Clear`, delete dialog title and body,
+  button labels), no toast after delete, and selection limited to the loaded page
+  (cleared on view, address, filter draft, or refresh) were not observed in the
+  reference capture; they follow this task's authorized interim rules.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.

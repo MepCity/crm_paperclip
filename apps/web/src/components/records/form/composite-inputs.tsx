@@ -9,12 +9,18 @@ import { picklistChoices } from "./field-input";
 
 export interface PrefixInputProps extends Omit<TextFieldProps, "prefix"> {
   prefixLabel: string;
+  prefixId?: string;
+  prefixDisabled?: boolean;
+  prefixErrorMessage?: string;
   prefixValue: string | null;
   onPrefixChange: (value: string | null) => void;
   options: readonly PicklistOption[];
 }
 export function PrefixInput({
   prefixLabel,
+  prefixId,
+  prefixDisabled,
+  prefixErrorMessage,
   prefixValue,
   onPrefixChange,
   options,
@@ -26,14 +32,16 @@ export function PrefixInput({
       prefix={
         <div className="record-prefix-select">
           <RecordChoice
+            id={prefixId}
             label={prefixLabel}
+            errorMessage={prefixErrorMessage}
             hideLabel
             prefix
             mutedEmpty
             value={prefixValue}
             onChange={onPrefixChange}
             options={picklistChoices(options, prefixValue)}
-            disabled={props.isDisabled || props.isReadOnly}
+            disabled={prefixDisabled || props.isDisabled || props.isReadOnly}
           />
           <span className="record-prefix-divider" aria-hidden />
         </div>
@@ -55,9 +63,12 @@ export interface CoordinatesInputProps {
   longitude: number | null;
   onChange: (value: { latitude: number | null; longitude: number | null }) => void;
   disabled?: boolean;
+  longitudeId?: string;
+  longitudeErrorMessage?: string;
   latitudeLabel?: string;
   longitudeLabel?: string;
   clearLabel?: string;
+  hideClearAction?: boolean;
   errorMessage?: string;
 }
 export function CoordinatesInput({
@@ -67,13 +78,16 @@ export function CoordinatesInput({
   longitude,
   onChange,
   disabled,
+  longitudeId,
+  longitudeErrorMessage,
   latitudeLabel = "Latitude",
   longitudeLabel = "Longitude",
   clearLabel = "Clear All",
+  hideClearAction = false,
   errorMessage,
 }: CoordinatesInputProps) {
   return (
-    <fieldset aria-label={label} className="flex items-start gap-2">
+    <fieldset aria-label={label} className="record-form-coordinates flex items-start gap-2">
       <NumberField
         id={id}
         label={latitudeLabel}
@@ -88,24 +102,27 @@ export function CoordinatesInput({
         onChange={(next) => onChange({ latitude: Number.isFinite(next) ? next : null, longitude })}
       />
       <NumberField
+        id={longitudeId}
         label={longitudeLabel}
         hideLabel
         placeholder={longitudeLabel}
         value={longitude ?? Number.NaN}
         isDisabled={disabled}
-        isInvalid={Boolean(errorMessage)}
-        errorMessage={errorMessage}
+        isInvalid={Boolean(longitudeErrorMessage)}
+        errorMessage={longitudeErrorMessage}
         validationBehavior="aria"
         formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
         onChange={(next) => onChange({ latitude, longitude: Number.isFinite(next) ? next : null })}
       />
-      <Button
-        variant="ghost"
-        isDisabled={disabled}
-        onPress={() => onChange({ latitude: null, longitude: null })}
-      >
-        {clearLabel}
-      </Button>
+      {hideClearAction ? null : (
+        <Button
+          variant="ghost"
+          isDisabled={disabled}
+          onPress={() => onChange({ latitude: null, longitude: null })}
+        >
+          {clearLabel}
+        </Button>
+      )}
     </fieldset>
   );
 }
