@@ -160,6 +160,23 @@ function matchesListDataSpec(request: CrmRequest, spec: ListDataRequestSpec): bo
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
 }
 
+async function openFilterRow(
+  page: import("@playwright/test").Page,
+  panel: import("@playwright/test").Locator,
+  label: string,
+) {
+  const checkbox = panel.getByRole("checkbox", { name: label, exact: true });
+  const operator = panel.getByRole("button", { name: new RegExp(`${label} operator`) });
+  if (await operator.count()) return;
+  await checkbox.scrollIntoViewIfNeeded();
+  await checkbox.focus();
+  await page.keyboard.press("Space");
+  if ((await operator.count()) === 0) {
+    await page.keyboard.press("Space");
+  }
+  await expect(operator).toBeVisible();
+}
+
 function assertListDataRequests(requests: CrmRequest[]) {
   for (const request of requests) {
     expect(
@@ -197,6 +214,61 @@ async function companyColumnTexts(page: import("@playwright/test").Page): Promis
     texts.push(await rows.nth(i).locator("[data-part=column]").nth(companyIndex).innerText());
   }
   return texts;
+}
+
+async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
+  const rows = page.locator("table tbody tr");
+  const rowCount = await rows.count();
+  const ids: string[] = [];
+  for (let i = 0; i < rowCount; i++) {
+    const href = await rows.nth(i).getByRole("link").first().getAttribute("href");
+    const match = href?.match(/\/Leads\/([^/?#]+)/);
+    if (match?.[1]) ids.push(match[1]);
+  }
+  return ids;
+}
+
+async function expectFilterResultsMatchResponses(
+  page: import("@playwright/test").Page,
+  bulkResponse: import("@playwright/test").Response,
+  countResponse: import("@playwright/test").Response,
+) {
+  const bulkJson = (await bulkResponse.json()) as { data: { id: string }[] };
+  const countJson = (await countResponse.json()) as { count: number };
+  const expectedIds = bulkJson.data.map((row) => row.id);
+  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectedIds);
+  await expect(page.locator("[data-part=total-value]")).toHaveText(String(countJson.count));
+  expect(expectedIds.length).toBeLessThanOrEqual(countJson.count);
+}
+
+async function waitForFilteredListResponses(page: import("@playwright/test").Page) {
+  return Promise.all([
+    page.waitForResponse(
+      (response) =>
+        parseCrmRequest(response.url(), response.request().method())?.pathname.endsWith(
+          "/Leads/bulk",
+        ) ?? false,
+    ),
+    page.waitForResponse(
+      (response) =>
+        parseCrmRequest(response.url(), response.request().method())?.pathname.endsWith(
+          "/Leads/actions/count",
+        ) ?? false,
+    ),
+  ]);
+}
+
+async function selectPicklistValues(
+  page: import("@playwright/test").Page,
+  panel: import("@playwright/test").Locator,
+  fieldLabel: string,
+  values: readonly string[],
+) {
+  await panel.getByRole("button", { name: new RegExp(`${fieldLabel} value$`) }).click();
+  for (const value of values) {
+    await page.getByRole("option", { name: value, exact: true }).click();
+  }
+  await page.keyboard.press("Escape");
 }
 
 test.describe("Leads list page", () => {
@@ -523,6 +595,129 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expectNoA11yViolations(page);
+  });
+
+  test("applies field filters to list data and count requests", async ({ page }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const initialRows = await page.locator("table tbody tr").count();
+    const initialTotal = await page.locator("[data-part=total-value]").innerText();
+    const sampleCompany = (
+      await page.locator("table tbody tr").first().locator("[data-part=column]").nth(1).innerText()
+    ).trim();
+    if (!sampleCompany) throw new Error("Expected a company value.");
+
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    const companyRow = panel.getByRole("checkbox", { name: "Company", exact: true });
+    await companyRow.scrollIntoViewIfNeeded();
+    await expect(companyRow).toBeEnabled({ timeout: 30_000 });
+    await openFilterRow(page, panel, "Company");
+    await panel.getByRole("textbox", { name: "Company value" }).fill(sampleCompany);
+    let lastBulkBody: unknown;
+    let lastCountBody: unknown;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) {
+        lastBulkBody = request.postDataJSON();
+      }
+      if (parsed.pathname.endsWith("/Leads/actions/count")) {
+        lastCountBody = request.postDataJSON();
+      }
+    });
+    const companyResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [companyBulk, companyCount] = await companyResponses;
+    await expectFilterResultsMatchResponses(page, companyBulk, companyCount);
+    const filteredRows = await page.locator("table tbody tr").count();
+    expect(filteredRows).toBeGreaterThan(0);
+    expect(filteredRows).toBeLessThan(initialRows);
+    const companyTexts = await companyColumnTexts(page);
+    for (const text of companyTexts) {
+      expect(text.toLowerCase()).toContain(sampleCompany.toLowerCase());
+    }
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        filters: {
+          field: { api_name: "Company" },
+          comparator: "contains",
+          value: sampleCompany,
+        },
+      }),
+    );
+    expect(lastCountBody).toEqual(lastBulkBody);
+
+    await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+
+    const leadSourceA = "Employee Referral";
+    const leadSourceB = "Cold Call";
+    await openFilterRow(page, panel, "Lead Source");
+    await panel.getByRole("button", { name: /Lead Source operator$/ }).click();
+    await page.getByRole("option", { name: "is", exact: true }).click();
+    await selectPicklistValues(page, panel, "Lead Source", [leadSourceA, leadSourceB]);
+    lastBulkBody = undefined;
+    lastCountBody = undefined;
+    const leadSourceResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [leadSourceBulk, leadSourceCount] = await leadSourceResponses;
+    await expectFilterResultsMatchResponses(page, leadSourceBulk, leadSourceCount);
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        filters: {
+          field: { api_name: "Lead_Source" },
+          comparator: "equal",
+          value: [leadSourceA, leadSourceB],
+        },
+      }),
+    );
+    expect(lastCountBody).toEqual(lastBulkBody);
+
+    await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+
+    await openFilterRow(page, panel, "Created Time");
+    await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+    await page.getByRole("option", { name: "Today", exact: true }).click();
+    lastBulkBody = undefined;
+    lastCountBody = undefined;
+    const todayResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [todayBulk, todayCount] = await todayResponses;
+    await expectFilterResultsMatchResponses(page, todayBulk, todayCount);
+    expect(lastBulkBody).toEqual({
+      filters: {
+        field: { api_name: "Created_Time" },
+        comparator: "equal",
+        value: `\${TODAY}`,
+      },
+    });
+    expect(lastCountBody).toEqual(lastBulkBody);
+
+    await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await openFilterRow(page, panel, "Company");
+    await panel.getByRole("button", { name: /Company operator$/ }).click();
+    await page.getByRole("option", { name: "is", exact: true }).click();
+    await panel.getByRole("textbox", { name: "Company value" }).fill("zzzz-no-match-zzzz");
+    lastBulkBody = undefined;
+    lastCountBody = undefined;
+    const noMatchResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    await noMatchResponses;
+    await expect(page.getByText("No Leads found.")).toBeVisible();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
+    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
+
+    await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);
   });
 
