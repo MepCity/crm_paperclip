@@ -15,6 +15,7 @@ import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import {
   decodeCriteria,
+  decodeCurrency,
   decodeField,
   decodeInput,
   decodeList,
@@ -22,6 +23,7 @@ import {
   decodeRecord,
   decodeView,
   encodeCriteria,
+  encodeCurrency,
   encodeField,
   encodeInfo,
   encodeInput,
@@ -554,5 +556,33 @@ describe("wire codec", () => {
       sort_by: "id",
       sort_order: "desc",
     });
+  });
+});
+
+describe("currency codec", () => {
+  const currency = { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
+  const wire = { iso_code: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefix_symbol: true };
+  it("round trips the configured symbol and both prefix positions", () => {
+    expect(encodeCurrency(currency)).toEqual(wire);
+    expect(decodeCurrency(wire)).toEqual(currency);
+    expect(decodeCurrency(encodeCurrency({ ...currency, prefixSymbol: false }))).toEqual({
+      ...currency,
+      prefixSymbol: false,
+    });
+  });
+  it.each(["iso_code", "symbol", "name", "prefix_symbol"])("rejects missing %s", (key) => {
+    const value: Record<string, unknown> = { ...wire };
+    delete value[key];
+    expect(() => decodeCurrency(value)).toThrow(ValidationError);
+  });
+  it.each([
+    null,
+    {},
+    { ...wire, extra: true },
+    { ...wire, iso_code: "try" },
+    { ...wire, symbol: "" },
+    { ...wire, prefix_symbol: "true" },
+  ])("rejects malformed or unknown fields: %j", (value) => {
+    expect(() => decodeCurrency(value)).toThrow(ValidationError);
   });
 });
