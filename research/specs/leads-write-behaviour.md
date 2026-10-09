@@ -95,7 +95,7 @@ Public documentation sources relied upon are referenced throughout this document
     - Selecting records displays the mass action menu on top of the screen (`D12`).
   - **Live UI Observation (Selection Toolbar & Actions Dropdown)**:
     - Upon selecting one or more records, the top list toolbar is replaced by the selection toolbar (`w2d-select-one`).
-    - **Selection counter & clear link**: Left strip measures 170 × 42 px (x 335–505, y 95–137), displaying the selection count formatted as `"{n} record selected."` (measured: `"1 record selected."`) in `#313949`, followed by a `"Clear"` action link (34 × 16 px at x 471, y 108) that clears the selection.
+    - **Selection counter & clear link**: Left strip measures 170 × 42 px (x 335–505, y 95–137), displaying the single-record selection count `"1 Record Selected."` in `#313949` (multi-record and plural counter patterns remain unverified), followed by a `"Clear"` action link (34 × 16 px at x 471, y 108) that clears the selection.
     - **Record Actions button strip**: Right strip measures 356 × 32 px (x 520–876, y 100–132) and displays four action controls in screen order:
       1. `Send Email` button (101 × 32 px)
       2. `Tags` button (73 × 32 px)
@@ -130,7 +130,7 @@ Public documentation sources relied upon are referenced throughout this document
 
 | Element | Measured value / visible state | Source slug |
 | --- | --- | --- |
-| Selection toolbar | Left counter strip 170 × 42 px (x 335–505, y 95–137) showing "{n} record selected." in `#313949` with "Clear" link (34 × 16 px at x 471, y 108); right Record Actions button strip 356 × 32 px (x 520–876, y 100–132) holding Send Email (101 × 32 px), Tags (73 × 32 px), Mass Update (113 × 32 px), and Actions menu button (45 × 32 px); buttons feature 1 px `#D5D8E9` border, light vertical gradient `#FDFDFE` to `#F3F2F8`, 6 px corners, text `#313949` | `w2d-select-one` |
+| Selection toolbar | Left counter strip 170 × 42 px (x 335–505, y 95–137) showing "1 Record Selected." (single record observed; plural format unverified) in `#313949` with "Clear" link (34 × 16 px at x 471, y 108); right Record Actions button strip 356 × 32 px (x 520–876, y 100–132) holding Send Email (101 × 32 px), Tags (73 × 32 px), Mass Update (113 × 32 px), and Actions menu button (45 × 32 px); buttons feature 1 px `#D5D8E9` border, light vertical gradient `#FDFDFE` to `#F3F2F8`, 6 px corners, text `#313949` | `w2d-select-one` |
 | Selection Actions menu | Popover menu approx 200 × 354 px (x 838–1038, y 139–493) anchored beneath the Actions dropdown button; contains 11 operations in screen order: Run Macro, Create Task, Change Owner, Cadences, Add to Campaigns, Print Mailing Labels, Print Using Canvas, Mail Merge, Mass Convert, Delete, Export Selected Records; white surface, 6 px corners, soft shadow, item rows 32 px high (Print Using Canvas 34 px) with `#313949` text, hovered row `#F0F4FC` | `w2d-change-owner` |
 
 - **Not Documented**:
@@ -405,7 +405,7 @@ Public documentation sources relied upon are referenced throughout this document
 The following functional behaviors, presentation details, and UI feedback mechanisms are not specified in public documentation and could not be observed due to the read-only rule:
 - **A1**: Delete confirmation modal window title, prompt body text, confirmation button labels, post-deletion redirection target page, and success toast notification message.
 - **A2**: Availability and behavior of `Save and New` and `Cancel` on clone form; post-save redirection destination; whether the UI clone form excludes the same fields as the Clone API (`D4`).
-- **A3**: Multi-page selection counter format and "Select all records in this view" presentation when more than 10 records exist. (Note: single-page selection counter format `"{n} record selected."` and selection toolbar styling are now observed).
+- **A3**: Multi-page selection counter format and "Select all records in this view" presentation when more than 10 records exist. (Note: single-record selection counter `"1 Record Selected."` and selection toolbar styling are now observed; plural/multi-record counter format remains unobserved).
 - **A4**: Mass update modal title and input styling; post-update confirmation notification text.
 - **A5**: Web UI Change Owner modal vs full-page dialog presentation styling, user selector control, checkbox labels/styling for associated related records, and result toast message (skipped by capture tool due to `dangerous attribute: update`).
 - **A6**: Mass delete confirmation modal title, warning text, button labels, and result notification message.
