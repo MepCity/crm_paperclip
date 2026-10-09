@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { AUTH_NAVIGATION_TIMEOUT_MS } from "./auth";
 import { expect } from "./test";
 
 /** Creates an organization through the form and lands on its home page. */
@@ -13,6 +14,6 @@ export async function createOrganization(
   await expect(slugField).not.toHaveValue("");
   const slug = await slugField.inputValue();
   await page.getByRole("button", { name: "Create organization" }).click();
-  await expect(page).toHaveURL(`/crm/${slug}`);
+  await expect(page).toHaveURL(`/crm/${slug}`, { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   return { name: organizationName, slug };
 }
