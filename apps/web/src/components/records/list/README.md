@@ -35,7 +35,8 @@ that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
 
 The header checkbox selects or clears every row on the page. A row checkbox
-selects that row. Nothing else changes: there is no selection toolbar.
+selects that row. The selection toolbar is composed on the module list page,
+not inside this table.
 
 The badge strip is an empty placeholder. No activity ribbon is drawn.
 
@@ -335,6 +336,11 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
+- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
+  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
+  Selected` / `3 Records Selected`), a `Clear`
+  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
+  The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
   from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
@@ -423,6 +429,10 @@ count queries without changing the URL. View Settings writes `per_page` and rese
 
 ### Interim
 
+- Selection bar placement, counter copy (`Clear`, delete dialog title and body,
+  button labels), no toast after delete, and selection limited to the loaded page
+  (cleared on view, address, filter draft, or refresh) were not observed in the
+  reference capture; they follow this task's authorized interim rules.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - View Settings preferences are stored in the browser, not on the server: `list.per-page`

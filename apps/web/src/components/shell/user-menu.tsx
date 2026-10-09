@@ -9,6 +9,7 @@ import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { type AuthResult, signOut } from "@/lib/auth-client";
 
 export interface ShellUser {
+  id: string;
   name: string;
   email: string;
 }
