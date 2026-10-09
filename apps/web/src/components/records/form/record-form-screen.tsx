@@ -283,6 +283,9 @@ function LoadedRecordForm({
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
+          currencyInformation={
+            field.apiName === rules.currency ? "Currency information" : undefined
+          }
         />
       );
     }

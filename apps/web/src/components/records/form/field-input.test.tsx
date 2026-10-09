@@ -83,7 +83,7 @@ test.each(["integer", "double", "currency"] as const)(
     expect(change).toHaveBeenLastCalledWith(null);
     if (type === "currency") {
       expect(screen.getByText("$")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Currency information" })).toBeTruthy();
+      expect(screen.getByRole("img", { name: "Currency information" })).toBeTruthy();
     }
   },
 );

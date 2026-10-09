@@ -111,7 +111,7 @@ contains only `-None-`. `searchLabel` overrides the search input label.
 `pickerLabel` and `searchLabel` provide its copy. The default search label is
 `Search Users`. A saved owner missing from the supplied inventory is shown by ID.
 `currencyPrefix` / `currencyInformation` supply the currency annotation and
-information icon's accessible label; no organization currency is assumed.
+passive information icon's accessible label; no organization currency is assumed.
 `textPrefix` supplies an attached text marker. `placeholder` supplies input copy.
 `defaultOpen` supports isolated panel-state examples; it never overrides disabled.
 All copy/data may be supplied through props; fallback copy is generic English.
@@ -225,9 +225,11 @@ focus the first rendered error, including composite prefix and longitude control
   option; without Country, State displays only the null option. The existing
   saved State is preserved internally until an explicit edit; no unresearched
   dependency clearing is introduced.
-- Currency text must be supplied by the route configuration when available; no
-  organization currency is guessed. The information action is omitted until a
-  functional interaction and copy are available.
+- Currency prefix text and divider are deferred to MEP-226, using the organization
+  currency contract from MEP-225 (CTO decision MEP-221). This route supplies no
+  prefix and guesses no currency. The measured information icon remains a passive
+  image in its 32px end section, with no tab stop, click handler or tooltip. Its
+  hover/click behavior is an open research question awaiting MEP-201.
 - `renderOwnerPicker` is an integration slot for the approved Select User dialog.
   Users come from `useUsers`. Done writes an opaque ID; Cancel preserves the
   previous owner; both return focus to the opening icon. The action is omitted

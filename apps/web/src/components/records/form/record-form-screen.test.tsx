@@ -311,3 +311,21 @@ test("Clear All clears writable address subfields without clearing identity", as
     "Retained company",
   );
 });
+
+test.each([undefined, { id: "saved-currency", fields: { [names.revenue]: 125 } }])(
+  "currency keeps its passive information image without guessing a prefix in create/edit",
+  async (record) => {
+    harness(record);
+    await ready();
+    const input = screen.getByRole("textbox", { name: "Annual Revenue" });
+    const field = input.closest("[data-form-field]");
+    if (!field) throw new Error("Missing currency field");
+    const image = within(field as HTMLElement).getByRole("img", { name: "Currency information" });
+    expect(image.tagName).toBe("SPAN");
+    expect(image.hasAttribute("tabindex")).toBe(false);
+    expect(image.hasAttribute("title")).toBe(false);
+    expect(within(field as HTMLElement).queryByRole("button")).toBeNull();
+    expect(field.querySelector(".record-currency-prefix")).toBeNull();
+    expect((input as HTMLInputElement).value).toBe(record ? "125" : "");
+  },
+);

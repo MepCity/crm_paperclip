@@ -175,6 +175,21 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
     "box-shadow",
     "rgb(255, 93, 90) 3px 0px 0px 0px inset",
   );
+  // Composite inputs: the prefix/divider move to MEP-226; the end section stays here.
+  const revenue = page.locator("[data-form-field=Annual_Revenue]");
+  const information = revenue.getByRole("img", { name: "Currency information" });
+  const informationBox = await information.boundingBox();
+  const iconBox = await information.locator("svg").boundingBox();
+  if (!informationBox || !iconBox) throw new Error("Missing currency information icon");
+  expectWithin1(informationBox.x, 840);
+  expectWithin1(informationBox.width, 32);
+  expectWithin1(informationBox.height, 32);
+  expectWithin1(iconBox.width, 16);
+  expectWithin1(iconBox.height, 16);
+  await expect(information).toHaveCSS("background-color", "rgb(240, 244, 255)");
+  await expect(information).toHaveCSS("color", "rgb(49, 57, 73)");
+  await expect(revenue.locator(".record-currency-prefix")).toHaveCount(0);
+  await expect(revenue.getByRole("button")).toHaveCount(0);
   const address = await page.locator("[data-record-form-field-group]").boundingBox();
   const country = await page.locator("[data-form-field=Country] .record-control").boundingBox();
   if (!address || !country) throw new Error("Missing address");
