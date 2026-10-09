@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Users,
   X,
 } from "lucide-react";
 import type { SVGProps } from "react";
@@ -215,6 +216,27 @@ function RecordInfo(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/**
+ * Create-menu row glyph. record-detail.md › Global create menu › Module list: every row starts
+ * with the same plus, 7 × 7 px with about 1 px strokes, so the ink fills its whole box.
+ */
+function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 7 7"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M0 3.5h7M3.5 0v7" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
@@ -230,6 +252,7 @@ export const Icons = {
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
+  createRecordPlus: CreateRecordPlus,
   fieldEdit: FieldEdit,
   building: Building2,
   check: Check,
@@ -241,6 +264,7 @@ export const Icons = {
   showMenu: PanelLeftOpen,
   plus: Plus,
   settings: Settings,
+  users: Users,
   spinner: Loader2,
   error: AlertCircle,
   success: CheckCircle2,

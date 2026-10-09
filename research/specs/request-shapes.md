@@ -1015,14 +1015,151 @@ These adjacent requests are outside Module 1 Timeline scope and belong to subseq
 
 ### Not observed (Timeline)
 
-- Request payload and URL query parameter serialization upon applying a filter (`Apply Filter` was disabled and unexercised).
-- The literal values of `action`, `type` and `source` (the capture tool stores every response string as the type `string`), and any event other than the single captured image upload event.
-- The values of `include_inner_details` and `include_timeline_types` (stored as `<v>`).
-- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all captures).
-- Nested structure of `automation_details`, `extension`, and `related_record` (`null` in all captures).
-- Pagination traversal with cursor tokens (`next_page_token`, `previous_page_token` are `null` in all captures).
-- Timeline requests for modules other than Leads.
+- Request payload and URL query parameter serialization upon applying a filter (`Apply Filter` was disabled and unexercised; filter query parameter structure documented (D1, D2), not observed).
+- The literal values of `action`, `type` and `source` (the capture tool stores every response string as the type `string`), and any event other than the single captured image upload event (documented (D1, D2), not observed).
+- The values of `include_inner_details` and `include_timeline_types` (stored as `<v>`; documented (D1, D2), not observed).
+- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all captures; documented (D1, D2), not observed).
+- Nested structure of `automation_details`, `extension`, and `related_record` (`null` in all captures; `related_record` structure and `automation_details` / `extension` roles documented (D1, D2), not observed).
+- Pagination traversal with cursor tokens (`next_page_token`, `previous_page_token` are `null` in all captures; `page_token` parameter documented (D1, D2), not observed).
+- Timeline requests for modules other than Leads (supported modules documented (D1, D2), not observed).
 - When `research/specs/record-detail.md` Data needs table and `research/specs/request-shapes.md` diverge, `request-shapes.md` is the authoritative specification for wire shapes.
+
+## Record timeline: documented, not observed
+
+All rows in this section come from the public developer documentation (D1, D2) and are not observation claims; what the captures show is in `## Record timeline`. The documented endpoint is `GET /{module_API_name}/{record_ID}/__timeline` and its sample response names the event array `__timeline`; the captured interface call is `GET /crm/v9/<module>/<recordId>/timelines` with the array `timelines`. The documents describe the general API version and are not assumed to match the interface call. Event rows are written under the observed array name `timelines[]` so that they line up with the observed tables; in the documents the same keys sit under `__timeline[]`. A plain type is listed only where the sample response shows it; elsewhere the cell says what the documents do show.
+
+### Documented response keys
+
+| Documented key or value | Documented type | Source |
+| --- | --- | --- |
+| `__timeline` | array<object> | D1, D2 |
+| `__timeline[]` | object | D1, D2 |
+| `info` | object | D1, D2 |
+| `info.count` | number | D1, D2 |
+| `info.more_records` | boolean | D1, D2 |
+| `info.next_page_token` | null in the sample response; the `page_token` parameter (string) takes its value | D1, D2 |
+| `info.page` | number | D1, D2 |
+| `info.per_page` | number | D1, D2 |
+| `info.previous_page_token` | null in the sample response; the `page_token` parameter (string) takes its value | D1, D2 |
+| `timelines[].action` | string | D1, D2 |
+| `timelines[].audited_time` | string | D1, D2 |
+| `timelines[].automation_details` | null in every sample event; no populated example, type and child keys not documented | D1, D2 |
+| `timelines[].done_by` | object | D1, D2 |
+| `timelines[].done_by.id` | string | D1, D2 |
+| `timelines[].done_by.name` | string | D1, D2 |
+| `timelines[].done_by.profile` | object | D1, D2 |
+| `timelines[].done_by.profile.id` | string | D1, D2 |
+| `timelines[].done_by.profile.name` | string | D1, D2 |
+| `timelines[].done_by.type__s` | string | D1, D2 |
+| `timelines[].extension` | not in the sample response; named only in the `include` text, type and place in the response not documented | D1, D2 |
+| `timelines[].field_history` | array<object>, null | D1, D2 |
+| `timelines[].field_history[]` | object | D1, D2 |
+| `timelines[].field_history[].api_name` | string | D1, D2 |
+| `timelines[].field_history[].data_type` | string | D1, D2 |
+| `timelines[].field_history[].enable_colour_code` | boolean | D1, D2 |
+| `timelines[].field_history[].field_label` | string | D1, D2 |
+| `timelines[].field_history[].id` | string | D1, D2 |
+| `timelines[].field_history[].pick_list_values` | array<object> | D1, D2 |
+| `timelines[].field_history[].pick_list_values[]` | object | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].actual_value` | string | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].colour_code` | null | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].display_value` | string | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].id` | string | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].sequence_number` | number | D1, D2 |
+| `timelines[].field_history[].pick_list_values[].type` | string | D1, D2 |
+| `timelines[].field_history[]._value` | object | D1, D2 |
+| `timelines[].field_history[]._value.new` | string | D1, D2 |
+| `timelines[].field_history[]._value.old` | string, null | D1, D2 |
+| `timelines[].id` | string | D1, D2 |
+| `timelines[].record` | object | D1, D2 |
+| `timelines[].record.id` | string | D1, D2 |
+| `timelines[].record.module` | object | D1, D2 |
+| `timelines[].record.module.api_name` | string | D1, D2 |
+| `timelines[].record.module.id` | string | D1, D2 |
+| `timelines[].record.name` | string | D1, D2 |
+| `timelines[].related_record` | object, null | D1, D2 |
+| `timelines[].related_record.id` | string | D1, D2 |
+| `timelines[].related_record.module` | object | D1, D2 |
+| `timelines[].related_record.module.api_name` | string | D1, D2 |
+| `timelines[].related_record.module.id` | string | D1, D2 |
+| `timelines[].related_record.name` | string | D1, D2 |
+| `timelines[].source` | string | D1, D2 |
+| `timelines[].type` | not in the sample response; named only in the `include` text, type and place in the response not documented | D1, D2 |
+
+Notes on documented response structures:
+- `timelines[].field_history`: Populated when changes are made to record fields; `null` in sample events where no fields were modified (e.g. task/note addition). Requires `include_inner_details` parameter to populate `field_label`, `data_type`, `enable_colour_code`, and `pick_list_values`.
+- `timelines[].automation_details`: Described as "Represents that the record was modified through an automation action such as a workflow"; `null` in every sample event, so its type when populated and its child keys are not documented.
+- `timelines[].extension` and `timelines[].type`: Absent from the sample response. The `include` parameter text says that after an update through a signal "the response will have details of the extension as email insights, while the type of update will be signals"; where these keys sit in the response, their types and their sub-keys are not documented.
+- `timelines[].field_history[]._value`: `old` is a string or `null` in the sample response; `new` is always a string there.
+- `timelines[].field_history[].pick_list_values[].type`: `used` in every sample item. It is an attribute of a picklist value, not an event `type`.
+- `info.next_page_token` and `info.previous_page_token`: `null` in the sample response; the `page_token` parameter is typed string and takes either value.
+- `timelines[].related_record`: Populated with parent record details (`id`, `name`, `module{api_name, id}`) when the timeline event represents a child activity (such as a task, meeting, call, or note) associated with a parent record; `null` for direct record updates.
+
+### Documented event vocabulary (`action`, `type`, `source`)
+
+The documents present these lists as open, and none is stated to be complete: the `action` description begins "Some of the possible values are", the `source` description reads "The possible values include" and ends with "etc.", and the `filters` text introduces its `source` list with "The allowed values include". `migration` and `mass_addition_via_ui` are named only in the `source` description and are absent from the `filters` allowed values. The two documentation versions spell two `action` values differently: D1 lists `TaskAssigned` and `RelListAssociation added` where D2 lists `task_assigned` and `relatedrecords_added`; which spelling the interface returns is not observed. For the event-level `type` the documents name one value, `signals`. The second column names the key and the places where the value occurs in the documents.
+
+| Documented key or value | Documented type | Source |
+| --- | --- | --- |
+| `added` | `action` value; in: `action` description, sample response | D1, D2 |
+| `owner_assigned` | `action` value; in: `action` description | D1, D2 |
+| `relatedrecords_added` | `action` value; in: `action` description | D2 |
+| `RelListAssociation added` | `action` value; in: `action` description | D1 |
+| `tag_added` | `action` value; in: sample response | D1, D2 |
+| `TaskAssigned` | `action` value; in: `action` description | D1 |
+| `task_assigned` | `action` value; in: `action` description | D2 |
+| `updated` | `action` value; in: `action` description, sample response | D1, D2 |
+| `signals` | event `type` value named in the `include` text; also the documented value of `include_timeline_type` | D1, D2 |
+| `approval_process` | `source` value; in: `filters` allowed values | D1, D2 |
+| `assignment_rules` | `source` value; in: `filters` allowed values | D1, D2 |
+| `blueprint` | `source` value; in: `filters` allowed values | D1, D2 |
+| `bulk_action` | `source` value; in: `filters` allowed values | D1, D2 |
+| `bulkapi` | `source` value; in: `filters` allowed values | D1, D2 |
+| `change_owner` | `source` value; in: `filters` allowed values | D1, D2 |
+| `convert` | `source` value; in: `filters` allowed values | D1, D2 |
+| `crm_api` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `crm_ui` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `custom_function` | `source` value; in: `filters` allowed values | D1, D2 |
+| `macro` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_addition_via_ui` | `source` value; in: `source` description | D1, D2 |
+| `mass_change_owner_via_scheduler` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_delete_via_clean_up` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_delete_via_crm_api` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_update` | `source` value; in: `filters` allowed values, `source` description, sample response | D1, D2 |
+| `mass_update_via_blueprint` | `source` value; in: `filters` allowed values | D1, D2 |
+| `mass_update_via_scheduler` | `source` value; in: `filters` allowed values | D1, D2 |
+| `massconvert` | `source` value; in: `filters` allowed values | D1, D2 |
+| `migration` | `source` value; in: `source` description | D1, D2 |
+| `orchestration` | `source` value; in: `filters` allowed values | D1, D2 |
+| `review_process` | `source` value; in: `filters` allowed values | D1, D2 |
+| `scoringrule` | `source` value; in: `filters` allowed values | D1, D2 |
+| `wizard` | `source` value; in: `filters` allowed values | D1, D2 |
+| `workflow` | `source` value; in: `filters` allowed values, `source` description | D1, D2 |
+
+### Documented query parameters and parameter value formats
+
+| Documented key or value | Documented type | Source |
+| --- | --- | --- |
+| `audited_time` | filter comparator between; value: ISO 8601 timestamp range `[start, end]` | D1, D2 |
+| `done_by.id` | filter comparators equal, in; value: user ID string or array of IDs | D1, D2 |
+| `done_by.profile` | include_inner_details token: requests user profile details | D1, D2 |
+| `done_by.type__s` | include_inner_details token: requests user type details | D1, D2 |
+| `extension` | include token: requests extension details (e.g. email insights) | D1, D2 |
+| `field_history.data_type` | include_inner_details token: requests field data type | D1, D2 |
+| `field_history.enable_colour_code` | include_inner_details token: requests picklist colour code flag | D1, D2 |
+| `field_history.field_label` | include_inner_details token: requests field label | D1, D2 |
+| `field_history.pick_list_values` | include_inner_details token: requests picklist value definitions | D1, D2 |
+| `filters` | JSON object (URL-encoded): `{field:{api_name}, comparator, value}` | D1, D2 |
+| `group_operator` | filter compound condition operator (`AND`) over `group` array | D1, D2 |
+| `include` | string; possible values `extension` and `type`; mandatory when `include_timeline_type` is given; no multi-value example, separator not documented | D1, D2 |
+| `include_inner_details` | string, optional; possible values are the six `field_history.*` and `done_by.*` tokens in this table; the sample request joins them with a comma and a space | D1, D2 |
+| `include_timeline_type` | string: extra timeline type request flag (value: `signals`; plural `include_timeline_types` in v9 capture) | D1, D2 |
+| `page_token` | string: pagination cursor token (`next_page_token` or `previous_page_token`) | D1, D2 |
+| `per_page` | integer: page record size for first page (e.g. `200`) | D1, D2 |
+| `record.module.api_name` | filter comparators equal, in; values: `Notes`, `Attachments`, `Tasks`, `Calls`, `Events`, `Emails` | D1, D2 |
+| `sort_by` | not listed under Parameters; occurs only in the sample request as `sort_by=audited_time`; type, other values and sort direction not documented | D1, D2 |
+| `source` | filter comparators equal, in; values: documented source tokens (e.g. `crm_ui`, `crm_api`) | D1, D2 |
+| `type` | include token: requests timeline entry type details | D1, D2 |
 
 ## Nested field configuration from metadata
 
@@ -1145,4 +1282,4 @@ The error `details` object has no nested keys in these captures; its value conte
 - Nested fields behind a `<deep>` capture truncation: not observable in the captures.
 - Values and nullability of array items beyond the first retained item: not observable in the captures.
 - The source of Leads field definitions and Leads layout sections on ordinary list and detail screens: not observable in the captures.
-- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures.
+- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures (documented (D1, D2), not observed).
