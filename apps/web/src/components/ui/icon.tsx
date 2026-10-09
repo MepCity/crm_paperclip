@@ -165,25 +165,25 @@ function ArrowLeft(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <path d="M15 6.75H2.5M2.5 6.75 6.25 3M2.5 6.75 6.25 10.5" />
+      <path d="M15.25 6.75H0.75M0.75 6.75 4.5 0.75M0.75 6.75 4.5 12.75" />
     </svg>
   );
 }
 
-/** Record header previous/next chevron ink target 7 × 13 px. */
+/** Record header previous/next chevron ink target 7 × 13 px in a 24 × 24 box. */
 function RecordHeaderChevronLeft(props: SVGProps<SVGSVGElement>) {
   const { "aria-label": _label, ...rest } = props;
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
     <svg
-      viewBox="0 0 7 13"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <path d="M6 1 1 6.5 6 12" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.5 5.5 8.5 12 15.5 18.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -193,14 +193,14 @@ function RecordHeaderChevronRight(props: SVGProps<SVGSVGElement>) {
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
     <svg
-      viewBox="0 0 7 13"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <path d="M1 1 6 6.5 1 12" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.5 5.5 15.5 12 8.5 18.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

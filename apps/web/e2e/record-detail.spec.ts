@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, type Locator, test } from "@playwright/test";
+import { expectWithin, svgPaintedInkSize } from "./support/geometry";
 import { expectType } from "./support/typography";
 
 // Binding geometry/color expectations: record-detail.md > Layout > Visual layout.
@@ -43,11 +44,13 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   const title = header.getByRole("heading", { level: 1 });
   const titleBox = await bounds(title);
   expect(titleBox.x - portraitBox.x - portraitBox.width).toBe(15);
+  // record-detail.md > Record page > Record header: portrait corners ~6 px.
   await expect(portrait).toHaveCSS("border-radius", "6px");
   const titleName = title.locator("span").first();
   const titleHyphen = title.locator("span").nth(1);
   const titleCompany = title.locator("span").nth(2);
   await expect(titleName).toHaveCSS("color", "rgb(49, 57, 73)");
+  // record-detail.md > Record page > Record header: title name/company weight and separator gaps.
   await expectType(page, titleName, "--text-2xl", "--font-weight-bold");
   await expectType(page, titleCompany, "--text-md", "--font-weight-normal");
   const nameBox = await bounds(titleName);
@@ -55,10 +58,14 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   const companyBox = await bounds(titleCompany);
   expect(Math.abs(hyphenBox.x - nameBox.x - nameBox.width - 6.5)).toBeLessThanOrEqual(1);
   expect(Math.abs(companyBox.x - hyphenBox.x - hyphenBox.width - 6)).toBeLessThanOrEqual(1);
+  // record-detail.md > Record page > Record header: Back shaft arrow ink ~16 × 13.5 px.
   const backIcon = header.getByRole("link", { name: "Back" }).locator("svg");
   const backIconBox = await bounds(backIcon);
-  expect(Math.abs(backIconBox.width - 16)).toBeLessThanOrEqual(1.5);
-  expect(Math.abs(backIconBox.height - 13.5)).toBeLessThanOrEqual(1.5);
+  expectWithin(backIconBox.width, 16, 1.5, "Back icon viewport width");
+  expectWithin(backIconBox.height, 13.5, 1.5, "Back icon viewport height");
+  const backInk = await svgPaintedInkSize(backIcon);
+  expectWithin(backInk.width, 16, 1.5, "Back icon painted ink width");
+  expectWithin(backInk.height, 13.5, 1.5, "Back icon painted ink height");
   // Header buttons: 32 high, radius6; detail-specific primary/secondary gradients.
   const primary = header.getByRole("button", { name: "Primary action" });
   const secondary = header.getByRole("button", { name: "Edit", exact: true });
@@ -92,16 +99,26 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   await expect(header.getByRole("button", { name: "Previous Record" })).toHaveCSS("opacity", "1");
   const nextRecord = header.getByRole("link", { name: "Next Record" });
   await expect(nextRecord).toHaveCSS("color", "rgb(49, 57, 73)");
+  // record-detail.md > Record page > Record header: Next chevron centred from header right edge.
   const nextBox = await bounds(nextRecord);
-  expect(
-    Math.abs(headerBox.x + headerBox.width - (nextBox.x + nextBox.width / 2) - 36),
-  ).toBeLessThanOrEqual(1);
+  expectWithin(
+    headerBox.x + headerBox.width - (nextBox.x + nextBox.width / 2),
+    36,
+    1,
+    "Next control centre inset from header right",
+  );
   for (const nav of [header.getByRole("button", { name: "Previous Record" }), nextRecord]) {
     await metric("Record nav control", nav, 24, 24);
-    const navIconBox = await bounds(nav.locator("svg"));
-    expect(Math.abs(navIconBox.width - 24)).toBeLessThanOrEqual(1);
-    expect(Math.abs(navIconBox.height - 24)).toBeLessThanOrEqual(1);
+    const navSvg = nav.locator("svg");
+    const navIconBox = await bounds(navSvg);
+    // record-detail.md > Record page > Record header: Previous / Next chevron ink 7 × 13 px.
+    expectWithin(navIconBox.width, 24, 1, "Record nav icon viewport width");
+    expectWithin(navIconBox.height, 24, 1, "Record nav icon viewport height");
+    const navInk = await svgPaintedInkSize(navSvg);
+    expectWithin(navInk.width, 7, 1.5, "Record nav chevron ink width");
+    expectWithin(navInk.height, 13, 1.5, "Record nav chevron ink height");
     measurements[`${await nav.getAttribute("aria-label")} icon box`] = navIconBox;
+    measurements[`${await nav.getAttribute("aria-label")} icon ink`] = navInk;
   }
   // Related-list rail:220 width; pitch32; selected height30, fillEDF0F9; inset12/8.5.
   const rail = frame.locator("[data-record-rail]");
@@ -164,10 +181,14 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   const popover = menu.locator("..");
   const moreBox = await bounds(more);
   const popBoxOpen = await bounds(popover);
-  expect(Math.abs(popBoxOpen.y - (moreBox.y + moreBox.height))).toBeLessThanOrEqual(1);
-  expect(
-    Math.abs(popBoxOpen.x + popBoxOpen.width - (moreBox.x + moreBox.width)),
-  ).toBeLessThanOrEqual(1);
+  // record-detail.md > More Options menu > Popover: top flush with ellipsis, right edges align.
+  expectWithin(popBoxOpen.y - (moreBox.y + moreBox.height), 0, 1, "Menu popover vertical gap");
+  expectWithin(
+    popBoxOpen.x + popBoxOpen.width - (moreBox.x + moreBox.width),
+    0,
+    1,
+    "Menu popover right edge delta",
+  );
   await expect(popover).toHaveCSS("width", "217px");
   await expect(popover).toHaveCSS("border-radius", "4px");
   await expect(popover).toHaveCSS("border-width", "1px");
@@ -180,14 +201,16 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   expect(itemBox.y - popBox.y).toBe(6);
   await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
   await expect(item).toHaveCSS("padding-left", "10.25px");
+  // record-detail.md > More Options menu > Rows and groups: highlighted row ~5 px corners.
   await expect(item).toHaveCSS("border-radius", "5px");
   await expectType(page, item, "--text-md", "--font-weight-normal");
   const item2 = await bounds(menu.getByRole("menuitem", { name: "Example Two" }));
   expect(item2.y - itemBox.y).toBe(30);
   const separator = menu.getByRole("separator");
   const separatorBox = await bounds(separator);
-  expect(Math.abs(separatorBox.width - itemBox.width)).toBeLessThanOrEqual(1);
-  expect(Math.abs(separatorBox.x - itemBox.x)).toBeLessThanOrEqual(1);
+  // record-detail.md > More Options menu > Rows and groups: group rule same width as row.
+  expectWithin(separatorBox.width, itemBox.width, 1, "Menu divider width vs row");
+  expectWithin(separatorBox.x, itemBox.x, 1, "Menu divider x vs row");
   await expect(separator).toHaveCSS("height", "1px");
   await expect(separator).toHaveCSS("background-color", "rgb(206, 208, 225)");
   await expect(separator).toHaveCSS("margin-top", "5px");
