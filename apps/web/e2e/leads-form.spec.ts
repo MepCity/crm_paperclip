@@ -199,6 +199,7 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
   expectWithin1(description.x, 553);
   expectWithin1(description.width, 639);
   expectWithin1(description.height, 34);
+  expectWithin1(description.y - address.y - address.height, 111);
   console.log(
     "form geometry",
     JSON.stringify({
