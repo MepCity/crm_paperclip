@@ -112,8 +112,10 @@ function ModuleListScreenLoaded({
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
-  const [lastSuccessfulTotal, setLastSuccessfulTotal] = useState<number | null>(null);
-  const [lastSuccessfulList, setLastSuccessfulList] = useState<ListResult | null>(null);
+  const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
+    list: ListResult;
+    total: number;
+  } | null>(null);
   const priorViewId = useRef(viewId);
 
   const moduleQuery = useModule(config.module);
@@ -138,8 +140,7 @@ function ModuleListScreenLoaded({
     setFilterSelection([]);
     setFilterApplyError(null);
     setSelectedIds([]);
-    setLastSuccessfulList(null);
-    setLastSuccessfulTotal(null);
+    setAcceptedListSnapshot(null);
   }, [viewId]);
 
   const listQuery = useMemo(() => {
@@ -164,18 +165,23 @@ function ModuleListScreenLoaded({
   );
   const count = useRecordCount(config.module, countQuery);
 
-  useEffect(() => {
-    if (count.data !== undefined) setLastSuccessfulTotal(count.data);
-  }, [count.data]);
-
-  useEffect(() => {
-    if (list.data) setLastSuccessfulList(list.data);
-  }, [list.data]);
-
   const listValidationError =
     list.isError && list.error instanceof ValidationError ? list.error : null;
   const countValidationError =
     count.isError && count.error instanceof ValidationError ? count.error : null;
+  const hasFilterValidationError = Boolean(listValidationError || countValidationError);
+
+  useEffect(() => {
+    if (
+      list.isSuccess &&
+      count.isSuccess &&
+      list.data &&
+      count.data !== undefined &&
+      !hasFilterValidationError
+    ) {
+      setAcceptedListSnapshot({ list: list.data, total: count.data });
+    }
+  }, [count.data, count.isSuccess, hasFilterValidationError, list.data, list.isSuccess]);
 
   const serverFilterMessage = useMemo(() => {
     const error = listValidationError ?? countValidationError;
@@ -299,7 +305,9 @@ function ModuleListScreenLoaded({
   if (moduleQuery.isError) throw moduleQuery.error;
 
   const listPage =
-    list.data ?? (listValidationError && lastSuccessfulList ? lastSuccessfulList : null);
+    hasFilterValidationError && acceptedListSnapshot
+      ? acceptedListSnapshot.list
+      : (list.data ?? null);
 
   if (initialLoading || !view || !listQuery || !listPage) {
     return <div className="module-list-page" aria-hidden="true" />;
@@ -307,7 +315,9 @@ function ModuleListScreenLoaded({
 
   const records = listPage.records;
   const total =
-    countValidationError || listValidationError ? lastSuccessfulTotal : (count.data ?? null);
+    hasFilterValidationError && acceptedListSnapshot
+      ? acceptedListSnapshot.total
+      : (count.data ?? null);
   const moreRecords = listPage.moreRecords;
   const page = listPage.page;
   const perPage = listPage.perPage;
@@ -348,6 +358,7 @@ function ModuleListScreenLoaded({
       <div className="module-list-body">
         {filterOpen ? (
           <FilterPanel
+            key={viewId}
             title={config.filterTitle}
             searchLabel="Search filter choices"
             searchPlaceholder="Search"

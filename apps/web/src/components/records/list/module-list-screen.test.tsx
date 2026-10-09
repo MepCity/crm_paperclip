@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -203,6 +203,38 @@ describe("ModuleListScreen", () => {
     });
   });
 
+  it("resets applied filter, selection, and panel draft when the view changes", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />,
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+    });
+    rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="converted-leads" />);
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.viewId).toBe("converted-leads");
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+    });
+    const panel = screen.getByRole("region", { name: "Filter Leads by" });
+    const companyCheckbox = within(panel).getByRole("checkbox", { name: "Company" });
+    expect(companyCheckbox.getAttribute("aria-checked")).not.toBe("true");
+    expect(within(panel).queryByRole("textbox", { name: "Company value" })).toBeNull();
+  });
+
   it("shows a validation message and keeps rows when list rejects filters", async () => {
     const records = createFixtureRecordService(ctx);
     const config = await leadsConfigWithFilters(records);
@@ -231,6 +263,98 @@ describe("ModuleListScreen", () => {
       expect(screen.getByRole("alert").textContent).toContain("Invalid filter.");
     });
     expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+  });
+
+  it("shows a validation message and keeps rows and total when count rejects filters", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const originalCount = records.count.bind(records);
+    vi.spyOn(records, "count").mockImplementation(async (module, query) => {
+      if (query.filters) {
+        throw new ValidationError({ filters: ["Invalid count filter."] });
+      }
+      return originalCount(module, query);
+    });
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rowsBefore = screen.getAllByRole("row").length;
+    const totalBefore = document.querySelector("[data-part=total-value]")?.textContent;
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("Invalid count filter.");
+    });
+    expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+    expect(document.querySelector("[data-part=total-value]")?.textContent).toBe(totalBefore);
+  });
+
+  it("keeps the prior snapshot when list rejects filters after count would succeed", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const originalList = records.list.bind(records);
+    const originalCount = records.count.bind(records);
+    vi.spyOn(records, "list").mockImplementation(async (module, query) => {
+      if (query.filters) {
+        throw new ValidationError({ filters: ["Invalid list filter."] });
+      }
+      return originalList(module, query);
+    });
+    vi.spyOn(records, "count").mockImplementation(async (module, query) => {
+      if (query.filters) return 42;
+      return originalCount(module, query);
+    });
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const totalBefore = document.querySelector("[data-part=total-value]")?.textContent;
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("Invalid list filter.");
+    });
+    expect(document.querySelector("[data-part=total-value]")?.textContent).toBe(totalBefore);
+    expect(document.querySelector("[data-part=total-value]")?.textContent).not.toBe("42");
+  });
+
+  it("resets to page 1 when Clear is pressed while the address is on page 2", async () => {
+    navigation.params = new URLSearchParams("page=2");
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(2);
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    expect(navigation.push).toHaveBeenCalled();
   });
 
   it("writes session list context for record detail navigation", async () => {

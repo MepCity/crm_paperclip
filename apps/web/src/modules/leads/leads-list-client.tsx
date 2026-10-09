@@ -23,7 +23,14 @@ export function LeadsListClient({ orgSlug, viewId }: { orgSlug: string; viewId?:
     };
   }, [module.data?.fields, users.data]);
 
-  if (!module.data?.fields.length || users.data === undefined) {
+  if (module.isError) throw module.error;
+  if (users.isError) throw users.error;
+  if (
+    module.isLoading ||
+    users.isLoading ||
+    !module.data?.fields.length ||
+    users.data === undefined
+  ) {
     return <div className="module-list-page" aria-hidden="true" />;
   }
 
