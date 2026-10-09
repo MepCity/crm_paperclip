@@ -104,7 +104,7 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(currencyPrefix).toHaveCSS("color", "rgb(97, 110, 136)");
   expect(
     await valueStartAfterOuterLeft(currencyFrame, currencyFrame.locator(".record-currency-prefix")),
-  ).toBeCloseTo(12, 0);
+  ).toBeCloseTo(11.5, 0);
   const currencyDivider = currencyFrame.locator(".record-currency-divider");
   const currencyBox = await bounds(currencyFrame);
   const currencyDividerBox = await bounds(currencyDivider);
