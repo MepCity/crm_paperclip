@@ -923,20 +923,20 @@ The `204` response has no body (`detail-attachments-card`).
 ## Record timeline
 
 - Method and path: `GET /crm/v9/<module>/<recordId>/timelines` (specifically `GET /crm/v9/Leads/<recordId>/timelines` in the observed captures).
-- Evidence: `detail-filter-modules-valid`, `detail-filter-sources-valid`, `detail-filter-time-valid`, `detail-interactions`, `detail-interactions-filter-valid`, `detail-timeline`, `detail-timeline-filter`.
+- Evidence: `detail-filter-modules-valid`, `detail-filter-sources-valid`, `detail-filter-time-valid`, `detail-interactions`, `detail-interactions-filter-valid`, `detail-timeline`, `detail-timeline-filter`, `tl2-r1`, `tl2-r2`, `tl2-r3`, `tl2-r4`, `tl2-r5`, `tl2-r6`, `tl2-r7`, `tl2-r8`.
 - Query parameters: `include` (`detail-timeline`), `include_inner_details` (`detail-timeline`), `include_timeline_types` (`detail-timeline`), `per_page` (`detail-timeline`).
 - Request body: none observed (`detail-timeline`). Request content type: not applicable.
-- Observed status: `200` (`detail-timeline`).
+- Observed status: `200` (`detail-timeline`, `tl2-r1`–`tl2-r8`).
 
 ### Request details and query parameters
 
 - **HTTP method and endpoint path:** `GET /crm/v9/<module>/<recordId>/timelines` (observed on Leads only: `GET /crm/v9/Leads/<recordId>/timelines`).
 - **Query parameters:**
-  - `per_page`: integer; value `25` in all 7 captures.
-  - `include`: comma-separated word list; value `extension,type` in all 7 captures (two structural words: `extension`, `type`).
+  - `per_page`: integer; value `25` in all 15 captures.
+  - `include`: comma-separated word list; value `extension,type` in all 15 captures (two structural words: `extension`, `type`).
   - `include_inner_details`: the capture tool stores this value as `<v>` (the name is not in its `SAFE_QUERY_KEYS` list). Value format and constants: not observable in the captures.
   - `include_timeline_types`: stored as `<v>` for the same reason. Value format and constants: not observable in the captures.
-- **Request volume and screen states:** Exactly 1 `timelines` request is dispatched per capture (7 requests total across the 7 captures), triggered under the following UI states:
+- **Request volume and screen states:** Exactly 1 `timelines` request is dispatched per capture (15 requests total across the 15 captures), triggered under the following UI states:
   - `detail-timeline` (1 request): Navigating from Leads list to record detail view and selecting the `Timeline` tab (the `History` subtab is open by default).
   - `detail-timeline-filter` (1 request): On the `Timeline` tab, clicking `Filter Timeline History`. The request is the initial tab load; opening the filter panel is rendered client-side and dispatches no additional request.
   - `detail-filter-modules-valid` (1 request): From `Filter Timeline History`, opening the `Modules` combobox dropdown. No network request is dispatched.
@@ -944,6 +944,7 @@ The `204` response has no body (`detail-attachments-card`).
   - `detail-filter-sources-valid` (1 request): From `Filter Timeline History`, opening the `Sources` combobox dropdown. No network request is dispatched.
   - `detail-interactions` (1 request): Selecting the `Timeline` tab and switching to the `Interactions` subtab. The timeline request is initiated upon opening the `Timeline` tab.
   - `detail-interactions-filter-valid` (1 request): On `Interactions`, clicking `Filter Customer Interactions`. No network request is dispatched on opening the filter popup.
+  - `tl2-r1` through `tl2-r8` (1 request each, 8 requests total): Navigating from Leads list to 8 distinct sample records and selecting the `Timeline` tab to inspect field modification history across diverse records.
 
 ### Response shape union
 
@@ -982,22 +983,39 @@ The `204` response has no body (`detail-attachments-card`).
 | `timelines[].source` | string | `detail-timeline` |
 | `timelines[].type` | string | `detail-timeline` |
 
-All 7 captures share this identical 32-path schema without variation.
-- **Populated keys in every capture (7/7):** `info{count, more_records, page, per_page}`, `timelines`, `timelines[]{action, audited_time, done_by{id, name, profile{id, name}, type__s}, id, record{id, module{api_name, id}, name}, source, type}`.
-- **Null keys in every capture (7/7):** `info.next_page_token`, `info.previous_page_token`, `timelines[].automation_details`, `timelines[].extension`, `timelines[].field_history`, `timelines[].record.display_label`, `timelines[].related_record`.
-- `timelines[].field_history` is `null` in every capture, so the keys of `field_history[]{…}` are not observable in the captures. Why it is `null` for the one captured event is not established.
+All 15 captures share this identical 32-path schema without variation.
+- **Populated keys in every capture (15/15):** `info{count, more_records, page, per_page}`, `timelines`, `timelines[]{action, audited_time, done_by{id, name, profile{id, name}, type__s}, id, record{id, module{api_name, id}, name}, source, type}`.
+- **Null keys in every capture (15/15):** `info.next_page_token`, `info.previous_page_token`, `timelines[].automation_details`, `timelines[].extension`, `timelines[].field_history`, `timelines[].record.display_label`, `timelines[].related_record`.
+- Across all 8 sample records examined in `tl2-r1` through `tl2-r8` (and `detail-timeline`), `timelines[].field_history` is `null` in every capture (15/15). Because every tested sample record contains an initial image upload event rather than field edits, populated `field_history[]{…}` items and their nested keys (`api_name`, `data_type`, `enable_colour_code`, `field_label`, `id`, `pick_list_values`, `_value{old, new}`) were not observable in the wire captures.
 
 ### Structural value sets (`action`, `type`, `source`)
 
 - In `network.json`, response bodies are recorded as type shapes by the capture tool; primitive string leaves are recorded as `"string"`. The literal wire enum tokens returned in the JSON payload are therefore not preserved in the captures.
-- In all 7 captures the `timelines` array holds exactly 1 item (the capture tool records the array length). The value of `info.count` is not recorded (type `number` only).
-- `page.txt` of the same captures shows one rendered event title, `Lead Image uploaded`. Which `action`, `type` and `source` values produce this text is not observable in the captures.
+- In all 15 captures the `timelines` array holds exactly 1 item (the capture tool records the array length). The value of `info.count` is not recorded (type `number` only).
+- `page.txt` across the 9 timeline history captures (`detail-timeline`, `tl2-r1`–`tl2-r8`) shows the rendered event title `Lead Image uploaded`. Which `action`, `type` and `source` values produce this text is not observable in the captures.
 - The filter panels in `aria.yml` list the option **display labels** below. They are screen labels, not wire values: how a label maps to an `action`, `type` or `source` value, or to a request parameter, is not observable in the captures.
   - **Sources (19 options in `detail-filter-sources-valid`):** `API`, `Approval Processes`, `Assignment Rules`, `Blueprint`, `CPQ`, `Cadences`, `Calendar Bookings`, `CommandCenter`, `Connected Workflow`, `Functions`, `Import`, `Kiosk`, `Macro`, `Manual`, `Path Finder`, `Review Process`, `Scoring Rules`, `Wizards`, `Workflow Rules`.
   - **Modules (6 options in `detail-filter-modules-valid`):** `Notes`, `Attachments`, `Tasks`, `Calls`, `Meetings`, `Emails`.
   - **Time (7 options in `detail-filter-time-valid`):** `Any Time`, `Today`, `Yesterday`, `Last 7 days`, `Last 30 days`, `Custom Range`, `Specific date`.
   - **Interactions view-by options (in `detail-interactions-filter-valid`):** Mediums (`All Mediums`), Users (`All Users`), Time (`Any Time`).
 - Literal user names, record names, and field values are excluded per project privacy rules.
+
+### Rendered event sentences
+
+The following sentence and line patterns appear in `page.txt` across the 9 timeline history captures (`detail-timeline`, `tl2-r1`–`tl2-r8`) where the history list is rendered. Literal customer names, user names, and timestamps are replaced by placeholders (`<field label>`, `<old>`, `<new>`, `<user>`, `<record>`).
+
+| Event element | Rendered sentence pattern | Captures observed |
+| --- | --- | --- |
+| Event title | `<record> Image uploaded` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
+| Event actor attribution | `by <user> <timestamp>` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
+| Header update status | `Last Update : <n> day(s) ago` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
+| Event time prefix | `<time>` | 9 (`detail-timeline`, `tl2-r1`–`tl2-r8`) |
+| Field modification | `<field label> changed from <old> to <new>` | Not observed (0 captures; `timelines[].field_history` is `null` in all 15 captures across 8 sampled records) |
+| Field addition / initial value | `<field label> set to <new>` | Not observed (0 captures) |
+| Record creation | `<record> created` | Not observed (0 captures) |
+
+- **Image upload event:** On Leads records, the title is rendered as `Lead Image uploaded`, accompanied by the attribution line `by <user> <timestamp>`. This was the only populated event type present across all 8 tested sample records (`tl2-r1` through `tl2-r8`) as well as `detail-timeline`.
+- **Field edit sentences:** No field modification events or populated `field_history` items were present in the tested records. Sentence patterns for field updates (such as `<field label> changed from <old> to <new>` or `<field label> set to <new>`) are not observable in the captures and remain documented only (D1, D2).
 
 ### Adjacent requests observed on the Timeline tab
 
@@ -1018,7 +1036,8 @@ These adjacent requests are outside Module 1 Timeline scope and belong to subseq
 - Request payload and URL query parameter serialization upon applying a filter (`Apply Filter` was disabled and unexercised; filter query parameter structure documented (D1, D2), not observed).
 - The literal values of `action`, `type` and `source` (the capture tool stores every response string as the type `string`), and any event other than the single captured image upload event (documented (D1, D2), not observed).
 - The values of `include_inner_details` and `include_timeline_types` (stored as `<v>`; documented (D1, D2), not observed).
-- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all captures; documented (D1, D2), not observed).
+- Nested structure and keys of `field_history[]{…}` when field edits are present (`null` in all 15 captures across 8 distinct sample records; documented (D1, D2), not observed).
+- Rendered event sentence templates for field modifications (`<field label> changed from <old> to <new>`, `<field label> set to <new>`): not observable in captures (0/15 captures).
 - Nested structure of `automation_details`, `extension`, and `related_record` (`null` in all captures; `related_record` structure and `automation_details` / `extension` roles documented (D1, D2), not observed).
 - Pagination traversal with cursor tokens (`next_page_token`, `previous_page_token` are `null` in all captures; `page_token` parameter documented (D1, D2), not observed).
 - Timeline requests for modules other than Leads (supported modules documented (D1, D2), not observed).
@@ -1282,4 +1301,4 @@ The error `details` object has no nested keys in these captures; its value conte
 - Nested fields behind a `<deep>` capture truncation: not observable in the captures.
 - Values and nullability of array items beyond the first retained item: not observable in the captures.
 - The source of Leads field definitions and Leads layout sections on ordinary list and detail screens: not observable in the captures.
-- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures (documented (D1, D2), not observed).
+- Timeline filter transport (`Apply Filter` query and payload encoding), the values of `include_inner_details` and `include_timeline_types`, the literal values of `action`, `type` and `source`, field history item keys (`field_history[]{…}`), field modification rendered sentence patterns, pagination traversal with cursor tokens (`next_page_token`), and timeline events other than the single captured event: not observable in the captures (documented (D1, D2), not observed).
