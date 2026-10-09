@@ -146,14 +146,14 @@ Public documentation sources relied upon are referenced throughout this document
     2. From Module Tools: Click `[Module] Tools` > `Mass Update [Module]` -> Specify criteria -> Click `Search` -> Under `Matching [records]`, select checkboxes -> Click `Mass Update` -> In `Select Field to Update` page, select field, enter data, and click `Save` (`D1`).
   - **Live UI Observation (Mass Update Modal Dialog)**:
     - Activating `Mass Update` in row-selected state opens a centered modal dialog window anchored to the top of the viewport over a dimmed backdrop (`w2e-mass-update`).
-    - **Modal surface & backdrop**: Centered card measuring 484 × 207 px (x 493–977, y 0–207) with a pure white `#FFFFFF` surface, 4 px bottom corners, and a soft outer drop shadow. The backdrop is a full-viewport translucent mask in `#313949` at approx. 50% opacity (rendering `#293651` over white page areas).
+    - **Modal surface & backdrop**: Centered card measuring 484 × 207 px (x 493–977, y 0–207) with a pure white `#FFFFFF` surface, 4 px bottom corners, and a soft outer drop shadow. The backdrop is a full-viewport translucent mask measuring sampled color `#293651` over underlying white page areas; base overlay color and exact alpha opacity are undetermined / not directly measurable.
     - **Modal title**: Heading text `Mass Update` sits 32.5 px inside the dialog left edge (ink x 525.5–646.5, y 29.5–48; cap height 14.5 px, baseline y 48) rendered in bold `#202123` (candidate Figtree 20.5–21 px bold).
     - **Field selection and value row** (y 80–114, 34 px high, 32 px below title baseline):
       1. `Select a field` combobox: Measures 122 × 34 px (x 524–646, y 80–114) with a 1 px `#C5C4D3` border, 4 px corners, and white `#FFFFFF` fill. Displays placeholder text `Select a field` in `#313949` text ink, with a centered downward caret icon (8 × 5 px in `#838892`) at x 628–632. Inset 31 px from the modal left edge (524 - 493 = 31 px).
       2. Value input placeholder: Measures 285 × 34 px (x 661–946, y 80–114) with a 1 px border `#D9DCE2`, 4 px corners, and disabled background fill `#F5F6F8`. Positioned horizontally beside the field selector with a 15 px gap (661 - 646 = 15 px). Inset 31 px from the modal right edge (977 - 946 = 31 px).
     - **Modal action buttons row** (y 144–176, 32 px high, 30 px below inputs row):
       1. `Cancel` button: Secondary action button measuring 74 × 32 px (x 784.5–858.5, y 144–176) with 4 px corners, a 1 px `#D5D8E9` border, light vertical gradient `#FDFDFE` to `#F3F2F8`, and regular `#313949` label ink.
-      2. `Update` button: Primary commit button measuring 76 × 32 px (x 870–946, y 144–176) with 4 px corners and white `#FFFFFF` label ink. In the initial unselected state, the button is disabled with flat lavender fill `#ADB3EE`.
+      2. `Update` button: Primary commit button measuring 76 × 32 px (x 870–946, y 144–176) with 4 px corners and white `#FFFFFF` label ink. In the initial unselected state, the button is disabled with flat lavender fill `#ADB3EE` (subsequent enabled state upon field selection was not observed).
       - Spacing: 11.5 px horizontal gap between `Cancel` and `Update` (870 - 858.5 = 11.5 px); 31 px margin to modal right edge (977 - 946 = 31 px); 31 px margin to modal bottom edge (207 - 176 = 31 px).
   - **Ineligible Fields**:
     - Text Area and Lookup fields cannot be updated using the Mass Update feature (`D1`).
@@ -173,12 +173,12 @@ Public documentation sources relied upon are referenced throughout this document
 | Element | Geometry and style (CSS px) | Visible state | Source slug |
 | --- | --- | --- | --- |
 | Modal container | Centered modal x 493–977 (484 px wide), y 0–207 (207 px high); white `#FFFFFF` surface, 4 px bottom corners, soft outer drop shadow | Anchored to top of viewport; equal 493 px side margins on 1470 px viewport | `w2e-mass-update` |
-| Dimmed backdrop | Full-viewport translucent mask in `#313949` at approx. 50% opacity | Renders `#293651` over white table content; underlying records visible | `w2e-mass-update` |
+| Dimmed backdrop | Full-viewport translucent mask; measured color `#293651` over white table content; base color and opacity undetermined | Underlying records remain visible beneath the mask | `w2e-mass-update` |
 | Modal title | Text `Mass Update` starts x 525.5 (32.5 px inside left edge), ink x 525.5–646.5, y 29.5–48; color `#202123`, bold, cap height 14.5 px | Heading role, Figtree 20.5–21 px bold | `w2e-mass-update` |
 | Field selector | Combobox 122 × 34 px (x 524–646, y 80–114); white fill `#FFFFFF`, 1 px border `#C5C4D3`, 4 px corners; placeholder text `Select a field` in `#313949`, caret 8 × 5 px in `#838892` at x 628–632 | 31 px margin from dialog left edge | `w2e-mass-update` |
 | Value placeholder | Input box 285 × 34 px (x 661–946, y 80–114); disabled fill `#F5F6F8`, 1 px border `#D9DCE2`, 4 px corners | Disabled empty placeholder beside field selector; 15 px horizontal gap | `w2e-mass-update` |
 | Cancel button | Button 74 × 32 px (x 784.5–858.5, y 144–176); gradient `#FDFDFE` to `#F3F2F8`, 1 px border `#D5D8E9`, 4 px corners, label `#313949` | Enabled secondary action | `w2e-mass-update` |
-| Update button | Button 76 × 32 px (x 870–946, y 144–176); flat fill `#ADB3EE`, white text `#FFFFFF`, 4 px corners | Disabled commit button (enabled upon valid field selection) | `w2e-mass-update` |
+| Update button | Button 76 × 32 px (x 870–946, y 144–176); flat fill `#ADB3EE`, white text `#FFFFFF`, 4 px corners | Disabled commit button in initial state (subsequent enabled state upon field selection was not observed) | `w2e-mass-update` |
 
 - **Not Documented**:
   - Form input styling and behavior for specific selected field types (e.g. picklist dropdowns, date pickers, multi-select checkboxes) within the popup.
@@ -475,22 +475,22 @@ This specification definitively resolves the following open questions from prior
 
 ## Interim Comparison Table (MEP-164 & MEP-165)
 
-Comparison of interim implementation rules defined in MEP-164 (Lead Clone) and MEP-165 (Mass Update & Change Owner) against live reference CRM observations and public documentation:
+Comparison of interim implementation rules defined in MEP-164 (Lead Clone) and MEP-165 (Mass Update & Change Owner) against live reference CRM observations:
 
 | Interim Rule / Topic | MEP-164 / MEP-165 Interim Decision | Reference CRM Observation | Parity | Evidence (Slug / Source) |
 | --- | --- | --- | --- | --- |
-| **Mass Update presentation** | Modal dialog window using existing dialog primitive | Centered modal dialog window (484 × 207 px, x 493–977, y 0–207) at top of viewport over 50% dimmed backdrop | Identical (modal dialog) | `w2e-mass-update` |
+| **Mass Update presentation** | Modal dialog window using existing dialog primitive | Centered modal dialog window (484 × 207 px, x 493–977, y 0–207) at top of viewport over dimmed backdrop (measured `#293651` over white surface; opacity undetermined) | Identical (modal dialog) | `w2e-mass-update` |
 | **Mass Update title** | `Select field to update` (per `D1` help doc text) | `Mass Update` heading in bold `#202123` (cap height 14.5 px) | Different (Interim used `Select field to update`, reference uses `Mass Update`) | `w2e-mass-update` |
 | **Mass Update input layout** | Field selector combobox; upon selection, field input renders vertically beneath it | `Select a field` combobox (122 × 34 px) and disabled value placeholder box (285 × 34 px) arranged horizontally side-by-side with 15 px gap | Different (Interim stacked vertically, reference arranged horizontally) | `w2e-mass-update` |
-| **Mass Update action buttons** | `Cancel` and `Save` buttons (`Save` disabled until field chosen) | `Cancel` (74 × 32 px, secondary gradient) and `Update` (76 × 32 px, `#ADB3EE` disabled flat fill) | Different (Interim button named `Save`, reference button named `Update`) | `w2e-mass-update` |
+| **Mass Update action buttons** | `Cancel` and `Save` buttons (`Save` disabled until field chosen) | `Cancel` (74 × 32 px, secondary gradient) and `Update` (76 × 32 px, `#ADB3EE` disabled flat fill in initial unselected state; subsequent enabled state upon field selection was not observed) | Different (Interim button named `Save`, reference button named `Update`; initial disabled state confirmed, enabled state unobserved) | `w2e-mass-update` |
 | **Mass Update modal geometry** | Unsaved changes modal dimensions (400 × 168 px, 26.5/29.5 px insets) | 484 × 207 px outer bounds with symmetric 31 px insets (left, right, bottom) | Different (400 × 168 px vs 484 × 207 px, 31 px paddings) | `w2e-mass-update` |
-| **Mass Update post-save feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | `w2e-mass-update`, `D1, D7` |
-| **Change Owner presentation** | Modal dialog window (`change-owner-dialog.tsx`) | Opening triggered write-protected `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by capture proxy, halting execution under Rule 5; modal did not open | Not observed | `w2e-change-owner` |
-| **Change Owner title & controls** | Title `Change Owner`, owner selector with user picker, `Cancel` and `Change Owner` buttons | Dialog unobserved due to safety network block and Rule 5 halt | Not observed | `w2e-change-owner` |
-| **Change Owner post-transfer feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | `w2e-change-owner`, `D1, D18` |
+| **Mass Update post-save feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |
+| **Change Owner presentation** | Modal dialog window (`change-owner-dialog.tsx`) | Opening triggered write-protected `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by capture proxy, halting execution under Rule 5; modal did not open | Not observed | Not observed (missing capture due to Rule 5 halt in `w2e-change-owner`) |
+| **Change Owner title & controls** | Title `Change Owner`, owner selector with user picker, `Cancel` and `Change Owner` buttons | Dialog unobserved due to safety network block and Rule 5 halt | Not observed | Not observed (missing capture due to Rule 5 halt in `w2e-change-owner`) |
+| **Change Owner post-transfer feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |
 | **Clone menu entry point** | First item in `More Options` menu above `Delete` | Item 1 in `More Options` dropdown (row height 30 px, text `Clone`, highlighted fill `#F0F4FC`) | Identical | `detail-more` |
-| **Clone route pattern** | `/crm/[orgSlug]/tab/Leads/[recordId]/clone` | Public doc describes `Clone [Record]` page (`D1`); live form unobserved due to Rule 5 halt in `w2e-change-owner` | Not observed | `detail-more`, `D1, D4` |
-| **Clone form title** | `Clone Lead` | Public doc describes `Clone [Record]` (`D1`); live form unobserved due to Rule 5 halt | Not observed | `D1` |
-| **Clone form buttons** | `Cancel` and `Save` (`Save and New` omitted) | Public doc confirms `Save` (`D1`); `Save and New` and `Cancel` undocumented; live form unobserved due to Rule 5 halt | Not observed | `D1, D4` |
-| **Clone excluded fields** | System fields, `Record_Image`, read-only fields excluded; create-visible fields copied | API excludes image/file upload, transient/system properties (`D4`); manual duplicate removal on unique fields required (`D5`); live UI unobserved | Not observed | `D4, D5` |
-| **Clone post-save destination** | `Save` navigates to new record detail; `Cancel` returns to source record | Post-save navigation not observable under read-only rule | Not observed | `D1` |
+| **Clone route pattern** | `/crm/[orgSlug]/tab/Leads/[recordId]/clone` | Not observed in live UI; capture `w2e-clone-form` not performed due to Rule 5 halt | Not observed | Not observed (missing capture `w2e-clone-form` due to Rule 5 halt) |
+| **Clone form title** | `Clone Lead` | Not observed in live UI; capture `w2e-clone-form` not performed due to Rule 5 halt | Not observed | Not observed (missing capture `w2e-clone-form` due to Rule 5 halt) |
+| **Clone form buttons** | `Cancel` and `Save` (`Save and New` omitted) | Not observed in live UI; capture `w2e-clone-form` not performed due to Rule 5 halt | Not observed | Not observed (missing capture `w2e-clone-form` due to Rule 5 halt) |
+| **Clone excluded fields** | System fields, `Record_Image`, read-only fields excluded; create-visible fields copied | Not observed in live UI; capture `w2e-clone-form` not performed due to Rule 5 halt | Not observed | Not observed (missing capture `w2e-clone-form` due to Rule 5 halt) |
+| **Clone post-save destination** | `Save` navigates to new record detail; `Cancel` returns to source record | Post-save navigation not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |

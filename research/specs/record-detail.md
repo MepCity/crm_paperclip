@@ -32,20 +32,9 @@ Board-provided screenshots of an invalid create form show inline validation afte
 
 ### Clone form
 
-The clone route allows copying an existing Lead into a new record form.
 - **Entry point**: On the Lead record detail page, click `More Options` in the header action strip -> Select `Clone` (observed in `detail-more` as item 1 in the popover menu, row height 30 px, text `Clone`, highlighted fill `#F0F4FC`, x 1169.5–1373, y 109.5–139.5).
-- **Route pattern**: `/crm/<org>/tab/Leads/<recordId>/clone` (per public documentation `D1`, `D4` and interim convention; `<recordId>` placeholder represents the source record ID).
-- **Title & Header Actions**: Fixed title/action strip (y 50–107) displays title `Clone Lead` (matching the `Create Lead` and `Edit Lead` pattern; public documentation `D1` specifies `Clone [Record]`). Action buttons on the right comprise secondary `Cancel` (74 × 32 px at x 1181–1255) and primary `Save` (59.5 × 32 px at x 1390.5–1450). `Save and New` is omitted on the clone form (public documentation `D1` specifies `Save`; `Save and New` is undocumented).
-- **Form Structure & Sections**: Identical to `Create Lead` and `Edit Lead`: circular placeholder avatar (`Lead Image`), two-column grid (`Lead Information`), left-aligned framed group (`Address Information`), and resizable textarea (`Description Information`). Fixed title/action strip, auxiliary bottom views strip (`Create Form Views : Standard View`), and right docked `Client Script` tab match the Create form.
-- **Pre-populated Fields (field names only)**: Unlike Create Lead (which pre-fills only `Owner`), the clone form copies values from the source record for all create-visible, non-read-only fields:
-  - Left column: `Owner`, `First_Name`, `Salutation`, `Designation`, `Phone`, `Mobile`, `Lead_Source`, `Industry`, `Annual_Revenue`, `Email_Opt_Out`.
-  - Right column: `Company`, `Last_Name`, `Email`, `Fax`, `Website`, `Lead_Status`, `No_of_Employees`, `Rating`, `Skype_ID`, `Secondary_Email`, `Twitter`.
-  - Address group: `Flat_House_No_Building_Apartment_Name`, `Street`, `City`, `State`, `Zip_Code`, `Country`, `Latitude`, `Longitude`.
-  - Description: `Description`.
-  - Excluded fields: System audit fields (`id`, `Created_By`, `Created_Time`, `Modified_By`, `Modified_Time`), image/attachment (`Record_Image`), read-only layout fields, and transient properties (per `D4` API exclusion rules).
-  - Unique fields requirement: Per `D5`, unique fields (e.g. unique email if duplicate checking is configured) must be manually cleared or modified by the user to prevent duplicate validation rejection upon save.
-- **Live UI Observation Note**: In MEP-240, live capture of the opened clone form was halted prior to `w2e-clone-form` because the preceding `w2e-change-owner` capture encountered a client-side `POST /crm/v9/settings/profiles/actions/get_assigned` request that was blocked by the safety proxy, triggering the Rule 5 execution halt. Consequently, live UI rendering of the opened clone form remains `Not observed`; structure, styling, and geometry are derived from the shared Create/Edit form layout (`detail-create`), `detail-more`, and public documentation `D1, D4, D5`.
-- **Visual Layout**: Visual layout, typography, borders, and spacing strictly follow the **Create/edit form** table below; no unique dimensional deviations from Create Lead exist.
+- **Live UI Observation Note**: In MEP-240, capture of the opened clone form (`w2e-clone-form`) was not performed because the preceding `w2e-change-owner` capture encountered an unexpected client-side request `POST /crm/v9/settings/profiles/actions/get_assigned` that was blocked by the safety proxy, triggering the Rule 5 execution halt. Consequently, live UI observation of the opened clone form was halted and remains **Not observed**.
+- **Route pattern, title, header buttons, form layout, pre-populated fields, and visual styling**: **Not observed**. Public developer/help documentation and API rules describe clone behavior (`D1, D4, D5`), but documentation and API knowledge do not substitute for live UI observation. Without an executed live capture of the rendered form, route pattern, title text, button inventory and dimensions, section structure, pre-filled field behavior, and visual layout remain unobserved in the reference CRM UI.
 
 ### Related-list structure and use
 
