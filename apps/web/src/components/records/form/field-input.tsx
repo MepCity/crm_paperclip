@@ -139,16 +139,23 @@ export function FieldInput({
           }
           endAction={
             field.dataType === "currency" && currencyInformation ? (
-              <button type="button" className="record-input-end" aria-label={currencyInformation}>
+              <span role="img" className="record-input-end" aria-label={currencyInformation}>
                 <Icons.recordInfo className="record-input-end-icon" aria-hidden />
-              </button>
+              </span>
             ) : undefined
           }
           onChange={(next) => onChange(Number.isFinite(next) ? next : null)}
         />
       );
     case "boolean":
-      return <Checkbox {...common} isSelected={value === true} onChange={onChange} />;
+      return (
+        <Checkbox
+          {...common}
+          aria-label={field.label}
+          isSelected={value === true}
+          onChange={onChange}
+        />
+      );
     case "picklist":
       return (
         <RecordChoice
