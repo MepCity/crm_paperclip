@@ -83,7 +83,7 @@ test.each(["integer", "double", "currency"] as const)(
     expect(change).toHaveBeenLastCalledWith(null);
     if (type === "currency") {
       expect(screen.getByText("$")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Currency information" })).toBeTruthy();
+      expect(screen.getByRole("img", { name: "Currency information" })).toBeTruthy();
     }
   },
 );
@@ -245,4 +245,19 @@ test("FormRow pairs with text, picklist and owner inputs through hideLabel", asy
   expect(visibleLabels("Owner")).toHaveLength(1);
   await user.click(screen.getByLabelText("Owner"));
   expect(screen.getByRole("listbox")).toBeTruthy();
+});
+
+test("checkbox inside a form row has one accessible label", () => {
+  render(
+    <FormRow label="Example" controlId="example-checkbox" column="left">
+      <FieldInput
+        id="example-checkbox"
+        hideLabel
+        field={field("boolean")}
+        value={false}
+        onChange={() => {}}
+      />
+    </FormRow>,
+  );
+  expect(screen.getByRole("checkbox", { name: "Example" })).toBeTruthy();
 });

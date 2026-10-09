@@ -32,6 +32,14 @@ export function moduleRecordPath(orgSlug: string, moduleApiName: string, recordI
   return moduleTabPath(orgSlug, moduleApiName, recordId);
 }
 
+export function moduleRecordEditPath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "edit");
+}
+
 export function moduleCreatePath(orgSlug: string, moduleApiName: string): string {
   return moduleTabPath(orgSlug, moduleApiName, "create");
 }

@@ -141,6 +141,21 @@ function RecordUser(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** White person silhouette for avatar placeholders; original drawing. */
+function AvatarPerson(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5H3Z" />
+    </svg>
+  );
+}
+
 /** Filled portrait silhouette clipped inside the Lead Image ring. */
 function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
   return (
@@ -241,6 +256,7 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   recordUser: RecordUser,
+  avatarPerson: AvatarPerson,
   recordPortraitSilhouette: RecordPortraitSilhouette,
   recordFormCaret: RecordFormCaret,
   recordChevron: RecordChevron,

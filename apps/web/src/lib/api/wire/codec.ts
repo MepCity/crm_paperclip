@@ -4,6 +4,7 @@ import type {
   Criteria,
   CriteriaPeriod,
   CriteriaValue,
+  CurrencyDefinition,
   FieldDefinition,
   FieldValue,
   ListResult,
@@ -15,6 +16,7 @@ import type {
 import type {
   WireCriteria,
   WireCriteriaValue,
+  WireCurrency,
   WireField,
   WireInfo,
   WireLayout,
@@ -416,4 +418,32 @@ export function encodeRecordWriteResult(
     if (value !== undefined) entry.details[name] = value;
   }
   return result;
+}
+
+export function encodeCurrency(currency: CurrencyDefinition): WireCurrency {
+  return {
+    symbol: currency.symbol,
+    iso_code: currency.isoCode,
+    name: currency.name,
+    prefix_symbol: currency.prefixSymbol,
+  };
+}
+
+export function decodeCurrency(value: unknown): CurrencyDefinition {
+  const currency = object(value, "currencies");
+  const keys = ["symbol", "iso_code", "name", "prefix_symbol"];
+  for (const key of Object.keys(currency)) {
+    if (!keys.includes(key)) invalid(key, "Unknown field.");
+  }
+  if (typeof currency.iso_code !== "string" || !/^[A-Z]{3}$/.test(currency.iso_code))
+    invalid("iso_code");
+  if (typeof currency.symbol !== "string" || !currency.symbol.trim()) invalid("symbol");
+  if (typeof currency.name !== "string" || !currency.name.trim()) invalid("name");
+  if (typeof currency.prefix_symbol !== "boolean") invalid("prefix_symbol");
+  return {
+    isoCode: currency.iso_code,
+    symbol: currency.symbol,
+    name: currency.name,
+    prefixSymbol: currency.prefix_symbol,
+  };
 }

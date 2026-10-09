@@ -30,6 +30,26 @@ Visual layout → Filter content, Surface and line colors, Selected / disabled.
 Vertical gaps, search-field width and end inset use the measured Filter content tokens.
 Open question 17 records the uncaptured closed group and checked checkbox.
 
+## Confirm dialog
+
+`confirm-dialog.tsx` builds a measured confirmation alert on the shared modal
+primitive. Props: `title`, `message`, `confirmLabel`, `cancelLabel`,
+`tone` (`danger` | `default`), optional `busy`, optional `errorMessage`,
+`onConfirm`, and optional controlled `isOpen` / `onOpenChange`. Escape and the
+secondary button close; focus opens on the secondary button; both buttons
+disable while `busy` or while an async `onConfirm` is pending. `errorMessage`
+renders as form error text above the actions. Geometry follows
+`record-detail.md` › Visual layout › Unsaved changes modal via
+`--size-dialog-width`, `--size-confirm-dialog-*`, and `--radius-create-menu`.
+Use inside `DialogTrigger` for trigger-driven flows, or pass `isOpen` for
+page-owned delete confirmation.
+
+### Interim
+
+Destructive fill uses the shared `danger` button variant rather than the
+sampled red gradient; hover and shadow parameters stay on the primitive
+defaults because they are not measured for this modal.
+
 ## Token sources
 
 Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
@@ -332,6 +352,13 @@ what the "no colour constants" rule forbids.
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
+| `--color-confirm-dialog-body` | `#434d5e` | record-detail.md › Unsaved changes modal › Modal body › color `#434D5E` | from spec |
+| `--size-confirm-dialog-padding-block-start` | `29.5px` | record-detail.md › Unsaved changes modal › "Top padding 29.5 px" | from spec |
+| `--size-confirm-dialog-padding-inline` | `26.5px` | record-detail.md › Unsaved changes modal › "left padding 26.5 px" | from spec |
+| `--size-confirm-dialog-padding-block-end` | `26px` | record-detail.md › Unsaved changes modal › "26 px bottom" | from spec |
+| `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
+| `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
+| `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
@@ -389,6 +416,51 @@ what the "no colour constants" rule forbids.
 | `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap 10 px below the icon's top edge is the spec measure; the 7 px body offset that produces it is the UI Lead's box model (MEP-143 review round 2, item 10) | lead decision |
 | `--size-detail-timeline-event-row-padding-bottom` | `18px` | no spec row measures the row box: 7 px body offset + 36 px icon + 18 px = a 61 px pitch, which is how the same-day icons land 25 px apart (UI Lead review round 2, item 11). The capture holds one event per day | Interim |
 | `--size-detail-timeline-day-gap` | `16px` | no spec row measures the space between day groups and the capture holds one event per day, so the group gap is unobserved | Interim |
+| `--size-select-user-panel-max-height` | `100dvh` | record-detail.md › Select User dialog › Backdrop and modal › viewport-limited growth (Interim) | from spec |
+| `--size-select-user-summary-text-offset` | `20px` | record-detail.md › Select User dialog › Search and selected summary › label/name baseline y 84 with row top y 64 | from spec |
+| `--size-select-user-summary-label-margin-top` | `5px` | record-detail.md › Select User dialog › Search and selected summary › baseline y 84 with `--text-md` ink box | from spec |
+| `--size-select-user-dialog-width` | `882px` | record-detail.md › Select User dialog › Backdrop and modal › "882 px wide" | from spec |
+| `--radius-select-user-dialog-bottom` | `12px` | record-detail.md › Select User dialog › Backdrop and modal › "12 px lower corners" | from spec |
+| `--size-select-user-dialog-inset` | `31px` | record-detail.md › Select User dialog › Search and selected summary › search x 325 (325 − 294) | from spec |
+| `--size-select-user-title-cap-top` | `29px` | record-detail.md › Select User dialog › Title › "cap top y 29" | from spec |
+| `--size-select-user-title-cap-inset` | `3px` | record-detail.md › Select User dialog › Title › cap top y 29 with bold `--text-2xl` box alignment | from spec |
+| `--size-select-user-search-top` | `64px` | record-detail.md › Select User dialog › Search and selected summary › "y 64–98" | from spec |
+| `--size-select-user-search-width` | `300px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-search-height` | `34px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-table-top` | `119px` | record-detail.md › Select User dialog › User table › "Frame … y 119–270.5" | from spec |
+| `--size-select-user-table-header-band` | `32px` | record-detail.md › Select User dialog › User table › "Header band y 120–152" | from spec |
+| `--size-select-user-table-header-cap-adjust` | `2px` | record-detail.md › Select User dialog › User table › cap centre y 136 with `--text-md` semibold | from spec |
+| `--size-select-user-table-header-rule` | `2px` | record-detail.md › Select User dialog › User table › "2 px `#D9E0EB` rule" | from spec |
+| `--size-select-user-table-row-height` | `38px` | record-detail.md › Select User dialog › User table › "Rows are 38 px high" | from spec |
+| `--size-select-user-table-row-divider` | `1px` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-footer-gap` | `20px` | record-detail.md › Select User dialog › Backdrop and modal › "footer … 20 px below the table frame" | from spec |
+| `--size-select-user-dialog-bottom-padding` | `30.5px` | record-detail.md › Select User dialog › Backdrop and modal › "30.5 px above the dialog's lower edge" | from spec |
+| `--size-select-user-done-height` | `32px` | record-detail.md › Select User dialog › Footer › "32 px high" | from spec |
+| `--size-select-user-done-width` | `63.5px` | record-detail.md › Select User dialog › Footer › "`Done` x 1081.5–1145" | from spec |
+| `--size-select-user-cancel-width` | `74.5px` | record-detail.md › Select User dialog › Footer › "`Cancel` x 996.5–1071" | from spec |
+| `--size-select-user-footer-gap` | `10.5px` | record-detail.md › Select User dialog › Footer › "10.5 px gap" | from spec |
+| `--size-select-user-summary-search-gap` | `16px` | record-detail.md › Select User dialog › Search and selected summary › search ends x 625, label starts x 641 | from spec |
+| `--size-select-user-summary-label-width` | `92px` | record-detail.md › Select User dialog › Search and selected summary › label ink x 641–733 | from spec |
+| `--size-select-user-summary-label-avatar-gap` | `8px` | record-detail.md › Select User dialog › Search and selected summary › label ends x 733, avatar x 741 | from spec |
+| `--size-select-user-summary-avatar-name-gap` | `11px` | record-detail.md › Select User dialog › Search and selected summary › avatar ends x 771, name x 782 | from spec |
+| `--size-select-user-avatar` | `30px` | record-detail.md › Select User dialog › Search and selected summary › "30 px" avatar | from spec |
+| `--size-select-user-radio` | `15px` | record-detail.md › Select User dialog › Radio › "15 × 15 px circle" | from spec |
+| `--size-select-user-radio-ring-selected` | `4px` | record-detail.md › Select User dialog › Radio › "4 px `#5464F2` ring" | from spec |
+| `--size-select-user-radio-ring-unselected` | `2px` | record-detail.md › Select User dialog › Radio › "2 px `#C5C4D3` ring" | from spec |
+| `--size-select-user-radio-centre` | `7px` | record-detail.md › Select User dialog › Radio › "7 px white centre" | from spec |
+| `--color-select-user-table-border` | `#d9e0eb` | record-detail.md › Select User dialog › User table › "1 px `#D9E0EB` edge" | from spec |
+| `--color-select-user-row-divider` | `#eef1f7` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-radio-inset` | `20px` | record-detail.md › Select User dialog › User table › radio x 346 with frame x 325 (346 − 325 − 1 px frame edge) | from spec |
+| `--size-select-user-table-radio-row-inset` | `13px` | record-detail.md › Select User dialog › User table › radio y 167 with row band y 154–192 | from spec |
+| `--size-select-user-table-radio-column` | `36px` | record-detail.md › Select User dialog › User table › radio x 346–361 | from spec |
+| `--size-select-user-table-avatar-column` | `60px` | record-detail.md › Select User dialog › User table › row avatar x 391–421 | from spec |
+| `--size-select-user-table-name-column` | `141.5px` | record-detail.md › Select User dialog › User table › name x 432, Role x 573.5 | from spec |
+| `--size-select-user-table-role-column` | `164.5px` | record-detail.md › Select User dialog › User table › Role x 573.5, Email x 738 | from spec |
+| `--size-select-user-table-email-column` | `253px` | record-detail.md › Select User dialog › User table › Email x 738, Profile x 991 | from spec |
+| `--size-select-user-table-name-header-inset` | `31px` | record-detail.md › Select User dialog › User table › `User Name` label x 392, avatar column ends x 361 | from spec |
+| `--size-select-user-table-avatar-inset` | `30px` | record-detail.md › Select User dialog › User table › avatar x 391 after radio column | from spec |
+| `--size-select-user-table-name-text-inset` | `11px` | record-detail.md › Select User dialog › User table › name x 432 after avatar x 421 | from spec |
+| `--size-select-user-table-frame-adjust` | `1.5px` | record-detail.md › Select User dialog › User table › frame y 119–270.5 minus row band sum for three rows | from spec |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
@@ -419,6 +491,16 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
 | `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
 | `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
+| `--size-form-address-radius` | `10px` | record-detail.md › Address frame › corner radius | from spec |
+| `--size-form-coordinate-gap` | `10px` | record-detail.md › Address frame › Latitude to Longitude gap | from spec |
+| `--color-form-clear-address` | `#a0a8b8` | record-detail.md › Address frame › Clear All ink | from spec |
+| `--size-form-description-width` | `639px` | record-detail.md › Description Information and textarea › x 553–1192 | from spec |
+| `--size-form-description-extra-gap` | `17px` | record-detail.md › Description Information and textarea › 17 px larger than standard section gap | from spec |
+| `--size-form-page-cancel-width` | `74px` | record-detail.md › Fixed title/action strip › Cancel x 1181–1255 | from spec |
+| `--size-form-page-save-new-width` | `119.5px` | record-detail.md › Fixed title/action strip › Save and New x 1263–1382.5 | from spec |
+| `--size-form-page-save-width` | `59.5px` | record-detail.md › Fixed title/action strip › Save x 1390.5–1450 | from spec |
+| `--size-form-description-rule-gap` | `40px` | record-detail.md › Description Information and textarea › bottom y 750.5 to rule y 790.5 | from spec |
 | `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
@@ -459,6 +541,8 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
 | `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
 | `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--color-record-rail-toggle-shown` | `#dfe4ef` | record-detail.md › Canvas and tab row › Circular rail button fill (rail shown) | from spec |
+| `--color-record-rail-toggle-hidden-border` | `#e2e7ee` | record-detail.md › Hidden-rail layout › Rail toggle button › 1 px border | from spec |
 | `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
@@ -710,6 +794,11 @@ Source: record-detail.md › Layout › Visual layout › Record page / More Opt
 These compact controls use the neighboring Status stage value typography role
 (`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
 
+The measured Clear All ink `#a0a8b8` on white is below AA. It remains at the
+reference value under ADR 0003 §8's newly measured pair workflow and is reported
+to CTO for the Module 1 board decision. This is not covered by the placeholder
+exception: the browser scan excludes only the text span, retaining its button.
+
 ## Status ribbon picklist menu
 
 `PicklistMenu` owns the React Aria dialog, search and single-selection menu.
@@ -722,3 +811,15 @@ Measured status pairs also stay at their reference values: current-stage text
 is 2.65:1. They are below the AA text/control thresholds and are not covered by
 the placeholder/separator exception in ADR 0003 §8. No accessibility check is
 disabled. The CTO must carry these pairs to the board at the module gate.
+
+## Table scroll container
+
+`Table`'s wrapper is the only scroll container of its rows: it carries `overflow-auto` together
+with paint containment (`contain-paint`). A table whose min-content width is larger than the
+space left of it then scrolls inside that wrapper and nothing else. Without containment Chromium
+keeps the wrapper scrollable *and* still adds the clipped spill to the document, so a narrow
+screen gets a horizontal page range and the top bar and the rail slide sideways with it
+(MEP-211). Overlays opened from a cell, such as the role menu and the remove confirmation, are
+rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
+inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
+container's own scroll at a narrow viewport and at the measured desktop viewport.

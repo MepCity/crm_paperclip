@@ -289,3 +289,5 @@ Storage, schemas/migrations, identity-generation strategy, HTTP paths/methods,
 authorization and role rules, event processing, routes, screens, conversions,
 other bulk actions, import/export and non-Leads modules are outside this delivery.
 The database package and route tree remain unchanged. No dependencies are added.
+
+`getHomeCurrency(): Promise<CurrencyDefinition>` returns the organization home currency (ISO code, configured symbol, name and prefix flag); no locale-derived symbol.
