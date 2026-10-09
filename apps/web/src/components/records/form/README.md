@@ -111,7 +111,7 @@ contains only `-None-`. `searchLabel` overrides the search input label.
 `pickerLabel` and `searchLabel` provide its copy. The default search label is
 `Search Users`. A saved owner missing from the supplied inventory is shown by ID.
 `currencyPrefix` / `currencyInformation` supply the currency annotation and
-information icon's accessible label; no organization currency is assumed.
+passive information icon's accessible label; no organization currency is assumed.
 `textPrefix` supplies an attached text marker. `placeholder` supplies input copy.
 `defaultOpen` supports isolated panel-state examples; it never overrides disabled.
 All copy/data may be supplied through props; fallback copy is generic English.
@@ -186,3 +186,80 @@ surrounding trigger.
   existing scale. Panel placement adapts to the available viewport; standard
   panels open above when below cannot fit. Shadow blur remains unmeasurable
   and is omitted. No separate 14px or 15px typography token is introduced.
+
+## Record form screen (MEP-145)
+
+`RecordFormScreen` loads metadata, the optional edit record and organization users
+through the browser hooks. Mount it inside the organization's `ApiProvider` and
+pass the session user ID. The heading uses the module's singular label. Sections
+and column placement come from `buildFormModel(metadata, mode)`; create/edit flags
+filter the columns without changing their order. Read-only inputs remain visible
+and disabled, but never enter a write payload.
+
+`RecordFormConfig` supplies the module, presentation rules, navigation callback
+and `paths.detail(id)`, `paths.create`, `paths.cancel`. The route layer must use the
+shared page-path helper and determine the user's origin; the screen does not
+construct routes or inspect browser history. The Leads route adapter supplies create/edit routes,
+list/detail entry points, browser request checks and measured page coordinates. No alternate path helper is introduced.
+
+`form-model.ts` owns initial values, null/placeholder conversion, primitive value
+mapping and create/partial-update payloads. An edit form keeps its initial baseline
+while queries refetch, preserving in-progress input. Writes use `useCreateRecord`
+and `useUpdateRecord`; all strip actions and inputs are disabled while a write is
+pending, and a synchronous guard prevents duplicate submissions. The form has
+`noValidate`: server validation owns these errors; measured validation and dirty
+form confirmation belong to MEP-146. Field errors appear at their controls and
+focus the first rendered error, including composite prefix and longitude controls.
+
+### Interim page behavior and Leads rules
+
+- Save navigates to the saved record, Save and New resets create values and
+  navigates to the create page, and Cancel navigates to the supplied origin. No
+  success message is shown. These results follow the authorized interim A7 rules
+  in `research/specs/leads-write-behaviour.md`, not observed write behavior.
+- `leads-form-rules.ts` is the only production file naming Leads-specific fields:
+  Salutation belongs to First Name, Address groups its metadata-ordered subfields,
+  Latitude/Longitude form one Coordinates row, Annual Revenue accepts a currency
+  prefix from configuration, and Twitter receives `@`. Connected To is omitted.
+- Country/State use metadata inventories. A saved unlisted value remains an
+  option; without Country, State displays only the null option. The existing
+  saved State is preserved internally until an explicit edit; no unresearched
+  dependency clearing is introduced.
+- Currency prefix text and divider are deferred to MEP-226, using the organization
+  currency contract from MEP-225 (CTO decision MEP-221). This route supplies no
+  prefix and guesses no currency. The measured information icon remains a passive
+  image in its 32px end section, with no tab stop, click handler or tooltip. Its
+  hover/click behavior is an open research question awaiting MEP-201.
+- `renderOwnerPicker` is an integration slot for the approved Select User dialog.
+  Users come from `useUsers`. Done writes an opaque ID; Cancel preserves the
+  previous owner; both return focus to the opening icon. The action is omitted
+  unless the slot is supplied. Component tests exercise both the integration slot and the actual dialog.
+- Image upload (parity row 18, image/attachment module), auxiliary form-view and
+  customization controls (rows 20–21, customization module), and Client Script
+  (automation module) remain omitted as scoped deferred controls. Placeholder
+  portrait and our original icons are used; no reference assets are copied.
+- Unexpected write failure keeps input on the form with the existing generic
+  alert. Measured non-field error presentation belongs to MEP-168.
+
+Tests use an `ApiProvider` with the fixture service: create payload, populated edit,
+partial update, server error placement/focus, Save and New reset, origin cancel,
+write locking, owner dropdown and picker integration, composite errors and
+Country/State options. Unit tests independently cover metadata filtering/order,
+required/read-only flags, value mapping and explicit clears. Browser tests cover page geometry and end-to-end flows.
+
+### Leads route adapter
+
+`modules/leads/leads-form-client.tsx` uses `lib/crm-paths.ts` for the create,
+record and list destinations. Both server pages require organization membership
+and supply the session user ID. The existing list Create Lead and detail Edit
+links open these routes. Edit Cancel returns to that record; Create Cancel uses
+the list context's complete URL, including view, pagination and filters, with the
+default list as fallback for a direct form visit. Save and New preserves that
+list origin and resets values. The real Select User dialog receives organization
+members and its Done callback updates Owner.
+
+The route stylesheet applies the page's measured Address radius, border-box
+insets, coordinate widths, Description width/height and bottom separator.
+Interim: Clear All resets all writable members of the Address group locally;
+read-only fields and identity fields are preserved. Its measured low-contrast
+ink is reported under ADR 0003 §8; no reference write was performed to study it.
