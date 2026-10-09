@@ -288,7 +288,19 @@ function LoadedRecordForm({
     }
     return (
       <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
-        <FormRow label={label} controlId={id} column={column}>
+        <FormRow
+          label={
+            rules.labelLines?.[field.apiName]
+              ? rules.labelLines[field.apiName]?.map((line) => (
+                  <span className="record-form-label-line" key={line}>
+                    {line}
+                  </span>
+                ))
+              : label
+          }
+          controlId={id}
+          column={column}
+        >
           {input}
         </FormRow>
       </div>

@@ -180,9 +180,18 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
   if (!address || !country) throw new Error("Missing address");
   expectWithin1(address.x, 344);
   expectWithin1(address.width, 529);
+  expectWithin1(address.height, 467);
   expectWithin1(country.x, 554);
   expectWithin1(country.width, 303);
   expectWithin1(country.y - address.y, 31);
+  const building = await page
+    .locator("[data-form-field=Flat_House_No_Building_Apartment_Name] .record-input-frame")
+    .boundingBox();
+  const street = await page.locator("[data-form-field=Street] .record-input-frame").boundingBox();
+  const coordinates = await page.locator(".record-form-coordinates").boundingBox();
+  if (!building || !street || !coordinates) throw new Error("Missing address row");
+  expectWithin1(street.y - building.y, 80);
+  expectWithin1(address.y + address.height - coordinates.y - coordinates.height, 52.5);
   const description = await page
     .getByRole("textbox", { name: "Description", exact: true })
     .boundingBox();
@@ -203,6 +212,9 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
       country,
       description,
       actions,
+      building,
+      street,
+      coordinates,
     }),
   );
   // ADR 0003 §8: measured empty Salutation ink #8c91ab on white remains below AA.

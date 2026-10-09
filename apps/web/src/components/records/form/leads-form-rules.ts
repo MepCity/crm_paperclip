@@ -14,6 +14,7 @@ export const leadsFormFields = {
   revenue: "Annual_Revenue",
   twitter: "Twitter",
   connected: "Connected_To__s",
+  building: "Flat_House_No_Building_Apartment_Name",
 } as const;
 
 export const leadsFormRules: FormRules = {
@@ -29,4 +30,5 @@ export const leadsFormRules: FormRules = {
   currency: leadsFormFields.revenue,
   textPrefixes: { [leadsFormFields.twitter]: "@" },
   omitted: [leadsFormFields.connected],
+  labelLines: { [leadsFormFields.building]: ["Flat / House No./", "Building /", "Apartment Name"] },
 };

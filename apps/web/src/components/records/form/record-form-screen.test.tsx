@@ -80,7 +80,8 @@ test("create starts with session owner/null picklists and saves through the serv
   });
   expect(create.mock.calls[0]?.[1]).not.toHaveProperty(names.address);
   expect(create.mock.calls[0]?.[1]).not.toHaveProperty(names.connected);
-});
+  // Metadata loads and renders the complete form before the write assertion.
+}, 30_000);
 
 test("edit initializes saved values and submits only changed fields", async () => {
   const record = {

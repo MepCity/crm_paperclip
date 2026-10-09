@@ -83,6 +83,7 @@ export interface FormRules {
   currency?: string;
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
+  labelLines?: Readonly<Record<string, readonly string[]>>;
 }
 
 export function formFields(
