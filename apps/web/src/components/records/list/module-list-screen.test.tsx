@@ -1,4 +1,4 @@
-import { NotFoundError } from "@crm/core/errors";
+import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,7 +6,8 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
-import { leadsListPageConfig } from "@/modules/leads/list-config";
+import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
+import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
 import { ModuleListScreen } from "./module-list-screen";
 
 const ctx = {
@@ -18,7 +19,10 @@ const ctx = {
 };
 
 const navigation = vi.hoisted(() => ({
-  push: vi.fn(),
+  push: vi.fn((href: string) => {
+    const url = new URL(href, "http://test");
+    navigation.params = url.searchParams;
+  }),
   refresh: vi.fn(),
   params: new URLSearchParams(),
 }));
@@ -35,6 +39,19 @@ function wrapper(service: ReturnType<typeof createClientRecordService>) {
         {children}
       </ApiProvider>
     );
+  };
+}
+
+async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRecordService>) {
+  const module = await service.getModule("Leads");
+  return {
+    ...leadsListPageConfig,
+    filterGroups: buildLeadsFilterGroups({
+      fields: module.fields,
+      users: [{ userId: ctx.userId, name: "User" }],
+      linkField: leadsListPageConfig.linkField,
+      currencyCode: LEADS_LIST_CURRENCY_CODE,
+    }),
   };
 }
 
@@ -121,6 +138,97 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.getByText(/could not be found/i)).toBeTruthy();
     });
+  });
+
+  it("applies a filter to list and count and resets to page 1", async () => {
+    navigation.params = new URLSearchParams("page=2");
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      const listQuery = listSpy.mock.calls.at(-1)?.[1];
+      const countQuery = countSpy.mock.calls.at(-1)?.[1];
+      expect(listQuery?.filters).toEqual({
+        field: "Company",
+        comparator: "contains",
+        value: "Example",
+      });
+      expect(countQuery?.filters).toEqual(listQuery?.filters);
+      expect(listQuery?.page).toBe(1);
+    });
+    expect(navigation.push).toHaveBeenCalled();
+  });
+
+  it("clears applied filters from list and count queries", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+    });
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+    });
+  });
+
+  it("shows a validation message and keeps rows when list rejects filters", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const originalList = records.list.bind(records);
+    vi.spyOn(records, "list").mockImplementation(async (module, query) => {
+      if (query.filters) {
+        throw new ValidationError({ filters: ["Invalid filter."] });
+      }
+      return originalList(module, query);
+    });
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rowsBefore = screen.getAllByRole("row").length;
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("Invalid filter.");
+    });
+    expect(screen.getAllByRole("row").length).toBe(rowsBefore);
   });
 
   it("passes list query fields and paging from the address", async () => {

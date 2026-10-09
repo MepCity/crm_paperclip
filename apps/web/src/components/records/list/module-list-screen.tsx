@@ -1,9 +1,17 @@
 "use client";
 
-import { NotFoundError } from "@crm/core/errors";
-import type { FieldDefinition, ModuleApiName, SortSpec } from "@crm/core/records";
+import { NotFoundError, ValidationError } from "@crm/core/errors";
+import type {
+  Criteria,
+  FieldDefinition,
+  ListResult,
+  ModuleApiName,
+  SortSpec,
+} from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
+import type { AppliedFilter } from "@/lib/records/filter-operators";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
@@ -21,6 +29,7 @@ import { withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import {
   appliedSortFromState,
+  LIST_PAGE_DEFAULT,
   type ListSearchState,
   listQueryFromSearchState,
   parseListSearchParams,
@@ -100,9 +109,15 @@ function ModuleListScreenLoaded({
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
+  const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
+  const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
+  const [lastSuccessfulTotal, setLastSuccessfulTotal] = useState<number | null>(null);
+  const [lastSuccessfulList, setLastSuccessfulList] = useState<ListResult | null>(null);
+  const priorViewId = useRef(viewId);
 
   const moduleQuery = useModule(config.module);
   const viewQuery = useView(config.module, viewId);
+  const users = useUsers();
   const view = viewQuery.data;
 
   const columnApiNames = view?.columns ?? [];
@@ -115,18 +130,62 @@ function ModuleListScreenLoaded({
     );
   }, [config.nonSortableFields, moduleQuery.data?.fields]);
 
+  useEffect(() => {
+    if (priorViewId.current === viewId) return;
+    priorViewId.current = viewId;
+    setAppliedCriteria(undefined);
+    setFilterSelection([]);
+    setFilterApplyError(null);
+    setSelectedIds([]);
+    setLastSuccessfulList(null);
+    setLastSuccessfulTotal(null);
+  }, [viewId]);
+
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
-    return listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
-  }, [columnApiNames, eligibleSortFields, searchState, viewId]);
+    const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
+    if (!appliedCriteria) return base;
+    return { ...base, filters: appliedCriteria };
+  }, [appliedCriteria, columnApiNames, eligibleSortFields, searchState, viewId]);
+
+  const countQuery = useMemo(
+    () => ({
+      viewId,
+      ...(appliedCriteria ? { filters: appliedCriteria } : {}),
+    }),
+    [appliedCriteria, viewId],
+  );
 
   const list = useRecordList(
     config.module,
     listQuery ?? { viewId, page: 1, perPage: 30, fields: [] },
     { enabled: listQuery !== null },
   );
-  const count = useRecordCount(config.module, { viewId });
-  const users = useUsers();
+  const count = useRecordCount(config.module, countQuery);
+
+  useEffect(() => {
+    if (count.data !== undefined) setLastSuccessfulTotal(count.data);
+  }, [count.data]);
+
+  useEffect(() => {
+    if (list.data) setLastSuccessfulList(list.data);
+  }, [list.data]);
+
+  const listValidationError =
+    list.isError && list.error instanceof ValidationError ? list.error : null;
+  const countValidationError =
+    count.isError && count.error instanceof ValidationError ? count.error : null;
+
+  const serverFilterMessage = useMemo(() => {
+    const error = listValidationError ?? countValidationError;
+    if (!error) return null;
+    const messages = error.fieldErrors.filters;
+    return messages?.[0] ?? error.message;
+  }, [countValidationError, listValidationError]);
+
+  useEffect(() => {
+    if (serverFilterMessage) setFilterApplyError(serverFilterMessage);
+  }, [serverFilterMessage]);
 
   const ownerNames = useMemo(() => {
     const map: Record<string, string> = {};
@@ -164,6 +223,29 @@ function ModuleListScreenLoaded({
     refreshModuleListData();
   }
 
+  function applyPanelFilters(applied: AppliedFilter[]) {
+    const inputs = applied.map((row) => ({
+      field: row.itemId,
+      operatorId: row.operatorId,
+      value: row.value,
+    }));
+    setFilterApplyError(null);
+    setAppliedCriteria(panelFiltersToCriteria(inputs));
+    setSelectedIds([]);
+    if (searchState.page !== LIST_PAGE_DEFAULT) {
+      navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
+    }
+  }
+
+  function clearPanelFilters() {
+    setAppliedCriteria(undefined);
+    setFilterApplyError(null);
+    setSelectedIds([]);
+    if (searchState.page !== LIST_PAGE_DEFAULT) {
+      navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
+    }
+  }
+
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
   const emptyMessage = `No ${config.pluralLabel} found.`;
   const initialLoading =
@@ -180,23 +262,27 @@ function ModuleListScreenLoaded({
   if (list.isError && list.error instanceof NotFoundError) {
     return <ListNotFound />;
   }
-  if (list.isError) throw list.error;
+  if (list.isError && !listValidationError) throw list.error;
   if (count.isError && count.error instanceof NotFoundError) {
     return <ListNotFound />;
   }
-  if (count.isError) throw count.error;
+  if (count.isError && !countValidationError) throw count.error;
   if (users.isError) throw users.error;
   if (moduleQuery.isError) throw moduleQuery.error;
 
-  if (initialLoading || !view || !listQuery || !list.data) {
+  const listPage =
+    list.data ?? (listValidationError && lastSuccessfulList ? lastSuccessfulList : null);
+
+  if (initialLoading || !view || !listQuery || !listPage) {
     return <div className="module-list-page" aria-hidden="true" />;
   }
 
-  const records = list.data.records;
-  const total = count.data ?? null;
-  const moreRecords = list.data.moreRecords;
-  const page = list.data.page;
-  const perPage = list.data.perPage;
+  const records = listPage.records;
+  const total =
+    countValidationError || listValidationError ? lastSuccessfulTotal : (count.data ?? null);
+  const moreRecords = listPage.moreRecords;
+  const page = listPage.page;
+  const perPage = listPage.perPage;
 
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
@@ -240,6 +326,9 @@ function ModuleListScreenLoaded({
             groups={config.filterGroups}
             selectedIds={filterSelection}
             onSelectionChange={setFilterSelection}
+            applyErrorMessage={filterApplyError}
+            onApply={applyPanelFilters}
+            onClear={clearPanelFilters}
           />
         ) : null}
         <div className="module-list-table-host">
