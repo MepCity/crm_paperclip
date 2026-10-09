@@ -541,6 +541,8 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
 | `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
 | `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--color-record-rail-toggle-shown` | `#dfe4ef` | record-detail.md › Canvas and tab row › Circular rail button fill (rail shown) | from spec |
+| `--color-record-rail-toggle-hidden-border` | `#e2e7ee` | record-detail.md › Hidden-rail layout › Rail toggle button › 1 px border | from spec |
 | `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |

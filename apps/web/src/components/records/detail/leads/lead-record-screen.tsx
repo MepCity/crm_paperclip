@@ -6,10 +6,13 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
+import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
+import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { useModule, useRecord, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { usePreference } from "@/lib/preferences";
 import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
 import {
   buildLeadsBusinessCardFields,
@@ -68,6 +71,7 @@ export function LeadRecordScreen({
   now = new Date(),
 }: LeadRecordScreenProps) {
   const [selectedTabId, setSelectedTabId] = useState("overview");
+  const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
   const moduleQuery = useModule(LEADS_MODULE);
   const recordQuery = useRecord(LEADS_MODULE, recordId);
@@ -173,6 +177,10 @@ export function LeadRecordScreen({
       selectedTabId={selectedTabId}
       onTabChange={setSelectedTabId}
       tabs={[{ id: "overview", label: "Overview", content: overview }]}
+      relatedRailVisible={railVisible}
+      railControl={
+        <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+      }
       scrollTopLabel="Scroll To Top"
     />
   );
