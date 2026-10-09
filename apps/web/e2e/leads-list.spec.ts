@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
@@ -99,20 +100,95 @@ function isSettingsOrUsersRequest(request: CrmRequest): boolean {
   );
 }
 
-async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
-  const companyIndex = await page
+async function columnTexts(page: import("@playwright/test").Page, headerLabel: string) {
+  const columnIndex = await page
     .locator("thead [data-part=column]")
-    .evaluateAll((nodes) =>
-      nodes.findIndex((node) => node.textContent?.trim().includes("Company")),
+    .evaluateAll(
+      (nodes, label) => nodes.findIndex((node) => node.textContent?.trim().includes(label)),
+      headerLabel,
     );
-  if (companyIndex < 0) throw new Error("Company column not found.");
+  if (columnIndex < 0) throw new Error(`${headerLabel} column not found.`);
   const rows = page.locator("tbody tr");
   const rowCount = await rows.count();
   const texts: string[] = [];
   for (let i = 0; i < rowCount; i++) {
-    texts.push(await rows.nth(i).locator("[data-part=column]").nth(companyIndex).innerText());
+    texts.push(await rows.nth(i).locator("[data-part=column]").nth(columnIndex).innerText());
   }
   return texts;
+}
+
+async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
+  return columnTexts(page, "Company");
+}
+
+/** Text of the row link in the first record of the open page. */
+function firstRowLinkText(page: import("@playwright/test").Page) {
+  return page.locator("table tbody tr").first().getByRole("link").first().innerText();
+}
+
+/** Reads a token's authored value off the page, so no measurement is repeated as a literal. */
+function tokenLength(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    probe.style.width = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).width;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function tokenFontLength(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.fontSize = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).fontSize;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function tokenWeight(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.fontWeight = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).fontWeight;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function tokenColor(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function expectPx(actual: number, expected: string) {
+  expect(Math.abs(actual - Number.parseFloat(expected))).toBeLessThanOrEqual(1);
+}
+
+async function boxWidth(locator: Locator) {
+  return locator.evaluate((element) => element.getBoundingClientRect().width);
+}
+
+function isOrdered(values: readonly string[], direction: "asc" | "desc") {
+  const normalized = values.map((value) => value.trim().toLowerCase());
+  for (let i = 1; i < normalized.length; i++) {
+    const previous = normalized[i - 1] ?? "";
+    const current = normalized[i] ?? "";
+    if (direction === "asc" && previous > current) return false;
+    if (direction === "desc" && previous < current) return false;
+  }
+  return true;
 }
 
 test.describe("Leads list page", () => {
@@ -136,12 +212,7 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLinkOnPage1 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    const firstLinkOnPage1 = await firstRowLinkText(page);
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
@@ -150,24 +221,18 @@ test.describe("Leads list page", () => {
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkOnPage2 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    // The rows of the previous page stay on screen while page 2 is requested, so the new
+    // first record is awaited rather than read once.
+    await expect.poll(() => firstRowLinkText(page)).not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstRowLinkText(page);
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
     await page.getByLabel("Previous").click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkBack = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    await expect.poll(() => firstRowLinkText(page)).toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstRowLinkText(page);
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
@@ -204,6 +269,121 @@ test.describe("Leads list page", () => {
     const bulkParams = new URL(lastBulk).searchParams;
     expect(bulkParams.get("sort_by")).toBe("Company");
     expect(bulkParams.get("sort_order")).toBe("asc");
+  });
+
+  test("sorts the list from the column header options menu", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=2`);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const nameTrigger = page.getByRole("button", { name: "Full Name column options" });
+    const companyTrigger = page.getByRole("button", { name: "Company column options" });
+    await expect(nameTrigger).toHaveCSS("opacity", "1");
+    await expect(companyTrigger).toHaveCSS("opacity", "0");
+    await page.getByRole("columnheader", { name: "Company" }).hover();
+    await expect(companyTrigger).toHaveCSS("opacity", "1");
+
+    const bulkUrls: string[] = [];
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk")) {
+        bulkUrls.push(request.url());
+      }
+    });
+
+    await companyTrigger.click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveCount(2);
+    expect((await menu.getByRole("menuitem").allTextContents()).map((text) => text.trim())).toEqual(
+      ["Asc", "Desc"],
+    );
+    await menu.getByRole("menuitem", { name: "Desc" }).click();
+    await expect(menu).toHaveCount(0);
+
+    const afterDesc = () => new URL(page.url()).searchParams;
+    await expect.poll(() => afterDesc().get("sort_by")).toBe("Company");
+    expect(afterDesc().get("sort_order")).toBe("desc");
+    expect(afterDesc().get("page")).toBeNull();
+    await expect(page.locator("tbody tr")).toHaveCount(10);
+    expect(isOrdered(await companyColumnTexts(page), "desc")).toBe(true);
+    const lastBulk = bulkUrls.at(-1);
+    if (!lastBulk) throw new Error("Expected a bulk request after the header sort.");
+    const bulkParams = new URL(lastBulk).searchParams;
+    expect(bulkParams.get("sort_by")).toBe("Company");
+    expect(bulkParams.get("sort_order")).toBe("desc");
+
+    await nameTrigger.click();
+    await page.getByRole("menu").getByRole("menuitem", { name: "Asc" }).click();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    const afterAsc = () => new URL(page.url()).searchParams;
+    await expect.poll(() => afterAsc().get("sort_by")).toBe("Full_Name");
+    expect(afterAsc().get("sort_order")).toBe("asc");
+    await expect
+      .poll(async () => isOrdered(await columnTexts(page, "Full Name"), "asc"))
+      .toBe(true);
+  });
+
+  test("column options menu matches the measured visual layout", async ({ page }) => {
+    // list-views.md › Layout › Visual layout › Column options menu and Table header and rows.
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const menuWidth = await tokenLength(page, "--size-popover-column-options-width");
+    const rowHeight = await tokenLength(page, "--size-menu-item-height");
+    const iconSize = await tokenLength(page, "--size-menu-icon");
+    const cellInset = await tokenLength(page, "--size-list-cell-inset");
+    const headerHeight = await tokenLength(page, "--size-list-header-height");
+    const columnWidth = await tokenLength(page, "--size-list-column-width");
+    const borderInk = await tokenColor(page, "--color-border");
+    const surface = await tokenColor(page, "--color-menu-surface");
+    const hoverInk = await tokenColor(page, "--color-surface-hover");
+    const textInk = await tokenColor(page, "--color-text");
+    const iconInk = await tokenColor(page, "--color-menu-icon");
+    const menuText = await tokenFontLength(page, "--text-md");
+    const menuWeight = await tokenWeight(page, "--font-weight-normal");
+    const radius = await tokenLength(page, "--radius-md");
+
+    const headerCell = page.getByRole("columnheader", { name: "Company" });
+    const trigger = page.getByRole("button", { name: "Company column options" });
+    await headerCell.hover();
+    await trigger.click();
+
+    const menu = page.getByRole("menu");
+    // The visible menu box is the popover that holds the list of rows.
+    const menuSurface = menu.locator("xpath=..");
+    await expect(menu).toBeVisible();
+    const menuBox = requireBox(await menuSurface.boundingBox(), "column options menu");
+    expectPx(menuBox.width, menuWidth);
+    await expect(menuSurface).toHaveCSS("border-top-width", "1px");
+    await expect(menuSurface).toHaveCSS("border-top-color", borderInk);
+    await expect(menuSurface).toHaveCSS("background-color", surface);
+    // The spec row does not measure corners; the shared popover radius is kept.
+    await expect(menuSurface).toHaveCSS("border-radius", radius);
+
+    const item = menu.getByRole("menuitem", { name: "Asc" });
+    const itemBox = requireBox(await item.boundingBox(), "Asc row");
+    expectPx(itemBox.height, rowHeight);
+    await expect(item).toHaveCSS("font-size", menuText);
+    await expect(item).toHaveCSS("font-weight", menuWeight);
+    await expect(item).toHaveCSS("color", textInk);
+    const glyph = item.locator("svg");
+    await expect(glyph).toHaveCSS("color", iconInk);
+    expectPx(await boxWidth(glyph), iconSize);
+    await item.hover();
+    await expect(item).toHaveCSS("background-color", hoverInk);
+
+    // The trigger sits at the header cell's trailing end, before its divider, and keeps
+    // the header box and the column width exactly as they were.
+    const triggerBox = requireBox(await trigger.boundingBox(), "column options trigger");
+    const headerBox = requireBox(await headerCell.boundingBox(), "Company header");
+    expectPx(headerBox.x + headerBox.width - (triggerBox.x + triggerBox.width), cellInset);
+    expectPx(headerBox.height, headerHeight);
+    expectPx(headerBox.width, columnWidth);
+
+    await expectNoA11yViolations(page);
   });
 
   test("custom view route shows that view columns", async ({ page }) => {

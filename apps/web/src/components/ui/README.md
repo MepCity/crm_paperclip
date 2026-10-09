@@ -101,6 +101,7 @@ what the "no colour constants" rule forbids.
 | `--color-topbar-surface` | `#ffffff` | app-shell.md › Top bar › Bounds and surface › "50 high; `#FFFFFF`" | from spec |
 | `--color-topbar-border` | `#dcdbee` | app-shell.md › Colour summary › "`#DCDBEE` › Top-bar lower rule" | from spec |
 | `--color-menu-surface` | `#ffffff` | app-shell.md › Teamspace More Actions menu › Surface, edge, corners, shadow › "`#FFFFFF` fill" | from spec |
+| `--color-menu-icon` | `#adb0b6` | list-views.md › Column options menu › "icon glyphs `#ADB0B6`" | from spec |
 | `--color-utility-border` | `#c5c4d3` | app-shell.md › Colour summary › "`#C5C4D3` › Utility-strip cell rules" | from spec |
 | `--color-utility-help` | `#7875e6` | app-shell.md › Colour summary › "`#7875E6` › Help utility cell" | from spec |
 | `--color-monogram` | `#00b96f` | app-shell.md › Colour summary › "`#00B96F` › Teamspace monogram block" | from spec |
@@ -336,6 +337,7 @@ what the "no colour constants" rule forbids.
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
 | `--size-popover-settings-width` | `264px` | list-views.md › View Settings popover › "About 264 px wide" | from spec |
+| `--size-popover-column-options-width` | `151px` | list-views.md › Column options menu › "151 px wide (x 963–1114)" | from spec |
 | `--size-popover-sort-width` | `385px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
 | `--size-popover-sort-height` | `157px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
 | `--size-popover-sort-field-width` | `150px` | list-views.md › Sort popover › "two side-by-side selectors around 150 px wide" | from spec |
@@ -694,9 +696,11 @@ Button primary and secondary variants use the measured vertical gradients from t
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
 opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
-`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`columnOptions`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
-menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+menus** and `--size-popover-column-options-width` from **Column options menu**. `Menu.placement`
+overrides the popover anchor side; menus keep `bottom end` unless the caller passes it.
+`Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
 

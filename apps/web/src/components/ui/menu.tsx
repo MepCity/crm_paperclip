@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -64,11 +64,13 @@ export interface MenuAction {
 export function Menu<T extends object>({
   width,
   appearance = "default",
+  placement,
   header,
   ...props
 }: AriaMenuProps<T> & {
-  width?: "create" | "actions";
+  width?: "create" | "actions" | "columnOptions";
   appearance?: "default" | "measured" | "record";
+  placement?: ComponentProps<typeof Popover>["placement"];
   header?: ReactNode;
 }) {
   const widthClass =
@@ -78,12 +80,14 @@ export function Menu<T extends object>({
         ? "w-(--size-popover-import-width)"
         : width === "actions"
           ? "w-(--size-popover-actions-width)"
-          : appearance === "measured"
-            ? "w-(--size-menu-width)"
-            : "w-48";
+          : width === "columnOptions"
+            ? "w-(--size-popover-column-options-width)"
+            : appearance === "measured"
+              ? "w-(--size-menu-width)"
+              : "w-48";
   return (
     <Popover
-      placement="bottom end"
+      placement={placement ?? "bottom end"}
       className={`${widthClass} ${appearance === "measured" ? "bg-menu-surface" : "bg-surface"} max-w-full ${appearance === "record" ? "max-h-screen rounded-(--radius-record-menu)" : "max-h-80 rounded-md"} overflow-auto border border-border shadow-lg outline-none`}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}

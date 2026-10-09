@@ -21,6 +21,7 @@ import { withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import {
   appliedSortFromState,
+  LIST_PAGE_DEFAULT,
   type ListSearchState,
   listQueryFromSearchState,
   parseListSearchParams,
@@ -188,6 +189,19 @@ function ModuleListScreenLoaded({
     router.push(href);
   }
 
+  /**
+   * Column header options write the same address keys as the Sort popover's Apply, and start
+   * the new sort on page 1. The Sort popover keeps the open page (MEP-77 behaviour).
+   */
+  function applyColumnSort(next: SortSpec) {
+    navigate({
+      ...searchState,
+      page: LIST_PAGE_DEFAULT,
+      sortBy: next.field,
+      sortOrder: next.order,
+    });
+  }
+
   function refreshView() {
     refreshModuleListData();
   }
@@ -278,6 +292,8 @@ function ModuleListScreenLoaded({
             rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
             selectedIds={selectedIds}
             onSelectedIdsChange={(ids) => setSelectedIds([...ids])}
+            sortableFields={eligibleSortFields}
+            onSortChange={applyColumnSort}
             wrapText
             emptyMessage={emptyMessage}
             ownerNames={ownerNames}
