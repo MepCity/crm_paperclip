@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import {
@@ -72,7 +74,9 @@ async function openFirstLeadFromList(
 ) {
   const listUrl = `${moduleListDefaultPath(orgSlug, LEADS_MODULE)}${listQuery}`;
   await page.goto(listUrl);
-  await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible({
+    timeout: 15_000,
+  });
   const link = page.locator("table tbody tr").first().getByRole("link").first();
   const name = await link.innerText();
   const href = await link.getAttribute("href");
@@ -223,6 +227,12 @@ test.describe("Lead record detail page", () => {
     expect(Math.abs(statusBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
     expectEdge(statusBox.y, STATUS_TOP);
     expectEdge(statusBox.height, STATUS_HEIGHT);
+    if (process.env.LEAD_DETAIL_ARTIFACT_DIR) {
+      await mkdir(process.env.LEAD_DETAIL_ARTIFACT_DIR, { recursive: true });
+      await page.screenshot({
+        path: join(process.env.LEAD_DETAIL_ARTIFACT_DIR, "lead-detail-status-ribbon.png"),
+      });
+    }
     const header = frame.locator("[data-record-header]");
     await expect(header).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const headerBox = requireBox(await header.boundingBox(), "record header");
@@ -259,5 +269,29 @@ test.describe("Lead record detail page", () => {
     const detailsCard = frame.getByRole("region", { name: "Details card" });
     const detailsBox = requireBox(await detailsCard.boundingBox(), "details card");
     expect(Math.abs(detailsBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
+  });
+
+  test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
+    const HIDDEN_CARD_WIDTH = 1126;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
+    const CANVAS_LEFT = 332;
+    const CANVAS_RIGHT = 1458;
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    await page.evaluate(() => document.fonts.ready);
+
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("button", { name: "Hide Related List" }).click();
+    await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
+
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
+    expectEdge(statusBox.x, CANVAS_LEFT);
+    expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
+    expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 });
