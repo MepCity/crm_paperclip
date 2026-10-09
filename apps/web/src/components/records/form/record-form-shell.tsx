@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { FormEventHandler, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import "./form.css";
 
@@ -18,6 +18,8 @@ export interface RecordFormShellProps {
   onSaveAndNew?: () => void;
   onSave?: () => void;
   children: ReactNode;
+  disabled?: boolean;
+  onSubmit?: FormEventHandler<HTMLFormElement>;
 }
 
 export function RecordFormShell({
@@ -28,6 +30,8 @@ export function RecordFormShell({
   onSaveAndNew,
   onSave,
   children,
+  disabled = false,
+  onSubmit,
 }: RecordFormShellProps) {
   return (
     <div className="record-form-shell" data-record-form-shell>
@@ -36,19 +40,42 @@ export function RecordFormShell({
           {title}
         </h1>
         <div className="record-form-strip__actions" data-record-form-actions>
-          <Button type="button" variant="secondary" size="formAction" onPress={onCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="formAction"
+            isDisabled={disabled}
+            onPress={onCancel}
+          >
             {actionLabels.cancel}
           </Button>
-          <Button type="button" variant="secondary" size="formAction" onPress={onSaveAndNew}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="formAction"
+            isDisabled={disabled}
+            onPress={onSaveAndNew}
+          >
             {actionLabels.saveAndNew}
           </Button>
-          <Button type="button" variant="primary" size="formAction" onPress={onSave}>
+          <Button
+            type="button"
+            variant="primary"
+            size="formAction"
+            isDisabled={disabled}
+            onPress={onSave}
+          >
             {actionLabels.save}
           </Button>
         </div>
       </header>
       <div className="record-form-card" data-record-form-card>
-        <form className="record-form-card__body" aria-label={formAriaLabel}>
+        <form
+          className="record-form-card__body"
+          aria-label={formAriaLabel}
+          noValidate
+          onSubmit={onSubmit}
+        >
           {children}
         </form>
       </div>

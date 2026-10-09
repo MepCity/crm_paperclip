@@ -93,7 +93,8 @@ the shared React Aria menu primitive, with the detail-specific appearance.
 | `tabsLabel` | Accessible tablist name. |
 | `tabs` | Ordered `{ id, label, content }`. Each content node is the matching labelled tabpanel. The measured pill is designed for two tabs. |
 | `selectedTabId`, `onTabChange` | Controlled selection; React Aria supplies arrow-key navigation. Tab changes return the content scroller to the top. |
-| `railControl?` | Reserved 36px slot before the tab pill. Empty here; the persistence/toggle task fills it. |
+| `relatedRailVisible?` | When false, the related-list rail is not rendered and the canvas uses the hidden-rail layout. Defaults to true. |
+| `railControl?` | 36px slot before the tab pill; pass `RecordRailToggle` wired to `record-detail.rail-visible`. |
 | `scrollTopLabel` | Accessible name of the circle shown after scrolling; activation returns this frame's content scroller to the top. |
 
 The parent supplies a constrained height. The header and tab row are outside the
@@ -115,7 +116,6 @@ menu present/absent, and all four arrow availability combinations.
 | Add Related List, Links, Add Link | M11, customization |
 | Record detail page views / custom record page bottom strip | M11, customization |
 | Selected/hovered related-row plus affordance | With each related module/action; no inert plus is rendered. |
-| Rail visibility control | MEP-147; its slot remains empty. |
 | Cards, status ribbon, Timeline content, page route/data | MEP-141, MEP-142, MEP-143, MEP-144 respectively. |
 
 - The portrait and icon glyphs use our own code; no reference image, icon, logo or font
@@ -143,6 +143,10 @@ menu present/absent, and all four arrow availability combinations.
 
 ## Interim
 
+- `record-detail.rail-visible` is stored in the browser via `usePreference` (see `lib/README.md`).
+  Whether the key is shared across all modules or scoped per module was not observed in reference
+  captures; we use one global key for every record detail page.
+
 The spec places Scroll To Top at lower right but does not measure it: we use a 36px
 circle, 16px from the content frame's right/bottom edges, white surface, panel border,
 and the existing medium shadow. These values are separately documented as unmeasured
@@ -158,3 +162,46 @@ empty rail, tab roles/arrow keys and Scroll To Top visibility/callback.
 typography from tokens, real content scroll while the header/tab row remain still,
 related-card scrolling, and a working Scroll To Top. Optional screenshots and measured
 boxes are emitted into `RECORD_DETAIL_ARTIFACT_DIR`, never committed.
+## Status ribbon presentation
+
+`StatusRibbon` accepts metadata-ordered picklist options (including the null
+option), current stored value, terminal groups and accessible labels. The null
+option is excluded from the ribbon and retained in the flat menu. Selecting an
+option calls `onSelect(value)` and closes the menu. No record data access lives
+here. Integration and selection effects remain in MEP-134.
+
+The current stage alone opens the flat menu. Terminal stages carry an original
+thumb icon. ResizeObserver measures overflow after font loading and container or
+track resizing; both scroll controls appear only when needed. At either end the
+corresponding control is disabled. Long stage labels keep their natural width.
+
+### Interim decisions
+
+- Search uses a case-insensitive substring of each option label. No typed search
+  was observed in the reference CRM.
+- Search labels/options and group headings use the nearest typography roles:
+  Filter search placeholder / Filter checkbox row (`--text-md`, normal), and
+  Details subsection heading (`--text-md`, bold). These popup roles do not yet
+  have separate rows in typography.md.
+- Stage text uses Status stage value (`--text-sm`, normal). Natural text advances
+  determine stage widths; icon drawings and letter widths differ from the
+  reference (expected letter-width tolerance 2 px).
+- Scroll control width uses the measured 20 px card inset; scroll distance is
+  half the viewport. Scroll icon geometry, search icon inset and shadow parameters
+  are not separately measurable in the current spec.
+- `/dev/ui` includes rail-hidden width (1126 px), rail-shown width (906 px),
+  stage-menu-open and terminal-menu-open choices. Open examples mount only after
+  their button is pressed, so the gallery never opens overlays or takes focus on load.
+- A null or unknown value has no current-stage trigger. The terminal trigger
+  remains available; page integration and null-state behaviour await MEP-134.
+
+No control is omitted from this presentation scope. Record persistence, the
+source of terminal grouping and page integration belong to parity checklist
+row 14 / MEP-134.
+
+Measured wide-demo stage widths are 171.59, 142.20, 100.83, 117.73, 109.41,
+127.53, 115.91 and 137.80 px, compared with the spec's 173, 141.5, 101, 119,
+110.5, 126, 116 and 136 px. Each differs by at most 1.80 px with the adopted
+font; accumulated boundary drift reaches 3.23 px at the current stage's end.
+The generic component uses natural label widths; these differences are recorded
+for review. Absolute page placement belongs to MEP-134.

@@ -1,0 +1,146 @@
+/* record-detail.md › Status strip; Hidden-rail layout. */
+.status-ribbon {
+  display: flex;
+  align-items: center;
+  gap: var(--size-status-terminal-gap);
+  height: var(--size-status-card-height);
+  padding-inline: var(--size-status-card-inset);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.status-ribbon-lane {
+  min-width: 0;
+  flex: 1;
+  position: relative;
+}
+.status-viewport {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.status-viewport::-webkit-scrollbar {
+  display: none;
+}
+.status-track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.status-stage {
+  flex-grow: 1;
+  position: relative;
+  height: var(--size-status-band-height);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+}
+.status-chevron {
+  position: absolute;
+  inset: 0 calc(0px - var(--size-status-chevron-tip)) 0 0;
+  background: var(--color-panel-border);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--size-status-chevron-tip)) 0,
+    100% 50%,
+    calc(100% - var(--size-status-chevron-tip)) 100%,
+    0 100%,
+    var(--size-status-chevron-tip) 50%
+  );
+}
+.status-chevron::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--color-surface);
+  clip-path: inherit;
+}
+.status-stage:first-child .status-chevron {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--size-status-chevron-tip)) 0,
+    100% 50%,
+    calc(100% - var(--size-status-chevron-tip)) 100%,
+    0 100%
+  );
+}
+.status-stage[aria-current] {
+  z-index: 1;
+}
+.status-stage[aria-current] .status-chevron {
+  background: var(--color-primary);
+}
+.status-stage[aria-current] .status-chevron::after {
+  background: var(--color-status-current);
+}
+.status-label,
+.status-ribbon .status-current {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--size-status-label-gap);
+  height: 100%;
+  padding: 0 var(--size-status-stage-inset);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  white-space: nowrap;
+  font: inherit;
+}
+.status-ribbon .status-current {
+  color: var(--color-primary);
+}
+.status-caret {
+  width: var(--size-list-filter-chevron-width);
+  height: var(--size-list-filter-chevron-height);
+}
+.status-stage-thumb {
+  width: var(--size-status-stage-thumb);
+  height: var(--size-status-stage-thumb);
+}
+.status-ribbon .status-terminal {
+  flex-shrink: 0;
+  width: var(--size-status-terminal-width);
+  height: var(--size-status-terminal-height);
+  padding: 0;
+  border: 1px solid var(--color-status-terminal-border);
+  border-radius: var(--radius-status-control);
+  background: var(--color-status-terminal-fill);
+  color: var(--color-status-terminal-icon);
+}
+.status-terminal svg {
+  width: var(--size-status-terminal-icon-width);
+  height: var(--size-status-terminal-icon-height);
+}
+.status-ribbon .status-scroll {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  height: var(--size-status-band-height);
+  width: var(--size-status-scroll-width);
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 0;
+}
+.status-scroll svg {
+  width: var(--size-menu-icon);
+  height: var(--size-menu-icon);
+}
+.status-scroll-previous {
+  left: calc(0px - var(--size-status-card-inset));
+}
+.status-scroll-next {
+  right: 0;
+}
+.status-demo-wide {
+  width: var(--size-status-demo-wide);
+}
+.status-demo-narrow {
+  width: var(--size-status-demo-narrow);
+}
+.status-stage:last-child .status-chevron {
+  right: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--size-status-chevron-tip) 50%);
+}

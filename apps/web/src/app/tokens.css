@@ -139,6 +139,7 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   --radius-form-control: 5px;
+  --radius-form-field-group: 10px;
   --radius-create-menu: 4px;
   --radius-create-menu-search: 4px;
 
@@ -377,6 +378,15 @@
   --size-dialog-height: 770px;
   --size-dialog-padding: 30px;
 
+  /* Unsaved changes modal (record-detail.md › Visual layout) */
+  --color-confirm-dialog-body: #434d5e;
+  --size-confirm-dialog-padding-block-start: 29.5px;
+  --size-confirm-dialog-padding-inline: 26.5px;
+  --size-confirm-dialog-padding-block-end: 26px;
+  --size-confirm-dialog-title-gap: 18.5px;
+  --size-confirm-dialog-message-actions-gap: 30.5px;
+  --size-confirm-dialog-actions-gap: 10.5px;
+
   /* List popovers */
   --size-popover-view-width: 128px;
   --size-popover-import-width: 180px;
@@ -496,8 +506,8 @@
   --size-form-first-title-center: 30px;
   --size-form-first-content-top: 63px;
   --size-form-section-gap: 55.5px;
-  --size-form-section-title-gap: 28px;
-  --size-form-section-title-box-trim: 4px;
+  --size-form-section-title-center-above: 61px;
+  --size-form-section-title-center-below: 33px;
   --size-form-portrait: 48px;
   --size-form-label-column-left: 172px;
   --size-form-label-column-right: 221.5px;
@@ -513,14 +523,27 @@
   --size-form-control-padding-inline: 10px;
   --size-form-control-padding-block: 8px;
   --size-form-action-height: 32px;
-  --size-form-action-gap: 10px;
+  --size-form-action-gap: 8px;
   --size-form-action-padding-inline: 14.5px;
-  --size-form-field-group-padding-end: 16px;
-  --size-form-field-group-body-top: 31px;
-  --size-form-field-group-legend-inset: 18.5px;
-  --size-form-field-group-legend-padding: 12.5px;
-  /* Description textarea height is not measurable in the capture; demo placeholder only. */
-  --size-form-description-height: 80px;
+  --size-form-field-group-padding-end: 15px;
+  --size-form-field-group-body-top: 30px;
+  --size-form-field-group-margin-bottom: 17px;
+  --size-form-field-group-legend-inset: 10px;
+  --size-form-field-group-legend-padding-start: 8.5px;
+  --size-form-field-group-legend-padding-end: 12.5px;
+  --size-form-input-full-width: 639px;
+  --size-form-description-height: 34px;
+  /* record-detail.md › Address frame; Description Information and textarea. */
+  --size-form-address-footer-bottom: 15px;
+  --size-form-address-radius: 10px;
+  --size-form-coordinate-gap: 10px;
+  --color-form-clear-address: #a0a8b8;
+  --size-form-description-width: 639px;
+  --size-form-description-extra-gap: 17px;
+  --size-form-page-cancel-width: 74px;
+  --size-form-page-save-new-width: 119.5px;
+  --size-form-page-save-width: 59.5px;
+  --size-form-description-rule-gap: 40px;
 
   /* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
      Offsets are panel-border-box coordinates minus the panel origin x 534, y 50. */
@@ -555,6 +578,8 @@
   --color-record-arrow-disabled: #adb0b6;
   --color-record-tab-selected: #ebedff;
   --color-record-tab-border: #a3acff;
+  --color-record-rail-toggle-shown: #dfe4ef;
+  --color-record-rail-toggle-hidden-border: #e2e7ee;
   --size-record-header-height: 73px;
   --size-record-portrait: 48px;
   --size-record-back-region: 52px;
@@ -579,4 +604,48 @@
   --size-record-scroll-top: 36px;
   --size-record-scroll-offset: 16px;
   --size-record-demo-height: 560px;
+  /* record-detail.md: status ribbon and picklist panels. */
+  --color-status-current: #eeeffc;
+  --color-status-terminal-border: #ffadac;
+  --color-status-terminal-fill: #ffecec;
+  --color-status-terminal-icon: #ff5d5a;
+  --color-status-check: #333333;
+  --radius-status-control: 4px;
+  --size-status-card-height: 68px;
+  --size-status-card-inset: 20px;
+  --size-status-band-height: 28px;
+  --size-status-chevron-tip: 6px;
+  --size-status-stage-inset: 18px;
+  --size-status-label-gap: 6.5px;
+  --size-status-stage-thumb: 14px;
+  --size-status-terminal-gap: 11px;
+  --size-status-terminal-width: 52px;
+  --size-status-terminal-height: 27px;
+  --size-status-terminal-icon-width: 28.5px;
+  --size-status-terminal-icon-height: 14px;
+  --size-status-scroll-width: 20px;
+  --size-status-stage-menu-width: 207px;
+  --size-status-stage-menu-height: 244px;
+  --size-status-stage-search-height: 31px;
+  --size-status-terminal-menu-width: 215.5px;
+  --size-status-terminal-search-height: 30.5px;
+  --size-status-pointer-width: 17px;
+  --size-status-pointer-height: 8.5px;
+  --size-status-pointer-right: 18px;
+  --size-status-option-height: 35px;
+  --size-status-option-inset: 31.5px;
+  --size-status-search-icon-inset: 10px;
+  --size-status-options-padding: 5px;
+  --size-status-check-inset: 9px;
+  --size-status-check-width: 10px;
+  --size-status-check-height: 6.5px;
+  --size-status-group-inset: 10.5px;
+  --size-status-terminal-options-top: 6px;
+  --size-status-terminal-options-bottom: 8px;
+  --size-status-terminal-header-height: 29.5px;
+  --size-status-terminal-option-height: 29.5px;
+  --size-status-terminal-divider-top: 8.5px;
+  --size-status-terminal-divider-bottom: 6px;
+  --size-status-demo-wide: 1126px;
+  --size-status-demo-narrow: 906px;
 }

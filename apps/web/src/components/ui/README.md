@@ -30,6 +30,26 @@ Visual layout → Filter content, Surface and line colors, Selected / disabled.
 Vertical gaps, search-field width and end inset use the measured Filter content tokens.
 Open question 17 records the uncaptured closed group and checked checkbox.
 
+## Confirm dialog
+
+`confirm-dialog.tsx` builds a measured confirmation alert on the shared modal
+primitive. Props: `title`, `message`, `confirmLabel`, `cancelLabel`,
+`tone` (`danger` | `default`), optional `busy`, optional `errorMessage`,
+`onConfirm`, and optional controlled `isOpen` / `onOpenChange`. Escape and the
+secondary button close; focus opens on the secondary button; both buttons
+disable while `busy` or while an async `onConfirm` is pending. `errorMessage`
+renders as form error text above the actions. Geometry follows
+`record-detail.md` › Visual layout › Unsaved changes modal via
+`--size-dialog-width`, `--size-confirm-dialog-*`, and `--radius-create-menu`.
+Use inside `DialogTrigger` for trigger-driven flows, or pass `isOpen` for
+page-owned delete confirmation.
+
+### Interim
+
+Destructive fill uses the shared `danger` button variant rather than the
+sampled red gradient; hover and shadow parameters stay on the primitive
+defaults because they are not measured for this modal.
+
 ## Token sources
 
 Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
@@ -154,6 +174,7 @@ what the "no colour constants" rule forbids.
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
+| `--radius-form-field-group` | `10px` | MEP-172 / MEP-174 › Address field group frame corner radius | from spec |
 | `--radius-create-menu` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "4 px bottom corners". Only the lower corners are measured; the panel keeps square top corners where it meets the top bar | from spec |
 | `--radius-create-menu-search` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "1 px focus border `#5464F2`, 4 px corners". The shared `filter-search` variant keeps its 6 px corners on list filters | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
@@ -350,6 +371,13 @@ what the "no colour constants" rule forbids.
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
+| `--color-confirm-dialog-body` | `#434d5e` | record-detail.md › Unsaved changes modal › Modal body › color `#434D5E` | from spec |
+| `--size-confirm-dialog-padding-block-start` | `29.5px` | record-detail.md › Unsaved changes modal › "Top padding 29.5 px" | from spec |
+| `--size-confirm-dialog-padding-inline` | `26.5px` | record-detail.md › Unsaved changes modal › "left padding 26.5 px" | from spec |
+| `--size-confirm-dialog-padding-block-end` | `26px` | record-detail.md › Unsaved changes modal › "26 px bottom" | from spec |
+| `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
+| `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
+| `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
@@ -457,9 +485,9 @@ what the "no colour constants" rule forbids.
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
 | `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
 | `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
-| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
-| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
-| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy section gap (Leads page Description section only) | from spec |
+| `--size-form-section-title-center-above` | `61px` | MEP-172 / MEP-174 › section title center below previous section content | from spec |
+| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top above section title center | from spec |
 | `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
 | `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
 | `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
@@ -475,13 +503,26 @@ what the "no colour constants" rule forbids.
 | `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
 | `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
 | `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
-| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-gap` | `8px` | MEP-172 / MEP-174 › gap between strip action buttons | from spec |
 | `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
-| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
-| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
-| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
-| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
-| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-form-field-group-padding-end` | `15px` | MEP-172 / MEP-174 › Address group input inset from right border (outer edge to input right +1 px border) | from spec |
+| `--size-form-field-group-body-top` | `30px` | MEP-172 / MEP-174 › first input below Address group top border (+1 px border to 31 px) | from spec |
+| `--size-form-field-group-margin-bottom` | `17px` | MEP-172 / MEP-174 › space below Address frame before next section title | from spec |
+| `--size-form-field-group-legend-inset` | `10px` | MEP-172 / MEP-174 › Address legend background box inset from group left | from spec |
+| `--size-form-field-group-legend-padding-start` | `8.5px` | MEP-172 / MEP-174 › legend text inset inside background box | from spec |
+| `--size-form-field-group-legend-padding-end` | `12.5px` | MEP-172 / MEP-174 › legend gap before top border resumes | from spec |
+| `--size-form-input-full-width` | `639px` | MEP-172 / MEP-174 › Description row control width (aligned with left inputs) | from spec |
+| `--size-form-description-height` | `34px` | MEP-172 / MEP-174 › Description textarea initial height in layout demo | from spec |
+| `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
+| `--size-form-address-radius` | `10px` | record-detail.md › Address frame › corner radius | from spec |
+| `--size-form-coordinate-gap` | `10px` | record-detail.md › Address frame › Latitude to Longitude gap | from spec |
+| `--color-form-clear-address` | `#a0a8b8` | record-detail.md › Address frame › Clear All ink | from spec |
+| `--size-form-description-width` | `639px` | record-detail.md › Description Information and textarea › x 553–1192 | from spec |
+| `--size-form-description-extra-gap` | `17px` | record-detail.md › Description Information and textarea › 17 px larger than standard section gap | from spec |
+| `--size-form-page-cancel-width` | `74px` | record-detail.md › Fixed title/action strip › Cancel x 1181–1255 | from spec |
+| `--size-form-page-save-new-width` | `119.5px` | record-detail.md › Fixed title/action strip › Save and New x 1263–1382.5 | from spec |
+| `--size-form-page-save-width` | `59.5px` | record-detail.md › Fixed title/action strip › Save x 1390.5–1450 | from spec |
+| `--size-form-description-rule-gap` | `40px` | record-detail.md › Description Information and textarea › bottom y 750.5 to rule y 790.5 | from spec |
 | `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
@@ -522,6 +563,8 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--color-record-arrow-disabled` | `#adb0b6` | record-detail.md › Record header › Pale previous chevron | from spec |
 | `--color-record-tab-selected` | `#ebedff` | record-detail.md › Canvas and tab row › Selected slice fill | from spec |
 | `--color-record-tab-border` | `#a3acff` | record-detail.md › Canvas and tab row › Selected slice border | from spec |
+| `--color-record-rail-toggle-shown` | `#dfe4ef` | record-detail.md › Canvas and tab row › Circular rail button fill (rail shown) | from spec |
+| `--color-record-rail-toggle-hidden-border` | `#e2e7ee` | record-detail.md › Hidden-rail layout › Rail toggle button › 1 px border | from spec |
 | `--size-record-header-height` | `73px` | record-detail.md › Record header › 123 − 50 | from spec |
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
@@ -545,6 +588,49 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
+| `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-terminal-fill` | `#ffecec` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-terminal-icon` | `#ff5d5a` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
+| `--color-status-check` | `#333333` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--radius-status-control` | `4px` | record-detail.md › Visual layout › Terminal control / menus |
+| `--size-status-card-height` | `68px` | record-detail.md › Visual layout › Status strip card |
+| `--size-status-card-inset` | `20px` | record-detail.md › Visual layout › Status strip card |
+| `--size-status-band-height` | `28px` | record-detail.md › Visual layout › Status ribbon chevrons |
+| `--size-status-chevron-tip` | `6px` | record-detail.md › Visual layout › Status ribbon chevrons / apex |
+| `--size-status-stage-inset` | `18px` | record-detail.md › Visual layout › Status ribbon chevrons / label inset (interim natural widths) |
+| `--size-status-label-gap` | `6.5px` | record-detail.md › Visual layout › Stage highlight and checkmark / icon to label |
+| `--size-status-stage-thumb` | `14px` | record-detail.md › Visual layout › Terminal control / icon height, nearest stage icon |
+| `--size-status-terminal-gap` | `11px` | record-detail.md › Visual layout › Status ribbon chevrons / terminal box gap |
+| `--size-status-terminal-width` | `52px` | record-detail.md › Visual layout › Terminal control |
+| `--size-status-terminal-height` | `27px` | record-detail.md › Visual layout › Terminal control |
+| `--size-status-terminal-icon-width` | `28.5px` | record-detail.md › Visual layout › Terminal control / icon ink |
+| `--size-status-terminal-icon-height` | `14px` | record-detail.md › Visual layout › Terminal control / icon ink |
+| `--size-status-scroll-width` | `20px` | record-detail.md › Visual layout › Status strip card / inset (interim scroll control width) |
+| `--size-status-stage-menu-width` | `207px` | record-detail.md › Visual layout › Stage dropdown panel |
+| `--size-status-stage-menu-height` | `244px` | record-detail.md › Visual layout › Stage dropdown panel |
+| `--size-status-stage-search-height` | `31px` | record-detail.md › Visual layout › Stage search input |
+| `--size-status-terminal-menu-width` | `215.5px` | record-detail.md › Visual layout › Terminal popover |
+| `--size-status-terminal-search-height` | `30.5px` | record-detail.md › Visual layout › Terminal search input |
+| `--size-status-pointer-width` | `17px` | record-detail.md › Visual layout › Upward pointer / caret |
+| `--size-status-pointer-height` | `8.5px` | record-detail.md › Visual layout › Upward pointer / caret |
+| `--size-status-pointer-right` | `18px` | record-detail.md › Visual layout › Upward pointer / caret / right inset |
+| `--size-status-option-height` | `35px` | record-detail.md › Visual layout › Stage option rows |
+| `--size-status-option-inset` | `31.5px` | record-detail.md › Visual layout › Stage option rows / Terminal options |
+| `--size-status-search-icon-inset` | `10px` | record-detail.md › Visual layout › Stage search input / nearest checkmark inset (interim) |
+| `--size-status-options-padding` | `5px` | record-detail.md › Visual layout › Stage highlight and checkmark / top gap |
+| `--size-status-check-inset` | `9px` | record-detail.md › Visual layout › Stage highlight and checkmark / left inset |
+| `--size-status-check-width` | `10px` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--size-status-check-height` | `6.5px` | record-detail.md › Visual layout › Stage highlight and checkmark |
+| `--size-status-group-inset` | `10.5px` | record-detail.md › Visual layout › Terminal group headers |
+| `--size-status-terminal-options-top` | `6px` | record-detail.md › Visual layout › Terminal group headers / top offset |
+| `--size-status-terminal-options-bottom` | `8px` | record-detail.md › Visual layout › Terminal options / panel bottom offset |
+| `--size-status-terminal-header-height` | `29.5px` | record-detail.md › Visual layout › Terminal options / header to option pitch |
+| `--size-status-terminal-option-height` | `29.5px` | record-detail.md › Visual layout › Terminal options / row pitch |
+| `--size-status-terminal-divider-top` | `8.5px` | record-detail.md › Visual layout › Terminal divider / offset after option row |
+| `--size-status-terminal-divider-bottom` | `6px` | record-detail.md › Visual layout › Terminal divider / next header offset |
+| `--size-status-demo-wide` | `1126px` | record-detail.md › Visual layout › Hidden-rail layout / Status strip card |
+| `--size-status-demo-narrow` | `906px` | record-detail.md › Visual layout › Record page / Status strip |
 
 ### Measured values that carry no token
 
@@ -729,3 +815,33 @@ Source: record-detail.md › Layout › Visual layout › Record page / More Opt
 
 These compact controls use the neighboring Status stage value typography role
 (`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
+
+The measured Clear All ink `#a0a8b8` on white is below AA. It remains at the
+reference value under ADR 0003 §8's newly measured pair workflow and is reported
+to CTO for the Module 1 board decision. This is not covered by the placeholder
+exception: the browser scan excludes only the text span, retaining its button.
+
+## Status ribbon picklist menu
+
+`PicklistMenu` owns the React Aria dialog, search and single-selection menu.
+Search receives focus; Arrow Down/Up enters the list, Enter selects, Escape or
+outside interaction closes and restores trigger focus. Groups are nonselectable
+section headers. All strings and stored values come from props.
+
+Measured status pairs also stay at their reference values: current-stage text
+`#5464F2` on `#EEEFFC` is 4.10:1, and the terminal icon `#FF5D5A` on `#FFECEC`
+is 2.65:1. They are below the AA text/control thresholds and are not covered by
+the placeholder/separator exception in ADR 0003 §8. No accessibility check is
+disabled. The CTO must carry these pairs to the board at the module gate.
+
+## Table scroll container
+
+`Table`'s wrapper is the only scroll container of its rows: it carries `overflow-auto` together
+with paint containment (`contain-paint`). A table whose min-content width is larger than the
+space left of it then scrolls inside that wrapper and nothing else. Without containment Chromium
+keeps the wrapper scrollable *and* still adds the clipped spill to the document, so a narrow
+screen gets a horizontal page range and the top bar and the rail slide sideways with it
+(MEP-211). Overlays opened from a cell, such as the role menu and the remove confirmation, are
+rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
+inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
+container's own scroll at a narrow viewport and at the measured desktop viewport.

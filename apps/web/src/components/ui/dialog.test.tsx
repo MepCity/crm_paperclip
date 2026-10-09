@@ -127,13 +127,12 @@ function renderConfirm(onConfirm: () => void | Promise<void>) {
       <Button>Delete record</Button>
       <ConfirmDialog
         title="Delete record"
+        message="This cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
-        variant="danger"
+        tone="danger"
         onConfirm={onConfirm}
-      >
-        This cannot be undone.
-      </ConfirmDialog>
+      />
     </DialogTrigger>,
   );
   return screen.getByRole("button", { name: "Delete record" });
