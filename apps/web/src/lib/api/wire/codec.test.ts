@@ -5,6 +5,7 @@ import type {
   Criteria,
   CriteriaPeriod,
   CriteriaToken,
+  CriteriaValue,
   FieldDataType,
   FieldDefinition,
   ListView,
@@ -206,6 +207,56 @@ describe("wire codec", () => {
       comparator: "less_equal",
       value: `\${DUEINDAYS}+${offset}`,
     });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
+    { token: "AGEINDAYS" as const, offset: 2, unit: "weeks" as const, wire: `\${AGEINWEEKS}+2` },
+    { token: "AGEINDAYS" as const, offset: 3, unit: "months" as const, wire: `\${AGEINMONTHS}+3` },
+    { token: "DUEINDAYS" as const, offset: 4, unit: "weeks" as const, wire: `\${DUEINWEEKS}+4` },
+    { token: "DUEINDAYS" as const, offset: 5, unit: "months" as const, wire: `\${DUEINMONTHS}+5` },
+    {
+      token: "RELATIVE" as const,
+      direction: "previous" as const,
+      count: 2,
+      unit: "days" as const,
+      wire: `\${PREVIOUS.DAYS}+2`,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "next" as const,
+      count: 1,
+      unit: "weeks" as const,
+      wire: `\${NEXT.WEEKS}+1`,
+    },
+  ])("round-trips interim datetime token %j", (entry) => {
+    const value: CriteriaValue =
+      entry.token === "RELATIVE"
+        ? {
+            token: "RELATIVE",
+            direction: entry.direction,
+            count: entry.count,
+            unit: entry.unit,
+          }
+        : { token: entry.token, offset: entry.offset, unit: entry.unit };
+    const criteria: Criteria = { field: "Created_Time", comparator: "equal", value };
+    expect(encodeCriteria(criteria)).toMatchObject({ value: entry.wire });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
+    `\${PREVIOUS.DAYS}+0`,
+    `\${NEXT.MONTHS}+1.5`,
+    `\${AGEINWEEKS}+1suffix`,
+  ])("rejects malformed interim datetime wire token %j", (value) => {
+    expect(() =>
+      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
+    ).toThrow(ValidationError);
+  });
+  it("round-trips calendar date strings unchanged", () => {
+    const criteria: Criteria = {
+      field: "Created_Time",
+      comparator: "between",
+      value: ["2026-01-04", "2026-01-05"],
+    };
     expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
   });
   it.each([

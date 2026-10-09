@@ -90,6 +90,13 @@ leaf/group body on `bulk` and `actions/count`; `field` carries `api_name` and
 - Existing `less_equal` also accepts a numeric value and the new day-offset
   token string `${DUEINDAYS}+N`. N is a nonnegative integer; the due window is
   strictly after now and inclusive at now + N complete days (N=0 is empty).
+  Interim week/month spellings `${AGEINWEEKS}+N`, `${AGEINMONTHS}+N`,
+  `${DUEINWEEKS}+N`, `${DUEINMONTHS}+N` share the port `unit` field on
+  `AGEINDAYS` / `DUEINDAYS`.
+- Interim relative windows use `equal` with `${PREVIOUS.DAYS|WEEKS|MONTHS}+N` or
+  `${NEXT.DAYS|WEEKS|MONTHS}+N` (count is a positive integer).
+- Interim calendar-day filters use strict `YYYY-MM-DD` strings for `equal`,
+  `less_than`, `greater_than`, `between`, and `not_between` on datetime fields.
 - Named periods use `equal` and one token family: `${PERIOD.TOMORROW}`,
   `${PERIOD.YESTERDAY}`, `${PERIOD.TILL_YESTERDAY}`,
   `${PERIOD.STARTING_TOMORROW}`, `${PERIOD.THIS_WEEK}`,

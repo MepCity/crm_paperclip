@@ -907,6 +907,207 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         records.map((record) => record.id),
       );
     });
+    it("panel datetime extended filters: units, relative, calendar dates and count parity", async () => {
+      const queryAt = new Date("2026-01-05T12:00:00.000Z");
+      let now = queryAt;
+      const adapter = await makeService(ctx, { now: () => now });
+      const marker = `Datetime-ext-${randomUUID()}`;
+      const stamps = [
+        "2025-12-29T00:00:00.000Z",
+        "2025-12-30T23:59:59.999Z",
+        "2026-01-04T00:00:00.000Z",
+        "2026-01-04T23:59:59.999Z",
+        "2026-01-05T00:00:00.000Z",
+        "2026-01-05T23:59:59.999Z",
+        "2026-01-06T00:00:00.000Z",
+        "2026-01-12T00:00:00.000Z",
+        "2026-02-01T00:00:00.000Z",
+        "2026-03-01T00:00:00.000Z",
+        "2024-02-29T00:00:00.000Z",
+        "2024-03-01T00:00:00.000Z",
+      ];
+      const records: RecordData[] = [];
+      for (const timestamp of stamps) {
+        now = new Date(timestamp);
+        records.push(await adapter.create("Leads", input({ Company: marker })));
+      }
+      now = queryAt;
+      const withCount = async (filters: Criteria, expected: string[]) => {
+        await assertPanelSet(adapter, marker, filters, expected);
+        const wrapped = {
+          groupOperator: "and" as const,
+          group: [{ field: "Company", comparator: "equal" as const, value: marker }, filters],
+        };
+        expect(await adapter.count("Leads", { viewId: defaultView.id, filters: wrapped })).toBe(
+          expected.length,
+        );
+      };
+      for (const [relative, period] of [
+        [
+          {
+            token: "RELATIVE" as const,
+            direction: "previous" as const,
+            count: 1,
+            unit: "days" as const,
+          },
+          { token: "PERIOD" as const, name: "YESTERDAY" as const },
+        ],
+        [
+          {
+            token: "RELATIVE" as const,
+            direction: "previous" as const,
+            count: 1,
+            unit: "weeks" as const,
+          },
+          { token: "PERIOD" as const, name: "PREVIOUS_WEEK" as const },
+        ],
+        [
+          {
+            token: "RELATIVE" as const,
+            direction: "next" as const,
+            count: 1,
+            unit: "days" as const,
+          },
+          { token: "PERIOD" as const, name: "TOMORROW" as const },
+        ],
+      ] as const) {
+        const relativeIds = (
+          await adapter.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 100,
+            filters: {
+              groupOperator: "and",
+              group: [
+                { field: "Company", comparator: "equal", value: marker },
+                { field: "Created_Time", comparator: "equal", value: relative },
+              ],
+            },
+          })
+        ).records.map((record) => record.id);
+        const periodIds = (
+          await adapter.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 100,
+            filters: {
+              groupOperator: "and",
+              group: [
+                { field: "Company", comparator: "equal", value: marker },
+                { field: "Created_Time", comparator: "equal", value: period },
+              ],
+            },
+          })
+        ).records.map((record) => record.id);
+        expect(relativeIds.sort()).toEqual(periodIds.sort());
+      }
+      await withCount({ field: "Created_Time", comparator: "equal", value: "2026-01-05" }, [
+        records[4]?.id as string,
+        records[5]?.id as string,
+      ]);
+      await withCount(
+        { field: "Created_Time", comparator: "less_than", value: "2026-01-05" },
+        stamps
+          .map((stamp, index) =>
+            Date.parse(stamp) < Date.parse("2026-01-05T00:00:00.000Z") ? index : -1,
+          )
+          .filter((index) => index >= 0)
+          .map((index) => records[index]?.id as string),
+      );
+      await withCount({ field: "Created_Time", comparator: "greater_than", value: "2026-01-05" }, [
+        records[6]?.id as string,
+        records[7]?.id as string,
+        records[8]?.id as string,
+        records[9]?.id as string,
+      ]);
+      await withCount(
+        { field: "Created_Time", comparator: "between", value: ["2026-01-04", "2026-01-05"] },
+        [
+          records[2]?.id as string,
+          records[3]?.id as string,
+          records[4]?.id as string,
+          records[5]?.id as string,
+        ],
+      );
+      await withCount(
+        { field: "Created_Time", comparator: "not_between", value: ["2026-01-04", "2026-01-05"] },
+        [
+          records[0]?.id as string,
+          records[1]?.id as string,
+          records[6]?.id as string,
+          records[7]?.id as string,
+          records[8]?.id as string,
+          records[9]?.id as string,
+          records[10]?.id as string,
+          records[11]?.id as string,
+        ],
+      );
+      await withCount({ field: "Created_Time", comparator: "equal", value: "2024-02-29" }, [
+        records[10]?.id as string,
+      ]);
+      await withCount(
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 2, unit: "days" },
+        },
+        [
+          records[2]?.id as string,
+          records[3]?.id as string,
+          records[4]?.id as string,
+          records[5]?.id as string,
+          records[6]?.id as string,
+          records[7]?.id as string,
+          records[8]?.id as string,
+          records[9]?.id as string,
+        ],
+      );
+      await withCount(
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "DUEINDAYS", offset: 1, unit: "weeks" },
+        },
+        [records[5]?.id as string, records[6]?.id as string, records[7]?.id as string],
+      );
+      now = new Date("2026-03-31T12:00:00.000Z");
+      const monthMarker = `Datetime-month-${randomUUID()}`;
+      const monthRecords: RecordData[] = [];
+      for (const timestamp of [
+        "2025-12-31T12:00:00.000Z",
+        "2026-03-30T12:00:00.000Z",
+        "2026-02-01T12:00:00.000Z",
+      ]) {
+        now = new Date(timestamp);
+        monthRecords.push(await adapter.create("Leads", input({ Company: monthMarker })));
+      }
+      now = new Date("2026-03-31T12:00:00.000Z");
+      await assertPanelSet(
+        adapter,
+        monthMarker,
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 1, unit: "months" },
+        },
+        [monthRecords[1]?.id as string],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Connected_To__s", comparator: "is_empty", value: null },
+        records.map((record) => record.id),
+      );
+      await validation(
+        service.list("Leads", {
+          viewId: defaultView.id,
+          page: 1,
+          perPage: 10,
+          filters: { field: "Connected_To__s", comparator: "equal", value: "x" },
+        }),
+        "filters",
+      );
+    });
     it("panel rejects invalid field / comparator / value combinations on list and count", async () => {
       const invalidCriteria = [
         { field: "Company", comparator: "unknown", value: "x" },
@@ -949,6 +1150,25 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
             value: { token, offset },
           })),
         ),
+        { field: "Created_Time", comparator: "equal", value: "2026-02-30" },
+        { field: "Created_Time", comparator: "equal", value: "2026-01-05T00:00:00.000Z" },
+        { field: "Created_Time", comparator: "between", value: ["2026-01-05", "2026-01-04"] },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE", direction: "previous", count: 0, unit: "days" },
+        },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE", direction: "sideways", count: 1, unit: "days" },
+        },
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 1, unit: "years" },
+        },
+        { field: "Connected_To__s", comparator: "contains", value: "x" },
       ] as unknown as Criteria[];
       for (const filters of invalidCriteria) {
         const query = { viewId: defaultView.id, page: 1, perPage: 10, filters };
