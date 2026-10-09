@@ -81,3 +81,5 @@ queries and every selected record query after success. On failure they preserve
 cache contents. Error decoding uses the HTTP status and code; body status is a
 string. A 400 DUPLICATE_DATA restores ConflictError, and validation maps retain
 all field messages. Remaining Interim choices are listed in ADR 0004 §5.
+
+`useHomeCurrency()` reads the organization home currency through `getHomeCurrency`, cached under `apiKeys.homeCurrency` inside the organization provider.

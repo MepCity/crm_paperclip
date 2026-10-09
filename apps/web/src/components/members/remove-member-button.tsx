@@ -23,9 +23,10 @@ export function RemoveMemberButton({
       </Button>
       <ConfirmDialog
         title={`Remove ${name}`}
+        message={`${name} will lose access to this organization.`}
         confirmLabel="Remove"
         cancelLabel="Cancel"
-        variant="danger"
+        tone="danger"
         onConfirm={async () => {
           report(null);
           const result = await onRemove();
@@ -35,9 +36,7 @@ export function RemoveMemberButton({
           }
           router.refresh();
         }}
-      >
-        {name} will lose access to this organization.
-      </ConfirmDialog>
+      />
     </DialogTrigger>
   );
 }

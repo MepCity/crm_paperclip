@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  CurrencyDefinition,
   ListQuery,
   ModuleApiName,
   ModuleMetadata,
@@ -12,6 +13,14 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { OrgMember } from "./http-record-service";
 import { useClientRecordService } from "./provider";
 import { apiKeys, countQueriesPrefix, listQueriesPrefix } from "./query-keys";
+
+export function useHomeCurrency() {
+  const service = useClientRecordService();
+  return useQuery<CurrencyDefinition>({
+    queryKey: apiKeys.homeCurrency,
+    queryFn: () => service.getHomeCurrency(),
+  });
+}
 
 export function useModule(module: ModuleApiName) {
   const service = useClientRecordService();

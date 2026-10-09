@@ -3,10 +3,12 @@ import RecordDetailCardsDemo from "@/components/records/detail/record-detail-car
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
+import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
+import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -14,6 +16,7 @@ import ButtonDemo from "@/components/ui/button.demo";
 import CardDemo from "@/components/ui/card.demo";
 import CheckboxDemo from "@/components/ui/checkbox.demo";
 import ComboBoxDemo from "@/components/ui/combo-box.demo";
+import ConfirmDialogDemo from "@/components/ui/confirm-dialog.demo";
 import DatePickerDemo from "@/components/ui/date-picker.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
 import DisclosureDemo from "@/components/ui/disclosure.demo";
@@ -44,6 +47,7 @@ export const demos: Record<string, React.ComponentType> = {
   "record-detail": RecordDetailDemo,
   "filter-panel": FilterPanelDemo,
   "filter-editors": FilterEditorsDemo,
+  "select-user-dialog": SelectUserDialogDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,
@@ -62,6 +66,7 @@ export const demos: Record<string, React.ComponentType> = {
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,
+  "confirm-dialog": ConfirmDialogDemo,
   disclosure: DisclosureDemo,
   menu: MenuDemo,
   table: TableDemo,
@@ -77,6 +82,7 @@ export const demos: Record<string, React.ComponentType> = {
   "empty-state": EmptyStateDemo,
   skeleton: SkeletonDemo,
   "list-chrome": ListChromeDemo,
+  "selection-bar": SelectionBarDemo,
   "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,

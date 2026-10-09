@@ -6,7 +6,7 @@ import "./form.css";
 export type FormRowColumn = "left" | "right" | "full";
 
 export interface FormRowProps {
-  label: string;
+  label: ReactNode;
   controlId: string;
   column: FormRowColumn;
   children: ReactNode;

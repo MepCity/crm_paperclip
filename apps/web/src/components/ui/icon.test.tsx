@@ -6,6 +6,7 @@ afterEach(cleanup);
 
 const expectedIcons = [
   "recordUser",
+  "avatarPerson",
   "recordPortraitSilhouette",
   "recordFormCaret",
   "recordChevron",
@@ -15,6 +16,7 @@ const expectedIcons = [
   "filterChevronDown",
   "filterChevronRight",
   "filterSearch",
+  "createRecordPlus",
   "building",
   "check",
   "chevronUp",

@@ -75,6 +75,17 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
       await expect(promise).rejects.toBeInstanceOf(ValidationError);
       await expect(promise).rejects.toMatchObject({ fieldErrors: { [field]: expect.any(Array) } });
     };
+    it("publishes the four home currency fields without exposing mutable state", async () => {
+      const currency = await service.getHomeCurrency();
+      expect(Object.keys(currency).sort()).toEqual(["isoCode", "name", "prefixSymbol", "symbol"]);
+      expect(currency.isoCode).toMatch(/^[A-Z]{3}$/);
+      expect(currency.symbol.trim().length).toBeGreaterThan(0);
+      expect(typeof currency.name).toBe("string");
+      expect(typeof currency.prefixSymbol).toBe("boolean");
+      const original = { ...currency };
+      currency.symbol = "changed";
+      expect(await service.getHomeCurrency()).toEqual(original);
+    });
     it("publishes consistent metadata, layouts and view definitions", async () => {
       expect(metadata.apiName).toBe("Leads");
       expect(metadata.singularLabel).toBe("Lead");
