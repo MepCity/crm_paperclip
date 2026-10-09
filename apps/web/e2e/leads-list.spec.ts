@@ -100,12 +100,12 @@ function isSettingsOrUsersRequest(request: CrmRequest): boolean {
   );
 }
 
-async function colorToken(page: import("@playwright/test").Page, token: string): Promise<string> {
+async function sizeToken(page: import("@playwright/test").Page, token: string): Promise<number> {
   return page.evaluate((name) => {
-    const probe = document.createElement("span");
-    probe.style.color = `var(${name})`;
+    const probe = document.createElement("div");
+    probe.style.height = `var(${name})`;
     document.body.append(probe);
-    const value = getComputedStyle(probe).color;
+    const value = parseFloat(getComputedStyle(probe).height);
     probe.remove();
     return value;
   }, token);
@@ -232,32 +232,103 @@ test.describe("Leads list page", () => {
   test("Sort By field dropdown matches the measured panel, rows and colours", async ({
     page,
   }, testInfo) => {
-    // list-views.md › Layout › Visual layout › Sort By field dropdown.
+    // list-views.md › Layout › Visual layout › Sort popover and Sort By field dropdown,
+    // both measured on a 1470 × 835 viewport. Coordinates and colours are the spec's literal
+    // values, so a token or an anchor that drifts away from them fails here. Text size and
+    // weight stay read from tokens (typography.md mapping).
+    const spec = {
+      /** "Outer box x 412.5–797.5, y 138–296" */
+      dialog: { x1: 412.5, y1: 138, x2: 797.5, y2: 296 },
+      /** "Both selectors sit at y 195–223: the first at x 443.5–593.5" */
+      selector: { x1: 443.5, y1: 195, x2: 593.5, y2: 223 },
+      /** "380 × 268 px popover (… x 443–823, y 222–490)" */
+      panel: { x1: 443, y1: 222, x2: 823, y2: 490 },
+      /** "scrollable list body 378 × 220 px (y 268–488)"; x is the panel inset by its border. */
+      list: { x1: 444, y1: 268, x2: 822, y2: 488 },
+      /** "white #FFFFFF surface, 1 px #CED0E1 border" */
+      surface: "rgb(255, 255, 255)",
+      border: "rgb(206, 208, 225)",
+      /** "option rows with text #313949, hover/selection fill #F0F4FC" */
+      ink: "rgb(49, 57, 73)",
+      fill: "rgb(240, 244, 252)",
+    };
+    const edges = (box: ElementBox) => ({
+      x: box.x,
+      y: box.y,
+      x2: box.x + box.width,
+      y2: box.y + box.height,
+      width: box.width,
+      height: box.height,
+    });
+    const offsets = (
+      box: ElementBox,
+      target: { x1: number; y1: number; x2: number; y2: number },
+    ) => ({
+      x: Math.round((box.x - target.x1) * 100) / 100,
+      y: Math.round((box.y - target.y1) * 100) / 100,
+      right: Math.round((box.x + box.width - target.x2) * 100) / 100,
+      bottom: Math.round((box.y + box.height - target.y2) * 100) / 100,
+    });
+    const expectSpecBox = (box: ElementBox, target: typeof spec.dialog) => {
+      expectEdge(box.x, target.x1);
+      expectEdge(box.y, target.y1);
+      expectEdge(box.x + box.width, target.x2);
+      expectEdge(box.y + box.height, target.y2);
+    };
+
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     await page.getByRole("button", { name: "Sort", exact: true }).click();
+    const dialog = page.locator(".record-sort-popover");
+    const dialogBox = requireBox(await dialog.boundingBox(), "Sort dialog");
+    expectSpecBox(dialogBox, spec.dialog);
+    expectEdge(dialogBox.width, 385);
+    expectEdge(dialogBox.height, 157);
     const sortBy = page.getByRole("button", { name: /Sort By/ });
+    const selectorBox = requireBox(await sortBy.boundingBox(), "Sort By selector");
+    expectSpecBox(selectorBox, spec.selector);
+
     await sortBy.click();
     const dropdown = page.locator(".record-sort-field-dropdown");
     const dropdownBox = requireBox(await dropdown.boundingBox(), "Sort By dropdown");
+    expectSpecBox(dropdownBox, spec.panel);
     expectEdge(dropdownBox.width, 380);
     expectEdge(dropdownBox.height, 268);
     await expect(dropdown).toHaveCSS("border-top-width", "1px");
-    await expect(dropdown).toHaveCSS("border-top-color", "rgb(206, 208, 225)");
-    await expect(dropdown).toHaveCSS("background-color", "rgb(255, 255, 255)");
-    const selectorBox = requireBox(await sortBy.boundingBox(), "Sort By selector");
+    await expect(dropdown).toHaveCSS("border-top-color", spec.border);
+    await expect(dropdown).toHaveCSS("background-color", spec.surface);
+    // The panel is left-aligned with the selector and covers its bottom border by 1 px.
     expectEdge(dropdownBox.x, selectorBox.x);
-    expectEdge(dropdownBox.y, selectorBox.y + selectorBox.height);
+    expectEdge(dropdownBox.y, selectorBox.y + selectorBox.height - 1);
 
     const list = page.getByRole("listbox", { name: "Sort By options" });
     const listBox = requireBox(await list.boundingBox(), "Sort By list body");
+    expectSpecBox(listBox, spec.list);
     expectEdge(listBox.width, 378);
     expectEdge(listBox.height, 220);
 
     const search = page.getByRole("textbox", { name: "Search fields" });
     const searchBox = requireBox(await search.boundingBox(), "Sort By search input");
+    // Interim: the spec measures the band, not the input. The band is the 46 px between the
+    // panel top and the list top minus the panel border; the input keeps the filter search
+    // height token and fills the band's content box, so it is centred in the remaining slack.
+    const band = page.locator(".record-sort-field-search");
+    const bandBox = requireBox(await band.boundingBox(), "Sort By search band");
+    const bandPadding = await band.evaluate((node) => {
+      const computed = getComputedStyle(node);
+      return {
+        left: parseFloat(computed.paddingLeft),
+        right: parseFloat(computed.paddingRight),
+      };
+    });
+    expectEdge(bandBox.height, 45);
+    expectEdge(bandBox.y, dropdownBox.y + 1);
+    expectEdge(listBox.y, bandBox.y + bandBox.height);
+    expectEdge(searchBox.height, await sizeToken(page, "--size-list-filter-search-height"));
+    expectEdge(searchBox.x, bandBox.x + bandPadding.left);
+    expectEdge(searchBox.x + searchBox.width, bandBox.x + bandBox.width - bandPadding.right);
     expect(searchBox.y).toBeGreaterThan(dropdownBox.y);
     expect(searchBox.y + searchBox.height).toBeLessThanOrEqual(listBox.y + 1);
 
@@ -270,15 +341,12 @@ test.describe("Leads list page", () => {
     await expect(options.nth(22)).toHaveText("Lead Name");
     await expect(options.last()).toHaveText("Website");
     const company = options.filter({ hasText: "Company" }).first();
-    const rowInk = await colorToken(page, "--color-text");
-    const rowFill = await colorToken(page, "--color-surface-selected");
-    const hoverFill = await colorToken(page, "--color-surface-hover");
-    await expect(company).toHaveCSS("color", rowInk);
+    await expect(company).toHaveCSS("color", spec.ink);
     // Nearest role in typography.md › List and detail text roles: the searchable option row
     // is drawn with the same regular size and weight as the filter operator list.
     await expectType(page, company, "--text-sm", "--font-weight-normal");
     await company.hover();
-    await expect(company).toHaveCSS("background-color", hoverFill);
+    await expect(company).toHaveCSS("background-color", spec.fill);
 
     const firstOptionBox = requireBox(await options.first().boundingBox(), "Sort By option row");
     const optionStyle = await options.first().evaluate((node) => {
@@ -294,13 +362,17 @@ test.describe("Leads list page", () => {
     });
     const measurements = {
       viewport: { width: 1470, height: 835 },
-      spec: "list-views.md › Layout › Visual layout › Sort By field dropdown",
-      panel: dropdownBox,
+      spec: "list-views.md › Layout › Visual layout › Sort popover / Sort By field dropdown",
+      specBoxes: spec,
+      dialog: { actual: edges(dialogBox), offsetFromSpec: offsets(dialogBox, spec.dialog) },
+      selector: { actual: edges(selectorBox), offsetFromSpec: offsets(selectorBox, spec.selector) },
+      panel: { actual: edges(dropdownBox), offsetFromSpec: offsets(dropdownBox, spec.panel) },
+      listBody: { actual: edges(listBox), offsetFromSpec: offsets(listBox, spec.list) },
       panelBorderWidth: "1px",
       panelBorderColor: await dropdown.evaluate((node) => getComputedStyle(node).borderTopColor),
       panelSurface: await dropdown.evaluate((node) => getComputedStyle(node).backgroundColor),
-      listBody: listBox,
       searchInput: searchBox,
+      searchBand: { box: bandBox, paddingInline: bandPadding, interim: true },
       optionRowHeight: firstOptionBox.height,
       optionRowCount: await options.count(),
       optionText: optionStyle,
@@ -318,7 +390,7 @@ test.describe("Leads list page", () => {
     await sortBy.click();
     await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveCSS(
       "background-color",
-      rowFill,
+      spec.fill,
     );
     await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveAttribute(
       "data-selected",
