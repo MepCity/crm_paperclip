@@ -365,7 +365,17 @@ test.describe("Leads list page", () => {
     const countBeforeNext = seen.length;
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
+    const bulkPage2 = page.waitForRequest((request) => {
+      if (request.method() !== "POST") return false;
+      try {
+        const url = new URL(request.url());
+        return url.pathname.endsWith("/Leads/bulk") && url.searchParams.get("page") === "2";
+      } catch {
+        return false;
+      }
+    });
     await next.click();
+    await bulkPage2;
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const afterNext = seen.slice(countBeforeNext);
     expect(afterNext.length).toBeGreaterThan(0);

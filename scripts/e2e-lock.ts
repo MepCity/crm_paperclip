@@ -1,8 +1,9 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export const DEFAULT_E2E_LOCK_DIR = "/tmp/crm-e2e.lock";
 const STALE_MS = 30 * 60 * 1000;
+const FRESH_PIDLESS_MS = 10_000;
 const POLL_MS = 2_000;
 const DEFAULT_WAIT_MS = 20 * 60 * 1000;
 
@@ -45,12 +46,22 @@ async function readLockInfo(dir: string): Promise<{ pid: number; startedAtMs: nu
   }
 }
 
+async function isPidlessLockOldEnough(dir: string): Promise<boolean> {
+  try {
+    const { mtimeMs } = await stat(dir);
+    return Date.now() - mtimeMs >= FRESH_PIDLESS_MS;
+  } catch {
+    return true;
+  }
+}
+
 async function tryCreateLock(dir: string): Promise<boolean> {
   try {
     await mkdir(dir);
     await writeFile(join(dir, "pid"), String(process.pid));
     await writeFile(join(dir, "startedAt"), String(Date.now()));
-    return true;
+    const info = await readLockInfo(dir);
+    return info?.pid === process.pid;
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
     if (code === "EEXIST") return false;
@@ -61,6 +72,7 @@ async function tryCreateLock(dir: string): Promise<boolean> {
 async function removeStaleLock(dir: string): Promise<void> {
   const info = await readLockInfo(dir);
   if (!info) {
+    if (!(await isPidlessLockOldEnough(dir))) return;
     await rm(dir, { recursive: true, force: true });
     return;
   }
@@ -82,11 +94,18 @@ export async function releaseE2eLock(): Promise<void> {
   }
 }
 
+export type AcquireE2eLockOptions = {
+  /** When true, stop waiting and return without holding the lock. */
+  shouldStop?: () => boolean;
+};
+
 /**
  * Waits for the machine-wide E2E lock. Returns a release function, or a no-op when
- * locking is disabled or the wait budget expired.
+ * locking is disabled, the wait budget expired, or lock setup failed.
  */
-export async function acquireE2eLock(): Promise<() => Promise<void>> {
+export async function acquireE2eLock(
+  options?: AcquireE2eLockOptions,
+): Promise<() => Promise<void>> {
   if (!isE2eLockEnabled()) return async () => {};
 
   const dir = e2eLockDir();
@@ -94,28 +113,40 @@ export async function acquireE2eLock(): Promise<() => Promise<void>> {
   const waitStart = Date.now();
   let lastLogMs = 0;
 
-  while (true) {
-    if (await tryCreateLock(dir)) {
-      return releaseE2eLock;
-    }
-    await removeStaleLock(dir);
-    if (await tryCreateLock(dir)) {
-      return releaseE2eLock;
-    }
+  const lockLoop = async (): Promise<(() => Promise<void>) | null> => {
+    while (true) {
+      if (options?.shouldStop?.()) return null;
 
-    const waitedMs = Date.now() - waitStart;
-    if (waitedMs >= waitMs) {
-      console.log("e2e: lock wait timed out; continuing without the machine-wide lock");
-      return async () => {};
-    }
+      if (await tryCreateLock(dir)) {
+        return releaseE2eLock;
+      }
+      await removeStaleLock(dir);
+      if (await tryCreateLock(dir)) {
+        return releaseE2eLock;
+      }
 
-    const info = await readLockInfo(dir);
-    const ownerPid = info?.pid ?? "?";
-    const elapsedSec = Math.floor(waitedMs / 1000);
-    if (lastLogMs === 0 || Date.now() - lastLogMs >= 60_000) {
-      console.log(`e2e: waiting for another run (pid ${ownerPid}, ${elapsedSec} s)`);
-      lastLogMs = Date.now();
+      const waitedMs = Date.now() - waitStart;
+      if (waitedMs >= waitMs) {
+        console.log("e2e: lock wait timed out; continuing without the machine-wide lock");
+        return async () => {};
+      }
+
+      const info = await readLockInfo(dir);
+      const ownerPid = info?.pid ?? "?";
+      const elapsedSec = Math.floor(waitedMs / 1000);
+      if (lastLogMs === 0 || Date.now() - lastLogMs >= 60_000) {
+        console.log(`e2e: waiting for another run (pid ${ownerPid}, ${elapsedSec} s)`);
+        lastLogMs = Date.now();
+      }
+      await sleep(POLL_MS);
     }
-    await sleep(POLL_MS);
+  };
+
+  try {
+    const release = await lockLoop();
+    return release ?? (async () => {});
+  } catch {
+    console.log("e2e: could not use machine-wide lock; continuing without it");
+    return async () => {};
   }
 }

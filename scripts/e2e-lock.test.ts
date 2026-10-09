@@ -89,4 +89,52 @@ describe("e2e machine-wide lock", () => {
     expect(isLockStale(999999999, Date.now())).toBe(true);
     expect(isLockStale(process.pid, Date.now() - STALE_MS - 1)).toBe(true);
   });
+
+  it("does not take over a fresh lock directory without pid files", async () => {
+    const fs = await import("node:fs/promises");
+    await fs.mkdir(lockDir);
+    process.env.MEP_E2E_LOCK_WAIT_MS = "80";
+
+    const release = await acquireE2eLock();
+    expect(release).toBeTypeOf("function");
+    await release();
+    await expect(fs.access(lockDir)).resolves.toBeUndefined();
+  });
+
+  it("takes over a pid-less lock directory after the grace period", async () => {
+    const fs = await import("node:fs/promises");
+    await fs.mkdir(lockDir);
+    const elevenSecondsAgo = new Date(Date.now() - 11_000);
+    await fs.utimes(lockDir, elevenSecondsAgo, elevenSecondsAgo);
+
+    const release = await acquireE2eLock();
+    await expect(fs.readFile(join(lockDir, "pid"), "utf8")).resolves.toBe(String(process.pid));
+    await release();
+  });
+
+  it("continues without a lock when the lock parent path is missing", async () => {
+    process.env.MEP_E2E_LOCK_DIR = join(lockRoot, "missing", "nested", "lock");
+    const release = await acquireE2eLock();
+    expect(release).toBeTypeOf("function");
+    await release();
+  });
+
+  it("stops waiting when shouldStop becomes true", async () => {
+    const fs = await import("node:fs/promises");
+    await fs.mkdir(lockDir);
+    await fs.writeFile(join(lockDir, "pid"), String(process.pid + 1));
+    await fs.writeFile(join(lockDir, "startedAt"), String(Date.now()));
+    vi.spyOn(process, "kill").mockImplementation(() => {
+      throw Object.assign(new Error("alive"), { code: "EPERM" });
+    });
+
+    let stop = false;
+    setTimeout(() => {
+      stop = true;
+    }, 40);
+    const release = await acquireE2eLock({ shouldStop: () => stop });
+    expect(release).toBeTypeOf("function");
+    await release();
+    await expect(fs.access(lockDir)).resolves.toBeUndefined();
+  });
 });
