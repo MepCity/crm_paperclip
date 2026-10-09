@@ -287,13 +287,20 @@ what the "no colour constants" rule forbids.
 | `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
 | `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
 | `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-details-wrapped-row-pitch` | `60px` | record-detail.md › Details value wrapping › two-line value line 1 to next row label | from spec |
 | `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
 | `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
 | `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
 | `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
 | `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
-| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
-| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
+| `--size-detail-details-sections-margin-top` | `18.25px` | record-detail.md › Details divider & headings › divider bottom y 609 to first section heading cap y 631 (22 px to cap minus 3.75 px cap inset) | from spec |
+| `--size-detail-section-title-margin-block` | `0 32.5px` | record-detail.md › Details divider & headings › section heading baseline y 641.5 to first field label text top y 681.5 (40 px) minus 7.5 px line-box trim | derived from spec |
+| `--size-detail-audit-line-pitch` | `18.5px` | record-detail.md › Details Created By / Modified By › cap-to-cap line pitch | from spec |
+| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped value cap-to-cap pitch | from spec |
+| `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
+| `--size-detail-description-label-extend` | `39.5px` | record-detail.md › Details full-width rows › Description label extends past x 701 label boundary | from spec |
+| `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |

@@ -18,7 +18,12 @@ const DETAILS_VALUE_START_RIGHT = 618.5;
 const DETAILS_LABEL_VALUE_GAP = 36.5;
 const DETAILS_ROW_PITCH = 44;
 const DETAILS_DIVIDER_TOP = 43.5;
+const DETAILS_SECTION_TITLE_CAP_TOP = 66.5;
 const DETAILS_FIRST_LABEL_TEXT_TOP = 117;
+const DETAILS_AUDIT_LINE_PITCH = 18.5;
+const DETAILS_MULTILINE_LINE_PITCH = 15.5;
+const DETAILS_TWO_LINE_ROW_PITCH = 60;
+const DETAILS_PENCIL_SIZE = 11.5;
 const CAP_HEIGHT = 10.5;
 const LINE_HEIGHT = 18;
 
@@ -186,6 +191,91 @@ test.describe("record detail cards visual layout", () => {
     const sectionTitle = details.getByRole("heading", { name: "Lead Information" });
     await expect(sectionTitle).toHaveCSS("color", await colorToken(page, "--color-text-strong"));
     await expectType(page, sectionTitle, "--text-md", "--font-weight-bold");
+    const sectionTitleBox = await sectionTitle.boundingBox();
+    expect(sectionTitleBox).not.toBeNull();
+    const sectionTitleCapTop = labelTextTop({ y: sectionTitleBox?.y ?? 0 }) - (detailsBox?.y ?? 0);
+    expect(Math.abs(sectionTitleCapTop - DETAILS_SECTION_TITLE_CAP_TOP)).toBeLessThanOrEqual(1);
+
+    const modifiedByRow = leftColumn.locator('[data-detail-field="Modified_By"]');
+    const modifiedByName = modifiedByRow.getByText("Sam Rivera", { exact: true });
+    const modifiedByTimestamp = modifiedByRow.locator(".detail-audit-timestamp");
+    const [modifiedNameBox, modifiedTimestampBox] = await Promise.all([
+      modifiedByName.boundingBox(),
+      modifiedByTimestamp.boundingBox(),
+    ]);
+    expect(modifiedNameBox).not.toBeNull();
+    expect(modifiedTimestampBox).not.toBeNull();
+    const modifiedNameCap = labelTextTop({ y: modifiedNameBox?.y ?? 0 });
+    const modifiedTimestampCap = labelTextTop({ y: modifiedTimestampBox?.y ?? 0 });
+    expect(
+      Math.abs(modifiedTimestampCap - modifiedNameCap - DETAILS_AUDIT_LINE_PITCH),
+    ).toBeLessThanOrEqual(1);
+    await expect(modifiedByTimestamp).toHaveCSS("color", await colorToken(page, "--color-text"));
+
+    const leadNameValue = rightColumn.getByText(
+      "Northwind Trading Company International Division Regional Procurement Office West Coast",
+      {
+        exact: true,
+      },
+    );
+    const leadNameLines = await leadNameValue.evaluate((node) => {
+      const range = document.createRange();
+      const text = node.firstChild;
+      if (!text || text.nodeType !== Node.TEXT_NODE) {
+        return null;
+      }
+      const content = text.textContent ?? "";
+      const words = content.split(" ");
+      const firstLine = words.slice(0, 4).join(" ");
+      const secondLineStart = firstLine.length + 1;
+      range.setStart(text, 0);
+      range.setEnd(text, firstLine.length);
+      const line1Top = range.getBoundingClientRect().top;
+      range.setStart(text, secondLineStart);
+      range.setEnd(text, content.length);
+      const line2Top = range.getBoundingClientRect().top;
+      return { line1Top, line2Top };
+    });
+    expect(leadNameLines).not.toBeNull();
+    if (leadNameLines) {
+      expect(
+        Math.abs(leadNameLines.line2Top - leadNameLines.line1Top - DETAILS_MULTILINE_LINE_PITCH),
+      ).toBeLessThanOrEqual(1);
+    }
+    const leadNameRow = rightColumn.locator('[data-detail-field="Lead_Name"]');
+    const companyLabel = rightColumn.getByText("Company", { exact: true });
+    const [leadNameValueBox, companyLabelBox] = await Promise.all([
+      leadNameRow.locator(".detail-field-value").boundingBox(),
+      companyLabel.boundingBox(),
+    ]);
+    expect(leadNameValueBox).not.toBeNull();
+    expect(companyLabelBox).not.toBeNull();
+    const leadNameLine1Cap = labelTextTop({ y: leadNameValueBox?.y ?? 0 });
+    const companyLabelTop = labelTextTop({ y: companyLabelBox?.y ?? 0 });
+    expect(
+      Math.abs(companyLabelTop - leadNameLine1Cap - DETAILS_TWO_LINE_ROW_PITCH),
+    ).toBeLessThanOrEqual(1);
+
+    const ratingRow = rightColumn.locator('[data-detail-field="Rating"]');
+    await ratingRow.hover();
+    const pencil = ratingRow.getByRole("button", { name: "Edit Rating" });
+    await expect(pencil).toBeVisible();
+    const ratingLabel = ratingRow.getByText("Rating", { exact: true });
+    const [pencilBox, ratingLabelBox] = await Promise.all([
+      pencil.boundingBox(),
+      ratingLabel.boundingBox(),
+    ]);
+    expect(pencilBox).not.toBeNull();
+    expect(ratingLabelBox).not.toBeNull();
+    expect(Math.abs((pencilBox?.width ?? 0) - DETAILS_PENCIL_SIZE)).toBeLessThanOrEqual(1);
+    expect(Math.abs((pencilBox?.height ?? 0) - DETAILS_PENCIL_SIZE)).toBeLessThanOrEqual(1);
+    const ratingLabelCap = labelTextTop({ y: ratingLabelBox?.y ?? 0 });
+    expect(Math.abs((pencilBox?.y ?? 0) - (ratingLabelCap - 1.5))).toBeLessThanOrEqual(1);
+    await expect(pencil).toHaveCSS("color", await colorToken(page, "--color-text-muted"));
+
+    const addressSection = details.locator(".detail-details-sections > div").nth(1);
+    const descriptionRow = addressSection.locator(".detail-details-row-description");
+    await expect(descriptionRow).toHaveCount(1);
 
     const longRow = rightColumn.locator('[data-detail-field="Description"]');
     const shortRow = leftColumn.locator('[data-detail-field="Title"]');

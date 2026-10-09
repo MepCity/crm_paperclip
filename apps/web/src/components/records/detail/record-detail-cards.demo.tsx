@@ -66,7 +66,20 @@ const leadInfoLeft = [
 ];
 
 const leadInfoRight = [
+  {
+    column: "right" as const,
+    field: field("Lead_Name", "Lead Name", "text"),
+    value:
+      "Northwind Trading Company International Division Regional Procurement Office West Coast",
+  },
   { column: "right" as const, field: field("Company", "Company", "text"), value: "Example Corp" },
+  {
+    column: "right" as const,
+    field: field("Rating", "Rating", "picklist", {
+      picklist: [{ storedValue: "none", displayValue: "-None-" }],
+    }),
+    value: "",
+  },
   {
     column: "right" as const,
     field: field("Website", "Website", "website"),
@@ -93,6 +106,7 @@ export default function RecordDetailCardsDemo() {
           <DetailsCard
             ownerNames={ownerNames}
             format={DEFAULT_FORMAT}
+            onEdit={() => undefined}
             sections={[
               {
                 title: "Lead Information",
@@ -113,6 +127,11 @@ export default function RecordDetailCardsDemo() {
                     column: "full",
                     field: field("Address", "Address", "textarea"),
                     value: "100 Market St, Springfield, IL 62701, United States",
+                  },
+                  {
+                    column: "full",
+                    field: field("Description", "Description", "textarea"),
+                    value: "",
                   },
                 ],
               },

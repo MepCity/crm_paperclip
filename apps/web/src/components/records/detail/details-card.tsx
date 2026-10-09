@@ -117,7 +117,9 @@ function SectionFields({
           ownerNames={ownerNames}
           format={format}
           onEdit={onEdit}
-          layout="details-full"
+          layout={
+            entry.field.apiName === "Description" ? "details-full-description" : "details-full"
+          }
         />
       ))}
     </>
@@ -135,7 +137,7 @@ function FieldEntry({
   ownerNames?: Readonly<Record<string, string>>;
   format: FormatOptions;
   onEdit?: (apiName: string) => void;
-  layout?: "details" | "details-full";
+  layout?: "details" | "details-full" | "details-full-description";
 }) {
   return (
     <DetailFieldRow

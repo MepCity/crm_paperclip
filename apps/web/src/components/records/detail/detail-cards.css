@@ -44,7 +44,7 @@
   display: flex;
   min-width: 0;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0;
 }
 
 .detail-business-row {
@@ -95,6 +95,7 @@
 
 .detail-section-title {
   margin-block: var(--size-detail-section-title-margin-block);
+  line-height: var(--size-list-line-height);
   font-size: var(--text-md);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-strong);
@@ -121,12 +122,28 @@
   min-height: var(--size-detail-details-row-pitch);
 }
 
+.detail-details-row[data-detail-wrapped="true"] {
+  min-height: var(--size-detail-details-wrapped-row-pitch);
+}
+
 .detail-details-row > .detail-field-label {
   grid-column: 1;
 }
 
 .detail-details-row > .detail-field-value-wrap {
   grid-column: 3;
+}
+
+.detail-details-row .detail-field-value-wrap > .detail-field-value,
+.detail-details-row-full .detail-field-value-wrap > .detail-field-value {
+  line-height: var(--size-detail-multiline-line-pitch);
+}
+
+.detail-details-row .detail-field-value-wrap > .detail-field-value:has(.detail-audit-timestamp),
+.detail-details-row-full
+  .detail-field-value-wrap
+  > .detail-field-value:has(.detail-audit-timestamp) {
+  line-height: var(--size-list-line-height);
 }
 
 .detail-details-row-full {
@@ -147,10 +164,23 @@
   grid-column: 3 / -1;
 }
 
+.detail-details-row-description > .detail-field-label {
+  width: var(--size-detail-description-label-width);
+  justify-self: end;
+  margin-inline-end: calc(-1 * var(--size-detail-description-label-extend));
+}
+
 .detail-field-edit {
   margin-inline-start: auto;
+  margin-block-start: calc(
+    (var(--size-list-line-height) - 10.5px) /
+    2 -
+    var(--size-detail-field-pencil-above-label-cap)
+  );
   flex-shrink: 0;
   display: inline-flex;
+  width: var(--size-detail-field-pencil-size);
+  height: var(--size-detail-field-pencil-size);
   padding: 0;
   border: 0;
   background: transparent;
@@ -159,17 +189,29 @@
   cursor: pointer;
 }
 
+.detail-field-edit svg {
+  width: 100%;
+  height: 100%;
+}
+
 .detail-field-value-wrap:hover .detail-field-edit,
 .detail-field-value-wrap:focus-within .detail-field-edit {
   opacity: 1;
 }
 
-.detail-audit-timestamp {
+.detail-details-row .detail-field-value .detail-audit-timestamp,
+.detail-details-row-full .detail-field-value .detail-audit-timestamp {
   display: block;
+  margin-block-start: calc(var(--size-detail-audit-line-pitch) - var(--size-list-line-height));
 }
 
 .detail-multiline {
   white-space: pre-wrap;
+}
+
+.detail-details-row .detail-multiline,
+.detail-details-row-full .detail-multiline {
+  line-height: var(--size-detail-multiline-line-pitch);
 }
 
 .detail-last-update {
