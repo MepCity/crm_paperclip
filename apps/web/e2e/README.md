@@ -43,4 +43,6 @@ Several agents may run `verify` on the same host. The E2E driver (`scripts/e2e.t
 | `MEP_E2E_LOCK_DIR` | `/tmp/crm-e2e.lock` | Lock directory (use a dedicated path in tests). |
 | `MEP_E2E_LOCK_WAIT_MS` | `1200000` (20 min) | Max wait for the lock; then the run continues without it. |
 
+The default wait budget fits under the merge bot's 45-minute `verify` ceiling (`check` + unit tests + wait + build + Playwright); raise it only if the full pipeline still stays below that limit.
+
 Playwright assertions use a **30s** default expect timeout (`playwright.config.ts`). Per-call timeouts in specs (for example `{ timeout: 50 }`) are unchanged.

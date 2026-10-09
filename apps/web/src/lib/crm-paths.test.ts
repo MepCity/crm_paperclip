@@ -4,6 +4,7 @@ import {
   moduleCreatePath,
   moduleListCustomPath,
   moduleListDefaultPath,
+  moduleRecordEditPath,
   moduleRecordPath,
   moduleTabPath,
   orgBasePath,
@@ -20,6 +21,7 @@ describe("crm-paths", () => {
       "/crm/acme/tab/Leads/custom-view/converted-leads/list",
     );
     expect(moduleRecordPath("acme", "Leads", "lead-1")).toBe("/crm/acme/tab/Leads/lead-1");
+    expect(moduleRecordEditPath("acme", "Leads", "lead-1")).toBe("/crm/acme/tab/Leads/lead-1/edit");
     expect(moduleCreatePath("acme", "Leads")).toBe("/crm/acme/tab/Leads/create");
   });
 

@@ -3,6 +3,7 @@ import RecordDetailCardsDemo from "@/components/records/detail/record-detail-car
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
+import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
@@ -44,6 +45,7 @@ export const demos: Record<string, React.ComponentType> = {
   "record-detail": RecordDetailDemo,
   "filter-panel": FilterPanelDemo,
   "filter-editors": FilterEditorsDemo,
+  "select-user-dialog": SelectUserDialogDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,

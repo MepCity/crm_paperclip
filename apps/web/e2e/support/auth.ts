@@ -33,7 +33,7 @@ export async function signUpNewUser(
   return credentials;
 }
 
-/** Submits the sign-in form. Pass `next` to start from a destination query. */
+/** Signs in through the form and waits until the page leaves /sign-in. Pass `next` to start from a destination query. A sign-in that must fail fills the form in the test instead. */
 export async function signIn(
   page: Page,
   credentials: Pick<AuthCredentials, "email" | "password">,
