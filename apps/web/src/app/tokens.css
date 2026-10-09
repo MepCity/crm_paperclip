@@ -139,6 +139,7 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   --radius-form-control: 5px;
+  --radius-form-field-group: 10px;
   --radius-create-menu: 4px;
   --radius-create-menu-search: 4px;
 
@@ -487,8 +488,8 @@
   --size-form-first-title-center: 30px;
   --size-form-first-content-top: 63px;
   --size-form-section-gap: 55.5px;
-  --size-form-section-title-gap: 28px;
-  --size-form-section-title-box-trim: 4px;
+  --size-form-section-title-center-above: 61px;
+  --size-form-section-title-center-below: 33px;
   --size-form-portrait: 48px;
   --size-form-label-column-left: 172px;
   --size-form-label-column-right: 221.5px;
@@ -504,14 +505,16 @@
   --size-form-control-padding-inline: 10px;
   --size-form-control-padding-block: 8px;
   --size-form-action-height: 32px;
-  --size-form-action-gap: 10px;
+  --size-form-action-gap: 8px;
   --size-form-action-padding-inline: 14.5px;
-  --size-form-field-group-padding-end: 16px;
-  --size-form-field-group-body-top: 31px;
-  --size-form-field-group-legend-inset: 18.5px;
-  --size-form-field-group-legend-padding: 12.5px;
-  /* Description textarea height is not measurable in the capture; demo placeholder only. */
-  --size-form-description-height: 80px;
+  --size-form-field-group-padding-end: 15px;
+  --size-form-field-group-body-top: 30px;
+  --size-form-field-group-margin-bottom: 17px;
+  --size-form-field-group-legend-inset: 10px;
+  --size-form-field-group-legend-padding-start: 8.5px;
+  --size-form-field-group-legend-padding-end: 12.5px;
+  --size-form-input-full-width: 639px;
+  --size-form-description-height: 34px;
   /* record-detail.md › Address frame; Description Information and textarea. */
   --size-form-address-footer-bottom: 15px;
   --size-form-address-radius: 10px;

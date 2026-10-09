@@ -11,9 +11,6 @@
   padding-inline-end: calc(var(--size-form-field-group-padding-end) - 1px);
   border-radius: var(--size-form-address-radius);
 }
-.leads-form-page .record-form-section[data-record-form-section-layout="single"]:not(:first-child) {
-  margin-top: calc(var(--size-form-section-gap) + var(--size-form-description-extra-gap));
-}
 .leads-form-page [data-form-type="textarea"] .record-form-row__control {
   max-width: var(--size-form-description-width);
 }
@@ -66,10 +63,4 @@
 }
 .record-form-label-line {
   display: block;
-}
-
-.leads-form-page
-  .record-form-section[data-record-form-section-layout="single"]:not(:first-child)
-  [data-form-type="textarea"] {
-  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
 }
