@@ -200,7 +200,9 @@ test("dirty cancel opens unsaved dialog and Stay Here keeps the form", async () 
   const user = userEvent.setup();
   await user.type(screen.getByRole("textbox", { name: "Company" }), "Draft");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(screen.getByRole("alertdialog", { name: "You have not saved your changes." })).toBeTruthy();
+  expect(
+    screen.getByRole("alertdialog", { name: "You have not saved your changes." }),
+  ).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Stay Here" }));
   expect(screen.getByRole("heading", { name: "Create Lead" })).toBeTruthy();
   expect(navigate).not.toHaveBeenCalled();

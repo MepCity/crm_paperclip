@@ -19,6 +19,8 @@ export function UnsavedChangesDialog({ isOpen, onOpenChange, onLeave }: UnsavedC
       confirmLabel="Yes, Leave Page"
       tone="danger"
       onConfirm={onLeave}
+      cancelClassName="min-w-(--size-unsaved-dialog-stay-width)"
+      confirmClassName="min-w-(--size-unsaved-dialog-leave-width)"
     />
   );
 }

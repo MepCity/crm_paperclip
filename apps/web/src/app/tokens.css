@@ -367,6 +367,8 @@
   --size-confirm-dialog-title-gap: 18.5px;
   --size-confirm-dialog-message-actions-gap: 30.5px;
   --size-confirm-dialog-actions-gap: 10.5px;
+  --size-unsaved-dialog-stay-width: 91px;
+  --size-unsaved-dialog-leave-width: 130.5px;
 
   /* List popovers */
   --size-popover-view-width: 128px;

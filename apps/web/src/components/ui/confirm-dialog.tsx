@@ -15,6 +15,8 @@ export interface ConfirmDialogProps {
   onConfirm: () => void | Promise<void>;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  cancelClassName?: string;
+  confirmClassName?: string;
 }
 
 function isPromise(value: void | Promise<void>): value is Promise<void> {
@@ -33,6 +35,8 @@ function ConfirmDialogBody({
   close,
   descriptionId,
   onPendingChange,
+  cancelClassName,
+  confirmClassName,
 }: Omit<ConfirmDialogProps, "isOpen" | "onOpenChange"> & {
   message: string;
   tone: "danger" | "default";
@@ -84,6 +88,7 @@ function ConfirmDialogBody({
           ref={cancelRef}
           variant="secondary"
           size="record"
+          className={cancelClassName}
           onPress={close}
           isDisabled={disabled}
         >
@@ -92,6 +97,7 @@ function ConfirmDialogBody({
         <Button
           variant={confirmVariant}
           size="record"
+          className={confirmClassName}
           isPending={pending}
           isDisabled={disabled}
           onPress={() => {
@@ -132,6 +138,8 @@ export function ConfirmDialog({
   onConfirm,
   isOpen,
   onOpenChange,
+  cancelClassName,
+  confirmClassName,
 }: ConfirmDialogProps) {
   const descriptionId = useId();
   const [pending, setPending] = useState(false);
@@ -167,6 +175,8 @@ export function ConfirmDialog({
               close={close}
               descriptionId={descriptionId}
               onPendingChange={setPending}
+              cancelClassName={cancelClassName}
+              confirmClassName={confirmClassName}
             />
           )}
         </AriaDialog>

@@ -8,6 +8,21 @@ import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 import { expectType } from "./support/typography";
 
+function px(value: string) {
+  return Number.parseFloat(value);
+}
+
+async function tokenLength(page: Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("div");
+    probe.style.width = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).width;
+    probe.remove();
+    return value;
+  }, token);
+}
+
 async function openCreate(page: Page) {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -121,15 +136,28 @@ test("validation and unsaved dialog visuals match record-detail tokens", async (
   await expect(message).toHaveCSS("color", "rgb(255, 93, 90)");
   await expectType(page, message, "--text-sm", "--font-weight-normal");
   await expect(frame).toHaveCSS("border-top-color", "rgb(255, 93, 90)");
+  await expect(frame).toHaveCSS("border-top-width", "1px");
+  await expect(frame).toHaveCSS("border-right-width", "1px");
+  await expect(frame).toHaveCSS("border-bottom-width", "1px");
+  await expect(frame).toHaveCSS("border-left-width", "1px");
   await page.getByRole("textbox", { name: "Company", exact: true }).fill("Dirty");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   const dialog = page.getByRole("alertdialog");
-  const modalBox = await dialog.evaluate((element) => {
-    const modal = element.parentElement;
-    return modal ? modal.getBoundingClientRect() : null;
-  });
+  const panel = dialog.locator("xpath=..");
+  const modalBox = await panel.boundingBox();
   if (!modalBox) throw new Error("Missing dialog");
-  expectWithin1(modalBox.width, 400);
+  const dialogWidth = px(await tokenLength(page, "--size-dialog-width"));
+  expectWithin1(modalBox.width, dialogWidth);
+  const cornerRadius = px(await tokenLength(page, "--radius-create-menu"));
+  await expect(panel).toHaveCSS("border-radius", `${cornerRadius}px`);
+  const title = dialog.getByRole("heading");
+  const titleBox = await title.boundingBox();
+  if (!titleBox) throw new Error("Missing dialog title");
+  const paddingTop = px(await tokenLength(page, "--size-confirm-dialog-padding-block-start"));
+  const paddingInline = px(await tokenLength(page, "--size-confirm-dialog-padding-inline"));
+  const paddingBottom = px(await tokenLength(page, "--size-confirm-dialog-padding-block-end"));
+  expectWithin1(titleBox.y - modalBox.y, paddingTop);
+  expectWithin1(titleBox.x - modalBox.x, paddingInline);
   const backdropAlpha = await page.evaluate(() => {
     const dialog = document.querySelector('[role="alertdialog"]');
     let node = dialog?.parentElement ?? null;
@@ -149,7 +177,14 @@ test("validation and unsaved dialog visuals match record-detail tokens", async (
   if (!stayBox || !leaveBox) throw new Error("Missing dialog actions");
   expectWithin1(stayBox.height, 32);
   expectWithin1(leaveBox.height, 32);
+  const stayWidth = px(await tokenLength(page, "--size-unsaved-dialog-stay-width"));
+  const leaveWidth = px(await tokenLength(page, "--size-unsaved-dialog-leave-width"));
+  expectWithin1(stayBox.width, stayWidth);
+  expectWithin1(leaveBox.width, leaveWidth);
   expectWithin1(leaveBox.x - (stayBox.x + stayBox.width), 10.5);
+  expectWithin1(modalBox.y + modalBox.height - (leaveBox.y + leaveBox.height), paddingBottom);
+  await expect(stay).toHaveCSS("border-top-width", "1px");
+  await expect(stay).toHaveCSS("border-top-color", "rgb(213, 216, 233)");
 });
 
 test("dirty cancel opens unsaved dialog; Stay Here and Leave Page behave correctly", async ({
