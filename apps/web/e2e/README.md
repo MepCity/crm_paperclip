@@ -30,3 +30,5 @@ corepack pnpm test:e2e
 ```
 
 That builds the app, starts a throwaway database, and runs Playwright.
+
+Pass extra Playwright CLI arguments after the script name (for example `corepack pnpm test:e2e auth.spec.ts --repeat-each=10`).

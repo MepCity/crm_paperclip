@@ -25,7 +25,8 @@ const expectWithinOnePx = (actual: number, expected: number) => {
 };
 
 test("filter panel matches the scoped Visual layout measurements", async ({ page }, testInfo) => {
-  // Full-gallery axe after measurements can exceed 90s once more demos land on /dev/ui.
+  // Detailed geometry checks plus the growing gallery's accessibility scan
+  // use the gallery smoke test budget; keep every measured threshold intact.
   test.setTimeout(180_000);
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "filter panel", exact: true });
@@ -285,13 +286,13 @@ test("filter demo exposes closed, searched, selected and disabled states", async
   await demo.getByText("Recent samples", { exact: true }).click();
   await expect(recent).toBeChecked();
   await expect(demo.getByRole("status")).toHaveText("Selected: recent");
-  // Selected appearance was not measured: preserve the primitive's prior 16 px / 1 px style.
+  // list-views.md > Checked filter checkbox: 15 px / 2 px in the scoped filter variant.
   const checkedBox = demo
     .getByRole("listitem")
     .filter({ hasText: "Recent samples" })
     .locator('span[aria-hidden="true"]');
-  await expect(checkedBox).toHaveCSS("width", "16px");
-  await expect(checkedBox).toHaveCSS("border-top-width", "1px");
+  await expect(checkedBox).toHaveCSS("width", "15px");
+  await expect(checkedBox).toHaveCSS("border-top-width", "2px");
   const search = demo.getByRole("textbox", { name: "Search filter choices" });
   await search.fill("CoD");
   await expect(demo.getByRole("checkbox")).toHaveCount(1);

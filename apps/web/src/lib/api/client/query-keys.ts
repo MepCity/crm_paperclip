@@ -14,6 +14,16 @@ export const apiKeys = {
   record: (module: string, id: string) => [...apiKeys.module(module), "record", id] as const,
 };
 
+/** Invalidates list queries only (not module metadata). */
+export function listQueriesPrefix(module: string) {
+  return [...apiKeys.module(module), "list"] as const;
+}
+
+/** Invalidates count queries only (not module metadata). */
+export function countQueriesPrefix(module: string) {
+  return [...apiKeys.module(module), "count"] as const;
+}
+
 function serializeListQuery(query: ListQuery): string {
   return JSON.stringify(query);
 }

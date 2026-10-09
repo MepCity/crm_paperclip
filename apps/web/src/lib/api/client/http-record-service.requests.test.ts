@@ -1,4 +1,4 @@
-import type { OrgContext } from "@crm/core/records";
+import type { Criteria, OrgContext } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
@@ -316,6 +316,72 @@ describe("http record service requests", () => {
         queryKeys: [],
         body: undefined,
       },
+    ]);
+  });
+
+  it("sends panel filters in exact POST bulk and count JSON bodies", async () => {
+    const log: RecordedRequest[] = [];
+    const service = createTrackedService((entry) => log.push(entry));
+    const view = (await service.listViews("Leads")).find((view) => view.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const filters: Criteria = {
+      groupOperator: "and",
+      group: [
+        { field: "Annual_Revenue", comparator: "between", value: [10, 20] },
+        {
+          groupOperator: "and",
+          group: [
+            {
+              field: "Created_Time",
+              comparator: "equal",
+              value: { token: "PERIOD", name: "THIS_WEEK" },
+            },
+            {
+              field: "Created_Time",
+              comparator: "less_equal",
+              value: { token: "DUEINDAYS", offset: 3 },
+            },
+          ],
+        },
+      ],
+    };
+    const body = {
+      filters: {
+        group_operator: "AND",
+        group: [
+          { field: { api_name: "Annual_Revenue" }, comparator: "between", value: [10, 20] },
+          {
+            group_operator: "AND",
+            group: [
+              {
+                field: { api_name: "Created_Time" },
+                comparator: "equal",
+                value: `\${PERIOD.THIS_WEEK}`,
+              },
+              {
+                field: { api_name: "Created_Time" },
+                comparator: "less_equal",
+                value: `\${DUEINDAYS}+3`,
+              },
+            ],
+          },
+        ],
+      },
+    };
+    log.length = 0;
+    await service.list("Leads", { viewId: view.id, page: 1, perPage: 10, filters });
+    expect(entriesForOperation(log, operations.bulk, { module: "Leads" })).toEqual([
+      {
+        method: "POST",
+        pathname: "/crm/v2.2/Leads/bulk",
+        queryKeys: ["cvid", "fields", "page", "per_page"],
+        body,
+      },
+    ]);
+    log.length = 0;
+    await service.count("Leads", { viewId: view.id, filters });
+    expect(log).toEqual([
+      { method: "POST", pathname: "/crm/v2.2/Leads/actions/count", queryKeys: ["cvid"], body },
     ]);
   });
 
