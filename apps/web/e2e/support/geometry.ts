@@ -2,12 +2,21 @@ import { expect, type Locator } from "@playwright/test";
 
 export type InkBox = { left: number; top: number; width: number; height: number };
 
+/** Legacy range coordinates for existing layout specs; use raster helpers for ink. */
 export async function textCapTop(locator: Locator) {
-  return (await textSolidInkBand(locator)).top;
+  return locator.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getBoundingClientRect().y;
+  });
 }
 
 export async function textCapLeft(locator: Locator) {
-  return (await textSolidInkBand(locator)).left;
+  return locator.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getBoundingClientRect().x;
+  });
 }
 
 export async function textBaseline(locator: Locator) {
@@ -34,288 +43,130 @@ export async function expectBaseline(locator: Locator, expected: number) {
   expectWithin1(await textBaseline(locator), expected);
 }
 
-/** Solid text ink band from canvas font metrics (not DOM line box). */
-export async function textSolidInkBand(locator: Locator): Promise<InkBox> {
-  return locator.evaluate((node) => {
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (!element) {
-      throw new Error("Expected an HTMLElement for ink measurement.");
-    }
-    const style = getComputedStyle(element);
-    const size = Number.parseFloat(style.fontSize);
-    const lineHeight =
-      style.lineHeight === "normal" ? size * 1.2 : Number.parseFloat(style.lineHeight);
-    const context = document.createElement("canvas").getContext("2d");
-    if (!context) {
-      throw new Error("Canvas metrics are unavailable.");
-    }
-    context.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
-    const text = element.textContent ?? "";
-    const metrics = context.measureText(text);
+/** Measure the browser's PNG pixels. DOM ranges only select the crop, never ink edges.
+ * Exact foreground RGB is solid ink; every non-background pixel includes antialiasing.
+ * Crops include a margin so overflowing SVG ink is not clipped by the measurement.
+ */
+export async function pageRasterInk(locator: Locator, icon = false) {
+  const page = locator.page();
+  await page.evaluate(() => document.fonts.ready);
+  const originalScroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+  await locator.scrollIntoViewIfNeeded();
+  if (icon) await locator.hover();
+  const crop = await locator.evaluate((node, isIcon) => {
+    const element = isIcon ? (node.querySelector("svg") ?? node) : node;
     const range = document.createRange();
     range.selectNodeContents(element);
-    const lineRect = range.getBoundingClientRect();
-    const boxRect = element.getBoundingClientRect();
-    const baseline =
-      lineRect.top +
-      (lineHeight - (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent)) / 2 +
-      metrics.fontBoundingBoxAscent;
-    const top = baseline - metrics.actualBoundingBoxAscent;
-    const bottom = baseline + metrics.actualBoundingBoxDescent;
-    const inkWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
-    const anchorRect = style.textAlign === "right" ? boxRect : lineRect;
-    const left =
-      style.textAlign === "right"
-        ? anchorRect.right - metrics.actualBoundingBoxRight - inkWidth
-        : anchorRect.left + metrics.actualBoundingBoxLeft;
-    return { left, top, width: inkWidth, height: bottom - top };
-  });
-}
-
-/** Solid ink left edge of the first rendered glyph. */
-export async function textSolidInkLeft(locator: Locator): Promise<number> {
-  return locator.evaluate((node) => {
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (!element) {
-      throw new Error("Expected an HTMLElement for ink measurement.");
+    const rect = isIcon ? element.getBoundingClientRect() : range.getBoundingClientRect();
+    const color = getComputedStyle(node).color;
+    let ancestor: Element | null = node;
+    let background = "rgba(0, 0, 0, 0)";
+    while (ancestor && background === "rgba(0, 0, 0, 0)") {
+      background = getComputedStyle(ancestor).backgroundColor;
+      ancestor = ancestor.parentElement;
     }
-    const textNode = [...element.childNodes].find((child) => child.nodeType === Node.TEXT_NODE);
-    const text = textNode?.textContent ?? element.textContent ?? "";
-    const style = getComputedStyle(element);
-    const context = document.createElement("canvas").getContext("2d");
-    if (!context) {
-      throw new Error("Canvas metrics are unavailable.");
-    }
-    context.font = `${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-    const range = document.createRange();
-    if (textNode) {
-      range.setStart(textNode, 0);
-      range.setEnd(textNode, 1);
-    } else {
-      range.selectNodeContents(element);
-    }
-    const rect = range.getBoundingClientRect();
-    const metrics = context.measureText(text[0] ?? "M");
-    return rect.left + metrics.actualBoundingBoxLeft;
-  });
-}
-
-/** Solid ink right edge of the full label text. */
-export async function textSolidInkRight(locator: Locator): Promise<number> {
-  return locator.evaluate((node) => {
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (!element) {
-      throw new Error("Expected an HTMLElement for ink measurement.");
-    }
-    const style = getComputedStyle(element);
-    const context = document.createElement("canvas").getContext("2d");
-    if (!context) {
-      throw new Error("Canvas metrics are unavailable.");
-    }
-    context.font = `${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-    const text = element.textContent ?? "";
-    const metrics = context.measureText(text);
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const lineRect = range.getBoundingClientRect();
-    return lineRect.right - metrics.actualBoundingBoxRight;
-  });
-}
-
-/** Solid cap top of the first rendered line in a (possibly wrapped) text node. */
-export async function firstLineSolidCapTop(locator: Locator): Promise<number | null> {
-  return locator.evaluate((node) => {
-    const measureSolidCapFromLineBox = (
-      style: CSSStyleDeclaration,
-      context: CanvasRenderingContext2D,
-      rect: DOMRect,
-      sample: string,
-    ) => {
-      const size = Number.parseFloat(style.fontSize);
-      const lineHeight =
-        style.lineHeight === "normal" ? size * 1.2 : Number.parseFloat(style.lineHeight);
-      const metrics = context.measureText(sample);
-      const baseline =
-        rect.top +
-        (lineHeight - (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent)) / 2 +
-        metrics.fontBoundingBoxAscent;
-      return baseline - metrics.actualBoundingBoxAscent;
+    const margin = isIcon ? 2 : 0;
+    return {
+      x: Math.floor(rect.left - margin),
+      y: Math.floor(rect.top - margin),
+      width: Math.ceil(rect.right + margin) - Math.floor(rect.left - margin),
+      height: Math.ceil(rect.bottom + margin) - Math.floor(rect.top - margin),
+      scrollX,
+      scrollY,
+      color,
+      background,
     };
-
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (!element) {
-      return null;
-    }
-    const textNode = [...element.childNodes].find((child) => child.nodeType === Node.TEXT_NODE);
-    const text = textNode?.textContent ?? element.textContent ?? "";
-    if (!text) {
-      return null;
-    }
-    const style = getComputedStyle(element);
-    const context = document.createElement("canvas").getContext("2d");
-    if (!context) {
-      return null;
-    }
-    context.font = `${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-    const range = document.createRange();
-    if (textNode) {
-      range.setStart(textNode, 0);
-      range.setEnd(textNode, 1);
-    } else {
-      range.selectNodeContents(element);
-    }
-    const rect = range.getBoundingClientRect();
-    return measureSolidCapFromLineBox(style, context, rect, text[0] ?? "M");
+  }, icon);
+  const png = await page.screenshot({
+    fullPage: false,
+    clip: { x: crop.x, y: crop.y, width: crop.width, height: crop.height },
+    animations: "disabled",
   });
-}
-
-/** Per wrapped line solid cap tops using caret sampling + font metrics. */
-export async function wrappedLineSolidCapTops(locator: Locator): Promise<number[] | null> {
-  return locator.evaluate((node) => {
-    const measureSolidCapFromLineBox = (
-      style: CSSStyleDeclaration,
-      context: CanvasRenderingContext2D,
-      rect: DOMRect,
-      sample: string,
-    ) => {
-      const size = Number.parseFloat(style.fontSize);
-      const lineHeight =
-        style.lineHeight === "normal" ? size * 1.2 : Number.parseFloat(style.lineHeight);
-      const metrics = context.measureText(sample);
-      const baseline =
-        rect.top +
-        (lineHeight - (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent)) / 2 +
-        metrics.fontBoundingBoxAscent;
-      return baseline - metrics.actualBoundingBoxAscent;
-    };
-
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (!element) {
-      return null;
-    }
-    const style = getComputedStyle(element);
-    const size = Number.parseFloat(style.fontSize);
-    const context = document.createElement("canvas").getContext("2d");
-    if (!context) {
-      return null;
-    }
-    context.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
-
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const rects = [...range.getClientRects()];
-    if (rects.length < 2) {
-      return null;
-    }
-
-    const capTops: number[] = [];
-    for (const rect of rects) {
-      const position = document.caretPositionFromPoint(
-        rect.left + Math.min(rect.width / 2, 4),
-        rect.top + rect.height / 2,
-      );
-      const textNode = position?.offsetNode;
-      const offset = position?.offset ?? 0;
-      const sample =
-        textNode?.nodeType === Node.TEXT_NODE
-          ? (textNode.textContent?.[offset] ?? textNode.textContent?.[0] ?? "M")
-          : "M";
-      capTops.push(measureSolidCapFromLineBox(style, context, rect, sample));
-    }
-    return capTops;
-  });
-}
-
-/** Raster solid (alpha ≥ 0.88) and antialiased (alpha ≥ 0.04) ink for SVG icons. */
-export async function svgRasterInkBoxes(locator: Locator): Promise<{
-  solid: InkBox | null;
-  antialiased: InkBox | null;
-}> {
-  return locator.evaluate(async (root) => {
-    const inkBoundsFromImageData = (
-      data: ImageData,
-      originLeft: number,
-      originTop: number,
-      scale: number,
-      minAlpha: number,
-      solidInk: boolean,
-    ) => {
-      const { width, height } = data;
-      let left = Infinity;
-      let right = -Infinity;
-      let top = Infinity;
-      let bottom = -Infinity;
-      for (let y = 0; y < height; y += 1) {
-        for (let x = 0; x < width; x += 1) {
-          const i = (y * width + x) * 4;
-          const alpha = (data.data[i + 3] ?? 0) / 255;
-          if (alpha < minAlpha) {
-            continue;
+  const result = await page.evaluate(
+    async ({ crop, png, originalScroll }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) throw new Error("PNG decoding requires a canvas context");
+      ctx.drawImage(image, 0, 0);
+      const pixels = ctx.getImageData(0, 0, image.width, image.height).data;
+      const rgb = (color: string) => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      const foreground = rgb(crop.color);
+      const background = rgb(crop.background);
+      const scale = image.width / crop.width;
+      const bounds = (solid: boolean) => {
+        let left = Infinity,
+          top = Infinity,
+          right = -Infinity,
+          bottom = -Infinity;
+        const rows: number[] = [];
+        for (let y = 0; y < image.height; y++) {
+          let occupied = false;
+          for (let x = 0; x < image.width; x++) {
+            const offset = (y * image.width + x) * 4;
+            const match = solid
+              ? foreground.every((value, channel) => pixels[offset + channel] === value)
+              : background.some((value, channel) => pixels[offset + channel] !== value);
+            if (!match) continue;
+            occupied = true;
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y);
           }
-          if (solidInk && alpha < 0.88) {
-            continue;
-          }
-          const dr = data.data[i] ?? 0;
-          const dg = data.data[i + 1] ?? 0;
-          const db = data.data[i + 2] ?? 0;
-          const luminance = 0.299 * dr + 0.587 * dg + 0.114 * db;
-          if (luminance > 235) {
-            continue;
-          }
-          const cssX = originLeft + x / scale;
-          const cssY = originTop + y / scale;
-          left = Math.min(left, cssX);
-          right = Math.max(right, cssX);
-          top = Math.min(top, cssY);
-          bottom = Math.max(bottom, cssY);
+          if (occupied) rows.push(y);
         }
-      }
-      if (!Number.isFinite(left)) {
-        return null;
-      }
-      return { left, top, width: right - left, height: bottom - top };
-    };
-
-    const svg = root.querySelector("svg");
-    const path = root.querySelector("path");
-    if (!svg || !path) {
-      return { solid: null, antialiased: null };
-    }
-    const color = getComputedStyle(root).color;
-    const rect = svg.getBoundingClientRect();
-    const scale = 8;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.ceil(rect.width * scale));
-    canvas.height = Math.max(1, Math.ceil(rect.height * scale));
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) {
-      return { solid: null, antialiased: null };
-    }
-
-    const clone = svg.cloneNode(true) as SVGSVGElement;
-    clone.setAttribute("width", String(rect.width));
-    clone.setAttribute("height", String(rect.height));
-    const filled = clone.querySelector("path");
-    if (filled) {
-      filled.setAttribute("fill", color);
-    }
-    const serialized = new XMLSerializer().serializeToString(clone);
-    const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
-
-    await new Promise<void>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, 0, 0, rect.width, rect.height);
-        resolve();
+        const lineTops = rows
+          .filter((y, index) => index === 0 || y > (rows[index - 1] ?? 0) + 1)
+          .map((y) => crop.y + crop.scrollY - originalScroll.y + y / scale);
+        return {
+          box: Number.isFinite(left)
+            ? {
+                left: crop.x + crop.scrollX - originalScroll.x + left / scale,
+                top: crop.y + crop.scrollY - originalScroll.y + top / scale,
+                width: (right - left + 1) / scale,
+                height: (bottom - top + 1) / scale,
+              }
+            : null,
+          lineTops,
+        };
       };
-      img.onerror = () => reject(new Error("SVG rasterization failed."));
-      img.src = url;
-    });
+      return { solid: bounds(true), antialiased: bounds(false), scale };
+    },
+    { crop, png: png.toString("base64"), originalScroll },
+  );
+  await page.evaluate(({ x, y }) => scrollTo(x, y), originalScroll);
+  return result;
+}
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const solid = inkBoundsFromImageData(imageData, rect.left, rect.top, scale, 0.88, true);
-    const antialiased = inkBoundsFromImageData(imageData, rect.left, rect.top, scale, 0.04, false);
-    return { solid, antialiased };
-  });
+export async function textSolidInkBand(locator: Locator): Promise<InkBox> {
+  const { solid } = await pageRasterInk(locator);
+  if (!solid.box) throw new Error("No exact foreground pixels in text crop");
+  return solid.box;
+}
+
+export async function textSolidInkLeft(locator: Locator) {
+  return (await textSolidInkBand(locator)).left;
+}
+
+export async function textSolidInkRight(locator: Locator) {
+  const box = await textSolidInkBand(locator);
+  return box.left + box.width;
+}
+
+export async function firstLineSolidCapTop(locator: Locator) {
+  return (await textSolidInkBand(locator)).top;
+}
+
+export async function wrappedLineSolidCapTops(locator: Locator) {
+  return (await pageRasterInk(locator)).solid.lineTops;
+}
+
+export async function svgRasterInkBoxes(locator: Locator) {
+  const ink = await pageRasterInk(locator, true);
+  return { solid: ink.solid.box, antialiased: ink.antialiased.box };
 }

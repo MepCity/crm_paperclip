@@ -507,7 +507,6 @@ const SIZE_GROUPS = [
       "--size-detail-field-pencil-rail-hidden-translate-x",
       "--size-detail-description-label-width",
       "--size-detail-description-label-extend",
-      "--size-detail-description-label-translate-x",
       "--size-detail-field-pencil-size",
       "--size-detail-field-pencil-above-label-cap",
       "--size-list-view-name-width",

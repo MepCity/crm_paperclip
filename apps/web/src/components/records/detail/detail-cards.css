@@ -179,7 +179,6 @@
   width: var(--size-detail-description-label-width);
   justify-self: end;
   margin-inline-end: calc(-1 * var(--size-detail-description-label-extend));
-  translate: var(--size-detail-description-label-translate-x) 0;
 }
 
 .detail-field-edit {
@@ -202,6 +201,7 @@
 }
 
 .detail-field-edit svg {
+  overflow: visible;
   width: 100%;
   height: 100%;
 }

@@ -62,7 +62,7 @@ function FieldEdit(props: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <path
-        transform="translate(0.5 0.08) scale(1.38) translate(-1.38 -1.02)"
+        transform="translate(-0.5 0.5) scale(1.38 1.23) translate(-1.38 0.11)"
         d="M1.38 9.66h1.1l6.07-6.07-1.1-1.1-6.07 6.07v1.1zM9.11 3.04l1.1-1.1c.28-.28.28-.74 0-1.01l-.83-.83c-.28-.28-.74-.28-1.01 0l-1.1 1.1 1.1 1.1z"
         fill="currentColor"
       />

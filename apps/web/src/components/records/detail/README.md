@@ -205,3 +205,22 @@ Measured wide-demo stage widths are 171.59, 142.20, 100.83, 117.73, 109.41,
 font; accumulated boundary drift reaches 3.23 px at the current stage's end.
 The generic component uses natural label widths; these differences are recorded
 for review. Absolute page placement belongs to MEP-134.
+
+## Details raster verification (MEP-203)
+
+`e2e/record-detail-cards.spec.ts` measures real Chromium page PNG pixels at
+1470 × 835 CSS px and device scale 2. Exact foreground RGB defines solid ink;
+every pixel differing from the flat background defines total antialiased ink.
+The inclusive final pixel is included in widths and heights. DOM ranges only
+select a crop; they do not provide ink coordinates. A synthetic overflow/hidden
+SVG probe verifies that the helper includes overflowing ink and respects actual
+page opacity. The pencil SVG allows overflow so its antialias fringe is visible.
+
+Description uses the measured 73px label width and a 39px extension (0.5px inside the measured 39.5px target), without a
+font-metric calibration translation. The Website role retains 19.5px wrapping
+pitch, plain wrapped text 15.5px, and audit timestamps 18.5px.
+
+The one-line synthetic Address → Description transition and final 44px row
+height are local regression contracts. The inline-editor capture's card bottom
+is not treated as a measured view-mode target. Left/right view-mode wrapping
+widths and Description value start/right edge remain unmeasured as listed above.
