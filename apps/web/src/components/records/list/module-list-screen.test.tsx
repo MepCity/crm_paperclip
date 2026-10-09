@@ -64,15 +64,16 @@ function screenWithFixture() {
   };
 }
 
-/** Opens View Settings and one of its submenus from the keyboard. */
-async function openViewSubmenu(user: UserEvent, name: string) {
+/** Opens View Settings and one of its submenus from the keyboard. `rowName` is the parent
+ * row's label plus the value in effect, which is also the submenu's accessible name. */
+async function openViewSubmenu(user: UserEvent, rowName: string) {
   const trigger = screen.getByRole("button", { name: "View Settings" });
   trigger.focus();
   await user.keyboard("{Enter}");
-  const item = screen.getByRole("menuitem", { name });
+  const item = screen.getByRole("menuitem", { name: rowName });
   item.focus();
   await user.keyboard("{ArrowRight}");
-  await waitFor(() => expect(screen.getByRole("menu", { name })).toBeTruthy());
+  await waitFor(() => expect(screen.getByRole("menu", { name: rowName })).toBeTruthy());
 }
 
 describe("ModuleListScreen", () => {
@@ -207,7 +208,7 @@ describe("ModuleListScreen", () => {
     const { perPageSizesRequested } = screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
 
-    await openViewSubmenu(user, "Records Per Page");
+    await openViewSubmenu(user, "Records Per Page 30");
     await user.click(screen.getByRole("menuitemradio", { name: "10" }));
 
     const href = navigation.push.mock.calls.at(-1)?.[0] ?? "";
@@ -223,7 +224,7 @@ describe("ModuleListScreen", () => {
     const user = userEvent.setup();
     screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
-    await openViewSubmenu(user, "Records Per Page");
+    await openViewSubmenu(user, "Records Per Page 30");
     await user.click(screen.getByRole("menuitemradio", { name: "20" }));
 
     cleanup();
@@ -232,7 +233,7 @@ describe("ModuleListScreen", () => {
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
     expect(again.perPageSizesRequested()).toContain(20);
 
-    await openViewSubmenu(user, "Records Per Page");
+    await openViewSubmenu(user, "Records Per Page 20");
     expect(screen.getByRole("menuitemradio", { name: "20" }).getAttribute("aria-checked")).toBe(
       "true",
     );
@@ -246,7 +247,7 @@ describe("ModuleListScreen", () => {
     const wrapped = document.querySelector("[data-part=row] [data-part=value]");
     expect(wrapped?.className).toContain("whitespace-normal");
 
-    await openViewSubmenu(user, "View Mode");
+    await openViewSubmenu(user, "View Mode Wrap Text");
     await user.click(screen.getByRole("menuitemcheckbox", { name: "Wrap Text" }));
     await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 

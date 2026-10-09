@@ -230,6 +230,61 @@ test.describe("Leads list View Settings", () => {
       await expect(row).toHaveCSS("color", "rgb(49, 57, 73)");
     }
 
+    // Row content in the capture's order: a leading glyph, the label, and the value in
+    // effect at the row's right edge. The page size is carried in the address here.
+    const partsOf = async (row: Locator) => {
+      const boxes = await Promise.all(
+        (await row.locator("svg").all()).map(async (glyph) =>
+          requireBox(await glyph.boundingBox(), "row glyph"),
+        ),
+      );
+      const leading = boxes[0];
+      const chevron = boxes[1];
+      if (!leading || !chevron) throw new Error(`Expected two glyphs in ${await row.innerText()}`);
+      return {
+        leading,
+        chevron,
+        count: boxes.length,
+        rowBox: requireBox(await row.boundingBox(), "settings row"),
+        text: (await row.innerText()).replace(/\s+/g, " ").trim(),
+      };
+    };
+    const perPageParts = await partsOf(perPage);
+    expect(perPageParts.text).toBe("Records Per Page 10");
+    const viewModeParts = await partsOf(viewMode);
+    expect(viewModeParts.text).toBe("View Mode Wrap Text");
+
+    for (const parts of [perPageParts, viewModeParts]) {
+      // Two glyphs: the leading icon and the submenu chevron at the row's right edge,
+      // both 16px (--size-menu-icon) and vertically centred in the 30px row.
+      expect(parts.count).toBe(2);
+      for (const glyph of [parts.leading, parts.chevron]) {
+        expectEdge(glyph.width, 16);
+        expectEdge(glyph.height, 16);
+        expect(glyph.y + glyph.height / 2).toBeCloseTo(parts.rowBox.y + parts.rowBox.height / 2, 1);
+      }
+      expect(parts.chevron.x).toBeGreaterThan(parts.leading.x + parts.leading.width);
+    }
+    // The value sits between the label and the chevron, right-aligned in the row.
+    const valueBox = requireBox(
+      await perPage.locator("span", { hasText: /^10$/ }).boundingBox(),
+      "page size value",
+    );
+    expect(valueBox.x + valueBox.width).toBeLessThanOrEqual(perPageParts.chevron.x);
+    expect(valueBox.y + valueBox.height / 2).toBeCloseTo(
+      perPageParts.rowBox.y + perPageParts.rowBox.height / 2,
+      1,
+    );
+
+    // The trigger glyph is the framed settings sliders, not a bare gear.
+    const triggerGlyph = requireBox(
+      await trigger.locator("svg").boundingBox(),
+      "View Settings trigger glyph",
+    );
+    expectEdge(triggerGlyph.width, 16);
+    expectEdge(triggerGlyph.height, 16);
+    expect(await trigger.locator("svg rect").count()).toBe(1);
+
     // Selected / disabled: highlighted settings-menu row fill #F0F4FC. Opening a menu
     // with the keyboard focuses its first row, so the highlighted row is whatever
     // carries the focus marker.

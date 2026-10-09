@@ -151,8 +151,16 @@ Also:
 - The page-size submenu and the View Mode submenu are not measured in the spec. Their
   width follows their content, the marker sits before the label, and the submenu chevron
   is 16px (`--size-menu-icon`). The submenu's border keeps the shared popover border.
+- The parent rows' leading glyphs, the value column and the row gap are read from the
+  `list-settings` capture, not measured in the spec: the glyphs are 16px
+  (`--size-menu-icon`) with the 12px label gap (`--size-menu-label-gap`) already used by
+  measured menus, the value sits right-aligned before the submenu chevron. The glyph
+  drawings are our own (`Icons.list`, `Icons.eye`); the spec forbids reusing the
+  reference's icon assets.
 - The View Settings trigger is an icon-only button in a 40px cell; the reference's
-  control and icon sizes in that cell were not measured. It uses `--size-list-view-icon`.
+  control and icon sizes in that cell were not measured. It uses `--size-list-view-icon`,
+  and its glyph is the framed sliders drawing (`Icons.settingsSliders`), not the bare
+  gear used by the shell's Settings nav item.
 - A wide empty table's message position was not observed. The message is
   centred on the visible card.
 - A partially selected page does not draw an indeterminate header box. Partial
@@ -294,14 +302,21 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
 | `onWrapTextChange` | Receives the next boolean and closes the menu. |
 
 - Trigger: an icon-only button in the 40px header cell, accessible name **View Settings**.
-  Opens with click, Enter or Space; Escape closes it and returns focus to the trigger.
+  Its glyph is the framed settings sliders (`Icons.settingsSliders`). Opens with click,
+  Enter or Space; Escape closes it and returns focus to the trigger. Opening focuses the
+  first row, so the first ArrowDown moves to the second.
 - Popover: 264px (`--size-popover-settings-width`), rows 30px
   (`--size-menu-item-height`), row text `--text-md` / `--font-weight-normal`
   (nearest measured row: Filter checkbox row). The focused row uses the measured
   highlight fill.
 - Rows: **Records Per Page** and **View Mode**, each a submenu opened with ArrowRight
-  or a click. Wrap Text is a `menuitemcheckbox`; page sizes are `menuitemradio` and the
-  current size carries a check marker.
+  or a click. A row draws its leading glyph, its label, then the value in effect pushed
+  to the right edge and the submenu chevron: `Records Per Page 30`, `View Mode Wrap Text`.
+  The value belongs to the row's accessible name, and react-aria gives the submenu popover
+  that same name — which is how `list-page-size` names the page-size menu. View Mode shows
+  its value only while Wrap Text is on; the off-state label was never observed.
+- Wrap Text is a `menuitemcheckbox`; page sizes are `menuitemradio` and the current size
+  carries a check marker.
 - Not drawn: **Manage Columns** and **Reset Column Size** — parity checklist row 9's
   column work belongs to M11 (Customization).
 - The component is presentational: the page owns the address, the preference keys and
