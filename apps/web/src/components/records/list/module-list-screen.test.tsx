@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
+import { recordListContextKey } from "@/lib/records/record-list-context";
 import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
 import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
 import { ModuleListScreen } from "./module-list-screen";
@@ -58,6 +59,7 @@ async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRe
 afterEach(() => {
   cleanup();
   navigation.params = new URLSearchParams();
+  sessionStorage.clear();
   vi.restoreAllMocks();
 });
 
@@ -229,6 +231,26 @@ describe("ModuleListScreen", () => {
       expect(screen.getByRole("alert").textContent).toContain("Invalid filter.");
     });
     expect(screen.getAllByRole("row").length).toBe(rowsBefore);
+  });
+
+  it("writes session list context for record detail navigation", async () => {
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const raw = sessionStorage.getItem(recordListContextKey(ctx.orgSlug, "Leads"));
+    expect(raw).not.toBeNull();
+    if (!raw) throw new Error("Expected list context in session storage.");
+    const parsed = JSON.parse(raw) as { listHref: string; recordIds: string[]; viewId: string };
+    expect(parsed.viewId).toBe("all-leads");
+    expect(parsed.recordIds.length).toBeGreaterThan(0);
+    expect(parsed.listHref).toContain("/tab/Leads/list");
   });
 
   it("passes list query fields and paging from the address", async () => {
