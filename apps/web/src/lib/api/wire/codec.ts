@@ -2,6 +2,7 @@ import { ValidationError } from "@crm/core/errors";
 import type {
   Comparator,
   Criteria,
+  CriteriaPeriod,
   CriteriaValue,
   FieldDefinition,
   FieldValue,
@@ -115,6 +116,7 @@ export function encodeField(field: FieldDefinition): WireField {
     data_type: field.dataType,
     system_mandatory: field.required,
     read_only: field.readOnly,
+    mass_update: field.massUpdate,
     unique: field.unique ? { enforced: true } : {},
     view_type: {
       view: field.views.view,
@@ -143,6 +145,7 @@ export function decodeField(field: WireField): FieldDefinition {
     dataType: field.data_type,
     required: field.system_mandatory,
     readOnly: field.read_only,
+    massUpdate: field.mass_update,
     unique: field.unique.enforced === true,
     views: {
       view: field.view_type.view,
@@ -203,17 +206,45 @@ export function decodeModule(
     })),
   };
 }
+const criteriaPeriods = new Set<CriteriaPeriod>([
+  "TOMORROW",
+  "YESTERDAY",
+  "TILL_YESTERDAY",
+  "STARTING_TOMORROW",
+  "THIS_WEEK",
+  "PREVIOUS_WEEK",
+  "THIS_MONTH",
+  "PREVIOUS_MONTH",
+  "THIS_YEAR",
+  "PREVIOUS_YEAR",
+  "NEXT_YEAR",
+]);
 function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
   if (typeof value === "object" && value !== null && "token" in value) {
+    const expectedKeys = value.token === "CURRENTUSER" || value.token === "TODAY" ? 1 : 2;
+    if (Object.keys(value).length !== expectedKeys)
+      return invalid("filters", "Invalid token shape.");
     switch (value.token) {
       case "CURRENTUSER":
         return { name: `\${CURRENTUSER}` };
       case "TODAY":
         return `\${TODAY}`;
       case "AGEINDAYS":
-        return `\${AGEINDAYS}${value.offset < 0 ? "" : "+"}${value.offset}`;
+        if (!Number.isInteger(value.offset) || value.offset < 0)
+          return invalid("filters", "Invalid day offset.");
+        return `\${AGEINDAYS}+${value.offset}`;
       case "CATEGORY":
+        if (typeof value.name !== "string") return invalid("filters", "Invalid category token.");
         return `\${CATEGORY.${value.name}}`;
+      case "DUEINDAYS":
+        if (!Number.isInteger(value.offset) || value.offset < 0)
+          return invalid("filters", "Invalid day offset.");
+        return `\${DUEINDAYS}+${value.offset}`;
+      case "PERIOD":
+        if (!criteriaPeriods.has(value.name)) return invalid("filters", "Unknown period.");
+        return `\${PERIOD.${value.name}}`;
+      default:
+        return invalid("filters", "Unknown token.");
     }
   }
   return structuredClone(value);
@@ -226,6 +257,21 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
       return { token: "AGEINDAYS", offset: Number(age[1]) };
     const category = /^\$\{CATEGORY\.([^{}\r\n]+)\}$/.exec(value);
     if (category?.[0] === value) return { token: "CATEGORY", name: category[1] as string };
+    const due = /^\$\{DUEINDAYS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (due?.[0] === value && Number.isInteger(Number(due[1])) && Number(due[1]) >= 0)
+      return { token: "DUEINDAYS", offset: Number(due[1]) };
+    const period = /^\$\{PERIOD\.([^{}]+)\}$/.exec(value);
+    if (period && criteriaPeriods.has(period[1] as CriteriaPeriod))
+      return { token: "PERIOD", name: period[1] as CriteriaPeriod };
+    if (value.startsWith(`\${PERIOD.`) || value.startsWith(`\${DUEINDAYS}`))
+      return invalid("filters", "Unknown token.");
+    if (
+      /^\$\{[^{}]+\}$/.test(value) &&
+      !value.startsWith(`\${CATEGORY.`) &&
+      value !== `\${AGEINDAYS}` &&
+      value !== `\${CURRENTUSER}`
+    )
+      return invalid("filters", "Unknown token.");
     return value;
   }
   if (Array.isArray(value)) return value.map((entry) => readFieldValue(entry, "filters"));
@@ -244,7 +290,17 @@ function comparator(value: unknown): Comparator {
     value === "equal" ||
     value === "contains" ||
     value === "not_contains" ||
-    value === "less_equal"
+    value === "less_equal" ||
+    value === "not_equal" ||
+    value === "starts_with" ||
+    value === "ends_with" ||
+    value === "is_empty" ||
+    value === "is_not_empty" ||
+    value === "less_than" ||
+    value === "greater_than" ||
+    value === "greater_equal" ||
+    value === "between" ||
+    value === "not_between"
   )
     return value;
   return invalid("filters", "Unknown comparator.");
@@ -334,4 +390,30 @@ export function decodeList(
     moreRecords: info.more_records,
     sort: { field: info.sort_by, order: info.sort_order },
   };
+}
+
+export function encodeWriteResult(
+  ids: readonly string[],
+  message: string,
+): import("./types").WireWriteResult {
+  return {
+    data: ids.map((id) => ({ code: "SUCCESS", details: { id }, message, status: "success" })),
+  };
+}
+
+export function encodeRecordWriteResult(
+  record: RecordData,
+  metadata: ModuleMetadata,
+  members: readonly WireMember[],
+  message: string,
+): import("./types").WireWriteResult {
+  const row = encodeRecord(record, metadata, members);
+  const result = encodeWriteResult([record.id], message);
+  const entry = result.data[0];
+  if (!entry) throw new Error("Missing write result.");
+  for (const name of ["Modified_Time", "Modified_By", "Created_Time", "Created_By"]) {
+    const value = row[name];
+    if (value !== undefined) entry.details[name] = value;
+  }
+  return result;
 }

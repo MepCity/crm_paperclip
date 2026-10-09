@@ -15,11 +15,11 @@ const STATUS_BY_CODE = {
   unauthenticated: 401,
   forbidden: 403,
   not_found: 404,
-  conflict: 409,
+  conflict: 400,
 } as const satisfies Record<ErrorCode, number>;
 
 /** Wire-only code. It is not a member of `ErrorCode`. */
-export const INTERNAL_ERROR_CODE = "internal_error" as const;
+export const INTERNAL_ERROR_CODE = "INTERNAL_ERROR" as const;
 
 export const INTERNAL_ERROR_MESSAGE = "Something went wrong.";
 
@@ -27,13 +27,24 @@ export const UNEXPECTED_API_MESSAGE = "The response could not be read.";
 
 const BODY_KEYS = ["code", "details", "message", "status"] as const;
 
-export type WireErrorCode = ErrorCode | typeof INTERNAL_ERROR_CODE;
+const WIRE_CODES = {
+  unauthenticated: "AUTHENTICATION_FAILURE",
+  forbidden: "NO_PERMISSION",
+  not_found: "not_found",
+  conflict: "DUPLICATE_DATA",
+  validation: "INVALID_DATA",
+} as const;
+export type WireErrorCode =
+  | (typeof WIRE_CODES)[ErrorCode]
+  | "MANDATORY_NOT_FOUND"
+  | "LIMIT_EXCEEDED"
+  | typeof INTERNAL_ERROR_CODE;
 
 export type WireErrorBody = {
   code: WireErrorCode;
   details: { fields?: FieldErrors };
   message: string;
-  status: number;
+  status: "error";
 };
 
 /**
@@ -54,7 +65,7 @@ type ParsedBody = {
   code: string;
   details: Record<string, unknown>;
   message: string;
-  status: number;
+  status: "error";
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -101,7 +112,7 @@ function parseBody(body: unknown): ParsedBody | null {
     return null;
   }
   if (typeof value.code !== "string" || typeof value.message !== "string") return null;
-  if (typeof value.status !== "number" || !Number.isInteger(value.status)) return null;
+  if (value.status !== "error") return null;
   if (!isPlainObject(value.details)) return null;
   return {
     code: value.code,
@@ -111,12 +122,13 @@ function parseBody(body: unknown): ParsedBody | null {
   };
 }
 
-function isErrorCode(code: string): code is ErrorCode {
-  return Object.hasOwn(STATUS_BY_CODE, code);
+function appCode(code: string): ErrorCode | undefined {
+  if (code === "MANDATORY_NOT_FOUND" || code === "LIMIT_EXCEEDED") return "validation";
+  return (Object.keys(WIRE_CODES) as ErrorCode[]).find((key) => WIRE_CODES[key] === code);
 }
 
 function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiError {
-  switch (parsed.code) {
+  switch (appCode(parsed.code)) {
     case "unauthenticated":
       return new UnauthenticatedError(parsed.message);
     case "forbidden":
@@ -128,7 +140,15 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
     case "validation": {
       const fieldErrors = readFieldErrors(parsed.details);
       if (!fieldErrors) return new UnexpectedApiError(status);
-      return new ValidationError(fieldErrors, parsed.message);
+      return new ValidationError(
+        fieldErrors,
+        parsed.message,
+        parsed.code === "MANDATORY_NOT_FOUND"
+          ? "mandatory"
+          : parsed.code === "LIMIT_EXCEEDED"
+            ? "limit"
+            : "invalid",
+      );
     }
     default:
       return new UnexpectedApiError(status);
@@ -146,10 +166,17 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
     return {
       status,
       body: {
-        code: error.code,
+        code:
+          error.code === "validation"
+            ? (error as ValidationError).reason === "mandatory"
+              ? "MANDATORY_NOT_FOUND"
+              : (error as ValidationError).reason === "limit"
+                ? "LIMIT_EXCEEDED"
+                : "INVALID_DATA"
+            : WIRE_CODES[error.code],
         details,
         message: error.message,
-        status,
+        status: "error",
       },
     };
   }
@@ -159,19 +186,18 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
       code: INTERNAL_ERROR_CODE,
       details: {},
       message: INTERNAL_ERROR_MESSAGE,
-      status: 500,
+      status: "error",
     },
   };
 }
 
 /**
- * Restores an `AppError` only for a four-key body whose `code` is one of the five
- * known codes and whose HTTP status and body `status` both match that code.
+ * Restores an `AppError` only for a four-key body whose `code` is a known
+ * application code and whose HTTP status matches that code; body status is "error".
  */
 export function decodeError(status: number, body: unknown): AppError | UnexpectedApiError {
   const parsed = parseBody(body);
-  if (!parsed || status === 500 || !isErrorCode(parsed.code)) return new UnexpectedApiError(status);
-  const expected = STATUS_BY_CODE[parsed.code];
-  if (status !== expected || parsed.status !== expected) return new UnexpectedApiError(status);
+  const code = parsed ? appCode(parsed.code) : undefined;
+  if (!parsed || !code || status !== STATUS_BY_CODE[code]) return new UnexpectedApiError(status);
   return restore(parsed, status);
 }

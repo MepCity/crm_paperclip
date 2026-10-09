@@ -9,6 +9,9 @@ export type AuthCredentials = {
 
 const DEFAULT_PASSWORD = "long-password-1";
 
+/** Max wait for auth forms to finish navigation after submit. */
+export const AUTH_NAVIGATION_TIMEOUT_MS = 30_000;
+
 /** Registers through the UI with a unique email unless one is provided. */
 export async function signUpNewUser(
   page: Page,
@@ -25,7 +28,7 @@ export async function signUpNewUser(
   await page.getByRole("textbox", { name: "Email" }).fill(credentials.email);
   await page.getByLabel("Password").fill(credentials.password);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page).toHaveURL("/orgs/new", { timeout: 30_000 });
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
   return credentials;
 }
@@ -43,6 +46,12 @@ export async function signIn(
   await page.getByLabel("Password").fill(credentials.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   if (options?.next !== undefined) {
-    await page.waitForURL((url) => new URL(url).pathname === options.next, { timeout: 30_000 });
+    await page.waitForURL((url) => new URL(url).pathname === options.next, {
+      timeout: AUTH_NAVIGATION_TIMEOUT_MS,
+    });
+  } else {
+    await page.waitForURL((url) => new URL(url).pathname !== "/sign-in", {
+      timeout: AUTH_NAVIGATION_TIMEOUT_MS,
+    });
   }
 }

@@ -102,11 +102,11 @@ export function RecordTable({
   return (
     <div
       data-part="card"
-      className="relative max-w-full overflow-hidden rounded-md border border-panel-border bg-surface"
+      className="relative flex max-h-full min-h-0 max-w-full flex-col overflow-hidden rounded-md border border-panel-border bg-surface"
     >
       <section
         aria-label={empty ? "Records" : undefined}
-        className={`overflow-x-auto ${
+        className={`min-h-0 flex-1 overflow-x-auto overflow-y-auto ${
           empty ? "outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" : ""
         }`}
         // No row control is focusable when the page is empty, so the scroller

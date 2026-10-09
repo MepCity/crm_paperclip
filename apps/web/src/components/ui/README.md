@@ -154,9 +154,12 @@ what the "no colour constants" rule forbids.
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
+| `--radius-create-menu` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "4 px bottom corners". Only the lower corners are measured; the panel keeps square top corners where it meets the top bar | from spec |
+| `--radius-create-menu-search` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "1 px focus border `#5464F2`, 4 px corners". The shared `filter-search` variant keeps its 6 px corners on list filters | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
+| `--shadow-create-menu-focus` | `0 0 15px rgba(84, 100, 242, 0.35)` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "Focused halo fades over approx. 7.5 px (top halo y 82.5–90)". A shadow with no spread fades out over about half its blur radius, so the blur is twice the measured fade; the halo colour is the measured 1 px focus edge `#5464F2` and its opacity is not measurable from capture | derived from spec |
 | `--space-1` | `0.25rem` (4px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-2` | `0.5rem` (8px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-3` | `0.75rem` (12px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
@@ -217,6 +220,17 @@ what the "no colour constants" rule forbids.
 | `--size-list-toolbar-height` | `47px` | list-views.md › Toolbar › "About 47 px high below tab strip" | from spec |
 | `--size-list-filter-width` | `202px` | list-views.md › Filter panel › "202 px wide including its 1 px borders" | from spec |
 | `--size-list-filter-gap` | `10px` | list-views.md › Filter panel › "10 px gap to the table" | from spec |
+| `--size-filter-editor-inset` | `23px` | list-views.md › Visual layout › Checked filter checkbox / Filter operator dropdown: x 354 → 377 | from spec |
+| `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
+| `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
+| `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
+| `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
+| `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
+| `--size-filter-operator-list-height` | `220px` | list-views.md › Visual layout › Open operator list, scrollable dropdown body | from spec |
+| `--size-filter-operator-row-height` | `27px` | list-views.md › Visual layout › Open operator list, item rows | from spec |
+| `--size-filter-operator-list-offset` | `1px` | list-views.md › Visual layout › Filter operator dropdown / Open operator list: y 559 → 560 | from spec |
 | `--size-list-filter-padding` | `18px` | list-views.md › Filter panel › "18 px horizontal inner padding" | from spec |
 | `--size-list-filter-search-height` | `34px` | list-views.md › Filter content › "34 px high including its 1 px border" | from spec |
 | `--size-list-filter-search-icon` | `13.5px` | list-views.md › Filter content › "about 13.5 × 13.5 px" | from spec |
@@ -450,6 +464,21 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
 | `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
 | `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
+| `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
+| `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
+| `--size-create-menu-column-width` | `334.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Vertical divider › "1 px line `#EDF0F4` at x 868.5–869.5" minus the panel left edge x 534 | from spec |
+| `--size-create-menu-inset-inline` | `31px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5" minus the panel left edge x 534; the same row's "Inset 31.5 px from panel left edge" is the header ink, 0.5 px inside this box | from spec |
+| `--size-create-menu-heading-top` | `11.3px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Left column header › "ink x 565.5–674.5, y 63.5–75" minus the panel top y 50 gives a 13.5 px ink inset. The header sets `line-height: 1`, where the 15.5 px Figtree ink band starts 2.2 px inside the line box, so the box inset is 11.3 px | from spec |
+| `--size-create-menu-search-top` | `40px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "y 90–120" minus the panel top y 50 | from spec |
+| `--size-create-menu-search-width` | `287.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5 (287.5 × 30 px)" | from spec |
+| `--size-create-menu-search-height` | `30px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5 (287.5 × 30 px), y 90–120" | from spec |
+| `--size-create-menu-list-top` | `75px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "10 visible before scroll, y 125–475" minus the panel top y 50 | from spec |
+| `--size-create-menu-list-height` | `350px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "10 visible before scroll, y 125–475" | from spec |
+| `--size-create-menu-row-height` | `34px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "row pitch 34 px" | from spec |
+| `--size-create-menu-row-icon` | `7px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "ink x 579.5–586.5, y 138.5–145.5 in the first row (7 × 7 px, strokes about 1 px, `#313949`)" | from spec |
+| `--size-create-menu-row-icon-inset` | `45.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › glyph ink "x 579.5" minus the panel left edge x 534 | from spec |
+| `--size-create-menu-row-label-gap` | `13px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "Text label starts x 599.5–600.5" minus the glyph ink end x 586.5 | from spec |
 
 ### Typeface
 
@@ -668,3 +697,17 @@ Shared tokens used here: panel border, surface, background, text, strong text, b
 border, primary gradient start, surface-active rail selection, surface-hover menu row,
 menu row height (30px), nested rail pitch (32px), space-3 (12px), radius-md (6px).
 Source: record-detail.md › Layout › Visual layout › Record page / More Options menu.
+
+## Field filter primitive additions
+
+- `Checkbox.variant="filter"` uses the measured 15px, 2px-border checked box;
+  other checkbox variants keep their current sizing.
+- `Select.variant="filter"` and `SelectItem.variant="filter"` provide a compact
+  selector and measured operator list; default Select stays unchanged.
+- `MultiSelect({ label, placeholder, options, value, onChange })` searches local
+  `{ id, label }` options and emits multiple IDs. Arrow keys navigate the list,
+  Space toggles an option, Escape dismisses, and selected IDs survive search.
+  It loads no data. Its open appearance is Interim, using existing popup tokens.
+
+These compact controls use the neighboring Status stage value typography role
+(`--text-sm`, `--font-weight-normal`); no operator typography role is measured.

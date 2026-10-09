@@ -9,6 +9,7 @@ import { Navigation } from "./navigation";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { PageHeader } from "./page-header";
 import { PageTitle } from "./page-title";
+import { SettingsNavigation } from "./settings-navigation";
 import { UserMenu } from "./user-menu";
 
 const navigation = vi.hoisted(() => ({
@@ -65,6 +66,10 @@ const config: NavConfig = {
   ],
 };
 
+function classes(element: HTMLElement): Set<string> {
+  return new Set(element.className.split(/\s+/));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   navigation.path = "/crm/example";
@@ -107,11 +112,13 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation omits empty teamspace containers", () => {
+test("Default navigation renders Leads under Sales and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(1);
-  expect(screen.queryByRole("button")).toBeNull();
-  expect(screen.queryByRole("region")).toBeNull();
+  expect(screen.getAllByRole("link")).toHaveLength(2);
+  expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Leads/list",
+  );
+  expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
 });
 
 test("Organization switcher lists organizations, marks the current one and selects using the keyboard", async () => {
@@ -225,6 +232,43 @@ test("Mobile rail starts hidden and changes with viewport width", () => {
   expect(screen.getByLabelText("Navigation rail").className).toContain("hidden");
   view.unmount();
   expect(media.removeEventListener).toHaveBeenCalledWith("change", onChange);
+});
+
+test("Settings navigation links to Members and keeps General exact", () => {
+  navigation.path = "/crm/example/settings/members";
+  render(<SettingsNavigation orgSlug="example" />);
+  const members = screen.getByRole("link", { name: "Members" });
+  expect(members.getAttribute("href")).toBe("/crm/example/settings/members");
+  expect(members.getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
+});
+
+test("Settings navigation marks only the current page with fill and bold", () => {
+  navigation.path = "/crm/example/settings/members";
+  const view = render(<SettingsNavigation orgSlug="example" />);
+
+  const members = classes(screen.getByRole("link", { name: "Members" }));
+  const general = classes(screen.getByRole("link", { name: "General" }));
+  expect(members.has("bg-surface-hover")).toBe(true);
+  expect(members.has("font-semibold")).toBe(true);
+  expect(members.has("text-text-muted")).toBe(false);
+  expect(general.has("bg-surface-hover")).toBe(false);
+  expect(general.has("font-semibold")).toBe(false);
+  expect(general.has("text-text-muted")).toBe(true);
+  expect(general.has("data-hovered:bg-surface-hover")).toBe(true);
+  for (const link of [members, general]) {
+    expect(link.has("px-3")).toBe(true);
+    expect(link.has("py-2")).toBe(true);
+  }
+
+  navigation.path = "/crm/example/settings";
+  view.rerender(<SettingsNavigation orgSlug="example" />);
+  const activeGeneral = classes(screen.getByRole("link", { name: "General" }));
+  expect(activeGeneral.has("bg-surface-hover")).toBe(true);
+  expect(activeGeneral.has("font-semibold")).toBe(true);
+  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-surface-hover")).toBe(
+    false,
+  );
 });
 
 test("PageHeader supplies description and actions without repeating a title", () => {

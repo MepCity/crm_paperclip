@@ -236,9 +236,16 @@ const RADIUS_TOKENS = [
   "--radius-xl",
   "--radius-full",
   "--radius-form-control",
+  "--radius-create-menu",
+  "--radius-create-menu-search",
 ] as const;
 
-const SHADOW_TOKENS = ["--shadow-sm", "--shadow-md", "--shadow-lg"] as const;
+const SHADOW_TOKENS = [
+  "--shadow-sm",
+  "--shadow-md",
+  "--shadow-lg",
+  "--shadow-create-menu-focus",
+] as const;
 
 const SIZE_GROUPS = [
   {
@@ -355,6 +362,17 @@ const SIZE_GROUPS = [
       "--size-list-toolbar-height",
       "--size-list-filter-width",
       "--size-list-filter-gap",
+      "--size-filter-editor-inset",
+      "--size-filter-editor-top-gap",
+      "--size-filter-editor-value-gap",
+      "--size-filter-control-height",
+      "--size-filter-contains-width",
+      "--size-filter-control-min-width",
+      "--radius-filter-control",
+      "--size-filter-operator-list-width",
+      "--size-filter-operator-list-height",
+      "--size-filter-operator-row-height",
+      "--size-filter-operator-list-offset",
       "--size-list-filter-padding",
       "--size-list-filter-search-height",
       "--size-list-filter-search-icon",
@@ -610,6 +628,26 @@ const SIZE_GROUPS = [
       "--size-form-field-group-legend-inset",
       "--size-form-field-group-legend-padding",
       "--size-form-description-height",
+    ],
+  },
+  {
+    label: "Global create menu",
+    tokens: [
+      "--size-create-menu-width",
+      "--size-create-menu-height",
+      "--size-create-menu-offset",
+      "--size-create-menu-column-width",
+      "--size-create-menu-inset-inline",
+      "--size-create-menu-heading-top",
+      "--size-create-menu-search-top",
+      "--size-create-menu-search-width",
+      "--size-create-menu-search-height",
+      "--size-create-menu-list-top",
+      "--size-create-menu-list-height",
+      "--size-create-menu-row-height",
+      "--size-create-menu-row-icon",
+      "--size-create-menu-row-icon-inset",
+      "--size-create-menu-row-label-gap",
     ],
   },
   {
