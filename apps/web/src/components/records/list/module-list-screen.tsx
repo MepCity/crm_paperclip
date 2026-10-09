@@ -3,7 +3,7 @@
 import { NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, ModuleApiName, SortSpec } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
@@ -26,6 +26,7 @@ import {
   parseListSearchParams,
   searchParamsFromListState,
 } from "@/lib/records/list-search-params";
+import { writeRecordListContext } from "@/lib/records/record-list-context";
 import { resolveSortFieldLabels } from "@/lib/records/sort-fields";
 import { RecordTable } from "./record-table";
 import { ViewTabStrip } from "./view-tab-strip";
@@ -147,6 +148,33 @@ function ModuleListScreenLoaded({
     if (routeViewId) return config.paths.customList(orgSlug, config.module, routeViewId);
     return config.paths.defaultList(orgSlug, config.module);
   }, [config.module, config.paths, orgSlug, routeViewId]);
+
+  const listHrefForContext = useMemo(() => {
+    if (!listBasePath) return null;
+    return withSearchParams(listBasePath, searchParamsFromListState(searchState));
+  }, [listBasePath, searchState]);
+
+  useEffect(() => {
+    const pageData = list.data;
+    if (!listQuery || !pageData || !listHrefForContext) return;
+    writeRecordListContext(orgSlug, {
+      module: config.module,
+      viewId,
+      listHref: listHrefForContext,
+      page: pageData.page,
+      perPage: pageData.perPage,
+      recordIds: pageData.records.map((record) => record.id),
+      listQuery: {
+        viewId: listQuery.viewId,
+        page: listQuery.page,
+        perPage: listQuery.perPage,
+        sort: listQuery.sort,
+        filters: listQuery.filters,
+        search: listQuery.search,
+        fields: listQuery.fields,
+      },
+    });
+  }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
 
   function navigate(next: ListSearchState) {
     if (!listBasePath) return;
