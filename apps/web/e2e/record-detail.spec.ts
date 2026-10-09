@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, type Locator, test } from "@playwright/test";
-import { expectWithin, svgPaintedInkSize } from "./support/geometry";
+import { expectWithin, svgPathGeometrySize, svgStrokeInclusiveInkSize } from "./support/geometry";
 import { expectType } from "./support/typography";
 
 // Binding geometry/color expectations: record-detail.md > Layout > Visual layout.
@@ -63,9 +63,12 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   const backIconBox = await bounds(backIcon);
   expectWithin(backIconBox.width, 16, 1.5, "Back icon viewport width");
   expectWithin(backIconBox.height, 13.5, 1.5, "Back icon viewport height");
-  const backInk = await svgPaintedInkSize(backIcon);
-  expectWithin(backInk.width, 16, 1.5, "Back icon painted ink width");
-  expectWithin(backInk.height, 13.5, 1.5, "Back icon painted ink height");
+  const backGeom = await svgPathGeometrySize(backIcon);
+  const backInk = await svgStrokeInclusiveInkSize(backIcon);
+  expectWithin(backGeom.width, 14.5, 1.5, "Back path geometry width");
+  expectWithin(backGeom.height, 12, 1.5, "Back path geometry height");
+  expectWithin(backInk.width, 16, 1.5, "Back stroke-inclusive ink width");
+  expectWithin(backInk.height, 13.5, 1.5, "Back stroke-inclusive ink height");
   // Header buttons: 32 high, radius6; detail-specific primary/secondary gradients.
   const primary = header.getByRole("button", { name: "Primary action" });
   const secondary = header.getByRole("button", { name: "Edit", exact: true });
@@ -114,10 +117,14 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
     // record-detail.md > Record page > Record header: Previous / Next chevron ink 7 × 13 px.
     expectWithin(navIconBox.width, 24, 1, "Record nav icon viewport width");
     expectWithin(navIconBox.height, 24, 1, "Record nav icon viewport height");
-    const navInk = await svgPaintedInkSize(navSvg);
-    expectWithin(navInk.width, 7, 1.5, "Record nav chevron ink width");
-    expectWithin(navInk.height, 13, 1.5, "Record nav chevron ink height");
+    const navGeom = await svgPathGeometrySize(navSvg);
+    const navInk = await svgStrokeInclusiveInkSize(navSvg);
+    expectWithin(navGeom.width, 7, 1.5, "Record nav chevron path geometry width");
+    expectWithin(navGeom.height, 13, 1.5, "Record nav chevron path geometry height");
+    expectWithin(navInk.width, 8.5, 1.5, "Record nav chevron stroke-inclusive ink width");
+    expectWithin(navInk.height, 14.5, 1.5, "Record nav chevron stroke-inclusive ink height");
     measurements[`${await nav.getAttribute("aria-label")} icon box`] = navIconBox;
+    measurements[`${await nav.getAttribute("aria-label")} icon geometry`] = navGeom;
     measurements[`${await nav.getAttribute("aria-label")} icon ink`] = navInk;
   }
   // Related-list rail:220 width; pitch32; selected height30, fillEDF0F9; inset12/8.5.
