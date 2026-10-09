@@ -34,6 +34,11 @@
   padding-block: 0;
 }
 
+.record-sort-fields .record-control-sort {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+}
+
 /* React Aria renders the field label as a span, not a native label. */
 .record-sort-fields span.text-md:not(.sr-only) {
   position: absolute;
