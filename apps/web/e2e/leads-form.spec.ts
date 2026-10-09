@@ -12,6 +12,91 @@ function px(value: string) {
   return Number.parseFloat(value);
 }
 
+async function tokenColor(page: Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, token);
+}
+
+async function sampleBackdropFromOverlayToken(page: Page) {
+  return page.evaluate(() => {
+    const overlay = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-overlay")
+      .trim();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = overlay;
+    context.globalAlpha = 0.5;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  });
+}
+
+async function sampleComputedBackground(page: Page, css: string) {
+  return page.evaluate((background) => {
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = background;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = value;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  }, css);
+}
+
+function expectRgbaClose(
+  actual: { red: number; green: number; blue: number; alpha: number },
+  expected: { red: number; green: number; blue: number; alpha: number },
+) {
+  for (const channel of ["red", "green", "blue", "alpha"] as const) {
+    expect(Math.abs(actual[channel] - expected[channel])).toBeLessThanOrEqual(2);
+  }
+}
+
+async function expectLinearGradientUsesColors(
+  page: Page,
+  locator: import("@playwright/test").Locator,
+  startToken: string,
+  endToken: string,
+) {
+  const startColor = await tokenColor(page, startToken);
+  const endColor = await tokenColor(page, endToken);
+  const backgroundImage = await locator.evaluate(
+    (element) => getComputedStyle(element).backgroundImage,
+  );
+  expect(backgroundImage).toContain("linear-gradient");
+  expect(backgroundImage).toContain(startColor);
+  expect(backgroundImage).toContain(endColor);
+}
+
 async function tokenLength(page: Page, token: string) {
   return page.evaluate((name) => {
     const probe = document.createElement("div");
@@ -158,18 +243,13 @@ test("validation and unsaved dialog visuals match record-detail tokens", async (
   const paddingBottom = px(await tokenLength(page, "--size-confirm-dialog-padding-block-end"));
   expectWithin1(titleBox.y - modalBox.y, paddingTop);
   expectWithin1(titleBox.x - modalBox.x, paddingInline);
-  const backdropAlpha = await page.evaluate(() => {
-    const dialog = document.querySelector('[role="alertdialog"]');
-    let node = dialog?.parentElement ?? null;
-    while (node && !node.classList.contains("fixed")) node = node.parentElement;
-    if (!node) return 0;
-    const color = getComputedStyle(node).backgroundColor;
-    const oklab = color.match(/\/\s*([\d.]+)\)/);
-    if (oklab) return Number(oklab[1]);
-    const rgba = color.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
-    return rgba ? Number(rgba[1]) : 0;
-  });
-  expectWithin1(backdropAlpha, 0.5);
+  const backdrop = dialog.locator('xpath=ancestor::*[contains(@class,"inset-0")][1]');
+  const backdropColor = await backdrop.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const expectedBackdrop = await sampleBackdropFromOverlayToken(page);
+  const actualBackdrop = await sampleComputedBackground(page, backdropColor);
+  expectRgbaClose(actualBackdrop, expectedBackdrop);
   const stay = page.getByRole("button", { name: "Stay Here", exact: true });
   const leave = page.getByRole("button", { name: "Yes, Leave Page", exact: true });
   const stayBox = await stay.boundingBox();
@@ -183,8 +263,32 @@ test("validation and unsaved dialog visuals match record-detail tokens", async (
   expectWithin1(leaveBox.width, leaveWidth);
   expectWithin1(leaveBox.x - (stayBox.x + stayBox.width), 10.5);
   expectWithin1(modalBox.y + modalBox.height - (leaveBox.y + leaveBox.height), paddingBottom);
+  await expect(stay).toHaveCSS("border-radius", `${cornerRadius}px`);
+  await expect(leave).toHaveCSS("border-radius", `${cornerRadius}px`);
   await expect(stay).toHaveCSS("border-top-width", "1px");
-  await expect(stay).toHaveCSS("border-top-color", "rgb(213, 216, 233)");
+  await expect(stay).toHaveCSS(
+    "border-top-color",
+    await tokenColor(page, "--color-unsaved-dialog-stay-border"),
+  );
+  await expect(stay).toHaveCSS("color", await tokenColor(page, "--color-unsaved-dialog-stay-text"));
+  await expect(leave).toHaveCSS(
+    "color",
+    await tokenColor(page, "--color-unsaved-dialog-leave-text"),
+  );
+  await expectType(page, stay, "--text-md", "--font-weight-normal");
+  await expectType(page, leave, "--text-md", "--font-weight-semibold");
+  await expectLinearGradientUsesColors(
+    page,
+    stay,
+    "--color-unsaved-dialog-stay-start",
+    "--color-unsaved-dialog-stay-end",
+  );
+  await expectLinearGradientUsesColors(
+    page,
+    leave,
+    "--color-unsaved-dialog-leave-start",
+    "--color-unsaved-dialog-leave-end",
+  );
 });
 
 test("dirty cancel opens unsaved dialog; Stay Here and Leave Page behave correctly", async ({

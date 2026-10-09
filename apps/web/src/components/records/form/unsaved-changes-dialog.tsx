@@ -17,8 +17,9 @@ export function UnsavedChangesDialog({ isOpen, onOpenChange, onLeave }: UnsavedC
       message="Are you sure you want to move away from this page?"
       cancelLabel="Stay Here"
       confirmLabel="Yes, Leave Page"
-      tone="danger"
       onConfirm={onLeave}
+      cancelVariant="unsavedDialogStay"
+      confirmVariant="unsavedDialogLeave"
       cancelClassName="min-w-(--size-unsaved-dialog-stay-width)"
       confirmClassName="min-w-(--size-unsaved-dialog-leave-width)"
     />
