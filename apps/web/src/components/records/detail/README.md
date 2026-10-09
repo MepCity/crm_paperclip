@@ -92,7 +92,8 @@ the shared React Aria menu primitive, with the detail-specific appearance.
 | `tabsLabel` | Accessible tablist name. |
 | `tabs` | Ordered `{ id, label, content }`. Each content node is the matching labelled tabpanel. The measured pill is designed for two tabs. |
 | `selectedTabId`, `onTabChange` | Controlled selection; React Aria supplies arrow-key navigation. Tab changes return the content scroller to the top. |
-| `railControl?` | Reserved 36px slot before the tab pill. Empty here; the persistence/toggle task fills it. |
+| `relatedRailVisible?` | When false, the related-list rail is not rendered and the canvas uses the hidden-rail layout. Defaults to true. |
+| `railControl?` | 36px slot before the tab pill; pass `RecordRailToggle` wired to `record-detail.rail-visible`. |
 | `scrollTopLabel` | Accessible name of the circle shown after scrolling; activation returns this frame's content scroller to the top. |
 
 The parent supplies a constrained height. The header and tab row are outside the
@@ -114,7 +115,6 @@ menu present/absent, and all four arrow availability combinations.
 | Add Related List, Links, Add Link | M11, customization |
 | Record detail page views / custom record page bottom strip | M11, customization |
 | Selected/hovered related-row plus affordance | With each related module/action; no inert plus is rendered. |
-| Rail visibility control | MEP-147; its slot remains empty. |
 | Cards, status ribbon, Timeline content, page route/data | MEP-141, MEP-142, MEP-143, MEP-144 respectively. |
 
 - The portrait and icon glyphs use our own code; no reference image, icon, logo or font
@@ -141,6 +141,10 @@ menu present/absent, and all four arrow availability combinations.
   are unmeasured. Labels wider than the captured sample can grow command widths.
 
 ## Interim
+
+- `record-detail.rail-visible` is stored in the browser via `usePreference` (see `lib/README.md`).
+  Whether the key is shared across all modules or scoped per module was not observed in reference
+  captures; we use one global key for every record detail page.
 
 The spec places Scroll To Top at lower right but does not measure it: we use a 36px
 circle, 16px from the content frame's right/bottom edges, white surface, panel border,

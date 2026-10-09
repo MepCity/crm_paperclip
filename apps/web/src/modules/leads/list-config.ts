@@ -26,6 +26,7 @@ export const leadsListPageConfig = {
   module: LEADS_MODULE,
   linkField: "Full_Name",
   pluralLabel: "Leads",
+  singularLabel: "Lead",
   createLabel: "Create Lead",
   filterTitle: "Filter Leads by",
   filterGroups: leadsFilterGroups,

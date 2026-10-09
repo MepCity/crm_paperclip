@@ -18,7 +18,7 @@ export default async function OrganizationLayout({
     <AppShell
       orgSlug={orgSlug}
       organizations={organizations.map((org) => ({ name: org.name, slug: org.slug }))}
-      user={{ name: user.name, email: user.email }}
+      user={{ id: user.id, name: user.name, email: user.email }}
     >
       {children}
     </AppShell>
