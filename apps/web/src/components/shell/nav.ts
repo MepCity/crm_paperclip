@@ -1,5 +1,5 @@
 import { type Icon, Icons } from "@/components/ui/icon";
-import { moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { LEADS_MODULE } from "@/modules/leads/list-config";
 
 export interface NavLink {
@@ -74,6 +74,21 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/members`,
     match: "exact",
   },
+];
+
+/**
+ * One row of the top-bar `Create Records` menu. Rows carry no icon: the spec measures the same
+ * plus glyph on every module row (record-detail.md › Global create menu › Module list). A module
+ * joins the menu by adding a row here; its page path stays with the module's own routes.
+ */
+export interface CreateRecordEntry {
+  id: string;
+  label: string;
+  path: (orgSlug: string) => string;
+}
+
+export const createRecordsNav: readonly CreateRecordEntry[] = [
+  { id: "Leads", label: "Lead", path: (slug) => moduleCreatePath(slug, LEADS_MODULE) },
 ];
 
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {

@@ -154,9 +154,12 @@ what the "no colour constants" rule forbids.
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
+| `--radius-create-menu` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "4 px bottom corners". Only the lower corners are measured; the panel keeps square top corners where it meets the top bar | from spec |
+| `--radius-create-menu-search` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "1 px focus border `#5464F2`, 4 px corners". The shared `filter-search` variant keeps its 6 px corners on list filters | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
 | `--shadow-md` | `0 4px 6px -1px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
 | `--shadow-lg` | `0 10px 15px -3px rgba(0, 0, 0, 0.1)` | Same shell rows, and the list spec does not measure shadow parameters either | not yet measured |
+| `--shadow-create-menu-focus` | `0 0 15px rgba(84, 100, 242, 0.35)` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "Focused halo fades over approx. 7.5 px (top halo y 82.5–90)". A shadow with no spread fades out over about half its blur radius, so the blur is twice the measured fade; the halo colour is the measured 1 px focus edge `#5464F2` and its opacity is not measurable from capture | derived from spec |
 | `--space-1` | `0.25rem` (4px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-2` | `0.5rem` (8px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
 | `--space-3` | `0.75rem` (12px) | Generic scale; the measured gaps carry their own `--size-*` token below | not yet measured |
@@ -386,6 +389,51 @@ what the "no colour constants" rule forbids.
 | `--size-detail-timeline-event-body-padding-top` | `7px` | record-detail.md › Layout › Visual layout › Timeline › Event track › title cap 10 px below the icon's top edge is the spec measure; the 7 px body offset that produces it is the UI Lead's box model (MEP-143 review round 2, item 10) | lead decision |
 | `--size-detail-timeline-event-row-padding-bottom` | `18px` | no spec row measures the row box: 7 px body offset + 36 px icon + 18 px = a 61 px pitch, which is how the same-day icons land 25 px apart (UI Lead review round 2, item 11). The capture holds one event per day | Interim |
 | `--size-detail-timeline-day-gap` | `16px` | no spec row measures the space between day groups and the capture holds one event per day, so the group gap is unobserved | Interim |
+| `--size-select-user-panel-max-height` | `100dvh` | record-detail.md › Select User dialog › Backdrop and modal › viewport-limited growth (Interim) | from spec |
+| `--size-select-user-summary-text-offset` | `20px` | record-detail.md › Select User dialog › Search and selected summary › label/name baseline y 84 with row top y 64 | from spec |
+| `--size-select-user-summary-label-margin-top` | `5px` | record-detail.md › Select User dialog › Search and selected summary › baseline y 84 with `--text-md` ink box | from spec |
+| `--size-select-user-dialog-width` | `882px` | record-detail.md › Select User dialog › Backdrop and modal › "882 px wide" | from spec |
+| `--radius-select-user-dialog-bottom` | `12px` | record-detail.md › Select User dialog › Backdrop and modal › "12 px lower corners" | from spec |
+| `--size-select-user-dialog-inset` | `31px` | record-detail.md › Select User dialog › Search and selected summary › search x 325 (325 − 294) | from spec |
+| `--size-select-user-title-cap-top` | `29px` | record-detail.md › Select User dialog › Title › "cap top y 29" | from spec |
+| `--size-select-user-title-cap-inset` | `3px` | record-detail.md › Select User dialog › Title › cap top y 29 with bold `--text-2xl` box alignment | from spec |
+| `--size-select-user-search-top` | `64px` | record-detail.md › Select User dialog › Search and selected summary › "y 64–98" | from spec |
+| `--size-select-user-search-width` | `300px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-search-height` | `34px` | record-detail.md › Select User dialog › Search and selected summary › "300 × 34" | from spec |
+| `--size-select-user-table-top` | `119px` | record-detail.md › Select User dialog › User table › "Frame … y 119–270.5" | from spec |
+| `--size-select-user-table-header-band` | `32px` | record-detail.md › Select User dialog › User table › "Header band y 120–152" | from spec |
+| `--size-select-user-table-header-cap-adjust` | `2px` | record-detail.md › Select User dialog › User table › cap centre y 136 with `--text-md` semibold | from spec |
+| `--size-select-user-table-header-rule` | `2px` | record-detail.md › Select User dialog › User table › "2 px `#D9E0EB` rule" | from spec |
+| `--size-select-user-table-row-height` | `38px` | record-detail.md › Select User dialog › User table › "Rows are 38 px high" | from spec |
+| `--size-select-user-table-row-divider` | `1px` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-footer-gap` | `20px` | record-detail.md › Select User dialog › Backdrop and modal › "footer … 20 px below the table frame" | from spec |
+| `--size-select-user-dialog-bottom-padding` | `30.5px` | record-detail.md › Select User dialog › Backdrop and modal › "30.5 px above the dialog's lower edge" | from spec |
+| `--size-select-user-done-height` | `32px` | record-detail.md › Select User dialog › Footer › "32 px high" | from spec |
+| `--size-select-user-done-width` | `63.5px` | record-detail.md › Select User dialog › Footer › "`Done` x 1081.5–1145" | from spec |
+| `--size-select-user-cancel-width` | `74.5px` | record-detail.md › Select User dialog › Footer › "`Cancel` x 996.5–1071" | from spec |
+| `--size-select-user-footer-gap` | `10.5px` | record-detail.md › Select User dialog › Footer › "10.5 px gap" | from spec |
+| `--size-select-user-summary-search-gap` | `16px` | record-detail.md › Select User dialog › Search and selected summary › search ends x 625, label starts x 641 | from spec |
+| `--size-select-user-summary-label-width` | `92px` | record-detail.md › Select User dialog › Search and selected summary › label ink x 641–733 | from spec |
+| `--size-select-user-summary-label-avatar-gap` | `8px` | record-detail.md › Select User dialog › Search and selected summary › label ends x 733, avatar x 741 | from spec |
+| `--size-select-user-summary-avatar-name-gap` | `11px` | record-detail.md › Select User dialog › Search and selected summary › avatar ends x 771, name x 782 | from spec |
+| `--size-select-user-avatar` | `30px` | record-detail.md › Select User dialog › Search and selected summary › "30 px" avatar | from spec |
+| `--size-select-user-radio` | `15px` | record-detail.md › Select User dialog › Radio › "15 × 15 px circle" | from spec |
+| `--size-select-user-radio-ring-selected` | `4px` | record-detail.md › Select User dialog › Radio › "4 px `#5464F2` ring" | from spec |
+| `--size-select-user-radio-ring-unselected` | `2px` | record-detail.md › Select User dialog › Radio › "2 px `#C5C4D3` ring" | from spec |
+| `--size-select-user-radio-centre` | `7px` | record-detail.md › Select User dialog › Radio › "7 px white centre" | from spec |
+| `--color-select-user-table-border` | `#d9e0eb` | record-detail.md › Select User dialog › User table › "1 px `#D9E0EB` edge" | from spec |
+| `--color-select-user-row-divider` | `#eef1f7` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
+| `--size-select-user-table-radio-inset` | `20px` | record-detail.md › Select User dialog › User table › radio x 346 with frame x 325 (346 − 325 − 1 px frame edge) | from spec |
+| `--size-select-user-table-radio-row-inset` | `13px` | record-detail.md › Select User dialog › User table › radio y 167 with row band y 154–192 | from spec |
+| `--size-select-user-table-radio-column` | `36px` | record-detail.md › Select User dialog › User table › radio x 346–361 | from spec |
+| `--size-select-user-table-avatar-column` | `60px` | record-detail.md › Select User dialog › User table › row avatar x 391–421 | from spec |
+| `--size-select-user-table-name-column` | `141.5px` | record-detail.md › Select User dialog › User table › name x 432, Role x 573.5 | from spec |
+| `--size-select-user-table-role-column` | `164.5px` | record-detail.md › Select User dialog › User table › Role x 573.5, Email x 738 | from spec |
+| `--size-select-user-table-email-column` | `253px` | record-detail.md › Select User dialog › User table › Email x 738, Profile x 991 | from spec |
+| `--size-select-user-table-name-header-inset` | `31px` | record-detail.md › Select User dialog › User table › `User Name` label x 392, avatar column ends x 361 | from spec |
+| `--size-select-user-table-avatar-inset` | `30px` | record-detail.md › Select User dialog › User table › avatar x 391 after radio column | from spec |
+| `--size-select-user-table-name-text-inset` | `11px` | record-detail.md › Select User dialog › User table › name x 432 after avatar x 421 | from spec |
+| `--size-select-user-table-frame-adjust` | `1.5px` | record-detail.md › Select User dialog › User table › frame y 119–270.5 minus row band sum for three rows | from spec |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
@@ -416,6 +464,21 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
 | `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
 | `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
+| `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
+| `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
+| `--size-create-menu-column-width` | `334.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Vertical divider › "1 px line `#EDF0F4` at x 868.5–869.5" minus the panel left edge x 534 | from spec |
+| `--size-create-menu-inset-inline` | `31px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5" minus the panel left edge x 534; the same row's "Inset 31.5 px from panel left edge" is the header ink, 0.5 px inside this box | from spec |
+| `--size-create-menu-heading-top` | `11.3px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Left column header › "ink x 565.5–674.5, y 63.5–75" minus the panel top y 50 gives a 13.5 px ink inset. The header sets `line-height: 1`, where the 15.5 px Figtree ink band starts 2.2 px inside the line box, so the box inset is 11.3 px | from spec |
+| `--size-create-menu-search-top` | `40px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "y 90–120" minus the panel top y 50 | from spec |
+| `--size-create-menu-search-width` | `287.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5 (287.5 × 30 px)" | from spec |
+| `--size-create-menu-search-height` | `30px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "x 565–852.5 (287.5 × 30 px), y 90–120" | from spec |
+| `--size-create-menu-list-top` | `75px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "10 visible before scroll, y 125–475" minus the panel top y 50 | from spec |
+| `--size-create-menu-list-height` | `350px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "10 visible before scroll, y 125–475" | from spec |
+| `--size-create-menu-row-height` | `34px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "row pitch 34 px" | from spec |
+| `--size-create-menu-row-icon` | `7px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "ink x 579.5–586.5, y 138.5–145.5 in the first row (7 × 7 px, strokes about 1 px, `#313949`)" | from spec |
+| `--size-create-menu-row-icon-inset` | `45.5px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › glyph ink "x 579.5" minus the panel left edge x 534 | from spec |
+| `--size-create-menu-row-label-gap` | `13px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Module list › "Text label starts x 599.5–600.5" minus the glyph ink end x 586.5 | from spec |
 
 ### Typeface
 

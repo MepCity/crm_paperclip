@@ -104,6 +104,21 @@ function RecordUser(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** White person silhouette for avatar placeholders; original drawing. */
+function AvatarPerson(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5H3Z" />
+    </svg>
+  );
+}
+
 /** Filled portrait silhouette clipped inside the Lead Image ring. */
 function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
   return (
@@ -179,10 +194,32 @@ function RecordInfo(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/**
+ * Create-menu row glyph. record-detail.md › Global create menu › Module list: every row starts
+ * with the same plus, 7 × 7 px with about 1 px strokes, so the ink fills its whole box.
+ */
+function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 7 7"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M0 3.5h7M3.5 0v7" />
+    </svg>
+  );
+}
+
 export type Icon = LucideIcon;
 
 export const Icons = {
   recordUser: RecordUser,
+  avatarPerson: AvatarPerson,
   recordPortraitSilhouette: RecordPortraitSilhouette,
   recordFormCaret: RecordFormCaret,
   recordChevron: RecordChevron,
@@ -192,6 +229,7 @@ export const Icons = {
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
+  createRecordPlus: CreateRecordPlus,
   fieldEdit: FieldEdit,
   building: Building2,
   check: Check,
