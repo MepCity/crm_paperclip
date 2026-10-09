@@ -159,6 +159,8 @@ test("keyboard navigation starts with skip and operates both menus", async ({ pa
   await expect(page.getByRole("button", { name: "Sales" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Leads" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Create Records" })).toBeFocused();
   const settings = page.getByRole("link", { name: "Settings", exact: true });
   for (let index = 0; index < 40; index++) {
     try {

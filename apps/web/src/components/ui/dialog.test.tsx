@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { Button } from "./button";
 import { ConfirmDialog, Dialog, DialogTrigger } from "./dialog";
@@ -70,6 +71,53 @@ test("Dialog closes on Escape and returns focus to the trigger", async () => {
 
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+// The state of the swapped content lives below the Dialog, so the Dialog itself never
+// re-renders: this is how the invite dialog replaces its form with the created link.
+function renderSwappingDialog() {
+  function Content() {
+    const [created, setCreated] = useState(false);
+    if (created) {
+      return (
+        <div className="flex flex-col gap-4">
+          <p>https://example.test/invite/token</p>
+        </div>
+      );
+    }
+    return <Button onPress={() => setCreated(true)}>Create invitation</Button>;
+  }
+
+  render(
+    <DialogTrigger>
+      <Button>Invite member</Button>
+      <Dialog title="Invite member">
+        <Content />
+      </Dialog>
+    </DialogTrigger>,
+  );
+  return screen.getByRole("button", { name: "Invite member" });
+}
+
+test("Dialog keeps focus inside and still closes on Escape when its content is replaced", async () => {
+  const user = userEvent.setup();
+  const trigger = renderSwappingDialog();
+
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Invite member" });
+
+  // A browser focuses a button when it is clicked, jsdom does not. The created button
+  // is the element the swap removes, so it has to hold focus for the real defect.
+  screen.getByRole("button", { name: "Create invitation" }).focus();
+  await user.click(screen.getByRole("button", { name: "Create invitation" }));
+
+  // Focus has to be reachable again in this commit, not a frame later.
+  expect(screen.getByText("https://example.test/invite/token")).toBeTruthy();
+  expect(dialog.contains(document.activeElement)).toBe(true);
+
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   await waitFor(() => expect(document.activeElement).toBe(trigger));
 });
 
