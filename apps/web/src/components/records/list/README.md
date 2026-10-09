@@ -339,14 +339,20 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List view tab | `--text-sm` | `--font-weight-bold` |
 | List toolbar Filter / Sort | `--text-md` | `--font-weight-semibold` |
 | List primary button (button or link) | `--text-md` | `--font-weight-semibold` |
+| Sort dialog heading (`Sort By` label) | `--text-md` | `--font-weight-normal` |
+| Sort dialog field selector value | `--text-sm` | `--font-weight-normal` |
+| Sort dialog order selector option | `--text-sm` | `--font-weight-normal` |
+| Sort dialog footer button (Cancel / Apply) | `--text-sm` | `--font-weight-semibold` |
+| List menu item (More / Actions) | `--text-md` | `--font-weight-normal` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
-are retained. Toolbar labels map the measured 14px to the existing 14.5px token;
-no separate 14px size is introduced. The Sort popover action buttons retain their
-existing size until their screen typography task.
+are retained. Toolbar labels, Sort dialog heading, disabled list menu items, and
+table settings labels map measured 14px to the existing 14.5px `--text-md`
+token; no separate 14px size is introduced. Sort disabled Apply maps measured
+weight 620 to `--font-weight-semibold` (510).
 
 ## Module list page (Leads)
 

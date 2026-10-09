@@ -42,15 +42,21 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
       >
         <div className="record-sort-fields">
           <Select
+            variant="sort"
             label="Sort By"
             placeholder="None"
             items={fields}
             value={validField ? field : null}
             onChange={(key) => setField(String(key ?? ""))}
           >
-            {(item) => <SelectItem id={item.apiName}>{item.label}</SelectItem>}
+            {(item) => (
+              <SelectItem variant="sort" id={item.apiName}>
+                {item.label}
+              </SelectItem>
+            )}
           </Select>
           <Select
+            variant="sort"
             label="Order"
             hideLabel
             items={[
@@ -60,7 +66,11 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
             value={order}
             onChange={(key) => setOrder(key === "desc" ? "desc" : "asc")}
           >
-            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+            {(item) => (
+              <SelectItem variant="sort" id={item.id}>
+                {item.label}
+              </SelectItem>
+            )}
           </Select>
         </div>
         <div className="record-sort-actions">
