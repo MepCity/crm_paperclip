@@ -4,6 +4,7 @@ import { NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, ModuleApiName, SortSpec } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
@@ -62,7 +63,7 @@ export interface ModuleListScreenProps {
 function ListNotFound() {
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <NotFoundMessage />
     </div>
   );
 }

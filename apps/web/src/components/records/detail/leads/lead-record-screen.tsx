@@ -10,6 +10,7 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
+import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { useModule, useRecord, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
@@ -53,7 +54,7 @@ function useLeadsListContext(orgSlug: string): RecordListContext | null {
 function RecordNotFound() {
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <NotFoundMessage />
     </div>
   );
 }
