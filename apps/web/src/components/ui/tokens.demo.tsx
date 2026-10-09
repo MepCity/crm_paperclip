@@ -26,6 +26,8 @@ const COLOUR_GROUPS = [
       "--color-record-arrow-disabled",
       "--color-record-tab-selected",
       "--color-record-tab-border",
+      "--color-record-rail-toggle-shown",
+      "--color-record-rail-toggle-hidden-border",
     ],
   },
   {

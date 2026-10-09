@@ -537,6 +537,8 @@
   --color-record-arrow-disabled: #adb0b6;
   --color-record-tab-selected: #ebedff;
   --color-record-tab-border: #a3acff;
+  --color-record-rail-toggle-shown: #dfe4ef;
+  --color-record-rail-toggle-hidden-border: #e2e7ee;
   --size-record-header-height: 73px;
   --size-record-portrait: 48px;
   --size-record-back-region: 52px;
