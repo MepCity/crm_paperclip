@@ -624,6 +624,89 @@ describe("ModuleListScreen", () => {
     expect(lastHref).toContain("page=1");
   });
 
+  it("mass-updates selected records and clears selection on success", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const massSpy = vi.spyOn(records, "massUpdate");
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: ctx.userId, name: "User", email: "u@example.test" },
+        { userId: "user-2", name: "Other", email: "o@example.test" },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const page = await records.list("Leads", listQuery);
+    const ids = page.records.slice(0, 2).map((record) => record.id);
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    await user.click(rows[1] as HTMLElement);
+    await user.click(rows[2] as HTMLElement);
+    const listCallsBefore = listSpy.mock.calls.length;
+    await user.click(screen.getByRole("button", { name: "Mass Update" }));
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: "Lead Source" }));
+    await user.click(screen.getByRole("button", { name: "Lead Source" }));
+    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    await waitFor(() => {
+      expect(massSpy).toHaveBeenCalledWith("Leads", ids, { Lead_Source: "Advertisement" });
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/Record Selected/)).toBeNull();
+    });
+    await waitFor(() => {
+      expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore);
+    });
+  });
+
+  it("changes owner for selected records from the Actions menu", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx, {
+      listMemberIds: async () => [ctx.userId, "batch-owner"],
+    });
+    const ownerSpy = vi.spyOn(records, "changeOwner");
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: ctx.userId, name: "User", email: "u@example.test" },
+        { userId: "batch-owner", name: "Batch Owner", email: "batch@example.test" },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const page = await records.list("Leads", listQuery);
+    const ids = page.records.slice(0, 2).map((record) => record.id);
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    await user.click(rows[1] as HTMLElement);
+    await user.click(rows[2] as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Change Owner" }));
+    await user.click(screen.getByRole("button", { name: "Lead Owner" }));
+    await user.click(screen.getByRole("option", { name: /Batch Owner/ }));
+    await user.click(screen.getByRole("button", { name: "Change Owner" }));
+    await waitFor(() => {
+      expect(ownerSpy).toHaveBeenCalledWith("Leads", ids, "batch-owner");
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/Record Selected/)).toBeNull();
+    });
+  });
+
   it("passes list query fields and paging from the address", async () => {
     navigation.params = new URLSearchParams("page=2&per_page=10&sort_by=Company&sort_order=asc");
     const records = createFixtureRecordService(ctx);

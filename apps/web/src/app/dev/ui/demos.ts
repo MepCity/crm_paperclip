@@ -9,6 +9,8 @@ import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
+import ChangeOwnerDialogDemo from "@/components/records/list/change-owner-dialog.demo";
+import MassUpdateDialogDemo from "@/components/records/list/mass-update-dialog.demo";
 import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
@@ -85,6 +87,8 @@ export const demos: Record<string, React.ComponentType> = {
   skeleton: SkeletonDemo,
   "list-chrome": ListChromeDemo,
   "selection-bar": SelectionBarDemo,
+  "mass-update-dialog": MassUpdateDialogDemo,
+  "change-owner-dialog": ChangeOwnerDialogDemo,
   "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,

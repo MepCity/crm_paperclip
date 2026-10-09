@@ -1,0 +1,70 @@
+.mass-update-modal-panel {
+  --top-aligned-modal-width: var(--size-mass-update-dialog-width);
+  --top-aligned-modal-bottom-radius: var(--radius-create-menu);
+  padding: var(--size-mass-update-dialog-padding-block-start)
+    var(--size-mass-update-dialog-padding-inline)
+    var(--size-mass-update-dialog-padding-block-end);
+  box-sizing: border-box;
+}
+
+.mass-update-title {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-strong);
+}
+
+.mass-update-field-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-mass-update-field-gap);
+  margin-top: var(--size-mass-update-dialog-title-fields-gap);
+}
+
+.mass-update-field-selector {
+  flex: none;
+  width: var(--size-mass-update-field-selector-width);
+}
+
+.mass-update-value-cell {
+  flex: none;
+  width: var(--size-mass-update-value-width);
+  min-width: 0;
+}
+
+.mass-update-value-placeholder {
+  box-sizing: border-box;
+  height: var(--size-form-input-height);
+  width: 100%;
+  border: 1px solid var(--color-mass-update-value-border);
+  border-radius: var(--radius-form-control);
+  background: var(--color-mass-update-value-disabled-fill);
+}
+
+.mass-update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--size-mass-update-actions-gap);
+  margin-top: var(--size-mass-update-dialog-fields-actions-gap);
+}
+
+.mass-update-cancel {
+  width: var(--size-mass-update-cancel-width);
+}
+
+.mass-update-update {
+  width: var(--size-mass-update-update-width);
+}
+
+.mass-update-form-error {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-danger);
+}
+
+.mass-update-general-error {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
