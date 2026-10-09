@@ -10,13 +10,16 @@ import type {
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
+import { SelectionBar } from "./selection-bar";
 import "./module-list-page.css";
 import {
+  useDeleteRecords,
   useModule,
   useRecordCount,
   useRecordList,
@@ -50,6 +53,7 @@ export interface ModuleListScreenConfig {
   module: ModuleApiName;
   linkField: string;
   pluralLabel: string;
+  singularLabel: string;
   createLabel: string;
   filterTitle: string;
   filterGroups: readonly FilterGroup[];
@@ -117,6 +121,9 @@ function ModuleListScreenLoaded({
     total: number;
   } | null>(null);
   const priorViewId = useRef(viewId);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteRecords = useDeleteRecords(config.module);
 
   const moduleQuery = useModule(config.module);
   const viewQuery = useView(config.module, viewId);
@@ -174,14 +181,26 @@ function ModuleListScreenLoaded({
   useEffect(() => {
     if (
       list.isSuccess &&
+      !list.isPlaceholderData &&
+      !list.isFetching &&
       count.isSuccess &&
+      !count.isFetching &&
       list.data &&
       count.data !== undefined &&
       !hasFilterValidationError
     ) {
       setAcceptedListSnapshot({ list: list.data, total: count.data });
     }
-  }, [count.data, count.isSuccess, hasFilterValidationError, list.data, list.isSuccess]);
+  }, [
+    count.data,
+    count.isFetching,
+    count.isSuccess,
+    hasFilterValidationError,
+    list.data,
+    list.isFetching,
+    list.isPlaceholderData,
+    list.isSuccess,
+  ]);
 
   const serverFilterMessage = useMemo(() => {
     const error = listValidationError ?? countValidationError;
@@ -253,7 +272,20 @@ function ModuleListScreenLoaded({
     router.push(href);
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset selection when list context changes
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [
+    viewId,
+    searchState.page,
+    searchState.perPage,
+    searchState.sortBy,
+    searchState.sortOrder,
+    filterSelection,
+  ]);
+
   function refreshView() {
+    setSelectedIds([]);
     refreshModuleListData();
   }
 
@@ -280,6 +312,10 @@ function ModuleListScreenLoaded({
     }
   }
 
+  function clearSelection() {
+    setSelectedIds([]);
+  }
+
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
   const emptyMessage = `No ${config.pluralLabel} found.`;
   const initialLoading =
@@ -304,23 +340,61 @@ function ModuleListScreenLoaded({
   if (users.isError) throw users.error;
   if (moduleQuery.isError) throw moduleQuery.error;
 
-  const listPage =
-    hasFilterValidationError && acceptedListSnapshot
-      ? acceptedListSnapshot.list
-      : (list.data ?? null);
+  const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
+  const countSettled = count.isSuccess && !count.isFetching;
+  const awaitingFilteredPair =
+    appliedCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
+  const useAcceptedSnapshot =
+    acceptedListSnapshot !== null && (hasFilterValidationError || awaitingFilteredPair);
+
+  const listPage = useAcceptedSnapshot ? acceptedListSnapshot.list : (list.data ?? null);
 
   if (initialLoading || !view || !listQuery || !listPage) {
     return <div className="module-list-page" aria-hidden="true" />;
   }
 
   const records = listPage.records;
-  const total =
-    hasFilterValidationError && acceptedListSnapshot
-      ? acceptedListSnapshot.total
-      : (count.data ?? null);
+  const total = useAcceptedSnapshot ? acceptedListSnapshot.total : (count.data ?? null);
   const moreRecords = listPage.moreRecords;
   const page = listPage.page;
   const perPage = listPage.perPage;
+
+  const pageRecordIds = new Set(records.map((record) => record.id));
+  const pageSelectedIds = selectedIds.filter((id) => pageRecordIds.has(id));
+  const selectionActive = pageSelectedIds.length > 0;
+
+  function openDeleteDialog() {
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    const ids = [...pageSelectedIds];
+    if (ids.length === 0) return;
+    setDeleteError(null);
+    try {
+      await deleteRecords.mutateAsync(ids);
+      setDeleteOpen(false);
+      const deletedAllOnPage = ids.length === records.length;
+      clearSelection();
+      if (deletedAllOnPage && page > 1) {
+        navigate({ ...searchState, page: page - 1 });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Delete failed.";
+      setDeleteError(message);
+      throw error;
+    }
+  }
+
+  const deleteTitle =
+    pageSelectedIds.length === 1
+      ? `Delete ${config.singularLabel}`
+      : `Delete ${config.pluralLabel}`;
+  const deleteMessage =
+    pageSelectedIds.length === 1
+      ? `Are you sure you want to delete the selected ${config.singularLabel}?`
+      : `Are you sure you want to delete the ${pageSelectedIds.length} selected ${config.pluralLabel}?`;
 
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
@@ -337,24 +411,48 @@ function ModuleListScreenLoaded({
   return (
     <div className="module-list-page">
       <ViewTabStrip viewName={view.name} />
-      <ListToolbar
-        filterOpen={filterOpen}
-        onFilterChange={setFilterOpen}
-        onRefresh={refreshView}
-        fields={sortFields}
-        sort={appliedSort}
-        onSortApply={(next: SortSpec) => {
-          navigate({
-            ...searchState,
-            sortBy: next.field,
-            sortOrder: next.order,
-          });
-        }}
-        create={{
-          label: config.createLabel,
-          href: config.paths.create(orgSlug, config.module),
-        }}
-      />
+      {selectionActive ? (
+        <SelectionBar
+          selectedCount={pageSelectedIds.length}
+          onClear={clearSelection}
+          onDelete={openDeleteDialog}
+        />
+      ) : (
+        <ListToolbar
+          filterOpen={filterOpen}
+          onFilterChange={setFilterOpen}
+          onRefresh={refreshView}
+          fields={sortFields}
+          sort={appliedSort}
+          onSortApply={(next: SortSpec) => {
+            navigate({
+              ...searchState,
+              sortBy: next.field,
+              sortOrder: next.order,
+            });
+          }}
+          create={{
+            label: config.createLabel,
+            href: config.paths.create(orgSlug, config.module),
+          }}
+        />
+      )}
+      {deleteOpen ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open && !deleteRecords.isPending) setDeleteOpen(false);
+          }}
+          title={deleteTitle}
+          message={deleteMessage}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          tone="danger"
+          busy={deleteRecords.isPending}
+          errorMessage={deleteError}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
       <div className="module-list-body">
         {filterOpen ? (
           <FilterPanel
@@ -376,8 +474,11 @@ function ModuleListScreenLoaded({
             records={records}
             linkField={config.linkField}
             rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
-            selectedIds={selectedIds}
-            onSelectedIdsChange={(ids) => setSelectedIds([...ids])}
+            selectedIds={pageSelectedIds}
+            onSelectedIdsChange={(ids) => {
+              const allowed = new Set(records.map((record) => record.id));
+              setSelectedIds([...ids].filter((id) => allowed.has(id)));
+            }}
             wrapText
             emptyMessage={emptyMessage}
             ownerNames={ownerNames}

@@ -26,6 +26,7 @@ export interface RecordPageFrameProps {
   tabs: readonly RecordPageTab[];
   selectedTabId: string;
   onTabChange: (id: string) => void;
+  relatedRailVisible?: boolean;
   railControl?: ReactNode;
   scrollTopLabel: string;
 }
@@ -40,6 +41,7 @@ export function RecordPageFrame({
   tabs,
   selectedTabId,
   onTabChange,
+  relatedRailVisible = true,
   railControl,
   scrollTopLabel,
 }: RecordPageFrameProps) {
@@ -60,32 +62,35 @@ export function RecordPageFrame({
     <section data-record-frame className="relative flex h-full min-h-0 flex-col overflow-hidden">
       {header}
       <div className="flex flex-1 min-h-0">
-        <nav
-          aria-label={relatedListLabel}
-          data-record-rail
-          className="shrink-0 w-(--size-record-rail-width) overflow-y-auto bg-surface px-3"
-        >
-          <h2 className="flex items-center h-(--size-record-rail-heading-height) pl-(--size-record-rail-text-inset) text-lg font-bold text-text-strong">
-            {relatedListLabel}
-          </h2>
-          <div className="flex flex-col gap-(--size-rail-nested-row-gap)">
-            {relatedEntries.map((entry) => (
-              <Link
-                key={entry.id}
-                href={`#${entry.targetId}`}
-                variant="body"
-                aria-current={selectedRelatedId === entry.id ? "page" : undefined}
-                onPress={() => selectRelated(entry)}
-                onClick={(event) => event.preventDefault()}
-                className={`flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal ${selectedRelatedId === entry.id ? "bg-(--color-surface-active)" : ""}`}
-              >
-                <span className="truncate" title={entry.label}>
-                  {entry.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </nav>
+        {relatedRailVisible ? (
+          <nav
+            id="record-related-rail"
+            aria-label={relatedListLabel}
+            data-record-rail
+            className="shrink-0 w-(--size-record-rail-width) overflow-y-auto bg-surface px-3"
+          >
+            <h2 className="flex items-center h-(--size-record-rail-heading-height) pl-(--size-record-rail-text-inset) text-lg font-bold text-text-strong">
+              {relatedListLabel}
+            </h2>
+            <div className="flex flex-col gap-(--size-rail-nested-row-gap)">
+              {relatedEntries.map((entry) => (
+                <Link
+                  key={entry.id}
+                  href={`#${entry.targetId}`}
+                  variant="body"
+                  aria-current={selectedRelatedId === entry.id ? "page" : undefined}
+                  onPress={() => selectRelated(entry)}
+                  onClick={(event) => event.preventDefault()}
+                  className={`flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal ${selectedRelatedId === entry.id ? "bg-(--color-surface-active)" : ""}`}
+                >
+                  <span className="truncate" title={entry.label}>
+                    {entry.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </nav>
+        ) : null}
         <Tabs
           selectedKey={selectedTabId}
           onSelectionChange={(id) => {

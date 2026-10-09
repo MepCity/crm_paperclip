@@ -5,6 +5,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { RecordHeader, type RecordHeaderProps } from "./record-header";
 import { RecordPageFrame } from "./record-page-frame";
+import { RecordRailToggle } from "./record-rail-toggle";
 
 const base: RecordHeaderProps = {
   title: "Example Record",
@@ -104,9 +105,16 @@ test("grouped menu opens by keyboard, skips disabled entries, dispatches and res
   expect(action).toHaveBeenCalledOnce();
 });
 
-function Frame({ entries = true }: { entries?: boolean }) {
+function Frame({
+  entries = true,
+  railVisible = true,
+}: {
+  entries?: boolean;
+  railVisible?: boolean;
+}) {
   const [selected, setSelected] = useState("one");
   const [tab, setTab] = useState("overview");
+  const [rail, setRail] = useState(railVisible);
   return (
     <RecordPageFrame
       header={<RecordHeader {...base} />}
@@ -124,6 +132,8 @@ function Frame({ entries = true }: { entries?: boolean }) {
       tabsLabel="Record views"
       selectedTabId={tab}
       onTabChange={setTab}
+      relatedRailVisible={rail}
+      railControl={<RecordRailToggle railVisible={rail} onRailVisibleChange={setRail} />}
       scrollTopLabel="Scroll To Top"
       tabs={[
         {
@@ -158,6 +168,19 @@ test("rail selection, tab arrows and panel semantics", async () => {
   expect(screen.getByRole("tabpanel", { name: "Timeline" }).textContent).toBe("Alternate content");
   await user.keyboard("{ArrowLeft}");
   expect(screen.getByRole("tabpanel", { name: "Overview" })).toBeTruthy();
+});
+
+test("rail toggle exposes aria-pressed and hides the related-list rail", async () => {
+  const user = userEvent.setup();
+  render(<Frame />);
+  const toggle = screen.getByRole("button", { name: "Hide Related List" });
+  expect(toggle.getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByRole("navigation", { name: "Related List" })).toBeTruthy();
+  await user.click(toggle);
+  expect(
+    screen.getByRole("button", { name: "Show Related List" }).getAttribute("aria-pressed"),
+  ).toBe("false");
+  expect(screen.queryByRole("navigation", { name: "Related List" })).toBeNull();
 });
 
 test("empty rail has heading only; scroll control appears and returns to top", async () => {

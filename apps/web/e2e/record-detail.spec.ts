@@ -120,7 +120,13 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
   await expect(tabRow.locator("..")).toHaveCSS("background-color", "rgb(238, 241, 249)");
   await expect(tabRow).toHaveCSS("padding-left", "12px");
   await expect(tabRow).toHaveCSS("padding-top", "14px");
-  await metric("Empty rail-control slot", frame.locator("[data-record-rail-control]"), 36, 36);
+  const railToggle = frame.getByRole("button", { name: "Hide Related List" });
+  await metric("Rail toggle button (rail shown)", railToggle, 36, 36);
+  await expect(railToggle).toHaveAttribute("aria-pressed", "true");
+  await expect(railToggle).toHaveCSS("background-color", "rgb(223, 228, 239)");
+  const toggleBox = await bounds(railToggle);
+  const tabListBox = await bounds(tabs);
+  expect(tabListBox.x - toggleBox.x - toggleBox.width).toBe(12);
   const scroller = frame.locator("[data-record-scroller]");
   await expect(scroller).toHaveCSS("padding-left", "12px");
   await expect(scroller).toHaveCSS("padding-right", "12px");

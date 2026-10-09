@@ -131,3 +131,61 @@ test("two people join through an invitation and manage membership", async ({ pag
     await guestContext.close();
   }
 });
+
+test("the invite dialog keeps focus after the link is created and closes on Escape", async ({
+  page,
+}) => {
+  await signUpNewUser(page, { name: "Ada Admin" });
+  const organization = await createOrganization(page, "Focus North");
+  // A full page load drops the announcement React Aria leaves pending behind the
+  // client-side navigation out of the organization shell (see the shell spec).
+  await page.goto(`/crm/${organization.slug}/settings/members`);
+
+  const trigger = page.getByRole("button", { name: "Invite member" });
+  const dialog = page.getByRole("dialog", { name: "Invite member" });
+
+  // Creating an invitation replaces the form with the link, so the pressed button is
+  // removed from the document with the focus on it. The dialog has to take that focus
+  // back, or Escape would no longer reach the modal and the flow could not be closed.
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("textbox", { name: "Email" })
+    .fill(`focus-${crypto.randomUUID()}@example.test`);
+  await dialog.getByRole("button", { name: "Create invitation" }).click();
+  await expect(dialog.getByText(/\/invite\//)).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute("role")))
+    .toBe("dialog");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.textContent?.trim()))
+    .toBe("Invite member");
+
+  // Same flow again after a second dialog type was opened and dismissed.
+  await page
+    .getByRole("button", { name: /^Remove / })
+    .first()
+    .click();
+  const confirm = page.getByRole("alertdialog");
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+
+  await trigger.click();
+  await dialog
+    .getByRole("textbox", { name: "Email" })
+    .fill(`focus2-${crypto.randomUUID()}@example.test`);
+  await dialog.getByRole("button", { name: "Create invitation" }).click();
+  await expect(dialog.getByText(/\/invite\//)).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute("role")))
+    .toBe("dialog");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.textContent?.trim()))
+    .toBe("Invite member");
+});
