@@ -99,24 +99,10 @@ function invalidateModuleLists(
   if (recordId) void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, recordId) });
 }
 
-function isModuleListOrCountQuery(queryKey: readonly unknown[], module: ModuleApiName): boolean {
-  return (
-    queryKey.length >= 4 &&
-    queryKey[0] === "crm" &&
-    queryKey[1] === "module" &&
-    queryKey[2] === module &&
-    (queryKey[3] === "list" || queryKey[3] === "count")
-  );
-}
-
 /** Re-requests open list and count queries for a module; does not reload module metadata. */
 export function useRefreshModuleListData(module: ModuleApiName) {
   const queryClient = useQueryClient();
-  return () => {
-    void queryClient.invalidateQueries({
-      predicate: (query) => isModuleListOrCountQuery(query.queryKey, module),
-    });
-  };
+  return () => invalidateModuleLists(queryClient, module);
 }
 
 export function useCreateRecord(module: ModuleApiName) {

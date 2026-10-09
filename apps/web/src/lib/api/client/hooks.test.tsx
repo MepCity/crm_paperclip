@@ -1,7 +1,7 @@
 import { NotFoundError } from "@crm/core/errors";
 import type { ListQuery } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "./client-record-service";
@@ -11,9 +11,13 @@ import {
   useDeleteRecords,
   useHomeCurrency,
   useMassUpdate,
+  useModule,
   useRecord,
   useRecordCount,
   useRecordList,
+  useRefreshModuleListData,
+  useUsers,
+  useViews,
 } from "./hooks";
 import type { ClientRecordService } from "./http-record-service";
 import { ApiProvider } from "./provider";
@@ -111,6 +115,53 @@ describe("record hooks", () => {
     });
     await waitFor(() => expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore));
     await waitFor(() => expect(countSpy.mock.calls.length).toBeGreaterThan(countCallsBefore));
+  });
+
+  it("refresh re-requests the open list and count without reloading metadata", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const viewId = view.id;
+    const query: ListQuery = { viewId, page: 1, perPage: 10 };
+    const listSpy = vi.spyOn(service, "list");
+    const countSpy = vi.spyOn(service, "count");
+    const moduleSpy = vi.spyOn(service, "getModule");
+    const summariesSpy = vi.spyOn(service, "listViewSummaries");
+    const usersSpy = vi.spyOn(service, "listUsers");
+    function useHarness() {
+      return {
+        list: useRecordList("Leads", query),
+        count: useRecordCount("Leads", { viewId }),
+        module: useModule("Leads"),
+        viewSummaries: useViews("Leads"),
+        users: useUsers(),
+        refresh: useRefreshModuleListData("Leads"),
+      };
+    }
+    const { result } = renderHook(() => useHarness(), { wrapper: wrapper(service) });
+    await waitFor(() =>
+      expect(
+        result.current.list.isSuccess &&
+          result.current.count.isSuccess &&
+          result.current.module.isSuccess &&
+          result.current.viewSummaries.isSuccess &&
+          result.current.users.isSuccess,
+      ).toBe(true),
+    );
+    listSpy.mockClear();
+    countSpy.mockClear();
+    moduleSpy.mockClear();
+    summariesSpy.mockClear();
+    usersSpy.mockClear();
+    act(() => result.current.refresh());
+    await waitFor(() => {
+      expect(listSpy).toHaveBeenCalledTimes(1);
+      expect(countSpy).toHaveBeenCalledTimes(1);
+    });
+    expect(moduleSpy).not.toHaveBeenCalled();
+    expect(summariesSpy).not.toHaveBeenCalled();
+    expect(usersSpy).not.toHaveBeenCalled();
   });
 
   it.each(["massUpdate", "changeOwner", "delete"] as const)(
