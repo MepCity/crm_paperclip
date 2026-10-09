@@ -41,6 +41,17 @@ function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Rail/product selector caret; app-shell.md › Rail/product selector (10 × 5 ink). */
+function ProductCaretDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 10 5" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M0.5 0h9L5 5Z" />
+    </svg>
+  );
+}
+
 function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
   const { "aria-label": _label, ...rest } = props;
   return (
@@ -266,6 +277,7 @@ export const Icons = {
   thumbDown: ThumbDown,
   statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
+  productCaretDown: ProductCaretDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
   createRecordPlus: CreateRecordPlus,

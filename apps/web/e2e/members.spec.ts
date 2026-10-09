@@ -59,7 +59,7 @@ test("two people join through an invitation and manage membership", async ({ pag
     await expect(bea).toHaveURL(inviteUrl, { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
     await bea.getByRole("button", { name: `Join ${organization.name}` }).click();
     await expect(bea).toHaveURL(`/crm/${organization.slug}`);
-    await expect(bea.getByRole("button", { name: "Organization switcher" })).toContainText(
+    await expect(bea.getByRole("button", { name: /Organization switcher:/ })).toContainText(
       organization.name,
     );
 

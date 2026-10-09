@@ -216,6 +216,7 @@ what the "no colour constants" rule forbids.
 | `--size-rail-header-inset` | `15px` | app-shell.md › Rail/product selector › Visible occupied box › "x 15-150, y 11-41" | from spec |
 | `--size-rail-product-selector-height` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "30 high" | from spec |
 | `--size-rail-product-mark` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "Product mark occupies x 15-45, 30 x 30" | from spec |
+| `--size-rail-product-caret` | `10px` | app-shell.md › Rail/product selector › Visible occupied box › "solid filled down caret, `#C2CBDE`, ink x 138-148, y 24-29 (10 wide × 5 high; 9 px wide on its top row, narrowing to a point)" | from spec |
 | `--size-rail-selector-height` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "y 289-313; about 24 high" | from spec |
 | `--size-rail-selector-inset` | `13px` | app-shell.md › Rail/teamspace selector › Occupied row › "left inset 13 px" | from spec |
 | `--size-rail-monogram` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "24 x 24 coloured monogram block at x 13-37" | from spec |

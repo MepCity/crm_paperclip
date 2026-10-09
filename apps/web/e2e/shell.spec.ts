@@ -41,7 +41,7 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   await expectNoA11yViolations(page);
 
   const slug = new URL(page.url()).pathname.split("/")[2] ?? "";
-  const name = await page.getByRole("button", { name: "Organization switcher" }).innerText();
+  const name = await page.getByRole("button", { name: /Organization switcher:/ }).innerText();
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(page).toHaveURL(`/crm/${slug}/settings`);
   await expect(page.getByRole("banner").getByRole("heading", { name: "Settings" })).toBeVisible();
@@ -73,11 +73,11 @@ test("the organization menu switches between two memberships and offers creation
   page,
 }) => {
   const firstSlug = new URL(page.url()).pathname.split("/")[2] ?? "";
-  const firstName = await page.getByRole("button", { name: "Organization switcher" }).innerText();
+  const firstName = await page.getByRole("button", { name: /Organization switcher:/ }).innerText();
   const second = await createOrganization(page);
   // pending-announcement workaround
   await page.reload();
-  const switcher = page.getByRole("button", { name: "Organization switcher" });
+  const switcher = page.getByRole("button", { name: /Organization switcher:/ });
   await expect(switcher).toContainText(second.name);
   await switcher.click();
   await expect(page.getByRole("menuitemradio", { name: second.name, exact: true })).toHaveAttribute(
@@ -144,13 +144,13 @@ test("keyboard navigation starts with skip and operates both menus", async ({ pa
   await page.reload();
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Organization switcher" })).toBeFocused();
+  await expect(page.getByRole("button", { name: /Organization switcher:/ })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("menu", { name: "Organization switcher" })).toBeVisible();
+  await expect(page.getByRole("menu", { name: /Organization switcher/ })).toBeVisible();
   await expectNoA11yViolations(page);
   await page.keyboard.press("Home");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("button", { name: "Organization switcher" })).toBeFocused();
+  await expect(page.getByRole("button", { name: /Organization switcher:/ })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Hide Menu" })).toBeFocused();
   await page.keyboard.press("Tab");
@@ -211,7 +211,7 @@ test("an unknown page keeps the shell and a non-member sees a generic 404", asyn
     await signUpNewUser(other);
     await other.goto(`/crm/${slug}/settings`);
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
-    await expect(other.getByRole("button", { name: "Organization switcher" })).toHaveCount(0);
+    await expect(other.getByRole("button", { name: /Organization switcher:/ })).toHaveCount(0);
     await expectNoA11yViolations(other);
   } finally {
     await context.close();
@@ -248,6 +248,29 @@ async function expectType(page: Page, locator: Locator, size: string, weight: st
   await expect(locator).toHaveCSS("font-weight", expected.weight);
 }
 
+test("Home icon accent and product selector caret match app-shell pinned-link and selector notes", async ({
+  page,
+}) => {
+  const home = page.getByRole("link", { name: "Home", exact: true });
+  const homeIcon = home.locator("svg");
+  // app-shell.md › Rail/pinned link: Home icon solid `#5A78FF` in selected and unselected states.
+  await expect(homeIcon).toHaveCSS("color", "rgb(90, 120, 255)");
+
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  const unselectedHome = page.getByRole("link", { name: "Home", exact: true });
+  await expect(unselectedHome).toHaveCSS("color", "rgb(194, 203, 222)");
+  await expect(unselectedHome.locator("svg")).toHaveCSS("color", "rgb(90, 120, 255)");
+
+  const selector = page.getByRole("button", { name: /Organization switcher:/ });
+  const caret = selector.locator("svg").last();
+  const caretBox = await caret.boundingBox();
+  if (!caretBox) throw new Error("Expected product selector caret.");
+  expect(caretBox.width).toBeGreaterThanOrEqual(9);
+  expect(caretBox.width).toBeLessThanOrEqual(11);
+  const fill = await caret.evaluate((node) => getComputedStyle(node).fill);
+  expect(fill).not.toBe("none");
+});
+
 test("the measured Home layout matches every rendered Module 1 shell region", async ({
   page,
 }, testInfo) => {
@@ -256,7 +279,7 @@ test("the measured Home layout matches every rendered Module 1 shell region", as
   const main = page.getByRole("main");
   const home = page.getByRole("link", { name: "Home", exact: true });
   const title = bar.getByRole("heading", { name: "Home" });
-  const selector = page.getByRole("button", { name: "Organization switcher" });
+  const selector = page.getByRole("button", { name: /Organization switcher:/ });
   const hide = page.getByRole("button", { name: "Hide Menu" });
   const settings = page.getByRole("link", { name: "Settings", exact: true });
   const avatar = page.getByRole("button", { name: "User menu" });
@@ -318,7 +341,7 @@ test("the measured Home layout matches every rendered Module 1 shell region", as
         main: "main",
         home: 'nav[aria-label="Main navigation"] a',
         title: "header h1",
-        selector: 'button[aria-label="Organization switcher"]',
+        selector: 'button[aria-label^="Organization switcher:"]',
         hide: 'button[aria-label="Hide Menu"]',
         settings: 'a[aria-label="Settings"]',
         avatar: 'button[aria-label="User menu"]',
