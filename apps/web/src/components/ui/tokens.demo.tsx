@@ -692,6 +692,7 @@ const SIZE_GROUPS = [
       "--size-form-field-group-legend-inset",
       "--size-form-field-group-legend-padding-start",
       "--size-form-field-group-legend-padding-end",
+      "--size-form-field-group-legend-baseline-offset",
       "--size-form-input-full-width",
       "--size-form-description-height",
       "--size-form-address-footer-bottom",

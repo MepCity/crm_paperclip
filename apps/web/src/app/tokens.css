@@ -513,6 +513,8 @@
   --size-form-field-group-legend-inset: 10px;
   --size-form-field-group-legend-padding-start: 8.5px;
   --size-form-field-group-legend-padding-end: 12.5px;
+  /* MEP-174 Address legend baseline; MEP-237 documents named transform offset. */
+  --size-form-field-group-legend-baseline-offset: 3px;
   --size-form-input-full-width: 639px;
   --size-form-description-height: 34px;
   /* record-detail.md › Address frame; Description Information and textarea. */
