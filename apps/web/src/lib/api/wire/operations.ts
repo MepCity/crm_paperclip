@@ -2,6 +2,7 @@ import type { ListQuery, RecordService, SortSpec } from "@crm/core/records";
 import {
   decodeCriteria,
   decodeInput,
+  encodeCurrency,
   encodeField,
   encodeInfo,
   encodeLayout,
@@ -111,6 +112,13 @@ function idsOf(body: Record<string, unknown>): string[] {
 
 /** The sole API path inventory, shared with the browser HTTP adapter. */
 export const operations = {
+  currencies: {
+    method: "GET",
+    path: "/crm/v2.2/org/currencies",
+    async run({ records }) {
+      return ok({ currencies: [encodeCurrency(await records.getHomeCurrency())] });
+    },
+  },
   module: {
     method: "GET",
     path: "/crm/v2.2/settings/modules/{module}",
