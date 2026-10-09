@@ -99,6 +99,12 @@ test("draws the capture's row content: leading glyph, label, value, submenu chev
     // The value sits between the label and the chevron, pushed to the row's right edge.
     const value = row.lastElementChild?.previousElementSibling;
     expect(value?.className).toContain("ml-auto");
+    // The value is heavier than the label: `typography.md` measures Table settings row
+    // value at wght 640-660 and the row label at 420. `font-bold` is the 650 token; the
+    // label keeps the menu item's own weight class.
+    expect(value?.className).toContain("font-bold");
+    const label = row.firstElementChild?.nextElementSibling;
+    expect(label?.className ?? "").not.toMatch(/font-(bold|semibold|normal|medium)/);
   }
   expect(rows[0]?.lastElementChild?.previousElementSibling?.textContent).toBe("30");
   expect(rows[1]?.lastElementChild?.previousElementSibling?.textContent).toBe("Wrap Text");

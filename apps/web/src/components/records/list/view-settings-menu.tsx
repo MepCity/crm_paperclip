@@ -19,6 +19,13 @@ const iconWidth = "w-(--size-menu-icon) h-(--size-menu-icon) shrink-0";
 /** The submenu chevron sits after the value, at the row's right edge. */
 const submenuIndicatorWidth = `${iconWidth} opacity-60`;
 
+/**
+ * `typography.md` › Table settings row value (measured from `list-settings`, wght 640–660)
+ * is heavier than the row label (Table settings row label, wght 420), so only the value
+ * leaves the menu item's `font-normal`; `--font-weight-bold` (650) sits in that band.
+ */
+const rowValueClass = "ml-auto shrink-0 font-bold";
+
 /** View Mode's value as the capture shows it. The off-state label was never observed. */
 const WRAP_TEXT_LABEL = "Wrap Text";
 
@@ -128,7 +135,7 @@ function RowContent({
     <>
       <Icon aria-hidden="true" className={iconWidth} />
       <span>{label}</span>
-      {value ? <span className="ml-auto shrink-0">{value}</span> : null}
+      {value ? <span className={rowValueClass}>{value}</span> : null}
       <Icons.chevronRight aria-hidden="true" className={submenuIndicatorWidth} />
     </>
   );

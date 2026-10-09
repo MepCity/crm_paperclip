@@ -26,6 +26,11 @@ function expectEdge(value: number, expected: number, tolerance = 1) {
   expect(Math.abs(value - expected)).toBeLessThanOrEqual(tolerance);
 }
 
+/** A span whose whole text is this string, so a label never matches its row's value. */
+function exactText(text: string) {
+  return new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
+}
+
 async function openList(page: Page) {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -222,12 +227,30 @@ test.describe("Leads list View Settings", () => {
 
     const perPage = menu.getByRole("menuitem", { name: "Records Per Page" });
     const viewMode = menu.getByRole("menuitem", { name: "View Mode" });
+    const spanOf = (row: Locator, text: string) =>
+      row.locator("span", { hasText: exactText(text) });
     for (const row of [perPage, viewMode]) {
       const rowBox = requireBox(await row.boundingBox(), "settings row");
       expectEdge(rowBox.width, 250);
       expectEdge(rowBox.height, 30);
       await expectType(page, row, "--text-md", "--font-weight-normal");
       await expect(row).toHaveCSS("color", "rgb(49, 57, 73)");
+    }
+
+    // Text roles: `typography.md` › Table settings row label is 14px / wght 420 and
+    // Table settings row value is the same height at wght 640-660, both measured from
+    // `list-settings`. The label keeps the menu item's normal token; the value uses the
+    // 650 bold token, so the pair is read from tokens rather than hard-coded numbers.
+    const textRows = [
+      { row: perPage, label: "Records Per Page", value: "10" },
+      { row: viewMode, label: "View Mode", value: "Wrap Text" },
+    ];
+    for (const { row, label, value } of textRows) {
+      await expectType(page, spanOf(row, label), "--text-md", "--font-weight-normal");
+      await expectType(page, spanOf(row, value), "--text-md", "--font-weight-bold");
+      const labelBox = requireBox(await spanOf(row, label).boundingBox(), `${label} label`);
+      const valueBox = requireBox(await spanOf(row, value).boundingBox(), `${value} value`);
+      expectEdge(valueBox.height, labelBox.height, 1);
     }
 
     // Row content in the capture's order: a leading glyph, the label, and the value in
@@ -266,12 +289,9 @@ test.describe("Leads list View Settings", () => {
       expect(parts.chevron.x).toBeGreaterThan(parts.leading.x + parts.leading.width);
     }
     // The value sits between the label and the chevron, right-aligned in the row.
-    const valueBox = requireBox(
-      await perPage.locator("span", { hasText: /^10$/ }).boundingBox(),
-      "page size value",
-    );
-    expect(valueBox.x + valueBox.width).toBeLessThanOrEqual(perPageParts.chevron.x);
-    expect(valueBox.y + valueBox.height / 2).toBeCloseTo(
+    const pageValueBox = requireBox(await spanOf(perPage, "10").boundingBox(), "page size value");
+    expect(pageValueBox.x + pageValueBox.width).toBeLessThanOrEqual(perPageParts.chevron.x);
+    expect(pageValueBox.y + pageValueBox.height / 2).toBeCloseTo(
       perPageParts.rowBox.y + perPageParts.rowBox.height / 2,
       1,
     );

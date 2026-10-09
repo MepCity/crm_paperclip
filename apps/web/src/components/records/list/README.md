@@ -154,9 +154,11 @@ Also:
 - The parent rows' leading glyphs, the value column and the row gap are read from the
   `list-settings` capture, not measured in the spec: the glyphs are 16px
   (`--size-menu-icon`) with the 12px label gap (`--size-menu-label-gap`) already used by
-  measured menus, the value sits right-aligned before the submenu chevron. The glyph
-  drawings are our own (`Icons.list`, `Icons.eye`); the spec forbids reusing the
-  reference's icon assets.
+  measured menus, the value sits right-aligned before the submenu chevron. Their text
+  weights are measured (`typography.md` › Table settings row label / value); the label's
+  14px maps to the existing 14.5px `--text-md` token and the value's 640-660 band to
+  `--font-weight-bold` (650). The glyph drawings are our own (`Icons.list`, `Icons.eye`);
+  the spec forbids reusing the reference's icon assets.
 - The View Settings trigger is an icon-only button in a 40px cell; the reference's
   control and icon sizes in that cell were not measured. It uses `--size-list-view-icon`,
   and its glyph is the framed sliders drawing (`Icons.settingsSliders`), not the bare
@@ -306,9 +308,10 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   Enter or Space; Escape closes it and returns focus to the trigger. Opening focuses the
   first row, so the first ArrowDown moves to the second.
 - Popover: 264px (`--size-popover-settings-width`), rows 30px
-  (`--size-menu-item-height`), row text `--text-md` / `--font-weight-normal`
-  (nearest measured row: Filter checkbox row). The focused row uses the measured
-  highlight fill.
+  (`--size-menu-item-height`). Row text follows the two roles `research/specs/typography.md`
+  measures from `list-settings`: the label is Table settings row label (`--text-md` /
+  `--font-weight-normal`), the value in effect is Table settings row value (`--text-md` /
+  `--font-weight-bold`). The focused row uses the measured highlight fill.
 - Rows: **Records Per Page** and **View Mode**, each a submenu opened with ArrowRight
   or a click. A row draws its leading glyph, its label, then the value in effect pushed
   to the right edge and the submenu chevron: `Records Per Page 30`, `View Mode Wrap Text`.
@@ -390,6 +393,8 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List primary button (button or link) | `--text-md` | `--font-weight-semibold` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
+| Table settings row label | `--text-md` | `--font-weight-normal` |
+| Table settings row value | `--text-md` | `--font-weight-bold` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
