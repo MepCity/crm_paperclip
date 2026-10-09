@@ -4,7 +4,7 @@ import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expectType } from "./support/typography";
 
 const near = (actual: number, expected: number) =>
-  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(0.5);
 test.use({ viewport: { width: 1470, height: 835 } });
 test("field filter editors match measured rows, keyboard, sticky actions and accessibility", async ({
   page,
@@ -183,7 +183,7 @@ test("filter multi-select placeholders use measured ink until an option is selec
     await trigger.click();
     const option = page
       .getByRole("listbox", { name: `Sample ${field} value`, exact: true })
-      .getByRole("option", { name: "Sample One", exact: true });
+      .getByRole("option", { name: /^Sample One/ });
     await option.click();
     await page.keyboard.press("Escape");
     await expect(label).toHaveText("Sample One");
@@ -205,4 +205,68 @@ test("filter multi-select placeholders use measured ink until an option is selec
     path: measurementPath,
     contentType: "application/json",
   });
+});
+
+test("observed value lists and currency range use measured dimensions", async ({ page }) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample boolean", { exact: true }).click();
+  const state = panel.getByRole("button", { name: /Sample boolean value$/ });
+  const stateBox = await state.boundingBox();
+  if (!stateBox) throw new Error("Missing state");
+  near(stateBox.width, 81);
+  near(stateBox.height, 24);
+  await state.click();
+  const stateList = page.getByRole("listbox", { name: /Sample boolean value$/ });
+  await expect(stateList.getByRole("option")).toHaveText(["Selected", "Not Selected"]);
+  await stateList.getByRole("option", { name: "Not Selected", exact: true }).click();
+  await panel.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(demo.getByRole("status")).toContainText('"value":false');
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample picklist", { exact: true }).click();
+  await panel.getByRole("button", { name: "Sample picklist value", exact: true }).click();
+  const choices = page.locator(".filter-choice-popover");
+  const choiceBox = await choices.boundingBox();
+  if (!choiceBox) throw new Error("Missing choice list");
+  near(choiceBox.width, 170);
+  near(choiceBox.height, 220);
+  await expect(choices.getByRole("option")).toHaveCount(16);
+  const choice = await choices.getByRole("option").first().boundingBox();
+  if (!choice) throw new Error("Missing choice row");
+  near(choice.width, 158);
+  near(choice.height, 28);
+  await page.keyboard.press("Escape");
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample ownerlookup", { exact: true }).click();
+  await panel.getByRole("button", { name: "Sample ownerlookup value", exact: true }).click();
+  const users = page.locator(".filter-user-popover");
+  for (const [selector, width, height] of [
+    [".filter-user-header .filter-operator-control", 77, 28],
+    [".filter-user-search", 229, 28],
+    [".filter-user-body", 327, 174],
+    [".filter-user-body [role=option]", 315, 41],
+  ] as const) {
+    const box = await users.locator(selector).first().boundingBox();
+    if (!box) throw new Error(`Missing ${selector}`);
+    near(box.width, width);
+    near(box.height, height);
+  }
+  await expect(users.getByText("Logged in User", { exact: true })).toBeVisible();
+  await expect(users.getByText("two@example.test", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample currency", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample currency operator$/ }).click();
+  await page.getByRole("option", { name: "between", exact: true }).click();
+  for (const bound of ["lower", "upper"]) {
+    const box = await panel
+      .getByRole("textbox", { name: `Sample currency ${bound} value` })
+      .locator("..")
+      .boundingBox();
+    if (!box) throw new Error("Missing range");
+    near(box.width, 100);
+    near(box.height, 25);
+  }
 });

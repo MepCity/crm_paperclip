@@ -28,8 +28,6 @@ const relatedModuleLabels =
 
 const disabledDataTypes = new Set<FieldDataType>([
   "textarea",
-  "website",
-  "integer",
   "lookup",
   "multi_module_lookup",
   "double",
@@ -53,7 +51,7 @@ function filterFieldType(dataType: FieldDataType): FilterFieldType | null {
 
 function editorForField(
   field: FieldDefinition,
-  users: readonly { userId: string; name: string }[],
+  users: readonly { userId: string; name: string; email?: string }[],
   currencyCode: string,
 ): FilterEditorDefinition | undefined {
   const fieldType = filterFieldType(field.dataType);
@@ -66,7 +64,11 @@ function editorForField(
     }));
   }
   if (fieldType === "ownerlookup") {
-    editor.options = users.map((user) => ({ id: user.userId, label: user.name }));
+    editor.options = users.map((user) => ({
+      id: user.userId,
+      label: user.name,
+      ...(user.email ? { detail: user.email } : {}),
+    }));
   }
   if (fieldType === "currency") {
     editor.currencyCode = currencyCode;
@@ -76,7 +78,7 @@ function editorForField(
 
 export interface BuildLeadsFilterGroupsInput {
   fields: readonly FieldDefinition[];
-  users: readonly { userId: string; name: string }[];
+  users: readonly { userId: string; name: string; email?: string }[];
   linkField: string;
   currencyCode: string;
 }

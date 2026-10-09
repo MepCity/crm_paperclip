@@ -19,6 +19,8 @@ const types: FilterFieldType[] = [
   "boolean",
   "ownerlookup",
   "datetime",
+  "website",
+  "integer",
 ];
 const options = [
   { id: "one", label: "Sample One" },
@@ -31,7 +33,7 @@ const groups: FilterGroup[] = [
     items: types.map((fieldType) => ({
       id: fieldType,
       label: fieldType,
-      editor: { fieldType, options, currencyCode: "TL" },
+      editor: { fieldType, options, currencyCode: fieldType === "currency" ? "TL" : undefined },
     })),
   },
 ];
@@ -95,11 +97,11 @@ for (const field of types) {
     render(<Panel onApply={onApply} />);
     await user.click(screen.getByRole("checkbox", { name: field }));
     let value: AppliedFilter["value"] = true;
-    if (["text", "email", "phone"].includes(field)) {
+    if (["text", "email", "phone", "website"].includes(field)) {
       value = "sample";
       await user.type(screen.getByRole("textbox", { name: `${field} value` }), value);
-    } else if (field === "currency" || field === "datetime") {
-      value = field === "currency" ? 12.5 : 0;
+    } else if (field === "currency" || field === "integer" || field === "datetime") {
+      value = field === "currency" ? 12.5 : field === "integer" ? 2 : 0;
       const input = screen.getByRole("textbox", { name: `${field} value` });
       await user.type(input, String(value));
       await user.tab();
@@ -115,7 +117,12 @@ for (const field of types) {
     expect(onApply).toHaveBeenCalledWith([
       {
         itemId: field,
-        operatorId: field === "text" ? "contains" : field === "datetime" ? "age_in" : "equal",
+        operatorId:
+          field === "text" || field === "website"
+            ? "contains"
+            : field === "datetime"
+              ? "age_in"
+              : "equal",
         value,
       },
     ]);
@@ -344,4 +351,18 @@ test("checkbox-only selections stay outside Apply and Clear resets both kinds of
   expect(onClear).toHaveBeenCalledOnce();
   for (const checkbox of screen.getAllByRole("checkbox"))
     expect((checkbox as HTMLInputElement).checked).toBe(false);
+});
+
+test("Not Selected emits false and trimming happens before Apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  render(<Panel initial={["text", "boolean"]} onApply={onApply} />);
+  await user.type(screen.getByRole("textbox", { name: "text value" }), "  sample  ");
+  await user.click(screen.getByRole("button", { name: /boolean value$/ }));
+  await user.click(screen.getByRole("option", { name: /^Not Selected$/ }));
+  await user.click(apply());
+  expect(onApply).toHaveBeenCalledWith([
+    { itemId: "text", operatorId: "contains", value: "sample" },
+    { itemId: "boolean", operatorId: "equal", value: false },
+  ]);
 });

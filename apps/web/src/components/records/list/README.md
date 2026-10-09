@@ -202,21 +202,34 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | text | is → equal; isn't → not_equal; contains → contains; doesn't contain → not_contains; starts with → starts_with; ends with → ends_with; is empty → is_empty; is not empty → is_not_empty | contains | string, Type here |
 | email, phone | Same eight text operators | equal | string, Type here |
 | picklist | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable multiple choice, None |
+| website | Same eight text operators | contains | string, Type here |
+| integer | Same ten numeric operators as currency | equal | number or [number, number], no prefix |
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
-| boolean | is → equal | equal | true, Selected |
-| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable users, Click to Select Users. |
-| datetime | age in → age_in; due in → due_in; Today → today; Tomorrow → tomorrow; Till Yesterday → till_yesterday; Starting tomorrow → starting_tomorrow; Yesterday → yesterday; This Week → this_week; This Month → this_month; Previous Week → previous_week; Previous Month → previous_month; This Year → this_year; Previous Year → previous_year; Next Year → next_year; is empty → is_empty; is not empty → is_not_empty | age_in | nonnegative integer days for age/due, otherwise null |
+| boolean | is → equal | equal | boolean, Selected / Not Selected |
+| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the picklist-style control and block Apply until option sources and criteria exist |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
 
 Empty operators always have no value control and emit null. Checking starts a
 fresh default draft. Changing the operator discards the old value. Unchecking,
 external deselection, and Clear discard drafts; search and group collapse keep them.
 Drafts are internal: the caller controls only item selection. Apply uses panel order,
-including checked fields hidden by search. Whitespace-only text is incomplete;
+including checked fields hidden by search. Text is trimmed before Apply and criteria
+generation; whitespace-only text is incomplete;
 currency requires finite numbers, ranges require two finite numbers, choices require
-at least one supplied option ID, and days require a nonnegative safe integer. The
-Selected state is complete immediately. Invalid numeric drafts are never emitted.
+at least one supplied option ID, and days require a nonnegative safe integer. Both
+state values are complete immediately. Invalid numeric drafts are never emitted.
 The page must supply synchronous option labels and IDs; these components never load
 options. Clear does not change the search query or group expansion.
+
+### Observed value list dimensions
+
+`list-views.md` → Value list structures and Visual layout define the boolean
+81 × 24 px trigger and two states, picklist 170 × 220 px popover with 158 × 28 px
+rows, and owner header 77 × 28 px type selector plus 229 × 28 px search, with
+327 × 174 px body and 315 × 41 px user rows. Caller options supply names and
+secondary details; avatars are original initials. Currency range inputs are
+100 × 25 px with From/To placeholders. All operator widths use one intrinsic
+text/chevron/padding rule; dropdown offset comes from its token.
 
 ### Interim
 
@@ -226,10 +239,10 @@ existing primitive tokens:
 
 - Apply Filter / Clear size and placement: existing small buttons, footer outside
   the scrollable group content. A constrained-height parent makes only the rows scroll.
-- Multiple choice, users, state and unit open lists use existing popover/list styling.
-- Currency ranges stack two equally sized inputs with the measured 7px value gap.
+- The user-type selector contents beyond the initial Users option and current-user
+  identification remain Interim; callers may supply `detail` and `currentUser` flags.
+  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
-- Valueless operators draw only the operator selector.
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -238,21 +251,22 @@ existing primitive tokens:
   all rows, including checkbox-only selections. No operator is invented for
   unobserved field types.
 
-`/dev/ui` → filter editors starts all eight supported rows checked, shows disabled
+`/dev/ui` → filter editors starts all supported rows checked, shows disabled
 Apply and the fixed footer, and lets reviewers open an operator list or Clear and
 select two rows. Only synthetic data appears in demos and tests.
 
 ### Not drawn
 
 - Email is blocked / is not blocked: email module (M10).
-- belongs to Role / does not belong to Role / belongs to Group: role/group
-  definitions; no parity checklist module has been assigned.
-- Date Previous / Next / On / before / after / between / not between: unobserved
-  value editors. Fiscal Current FY / Current FQ / Previous FY / Previous FQ /
-  Next FY / Next FQ: fiscal-year settings dependency.
-- State options other than Selected and units other than days: unobserved.
-- System-defined and related-module editors: their respective modules.
-- textarea, website, integer, double, bigint, lookup, multi_module_lookup,
+- Address, Connected To and Tag field filters: observed in spec, pending dedicated
+  field-type editors, option sources and criteria contract. System-defined and
+  related-module editors: their respective modules.
+- Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
+  rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
+- Date Previous / Next / On / before / after / between / not between: value editors
+  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
+- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
+- textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
 ### Deviations
@@ -398,7 +412,7 @@ clears applied criteria and panel selection. `ValidationError` on `filters` show
 server message above the panel actions; the table keeps the previous page via
 `keepPreviousData`.
 
-Disabled filter rows (deviations): `textarea`, `website`, `integer`, `lookup`,
+Disabled filter rows (deviations): `textarea`, `lookup`,
 `multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
 and related-module groups stay disabled.
 

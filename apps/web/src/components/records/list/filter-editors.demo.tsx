@@ -12,6 +12,8 @@ const fieldTypes: FilterFieldType[] = [
   "boolean",
   "ownerlookup",
   "datetime",
+  "website",
+  "integer",
 ];
 const groups: FilterGroup[] = [
   {
@@ -23,10 +25,20 @@ const groups: FilterGroup[] = [
       editor: {
         fieldType,
         currencyCode: fieldType === "currency" ? "TL" : undefined,
-        options: [
-          { id: "one", label: "Sample One" },
-          { id: "two", label: "Sample Two" },
-        ],
+        options:
+          fieldType === "picklist"
+            ? [
+                { id: "one", label: "Sample One" },
+                { id: "two", label: "Sample Two" },
+                ...Array.from({ length: 14 }, (_, index) => ({
+                  id: `choice-${index}`,
+                  label: `Choice ${index + 1}`,
+                })),
+              ]
+            : [
+                { id: "one", label: "Sample One", detail: "one@example.test", currentUser: true },
+                { id: "two", label: "Sample Two", detail: "two@example.test" },
+              ],
       },
     })),
   },
@@ -37,8 +49,8 @@ export default function FilterEditorsDemo() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-text-muted">
-        All eight supported editors start checked. Open an operator list; complete values to enable
-        Apply Filter. Clear and select two rows to exercise multiple drafts.
+        All supported editors start checked. Open an operator list; complete values to enable Apply
+        Filter. Clear and select two rows to exercise multiple drafts.
       </p>
       <div className="flex h-96">
         <FilterPanel

@@ -245,7 +245,7 @@ what the "no colour constants" rule forbids.
 | `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
 | `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
 | `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
-| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-operator-gap` | `5.5px` | list-views.md › Visual layout › intrinsic widths calibrated against contains 79px and is 36px | implementation fit |
 | `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
 | `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
 | `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
@@ -827,3 +827,24 @@ screen gets a horizontal page range and the top bar and the rail slide sideways 
 rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
 inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
 container's own scroll at a narrow viewport and at the measured desktop viewport.
+
+### Filter value list tokens
+
+Source: `research/specs/list-views.md` → Visual layout (Boolean filter value
+dropdown, Picklist filter multi-select popover, Owner selector popover, Currency
+range filter inputs) and Value list structures.
+
+| Token | Value | Measured role |
+| --- | --- | --- |
+| `--size-filter-range-width` | 100px | Currency range input width |
+| `--size-filter-currency-range-height` | 25px | Currency range input height |
+| `--size-filter-state-width` | 81px | Boolean value trigger width |
+| `--size-filter-choice-width` | 170px | Picklist popover width |
+| `--size-filter-choice-height` | 220px | Picklist popover height |
+| `--size-filter-choice-row-height` | 28px | Picklist option row height |
+| `--size-filter-user-width` | 327px | Owner list width |
+| `--size-filter-user-type-width` | 77px | Owner type selector width |
+| `--size-filter-user-search-width` | 229px | Owner search width |
+| `--size-filter-user-header-height` | 28px | Owner header controls height |
+| `--size-filter-user-body-height` | 174px | Owner list height |
+| `--size-filter-user-row-height` | 41px | Owner entry height |

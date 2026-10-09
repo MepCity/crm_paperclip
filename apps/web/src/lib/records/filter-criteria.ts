@@ -47,6 +47,21 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
       if (!name) throw new Error(`Missing period for ${operatorId}`);
       return { token: "PERIOD", name };
     }
+    case "previous":
+    case "next":
+    case "on":
+    case "before":
+    case "after":
+    case "current_fy":
+    case "current_fq":
+    case "previous_fy":
+    case "previous_fq":
+    case "next_fy":
+    case "next_fq":
+    case "belongs_to_role":
+    case "not_belongs_to_role":
+    case "belongs_to_group":
+      throw new Error(`Operator ${operatorId} is not mapped to criteria yet`);
     case "equal":
     case "not_equal":
     case "contains":
@@ -59,7 +74,7 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "greater_equal":
     case "between":
     case "not_between":
-      return value as CriteriaValue;
+      return (typeof value === "string" ? value.trim() : value) as CriteriaValue;
     default: {
       const _exhaustive: never = operatorId;
       return _exhaustive;
@@ -113,6 +128,21 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "previous_year":
     case "next_year":
       return "equal";
+    case "previous":
+    case "next":
+    case "on":
+    case "before":
+    case "after":
+    case "current_fy":
+    case "current_fq":
+    case "previous_fy":
+    case "previous_fq":
+    case "next_fy":
+    case "next_fq":
+    case "belongs_to_role":
+    case "not_belongs_to_role":
+    case "belongs_to_group":
+      throw new Error(`Operator ${operatorId} is not mapped to criteria yet`);
     default: {
       const _exhaustive: never = operatorId;
       return _exhaustive;

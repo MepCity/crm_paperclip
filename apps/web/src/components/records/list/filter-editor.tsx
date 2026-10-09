@@ -6,10 +6,12 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import {
   type AppliedFilterValue,
+  type DateUnit,
   type FilterFieldType,
   type FilterOperator,
   type FilterOperatorId,
   filterOperators,
+  operatorsWithoutCriteriaSupport,
 } from "@/lib/records/filter-operators";
 
 export interface FilterEditorDefinition {
@@ -21,10 +23,15 @@ export interface FilterEditorDefinition {
 export interface FilterDraft {
   operatorId: FilterOperatorId;
   value: AppliedFilterValue;
+  daysUnit?: DateUnit;
 }
 export function initialFilterDraft(editor: FilterEditorDefinition): FilterDraft {
   const operatorId = filterOperators[editor.fieldType].defaultOperator;
-  return { operatorId, value: editor.fieldType === "boolean" ? true : null };
+  return {
+    operatorId,
+    value: editor.fieldType === "boolean" ? true : null,
+    daysUnit: "days",
+  };
 }
 export function draftOperator(
   editor: FilterEditorDefinition,
@@ -35,6 +42,7 @@ export function draftOperator(
   );
 }
 export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDraft): boolean {
+  if (operatorsWithoutCriteriaSupport.has(draft.operatorId)) return false;
   const control = draftOperator(editor, draft)?.control;
   const value = draft.value;
   switch (control) {
@@ -60,9 +68,18 @@ export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDr
         )
       );
     case "state":
-      return value === true;
+      return typeof value === "boolean";
     case "days":
-      return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+      return (
+        (draft.daysUnit ?? "days") === "days" &&
+        typeof value === "number" &&
+        Number.isSafeInteger(value) &&
+        value >= 0
+      );
+    case "date":
+      return typeof value === "string" && value.trim().length > 0;
+    case "date_range":
+      return false;
     default:
       return false;
   }
@@ -85,6 +102,9 @@ export function FilterEditor({
   const number = (name: string, current: number, change: (next: number) => void) => (
     <NumberField
       hideLabel
+      placeholder={
+        name.endsWith("lower value") ? "From" : name.endsWith("upper value") ? "To" : undefined
+      }
       label={name}
       value={current}
       onChange={change}
@@ -96,7 +116,7 @@ export function FilterEditor({
     />
   );
   return (
-    <div className="filter-editor">
+    <div className="filter-editor" data-field-type={editor.fieldType}>
       <Select
         label={`${label} operator`}
         hideLabel
@@ -109,6 +129,7 @@ export function FilterEditor({
             onChange({
               operatorId: operator.id,
               value: operator.control === "state" ? true : null,
+              daysUnit: operator.control === "days" ? "days" : draft.daysUnit,
             });
         }}
       >
@@ -132,7 +153,7 @@ export function FilterEditor({
           {control === "number" &&
             number(`${label} value`, typeof value === "number" ? value : Number.NaN, setValue)}
           {control === "range" && (
-            <div className="flex flex-col gap-(--size-filter-editor-value-gap)">
+            <div className="filter-number-range">
               {number(
                 `${label} lower value`,
                 Array.isArray(value) && typeof value[0] === "number" ? value[0] : Number.NaN,
@@ -155,6 +176,7 @@ export function FilterEditor({
           )}
           {(control === "choices" || control === "users") && (
             <MultiSelect
+              variant={control === "users" ? "users" : "choices"}
               label={`${label} value`}
               placeholder={control === "users" ? "Click to Select Users." : "None"}
               options={editor.options ?? []}
@@ -169,9 +191,12 @@ export function FilterEditor({
               label={`${label} value`}
               hideLabel
               variant="filter"
-              items={[{ id: "selected", label: "Selected" }]}
-              value="selected"
-              onChange={() => setValue(true)}
+              items={[
+                { id: "selected", label: "Selected" },
+                { id: "not_selected", label: "Not Selected" },
+              ]}
+              value={value === false ? "not_selected" : "selected"}
+              onChange={(key) => setValue(key === "selected")}
             >
               {(option) => (
                 <SelectItem variant="filter" id={option.id}>
@@ -194,9 +219,13 @@ export function FilterEditor({
                 label={`${label} unit`}
                 hideLabel
                 variant="filter"
-                items={[{ id: "days", label: "days" }]}
-                value="days"
-                onChange={() => {}}
+                items={[
+                  { id: "days", label: "days" },
+                  { id: "weeks", label: "weeks" },
+                  { id: "months", label: "months" },
+                ]}
+                value={draft.daysUnit ?? "days"}
+                onChange={(key) => onChange({ ...draft, daysUnit: key as DateUnit, value: null })}
               >
                 {(option) => (
                   <SelectItem variant="filter" id={option.id}>
@@ -204,6 +233,43 @@ export function FilterEditor({
                   </SelectItem>
                 )}
               </Select>
+            </div>
+          )}
+          {control === "date" && (
+            <TextField
+              label={`${label} value`}
+              hideLabel
+              placeholder="DD.MM.YYYY"
+              value={typeof value === "string" ? value : ""}
+              onChange={setValue}
+            />
+          )}
+          {control === "date_range" && (
+            <div className="filter-date-range flex min-w-0 flex-col gap-(--size-filter-editor-value-gap)">
+              <TextField
+                label={`${label} from date`}
+                hideLabel
+                placeholder="From Date"
+                value={Array.isArray(value) && typeof value[0] === "string" ? value[0] : ""}
+                onChange={(from) =>
+                  setValue([
+                    from,
+                    Array.isArray(value) && typeof value[1] === "string" ? value[1] : "",
+                  ])
+                }
+              />
+              <TextField
+                label={`${label} to date`}
+                hideLabel
+                placeholder="To Date"
+                value={Array.isArray(value) && typeof value[1] === "string" ? value[1] : ""}
+                onChange={(to) =>
+                  setValue([
+                    Array.isArray(value) && typeof value[0] === "string" ? value[0] : "",
+                    to,
+                  ])
+                }
+              />
             </div>
           )}
         </div>

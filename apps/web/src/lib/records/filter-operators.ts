@@ -7,7 +7,10 @@ export type FilterValueControl =
   | "users"
   | "state"
   | "days"
+  | "date"
+  | "date_range"
   | "none";
+
 export type FilterOperatorId =
   | "equal"
   | "not_equal"
@@ -25,6 +28,11 @@ export type FilterOperatorId =
   | "not_between"
   | "age_in"
   | "due_in"
+  | "previous"
+  | "next"
+  | "on"
+  | "before"
+  | "after"
   | "today"
   | "tomorrow"
   | "till_yesterday"
@@ -35,8 +43,36 @@ export type FilterOperatorId =
   | "previous_week"
   | "previous_month"
   | "this_year"
+  | "current_fy"
+  | "current_fq"
   | "previous_year"
-  | "next_year";
+  | "previous_fy"
+  | "previous_fq"
+  | "next_year"
+  | "next_fy"
+  | "next_fq"
+  | "belongs_to_role"
+  | "not_belongs_to_role"
+  | "belongs_to_group";
+
+/** Operators with observed editors that are not yet mapped to port criteria (MEP-222 / Platform contract). */
+export const operatorsWithoutCriteriaSupport = new Set<FilterOperatorId>([
+  "previous",
+  "next",
+  "on",
+  "before",
+  "after",
+  "current_fy",
+  "current_fq",
+  "previous_fy",
+  "previous_fq",
+  "next_fy",
+  "next_fq",
+  "belongs_to_role",
+  "not_belongs_to_role",
+  "belongs_to_group",
+]);
+
 export interface FilterOperator {
   id: FilterOperatorId;
   label: string;
@@ -66,10 +102,11 @@ function choices(control: "choices" | "users"): readonly FilterOperator[] {
     ...empty,
   ];
 }
-export const filterOperators = {
+const catalog = {
   text: { operators: text, defaultOperator: "contains" },
   email: { operators: text, defaultOperator: "equal" },
   phone: { operators: text, defaultOperator: "equal" },
+  website: { operators: text, defaultOperator: "contains" },
   picklist: { operators: choices("choices"), defaultOperator: "equal" },
   currency: {
     operators: [
@@ -89,11 +126,28 @@ export const filterOperators = {
     operators: [{ id: "equal", label: "is", control: "state" }],
     defaultOperator: "equal",
   },
-  ownerlookup: { operators: choices("users"), defaultOperator: "equal" },
+  ownerlookup: {
+    operators: [
+      { id: "equal", label: "is", control: "users" },
+      { id: "not_equal", label: "is not", control: "users" },
+      ...empty,
+      { id: "belongs_to_role", label: "belongs to Role", control: "choices" },
+      { id: "not_belongs_to_role", label: "does not belong to Role", control: "choices" },
+      { id: "belongs_to_group", label: "belongs to Group", control: "choices" },
+    ],
+    defaultOperator: "equal",
+  },
   datetime: {
     operators: [
       { id: "age_in", label: "age in", control: "days" },
       { id: "due_in", label: "due in", control: "days" },
+      { id: "previous", label: "Previous", control: "days" },
+      { id: "next", label: "Next", control: "days" },
+      { id: "on", label: "On", control: "date" },
+      { id: "before", label: "before", control: "date" },
+      { id: "not_between", label: "not between", control: "date_range" },
+      { id: "after", label: "after", control: "date" },
+      { id: "between", label: "between", control: "date_range" },
       { id: "today", label: "Today", control: "none" },
       { id: "tomorrow", label: "Tomorrow", control: "none" },
       { id: "till_yesterday", label: "Till Yesterday", control: "none" },
@@ -104,15 +158,31 @@ export const filterOperators = {
       { id: "previous_week", label: "Previous Week", control: "none" },
       { id: "previous_month", label: "Previous Month", control: "none" },
       { id: "this_year", label: "This Year", control: "none" },
+      { id: "current_fy", label: "Current FY", control: "none" },
+      { id: "current_fq", label: "Current FQ", control: "none" },
       { id: "previous_year", label: "Previous Year", control: "none" },
+      { id: "previous_fy", label: "Previous FY", control: "none" },
+      { id: "previous_fq", label: "Previous FQ", control: "none" },
       { id: "next_year", label: "Next Year", control: "none" },
+      { id: "next_fy", label: "Next FY", control: "none" },
+      { id: "next_fq", label: "Next FQ", control: "none" },
       ...empty,
     ],
     defaultOperator: "age_in",
   },
 } as const satisfies Record<string, FilterOperatorDefinition>;
+export const numericFilterOperators: FilterOperatorDefinition = catalog.currency;
+export const filterOperators = { ...catalog, integer: numericFilterOperators };
 export type FilterFieldType = keyof typeof filterOperators;
-export type AppliedFilterValue = string | number | [number, number] | string[] | true | null;
+export type AppliedFilterValue =
+  | string
+  | number
+  | [number, number]
+  | string[]
+  | [string, string]
+  | boolean
+  | null;
+export type DateUnit = "days" | "weeks" | "months";
 export interface AppliedFilter {
   itemId: string;
   operatorId: FilterOperatorId;

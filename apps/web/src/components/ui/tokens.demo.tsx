@@ -422,7 +422,7 @@ const SIZE_GROUPS = [
       "--size-filter-editor-top-gap",
       "--size-filter-editor-value-gap",
       "--size-filter-control-height",
-      "--size-filter-contains-width",
+      "--size-filter-operator-gap",
       "--size-filter-control-min-width",
       "--radius-filter-control",
       "--size-filter-operator-list-width",
