@@ -14,15 +14,11 @@ export default function SelectionBarDemo() {
     <div className="space-y-6">
       <SelectionBar
         selectedCount={1}
-        recordLabelSingular="Lead"
-        recordLabelPlural="Leads"
         onClear={() => setMessage("Cleared one")}
         onDelete={() => setMessage("Delete one")}
       />
       <SelectionBar
         selectedCount={3}
-        recordLabelSingular="Lead"
-        recordLabelPlural="Leads"
         onClear={() => setMessage("Cleared three")}
         onDelete={() => setMessage("Delete three")}
         actions={sampleActions}

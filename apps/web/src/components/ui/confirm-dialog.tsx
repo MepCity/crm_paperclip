@@ -88,7 +88,7 @@ function ConfirmDialogBody({
       </Heading>
       <p
         id={descriptionId}
-        className="mb-(--size-confirm-dialog-message-actions-gap) text-md font-normal text-text"
+        className="mb-(--size-confirm-dialog-message-actions-gap) text-md font-normal text-confirm-dialog-body"
       >
         {message}
       </p>
@@ -169,7 +169,7 @@ export function ConfirmDialog({
       <Modal
         className={[
           "w-(--size-dialog-width) max-w-full outline-none",
-          "rounded-(--radius-create-menu) border border-border bg-surface shadow-lg",
+          "rounded-(--radius-create-menu) bg-surface shadow-lg",
           "pt-(--size-confirm-dialog-padding-block-start)",
           "px-(--size-confirm-dialog-padding-inline)",
           "pb-(--size-confirm-dialog-padding-block-end)",

@@ -104,6 +104,30 @@ test("ConfirmDialog shows errorMessage above the actions", () => {
   expect(screen.getByRole("alert").textContent).toBe("Server error");
 });
 
+test("ConfirmDialog traps focus between Cancel and Delete with Tab", async () => {
+  const user = userEvent.setup();
+  render(
+    <ConfirmDialog
+      isOpen
+      title="Delete"
+      message="Sure?"
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      tone="danger"
+      onConfirm={() => undefined}
+    />,
+  );
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  const confirm = screen.getByRole("button", { name: "Delete" });
+  await waitFor(() => expect(document.activeElement).toBe(cancel));
+  await user.tab();
+  expect(document.activeElement).toBe(confirm);
+  await user.tab();
+  expect(document.activeElement).toBe(cancel);
+  await user.tab({ shift: true });
+  expect(document.activeElement).toBe(confirm);
+});
+
 test("ConfirmDialog calls onConfirm once and returns focus to the trigger", async () => {
   const user = userEvent.setup();
   const onConfirm = vi.fn();

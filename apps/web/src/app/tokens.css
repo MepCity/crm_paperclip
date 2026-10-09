@@ -360,6 +360,7 @@
   --size-dialog-padding: 30px;
 
   /* Unsaved changes modal (record-detail.md › Visual layout) */
+  --color-confirm-dialog-body: #434d5e;
   --size-confirm-dialog-padding-block-start: 29.5px;
   --size-confirm-dialog-padding-inline: 26.5px;
   --size-confirm-dialog-padding-block-end: 26px;

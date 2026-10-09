@@ -72,6 +72,75 @@ async function tokenLength(page: import("@playwright/test").Page, token: string)
   }, token);
 }
 
+async function tokenColor(page: import("@playwright/test").Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, token);
+}
+
+async function sampleBackdropFromOverlayToken(page: import("@playwright/test").Page) {
+  return page.evaluate(() => {
+    const overlay = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-overlay")
+      .trim();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = overlay;
+    context.globalAlpha = 0.5;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  });
+}
+
+async function sampleComputedBackground(page: import("@playwright/test").Page, css: string) {
+  return page.evaluate((background) => {
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = background;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = value;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  }, css);
+}
+
+function expectRgbaClose(
+  actual: { red: number; green: number; blue: number; alpha: number },
+  expected: { red: number; green: number; blue: number; alpha: number },
+) {
+  for (const channel of ["red", "green", "blue", "alpha"] as const) {
+    expect(Math.abs(actual[channel] - expected[channel])).toBeLessThanOrEqual(2);
+  }
+}
+
 function parseCrmRequest(url: string, method: string): CrmRequest | null {
   const parsed = new URL(url);
   if (!parsed.pathname.startsWith("/crm/v")) return null;
@@ -259,14 +328,15 @@ test.describe("Leads list page", () => {
     const deletedIds: string[] = [];
     await rowChecks.nth(1).check({ force: true });
     await rowChecks.nth(2).check({ force: true });
-    await expect(page.getByText("2 Leads Selected")).toBeVisible();
+    await expect(page.getByText("2 Records Selected")).toBeVisible();
     await expectNoA11yViolations(page);
     await expect(page.getByRole("button", { name: "Filter", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByRole("alertdialog")).toBeVisible();
+    await expectNoA11yViolations(page);
     await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
-    await expect(page.getByText("2 Leads Selected")).toBeVisible();
+    await expect(page.getByText("2 Records Selected")).toBeVisible();
     const deleteDone = page.waitForResponse(async (response) => {
       if (response.request().method() !== "POST") return false;
       if (!response.url().includes("/actions/mass_delete")) return false;
@@ -280,7 +350,7 @@ test.describe("Leads list page", () => {
     await deleteDone;
     expect(deletedIds).toHaveLength(2);
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
-    await expect(page.getByText(/Leads Selected/)).toHaveCount(0);
+    await expect(page.getByText(/Records Selected/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Filter", exact: true })).toBeVisible();
     for (const label of deletedLabels) {
       await expect(page.getByRole("link", { name: label })).toHaveCount(0);
@@ -489,18 +559,14 @@ test.describe("Leads list page", () => {
     const backdropColor = await backdrop.evaluate(
       (element) => getComputedStyle(element).backgroundColor,
     );
-    const referenceBackdrop = await page.evaluate(() => {
-      const probe = document.createElement("div");
-      probe.className = "bg-overlay/50";
-      document.body.append(probe);
-      const value = getComputedStyle(probe).backgroundColor;
-      probe.remove();
-      return value;
-    });
-    expect(backdropColor).toBe(referenceBackdrop);
+    const expectedBackdrop = await sampleBackdropFromOverlayToken(page);
+    const actualBackdrop = await sampleComputedBackground(page, backdropColor);
+    expectRgbaClose(actualBackdrop, expectedBackdrop);
 
     const title = dialog.getByRole("heading");
     const message = dialog.locator("p").first();
+    await expect(title).toHaveCSS("color", await tokenColor(page, "--color-text-strong"));
+    await expect(message).toHaveCSS("color", await tokenColor(page, "--color-confirm-dialog-body"));
     const cancel = dialog.getByRole("button", { name: "Cancel" });
     const confirmDelete = dialog.getByRole("button", { name: "Delete" });
     const titleBox = requireBox(await title.boundingBox(), "confirm title");

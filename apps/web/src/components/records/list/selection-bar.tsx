@@ -6,22 +6,18 @@ import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/me
 
 export interface SelectionBarProps {
   selectedCount: number;
-  recordLabelSingular: string;
-  recordLabelPlural: string;
   onClear: () => void;
   onDelete: () => void;
   actions?: readonly MenuAction[];
 }
 
-function selectionLabel(count: number, singular: string, plural: string): string {
-  if (count === 1) return `1 ${singular} Selected`;
-  return `${count} ${plural} Selected`;
+function selectionLabel(count: number): string {
+  if (count === 1) return "1 Record Selected";
+  return `${count} Records Selected`;
 }
 
 export function SelectionBar({
   selectedCount,
-  recordLabelSingular,
-  recordLabelPlural,
   onClear,
   onDelete,
   actions = [],
@@ -34,9 +30,7 @@ export function SelectionBar({
       data-selection-bar
     >
       <div className="flex min-w-0 items-center gap-3 text-md font-normal text-text">
-        <span data-part="selection-count">
-          {selectionLabel(selectedCount, recordLabelSingular, recordLabelPlural)}
-        </span>
+        <span data-part="selection-count">{selectionLabel(selectedCount)}</span>
         <Button
           variant="ghost"
           size="sm"

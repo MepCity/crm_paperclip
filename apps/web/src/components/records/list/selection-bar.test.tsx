@@ -7,26 +7,12 @@ afterEach(cleanup);
 
 test("renders singular and plural selection counts", () => {
   const { rerender } = render(
-    <SelectionBar
-      selectedCount={1}
-      recordLabelSingular="Lead"
-      recordLabelPlural="Leads"
-      onClear={() => {}}
-      onDelete={() => {}}
-    />,
+    <SelectionBar selectedCount={1} onClear={() => {}} onDelete={() => {}} />,
   );
-  expect(screen.getByText("1 Lead Selected")).toBeTruthy();
+  expect(screen.getByText("1 Record Selected")).toBeTruthy();
 
-  rerender(
-    <SelectionBar
-      selectedCount={3}
-      recordLabelSingular="Lead"
-      recordLabelPlural="Leads"
-      onClear={() => {}}
-      onDelete={() => {}}
-    />,
-  );
-  expect(screen.getByText("3 Leads Selected")).toBeTruthy();
+  rerender(<SelectionBar selectedCount={3} onClear={() => {}} onDelete={() => {}} />);
+  expect(screen.getByText("3 Records Selected")).toBeTruthy();
 });
 
 test("Clear and Delete call their handlers; Actions menu renders when items exist", async () => {
@@ -37,8 +23,6 @@ test("Clear and Delete call their handlers; Actions menu renders when items exis
   render(
     <SelectionBar
       selectedCount={2}
-      recordLabelSingular="Lead"
-      recordLabelPlural="Leads"
       onClear={onClear}
       onDelete={onDelete}
       actions={[{ id: "example", label: "Example", onAction }]}
@@ -57,15 +41,6 @@ test("Clear and Delete call their handlers; Actions menu renders when items exis
 });
 
 test("omits Actions when the action list is empty", () => {
-  render(
-    <SelectionBar
-      selectedCount={1}
-      recordLabelSingular="Lead"
-      recordLabelPlural="Leads"
-      onClear={() => {}}
-      onDelete={() => {}}
-      actions={[]}
-    />,
-  );
+  render(<SelectionBar selectedCount={1} onClear={() => {}} onDelete={() => {}} actions={[]} />);
   expect(screen.queryByRole("button", { name: "Actions" })).toBeNull();
 });

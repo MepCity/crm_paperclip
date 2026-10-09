@@ -278,9 +278,9 @@ select two rows. Only synthetic data appears in demos and tests.
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
-- `SelectionBar({ selectedCount, recordLabelSingular, recordLabelPlural, onClear,
-  onDelete, actions? })`: replaces the toolbar while `selectedCount > 0`. Shows the
-  measured toolbar height, a count (`1 Lead Selected` / `3 Leads Selected`), a `Clear`
+- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
+  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
+  Selected` / `3 Records Selected`), a `Clear`
   text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
   The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
