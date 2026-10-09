@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { AUTH_NAVIGATION_TIMEOUT_MS, signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
@@ -9,6 +10,42 @@ test("organization creation passes accessibility right after redirect", async ({
   expect(organization).toEqual({ name: "Çağrı Şirketi Örnek", slug: "cagri-sirketi-ornek" });
   await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
   await expectNoA11yViolations(page);
+});
+
+/** Records every full document load of the organization form, the sign of a lost page state. */
+function watchFormDocumentLoads(page: Page): string[] {
+  const loads: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document" && new URL(request.url()).pathname === "/orgs/new")
+      loads.push(request.url());
+  });
+  return loads;
+}
+
+test("the form helper fills the form it already sits on without loading it again", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const formLoads = watchFormDocumentLoads(page);
+
+  const organization = await createOrganization(page);
+
+  expect(formLoads).toEqual([]);
+  await expect(page).toHaveURL(`/crm/${organization.slug}`);
+});
+
+test("the form helper opens the form when it starts from another page", async ({ page }) => {
+  await signUpNewUser(page);
+  const first = await createOrganization(page, "First Org");
+
+  const formLoads = watchFormDocumentLoads(page);
+  const second = await createOrganization(page, "Second Org");
+
+  expect(second).toEqual({ name: "Second Org", slug: "second-org" });
+  expect(formLoads).toHaveLength(1);
+  await expect(page).toHaveURL(`/crm/${second.slug}`);
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
+  expect(first.slug).toBe("first-org");
 });
 
 test("a new user creates an organization and returns to it from home", async ({ page }) => {
