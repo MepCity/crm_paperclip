@@ -357,6 +357,11 @@ test.describe("Leads list page", () => {
     await expect(next).toBeEnabled();
     await next.click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
+    // The address settles before the screen issues its next fetch, so wait for that
+    // request instead of reading the log the moment the URL changes.
+    await expect
+      .poll(() => seen.slice(countBeforeNext).some((item) => item.pathname.endsWith("/Leads/bulk")))
+      .toBe(true);
     const afterNext = seen.slice(countBeforeNext);
     expect(afterNext.length).toBeGreaterThan(0);
     for (const request of afterNext) {
