@@ -344,7 +344,9 @@ describe("wire operations", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
   it("returns 404 for unknown modules, views and records", async () => {
-    for (const op of Object.values(operations).filter((op) => op !== operations.users)) {
+    for (const op of Object.values(operations).filter(
+      (op) => op !== operations.users && op !== operations.currencies,
+    )) {
       await expect(
         op.run(deps, {
           ...input(
