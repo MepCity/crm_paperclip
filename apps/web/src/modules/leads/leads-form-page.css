@@ -67,9 +67,3 @@
 .record-form-label-line {
   display: block;
 }
-
-.leads-form-page
-  .record-form-section[data-record-form-section-layout="single"]:not(:first-child)
-  [data-form-type="textarea"] {
-  margin-top: calc(-1 * var(--size-form-section-title-box-trim));
-}

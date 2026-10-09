@@ -154,6 +154,7 @@ what the "no colour constants" rule forbids.
 | `--radius-xl` | `1rem` (16px) | list-views.md › Manage Columns dialog › "about 16 px corners" | from spec |
 | `--radius-full` | `9999px` | app-shell.md › Top bar/right controls › Order, sizing, spacing › "Avatar is about 30 x 30 circular" | from spec |
 | `--radius-form-control` | `5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "5 px corners" | from spec |
+| `--radius-form-field-group` | `10px` | MEP-172 / MEP-174 › Address field group frame corner radius | from spec |
 | `--radius-create-menu` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "4 px bottom corners". Only the lower corners are measured; the panel keeps square top corners where it meets the top bar | from spec |
 | `--radius-create-menu-search` | `4px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Search box › "1 px focus border `#5464F2`, 4 px corners". The shared `filter-search` variant keeps its 6 px corners on list filters | from spec |
 | `--shadow-sm` | `0 1px 2px 0 rgba(0, 0, 0, 0.05)` | app-shell.md › Bottom utility strip › "exact blur parameters are **not measurable from capture**"; Teamspace More Actions menu › "blur/spread and opacity are **not measurable from capture**". The list spec only says "soft shadow" on the view-options, actions and settings popovers, so it does not measure blur, spread or opacity either | not yet measured |
@@ -439,9 +440,9 @@ what the "no colour constants" rule forbids.
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
 | `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
 | `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
-| `--size-form-section-gap` | `55.5px` | MEP-172 interim › next section title cap below previous section content | from spec |
-| `--size-form-section-title-gap` | `28px` | MEP-172 interim › section content below heading baseline | from spec |
-| `--size-form-section-title-box-trim` | `4px` | MEP-172 interim › trim heading line box when margin follows the title | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy section gap (Leads page Description section only) | from spec |
+| `--size-form-section-title-center-above` | `61px` | MEP-172 / MEP-174 › section title center below previous section content | from spec |
+| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top above section title center | from spec |
 | `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
 | `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
 | `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
@@ -457,13 +458,16 @@ what the "no colour constants" rule forbids.
 | `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
 | `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
 | `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
-| `--size-form-action-gap` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › gap between strip action buttons | from spec |
+| `--size-form-action-gap` | `8px` | MEP-172 / MEP-174 › gap between strip action buttons | from spec |
 | `--size-form-action-padding-inline` | `14.5px` | MEP-172 interim › strip action button horizontal padding | from spec |
-| `--size-form-field-group-padding-end` | `16px` | MEP-172 interim › Address group input inset from right border | from spec |
-| `--size-form-field-group-body-top` | `31px` | MEP-172 interim › first input below Address group top border | from spec |
-| `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
-| `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
-| `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-form-field-group-padding-end` | `15px` | MEP-172 / MEP-174 › Address group input inset from right border (outer edge to input right +1 px border) | from spec |
+| `--size-form-field-group-body-top` | `30px` | MEP-172 / MEP-174 › first input below Address group top border (+1 px border to 31 px) | from spec |
+| `--size-form-field-group-margin-bottom` | `17px` | MEP-172 / MEP-174 › space below Address frame before next section title | from spec |
+| `--size-form-field-group-legend-inset` | `10px` | MEP-172 / MEP-174 › Address legend background box inset from group left | from spec |
+| `--size-form-field-group-legend-padding-start` | `8.5px` | MEP-172 / MEP-174 › legend text inset inside background box | from spec |
+| `--size-form-field-group-legend-padding-end` | `12.5px` | MEP-172 / MEP-174 › legend gap before top border resumes | from spec |
+| `--size-form-input-full-width` | `639px` | MEP-172 / MEP-174 › Description row control width (aligned with left inputs) | from spec |
+| `--size-form-description-height` | `34px` | MEP-172 / MEP-174 › Description textarea initial height in layout demo | from spec |
 | `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
 | `--size-form-address-radius` | `10px` | record-detail.md › Address frame › corner radius | from spec |
 | `--size-form-coordinate-gap` | `10px` | record-detail.md › Address frame › Latitude to Longitude gap | from spec |
