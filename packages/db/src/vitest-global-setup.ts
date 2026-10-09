@@ -8,7 +8,7 @@ declare module "vitest" {
 
 type GlobalSetupContext = { provide(key: "crmAdminUrl", value: string): void };
 
-/** Starts one throwaway PostgreSQL for the whole run and prepares the template database. */
+/** startTestPostgres uses the shared signal-shutdown helper. Starts one throwaway PostgreSQL for the whole run and prepares the template database. */
 export default async function setup(project: GlobalSetupContext): Promise<() => Promise<void>> {
   const postgres = await startTestPostgres();
   try {

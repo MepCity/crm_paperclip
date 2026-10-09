@@ -2,6 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pickFreePort } from "@crm/db/ports";
+import { registerSignalShutdown, stopApplicationChild } from "@crm/db/signal-shutdown";
 import { createTemplateDatabase, createWorkerDatabase, startTestPostgres } from "@crm/db/testing";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -24,16 +25,14 @@ function run(command: string, args: string[], env: NodeJS.ProcessEnv): Promise<n
   });
 }
 
-for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.on(signal, () => {
-    interrupted = true;
-    current?.kill(signal);
-  });
-}
-
 async function main(): Promise<number> {
   console.log("e2e: starting a throwaway PostgreSQL");
   const postgres = await startTestPostgres();
+  const stop = registerSignalShutdown(async () => {
+    interrupted = true;
+    await stopApplicationChild(current);
+    await postgres.stop();
+  });
   try {
     await createTemplateDatabase(postgres.adminUrl);
     const database = await createWorkerDatabase(postgres.adminUrl, "e2e");
@@ -55,7 +54,7 @@ async function main(): Promise<number> {
     const playwrightArgs = ["test", ...process.argv.slice(2)];
     return await run("playwright", playwrightArgs, env);
   } finally {
-    await postgres.stop();
+    await stop();
   }
 }
 

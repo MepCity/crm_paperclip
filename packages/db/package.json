@@ -8,7 +8,9 @@
     "./local-postgres": "./src/local-postgres.ts",
     "./testing": "./src/testing.ts",
     "./ports": "./src/ports.ts",
-    "./migrate": "./src/migrate.ts"
+    "./migrate": "./src/migrate.ts",
+    "./signal-shutdown": "./src/signal-shutdown.ts",
+    "./sysv-ipc": "./src/sysv-ipc.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate"
