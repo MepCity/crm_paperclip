@@ -119,10 +119,10 @@ test("record frame matches the header, rail, tab and grouped-menu measurements",
     expectWithin(navIconBox.height, 24, 1, "Record nav icon viewport height");
     const navGeom = await svgPathGeometrySize(navSvg);
     const navInk = await svgStrokeInclusiveInkSize(navSvg);
-    expectWithin(navGeom.width, 7, 1.5, "Record nav chevron path geometry width");
-    expectWithin(navGeom.height, 13, 1.5, "Record nav chevron path geometry height");
-    expectWithin(navInk.width, 8.5, 1.5, "Record nav chevron stroke-inclusive ink width");
-    expectWithin(navInk.height, 14.5, 1.5, "Record nav chevron stroke-inclusive ink height");
+    expectWithin(navGeom.width, 5.5, 1.5, "Record nav chevron path geometry width");
+    expectWithin(navGeom.height, 11.5, 1.5, "Record nav chevron path geometry height");
+    expectWithin(navInk.width, 7, 1.5, "Record nav chevron stroke-inclusive ink width");
+    expectWithin(navInk.height, 13, 1.5, "Record nav chevron stroke-inclusive ink height");
     measurements[`${await nav.getAttribute("aria-label")} icon box`] = navIconBox;
     measurements[`${await nav.getAttribute("aria-label")} icon geometry`] = navGeom;
     measurements[`${await nav.getAttribute("aria-label")} icon ink`] = navInk;

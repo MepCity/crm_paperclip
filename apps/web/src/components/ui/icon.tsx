@@ -220,7 +220,7 @@ function RecordHeaderChevronLeft(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <path d="M15.5 5.5 8.5 12 15.5 18.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 6.25 8.5 12 14 17.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -237,7 +237,7 @@ function RecordHeaderChevronRight(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <path d="M8.5 5.5 15.5 12 8.5 18.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 6.25 15.5 12 10 17.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
