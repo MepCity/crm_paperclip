@@ -722,8 +722,19 @@ Source: record-detail.md › Layout › Visual layout › Record page / More Opt
 These compact controls use the neighboring Status stage value typography role
 (`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
 
-
 The measured Clear All ink `#a0a8b8` on white is below AA. It remains at the
 reference value under ADR 0003 §8's newly measured pair workflow and is reported
 to CTO for the Module 1 board decision. This is not covered by the placeholder
 exception: the browser scan excludes only the text span, retaining its button.
+
+## Table scroll container
+
+`Table`'s wrapper is the only scroll container of its rows: it carries `overflow-auto` together
+with paint containment (`contain-paint`). A table whose min-content width is larger than the
+space left of it then scrolls inside that wrapper and nothing else. Without containment Chromium
+keeps the wrapper scrollable *and* still adds the clipped spill to the document, so a narrow
+screen gets a horizontal page range and the top bar and the rail slide sideways with it
+(MEP-211). Overlays opened from a cell, such as the role menu and the remove confirmation, are
+rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
+inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
+container's own scroll at a narrow viewport and at the measured desktop viewport.
