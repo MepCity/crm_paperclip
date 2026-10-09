@@ -44,6 +44,9 @@ test("hidden-rail layout matches Visual layout measurements on the demo frame", 
 
   const tabs = frame.getByRole("tablist", { name: "Record views" });
   const tabsBox = await bounds(tabs);
+  const overviewTab = frame.getByRole("tab", { name: "Overview" });
+  const overviewTabBox = await bounds(overviewTab);
+  expect(Math.abs(overviewTabBox.y - tabsBox.y - 4)).toBeLessThanOrEqual(1);
   expect(Math.abs(tabsBox.x - toggleBox.x - toggleBox.width - 12)).toBeLessThanOrEqual(1);
   expect(Math.abs(tabsBox.width - 222.5)).toBeLessThanOrEqual(1);
   expect(Math.abs(tabsBox.height - 37)).toBeLessThanOrEqual(1);
@@ -56,7 +59,7 @@ test("hidden-rail layout matches Visual layout measurements on the demo frame", 
   const cardRight = cardBox.x + cardBox.width;
   const scrollerRight = scrollerBox.x + scrollerBox.width - 12;
   expect(Math.abs(cardRight - scrollerRight)).toBeLessThanOrEqual(1);
-  expect(Math.abs(cardBox.width - widthBefore - 220)).toBeLessThanOrEqual(2);
+  expect(Math.abs(cardBox.width - widthBefore - 220)).toBeLessThanOrEqual(1);
 });
 
 test("rail preference survives reload on the demo frame", async ({ page }) => {
