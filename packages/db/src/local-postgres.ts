@@ -59,6 +59,15 @@ export function isIpcExhausted(message: string): boolean {
   return /could not create (shared memory segment|semaphore set)/.test(message);
 }
 
+/**
+ * Identifier failure of a start attempt. A postmaster that dies during start gives
+ * embedded-postgres nothing to reject with, so its FATAL line has to be read from the output the
+ * caller collected; initdb failures already carry the whole stderr in the reason.
+ */
+export function ipcFailure(reason: string, serverOutput: string): boolean {
+  return isIpcExhausted(reason) || isIpcExhausted(serverOutput);
+}
+
 function realSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -288,7 +297,7 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
   const started = await startClusterWithIpcRetry({
     create: createCluster,
     needsInitialise: () => !existsSync(join(dataDir, "PG_VERSION")),
-    isIpcExhausted: (reason) => isIpcExhausted(reason) || isIpcExhausted(serverOutput()),
+    isIpcExhausted: (reason) => ipcFailure(reason, serverOutput()),
     onRetry: ({ attempt, delayMs }) =>
       onLog(`SysV IPC identifiers are taken, retrying attempt ${attempt + 1} in ${delayMs}ms`),
   });

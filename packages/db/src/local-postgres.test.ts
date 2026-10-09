@@ -5,6 +5,7 @@ import {
   type ClusterStart,
   connectionUrl,
   failureReason,
+  ipcFailure,
   isIpcExhausted,
   parsePostmasterPid,
   startClusterWithIpcRetry,
@@ -76,6 +77,23 @@ describe("isIpcExhausted", () => {
   it("does not match other start failures", () => {
     expect(isIpcExhausted("port 54329 is already in use")).toBe(false);
     expect(isIpcExhausted("FATAL:  data directory does not exist")).toBe(false);
+  });
+});
+
+describe("ipcFailure", () => {
+  it("reads the identifier failure from the postmaster output when the reason is the placeholder", () => {
+    expect(ipcFailure("server exited during start", SERVER_FATAL)).toBe(true);
+    expect(ipcFailure("server exited during start", `previous line\n${SERVER_FATAL}`)).toBe(true);
+  });
+
+  it("reads it from the reason when initdb reports the whole stderr", () => {
+    expect(ipcFailure(INITDB_FAILURE, "")).toBe(true);
+  });
+
+  it("stays false for an unrelated start failure", () => {
+    expect(ipcFailure("server exited during start", "FATAL:  config file contains errors")).toBe(
+      false,
+    );
   });
 });
 
@@ -243,7 +261,7 @@ describe("startClusterWithIpcRetry", () => {
       needsInitialise: () => false,
       isIpcExhausted: (reason) => {
         seen.push(reason);
-        return isIpcExhausted(reason) || isIpcExhausted(SERVER_FATAL);
+        return ipcFailure(reason, SERVER_FATAL);
       },
       sleep: async () => undefined,
     });
