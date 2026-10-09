@@ -382,7 +382,17 @@ test.describe("Leads list page", () => {
     const countBeforeNext = seen.length;
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
+    // Navigation updates the URL before the asynchronous bulk request completes.
+    const pageTwoResponse = page.waitForResponse((response) => {
+      const request = parseCrmRequest(response.url(), response.request().method());
+      return (
+        request?.method === "POST" &&
+        request.pathname.endsWith("/Leads/bulk") &&
+        request.searchParams.get("page") === "2"
+      );
+    });
     await next.click();
+    expect((await pageTwoResponse).ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     await expect.poll(() => seen.slice(countBeforeNext).length).toBeGreaterThan(0);
     const afterNext = seen.slice(countBeforeNext);
