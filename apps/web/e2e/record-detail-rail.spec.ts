@@ -75,9 +75,7 @@ test("rail preference survives reload on the demo frame", async ({ page }) => {
   });
   await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
   await frame.getByRole("button", { name: "Show Related List" }).click();
-  await expect
-    .poll(() => page.evaluate((key) => localStorage.getItem(key), PREF_KEY))
-    .toBe("true");
+  await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), PREF_KEY)).toBe("true");
   await page.reload({ waitUntil: "networkidle" });
   await expect(frame.getByRole("button", { name: "Hide Related List" })).toBeVisible({
     timeout: 15_000,
