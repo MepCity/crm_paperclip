@@ -9,6 +9,7 @@ import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
+  [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
   [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
   [operations.fields, () => import("@/app/crm/v2.2/settings/fields/route")],
   [operations.layouts, () => import("@/app/crm/v2.1/settings/layouts/route")],
@@ -89,6 +90,21 @@ describe("operation routes", () => {
   beforeAll(async () => {
     a = await createTestOrganization();
     b = await createTestOrganization();
+  });
+  it("authenticates the currency GET and returns exactly one configured currency", async () => {
+    const anonymous = await call(operations.currencies);
+    expect(anonymous.status).toBe(401);
+    expect(await anonymous.json()).toMatchObject({
+      code: "AUTHENTICATION_FAILURE",
+      status: "error",
+    });
+    const response = await call(operations.currencies, a);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      currencies: [
+        { symbol: "TL", iso_code: "TRY", name: "Turkish Lira - TRY", prefix_symbol: true },
+      ],
+    });
   });
   it("has a thin, force-dynamic wrapped route for every operation", () => {
     expect(handlers).toHaveLength(Object.keys(operations).length);

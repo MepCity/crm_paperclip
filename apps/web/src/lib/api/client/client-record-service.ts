@@ -8,6 +8,7 @@ export function createClientRecordService(
 ): ClientRecordService {
   return {
     ...records,
+    getHomeCurrency: () => records.getHomeCurrency(),
     listUsers: extensions.listUsers,
     async listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]> {
       const views = await records.listViews(module);
