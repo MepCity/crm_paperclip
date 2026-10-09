@@ -129,17 +129,28 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     };
   }
 
-  const tail: string[] = [];
-  const onLog = (message: string) => {
-    for (const line of message.split("\n")) {
-      if (line.trim() === "") continue;
-      tail.push(line);
-      if (tail.length > 20) tail.shift();
-      options.onLog?.(line);
-    }
+  /** Splits server and initdb output into the lines the caller is given. */
+  const toLines = (message: string): string[] =>
+    message.split("\n").filter((line) => line.trim() !== "");
+
+  // The retry note is reported to the caller only: it must not land in the log ring of the
+  // attempt that follows it.
+  const report = (message: string) => {
+    for (const line of toLines(message)) options.onLog?.(line);
   };
 
   const startOnce = async (): Promise<LocalPostgres> => {
+    // One ring per attempt. The composed error is what the retry classifies, so an older
+    // attempt's shared memory line must never be carried into a newer failure's report.
+    const tail: string[] = [];
+    const onLog = (message: string) => {
+      for (const line of toLines(message)) {
+        tail.push(line);
+        if (tail.length > 20) tail.shift();
+        options.onLog?.(line);
+      }
+    };
+
     const port = options.port ?? (await pickFreePort());
     if (options.port !== undefined && !(await isPortFree(port))) {
       throw new Error(`port ${port} is already in use`);
@@ -189,7 +200,7 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
   try {
     return await retryOnSharedMemoryExhaustion(startOnce, {
       onRetry: (_error, delayMs) =>
-        onLog(`shared memory table is full, retrying the server start in ${delayMs} ms`),
+        report(`shared memory table is full, retrying the server start in ${delayMs} ms`),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
