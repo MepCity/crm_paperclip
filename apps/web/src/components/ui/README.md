@@ -30,6 +30,26 @@ Visual layout → Filter content, Surface and line colors, Selected / disabled.
 Vertical gaps, search-field width and end inset use the measured Filter content tokens.
 Open question 17 records the uncaptured closed group and checked checkbox.
 
+## Confirm dialog
+
+`confirm-dialog.tsx` builds a measured confirmation alert on the shared modal
+primitive. Props: `title`, `message`, `confirmLabel`, `cancelLabel`,
+`tone` (`danger` | `default`), optional `busy`, optional `errorMessage`,
+`onConfirm`, and optional controlled `isOpen` / `onOpenChange`. Escape and the
+secondary button close; focus opens on the secondary button; both buttons
+disable while `busy` or while an async `onConfirm` is pending. `errorMessage`
+renders as form error text above the actions. Geometry follows
+`record-detail.md` › Visual layout › Unsaved changes modal via
+`--size-dialog-width`, `--size-confirm-dialog-*`, and `--radius-create-menu`.
+Use inside `DialogTrigger` for trigger-driven flows, or pass `isOpen` for
+page-owned delete confirmation.
+
+### Interim
+
+Destructive fill uses the shared `danger` button variant rather than the
+sampled red gradient; hover and shadow parameters stay on the primitive
+defaults because they are not measured for this modal.
+
 ## Token sources
 
 Token regression expectations live next to the stylesheet in `apps/web/src/app/tokens.test.ts`.
@@ -332,6 +352,13 @@ what the "no colour constants" rule forbids.
 | `--size-dialog-width` | `400px` | list-views.md › Manage Columns dialog › "about 400 px wide" | from spec |
 | `--size-dialog-height` | `770px` | list-views.md › Manage Columns dialog › "770 px high" | from spec |
 | `--size-dialog-padding` | `30px` | list-views.md › Manage Columns dialog › "30 px inner padding" | from spec |
+| `--color-confirm-dialog-body` | `#434d5e` | record-detail.md › Unsaved changes modal › Modal body › color `#434D5E` | from spec |
+| `--size-confirm-dialog-padding-block-start` | `29.5px` | record-detail.md › Unsaved changes modal › "Top padding 29.5 px" | from spec |
+| `--size-confirm-dialog-padding-inline` | `26.5px` | record-detail.md › Unsaved changes modal › "left padding 26.5 px" | from spec |
+| `--size-confirm-dialog-padding-block-end` | `26px` | record-detail.md › Unsaved changes modal › "26 px bottom" | from spec |
+| `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
+| `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
+| `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
@@ -464,6 +491,16 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
 | `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
 | `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
+| `--size-form-address-radius` | `10px` | record-detail.md › Address frame › corner radius | from spec |
+| `--size-form-coordinate-gap` | `10px` | record-detail.md › Address frame › Latitude to Longitude gap | from spec |
+| `--color-form-clear-address` | `#a0a8b8` | record-detail.md › Address frame › Clear All ink | from spec |
+| `--size-form-description-width` | `639px` | record-detail.md › Description Information and textarea › x 553–1192 | from spec |
+| `--size-form-description-extra-gap` | `17px` | record-detail.md › Description Information and textarea › 17 px larger than standard section gap | from spec |
+| `--size-form-page-cancel-width` | `74px` | record-detail.md › Fixed title/action strip › Cancel x 1181–1255 | from spec |
+| `--size-form-page-save-new-width` | `119.5px` | record-detail.md › Fixed title/action strip › Save and New x 1263–1382.5 | from spec |
+| `--size-form-page-save-width` | `59.5px` | record-detail.md › Fixed title/action strip › Save x 1390.5–1450 | from spec |
+| `--size-form-description-rule-gap` | `40px` | record-detail.md › Description Information and textarea › bottom y 750.5 to rule y 790.5 | from spec |
 | `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
@@ -711,6 +748,11 @@ Source: record-detail.md › Layout › Visual layout › Record page / More Opt
 
 These compact controls use the neighboring Status stage value typography role
 (`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
+
+The measured Clear All ink `#a0a8b8` on white is below AA. It remains at the
+reference value under ADR 0003 §8's newly measured pair workflow and is reported
+to CTO for the Module 1 board decision. This is not covered by the placeholder
+exception: the browser scan excludes only the text span, retaining its button.
 
 ## Table scroll container
 
