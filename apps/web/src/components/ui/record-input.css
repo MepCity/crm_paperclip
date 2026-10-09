@@ -219,8 +219,17 @@
   padding-top: var(--size-form-panel-list-first-gap);
 }
 .record-owner-panel .record-choice-list {
-  padding-block: 0 var(--size-form-panel-owner-content-bottom);
-  padding-top: var(--size-form-panel-owner-content-top);
+  padding-top: calc(
+    var(--size-form-panel-owner-content-top) -
+    (var(--size-form-panel-owner-row-pitch) - var(--size-form-panel-owner-avatar-size)) /
+    2
+  );
+  padding-bottom: calc(
+    var(--size-form-panel-owner-content-bottom) -
+    (var(--size-form-panel-owner-row-pitch) - var(--size-form-panel-owner-avatar-size)) /
+    2 -
+    1px
+  );
 }
 .record-choice-row {
   position: relative;
@@ -304,6 +313,13 @@
   height: var(--size-form-input-height);
   padding-inline-start: var(--size-form-panel-search-text-inset);
 }
+.record-prefix-select .record-control {
+  border: 0;
+  height: 100%;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
 .record-owner-panel .record-panel-search .record-control {
   height: var(--size-form-panel-search-height-owner);
 }
@@ -376,13 +392,6 @@
   width: 100%;
   padding-left: var(--space-3);
   padding-right: calc(var(--size-form-prefix-caret-gap) + var(--size-form-caret-width));
-}
-.record-prefix-select .record-control {
-  border: 0;
-  height: 100%;
-  padding: 0;
-  box-shadow: none;
-  background: transparent;
 }
 .record-prefix-empty {
   color: var(--color-text-placeholder);
