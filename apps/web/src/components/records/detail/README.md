@@ -11,7 +11,8 @@ and page placement live in MEP-144.
 | Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
 | Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
-| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
+| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order |
+| Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
 
 The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
