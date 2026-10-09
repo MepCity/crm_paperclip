@@ -464,6 +464,16 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `18.5px` | MEP-172 interim › Address legend inset from group left | from spec |
 | `--size-form-field-group-legend-padding` | `12.5px` | MEP-172 interim › legend gap before border resumes | from spec |
 | `--size-form-description-height` | `80px` | record-detail.md › Layout › Visual layout › Create/edit form › Address and Description › "Exact textarea height: not measurable" | not yet measured |
+| `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
+| `--size-form-address-radius` | `10px` | record-detail.md › Address frame › corner radius | from spec |
+| `--size-form-coordinate-gap` | `10px` | record-detail.md › Address frame › Latitude to Longitude gap | from spec |
+| `--color-form-clear-address` | `#a0a8b8` | record-detail.md › Address frame › Clear All ink | from spec |
+| `--size-form-description-width` | `639px` | record-detail.md › Description Information and textarea › x 553–1192 | from spec |
+| `--size-form-description-extra-gap` | `17px` | record-detail.md › Description Information and textarea › 17 px larger than standard section gap | from spec |
+| `--size-form-page-cancel-width` | `74px` | record-detail.md › Fixed title/action strip › Cancel x 1181–1255 | from spec |
+| `--size-form-page-save-new-width` | `119.5px` | record-detail.md › Fixed title/action strip › Save and New x 1263–1382.5 | from spec |
+| `--size-form-page-save-width` | `59.5px` | record-detail.md › Fixed title/action strip › Save x 1390.5–1450 | from spec |
+| `--size-form-description-rule-gap` | `40px` | record-detail.md › Description Information and textarea › bottom y 750.5 to rule y 790.5 | from spec |
 | `--size-create-menu-width` | `670px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-height` | `429px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "x 534–1204, y 50–479 (670 × 429 px; border x 1203–1204, y 478–479)" | from spec |
 | `--size-create-menu-offset` | `12px` | record-detail.md › Layout › Visual layout › Global create menu (`Create Records`) › Popover panel › "Anchored directly beneath top-bar `+` button at y 50"; panel top y 50 minus app-shell.md › Top bar/right controls › "Quick-create box x 1176–1204, y 10–38" bottom y 38 | from spec |
@@ -711,6 +721,11 @@ Source: record-detail.md › Layout › Visual layout › Record page / More Opt
 
 These compact controls use the neighboring Status stage value typography role
 (`--text-sm`, `--font-weight-normal`); no operator typography role is measured.
+
+The measured Clear All ink `#a0a8b8` on white is below AA. It remains at the
+reference value under ADR 0003 §8's newly measured pair workflow and is reported
+to CTO for the Module 1 board decision. This is not covered by the placeholder
+exception: the browser scan excludes only the text span, retaining its button.
 
 ## Table scroll container
 
