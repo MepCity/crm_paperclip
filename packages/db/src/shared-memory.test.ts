@@ -96,7 +96,8 @@ describe("describeSysVSharedMemory", () => {
     expect(line).toContain("6 kernel IDs in use");
     expect(line).toContain("3 stale");
     expect(line).toContain("ipcrm -m");
-    expect(line).toContain("free-stale-shared-memory");
+    expect(line).toContain("list-stale-shared-memory");
+    expect(line).toContain("removes nothing");
   });
 
   it("says nothing when the table could not be read", () => {

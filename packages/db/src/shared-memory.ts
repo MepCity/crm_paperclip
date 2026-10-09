@@ -55,9 +55,9 @@ export function staleSysVSegments(
 }
 
 /**
- * Stale segments that are the size of the placeholder a PostgreSQL server creates, which is
- * what a killed test cluster leaves behind. Narrower than staleSysVSegments: a live server
- * always shows up with its creator PID, so only leftovers are selected here.
+ * Stale segments that are the size a PostgreSQL placeholder has. The size narrows the list to
+ * what a killed test cluster is expected to leave, but it is a hint and not proof of who made a
+ * segment: other programs can allocate the same size, so nothing here is removed on this basis.
  */
 export function stalePostgresMarkers(
   rows: readonly SysVSharedMemoryRow[],
@@ -95,8 +95,9 @@ export function describeSysVSharedMemory(
   return [
     `System V shared memory: ${rows.length} kernel IDs in use, ${stale.length} stale`,
     "(nothing attached, creator PID gone — left behind by servers that were killed instead of",
-    "stopped). macOS keeps them until they are removed with `ipcrm -m <id>`",
-    "(see scripts/free-stale-shared-memory.ts) or the machine reboots.",
+    "stopped). macOS keeps them until a person checks each creator and frees it with",
+    "`ipcrm -m <id>` (scripts/list-stale-shared-memory.ts names them and removes nothing)",
+    "or the machine reboots.",
   ].join(" ");
 }
 
