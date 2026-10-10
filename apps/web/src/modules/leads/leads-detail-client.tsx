@@ -2,7 +2,12 @@
 
 import type { RecordId } from "@crm/core/records";
 import { LeadRecordScreen } from "@/components/records/detail/leads/lead-record-screen";
-import { moduleListDefaultPath, moduleRecordEditPath, moduleRecordPath } from "@/lib/crm-paths";
+import {
+  moduleListDefaultPath,
+  moduleRecordClonePath,
+  moduleRecordEditPath,
+  moduleRecordPath,
+} from "@/lib/crm-paths";
 
 export function LeadsDetailClient({ orgSlug, recordId }: { orgSlug: string; recordId: RecordId }) {
   return (
@@ -13,6 +18,7 @@ export function LeadsDetailClient({ orgSlug, recordId }: { orgSlug: string; reco
         defaultList: moduleListDefaultPath,
         record: moduleRecordPath,
         edit: moduleRecordEditPath,
+        clone: moduleRecordClonePath,
       }}
     />
   );
