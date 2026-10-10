@@ -6,6 +6,7 @@ import { expectType } from "./support/typography";
 
 // All expected metrics cite research/specs/list-views.md › Layout › Visual layout.
 test("list chrome matches the measured tab, toolbar and button rows", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "list chrome" });
   const chrome = demo.locator('[data-list-demo="with-menus"]');
@@ -105,7 +106,7 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   // Create and action buttons.
   const split = chrome.locator("[data-split-button]");
   const primary = chrome.getByRole("button", { name: "Create Lead" });
-  const more = chrome.getByRole("button", { name: "More" });
+  const more = chrome.getByRole("button", { name: "More", exact: true });
   const actions = chrome.getByRole("button", { name: "Actions" });
   await box("split", split, 137.5, 33);
   await box("primary", primary, 102.5, 33);
@@ -130,7 +131,7 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   expect(gap).toBe(8.5);
   measured.gap = gap;
   const without = demo.locator('[data-list-demo="without-menus"]');
-  await expect(without.getByRole("button", { name: "More" })).toHaveCount(0);
+  await expect(without.getByRole("button", { name: "More", exact: true })).toHaveCount(0);
   await expect(without.getByRole("button", { name: "Actions" })).toHaveCount(0);
   await expect(without.getByRole("button", { name: "Filter", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -172,6 +173,7 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
 });
 
 test("Sort popover matches its measured size and supports Apply and Cancel", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "list chrome" });
   const trigger = demo
