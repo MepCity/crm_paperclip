@@ -5,6 +5,7 @@ import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.d
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
+import UnsavedChangesDialogDemo from "@/components/records/form/unsaved-changes-dialog.demo";
 import ChangeOwnerDialogDemo from "@/components/records/list/change-owner-dialog.demo";
 import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
@@ -53,6 +54,7 @@ export const demos: Record<string, React.ComponentType> = {
   "filter-panel": FilterPanelDemo,
   "filter-editors": FilterEditorsDemo,
   "select-user-dialog": SelectUserDialogDemo,
+  "unsaved-changes-dialog": UnsavedChangesDialogDemo,
   tokens: TokensDemo,
   icon: IconDemo,
   button: ButtonDemo,

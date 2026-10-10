@@ -4,13 +4,14 @@
   --list-content-inset-start: 15px;
   --list-toolbar-inset-end: 73px;
   --list-toolbar-body-gap: 15px;
+  --list-card-bottom-gap: 13px;
 
   display: flex;
   box-sizing: border-box;
   height: 100%;
   min-height: 100%;
   flex-direction: column;
-  padding-bottom: 13px;
+  padding-bottom: var(--list-card-bottom-gap);
   background-color: var(--color-bg);
 }
 

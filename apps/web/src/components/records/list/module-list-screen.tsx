@@ -10,9 +10,14 @@ import type {
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { MenuAction } from "@/components/ui/menu";
-import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
+import {
+  combineCriteriaAnd,
+  firstLetterCriteria,
+  panelFiltersToCriteria,
+} from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
@@ -81,7 +86,7 @@ export interface ModuleListScreenProps {
 function ListNotFound() {
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <NotFoundMessage />
     </div>
   );
 }
@@ -130,6 +135,7 @@ function ModuleListScreenLoaded({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
+  const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
     list: ListResult;
@@ -161,25 +167,32 @@ function ModuleListScreenLoaded({
     if (priorViewId.current === viewId) return;
     priorViewId.current = viewId;
     setAppliedCriteria(undefined);
+    setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
     setSelectedIds([]);
     setAcceptedListSnapshot(null);
   }, [viewId]);
 
+  /** Panel criteria and the header's first-letter choice restrict the list together (Interim). */
+  const listCriteria = useMemo(
+    () => combineCriteriaAnd([appliedCriteria, firstLetterCriteria(config.linkField, letter)]),
+    [appliedCriteria, config.linkField, letter],
+  );
+
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
-    if (!appliedCriteria) return base;
-    return { ...base, filters: appliedCriteria };
-  }, [appliedCriteria, columnApiNames, eligibleSortFields, searchState, viewId]);
+    if (!listCriteria) return base;
+    return { ...base, filters: listCriteria };
+  }, [columnApiNames, eligibleSortFields, listCriteria, searchState, viewId]);
 
   const countQuery = useMemo(
     () => ({
       viewId,
-      ...(appliedCriteria ? { filters: appliedCriteria } : {}),
+      ...(listCriteria ? { filters: listCriteria } : {}),
     }),
-    [appliedCriteria, viewId],
+    [listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -339,6 +352,18 @@ function ModuleListScreenLoaded({
     }
   }
 
+  /**
+   * The header's letter choice is a criterion of its own; the panel keeps what it applied.
+   * A new choice starts on page 1 and drops row selection, like applying a panel filter.
+   */
+  function applyLetter(letterChoice: string | null) {
+    setLetter(letterChoice);
+    setSelectedIds([]);
+    if (searchState.page !== LIST_PAGE_DEFAULT) {
+      navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
+    }
+  }
+
   function clearSelection() {
     setSelectedIds([]);
   }
@@ -370,7 +395,7 @@ function ModuleListScreenLoaded({
   const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
   const countSettled = count.isSuccess && !count.isFetching;
   const awaitingFilteredPair =
-    appliedCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
+    listCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
   const useAcceptedSnapshot =
     acceptedListSnapshot !== null && (hasFilterValidationError || awaitingFilteredPair);
 
@@ -548,6 +573,7 @@ function ModuleListScreenLoaded({
               const allowed = new Set(records.map((record) => record.id));
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
+            alphabet={{ value: letter, onChange: applyLetter }}
             wrapText={wrapText}
             emptyMessage={emptyMessage}
             settings={

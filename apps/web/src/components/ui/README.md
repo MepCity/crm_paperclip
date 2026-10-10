@@ -416,6 +416,15 @@ what the "no colour constants" rule forbids.
 | `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
 | `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
 | `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
+| `--size-unsaved-dialog-stay-width` | `91px` | record-detail.md › Unsaved changes modal › Secondary action | from spec |
+| `--size-unsaved-dialog-leave-width` | `130.5px` | record-detail.md › Unsaved changes modal › Destructive action | from spec |
+| `--color-unsaved-dialog-stay-border` | `#d6d8e8` | record-detail.md › Unsaved changes modal › Secondary action › border | from spec |
+| `--color-unsaved-dialog-stay-start` | `#ffffff` | record-detail.md › Unsaved changes modal › Secondary action › gradient start | from spec |
+| `--color-unsaved-dialog-stay-end` | `#f1f0f7` | record-detail.md › Unsaved changes modal › Secondary action › gradient end | from spec |
+| `--color-unsaved-dialog-stay-text` | `#313949` | record-detail.md › Unsaved changes modal › Secondary action › label ink | from spec |
+| `--color-unsaved-dialog-leave-start` | `#ff4657` | record-detail.md › Unsaved changes modal › Destructive action › gradient start | from spec |
+| `--color-unsaved-dialog-leave-end` | `#e33041` | record-detail.md › Unsaved changes modal › Destructive action › gradient end | from spec |
+| `--color-unsaved-dialog-leave-text` | `#ffffff` | record-detail.md › Unsaved changes modal › Destructive action › label ink | from spec |
 | `--size-list-selection-counter-width` | `170px` | list-views.md › Selection toolbar › counter strip "170 × 42 px" | from spec |
 | `--size-list-selection-counter-height` | `42px` | list-views.md › Selection toolbar › counter strip "170 × 42 px" | from spec |
 | `--size-list-selection-clear-width` | `34px` | list-views.md › Selection toolbar › Clear action link "34 × 16 px" | from spec |
@@ -466,6 +475,11 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
 | `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
 | `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
+| `--size-popover-alphabet-width` | `59px` | list-views.md › All alphabet dropdown › "Outer popover box approx 59 px wide" | from spec |
+| `--size-popover-alphabet-height` | `412px` | list-views.md › All alphabet dropdown › "412 px visible height" | from spec |
+| `--size-popover-alphabet-inset` | `6px` | list-views.md › All alphabet dropdown › "approx 6 px horizontal padding around option rows" | from spec |
+| `--size-popover-alphabet-row-width` | `45px` | list-views.md › All alphabet dropdown › "27 item rows 45 px wide and 23 px high" | from spec |
+| `--size-popover-alphabet-row-height` | `23px` | list-views.md › All alphabet dropdown › "27 item rows 45 px wide and 23 px high" | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -891,6 +905,41 @@ value); the default keeps the shared record-control appearance. Rows are the cal
 filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
 Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
 sizes come from the Sort By field dropdown tokens.
+
+## Alphabet filter primitive
+
+`AlphabetFilter({ label, value, onChange, className })` (`alphabet-filter.tsx`) is the
+single-choice alphabetical filter: a text control that shows the current choice — `All` while
+`value` is null, otherwise the letter — and opens a scrollable list of 27 options, `All` first
+and then A to Z, in that order. Choosing reports the letter, or null for `All`, and closes the
+list; Escape and an outside click close it without reporting. It loads no data and filters
+nothing itself: the caller owns the choice.
+
+`list-views.md` → Layout → Visual layout → **All alphabet dropdown** gives the panel geometry:
+the 59 × 412 px outer box (`--size-popover-alphabet-width`/`-height`), the approx 6 px padding
+around the rows (`--size-popover-alphabet-inset`), the 45 × 23 px rows
+(`--size-popover-alphabet-row-width`/`-height`) and the scroll — 27 rows do not fit the visible
+height. Border, surface and shadow come from the shared popover chrome, so the panel uses
+`--color-border` (`#CED0E1`), `--color-surface` and the existing soft shadow. The
+selected/hovered row fill is `--color-surface-selected`, selected text `--color-primary`,
+unselected text `--color-text`; the selected row carries no marker glyph, only `aria-selected`.
+
+**Interim** (not observed, not measured):
+
+- The closed control. It is the shared listbox trigger pattern with existing tokens only: the
+  Table column header text role (`--text-md`, `--font-weight-normal`, `--color-text-strong`),
+  `--size-list-filter-row-padding` inline padding, `--color-surface-hover`/`-pressed` fills and
+  an inset `--color-focus-ring` edge (the header cell clips its content). No width or height
+  token is invented for it.
+- Row ink position inside the 45 px row and the row corner radius are not measured: the text is
+  left-aligned on the row edge and the rows are square, matching the neighbouring value lists.
+- Row type has no row in `typography.md` → List and detail text roles. Nearest neighbour is the
+  list-value role already used for the operator and value lists (Status stage value,
+  `--text-sm` + `--font-weight-normal`); recorded as a deviation.
+
+`/dev/ui` does not demo it on its own; its consumers are the record table header
+(`components/records/list/record-table.tsx`) and the Leads list page, and
+`e2e/leads-list.spec.ts` measures the panel.
 
 ## Record detail extensions
 
