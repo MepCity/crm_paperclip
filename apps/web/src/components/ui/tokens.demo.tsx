@@ -795,6 +795,8 @@ const SIZE_GROUPS = [
       "--color-select-user-row-divider",
       "--size-select-user-table-radio-inset",
       "--size-select-user-table-radio-row-inset",
+      "--size-select-user-table-avatar-row-inset",
+      "--size-select-user-table-text-row-inset",
       "--size-select-user-table-radio-column",
       "--size-select-user-table-avatar-column",
       "--size-select-user-table-name-column",
@@ -803,12 +805,12 @@ const SIZE_GROUPS = [
       "--size-select-user-table-name-header-inset",
       "--size-select-user-table-avatar-inset",
       "--size-select-user-table-name-text-inset",
-      "--size-select-user-table-frame-adjust",
     ],
   },
   {
     label: "Create/edit form",
     tokens: [
+      "--size-form-layout-subpixel-trim",
       "--size-form-strip-height",
       "--size-form-strip-padding-end",
       "--size-form-card-inset",

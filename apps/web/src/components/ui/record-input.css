@@ -440,6 +440,16 @@
 .record-input-frame:has(.record-currency-prefix) > input.record-control {
   padding-left: var(--space-3);
 }
+
+.record-filter-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--size-list-filter-search-width);
+}
+
+.record-filter-search-wrap--fill {
+  max-width: none;
+}
 /* record-detail.md › Disabled input is Not observed: the wrapper already fades to 0.5, so the
    inner control must not fade again (two stacked layers would render the value text at 0.25). */
 .record-input-frame:has(:disabled) .record-control,

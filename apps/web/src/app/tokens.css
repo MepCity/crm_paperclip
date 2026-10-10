@@ -613,6 +613,8 @@
   --color-select-user-row-divider: #eef1f7;
   --size-select-user-table-radio-inset: 20px;
   --size-select-user-table-radio-row-inset: 13px;
+  --size-select-user-table-avatar-row-inset: 4px;
+  --size-select-user-table-text-row-inset: 14.5px;
   --size-select-user-table-radio-column: 36px;
   --size-select-user-table-avatar-column: 60px;
   --size-select-user-table-name-column: 141.5px;
@@ -621,10 +623,9 @@
   --size-select-user-table-name-header-inset: 31px;
   --size-select-user-table-avatar-inset: 30px;
   --size-select-user-table-name-text-inset: 11px;
-  /* Frame outer height minus row sum; record-detail.md › User table › y 119–270.5 with three rows. */
-  --size-select-user-table-frame-adjust: 1.5px;
 
   /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-layout-subpixel-trim: 1px;
   --size-form-strip-height: 57px;
   --size-form-strip-padding-end: 8px;
   --size-form-card-inset: 12px;

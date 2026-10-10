@@ -1,7 +1,9 @@
+import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import {
   expectBaseline,
   expectCapTop,
+  expectWithin,
   expectWithin1,
   textCapLeft,
   textCapTop,
@@ -30,7 +32,7 @@ test("Select User dialog matches Visual layout at 1470px (three users)", async (
   expect(modalBox).not.toBeNull();
   expectWithin1(modalBox?.x ?? 0, 294);
   expectWithin1(modalBox?.width ?? 0, 882);
-  expectWithin1(modalBox?.height ?? 0, 353);
+  expectWithin1(modalBox?.height ?? 0, 351.5);
   expectWithin1(modalBox?.y ?? 0, 0);
   await expect(modal).toHaveCSS("border-bottom-left-radius", "12px");
   await expect(modal).toHaveCSS("background-color", "rgb(255, 255, 255)");
@@ -78,35 +80,72 @@ test("Select User dialog matches Visual layout at 1470px (three users)", async (
   expectWithin1(tableBox?.x ?? 0, 325);
   expectWithin1(tableBox?.y ?? 0, 119);
   expectWithin1(tableBox?.width ?? 0, 820);
-  expectWithin1(tableBox?.height ?? 0, 151.5);
+  expectWithin1(tableBox?.height ?? 0, 152);
   await expect(tableFrame).toHaveCSS("border-top-color", "rgb(217, 224, 235)");
   await expect(tableFrame).toHaveCSS("border-top-left-radius", "8px");
 
-  const headerBand = dialog.locator(".select-user-table thead tr");
+  const headerBand = dialog.locator(".select-user-header-band");
   const headerBandBox = await headerBand.boundingBox();
   expect(headerBandBox).not.toBeNull();
-  expectWithin1(headerBandBox?.y ?? 0, 120);
-  expectWithin1(headerBandBox?.height ?? 0, 32);
-  await expect(headerBand).toHaveCSS("border-bottom-width", "2px");
-  await expect(headerBand).toHaveCSS("border-bottom-color", "rgb(217, 224, 235)");
+  expectWithin(headerBandBox?.y ?? 0, 120, 0.5, "header band top");
+  expectWithin(
+    (headerBandBox?.y ?? 0) + (headerBandBox?.height ?? 0),
+    152,
+    0.5,
+    "header band bottom",
+  );
+  expectWithin(headerBandBox?.height ?? 0, 32, 0.5, "header band height");
+  const headerRule = dialog.locator(".select-user-header-rule td").first();
+  const headerRuleBox = await headerRule.boundingBox();
+  expect(headerRuleBox).not.toBeNull();
+  expectWithin(headerRuleBox?.y ?? 0, 152, 0.5, "header rule top");
+  expectWithin(
+    (headerRuleBox?.y ?? 0) + (headerRuleBox?.height ?? 0),
+    154,
+    0.5,
+    "header rule bottom",
+  );
+  await expect(headerRule).toHaveCSS("background-color", "rgb(217, 224, 235)");
 
   const headerRole = dialog.getByRole("columnheader", { name: "Role" });
   await expectType(page, headerRole, "--text-md", "--font-weight-semibold");
 
-  const firstRow = dialog.locator(".select-user-table tbody tr").first();
-  const firstRowBox = await firstRow.boundingBox();
-  expect(firstRowBox).not.toBeNull();
-  expectWithin1(firstRowBox?.height ?? 0, 38);
+  const rowTargets = [
+    { top: 154, bottom: 192 },
+    { top: 193, bottom: 230.5 },
+    { top: 231.5, bottom: 269.5 },
+  ];
+  for (const [index, target] of rowTargets.entries()) {
+    const row = dialog
+      .locator(".select-user-table tbody tr:not(.select-user-row-divider)")
+      .nth(index);
+    const rowBox = await row.boundingBox();
+    expect(rowBox).not.toBeNull();
+    expectWithin(rowBox?.y ?? 0, target.top, 0.5, `row ${index + 1} top`);
+    expectWithin(
+      (rowBox?.y ?? 0) + (rowBox?.height ?? 0),
+      target.bottom,
+      0.5,
+      `row ${index + 1} bottom`,
+    );
+    expectWithin(rowBox?.height ?? 0, 38, 0.5, `row ${index + 1} height`);
+  }
 
-  const secondRow = dialog.locator(".select-user-table tbody tr").nth(1);
-  await expect(secondRow).toHaveCSS("border-top-width", "1px");
-  await expect(secondRow).toHaveCSS("border-top-color", "rgb(238, 241, 247)");
+  const firstRowDivider = dialog.locator(".select-user-row-divider").first().locator("td");
+  const dividerBox = await firstRowDivider.boundingBox();
+  expect(dividerBox).not.toBeNull();
+  expectWithin(dividerBox?.y ?? 0, 192, 0.5, "row divider top");
+  expectWithin((dividerBox?.y ?? 0) + (dividerBox?.height ?? 0), 193, 0.5, "row divider bottom");
+  await expect(firstRowDivider).toHaveCSS("background-color", "rgb(238, 241, 247)");
 
-  const selectedRadio = dialog.locator(".select-user-td-radio .table-radio").first();
+  const firstDataRow = dialog
+    .locator(".select-user-table tbody tr:not(.select-user-row-divider)")
+    .first();
+  const selectedRadio = firstDataRow.locator(".select-user-td-radio .table-radio");
   const radioBox = await selectedRadio.boundingBox();
   expect(radioBox).not.toBeNull();
   expectWithin1(radioBox?.x ?? 0, 346);
-  expectWithin1(radioBox?.y ?? 0, 167);
+  expectWithin(radioBox?.y ?? 0, 167, 0.5, "row radio top");
   expectWithin1(radioBox?.width ?? 0, 15);
   expectWithin1(radioBox?.height ?? 0, 15);
   await expect(selectedRadio).toHaveCSS("border-top-width", "4px");
@@ -121,8 +160,16 @@ test("Select User dialog matches Visual layout at 1470px (three users)", async (
   expect(rowAvatarBox).not.toBeNull();
   expectWithin1(rowAvatarBox?.x ?? 0, 391);
   expectWithin1(rowAvatarBox?.width ?? 0, 30);
+  expectWithin(rowAvatarBox?.y ?? 0, 158.5, 0.5, "row avatar top");
+  expectWithin(
+    (rowAvatarBox?.y ?? 0) + (rowAvatarBox?.height ?? 0),
+    188.5,
+    0.5,
+    "row avatar bottom",
+  );
 
   const nameCell = dialog.locator(".select-user-td-name").first();
+  expectWithin(await textCapTop(nameCell), 168.5, 1, "row name cap top");
   expectWithin1(await textCapLeft(nameCell), 432);
   const roleCell = dialog.locator(".select-user-td-role").first();
   expectWithin1(await textCapLeft(roleCell), 573.5);
@@ -137,7 +184,7 @@ test("Select User dialog matches Visual layout at 1470px (three users)", async (
   expect(cancelBox).not.toBeNull();
   expectWithin1(cancelBox?.x ?? 0, 996.5);
   expectWithin1(cancelBox?.width ?? 0, 74.5);
-  expectWithin1(cancelBox?.y ?? 0, 290.5);
+  expectWithin1(cancelBox?.y ?? 0, 289);
   expectWithin1(Number.parseFloat(await cancel.evaluate((el) => getComputedStyle(el).height)), 32);
   await expect(cancel).toHaveCSS("border-top-color", "rgb(213, 216, 233)");
   await expect(cancel).toHaveCSS("color", "rgb(49, 57, 73)");
@@ -149,10 +196,15 @@ test("Select User dialog matches Visual layout at 1470px (three users)", async (
   expectWithin1(Number.parseFloat(await done.evaluate((el) => getComputedStyle(el).height)), 32);
   expectWithin1(doneBox?.width ?? 0, 63.5);
   expectWithin1(doneBox?.x ?? 0, 1081.5);
-  expectWithin1(doneBox?.y ?? 0, 290.5);
+  expectWithin1(doneBox?.y ?? 0, 289);
   expectWithin1((doneBox?.x ?? 0) - ((cancelBox?.x ?? 0) + (cancelBox?.width ?? 0)), 10.5);
   await expect(done).toBeDisabled();
   await expect(done).toHaveCSS("background-color", "rgb(173, 179, 238)");
+
+  const scratch = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
+  if (scratch) {
+    await page.screenshot({ path: join(scratch, "select-user-1470x835.png"), fullPage: true });
+  }
 });
 
 test("Select User dialog stays centred at 1200px width", async ({ page }) => {

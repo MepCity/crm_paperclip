@@ -6,6 +6,7 @@ import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import { picklistChoices } from "./field-input";
+import { RECORD_FORM_COPY } from "./record-form-copy";
 
 export interface PrefixInputProps extends Omit<TextFieldProps, "prefix"> {
   prefixLabel: string;
@@ -81,8 +82,8 @@ export function CoordinatesInput({
   longitudeId,
   longitudeErrorMessage,
   latitudeLabel = "Latitude",
-  longitudeLabel = "Longitude",
-  clearLabel = "Clear All",
+  longitudeLabel = RECORD_FORM_COPY.longitudeFallback,
+  clearLabel = RECORD_FORM_COPY.clearAll,
   hideClearAction = false,
   errorMessage,
 }: CoordinatesInputProps) {

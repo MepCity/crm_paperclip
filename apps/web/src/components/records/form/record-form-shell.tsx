@@ -46,6 +46,7 @@ export function RecordFormShell({
             type="button"
             variant="secondary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--cancel"
             isDisabled={disabled}
             onPress={onCancel}
           >
@@ -55,6 +56,7 @@ export function RecordFormShell({
             type="button"
             variant="secondary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--save-new"
             isDisabled={disabled}
             onPress={onSaveAndNew}
           >
@@ -64,6 +66,7 @@ export function RecordFormShell({
             type="button"
             variant="primary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--save"
             isDisabled={disabled}
             onPress={onSave}
           >
