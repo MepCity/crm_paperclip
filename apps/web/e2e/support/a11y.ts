@@ -11,6 +11,8 @@ export const DEV_UI_A11Y_EXCLUDE = [
   '.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-selector-label',
   /** Reference CRM measured validation ink (`--color-form-required`, ~3.04:1 on white). */
   ".record-form-validation-error",
+  /** Save-error banner ink matches validation error token (MEP-168; ADR 0003 §8). */
+  "[data-record-form-error-banner]",
 ] as const;
 
 type AxeViolations = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];

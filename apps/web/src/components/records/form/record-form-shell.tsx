@@ -18,6 +18,7 @@ export interface RecordFormShellProps {
   onSaveAndNew?: () => void;
   onSave?: () => void;
   children: ReactNode;
+  errorBanner?: ReactNode;
   disabled?: boolean;
   onSubmit?: FormEventHandler<HTMLFormElement>;
 }
@@ -30,6 +31,7 @@ export function RecordFormShell({
   onSaveAndNew,
   onSave,
   children,
+  errorBanner,
   disabled = false,
   onSubmit,
 }: RecordFormShellProps) {
@@ -72,6 +74,7 @@ export function RecordFormShell({
           </Button>
         </div>
       </header>
+      {errorBanner}
       <div className="record-form-card" data-record-form-card>
         <form
           className="record-form-card__body"

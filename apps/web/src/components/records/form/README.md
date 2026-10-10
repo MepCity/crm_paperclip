@@ -4,6 +4,23 @@ Module-agnostic presentation for create and edit record forms. Field controls,
 validation, save flows and page wiring live in other issues; these components only
 provide the measured shell, sections, two-column rows and bordered field groups.
 
+## Form error banner (`form-error-banner.tsx`)
+
+Single-line `role="alert"` strip rendered directly under the sticky title strip when
+a save request fails without field-level validation errors. Ink uses
+`--color-form-required` (Validation error table in `record-detail.md`); typography
+uses `--text-sm` and `--font-weight-normal` (nearest List and detail text role to
+the measured 11.5 px validation message). General network and unexpected failures
+show `FORM_SAVE_GENERIC_ERROR_MESSAGE` (`Something went wrong.` from the wire
+codec). The banner clears when the user starts another save.
+
+### Interim (A10, not observed in reference)
+
+- Banner placement, padding and copy for non-field save failures.
+- No toast; form values stay on screen.
+
+`/dev/ui` › `form-error-banner` shows the banner under a synthetic Create Lead shell.
+
 ## RecordFormShell
 
 `record-form-shell.tsx`
@@ -14,6 +31,7 @@ provide the measured shell, sections, two-column rows and bordered field groups.
 | `formAriaLabel` | Accessible name on the `<form>` landmark inside the card. |
 | `actionLabels` | `cancel`, `saveAndNew`, and `save` button text. |
 | `onCancel`, `onSaveAndNew`, `onSave` | Optional press handlers for the strip actions. |
+| `errorBanner` | Optional node between the sticky strip and the card (save error banner). |
 | `children` | Form body inside the white card (`record-form-card`). |
 
 The strip stays `position: sticky` while the card body scrolls. Action order in
@@ -280,8 +298,9 @@ is wired to `Cancel` only (browser back and in-app links were not observed).
   customization controls (rows 20–21, customization module), and Client Script
   (automation module) remain omitted as scoped deferred controls. Placeholder
   portrait and our original icons are used; no reference assets are copied.
-- Unexpected write failure keeps input on the form with the existing generic
-  alert. Measured non-field error presentation belongs to MEP-168.
+- Non-field write failures keep input on the form and show `FormErrorBanner` under
+  the sticky strip (MEP-168). Field-level `ValidationError` messages stay on their
+  controls without a banner.
 
 Tests use an `ApiProvider` with the fixture service: create payload, populated edit,
 partial update, server error placement/focus, Save and New reset, origin cancel,
