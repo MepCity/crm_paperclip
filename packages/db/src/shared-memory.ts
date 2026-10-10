@@ -101,6 +101,8 @@ export async function retryOnSharedMemoryExhaustion<T>(
     attempts?: number;
     delaysMs?: readonly number[];
     sleep?: (ms: number) => Promise<void>;
+    /** Runs before waiting; true skips the wait before the next attempt. */
+    onExhaustion?: (error: unknown) => boolean | Promise<boolean>;
     onRetry?: (error: unknown, delayMs: number) => void;
   } = {},
 ): Promise<T> {
@@ -116,10 +118,12 @@ export async function retryOnSharedMemoryExhaustion<T>(
       lastError = error;
       const message = error instanceof Error ? error.message : String(error);
       if (!isSharedMemoryExhaustion(message)) throw error;
-      const delayMs = delaysMs[attempt];
+      const immediate = await options.onExhaustion?.(error);
+      if (attempt + 1 >= total) break;
+      const delayMs = immediate ? 0 : delaysMs[attempt];
       if (delayMs === undefined) break;
       onRetry?.(error, delayMs);
-      await sleep(delayMs);
+      if (delayMs > 0) await sleep(delayMs);
     }
   }
   throw lastError;
