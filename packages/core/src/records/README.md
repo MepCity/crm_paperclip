@@ -46,7 +46,14 @@ combinations raise `ValidationError` keyed by `filters` on both `list` and `coun
 | is | boolean | `equal`, boolean |
 | is / is not | ownerlookup | `equal` / `not_equal`, nonempty user-ID string array |
 | age in N days | datetime | `less_equal`, `{ token: "AGEINDAYS", offset: N }` (existing saved-view rule) |
+| age in N weeks / months | datetime | `less_equal`, `{ token: "AGEINDAYS", offset: N, unit: "weeks" \| "months" }` (**Interim**) |
 | due in N days | datetime | `less_equal`, `{ token: "DUEINDAYS", offset: N }` |
+| due in N weeks / months | datetime | `less_equal`, `{ token: "DUEINDAYS", offset: N, unit: "weeks" \| "months" }` (**Interim**) |
+| Previous N unit | datetime | `equal`, `{ token: "RELATIVE", direction: "previous", count: N, unit }` (**Interim**) |
+| Next N unit | datetime | `equal`, `{ token: "RELATIVE", direction: "next", count: N, unit }` (**Interim**) |
+| On | datetime | `equal`, `"YYYY-MM-DD"` (**Interim**) |
+| before / after | datetime | `less_than` / `greater_than`, `"YYYY-MM-DD"` (**Interim**) |
+| between / not between | datetime | `between` / `not_between`, `["YYYY-MM-DD", "YYYY-MM-DD"]` (**Interim**) |
 | Today | datetime | `equal`, `{ token: "TODAY" }` (existing token) |
 | Tomorrow / Yesterday | datetime | `equal`, `{ token: "PERIOD", name: "TOMORROW" / "YESTERDAY" }` |
 | Till Yesterday / Starting tomorrow | datetime | `equal`, `PERIOD` name `TILL_YESTERDAY` / `STARTING_TOMORROW` |
@@ -65,15 +72,25 @@ Interim boundaries and empty-value behavior:
 - Range endpoints are inclusive. Reversed or malformed ranges fail validation.
 - N is a nonnegative integer. `AGEINDAYS` keeps
   `floor((now - field) / 86_400_000) <= N`, including its existing future-date behavior.
+  Optional `unit` `weeks` multiplies the day window by seven; `months` means
+  `field >= now - N calendar months` (short months use the month's last day).
   `DUEINDAYS` means `now < field <= now + N * 86_400_000`; N=0 matches nothing.
+  Week and month due windows use the same multipliers and calendar addition.
+- `RELATIVE` uses half-open UTC intervals over N complete prior or next units;
+  `Previous 1 days` matches `PERIOD.YESTERDAY`, `Previous 1 weeks` matches
+  `PERIOD.PREVIOUS_WEEK`, and `Next 1 days` matches `PERIOD.TOMORROW`.
+- Calendar date strings are strict `YYYY-MM-DD` values; `On` is the UTC day
+  interval, `before` is strictly before that midnight, `after` is from the
+  next midnight onward, and `between` is inclusive at both calendar ends.
 - Calendar periods use UTC and half-open `[start, nextStart)` intervals. Weeks
   start Monday 00:00 UTC. Months/years use calendar boundaries, including year
   rollover and leap days. Till Yesterday is before today's UTC midnight; Starting
   tomorrow includes tomorrow's UTC midnight and all later dates.
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
-- Role/group membership, blocked email, arbitrary date offsets/dates/ranges,
-  fiscal periods, system filters and related-module filters are not introduced.
+- Role/group membership, blocked email, fiscal periods, system filters and
+  related-module filters are not introduced. `multi_module_lookup` keeps only
+  empty / not-empty panel predicates.
 
 
 `ListQuery.fields` projects field API names, always including `id`. Omission
