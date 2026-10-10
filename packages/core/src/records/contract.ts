@@ -102,6 +102,9 @@ export type Comparator =
   | "between"
   | "not_between";
 
+/** Interim age/due and relative panel units (UTC calendar rules). */
+export type CriteriaUnit = "days" | "weeks" | "months";
+
 /** Interim UTC calendar periods; TODAY retains its existing standalone token. */
 export type CriteriaPeriod =
   | "TOMORROW"
@@ -120,9 +123,15 @@ export type CriteriaPeriod =
 export type CriteriaToken =
   | { token: "CURRENTUSER" }
   | { token: "TODAY" }
-  | { token: "AGEINDAYS"; offset: number }
+  | { token: "AGEINDAYS"; offset: number; unit?: CriteriaUnit }
   | { token: "CATEGORY"; name: string }
-  | { token: "DUEINDAYS"; offset: number }
+  | { token: "DUEINDAYS"; offset: number; unit?: CriteriaUnit }
+  | {
+      token: "RELATIVE";
+      direction: "previous" | "next";
+      count: number;
+      unit: CriteriaUnit;
+    }
   | { token: "PERIOD"; name: CriteriaPeriod };
 
 export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
