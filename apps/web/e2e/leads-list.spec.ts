@@ -803,7 +803,7 @@ test.describe("Leads list page", () => {
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=2`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
 
-    const nameTrigger = page.getByRole("button", { name: "Full Name column options" });
+    const nameTrigger = page.getByRole("button", { name: "Lead Name column options" });
     const companyTrigger = page.getByRole("button", { name: "Company column options" });
     await expect(nameTrigger).toHaveCSS("opacity", "1");
     await expect(companyTrigger).toHaveCSS("opacity", "0");
@@ -846,7 +846,7 @@ test.describe("Leads list page", () => {
     await expect.poll(() => afterAsc().get("sort_by")).toBe("Full_Name");
     expect(afterAsc().get("sort_order")).toBe("asc");
     await expect
-      .poll(async () => isOrdered(await columnTexts(page, "Full Name"), "asc"))
+      .poll(async () => isOrdered(await columnTexts(page, "Lead Name"), "asc"))
       .toBe(true);
   });
 
