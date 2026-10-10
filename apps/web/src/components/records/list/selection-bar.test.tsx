@@ -44,3 +44,18 @@ test("omits Actions when the action list is empty", () => {
   render(<SelectionBar selectedCount={1} onClear={() => {}} onDelete={() => {}} actions={[]} />);
   expect(screen.queryByRole("button", { name: "Actions" })).toBeNull();
 });
+
+test("renders Mass Update when onMassUpdate is provided", async () => {
+  const user = userEvent.setup();
+  const onMassUpdate = vi.fn();
+  render(
+    <SelectionBar
+      selectedCount={2}
+      onClear={() => {}}
+      onDelete={() => {}}
+      onMassUpdate={onMassUpdate}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Mass Update" }));
+  expect(onMassUpdate).toHaveBeenCalledTimes(1);
+});
