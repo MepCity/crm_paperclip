@@ -95,6 +95,23 @@ test.describe("record detail cards visual layout", () => {
 
     const businessBox = await business.boundingBox();
     expect(businessBox).not.toBeNull();
+
+    // Spec › Record page: the overview starts with the `Last Update` label, then the cards.
+    const lastUpdate = demo.locator(".detail-last-update");
+    await expect(lastUpdate).toBeVisible();
+    const lastUpdateBox = await lastUpdate.boundingBox();
+    expect(lastUpdateBox).not.toBeNull();
+    expect((lastUpdateBox?.y ?? 0) + (lastUpdateBox?.height ?? 0)).toBeLessThanOrEqual(
+      businessBox?.y ?? 0,
+    );
+    const labelComesFirst = await demo.evaluate((node) => {
+      const label = node.querySelector(".detail-last-update");
+      const card = node.querySelector(".detail-business-card");
+      return Boolean(
+        label && card && !!(label.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING),
+      );
+    });
+    expect(labelComesFirst).toBe(true);
     expect(Math.abs((businessBox?.width ?? 0) - CARD_WIDTH)).toBeLessThanOrEqual(1);
     expect(Math.abs((businessBox?.height ?? 0) - BUSINESS_CARD_HEIGHT)).toBeLessThanOrEqual(1);
 
