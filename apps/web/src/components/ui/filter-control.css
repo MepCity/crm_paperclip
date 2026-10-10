@@ -204,14 +204,12 @@
   width: var(--size-filter-range-width);
 }
 .filter-editor[data-field-type="datetime"] .filter-date-range-from {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  position: relative;
   width: 100%;
+  height: var(--size-filter-control-height);
 }
 .filter-editor[data-field-type="datetime"] .filter-date-range-from .record-input-frame {
-  flex: 1 1 auto;
-  min-width: 0;
+  width: 100%;
   height: var(--size-filter-control-height);
 }
 .filter-editor[data-field-type="datetime"] .filter-date-range > .record-input-frame {
@@ -219,7 +217,10 @@
   height: var(--size-filter-control-height);
 }
 .filter-editor[data-field-type="datetime"] .filter-date-range-separator {
-  flex-shrink: 0;
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--color-text);
   font-size: var(--text-sm);
   line-height: 1;

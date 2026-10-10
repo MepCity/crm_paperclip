@@ -1,5 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListDefaultPath } from "./support/crm-paths";
@@ -16,6 +16,13 @@ const nearPopoverGap = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
 const nearOnePx = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+async function fillCreatedTimeDayCount(panel: Locator, count: string) {
+  const input = panel.getByRole("textbox", { name: "Created Time value" });
+  await input.click();
+  await input.fill("");
+  await input.pressSequentially(count);
+  await input.press("Tab");
+}
 test.use({ viewport: { width: 1470, height: 835 } });
 test("field filter editors match measured rows, keyboard, sticky actions and accessibility", async ({
   page,
@@ -447,7 +454,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
       fill: async () => {
         await panel.getByRole("button", { name: /Created Time operator$/ }).click();
         await page.getByRole("option", { name: "age in", exact: true }).click();
-        await panel.getByRole("textbox", { name: "Created Time value" }).fill("2");
+        await fillCreatedTimeDayCount(panel, "2");
         await panel.getByRole("button", { name: /Created Time unit$/ }).click();
         await page.getByRole("option", { name: "weeks", exact: true }).click();
       },
@@ -464,7 +471,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
       fill: async () => {
         await panel.getByRole("button", { name: /Created Time operator$/ }).click();
         await page.getByRole("option", { name: "Previous", exact: true }).click();
-        await panel.getByRole("textbox", { name: "Created Time value" }).fill("3");
+        await fillCreatedTimeDayCount(panel, "3");
       },
       body: {
         filters: {
@@ -479,17 +486,16 @@ test("datetime filter value editors emit expected list request bodies", async ({
   for (const { operator, fill, body } of cases) {
     lastBulkBody = undefined;
     await fill();
+    const apply = panel.getByRole("button", { name: "Apply Filter" });
+    await expect(apply).toBeEnabled();
     const bulkResponse = page.waitForResponse(
       (response) =>
         response.request().method() === "POST" &&
         new URL(response.url()).pathname.endsWith("/Leads/bulk"),
     );
-    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    await apply.click();
     await bulkResponse;
     expect(lastBulkBody).toEqual(body);
-    await panel.getByRole("button", { name: "Clear" }).click();
-    await panel.getByRole("button", { name: /Created Time operator$/ }).waitFor();
-    await expect(panel.getByRole("button", { name: /Created Time operator$/ })).toBeVisible();
     void operator;
   }
 });

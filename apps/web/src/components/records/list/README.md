@@ -267,7 +267,7 @@ existing primitive tokens:
 - The user-type selector contents beyond the initial Users option and current-user
   identification remain Interim; callers may supply `detail` and `currentUser` flags.
 - The days unit sits next to the numeric input with the existing smallest spacing.
-- **after** shares the single `DD.MM.YYYY` control used for **before** (no separate spec row).
+- **after** shares the single `DD.MM.YYYY` control used for **before** (**Interim**; no separate spec row).
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
