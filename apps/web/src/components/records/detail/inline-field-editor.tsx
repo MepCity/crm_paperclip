@@ -37,14 +37,33 @@ export function InlineFieldEditor({
   const mounted = useRef(true);
   const root = useRef<HTMLDivElement>(null);
   const saveLatest = useRef<() => Promise<void>>(async () => {});
+  const cancelLatest = useRef<() => void>(() => {});
   const controlId = useId();
   const busy = saving || disabled;
+  cancelLatest.current = () => {
+    if (!busy) onCancel();
+  };
   useEffect(() => {
     mounted.current = true;
     if (field.dataType !== "picklist" && field.dataType !== "ownerlookup") {
       root.current?.querySelector<HTMLElement>("input, textarea")?.focus();
     }
+    // Overlay Escape can stop propagation before React's portal capture handler.
+    // Observe only this input and the dialog referenced by its trigger.
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !(event.target instanceof Node)) return;
+      const dialogId = root.current
+        ?.querySelector("[aria-controls]")
+        ?.getAttribute("aria-controls");
+      const dialog = dialogId ? document.getElementById(dialogId) : null;
+      if (!root.current?.contains(event.target) && !dialog?.contains(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelLatest.current();
+    };
+    document.addEventListener("keydown", handleEscape, true);
     return () => {
+      document.removeEventListener("keydown", handleEscape, true);
       mounted.current = false;
     };
   }, [field.dataType]);
@@ -93,11 +112,7 @@ export function InlineFieldEditor({
       className="detail-inline-editor"
       aria-busy={busy || undefined}
       onKeyDownCapture={(event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!busy) onCancel();
-        } else if (
+        if (
           event.key === "Enter" &&
           event.target instanceof HTMLInputElement &&
           field.dataType !== "ownerlookup" &&

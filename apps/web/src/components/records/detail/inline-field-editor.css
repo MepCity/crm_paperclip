@@ -108,3 +108,16 @@
   width: var(--size-detail-inline-save-check-width);
   height: var(--size-detail-inline-save-check-height);
 }
+
+/* Inline editor stays inside the card at the measured right-column anchor. */
+[data-detail-column="right"] .detail-inline-editor {
+  margin-left: calc(
+    100% -
+    var(--size-detail-inline-width) -
+    var(--size-detail-inline-action-inset) -
+    2 *
+    var(--size-detail-inline-action-size) -
+    var(--size-detail-inline-action-gap) -
+    var(--size-detail-inline-trailing-inset)
+  );
+}

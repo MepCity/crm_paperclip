@@ -20,6 +20,8 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   await page.locator("table tbody tr").first().getByRole("link").first().click();
   const details = page.getByRole("region", { name: "Details card" });
   await expect(details).toBeVisible();
+  await page.getByRole("button", { name: "Hide Related List" }).click();
+  await expect(details).toHaveAttribute("data-detail-rail", "hidden");
   const rating = details.locator('[data-detail-field="Rating"]');
   const pencil = rating.getByRole("button", { name: "Edit Rating", exact: true });
   await pencil.hover();
@@ -47,6 +49,8 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   if (!control || !popup || !saveBox || !cancelBox) throw new Error("Missing editor geometry.");
   const near = (value: number, target: number) =>
     expect(Math.abs(value - target)).toBeLessThanOrEqual(1);
+  near(control.x, 1080);
+  expect(cancelBox.x + cancelBox.width).toBeLessThanOrEqual(1470);
   near(control.width, 273);
   near(control.height, 34);
   near(popup.width, 273);
@@ -124,6 +128,7 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   await cancel.click();
   await expect(company.getByRole("button", { name: "Edit Company value" })).toHaveText(original);
   await rating.getByRole("button", { name: "Edit Rating", exact: true }).click();
+  await expect(page.getByRole("listbox", { name: "Rating choices" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(rating.getByRole("button", { name: "Edit Rating value" })).toHaveText("Active");
 });
