@@ -239,7 +239,8 @@ describe("record hooks", () => {
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
     if (!view) throw new Error("Missing default view.");
-    const query: ListQuery = { viewId: view.id, page: 1, perPage: 10 };
+    const viewId = view.id;
+    const query: ListQuery = { viewId, page: 1, perPage: 10 };
     const created = await service.create("Leads", {
       Last_Name: "Invalidate Lead",
       Company: "Invalidate Co",
@@ -250,7 +251,7 @@ describe("record hooks", () => {
 
     function useHarness() {
       const list = useRecordList("Leads", query);
-      const count = useRecordCount("Leads", { viewId: view.id });
+      const count = useRecordCount("Leads", { viewId });
       const record = useRecord("Leads", created.id);
       const update = useUpdateRecord("Leads");
       return { list, count, record, update };
