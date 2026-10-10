@@ -10,6 +10,7 @@ import type {
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
@@ -80,7 +81,7 @@ export interface ModuleListScreenProps {
 function ListNotFound() {
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <NotFoundMessage />
     </div>
   );
 }
