@@ -1,16 +1,29 @@
 .mass-update-modal-panel {
   --top-aligned-modal-width: var(--size-mass-update-dialog-width);
   --top-aligned-modal-bottom-radius: var(--radius-create-menu);
-  padding: var(--size-mass-update-dialog-padding-block-start)
-    var(--size-mass-update-dialog-padding-inline)
-    var(--size-mass-update-dialog-padding-block-end);
   box-sizing: border-box;
+  height: var(--size-mass-update-dialog-height);
+  padding: var(--size-mass-update-dialog-padding-block-start)
+    var(--size-mass-update-dialog-padding-inline)     var(--size-mass-update-dialog-padding-block-end);
+}
+
+.mass-update-modal-panel:has(.mass-update-general-error) {
+  height: auto;
+  min-height: var(--size-mass-update-dialog-height);
 }
 
 .mass-update-title {
   margin: 0;
+  margin-inline-start: calc(
+    var(--size-mass-update-dialog-title-padding-inline-start) -
+    var(--size-mass-update-dialog-padding-inline)
+  );
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-bold);
+  display: block;
+  height: var(--size-mass-update-dialog-title-line-height);
+  overflow: hidden;
+  line-height: var(--size-mass-update-dialog-title-line-height);
   color: var(--color-text-strong);
 }
 

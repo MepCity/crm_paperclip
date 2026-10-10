@@ -13,10 +13,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
-import { ChangeOwnerDialog } from "./change-owner-dialog";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { SelectionBar } from "./selection-bar";
@@ -441,9 +441,7 @@ function ModuleListScreenLoaded({
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onDelete={openDeleteDialog}
-          onMassUpdate={
-            massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined
-          }
+          onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
           actions={
             ownerField
               ? [

@@ -387,7 +387,10 @@
   --size-confirm-dialog-actions-gap: 10.5px;
   --size-list-mass-update-button-width: 113px;
   --size-mass-update-dialog-width: 484px;
+  --size-mass-update-dialog-height: 207px;
   --size-mass-update-dialog-padding-inline: 31px;
+  --size-mass-update-dialog-title-padding-inline-start: 32.5px;
+  --size-mass-update-dialog-title-line-height: 18.5px;
   --size-mass-update-dialog-padding-block-start: 29.5px;
   --size-mass-update-dialog-padding-block-end: 31px;
   --size-mass-update-dialog-title-fields-gap: 32px;

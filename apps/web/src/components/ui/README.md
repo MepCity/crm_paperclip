@@ -379,7 +379,10 @@ what the "no colour constants" rule forbids.
 | `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
 | `--size-list-mass-update-button-width` | `113px` | list-views.md › Visual layout › Selection toolbar › Mass Update button | from spec |
 | `--size-mass-update-dialog-width` | `484px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
+| `--size-mass-update-dialog-height` | `207px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
 | `--size-mass-update-dialog-padding-inline` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › field selector inset | from spec |
+| `--size-mass-update-dialog-title-padding-inline-start` | `32.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title | from spec |
+| `--size-mass-update-dialog-title-line-height` | `18.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title block | from spec |
 | `--size-mass-update-dialog-padding-block-start` | `29.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title position | from spec |
 | `--size-mass-update-dialog-padding-block-end` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › bottom inset | from spec |
 | `--size-mass-update-dialog-title-fields-gap` | `32px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title to field row | from spec |

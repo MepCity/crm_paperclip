@@ -1,3 +1,4 @@
+import { ValidationError } from "@crm/core/errors";
 import type { FieldDefinition } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
@@ -103,5 +104,61 @@ describe("ChangeOwnerDialog", () => {
       expect(ownerSpy).toHaveBeenCalledWith("Leads", ids, ctx.userId);
     });
     expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows validation error above the actions", async () => {
+    const records = createFixtureRecordService(ctx);
+    vi.spyOn(records, "changeOwner").mockRejectedValue(
+      new ValidationError({ Owner: ["Owner is not allowed."] }),
+    );
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <ChangeOwnerDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a"]}
+        ownerField={ownerField}
+        users={users}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Lead Owner" }));
+    await user.click(screen.getByRole("option", { name: /User One/ }));
+    await user.click(screen.getByRole("button", { name: "Change Owner" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("Owner is not allowed.");
+    });
+  });
+
+  it("shows a general error when change owner fails", async () => {
+    const records = createFixtureRecordService(ctx);
+    vi.spyOn(records, "changeOwner").mockRejectedValue(new Error("Server error."));
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <ChangeOwnerDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a"]}
+        ownerField={ownerField}
+        users={users}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Lead Owner" }));
+    await user.click(screen.getByRole("option", { name: /User One/ }));
+    await user.click(screen.getByRole("button", { name: "Change Owner" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("Server error.");
+    });
   });
 });

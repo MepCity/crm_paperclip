@@ -5,12 +5,12 @@ import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.d
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
+import ChangeOwnerDialogDemo from "@/components/records/list/change-owner-dialog.demo";
 import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
-import RecordTableDemo from "@/components/records/list/record-table.demo";
-import ChangeOwnerDialogDemo from "@/components/records/list/change-owner-dialog.demo";
 import MassUpdateDialogDemo from "@/components/records/list/mass-update-dialog.demo";
+import RecordTableDemo from "@/components/records/list/record-table.demo";
 import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
