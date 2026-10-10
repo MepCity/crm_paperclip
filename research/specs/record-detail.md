@@ -45,21 +45,21 @@ Board-provided screenshots of an invalid create form show inline validation afte
 - **Sections and layout structure**:
   - Form layout inherits the Standard View multi-section layout identically to the Create Lead form (`detail-create`).
   - Sections:
-    - `Lead Image`: contains an empty placeholder image icon (48 × 48 px at x 344, y 170). Source record custom image (if any) is not cloned; the placeholder is shown empty.
+    - `Lead Image`: contains the populated record image (`img "Lead Image": - img "image"` at x 344–392, y 170–218; 48 × 48 px), carried over from the source record. Post-save image persistence behavior is Not observed under read-only rules.
     - `Lead Information`: two-column field grid.
     - `Address Information`: address block, coordinates, and `Clear All` button.
     - `Description Information`: description text area.
     - Right rail / sidebar: `Create Form Views`, `Standard View`, `Create a custom form page` button (x 1221, y 1667, 205 × 32 px), `Client Script`.
   - Required indicators: `Company` and `Last Name` have the identical narrow red required indicator on the input's left edge as in Create form.
 - **Pre-populated fields vs unpopulated fields (field names only)**:
-  - **Pre-populated from source record**: `Lead Owner`, `First Name` (`Salutation` and `First Name`), `Title`, `Phone`, `Mobile`, `Lead Source`, `Industry`, `Annual Revenue`, `Company`, `Last Name`, `Email`, `Website`, `Lead Status`, `Skype ID`, `Twitter`, `Country / Region`, `Street Address`, `City`, `State / Province`, `Zip / Postal Code`.
-  - **Unpopulated / default fields**: `Lead Image` (empty placeholder icon), `Email Opt Out` (checkbox unchecked), `Fax` (empty), `No. of Employees` (empty), `Rating` (displays `-None-`), `Secondary Email` (empty), `Flat / House No./ Building / Apartment Name` (empty), `Coordinates` (`Latitude`, `Longitude` empty), `Description` (empty).
+  - **Pre-populated from source record**: `Lead Image`, `Lead Owner`, `First Name` (`Salutation` and `First Name`), `Title`, `Phone`, `Mobile`, `Lead Source`, `Industry`, `Annual Revenue`, `Company`, `Last Name`, `Email`, `Website`, `Lead Status`, `Skype ID`, `Twitter`, `Country / Region`, `Street Address`, `City`, `State / Province`, `Zip / Postal Code`.
+  - **Unpopulated / default fields**: `Email Opt Out` (checkbox unchecked), `Fax` (empty), `No. of Employees` (empty), `Rating` (displays `-None-`), `Secondary Email` (empty), `Flat / House No./ Building / Apartment Name` (empty), `Coordinates` (`Latitude`, `Longitude` empty), `Description` (empty).
   - **System and audit fields**: System fields (`Created By`, `Modified By`, `Created Time`, `Modified Time`, `Last Activity Time`, record IDs) are excluded from the form, identical to the Create form.
 - **Geometry and visual differences from Create form**:
   - The overall form geometry, field layout, and 34 px input height match the Create form.
   - Differences from Create form:
     - Heading text reads `Clone Lead` (x 332, y 66, `#202123`) instead of `Create Lead`.
-    - Editable fields are pre-populated with source record values instead of initial blank inputs and `-None-` defaults.
+    - Editable fields and `Lead Image` are pre-populated with source record values instead of initial blank inputs, placeholder silhouette, and `-None-` defaults.
     - Route contains the source record identifier: `/crm/<org>/tab/Leads/<recordId>/clone?layoutId=<layoutId>`.
 
 ### Related-list structure and use
