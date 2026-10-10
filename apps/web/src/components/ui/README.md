@@ -577,6 +577,8 @@ what the "no colour constants" rule forbids.
 | `--color-select-user-row-divider` | `#eef1f7` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
 | `--size-select-user-table-radio-inset` | `20px` | record-detail.md › Select User dialog › User table › radio x 346 with frame x 325 (346 − 325 − 1 px frame edge) | from spec |
 | `--size-select-user-table-radio-row-inset` | `13px` | record-detail.md › Select User dialog › User table › radio y 167 with row band y 154–192 | from spec |
+| `--size-select-user-table-avatar-row-inset` | `4px` | record-detail.md › Select User dialog › User table › row avatar band y 158.5–188.5 within row y 154–192 | from spec |
+| `--size-select-user-table-text-row-inset` | `14.5px` | record-detail.md › Select User dialog › User table › row name cap y 168.5 within row band | from spec |
 | `--size-select-user-table-radio-column` | `36px` | record-detail.md › Select User dialog › User table › radio x 346–361 | from spec |
 | `--size-select-user-table-avatar-column` | `60px` | record-detail.md › Select User dialog › User table › row avatar x 391–421 | from spec |
 | `--size-select-user-table-name-column` | `141.5px` | record-detail.md › Select User dialog › User table › name x 432, Role x 573.5 | from spec |
@@ -585,6 +587,7 @@ what the "no colour constants" rule forbids.
 | `--size-select-user-table-name-header-inset` | `31px` | record-detail.md › Select User dialog › User table › `User Name` label x 392, avatar column ends x 361 | from spec |
 | `--size-select-user-table-avatar-inset` | `30px` | record-detail.md › Select User dialog › User table › avatar x 391 after radio column | from spec |
 | `--size-select-user-table-name-text-inset` | `11px` | record-detail.md › Select User dialog › User table › name x 432 after avatar x 421 | from spec |
+| `--size-form-layout-subpixel-trim` | `1px` | record-detail.md › Layout › Visual layout › Create/edit form › layout width helpers subtract 1 px for subpixel alignment | from spec |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |

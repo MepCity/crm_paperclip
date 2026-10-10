@@ -774,6 +774,8 @@ const SIZE_GROUPS = [
       "--color-select-user-row-divider",
       "--size-select-user-table-radio-inset",
       "--size-select-user-table-radio-row-inset",
+      "--size-select-user-table-avatar-row-inset",
+      "--size-select-user-table-text-row-inset",
       "--size-select-user-table-radio-column",
       "--size-select-user-table-avatar-column",
       "--size-select-user-table-name-column",
