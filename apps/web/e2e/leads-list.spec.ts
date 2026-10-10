@@ -217,15 +217,16 @@ async function companyColumnTexts(page: import("@playwright/test").Page): Promis
 }
 
 async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
-  const rows = page.locator("table tbody tr");
-  const rowCount = await rows.count();
-  const ids: string[] = [];
-  for (let i = 0; i < rowCount; i++) {
-    const href = await rows.nth(i).getByRole("link").first().getAttribute("href");
-    const match = href?.match(/\/Leads\/([^/?#]+)/);
-    if (match?.[1]) ids.push(match[1]);
-  }
-  return ids;
+  return page.locator("table tbody tr").evaluateAll((rows) => {
+    const ids: string[] = [];
+    for (const row of rows) {
+      const link = row.querySelector("a[href*='/Leads/']");
+      const href = link?.getAttribute("href");
+      const match = href?.match(/\/Leads\/([^/?#]+)/);
+      if (match?.[1]) ids.push(match[1]);
+    }
+    return ids;
+  });
 }
 
 type FilterRequestBody = { filters: unknown };
