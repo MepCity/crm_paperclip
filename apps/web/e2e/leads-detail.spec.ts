@@ -362,30 +362,6 @@ test.describe("Lead record detail page", () => {
     }
   });
 
-  test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
-    const HIDDEN_CARD_WIDTH = 1126;
-    const STATUS_TOP = 185;
-    const STATUS_HEIGHT = 68;
-    const CANVAS_LEFT = 332;
-    const CANVAS_RIGHT = 1458;
-    await signUpNewUser(page);
-    const org = await createOrganization(page);
-    await openFirstLeadFromList(page, org.slug);
-    await page.evaluate(() => document.fonts.ready);
-
-    const frame = page.locator("[data-record-frame]");
-    await frame.getByRole("button", { name: "Hide Related List" }).click();
-    await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
-
-    const statusRibbon = frame.locator("[data-status-ribbon]");
-    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
-    expectEdge(statusBox.x, CANVAS_LEFT);
-    expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
-    expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
-    expectEdge(statusBox.y, STATUS_TOP);
-    expectEdge(statusBox.height, STATUS_HEIGHT);
-  });
-
   test("deletes a lead from More Options and returns to the list", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -467,5 +443,29 @@ test.describe("Lead record detail page", () => {
         path: join(scratch, "leads-detail-more-options-delete.png"),
       });
     }
+  });
+
+  test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
+    const HIDDEN_CARD_WIDTH = 1126;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
+    const CANVAS_LEFT = 332;
+    const CANVAS_RIGHT = 1458;
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    await page.evaluate(() => document.fonts.ready);
+
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("button", { name: "Hide Related List" }).click();
+    await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
+
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
+    expectEdge(statusBox.x, CANVAS_LEFT);
+    expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
+    expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 });
