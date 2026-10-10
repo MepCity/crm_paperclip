@@ -179,8 +179,7 @@ surrounding trigger.
   This component gallery is not the final page layout.
 - Owner picker dialog: MEP-139 (row 19). Action is rendered only with a callback.
 - Create/edit page actions and save: MEP-145 (rows 20–21).
-- Measured validation appearance: MEP-146 (row 22); existing invalid primitive
-  colour and accessible explanation remain in this issue.
+- Measured validation appearance and unsaved-changes dialog: MEP-146 (row 22).
 - Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported lookup/multi-module/date-time/long-integer controls: absent from
@@ -216,9 +215,14 @@ mapping and create/partial-update payloads. An edit form keeps its initial basel
 while queries refetch, preserving in-progress input. Writes use `useCreateRecord`
 and `useUpdateRecord`; all strip actions and inputs are disabled while a write is
 pending, and a synchronous guard prevents duplicate submissions. The form has
-`noValidate`: server validation owns these errors; measured validation and dirty
-form confirmation belong to MEP-146. Field errors appear at their controls and
-focus the first rendered error, including composite prefix and longitude controls.
+`noValidate`: client validation runs on `Save` before any write; server field errors
+reuse the same inline appearance. `UnsavedChangesDialog` opens from `Cancel` when
+the form is dirty. Field errors appear at their controls and focus the first
+rendered error, including composite prefix and longitude controls.
+
+**Interim (MEP-146):** email format uses the browser email validity check when
+available; integer format rejects non-integer numbers. Unsaved-changes confirmation
+is wired to `Cancel` only (browser back and in-app links were not observed).
 
 ### Interim page behavior and Leads rules
 
@@ -260,16 +264,36 @@ write locking, owner dropdown and picker integration, composite errors and
 Country/State options. Unit tests independently cover metadata filtering/order,
 required/read-only flags, value mapping and explicit clears. Browser tests cover page geometry and end-to-end flows.
 
+### Clone Lead page (MEP-164)
+
+`buildCloneInput` copies `views.create` writable field values from a source record,
+excluding system audit fields and `Record_Image`. `RecordFormScreen` accepts
+`cloneSourceId` to load the source, render the create layout with heading
+`Clone <singularLabel>`, and always write through `create`. Cancel returns to the
+source record detail; dirty cancel uses the unsaved-changes dialog from MEP-146.
+Save navigates to the new record detail; Save and New follows the same reset and
+create-route navigation as the create page. Lead Image stays empty (parity row 18).
+
+Route: `/crm/[orgSlug]/tab/Leads/[recordId]/clone` via
+`moduleRecordClonePath`. Entry: Lead detail More Options › `Clone` (first item,
+above Delete).
+
+### Interim (clone)
+
+- Post-save destinations follow the same interim A7 rules as create/edit (MEP-145);
+  reference write-after-clone was not observed (MEP-248).
+- Source `Lead Image` is not copied; the form shows the empty portrait placeholder.
+
 ### Leads route adapter
 
 `modules/leads/leads-form-client.tsx` uses `lib/crm-paths.ts` for the create,
-record and list destinations. Both server pages require organization membership
+clone, record and list destinations. Server pages require organization membership
 and supply the session user ID. The existing list Create Lead and detail Edit
 links open these routes. Edit Cancel returns to that record; Create Cancel uses
 the list context's complete URL, including view, pagination and filters, with the
-default list as fallback for a direct form visit. Save and New preserves that
-list origin and resets values. The real Select User dialog receives organization
-members and its Done callback updates Owner.
+default list as fallback for a direct form visit. Clone Cancel returns to the
+source record. Save and New preserves that list origin and resets values. The real
+Select User dialog receives organization members and its Done callback updates Owner.
 
 The route stylesheet applies the page's measured Address radius, border-box
 insets, coordinate widths, Description width/height and bottom separator.

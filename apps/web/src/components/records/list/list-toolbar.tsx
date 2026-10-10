@@ -6,6 +6,7 @@ import { Icons } from "@/components/ui/icon";
 import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { SplitButton, type SplitButtonProps } from "@/components/ui/split-button";
 import { SortPopover, type SortPopoverProps } from "./sort-popover";
+import { ViewTypeSwitcher } from "./view-type-switcher";
 
 export interface ListToolbarProps {
   filterOpen: boolean;
@@ -16,7 +17,6 @@ export interface ListToolbarProps {
   onSortApply: (sort: SortSpec) => void;
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
-  presentationLabel?: string;
 }
 
 export function ListToolbar({
@@ -28,7 +28,6 @@ export function ListToolbar({
   onSortApply,
   create,
   actions = [],
-  presentationLabel = "List presentation",
 }: ListToolbarProps) {
   return (
     <div
@@ -41,18 +40,17 @@ export function ListToolbar({
           size="listFilter"
           aria-pressed={filterOpen}
           onPress={() => onFilterChange(!filterOpen)}
-          className="gap-1 aria-pressed:bg-(--color-surface-active)"
+          className="gap-(--size-list-filter-toggle-icon-gap) rounded-(--radius-list-toolbar-tile)! aria-pressed:bg-(--color-surface-active)"
         >
-          <Icons.filter aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <Icons.filterToggle
+            aria-hidden="true"
+            className="h-(--size-list-filter-toggle-icon-height) w-(--size-list-filter-toggle-icon-width) shrink-0 text-(--color-list-filter-toggle-icon)"
+          />
           Filter
         </Button>
         <SortPopover fields={fields} sort={sort} onApply={onSortApply} />
-        <span
-          role="img"
-          aria-label={presentationLabel}
-          className="flex h-(--size-list-view-icon) w-(--size-list-view-icon) items-center justify-center rounded-md bg-primary-subtle text-primary"
-        >
-          <Icons.list aria-hidden="true" className="h-4 w-4 shrink-0" />
+        <span className="ml-(--size-list-view-switcher-offset)">
+          <ViewTypeSwitcher />
         </span>
         <Button
           variant="ghost"

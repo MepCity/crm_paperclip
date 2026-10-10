@@ -14,10 +14,18 @@ export const buttonStyles = {
     "font-semibold rounded-md bg-primary bg-linear-to-b from-(--color-primary-gradient-start) to-(--color-primary-gradient-end) text-primary-text data-hovered:bg-none data-hovered:bg-primary-hover data-pressed:bg-none data-pressed:bg-primary-pressed data-disabled:bg-none! data-disabled:bg-(--color-primary-disabled)! data-disabled:opacity-100!",
   secondary:
     "font-semibold rounded-md bg-surface bg-linear-to-b from-(--color-button-gradient-start) to-(--color-button-gradient-end) text-text border border-(--color-button-border) shadow-sm data-hovered:bg-none data-hovered:bg-surface-hover data-pressed:bg-none data-pressed:bg-surface-pressed",
+  /* list-views.md › Selection toolbar: the four record-action buttons are regular weight, carry
+     their own gradient and show no shadow. */
+  selection:
+    "font-normal rounded-md bg-surface bg-linear-to-b from-(--color-selection-button-gradient-start) to-(--color-selection-button-gradient-end) text-text border border-(--color-button-border)",
   ghost:
     "font-semibold rounded-md bg-transparent text-text data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
   danger:
     "font-semibold rounded-md bg-danger text-danger-text data-hovered:bg-danger-hover data-pressed:bg-danger-pressed",
+  unsavedDialogStay:
+    "font-normal rounded-(--radius-create-menu) bg-surface bg-linear-to-b from-(--color-unsaved-dialog-stay-start) to-(--color-unsaved-dialog-stay-end) text-(--color-unsaved-dialog-stay-text) border border-(--color-unsaved-dialog-stay-border) shadow-none data-hovered:bg-none data-hovered:from-(--color-unsaved-dialog-stay-start) data-hovered:to-(--color-unsaved-dialog-stay-end) data-hovered:bg-surface-hover data-pressed:bg-none data-pressed:from-(--color-unsaved-dialog-stay-start) data-pressed:to-(--color-unsaved-dialog-stay-end) data-pressed:bg-surface-pressed",
+  unsavedDialogLeave:
+    "font-semibold rounded-(--radius-create-menu) bg-linear-to-b from-(--color-unsaved-dialog-leave-start) to-(--color-unsaved-dialog-leave-end) text-(--color-unsaved-dialog-leave-text) data-hovered:bg-none data-hovered:from-(--color-unsaved-dialog-leave-start) data-hovered:to-(--color-unsaved-dialog-leave-end) data-pressed:bg-none data-pressed:from-(--color-unsaved-dialog-leave-start) data-pressed:to-(--color-unsaved-dialog-leave-end)",
 };
 
 export const buttonSizes = {
@@ -29,6 +37,7 @@ export const buttonSizes = {
     "h-(--size-list-filter-button-height) w-(--size-list-filter-button-width) text-md p-0",
   listIcon: "h-(--size-list-view-icon) w-(--size-list-view-icon) text-sm p-0",
   listToolbar: "h-(--size-button-split-height) text-md px-3 py-0",
+  listSelection: "h-(--size-button-ellipsis-height) text-md px-3 py-0",
   toolbar: "h-(--size-button-split-height) text-sm px-3 py-0",
   splitPrimary:
     "h-(--size-button-split-height) min-w-(--size-button-split-primary) text-md px-2 py-0",

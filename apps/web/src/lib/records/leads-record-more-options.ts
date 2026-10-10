@@ -5,6 +5,7 @@ export const LEADS_DELETE_CONFIRM_TITLE = "Delete Lead";
 export const LEADS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete this Lead?";
 
 export type LeadsRecordMoreOptionsHandlers = {
+  onClone: () => void;
   onDelete: () => void;
 };
 
@@ -30,7 +31,7 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
   {
     id: "leads-more-primary",
     items: [
-      { id: "clone", label: "Clone" },
+      { id: "clone", label: "Clone", handlerKey: "onClone" },
       { id: "share", label: "Share" },
       { id: "delete", label: "Delete", handlerKey: "onDelete" },
     ],
@@ -61,7 +62,6 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
 
 /** Unimplemented menu labels with parity-checklist owning module (docs/parity-checklist.md). */
 export const LEADS_RECORD_MORE_OPTIONS_DEVIATIONS: readonly LeadsMoreOptionsDeviation[] = [
-  { label: "Clone", parityModule: "M1 row 25 (separate Clone Lead task)" },
   { label: "Share", parityModule: "M11 (Record Share)" },
   { label: "Print Preview", parityModule: "M6" },
   { label: "Find and Merge Duplicates", parityModule: "M2 with Contacts" },
