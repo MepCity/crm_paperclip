@@ -30,11 +30,12 @@ export function useModule(module: ModuleApiName) {
   });
 }
 
-export function useViews(module: ModuleApiName) {
+export function useViews(module: ModuleApiName, options?: { enabled?: boolean }) {
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.views(module),
     queryFn: () => service.listViewSummaries(module),
+    enabled: options?.enabled ?? true,
   });
 }
 

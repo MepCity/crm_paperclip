@@ -95,9 +95,8 @@ export function describeSysVSharedMemory(
   return [
     `System V shared memory: ${rows.length} kernel IDs in use, ${stale.length} stale`,
     "(nothing attached, creator PID gone — left behind by servers that were killed instead of",
-    "stopped). macOS keeps them until a person checks each creator and frees it with",
-    "`ipcrm -m <id>` (scripts/list-stale-shared-memory.ts names them and removes nothing)",
-    "or the machine reboots.",
+    "stopped). macOS keeps them until safely reclaimed or the machine reboots.",
+    "For a dry run, use `pnpm ipc:sweep` (reports candidates and removes nothing).",
   ].join(" ");
 }
 

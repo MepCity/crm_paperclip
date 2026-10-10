@@ -1,6 +1,7 @@
 import { listOrganizationsForUser } from "@crm/core";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell/app-shell";
+import { PreferenceProvider } from "@/lib/preferences";
 import { requireOrgContext, requireUser } from "@/lib/session";
 
 export default async function OrganizationLayout({
@@ -20,7 +21,9 @@ export default async function OrganizationLayout({
       organizations={organizations.map((org) => ({ name: org.name, slug: org.slug }))}
       user={{ id: user.id, name: user.name, email: user.email }}
     >
-      {children}
+      <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
+        {children}
+      </PreferenceProvider>
     </AppShell>
   );
 }
