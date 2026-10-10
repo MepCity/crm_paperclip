@@ -407,6 +407,12 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  --size-popover-sort-field-dropdown-width: 380px;
+  --size-popover-sort-field-dropdown-height: 268px;
+  /* 268 − 222, the band between the panel top and the list top in the Sort By field dropdown row. */
+  --size-popover-sort-field-dropdown-list-offset: 46px;
+  /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
+  --size-popover-sort-field-dropdown-list-height: 220px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;

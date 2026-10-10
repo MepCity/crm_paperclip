@@ -5,6 +5,12 @@ import { join } from "node:path";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { isPortFree, pickFreePort } from "./ports";
+import {
+  describeSysVSharedMemory,
+  isSharedMemoryExhaustion,
+  readSysVSharedMemoryTable,
+  retryOnSharedMemoryExhaustion,
+} from "./shared-memory";
 
 const USER = "postgres";
 const PASSWORD = "postgres";
@@ -123,60 +129,87 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     };
   }
 
-  const tail: string[] = [];
-  const onLog = (message: string) => {
-    for (const line of message.split("\n")) {
-      if (line.trim() === "") continue;
-      tail.push(line);
-      if (tail.length > 20) tail.shift();
-      options.onLog?.(line);
-    }
+  /** Splits server and initdb output into the lines the caller is given. */
+  const toLines = (message: string): string[] =>
+    message.split("\n").filter((line) => line.trim() !== "");
+
+  // The retry note is reported to the caller only: it must not land in the log ring of the
+  // attempt that follows it.
+  const report = (message: string) => {
+    for (const line of toLines(message)) options.onLog?.(line);
   };
 
-  const port = options.port ?? (await pickFreePort());
-  if (options.port !== undefined && !(await isPortFree(port))) {
-    throw new Error(`port ${port} is already in use`);
-  }
+  const startOnce = async (): Promise<LocalPostgres> => {
+    // One ring per attempt. The composed error is what the retry classifies, so an older
+    // attempt's shared memory line must never be carried into a newer failure's report.
+    const tail: string[] = [];
+    const onLog = (message: string) => {
+      for (const line of toLines(message)) {
+        tail.push(line);
+        if (tail.length > 20) tail.shift();
+        options.onLog?.(line);
+      }
+    };
 
-  const flags = Object.entries({ listen_addresses: HOST, ...options.settings }).flatMap(
-    ([name, value]) => ["-c", `${name}=${value}`],
-  );
-  const server = new EmbeddedPostgres({
-    databaseDir: dataDir,
-    port,
-    user: USER,
-    password: PASSWORD,
-    persistent: true,
-    initdbFlags: UTF8_INITDB_FLAGS,
-    postgresFlags: flags,
-    onLog,
-    onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
-  });
+    const port = options.port ?? (await pickFreePort());
+    if (options.port !== undefined && !(await isPortFree(port))) {
+      throw new Error(`port ${port} is already in use`);
+    }
+
+    const flags = Object.entries({ listen_addresses: HOST, ...options.settings }).flatMap(
+      ([name, value]) => ["-c", `${name}=${value}`],
+    );
+    const server = new EmbeddedPostgres({
+      databaseDir: dataDir,
+      port,
+      user: USER,
+      password: PASSWORD,
+      persistent: true,
+      initdbFlags: UTF8_INITDB_FLAGS,
+      postgresFlags: flags,
+      onLog,
+      onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
+    });
+
+    try {
+      if (!existsSync(join(dataDir, "PG_VERSION"))) await server.initialise();
+      await server.start();
+    } catch (error) {
+      await server.stop().catch(() => undefined);
+      const reason = error instanceof Error ? error.message : "server exited during start";
+      throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}`);
+    }
+
+    return {
+      port,
+      adopted: false,
+      urlFor: (database) => connectionUrl(port, database),
+      async stop() {
+        // A Ctrl+C reaches the server directly (same process group) and it exits on its own;
+        // embedded-postgres would then wait forever for an exit event it already missed.
+        const child = (server as unknown as { process?: ChildProcess }).process;
+        if (child && (child.exitCode !== null || child.signalCode !== null)) {
+          (server as unknown as { process?: ChildProcess }).process = undefined;
+          return;
+        }
+        await server.stop();
+      },
+    };
+  };
 
   try {
-    if (!existsSync(join(dataDir, "PG_VERSION"))) await server.initialise();
-    await server.start();
+    return await retryOnSharedMemoryExhaustion(startOnce, {
+      onRetry: (_error, delayMs) =>
+        report(`shared memory table is full, retrying the server start in ${delayMs} ms`),
+    });
   } catch (error) {
-    await server.stop().catch(() => undefined);
-    const reason = error instanceof Error ? error.message : "server exited during start";
-    throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}`);
+    const message = error instanceof Error ? error.message : String(error);
+    if (!isSharedMemoryExhaustion(message)) throw error;
+    // Every run on this machine shares one small kernel table, so the useful part of the
+    // report is who is holding it: live servers finish and free their ID, stale ones do not.
+    const pressure = describeSysVSharedMemory(await readSysVSharedMemoryTable(), isAlive);
+    throw new Error(pressure ? `${message}\n${pressure}` : message);
   }
-
-  return {
-    port,
-    adopted: false,
-    urlFor: (database) => connectionUrl(port, database),
-    async stop() {
-      // A Ctrl+C reaches the server directly (same process group) and it exits on its own;
-      // embedded-postgres would then wait forever for an exit event it already missed.
-      const child = (server as unknown as { process?: ChildProcess }).process;
-      if (child && (child.exitCode !== null || child.signalCode !== null)) {
-        (server as unknown as { process?: ChildProcess }).process = undefined;
-        return;
-      }
-      await server.stop();
-    },
-  };
 }
 
 /** Creates the database when it does not exist yet. */
