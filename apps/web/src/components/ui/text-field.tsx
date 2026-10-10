@@ -94,7 +94,7 @@ export function TextField({
           {description}
         </Text>
       )}
-      <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
+      <FieldError className="record-form-validation-error">{errorMessage}</FieldError>
     </AriaTextField>
   );
 }

@@ -405,6 +405,15 @@
   --size-confirm-dialog-title-gap: 18.5px;
   --size-confirm-dialog-message-actions-gap: 30.5px;
   --size-confirm-dialog-actions-gap: 10.5px;
+  --size-unsaved-dialog-stay-width: 91px;
+  --size-unsaved-dialog-leave-width: 130.5px;
+  --color-unsaved-dialog-stay-border: #d6d8e8;
+  --color-unsaved-dialog-stay-start: #ffffff;
+  --color-unsaved-dialog-stay-end: #f1f0f7;
+  --color-unsaved-dialog-stay-text: #313949;
+  --color-unsaved-dialog-leave-start: #ff4657;
+  --color-unsaved-dialog-leave-end: #e33041;
+  --color-unsaved-dialog-leave-text: #ffffff;
   --size-list-mass-update-button-width: 113px;
   --size-mass-update-dialog-width: 484px;
   --size-mass-update-dialog-height: 207px;

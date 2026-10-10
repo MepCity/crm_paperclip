@@ -1,4 +1,10 @@
 /* Geometry: record-detail.md, Visual layout → Lead Information rows. */
+.record-form-validation-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-form-required);
+}
 .record-control {
   box-sizing: border-box;
   height: var(--size-form-input-height);
@@ -24,7 +30,7 @@
 }
 .record-control[aria-invalid="true"],
 .record-control[data-invalid] {
-  border-color: var(--color-danger);
+  border-color: var(--color-form-required);
 }
 .record-control:disabled,
 .record-control[data-disabled] {
@@ -63,8 +69,13 @@
 .record-input-frame:has(:focus) {
   border-color: var(--color-focus-ring);
 }
+.record-input-frame[data-required],
+.record-choice-shell[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
+.record-input-frame[data-invalid],
 .record-input-frame:has([aria-invalid="true"]) {
-  border-color: var(--color-danger);
+  border-color: var(--color-form-required);
 }
 .record-input-frame:has(:disabled),
 .record-choice-shell:has(:disabled) {
@@ -133,7 +144,7 @@
   border-color: var(--color-focus-ring);
 }
 .record-choice-shell[data-invalid] {
-  border-color: var(--color-danger);
+  border-color: var(--color-form-required);
 }
 .record-choice-shell .record-choice-trigger {
   flex: 1;

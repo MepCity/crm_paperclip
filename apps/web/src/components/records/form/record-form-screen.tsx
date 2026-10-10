@@ -2,7 +2,7 @@
 
 import { isAppError, type ValidationError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import {
   useCreateRecord,
@@ -22,6 +22,7 @@ import {
   type FormRules,
   formFields,
   formPayload,
+  formValuesEqual,
   initialFormValues,
   numberValue,
   textValue,
@@ -29,8 +30,9 @@ import {
 import { FormRow, type FormRowColumn } from "./form-row";
 import { FormSection } from "./form-section";
 import { RECORD_FORM_COPY } from "./record-form-copy";
-
+import { validateRecordForm } from "./form-validation";
 import { RecordFormShell } from "./record-form-shell";
+import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
 export interface OwnerPickerProps {
   users: OwnerOption[];
@@ -95,6 +97,8 @@ function LoadedRecordForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [unsavedOpen, setUnsavedOpen] = useState(false);
+  const [dirtyBaseline, setDirtyBaseline] = useState(() => ({ ...values }));
   const rootRef = useRef<HTMLDivElement>(null);
   const pickerTrigger = useRef<HTMLElement | null>(null);
   const writeInFlight = useRef(false);
@@ -103,6 +107,23 @@ function LoadedRecordForm({
   const update = useUpdateRecord(config.module);
   const saving = create.isPending || update.isPending;
   const title = `${record ? "Edit" : "Create"} ${metadata.singularLabel}`;
+  const labelsByField = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const section of sections) {
+      const addressParent =
+        config.rules.address &&
+        section.columns.flat().find((field) => field.apiName === config.rules.address?.field);
+      for (const field of section.columns.flat()) {
+        labels.set(
+          field.apiName,
+          addressParent && field.apiName !== addressParent.apiName
+            ? addressLabel(field, addressParent)
+            : field.label,
+        );
+      }
+    }
+    return labels;
+  }, [sections, config.rules]);
 
   useEffect(() => {
     if (saving || !errorFocusPending.current || Object.keys(errors).length === 0) return;
@@ -158,18 +179,45 @@ function LoadedRecordForm({
     requestAnimationFrame(() => pickerTrigger.current?.focus());
   }
 
+  function runClientValidation(): boolean {
+    const messages = validateRecordForm(
+      fields,
+      values,
+      (field) => labelsByField.get(field.apiName) ?? field.label,
+    );
+    if (Object.keys(messages).length === 0) return true;
+    errorFocusPending.current = true;
+    setErrors(messages);
+    return false;
+  }
+
+  function isDirty(): boolean {
+    return !formValuesEqual(fields, values, dirtyBaseline);
+  }
+
+  function requestCancel() {
+    if (!isDirty()) {
+      config.navigate(config.paths.cancel);
+      return;
+    }
+    setUnsavedOpen(true);
+  }
+
   async function save(andNew: boolean) {
     if (writeInFlight.current) return;
+    setFormError(false);
+    if (!runClientValidation()) return;
     writeInFlight.current = true;
     setErrors({});
-    setFormError(false);
     try {
       const input = formPayload(fields, values, record ? baseline : undefined);
       const saved = record
         ? await update.mutateAsync({ id: record.id, input })
         : await create.mutateAsync(input);
       if (andNew) {
-        setValues(emptyValues());
+        const next = emptyValues();
+        setValues(next);
+        setDirtyBaseline({ ...next });
         config.navigate(config.paths.create);
       } else config.navigate(config.paths.detail(saved.id));
     } catch (error) {
@@ -330,7 +378,7 @@ function LoadedRecordForm({
         formAriaLabel={title}
         actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
         disabled={saving}
-        onCancel={() => config.navigate(config.paths.cancel)}
+        onCancel={requestCancel}
         onSave={() => {
           void save(false);
         }}
@@ -388,6 +436,14 @@ function LoadedRecordForm({
           );
         })}
       </RecordFormShell>
+      <UnsavedChangesDialog
+        isOpen={unsavedOpen}
+        onOpenChange={setUnsavedOpen}
+        onLeave={() => {
+          setUnsavedOpen(false);
+          config.navigate(config.paths.cancel);
+        }}
+      />
       {pickerOpen
         ? config.renderOwnerPicker?.({
             users,
