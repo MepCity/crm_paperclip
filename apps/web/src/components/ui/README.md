@@ -350,7 +350,7 @@ what the "no colour constants" rule forbids.
 | `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
 | `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
 | `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
-| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `3px` | record-detail.md › Details field pencil › antialiased ink top 1.5 px above label cap and ink bottom on the baseline; the margin lands on the icon box, whose ink starts ~0.9 px inside it, so the box offset carries 1.5 px more than the spec's ink figure | derived from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |

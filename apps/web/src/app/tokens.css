@@ -344,7 +344,10 @@
   --size-detail-description-label-width: 73px;
   --size-detail-description-label-extend: 39px;
   --size-detail-field-pencil-size: 11.5px;
-  --size-detail-field-pencil-above-label-cap: 1.5px;
+  /* Ink-level target: the pencil's antialiased ink top sits 1.5 px above the label cap
+     (record-detail.md › Details field pencil). The margin is applied to the icon box, whose
+     ink starts ~0.9 px inside it, so the box offset carries the extra 1.5 px. */
+  --size-detail-field-pencil-above-label-cap: 3px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
