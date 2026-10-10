@@ -2,7 +2,7 @@
 
 import "./record-input.css";
 import type { ReactNode } from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   Button,
   Dialog,
@@ -67,14 +67,6 @@ export function RecordChoice({
   const [open, setOpen] = useState(defaultOpen && !disabled);
   const [query, setQuery] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
-  const opening = useRef(inline && defaultOpen);
-  useEffect(() => {
-    if (!opening.current) return;
-    const frame = requestAnimationFrame(() => {
-      opening.current = false;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
   const selected = options.find((option) => option.value === value);
   const items = options.map((option, index) => ({ ...option, id: String(index) }));
   const selectedId = items.find((option) => option.value === value)?.id;
@@ -107,6 +99,9 @@ export function RecordChoice({
       <DialogTrigger
         isOpen={open && !disabled}
         onOpenChange={(next) => {
+          // Non-modal focus can scroll an ancestor, which requests overlay closure.
+          // Keep the list open while its option still holds focus.
+          if (inline && !next && listRef.current?.contains(document.activeElement)) return;
           setOpen(next);
           setQuery("");
         }}
@@ -189,14 +184,6 @@ export function RecordChoice({
         )}
         <Popover
           isNonModal={inline}
-          shouldCloseOnInteractOutside={
-            inline
-              ? (element) => {
-                  // Let the newly mounted list take focus before handling outside blur.
-                  return !opening.current && element.isConnected;
-                }
-              : undefined
-          }
           offset={inline ? -1 : 0}
           placement="bottom start"
           style={prefix ? { width: "var(--size-form-prefix-width)" } : undefined}
