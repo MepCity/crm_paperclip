@@ -229,7 +229,12 @@ async function recordIdsInTable(page: import("@playwright/test").Page): Promise<
   });
 }
 
-type FilterRequestBody = { filters: unknown };
+type UnfilteredLeadRow = {
+  id: string;
+  Company: string | null;
+  Lead_Source: string | null;
+  Created_Time: string | null;
+};
 
 function captureNextBulkSearchParams(page: import("@playwright/test").Page) {
   return page
@@ -240,57 +245,84 @@ function captureNextBulkSearchParams(page: import("@playwright/test").Page) {
     .then((request) => new URL(request.url()).searchParams);
 }
 
-async function fetchIndependentFilterExpectations(
+function isCreatedOnUtcToday(createdTime: string | null, now: Date): boolean {
+  if (!createdTime) return false;
+  const parsed = Date.parse(createdTime);
+  if (Number.isNaN(parsed)) return false;
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return parsed >= start && parsed < start + 86_400_000;
+}
+
+function firstPageFilterExpectations(
+  rows: readonly UnfilteredLeadRow[],
+  perPage: number,
+  predicate: (row: UnfilteredLeadRow) => boolean,
+): { ids: string[]; total: number } {
+  const matching = rows.filter(predicate);
+  return {
+    ids: matching.slice(0, perPage).map((row) => row.id),
+    total: matching.length,
+  };
+}
+
+async function fetchUnfilteredLeadCatalog(
   page: import("@playwright/test").Page,
   orgSlug: string,
   bulkSearchParams: URLSearchParams,
-  body: FilterRequestBody,
-): Promise<{ ids: string[]; total: number }> {
+): Promise<UnfilteredLeadRow[]> {
   const bulkParams = new URLSearchParams(bulkSearchParams);
-  bulkParams.set("page", "1");
   const cvid = bulkParams.get("cvid");
   if (!cvid) throw new Error("Expected cvid on bulk request.");
+  const perPage = bulkParams.get("per_page") ?? "30";
+  bulkParams.set("per_page", perPage);
+  const existingFields = bulkParams.get("fields")?.split(",").filter(Boolean) ?? [];
+  const fields = [...new Set([...existingFields, "Company", "Lead_Source", "Created_Time"])];
+  bulkParams.set("fields", fields.join(","));
+  bulkParams.delete("page");
   return page.evaluate(
-    async ({ org, bulkQuery, viewId, filterBody }) => {
+    async ({ org, bulkQueryBase }) => {
       const headers = {
         "Content-Type": "application/json",
         "X-CRM-ORG": org,
       };
-      const [bulkResponse, countResponse] = await Promise.all([
-        fetch(`/crm/v2.2/Leads/bulk?${bulkQuery}`, {
+      const rows: UnfilteredLeadRow[] = [];
+      let pageNumber = 1;
+      for (;;) {
+        const bulkQuery = new URLSearchParams(bulkQueryBase);
+        bulkQuery.set("page", String(pageNumber));
+        const bulkResponse = await fetch(`/crm/v2.2/Leads/bulk?${bulkQuery}`, {
           method: "POST",
           headers,
-          body: JSON.stringify(filterBody),
-        }),
-        fetch(`/crm/v2.2/Leads/actions/count?cvid=${viewId}`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(filterBody),
-        }),
-      ]);
-      if (!bulkResponse.ok) {
-        throw new Error(`bulk ${bulkResponse.status}: ${await bulkResponse.text()}`);
+          body: JSON.stringify({}),
+        });
+        if (!bulkResponse.ok) {
+          throw new Error(`bulk ${bulkResponse.status}: ${await bulkResponse.text()}`);
+        }
+        const text = await bulkResponse.text();
+        if (!text) break;
+        const bulkJson = JSON.parse(text) as {
+          data?: {
+            id: string;
+            Company?: string | null;
+            Lead_Source?: string | null;
+            Created_Time?: string | null;
+          }[];
+          info?: { more_records?: boolean };
+        };
+        for (const row of bulkJson.data ?? []) {
+          rows.push({
+            id: row.id,
+            Company: row.Company ?? null,
+            Lead_Source: row.Lead_Source ?? null,
+            Created_Time: row.Created_Time ?? null,
+          });
+        }
+        if (!bulkJson.info?.more_records) break;
+        pageNumber += 1;
       }
-      if (!countResponse.ok) {
-        throw new Error(`count ${countResponse.status}: ${await countResponse.text()}`);
-      }
-      const readJson = async (response: Response) => {
-        const text = await response.text();
-        return text ? (JSON.parse(text) as unknown) : null;
-      };
-      const bulkJson = (await readJson(bulkResponse)) as { data?: { id: string }[] } | null;
-      const countJson = (await readJson(countResponse)) as { count?: number } | null;
-      return {
-        ids: (bulkJson?.data ?? []).map((row) => row.id),
-        total: countJson?.count ?? 0,
-      };
+      return rows;
     },
-    {
-      org: orgSlug,
-      bulkQuery: bulkParams.toString(),
-      viewId: cvid,
-      filterBody: body,
-    },
+    { org: orgSlug, bulkQueryBase: bulkParams.toString() },
   );
 }
 
@@ -671,6 +703,8 @@ test.describe("Leads list page", () => {
     const baselineIds = await recordIdsInTable(page);
     const initialRows = await page.locator("table tbody tr").count();
     const initialTotal = await page.locator("[data-part=total-value]").innerText();
+    const perPage = Number(bulkSearchParams.get("per_page") ?? "30");
+    const unfilteredCatalog = await fetchUnfilteredLeadCatalog(page, org.slug, bulkSearchParams);
     const sampleCompany = (
       await page.locator("table tbody tr").first().locator("[data-part=column]").nth(1).innerText()
     ).trim();
@@ -694,18 +728,11 @@ test.describe("Leads list page", () => {
         lastCountBody = request.postDataJSON();
       }
     });
-    const companyFilterBody: FilterRequestBody = {
-      filters: {
-        field: { api_name: "Company" },
-        comparator: "contains",
-        value: sampleCompany,
-      },
-    };
-    const companyExpectations = await fetchIndependentFilterExpectations(
-      page,
-      org.slug,
-      bulkSearchParams,
-      companyFilterBody,
+    const companyNeedle = sampleCompany.toLowerCase();
+    const companyExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => typeof row.Company === "string" && row.Company.toLowerCase().includes(companyNeedle),
     );
     const companyResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
@@ -744,18 +771,10 @@ test.describe("Leads list page", () => {
     await selectPicklistValues(page, panel, "Lead Source", [leadSourceA, leadSourceB]);
     lastBulkBody = undefined;
     lastCountBody = undefined;
-    const leadSourceFilterBody: FilterRequestBody = {
-      filters: {
-        field: { api_name: "Lead_Source" },
-        comparator: "equal",
-        value: [leadSourceA, leadSourceB],
-      },
-    };
-    const leadSourceExpectations = await fetchIndependentFilterExpectations(
-      page,
-      org.slug,
-      bulkSearchParams,
-      leadSourceFilterBody,
+    const leadSourceExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => row.Lead_Source === leadSourceA || row.Lead_Source === leadSourceB,
     );
     const leadSourceResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
@@ -784,18 +803,10 @@ test.describe("Leads list page", () => {
     await page.getByRole("option", { name: "Today", exact: true }).click();
     lastBulkBody = undefined;
     lastCountBody = undefined;
-    const todayFilterBody: FilterRequestBody = {
-      filters: {
-        field: { api_name: "Created_Time" },
-        comparator: "equal",
-        value: `\${TODAY}`,
-      },
-    };
-    const todayExpectations = await fetchIndependentFilterExpectations(
-      page,
-      org.slug,
-      bulkSearchParams,
-      todayFilterBody,
+    // Fixture seeds mixed Created_Time ages; Today expectation is computed from unfiltered rows only.
+    const todayNow = new Date();
+    const todayExpectations = firstPageFilterExpectations(unfilteredCatalog, perPage, (row) =>
+      isCreatedOnUtcToday(row.Created_Time, todayNow),
     );
     const todayResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
