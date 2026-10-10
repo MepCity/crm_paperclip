@@ -32,9 +32,16 @@ export function DetailFieldRow({
   const editable = inline?.eligible(field) ?? false;
   const editing = editable && inline?.activeId === rowId;
   const valueButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (!editing && restoreFocus.current) {
+      restoreFocus.current = false;
+      valueButton.current?.focus();
+    }
+  }, [editing]);
   function close() {
+    restoreFocus.current = true;
     inline?.activate(null);
-    requestAnimationFrame(() => valueButton.current?.focus());
   }
   const edit = editable
     ? () => inline?.activate(rowId)
