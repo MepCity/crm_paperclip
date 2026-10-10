@@ -3,10 +3,10 @@
 import type { PicklistOption } from "@crm/core/records";
 import { Button } from "@/components/ui/button";
 import { NumberField } from "@/components/ui/number-field";
-import { RECORD_FORM_COPY } from "./record-form-copy";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import { picklistChoices } from "./field-input";
+import { RECORD_FORM_COPY } from "./record-form-copy";
 
 export interface PrefixInputProps extends Omit<TextFieldProps, "prefix"> {
   prefixLabel: string;

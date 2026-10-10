@@ -193,8 +193,8 @@
     var(--size-form-input-left-width)
   );
   margin: 0 0 var(--size-form-field-group-margin-bottom);
-  padding: 0
-    calc(var(--size-form-field-group-padding-end) - var(--size-form-layout-subpixel-trim)) 0 0;
+  padding: 0 calc(var(--size-form-field-group-padding-end) - var(--size-form-layout-subpixel-trim))
+    0 0;
   border: 1px solid var(--color-form-field-group-border);
   border-radius: var(--radius-form-field-group);
 }
@@ -221,15 +221,14 @@
   display: flex;
   flex-direction: column;
   gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
-  padding-top: calc(
-    var(--size-form-field-group-body-top) - var(--size-form-layout-subpixel-trim)
-  );
+  padding-top: calc(var(--size-form-field-group-body-top) - var(--size-form-layout-subpixel-trim));
 }
 
 .record-form-clear-address {
   align-self: flex-end;
   margin-bottom: calc(
-    var(--size-form-address-footer-bottom) - var(--size-form-layout-subpixel-trim)
+    var(--size-form-address-footer-bottom) -
+    var(--size-form-layout-subpixel-trim)
   );
   padding: 0;
   border: 0;
