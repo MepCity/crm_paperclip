@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import {
@@ -269,7 +271,7 @@ test.describe("Lead record detail page", () => {
     await expectNoA11yViolations(page);
   });
 
-  test("More Options delete menu row matches visual layout at 1470×835", async ({ page }) => {
+  test("More Options delete menu row matches visual layout at 1470×835", async ({ page }, testInfo) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openFirstLeadFromList(page, org.slug);
@@ -293,5 +295,14 @@ test.describe("Lead record detail page", () => {
     await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
     await expect(item).toHaveCSS("padding-left", "10.25px");
     await expectType(page, item, "--text-md", "--font-weight-normal");
+    const screenshotPath = testInfo.outputPath("leads-detail-more-options-delete.png");
+    await popover.screenshot({ path: screenshotPath });
+    const scratch = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
+    if (scratch) {
+      await mkdir(scratch, { recursive: true });
+      await popover.screenshot({
+        path: join(scratch, "leads-detail-more-options-delete.png"),
+      });
+    }
   });
 });
