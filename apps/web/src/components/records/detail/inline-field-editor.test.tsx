@@ -188,6 +188,19 @@ test("numeric Enter commits the current typed value before saving", async () => 
   await waitFor(() => expect(save).toHaveBeenCalledWith({ Company: 23 }));
 });
 
+test("integer keeps a typed decimal and refuses the write with the format message", async () => {
+  const { user, save, complete } = setup("integer", 12);
+  const input = screen.getByRole("textbox", { name: "Company" });
+  await user.clear(input);
+  await user.type(input, "12.5");
+  await user.tab();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect((input as HTMLInputElement).value).toBe("12.5");
+  expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
+  expect(save).not.toHaveBeenCalled();
+  expect(complete).not.toHaveBeenCalled();
+});
+
 test("textarea Enter inserts a newline without saving", async () => {
   const { user, save } = setup("textarea", "Old");
   await user.type(screen.getByRole("textbox"), "{Enter}new");

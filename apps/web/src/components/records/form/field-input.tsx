@@ -128,10 +128,9 @@ export function FieldInput({
           {...common}
           value={number}
           placeholder={placeholder}
-          formatOptions={{
-            useGrouping: false,
-            maximumFractionDigits: field.dataType === "integer" ? 0 : 20,
-          }}
+          // An integer field still accepts what is typed: `Save` rejects a decimal with
+          // `Please enter a valid <label>.`, which needs the value to survive in the input.
+          formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
           prefix={
             field.dataType === "currency" && currencyPrefix ? (
               <span className="record-currency-prefix">

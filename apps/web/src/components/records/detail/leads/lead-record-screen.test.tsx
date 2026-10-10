@@ -143,6 +143,21 @@ describe("LeadRecordScreen", () => {
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 
+  it("starts the overview with the Last Update label above the status ribbon", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected list rows.");
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
+    const label = screen.getByText(/^Last Update : /);
+    const ribbon = screen.getByRole("region", { name: "Lead status" });
+    expect(label.compareDocumentPosition(ribbon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("does not fetch view summaries when list context is present", async () => {
     const service = createService();
     const listViewSummaries = vi.spyOn(service, "listViewSummaries");

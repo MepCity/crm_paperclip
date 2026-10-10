@@ -250,7 +250,10 @@ test.describe("Lead record detail page", () => {
 
   test("layout matches record-detail visual layout at 1470×835", async ({ page }) => {
     const CARD_WIDTH = 906;
-    const STATUS_TOP = 185;
+    // Spec › Record page: the overview starts with the `Last Update` label, then the ribbon.
+    const OVERVIEW_TOP = 185;
+    // The label's own 0.5rem bottom margin plus the overview panel's 12 px block gap.
+    const LABEL_TO_RIBBON_GAP = 20;
     const STATUS_HEIGHT = 68;
     const BUSINESS_LABEL_END = 173.5;
     const BUSINESS_VALUE_START = 219;
@@ -274,10 +277,14 @@ test.describe("Lead record detail page", () => {
     await page.evaluate(() => document.fonts.ready);
 
     const frame = page.locator("[data-record-frame]");
+    const lastUpdate = frame.locator(".detail-last-update");
+    const lastUpdateBox = requireBox(await lastUpdate.boundingBox(), "Last Update label");
     const statusRibbon = frame.locator("[data-status-ribbon]");
     const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon");
+    expectEdge(lastUpdateBox.y, OVERVIEW_TOP);
+    expect(statusBox.y).toBeGreaterThan(lastUpdateBox.y + lastUpdateBox.height);
+    expectEdge(statusBox.y - lastUpdateBox.y - lastUpdateBox.height, LABEL_TO_RIBBON_GAP);
     expect(Math.abs(statusBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
-    expectEdge(statusBox.y, STATUS_TOP);
     expectEdge(statusBox.height, STATUS_HEIGHT);
     if (process.env.LEAD_DETAIL_ARTIFACT_DIR) {
       await mkdir(process.env.LEAD_DETAIL_ARTIFACT_DIR, { recursive: true });
@@ -449,7 +456,7 @@ test.describe("Lead record detail page", () => {
 
   test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
     const HIDDEN_CARD_WIDTH = 1126;
-    const STATUS_TOP = 185;
+    const OVERVIEW_TOP = 185;
     const STATUS_HEIGHT = 68;
     const CANVAS_LEFT = 332;
     const CANVAS_RIGHT = 1458;
@@ -462,12 +469,17 @@ test.describe("Lead record detail page", () => {
     await frame.getByRole("button", { name: "Hide Related List" }).click();
     await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
 
+    const labelBox = requireBox(
+      await frame.locator(".detail-last-update").boundingBox(),
+      "Last Update label",
+    );
     const statusRibbon = frame.locator("[data-status-ribbon]");
     const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
+    expectEdge(labelBox.y, OVERVIEW_TOP);
+    expect(statusBox.y).toBeGreaterThan(labelBox.y + labelBox.height);
     expectEdge(statusBox.x, CANVAS_LEFT);
     expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
     expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
-    expectEdge(statusBox.y, STATUS_TOP);
     expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 });

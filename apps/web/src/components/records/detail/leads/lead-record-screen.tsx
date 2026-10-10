@@ -205,8 +205,10 @@ export function LeadRecordScreen({
     onDelete: openDeleteDialog,
   });
 
+  // Overview order is the spec's: the `Last Update` age label, then the Lead Status ribbon.
   const overview = (
     <>
+      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField ? (
         <LeadStatusRibbonSection
           module={LEADS_MODULE}
@@ -216,7 +218,6 @@ export function LeadRecordScreen({
           onValueChange={setStatusOverride}
         />
       ) : null}
-      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
       <InlineEditProvider
         key={recordId}
         eligible={isLeadInlineEditable}
