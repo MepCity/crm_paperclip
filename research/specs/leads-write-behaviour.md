@@ -65,27 +65,30 @@ Public documentation sources relied upon are referenced throughout this document
   - Whether restoring a parent record from the Recycle Bin automatically restores all associated cascading child records.
 
 ### A2: Lead Cloning Flow
-- **Status**: `Documented [D1, D4, D5]`
+- **Status**: `Documented [D1, D4, D5]`; clone form open state `Observed [w2f-clone-form]` (see also `record-detail.md` › **Clone form**)
 - **Documented Flow & Rules**:
   - **Trigger & Target**:
     - In the Record Details page (`[Module] Details`), click `Clone` (`D1`).
     - Opens the `Clone [Record]` page (`D1`).
   - **Controls**:
     - In the `Clone [Record]` page, modify the required details and click `Save` (`D1`).
+  - **Live UI Observation (clone form at open) `Observed [w2f-clone-form]`**:
+    - **Entry**: Lead record detail → `More Options` → `Clone` (first menu item above `Delete`; see `record-detail.md` › **Clone form**).
+    - **Page chrome**: Title `Clone Lead`; multi-section form layout matches the Create Lead form (Standard View sections, field grid, right rail).
+    - **Header actions on load**: `Cancel`, `Save and New`, and `Save` are all enabled. Visual left-to-right order in the form controls strip is `Cancel` → `Save and New` → `Save` (same control set and strip geometry as Create Lead; measured sizes in `record-detail.md` › **Clone form**).
+    - **Pre-population at open**: Create-visible editable fields carry source record values; `Lead Image` shows the source record image. System audit fields (`Created By`, `Modified By`, `Created Time`, `Modified Time`, record IDs) are not rendered on the form.
   - **Clone API (D4)**:
     - Field values from the source record are copied to the cloned record by default (`D4`).
     - The following fields and properties are explicitly excluded during the record cloning process via API (`D4`):
       - Field Types: File Upload, Image Upload (`D4`).
       - Transient / Module-Specific Fields: `wizard`, `data_processing_basis_details` (if GDPR is enabled) (`D4`).
       - Field Properties: `read_only`, `external`, and internal system `$` properties (`D4`).
-    - Whether the web UI clone form excludes the exact same set of fields is Not documented.
+    - Whether the web UI clone form excludes the exact same set of fields as the API at save time is not fully aligned in public docs; at open, the UI pre-populates `Lead Image` while API docs exclude Image Upload (`D4`) — persistence after save is Not observed.
   - **Unique Fields Behaviour on Clone**:
     - On the `Clone [Record]` page, the user must manually remove unique field values and update them before saving to prevent duplicate validation rejection (`D5`).
-- **Not Documented**:
-  - Availability or behavior of a `Save and New` button on the clone form.
-  - Availability or behavior of a `Cancel` button and its navigation return destination.
-  - Post-save redirection target page (e.g. whether user navigates to the newly cloned record's detail page or returns to the source record).
-  - Whether the UI clone form excludes the exact same field types and system properties as the Clone API (`D4`).
+- **Not Documented** (not observable under read-only rule for write actions):
+  - Post-click navigation and feedback for `Save`, `Save and New`, and `Cancel` (redirect targets, toast text, whether `Save and New` clears the form or reopens clone).
+  - Whether saved clone records persist `Lead Image` / file fields the same way the open form displays them, and full parity between UI field omission and Clone API (`D4`) exclusions.
 
 ### A3: List Row Selection & Bulk Actions
 - **Status**: `Documented, depends on edition or setting [D1, D12]`; visual layout and counter format `Observed [w2d-select-one, w2d-change-owner]`
@@ -427,7 +430,7 @@ Public documentation sources relied upon are referenced throughout this document
 
 The following functional behaviors, presentation details, and UI feedback mechanisms are not specified in public documentation and could not be observed due to the read-only rule:
 - **A1**: Delete confirmation modal window title, prompt body text, confirmation button labels, post-deletion redirection target page, and success toast notification message.
-- **A2**: Availability and behavior of `Save and New` and `Cancel` on clone form; post-save redirection destination; whether the UI clone form excludes the same fields as the Clone API (`D4`).
+- **A2**: Post-click destinations and UI feedback for `Save`, `Save and New`, and `Cancel` on the clone form; whether persisted clone data matches Clone API (`D4`) field exclusions (including image/file handling after save). Clone form title, Create-matching layout, and enabled `Cancel` → `Save and New` → `Save` at open are observed in `w2f-clone-form` (documented under A2 and `record-detail.md` › **Clone form**).
 - **A3**: Multi-page selection counter format and "Select all records in this view" presentation when more than 10 records exist. (Note: single-record selection counter `"1 Record Selected."` and selection toolbar styling are now observed; plural/multi-record counter format remains unobserved).
 - **A4**: Post-update confirmation notification text and subsequent field-type-specific editor widgets within Mass Update popup (initial modal dimensions 484 × 207 px, title `Mass Update`, `Select a field` dropdown, and `Update` button observed in `w2e-mass-update`).
 - **A5**: Web UI Change Owner modal vs full-page dialog presentation styling, user selector control, checkbox labels/styling for associated related records, and result toast message (in `w2e-change-owner`, `Change Owner` click passed the allow-open guard, but triggered client `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by the capture proxy, preventing dialog rendering and triggering the Rule 5 halt).
