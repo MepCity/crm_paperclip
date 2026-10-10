@@ -9,7 +9,7 @@ describe("panelFiltersToCriteria", () => {
 
   it("returns a single leaf for one row", () => {
     expect(
-      panelFiltersToCriteria([{ field: "Company", operatorId: "contains", value: "Acme" }]),
+      panelFiltersToCriteria([{ field: "Company", operatorId: "contains", value: "  Acme  " }]),
     ).toEqual({
       field: "Company",
       comparator: "contains",
@@ -164,4 +164,13 @@ describe("panelFiltersToCriteria", () => {
       });
     });
   }
+});
+
+it("preserves the Not Selected boolean state and integer range", () => {
+  expect(
+    panelFiltersToCriteria([{ field: "Email_Opt_Out", operatorId: "equal", value: false }]),
+  ).toEqual({ field: "Email_Opt_Out", comparator: "equal", value: false });
+  expect(
+    panelFiltersToCriteria([{ field: "No_of_Employees", operatorId: "between", value: [2, 10] }]),
+  ).toEqual({ field: "No_of_Employees", comparator: "between", value: [2, 10] });
 });

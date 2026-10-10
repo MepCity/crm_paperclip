@@ -179,7 +179,9 @@ export function FilterPanel({
                           value:
                             draftOperator(item.editor, draft)?.control === "none"
                               ? null
-                              : draft.value,
+                              : typeof draft.value === "string"
+                                ? draft.value.trim()
+                                : draft.value,
                         },
                       ];
                     }),

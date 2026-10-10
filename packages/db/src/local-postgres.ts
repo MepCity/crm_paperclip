@@ -5,6 +5,12 @@ import { join } from "node:path";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { isPortFree, pickFreePort } from "./ports";
+import {
+  describeSysVSharedMemory,
+  isSharedMemoryExhaustion,
+  readSysVSharedMemoryTable,
+  retryOnSharedMemoryExhaustion,
+} from "./shared-memory";
 
 const USER = "postgres";
 const PASSWORD = "postgres";
@@ -19,147 +25,6 @@ const UTF8_INITDB_FLAGS = [
   "--locale-provider=icu",
   "--icu-locale=und",
 ];
-
-// macOS caps SysV IPC identifiers at kern.sysv.shmmni (32 on this shared machine). PostgreSQL
-// takes one identifier per instance whichever shared_memory_type it uses: measured on a default
-// (mmap) postmaster it is a 56-byte marker segment, released by a clean shutdown and kept forever
-// by a postmaster that is killed. With the table full a cluster fails to start on "could not
-// create shared memory segment: No space left on device", in initdb's bootstrap run or in the
-// postmaster itself.
-
-/**
- * Only the identifier failure is retried, and only briefly: the waits stay under the integration
- * project's 60s hook timeout and help when another run's cluster is shutting down. Identifiers
- * leaked by killed postmasters do not come back on their own.
- */
-const IPC_RETRY_DELAYS_MS = [5_000, 10_000, 20_000];
-
-const IPC_EXHAUSTION_HINT =
-  "This host is out of SysV IPC identifiers (kern.sysv.shmmni). Retrying only helps while another " +
-  "cluster is shutting down: identifiers leaked by killed postmasters are never reclaimed by waiting " +
-  "and must be released (ipcrm) or the limit raised.";
-
-function toFlags(settings: Record<string, string>): string[] {
-  return Object.entries(settings).flatMap(([name, value]) => ["-c", `${name}=${value}`]);
-}
-
-/** initdb arguments. No shared memory setting is passed: both implementations take one SysV
- *  identifier for their marker segment, so the choice does not relieve the identifier table. */
-export function buildInitdbFlags(): string[] {
-  return [...UTF8_INITDB_FLAGS];
-}
-
-/** `-c name=value` server arguments. A caller's setting wins over the default. */
-export function buildServerFlags(settings: Record<string, string> = {}): string[] {
-  return toFlags({ listen_addresses: HOST, ...settings });
-}
-
-/** True when PostgreSQL failed because machine-wide SysV identifiers are taken. */
-export function isIpcExhausted(message: string): boolean {
-  return /could not create (shared memory segment|semaphore set)/.test(message);
-}
-
-/**
- * Identifier failure of a start attempt. A postmaster that dies during start gives
- * embedded-postgres nothing to reject with, so its FATAL line has to be read from the output the
- * caller collected; initdb failures already carry the whole stderr in the reason.
- */
-export function ipcFailure(reason: string, serverOutput: string): boolean {
-  return isIpcExhausted(reason) || isIpcExhausted(serverOutput);
-}
-
-function realSleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** The parts of an embedded-postgres instance this module drives. */
-export type ClusterStart = {
-  initialise(): Promise<void>;
-  start(): Promise<void>;
-  stop(): Promise<void>;
-  /** Postmaster child process; embedded-postgres sets it while the cluster is running. */
-  process?: ChildProcess;
-};
-
-/**
- * Text of a failed attempt. embedded-postgres rejects start() with no arguments when the
- * postmaster exits early, so there is often no reason to report but this placeholder.
- */
-export function failureReason(error: unknown): string {
-  return error instanceof Error && error.message !== ""
-    ? error.message
-    : "server exited during start";
-}
-
-/**
- * Stops a cluster, tolerating one that is already gone: a Ctrl+C reaches the postmaster directly
- * (same process group) and a failed start can end it too, after which embedded-postgres would
- * wait forever for an exit event it already missed.
- */
-export async function stopCluster(cluster: ClusterStart): Promise<void> {
-  const child = cluster.process;
-  if (child && (child.exitCode !== null || child.signalCode !== null)) {
-    cluster.process = undefined;
-    return;
-  }
-  await cluster.stop();
-}
-
-export type ClusterStartResult =
-  | { ok: true; cluster: ClusterStart; attempts: number }
-  | { ok: false; reason: string; ipcExhausted: boolean; attempts: number };
-
-/**
- * Creates, initialises and starts a cluster, retrying up to `retryDelaysMs.length` times while
- * the failure is a taken SysV identifier. Other failures stop after the first attempt. Every
- * failed attempt is cleaned up before the next one. `isIpcExhausted` is given the attempt's
- * reason; callers also inspect the server output they collect, because a postmaster that dies
- * during start leaves its FATAL line only there.
- */
-export async function startClusterWithIpcRetry(options: {
-  create: () => ClusterStart;
-  needsInitialise: () => boolean;
-  isIpcExhausted: (reason: string) => boolean;
-  retryDelaysMs?: number[];
-  sleep?: (ms: number) => Promise<void>;
-  onRetry?: (info: { attempt: number; delayMs: number; reason: string }) => void;
-}): Promise<ClusterStartResult> {
-  const delays = options.retryDelaysMs ?? IPC_RETRY_DELAYS_MS;
-  const sleep = options.sleep ?? realSleep;
-  let attempts = 0;
-
-  for (;;) {
-    attempts += 1;
-    const cluster = options.create();
-    try {
-      if (options.needsInitialise()) await cluster.initialise();
-      await cluster.start();
-      return { ok: true, cluster, attempts };
-    } catch (error) {
-      const reason = failureReason(error);
-      await stopCluster(cluster).catch(() => undefined);
-      const exhausted = options.isIpcExhausted(reason);
-      const delayMs = delays[attempts - 1];
-      if (!exhausted || delayMs === undefined) {
-        return { ok: false, reason, ipcExhausted: exhausted, attempts };
-      }
-      options.onRetry?.({ attempt: attempts, delayMs, reason });
-      await sleep(delayMs);
-    }
-  }
-}
-
-/** Message for a cluster that never started, with the kernel-limit hint when identifiers ran out. */
-export function startFailureMessage(
-  reason: string,
-  tail: string[],
-  ipcExhausted: boolean,
-  attempts: number,
-): string {
-  const prefix = attempts > 1 ? `${attempts} attempts failed: ` : "";
-  const hint = ipcExhausted ? `\n${IPC_EXHAUSTION_HINT}` : "";
-  return `could not start local PostgreSQL: ${prefix}${reason}\n${tail.join("\n")}${hint}`;
-}
 
 const failureExitGuard = Symbol.for("crm.failureExitGuard");
 
@@ -264,56 +129,87 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     };
   }
 
-  const tail: string[] = [];
-  const onLog = (message: string) => {
-    for (const line of message.split("\n")) {
-      if (line.trim() === "") continue;
-      tail.push(line);
-      if (tail.length > 20) tail.shift();
-      options.onLog?.(line);
-    }
+  /** Splits server and initdb output into the lines the caller is given. */
+  const toLines = (message: string): string[] =>
+    message.split("\n").filter((line) => line.trim() !== "");
+
+  // The retry note is reported to the caller only: it must not land in the log ring of the
+  // attempt that follows it.
+  const report = (message: string) => {
+    for (const line of toLines(message)) options.onLog?.(line);
   };
 
-  const port = options.port ?? (await pickFreePort());
-  if (options.port !== undefined && !(await isPortFree(port))) {
-    throw new Error(`port ${port} is already in use`);
-  }
+  const startOnce = async (): Promise<LocalPostgres> => {
+    // One ring per attempt. The composed error is what the retry classifies, so an older
+    // attempt's shared memory line must never be carried into a newer failure's report.
+    const tail: string[] = [];
+    const onLog = (message: string) => {
+      for (const line of toLines(message)) {
+        tail.push(line);
+        if (tail.length > 20) tail.shift();
+        options.onLog?.(line);
+      }
+    };
 
-  const flags = buildServerFlags(options.settings);
-  const createCluster = (): ClusterStart =>
-    new EmbeddedPostgres({
+    const port = options.port ?? (await pickFreePort());
+    if (options.port !== undefined && !(await isPortFree(port))) {
+      throw new Error(`port ${port} is already in use`);
+    }
+
+    const flags = Object.entries({ listen_addresses: HOST, ...options.settings }).flatMap(
+      ([name, value]) => ["-c", `${name}=${value}`],
+    );
+    const server = new EmbeddedPostgres({
       databaseDir: dataDir,
       port,
       user: USER,
       password: PASSWORD,
       persistent: true,
-      initdbFlags: buildInitdbFlags(),
+      initdbFlags: UTF8_INITDB_FLAGS,
       postgresFlags: flags,
       onLog,
       onError: (error) => onLog(error instanceof Error ? error.message : String(error)),
-    }) as unknown as ClusterStart;
+    });
 
-  const serverOutput = () => tail.join("\n");
-  const started = await startClusterWithIpcRetry({
-    create: createCluster,
-    needsInitialise: () => !existsSync(join(dataDir, "PG_VERSION")),
-    isIpcExhausted: (reason) => ipcFailure(reason, serverOutput()),
-    onRetry: ({ attempt, delayMs }) =>
-      onLog(`SysV IPC identifiers are taken, retrying attempt ${attempt + 1} in ${delayMs}ms`),
-  });
-  if (!started.ok) {
-    throw new Error(
-      startFailureMessage(started.reason, tail, started.ipcExhausted, started.attempts),
-    );
-  }
+    try {
+      if (!existsSync(join(dataDir, "PG_VERSION"))) await server.initialise();
+      await server.start();
+    } catch (error) {
+      await server.stop().catch(() => undefined);
+      const reason = error instanceof Error ? error.message : "server exited during start";
+      throw new Error(`could not start local PostgreSQL: ${reason}\n${tail.join("\n")}`);
+    }
 
-  const cluster = started.cluster;
-  return {
-    port,
-    adopted: false,
-    urlFor: (database) => connectionUrl(port, database),
-    stop: () => stopCluster(cluster),
+    return {
+      port,
+      adopted: false,
+      urlFor: (database) => connectionUrl(port, database),
+      async stop() {
+        // A Ctrl+C reaches the server directly (same process group) and it exits on its own;
+        // embedded-postgres would then wait forever for an exit event it already missed.
+        const child = (server as unknown as { process?: ChildProcess }).process;
+        if (child && (child.exitCode !== null || child.signalCode !== null)) {
+          (server as unknown as { process?: ChildProcess }).process = undefined;
+          return;
+        }
+        await server.stop();
+      },
+    };
   };
+
+  try {
+    return await retryOnSharedMemoryExhaustion(startOnce, {
+      onRetry: (_error, delayMs) =>
+        report(`shared memory table is full, retrying the server start in ${delayMs} ms`),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!isSharedMemoryExhaustion(message)) throw error;
+    // Every run on this machine shares one small kernel table, so the useful part of the
+    // report is who is holding it: live servers finish and free their ID, stale ones do not.
+    const pressure = describeSysVSharedMemory(await readSysVSharedMemoryTable(), isAlive);
+    throw new Error(pressure ? `${message}\n${pressure}` : message);
+  }
 }
 
 /** Creates the database when it does not exist yet. */

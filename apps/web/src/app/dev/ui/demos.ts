@@ -30,6 +30,7 @@ import NumberFieldDemo from "@/components/ui/number-field.demo";
 import PaginationDemo from "@/components/ui/pagination.demo";
 import PopoverDemo from "@/components/ui/popover.demo";
 import RadioGroupDemo from "@/components/ui/radio-group.demo";
+import SearchableSelectDemo from "@/components/ui/searchable-select.demo";
 import SelectDemo from "@/components/ui/select.demo";
 import SkeletonDemo from "@/components/ui/skeleton.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
@@ -65,6 +66,7 @@ export const demos: Record<string, React.ComponentType> = {
   "radio-group": RadioGroupDemo,
   "date-picker": DatePickerDemo,
   "combo-box": ComboBoxDemo,
+  "searchable-select": SearchableSelectDemo,
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,

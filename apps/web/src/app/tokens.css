@@ -234,8 +234,29 @@
   --size-filter-editor-inset: 23px;
   --size-filter-editor-top-gap: 8px;
   --size-filter-editor-value-gap: 7px;
+  --size-filter-date-range-gap: 3px;
+  --size-filter-date-unit-width: 80px;
+  --size-filter-role-group-width: 141px;
+  --size-filter-role-group-height: 25px;
+  --size-filter-role-group-search-width: 112px;
+  --size-filter-role-group-search-height: 16px;
+  --size-filter-address-width: 144px;
+  --size-filter-address-location-height: 25px;
+  --size-filter-address-radius-height: 54px;
   --size-filter-control-height: 24px;
-  --size-filter-contains-width: 79px;
+  --size-filter-operator-gap: 5.5px;
+  --size-filter-range-width: 100px;
+  --size-filter-currency-range-height: 25px;
+  --size-filter-state-width: 81px;
+  --size-filter-choice-width: 170px;
+  --size-filter-choice-height: 220px;
+  --size-filter-choice-row-height: 28px;
+  --size-filter-user-width: 327px;
+  --size-filter-user-type-width: 77px;
+  --size-filter-user-search-width: 229px;
+  --size-filter-user-header-height: 28px;
+  --size-filter-user-body-height: 174px;
+  --size-filter-user-row-height: 41px;
   --size-filter-control-min-width: 36px;
   --radius-filter-control: 3px;
   --size-filter-operator-list-width: 146px;
@@ -304,13 +325,30 @@
   --size-detail-details-label-width: 129px;
   --size-detail-details-label-value-gap: 36.5px;
   --size-detail-details-row-pitch: 44px;
+  --size-detail-details-wrapped-row-pitch: 60px;
   --size-detail-column-width: 433.5px;
   --size-detail-business-min-height: 287px;
   --size-detail-business-padding-block-start: 42.75px;
   --size-detail-business-padding-block-end: 21.75px;
   --size-detail-details-toggle-padding-block: 12.75px;
-  --size-detail-details-sections-margin-top: 39px;
-  --size-detail-section-title-margin-block: 16px 8px;
+  --size-detail-details-sections-margin-top: 18.25px;
+  --size-detail-section-title-margin-block: 0 32.5px;
+  --size-detail-inter-section-gap: 26px;
+  --size-detail-audit-line-pitch: 18.5px;
+  --size-detail-multiline-line-pitch: 15.5px;
+  --size-detail-wrapped-link-line-pitch: 19.5px;
+  --size-detail-cap-height: 10.5px;
+  --size-detail-card-width-rail-hidden: 1126px;
+  --size-detail-column-width-rail-hidden: 543px;
+  --size-detail-rail-hidden-value-width: 273px;
+  --size-detail-field-pencil-inset-from-card-end: 113px;
+  --size-detail-field-pencil-ink-left-rail-hidden: 1000.5px;
+  --size-detail-field-pencil-rail-hidden-translate-x: 10.5px;
+  --size-detail-description-label-width: 73px;
+  --size-detail-description-label-extend: 39px;
+  --size-detail-field-pencil-size: 11.5px;
+  --size-detail-field-pencil-aa-size: 12.5px;
+  --size-detail-field-pencil-above-label-cap: 1.5px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
@@ -390,6 +428,12 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  --size-popover-sort-field-dropdown-width: 380px;
+  --size-popover-sort-field-dropdown-height: 268px;
+  /* 268 − 222, the band between the panel top and the list top in the Sort By field dropdown row. */
+  --size-popover-sort-field-dropdown-list-offset: 46px;
+  /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
+  --size-popover-sort-field-dropdown-list-height: 220px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;
