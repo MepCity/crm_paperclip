@@ -208,6 +208,7 @@ export function decodeModule(
     })),
   };
 }
+const criteriaUnits = new Set(["days", "weeks", "months"]);
 const criteriaPeriods = new Set<CriteriaPeriod>([
   "TOMORROW",
   "YESTERDAY",
@@ -221,28 +222,55 @@ const criteriaPeriods = new Set<CriteriaPeriod>([
   "PREVIOUS_YEAR",
   "NEXT_YEAR",
 ]);
+function ageDueWirePrefix(token: "AGEINDAYS" | "DUEINDAYS", unit: string): string {
+  if (token === "AGEINDAYS") {
+    if (unit === "weeks") return "AGEINWEEKS";
+    if (unit === "months") return "AGEINMONTHS";
+    return "AGEINDAYS";
+  }
+  if (unit === "weeks") return "DUEINWEEKS";
+  if (unit === "months") return "DUEINMONTHS";
+  return "DUEINDAYS";
+}
+
 function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
   if (typeof value === "object" && value !== null && "token" in value) {
-    const expectedKeys = value.token === "CURRENTUSER" || value.token === "TODAY" ? 1 : 2;
-    if (Object.keys(value).length !== expectedKeys)
-      return invalid("filters", "Invalid token shape.");
     switch (value.token) {
       case "CURRENTUSER":
+        if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return { name: `\${CURRENTUSER}` };
       case "TODAY":
+        if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return `\${TODAY}`;
       case "AGEINDAYS":
+      case "DUEINDAYS": {
+        const keys = Object.keys(value);
+        if (keys.length < 2 || keys.length > 3) return invalid("filters", "Invalid token shape.");
         if (!Number.isInteger(value.offset) || value.offset < 0)
           return invalid("filters", "Invalid day offset.");
-        return `\${AGEINDAYS}+${value.offset}`;
+        const unit = value.unit ?? "days";
+        if (value.unit !== undefined && !criteriaUnits.has(value.unit))
+          return invalid("filters", "Unknown unit.");
+        return `\${${ageDueWirePrefix(value.token, unit)}}+${value.offset}`;
+      }
       case "CATEGORY":
+        if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
         if (typeof value.name !== "string") return invalid("filters", "Invalid category token.");
         return `\${CATEGORY.${value.name}}`;
-      case "DUEINDAYS":
-        if (!Number.isInteger(value.offset) || value.offset < 0)
-          return invalid("filters", "Invalid day offset.");
-        return `\${DUEINDAYS}+${value.offset}`;
+      case "RELATIVE": {
+        if (Object.keys(value).length !== 4) return invalid("filters", "Invalid token shape.");
+        if (value.direction !== "previous" && value.direction !== "next")
+          return invalid("filters", "Unknown direction.");
+        if (!Number.isInteger(value.count) || value.count < 1)
+          return invalid("filters", "Invalid relative count.");
+        if (!criteriaUnits.has(value.unit)) return invalid("filters", "Unknown unit.");
+        const segment = value.direction === "previous" ? "PREVIOUS" : "NEXT";
+        const unitWire =
+          value.unit === "days" ? "DAYS" : value.unit === "weeks" ? "WEEKS" : "MONTHS";
+        return `\${${segment}.${unitWire}}+${value.count}`;
+      }
       case "PERIOD":
+        if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
         if (!criteriaPeriods.has(value.name)) return invalid("filters", "Unknown period.");
         return `\${PERIOD.${value.name}}`;
       default:
@@ -262,10 +290,55 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
     const due = /^\$\{DUEINDAYS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
     if (due?.[0] === value && Number.isInteger(Number(due[1])) && Number(due[1]) >= 0)
       return { token: "DUEINDAYS", offset: Number(due[1]) };
+    const ageWeeks = /^\$\{AGEINWEEKS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (
+      ageWeeks?.[0] === value &&
+      Number.isInteger(Number(ageWeeks[1])) &&
+      Number(ageWeeks[1]) >= 0
+    )
+      return { token: "AGEINDAYS", offset: Number(ageWeeks[1]), unit: "weeks" };
+    const ageMonths = /^\$\{AGEINMONTHS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (
+      ageMonths?.[0] === value &&
+      Number.isInteger(Number(ageMonths[1])) &&
+      Number(ageMonths[1]) >= 0
+    )
+      return { token: "AGEINDAYS", offset: Number(ageMonths[1]), unit: "months" };
+    const dueWeeks = /^\$\{DUEINWEEKS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (
+      dueWeeks?.[0] === value &&
+      Number.isInteger(Number(dueWeeks[1])) &&
+      Number(dueWeeks[1]) >= 0
+    )
+      return { token: "DUEINDAYS", offset: Number(dueWeeks[1]), unit: "weeks" };
+    const dueMonths = /^\$\{DUEINMONTHS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (
+      dueMonths?.[0] === value &&
+      Number.isInteger(Number(dueMonths[1])) &&
+      Number(dueMonths[1]) >= 0
+    )
+      return { token: "DUEINDAYS", offset: Number(dueMonths[1]), unit: "months" };
+    const relative = /^\$\{(PREVIOUS|NEXT)\.(DAYS|WEEKS|MONTHS)\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
+    if (relative?.[0] === value) {
+      const count = Number(relative[3]);
+      if (!Number.isInteger(count) || count < 1) return invalid("filters", "Unknown token.");
+      const direction = relative[1] === "PREVIOUS" ? "previous" : "next";
+      const unit = relative[2] === "DAYS" ? "days" : relative[2] === "WEEKS" ? "weeks" : "months";
+      return { token: "RELATIVE", direction, count, unit };
+    }
     const period = /^\$\{PERIOD\.([^{}]+)\}$/.exec(value);
     if (period && criteriaPeriods.has(period[1] as CriteriaPeriod))
       return { token: "PERIOD", name: period[1] as CriteriaPeriod };
-    if (value.startsWith(`\${PERIOD.`) || value.startsWith(`\${DUEINDAYS}`))
+    if (
+      value.startsWith(`\${PERIOD.`) ||
+      value.startsWith(`\${DUEINDAYS}`) ||
+      value.startsWith(`\${AGEINWEEKS}`) ||
+      value.startsWith(`\${AGEINMONTHS}`) ||
+      value.startsWith(`\${DUEINWEEKS}`) ||
+      value.startsWith(`\${DUEINMONTHS}`) ||
+      value.startsWith(`\${PREVIOUS.`) ||
+      value.startsWith(`\${NEXT.`)
+    )
       return invalid("filters", "Unknown token.");
     if (
       /^\$\{[^{}]+\}$/.test(value) &&
