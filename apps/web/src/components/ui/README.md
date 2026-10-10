@@ -614,6 +614,9 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
 | `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-title-separator-gap` | `6px` | record-detail.md › Record header › hyphen and company ink gaps | from spec |
+| `--size-record-header-end` | `24px` | record-detail.md › Record header › Next chevron centred 35.5 px from header right edge | from spec |
+| `--radius-record-menu-row` | `5px` | record-detail.md › More Options menu › Rows and groups › highlighted row corners | from spec |
 | `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
 | `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
 | `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |

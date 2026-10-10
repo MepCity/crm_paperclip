@@ -190,6 +190,61 @@ function RecordFormCaret({ "aria-hidden": ariaHidden, ...props }: SVGProps<SVGSV
   );
 }
 
+/** Left arrow with shaft for record header Back (ink about 16 × 13.5 px). */
+function ArrowLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 13.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M15.25 6.75H0.75M0.75 6.75 4.5 0.75M0.75 6.75 4.5 12.75" />
+    </svg>
+  );
+}
+
+/** Record header previous/next chevron ink target 7 × 13 px in a 24 × 24 box. */
+function RecordHeaderChevronLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M14 6.25 8.5 12 14 17.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RecordHeaderChevronRight(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M10 6.25 15.5 12 10 17.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function RecordChevron(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -291,8 +346,11 @@ export const Icons = {
   warning: AlertTriangle,
   calendar: Calendar,
   chevronDown: ChevronDown,
+  arrowLeft: ArrowLeft,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  recordHeaderChevronLeft: RecordHeaderChevronLeft,
+  recordHeaderChevronRight: RecordHeaderChevronRight,
   close: X,
   filter: FilterIcon,
   sort: SortIcon,
