@@ -257,15 +257,6 @@ function ModuleListScreenLoaded({
       page: pageData.page,
       perPage: pageData.perPage,
       recordIds: pageData.records.map((record) => record.id),
-      listQuery: {
-        viewId: listQuery.viewId,
-        page: listQuery.page,
-        perPage: listQuery.perPage,
-        sort: listQuery.sort,
-        filters: listQuery.filters,
-        search: listQuery.search,
-        fields: listQuery.fields,
-      },
     });
   }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
 
