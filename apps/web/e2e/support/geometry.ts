@@ -1,4 +1,4 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export type InkBox = { left: number; top: number; width: number; height: number };
 
@@ -168,47 +168,88 @@ export async function svgStrokeInclusiveInkSize(svg: Locator) {
   });
 }
 
-/** Measure the browser's PNG pixels. DOM ranges only select the crop, never ink edges.
- * Exact foreground RGB is solid ink; every non-background pixel includes antialiasing.
- * Crops include a margin so overflowing SVG ink is not clipped by the measurement.
+type InkScan = { box: InkBox | null; lineTops: number[] };
+type InkResult = { solid: InkScan; antialiased: InkScan; scale: number };
+
+/** Viewport-space rect plus the colours that define the ink of one measurement target. */
+type Probe = {
+  key: string;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  margin: number;
+  color: string;
+  background: string;
+  scrollX: number;
+  scrollY: number;
+};
+
+async function probeInkTarget(locator: Locator, key: string, icon: boolean): Promise<Probe> {
+  const probe = await locator.evaluate(
+    (node, { isIcon, inkKey }) => {
+      const element = isIcon ? (node.querySelector("svg") ?? node) : node;
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const rect = isIcon ? element.getBoundingClientRect() : range.getBoundingClientRect();
+      const color = getComputedStyle(node).color;
+      let ancestor: Element | null = node;
+      let background = "rgba(0, 0, 0, 0)";
+      while (ancestor && background === "rgba(0, 0, 0, 0)") {
+        background = getComputedStyle(ancestor).backgroundColor;
+        ancestor = ancestor.parentElement;
+      }
+      return {
+        key: inkKey,
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        margin: isIcon ? 2 : 0,
+        scrollX,
+        scrollY,
+        color,
+        background,
+      };
+    },
+    { isIcon: icon, inkKey: key },
+  );
+  return probe;
+}
+
+/** Screenshot the union of the probes once and scan each target inside its own window.
+ * Every probe shares one crop origin and one paint phase, so offsets between targets are
+ * common-mode: content moving above the row cannot change them.
  */
-export async function pageRasterInk(locator: Locator, icon = false) {
-  const page = locator.page();
-  await page.evaluate(() => document.fonts.ready);
-  const originalScroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
-  await locator.scrollIntoViewIfNeeded();
-  if (icon) await locator.hover();
-  const crop = await locator.evaluate((node, isIcon) => {
-    const element = isIcon ? (node.querySelector("svg") ?? node) : node;
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const rect = isIcon ? element.getBoundingClientRect() : range.getBoundingClientRect();
-    const color = getComputedStyle(node).color;
-    let ancestor: Element | null = node;
-    let background = "rgba(0, 0, 0, 0)";
-    while (ancestor && background === "rgba(0, 0, 0, 0)") {
-      background = getComputedStyle(ancestor).backgroundColor;
-      ancestor = ancestor.parentElement;
+async function rasterInkProbes(
+  page: Page,
+  probes: Probe[],
+  originalScroll: { x: number; y: number },
+): Promise<Record<string, InkResult>> {
+  for (const probe of probes) {
+    if (probe.scrollY !== probes[0]?.scrollY || probe.scrollX !== probes[0]?.scrollX) {
+      throw new Error(`pageRasterInk: ${probe.key} scrolled away during the measurement`);
     }
-    const margin = isIcon ? 2 : 0;
-    return {
-      x: Math.floor(rect.left - margin),
-      y: Math.floor(rect.top - margin),
-      width: Math.ceil(rect.right + margin) - Math.floor(rect.left - margin),
-      height: Math.ceil(rect.bottom + margin) - Math.floor(rect.top - margin),
-      scrollX,
-      scrollY,
-      color,
-      background,
-    };
-  }, icon);
+  }
+  const left = Math.min(...probes.map((probe) => probe.left - probe.margin));
+  const top = Math.min(...probes.map((probe) => probe.top - probe.margin));
+  const right = Math.max(...probes.map((probe) => probe.right + probe.margin));
+  const bottom = Math.max(...probes.map((probe) => probe.bottom + probe.margin));
+  const crop = {
+    x: Math.floor(left),
+    y: Math.floor(top),
+    width: Math.ceil(right) - Math.floor(left),
+    height: Math.ceil(bottom) - Math.floor(top),
+    scrollX: probes[0]?.scrollX ?? 0,
+    scrollY: probes[0]?.scrollY ?? 0,
+  };
   const png = await page.screenshot({
     fullPage: false,
     clip: { x: crop.x, y: crop.y, width: crop.width, height: crop.height },
     animations: "disabled",
   });
-  const result = await page.evaluate(
-    async ({ crop, png, originalScroll }) => {
+  return page.evaluate(
+    async ({ crop, probes, png, originalScroll }) => {
       const image = new Image();
       image.src = `data:image/png;base64,${png}`;
       await image.decode();
@@ -220,52 +261,106 @@ export async function pageRasterInk(locator: Locator, icon = false) {
       ctx.drawImage(image, 0, 0);
       const pixels = ctx.getImageData(0, 0, image.width, image.height).data;
       const rgb = (color: string) => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
-      const foreground = rgb(crop.color);
-      const background = rgb(crop.background);
       const scale = image.width / crop.width;
-      const bounds = (solid: boolean) => {
-        let left = Infinity,
-          top = Infinity,
-          right = -Infinity,
-          bottom = -Infinity;
-        const rows: number[] = [];
-        for (let y = 0; y < image.height; y++) {
-          let occupied = false;
-          for (let x = 0; x < image.width; x++) {
-            const offset = (y * image.width + x) * 4;
-            const match = solid
-              ? foreground.every((value, channel) => pixels[offset + channel] === value)
-              : background.some((value, channel) => pixels[offset + channel] !== value);
-            if (!match) continue;
-            occupied = true;
-            left = Math.min(left, x);
-            right = Math.max(right, x);
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y);
+      const results: Record<string, InkResult> = {};
+      for (const probe of probes) {
+        const foreground = rgb(probe.color);
+        const background = rgb(probe.background);
+        const xStart = Math.max(0, (Math.floor(probe.left - probe.margin) - crop.x) * scale);
+        const xEnd = Math.min(
+          image.width,
+          (Math.ceil(probe.right + probe.margin) - crop.x) * scale,
+        );
+        const yStart = Math.max(0, (Math.floor(probe.top - probe.margin) - crop.y) * scale);
+        const yEnd = Math.min(
+          image.height,
+          (Math.ceil(probe.bottom + probe.margin) - crop.y) * scale,
+        );
+        const bounds = (solid: boolean) => {
+          let left = Infinity,
+            top = Infinity,
+            right = -Infinity,
+            bottom = -Infinity;
+          const rows: number[] = [];
+          for (let y = yStart; y < yEnd; y++) {
+            let occupied = false;
+            for (let x = xStart; x < xEnd; x++) {
+              const offset = (y * image.width + x) * 4;
+              const match = solid
+                ? foreground.every((value, channel) => pixels[offset + channel] === value)
+                : background.some((value, channel) => pixels[offset + channel] !== value);
+              if (!match) continue;
+              occupied = true;
+              left = Math.min(left, x);
+              right = Math.max(right, x);
+              top = Math.min(top, y);
+              bottom = Math.max(bottom, y);
+            }
+            if (occupied) rows.push(y);
           }
-          if (occupied) rows.push(y);
-        }
-        const lineTops = rows
-          .filter((y, index) => index === 0 || y > (rows[index - 1] ?? 0) + 1)
-          .map((y) => crop.y + crop.scrollY - originalScroll.y + y / scale);
-        return {
-          box: Number.isFinite(left)
-            ? {
-                left: crop.x + crop.scrollX - originalScroll.x + left / scale,
-                top: crop.y + crop.scrollY - originalScroll.y + top / scale,
-                width: (right - left + 1) / scale,
-                height: (bottom - top + 1) / scale,
-              }
-            : null,
-          lineTops,
+          const lineTops = rows
+            .filter((y, index) => index === 0 || y > (rows[index - 1] ?? 0) + 1)
+            .map((y) => crop.y + crop.scrollY - originalScroll.y + y / scale);
+          return {
+            box: Number.isFinite(left)
+              ? {
+                  left: crop.x + crop.scrollX - originalScroll.x + left / scale,
+                  top: crop.y + crop.scrollY - originalScroll.y + top / scale,
+                  width: (right - left + 1) / scale,
+                  height: (bottom - top + 1) / scale,
+                }
+              : null,
+            lineTops,
+          };
         };
-      };
-      return { solid: bounds(true), antialiased: bounds(false), scale };
+        results[probe.key] = { solid: bounds(true), antialiased: bounds(false), scale };
+      }
+      return results;
     },
-    { crop, png: png.toString("base64"), originalScroll },
+    { crop, probes, png: png.toString("base64"), originalScroll },
   );
+}
+
+/** Measure one target in its own crop, as it was measured before MEP-269. Cross-target offsets
+ * go through `pageRasterInkShared`, which reads both edges from a single paint.
+ */
+export async function pageRasterInk(locator: Locator, icon = false): Promise<InkResult> {
+  const page = locator.page();
+  await page.evaluate(() => document.fonts.ready);
+  const originalScroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+  await locator.scrollIntoViewIfNeeded();
+  if (icon) await locator.hover();
+  const probe = await probeInkTarget(locator, "ink", icon);
+  const results = await rasterInkProbes(page, [probe], originalScroll);
   await page.evaluate(({ x, y }) => scrollTo(x, y), originalScroll);
+  const result = results.ink;
+  if (!result) throw new Error("pageRasterInk: measurement missing");
   return result;
+}
+
+/** Targets measured in a single screenshot, so both edges come from one paint and one crop
+ * origin. Keys are the names specs assert on; icon targets are hovered by the helper after the
+ * scroll settles, because their ink is only painted while the affordance is visible.
+ */
+export async function pageRasterInkShared(
+  anchor: Locator,
+  targets: Record<string, { locator: Locator; icon?: boolean }>,
+): Promise<Record<string, InkResult>> {
+  const page = anchor.page();
+  await page.evaluate(() => document.fonts.ready);
+  const originalScroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+  await anchor.scrollIntoViewIfNeeded();
+  for (const target of Object.values(targets)) {
+    if (target.icon) await target.locator.hover();
+  }
+  const probes = await Promise.all(
+    Object.entries(targets).map(([key, target]) =>
+      probeInkTarget(target.locator, key, target.icon ?? false),
+    ),
+  );
+  const results = await rasterInkProbes(page, probes, originalScroll);
+  await page.evaluate(({ x, y }) => scrollTo(x, y), originalScroll);
+  return results;
 }
 
 export async function textSolidInkBand(locator: Locator): Promise<InkBox> {
