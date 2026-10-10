@@ -246,6 +246,7 @@ const TYPE_ROLES = [
 const FONT_TOKENS = ["--font-sans", "--font-mono"] as const;
 
 const RADIUS_TOKENS = [
+  "--radius-detail-inline-control",
   "--radius-record-menu",
   "--radius-status-control",
   "--radius-sm",
@@ -267,6 +268,26 @@ const SHADOW_TOKENS = [
 ] as const;
 
 const SIZE_GROUPS = [
+  {
+    label: "Inline record editing",
+    tokens: [
+      "--size-detail-inline-width",
+      "--size-detail-inline-value-inset",
+      "--size-detail-inline-halo",
+      "--size-detail-inline-action-size",
+      "--size-detail-inline-action-icon",
+      "--size-detail-inline-action-inset",
+      "--size-detail-inline-action-gap",
+      "--size-detail-inline-trailing-inset",
+      "--size-detail-inline-list-padding",
+      "--size-detail-inline-option-height",
+      "--size-detail-inline-check-size",
+      "--size-detail-inline-check-height",
+      "--size-detail-inline-save-check-width",
+      "--size-detail-inline-save-check-height",
+      "--size-detail-inline-check-gap",
+    ],
+  },
   {
     label: "Record detail",
     tokens: [
