@@ -1,3 +1,4 @@
+import { describeSysVSharedMemory, parseSysVSharedMemoryTable } from "@crm/db/shared-memory";
 import { describe, expect, it, vi } from "vitest";
 import { sweep } from "./ipc-sweep";
 
@@ -19,6 +20,31 @@ function fixture(tables = [header + row]) {
   return { run, log, platform: "darwin", owner: "test-owner", now, dead: () => true };
 }
 describe("ipc sweep", () => {
+  it("matches the startup report count including the minimum age boundary", () => {
+    const table =
+      header +
+      [
+        row,
+        row.replace("m 987", "m 988").replace("10:00:00", "10:05:00"),
+        row.replace("m 987", "m 989").replace("10:00:00", "10:05:01"),
+        row.replace("m 987", "m 990").replaceAll("test-owner", "other-owner"),
+        row.replace("m 987", "m 991").replace("0 56", "1 56"),
+        row.replace("m 987", "m 992").replace("0 56", "0 4096"),
+        row.replace("m 987", "m 993").replaceAll("765", "766"),
+      ].join("");
+    const options = { ...fixture([table]), dead: (pid: number) => pid === 765 };
+    expect(sweep(options)).toBe(0);
+    const candidates = options.log.mock.calls.filter(([line]) => line.includes(": candidate:"));
+    expect(candidates).toHaveLength(2);
+    const report = describeSysVSharedMemory(
+      parseSysVSharedMemoryTable(table, now()),
+      (pid) => !options.dead(pid),
+      { owner: options.owner, now: now() },
+    );
+    expect(report).toContain("7 kernel IDs in use");
+    expect(report).toContain(`${candidates.length} stale`);
+  });
+
   it("defaults to dry run and never executes a removal", () => {
     const options = fixture();
     expect(sweep(options)).toBe(0);

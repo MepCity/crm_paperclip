@@ -172,18 +172,24 @@ export function FilterPanel({
                     selectedItems.flatMap((item) => {
                       if (!item.editor) return [];
                       const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
-                      return [
-                        {
-                          itemId: item.id,
-                          operatorId: draft.operatorId,
-                          value:
-                            draftOperator(item.editor, draft)?.control === "none"
-                              ? null
-                              : typeof draft.value === "string"
-                                ? draft.value.trim()
-                                : draft.value,
-                        },
-                      ];
+                      const control = draftOperator(item.editor, draft)?.control;
+                      const applied: {
+                        itemId: string;
+                        operatorId: typeof draft.operatorId;
+                        value: typeof draft.value;
+                        daysUnit?: typeof draft.daysUnit;
+                      } = {
+                        itemId: item.id,
+                        operatorId: draft.operatorId,
+                        value:
+                          control === "none"
+                            ? null
+                            : typeof draft.value === "string"
+                              ? draft.value.trim()
+                              : draft.value,
+                      };
+                      if (control === "days") applied.daysUnit = draft.daysUnit ?? "days";
+                      return [applied];
                     }),
                   );
                 }}

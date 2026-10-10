@@ -21,8 +21,11 @@ type CrmRequest = { method: string; pathname: string; searchParams: URLSearchPar
 const DETAIL_FROM_LIST_REQUESTS: readonly {
   method: string;
   path: RegExp;
-  queryNames: readonly string[] | null;
-}[] = [{ method: "GET", path: /^\/crm\/v2\.2\/Leads\/[^/]+$/, queryNames: null }];
+  queryNames: readonly string[];
+}[] = [
+  { method: "GET", path: /^\/crm\/v2\.2\/Leads\/[^/]+$/, queryNames: [] },
+  { method: "GET", path: /^\/crm\/v9\/users$/, queryNames: ["type", "page", "per_page"] },
+];
 
 function requireBox(box: ElementBox | null, label = "element"): ElementBox {
   if (!box) throw new Error(`Expected ${label} box.`);
@@ -31,6 +34,10 @@ function requireBox(box: ElementBox | null, label = "element"): ElementBox {
 
 function expectEdge(value: number, expected: number, tolerance = 1) {
   expect(Math.abs(value - expected)).toBeLessThanOrEqual(tolerance);
+}
+
+function expectSpecEdge(value: number, expected: number) {
+  expectEdge(value, expected, 0.5);
 }
 
 function expectListAddress(
@@ -60,11 +67,26 @@ function queryNameSet(params: URLSearchParams): Set<string> {
 function matchesDetailSpec(request: CrmRequest, spec: (typeof DETAIL_FROM_LIST_REQUESTS)[number]) {
   if (request.method !== spec.method) return false;
   if (!spec.path.test(request.pathname)) return false;
-  if (spec.queryNames === null) return true;
   const expected = [...spec.queryNames];
   const actual = [...queryNameSet(request.searchParams)].sort();
   const expectedSorted = [...expected].sort();
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
+}
+
+function assertDetailFromListRequests(requests: CrmRequest[]) {
+  for (const request of requests) {
+    expect(
+      DETAIL_FROM_LIST_REQUESTS.some((spec) => matchesDetailSpec(request, spec)),
+      `Unexpected CRM request: ${request.method} ${request.pathname}`,
+    ).toBe(true);
+  }
+  for (const spec of DETAIL_FROM_LIST_REQUESTS) {
+    expect(
+      requests.some((request) => matchesDetailSpec(request, spec)),
+      `Expected request for ${spec.method} ${spec.path}`,
+    ).toBe(true);
+  }
+  expect(requests).toHaveLength(DETAIL_FROM_LIST_REQUESTS.length);
 }
 
 async function openFirstLeadFromList(
@@ -74,7 +96,9 @@ async function openFirstLeadFromList(
 ) {
   const listUrl = `${moduleListDefaultPath(orgSlug, LEADS_MODULE)}${listQuery}`;
   await page.goto(listUrl);
-  await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible({
+    timeout: 15_000,
+  });
   const link = page.locator("table tbody tr").first().getByRole("link").first();
   const name = await link.innerText();
   const href = await link.getAttribute("href");
@@ -109,6 +133,7 @@ test.describe("Lead record detail page", () => {
     const listParams = { page: "2", per_page: "10" };
     const backHref = await back.getAttribute("href");
     if (!backHref) throw new Error("Expected Back link href.");
+    expect(backHref).toBe(`${listPath}?page=2&per_page=10`);
     expectListAddress(backHref, page.url(), listPath, listParams);
     await Promise.all([page.waitForURL(/\/tab\/Leads\/list/), back.click()]);
     expectListAddress(page.url(), page.url(), listPath, listParams);
@@ -128,6 +153,18 @@ test.describe("Lead record detail page", () => {
     await expect(recordTitle).not.toHaveText(titleOnFirst);
     await page.getByRole("link", { name: "Previous Record" }).click();
     await expect(recordTitle).toHaveText(titleOnFirst);
+  });
+
+  test("Next Record is disabled on the last row of the list page", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = `${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`;
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const lastLink = page.locator("table tbody tr").last().getByRole("link").first();
+    await lastLink.click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Next Record" })).toBeDisabled();
   });
 
   test("Edit links to the edit route", async ({ page }) => {
@@ -156,18 +193,21 @@ test.describe("Lead record detail page", () => {
   test("loads the record through ADR get on navigation from list", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
+    const listUrl = moduleListDefaultPath(org.slug, LEADS_MODULE);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const link = page.locator("table tbody tr").first().getByRole("link").first();
     const seen: CrmRequest[] = [];
     const onRequest = (request: import("@playwright/test").Request) => {
       const parsed = parseCrmRequest(request.url(), request.method());
       if (parsed) seen.push(parsed);
     };
     page.on("request", onRequest);
-    await openFirstLeadFromList(page, org.slug);
+    await link.click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
     page.off("request", onRequest);
-    const afterNav = seen.filter((item) =>
-      DETAIL_FROM_LIST_REQUESTS.some((spec) => matchesDetailSpec(item, spec)),
-    );
-    expect(afterNav.length).toBeGreaterThan(0);
+    assertDetailFromListRequests(seen);
+    expect(seen.some((item) => item.pathname.includes("/settings/custom_views"))).toBe(false);
   });
 
   test("meets accessibility rules on a populated record", async ({ page }) => {
@@ -177,27 +217,92 @@ test.describe("Lead record detail page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("updates lead status from the ribbon and keeps cards in sync after reload", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const ribbon = page.locator("[data-status-ribbon]");
+    await expect(ribbon).toBeVisible();
+    const updates: { method: string; body: string }[] = [];
+    page.on("request", (request) => {
+      if (request.method() !== "PUT") return;
+      if (!request.url().includes("/crm/v") || !request.url().includes("/Leads/")) return;
+      updates.push({ method: request.method(), body: request.postData() ?? "" });
+    });
+    await ribbon.getByRole("button", { name: "Choose lead status" }).click();
+    await ribbon.page().getByRole("menuitemradio", { name: "Contacted", exact: true }).click();
+    await expect.poll(() => updates.length).toBe(1);
+    expect(updates[0]?.body).toContain("Lead_Status");
+    expect(updates[0]?.body).not.toMatch(/"(Company|Email|Last_Name)"/);
+    const frame = page.locator("[data-record-frame]");
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Contacted");
+    await expect(frame.getByRole("region", { name: "Details card" })).toContainText("Contacted");
+    await page.reload();
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Contacted");
+    await ribbon.getByRole("button", { name: "Choose rejected lead status" }).click();
+    await page.getByRole("menuitemradio", { name: "Junk Lead" }).click();
+    await expect.poll(() => updates.length).toBe(2);
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Junk Lead");
+    await expect(frame.getByRole("region", { name: "Details card" })).toContainText("Junk Lead");
+  });
+
   test("layout matches record-detail visual layout at 1470×835", async ({ page }) => {
     const CARD_WIDTH = 906;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
     const BUSINESS_LABEL_END = 173.5;
     const BUSINESS_VALUE_START = 219;
+    const SPEC = {
+      headerYTop: 50,
+      headerYBottom: 123,
+      railXLeft: 320,
+      railXRight: 540,
+      canvasXLeft: 540,
+      canvasXRight: 1470,
+      cardXLeft: 552,
+      cardXRight: 1458,
+      detailsLeftLabelEnd: 701,
+      detailsRightLabelEnd: 1134.5,
+      detailsLeftValueStart: 737.5,
+      detailsRightValueStart: 1170.5,
+    };
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openFirstLeadFromList(page, org.slug);
     await page.evaluate(() => document.fonts.ready);
 
     const frame = page.locator("[data-record-frame]");
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon");
+    expect(Math.abs(statusBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
+    if (process.env.LEAD_DETAIL_ARTIFACT_DIR) {
+      await mkdir(process.env.LEAD_DETAIL_ARTIFACT_DIR, { recursive: true });
+      await page.screenshot({
+        path: join(process.env.LEAD_DETAIL_ARTIFACT_DIR, "lead-detail-status-ribbon.png"),
+      });
+    }
     const header = frame.locator("[data-record-header]");
     await expect(header).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const headerBox = requireBox(await header.boundingBox(), "record header");
-    expectEdge(headerBox.height, 73);
+    expectSpecEdge(headerBox.y, SPEC.headerYTop);
+    expectSpecEdge(headerBox.y + headerBox.height, SPEC.headerYBottom);
+    expectSpecEdge(headerBox.height, 73);
 
     const portrait = header.locator("[data-record-portrait]");
     const portraitBox = requireBox(await portrait.boundingBox(), "portrait");
     expectEdge(portraitBox.width, 48);
     expectEdge(portraitBox.x - headerBox.x, 52);
 
-    await expect(frame.locator("[data-record-rail]")).toHaveCSS("width", "220px");
+    const rail = frame.locator("[data-record-rail]");
+    const railBox = requireBox(await rail.boundingBox(), "related-list rail");
+    expectSpecEdge(railBox.x, SPEC.railXLeft);
+    expectSpecEdge(railBox.x + railBox.width, SPEC.railXRight);
+    await expect(rail).toHaveCSS("width", "220px");
+
     const tabRow = frame.locator("[data-record-tab-row]");
     await expect(tabRow.locator("..")).toHaveCSS("background-color", "rgb(238, 241, 249)");
     await expectType(
@@ -208,21 +313,77 @@ test.describe("Lead record detail page", () => {
     );
     await expect(frame.locator("[data-record-rail-control]")).toHaveCSS("width", "36px");
 
+    const scroller = frame.locator("[data-record-scroller]");
+    const scrollerBox = requireBox(await scroller.boundingBox(), "record scroller");
+    expectSpecEdge(scrollerBox.x, SPEC.canvasXLeft);
+    expectSpecEdge(scrollerBox.x + scrollerBox.width, SPEC.canvasXRight);
+
     const businessCard = frame.getByRole("region", { name: "Business card" });
     const businessBox = requireBox(await businessCard.boundingBox(), "business card");
-    expect(Math.abs(businessBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectSpecEdge(businessBox.x, SPEC.cardXLeft);
+    expectSpecEdge(businessBox.x + businessBox.width, SPEC.cardXRight);
+    expect(Math.abs(businessBox.width - CARD_WIDTH)).toBeLessThanOrEqual(0.5);
     const businessLabel = businessCard.locator(".detail-field-label").first();
     const businessValue = businessCard.locator(".detail-field-value").first();
     const labelBox = requireBox(await businessLabel.boundingBox(), "business label");
     const valueBox = requireBox(await businessValue.boundingBox(), "business value");
     expect(
       Math.abs(labelBox.x + labelBox.width - businessBox.x - BUSINESS_LABEL_END),
-    ).toBeLessThanOrEqual(1);
-    expect(Math.abs(valueBox.x - businessBox.x - BUSINESS_VALUE_START)).toBeLessThanOrEqual(1);
+    ).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(valueBox.x - businessBox.x - BUSINESS_VALUE_START)).toBeLessThanOrEqual(0.5);
 
     const detailsCard = frame.getByRole("region", { name: "Details card" });
     const detailsBox = requireBox(await detailsCard.boundingBox(), "details card");
-    expect(Math.abs(detailsBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectSpecEdge(detailsBox.x, SPEC.cardXLeft);
+    expectSpecEdge(detailsBox.x + detailsBox.width, SPEC.cardXRight);
+    expect(Math.abs(detailsBox.width - CARD_WIDTH)).toBeLessThanOrEqual(0.5);
+
+    const leftColumn = detailsCard.locator(".detail-column").first();
+    const rightColumn = detailsCard.locator(".detail-column").nth(1);
+    const leftDetailsLabel = leftColumn.locator(".detail-field-label").first();
+    const leftDetailsValue = leftColumn.locator(".detail-field-value").first();
+    const leadNameRow = rightColumn.locator(".detail-details-row", { hasText: "Lead Name" });
+    const rightDetailsLabel = leadNameRow.locator(".detail-field-label");
+    const rightDetailsValue = leadNameRow.locator(".detail-field-value");
+    const leftLabelBox = requireBox(await leftDetailsLabel.boundingBox(), "details left label");
+    const leftValueBox = requireBox(await leftDetailsValue.boundingBox(), "details left value");
+    const rightLabelBox = requireBox(await rightDetailsLabel.boundingBox(), "details right label");
+    const rightValueBox = requireBox(await rightDetailsValue.boundingBox(), "details right value");
+    expectSpecEdge(leftLabelBox.x + leftLabelBox.width, SPEC.detailsLeftLabelEnd);
+    expectSpecEdge(rightLabelBox.x + rightLabelBox.width, SPEC.detailsRightLabelEnd);
+    expectSpecEdge(leftValueBox.x, SPEC.detailsLeftValueStart);
+    expectSpecEdge(rightValueBox.x, SPEC.detailsRightValueStart);
+
+    const scratchDir = process.env.PAPERCLIP_TASK_SCRATCH_DIR;
+    if (scratchDir) {
+      await page.screenshot({
+        path: `${scratchDir}/mep-232-leads-detail-1470x835.png`,
+      });
+    }
+  });
+
+  test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
+    const HIDDEN_CARD_WIDTH = 1126;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
+    const CANVAS_LEFT = 332;
+    const CANVAS_RIGHT = 1458;
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    await page.evaluate(() => document.fonts.ready);
+
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("button", { name: "Hide Related List" }).click();
+    await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
+
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
+    expectEdge(statusBox.x, CANVAS_LEFT);
+    expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
+    expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 
   test("deletes a lead from More Options and returns to the list", async ({ page, pageErrors }) => {

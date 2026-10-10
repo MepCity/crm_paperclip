@@ -23,12 +23,14 @@ import {
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
+import { resolveLeadsDetailBackHref } from "@/lib/records/leads-detail-back-href";
 import {
   buildLeadsBusinessCardFields,
   buildLeadsDetailSections,
 } from "@/lib/records/leads-detail-sections";
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
+import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
 import {
   buildLeadsRecordMoreMenuGroups,
   LEADS_DELETE_CONFIRM_MESSAGE,
@@ -41,6 +43,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
@@ -88,15 +91,17 @@ export function LeadRecordScreen({
 }: LeadRecordScreenProps) {
   const router = useRouter();
   const [selectedTabId, setSelectedTabId] = useState("overview");
+  const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deleteRecords = useDeleteRecords(LEADS_MODULE);
   const listContext = useLeadsListContext(orgSlug);
+  const viewsQueryEnabled = listContext === null;
   const moduleQuery = useModule(LEADS_MODULE);
   const recordQuery = useRecord(LEADS_MODULE, recordId);
   const usersQuery = useUsers();
-  const viewsQuery = useViews(LEADS_MODULE);
+  const viewsQuery = useViews(LEADS_MODULE, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -124,11 +129,15 @@ export function LeadRecordScreen({
     return map;
   }, [usersQuery.data]);
 
+  const serverLeadStatus = recordQuery.data
+    ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
+    : undefined;
+
   const loading =
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
     usersQuery.isLoading ||
-    viewsQuery.isLoading ||
+    (viewsQueryEnabled && viewsQuery.isLoading) ||
     (!listContext && fallbackListQuery !== null && fallbackList.isLoading && !fallbackList.data);
 
   if (loading) return <LeadRecordLoadingShell />;
@@ -139,7 +148,7 @@ export function LeadRecordScreen({
   }
   if (moduleQuery.isError) throw moduleQuery.error;
   if (usersQuery.isError) throw usersQuery.error;
-  if (viewsQuery.isError) throw viewsQuery.error;
+  if (viewsQueryEnabled && viewsQuery.isError) throw viewsQuery.error;
   if (!listContext && fallbackListQuery && fallbackList.isError) throw fallbackList.error;
 
   const module = moduleQuery.data;
@@ -148,18 +157,24 @@ export function LeadRecordScreen({
 
   const orderedIds =
     listContext?.recordIds ?? fallbackList.data?.records.map((row) => row.id) ?? [];
-  const backHref =
-    listContext?.listHref ??
-    (fallbackViewId
-      ? paths.defaultList(orgSlug, LEADS_MODULE)
-      : paths.defaultList(orgSlug, LEADS_MODULE));
+  const backHref = resolveLeadsDetailBackHref(
+    listContext,
+    paths.defaultList(orgSlug, LEADS_MODULE),
+  );
 
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 
+  const statusField = module.fields.find((field) => field.apiName === "Lead_Status");
+  const serverStatus = serverLeadStatus ?? readLeadStatusValue(record.fields.Lead_Status);
+  const displayStatus = statusOverride !== undefined ? statusOverride : serverStatus;
+  const displayRecord = {
+    ...record,
+    fields: { ...record.fields, Lead_Status: displayStatus },
+  };
   const { title, subtitle } = leadsRecordHeaderIdentity(record);
   const lastUpdate = formatLeadsLastUpdateLabel(record, now, DEFAULT_FORMAT);
-  const businessFields = buildLeadsBusinessCardFields(module, record);
-  const detailSections = buildLeadsDetailSections(module, record);
+  const businessFields = buildLeadsBusinessCardFields(module, displayRecord);
+  const detailSections = buildLeadsDetailSections(module, displayRecord);
 
   function openDeleteDialog() {
     setDeleteError(null);
@@ -187,6 +202,15 @@ export function LeadRecordScreen({
 
   const overview = (
     <>
+      {statusField ? (
+        <LeadStatusRibbonSection
+          module={LEADS_MODULE}
+          recordId={recordId}
+          field={statusField}
+          value={displayStatus}
+          onValueChange={setStatusOverride}
+        />
+      ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
       <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
       <DetailsCard sections={detailSections} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
