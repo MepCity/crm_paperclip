@@ -116,14 +116,14 @@ async function selectFirstFixtureRecordOnCurrentListPage(
   await user.click(rowSelectCheckboxForRecordName(selectedName));
   await waitFor(() => {
     expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
-    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    expect(screen.getByText("1 Record Selected.")).toBeTruthy();
   });
   return { selectedName };
 }
 
 async function expectNoTableRowSelection() {
   await waitFor(() => {
-    expect(screen.queryByText("1 Record Selected")).toBeNull();
+    expect(screen.queryByText("1 Record Selected.")).toBeNull();
   });
   await expectAllTableRowSelectsUnchecked();
 }
@@ -291,7 +291,7 @@ describe("ModuleListScreen", () => {
     await user.click(rowSelectCheckboxForRecordName(selectedName));
     await waitFor(() => {
       expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
-      expect(screen.getByText("1 Record Selected")).toBeTruthy();
+      expect(screen.getByText("1 Record Selected.")).toBeTruthy();
     });
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
@@ -306,7 +306,7 @@ describe("ModuleListScreen", () => {
       expect(listQuery?.page).toBe(1);
     });
     await waitFor(() => {
-      expect(screen.queryByText("1 Record Selected")).toBeNull();
+      expect(screen.queryByText("1 Record Selected.")).toBeNull();
     });
     expectRowAbsentFromTable(selectedName);
     await expectAllTableRowSelectsUnchecked();
@@ -335,7 +335,7 @@ describe("ModuleListScreen", () => {
     await user.click(rowSelectCheckboxForRecordName(selectedName));
     await waitFor(() => {
       expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
-      expect(screen.getByText("1 Record Selected")).toBeTruthy();
+      expect(screen.getByText("1 Record Selected.")).toBeTruthy();
     });
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
@@ -345,7 +345,7 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
       expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
-      expect(screen.queryByText("1 Record Selected")).toBeNull();
+      expect(screen.queryByText("1 Record Selected.")).toBeNull();
       expect(recordIdsInDomTable()).toEqual(baselineIds);
     });
     expectRowSelectUnchecked(selectedName);
@@ -663,12 +663,12 @@ describe("ModuleListScreen", () => {
     const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
     await user.click(rowSelectCheckboxForRecordName(selectedName));
     expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
-    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    expect(screen.getByText("1 Record Selected.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByRole("button", { name: "Filter" })).toBeTruthy();
     expectRowSelectUnchecked(selectedName);
-    expect(screen.queryByText("1 Record Selected")).toBeNull();
+    expect(screen.queryByText("1 Record Selected.")).toBeNull();
   });
 
   it("clears selection when the list page changes", async () => {
@@ -688,7 +688,7 @@ describe("ModuleListScreen", () => {
     const firstRow = screen.getAllByRole("checkbox", { name: /Select / })[1];
     if (!firstRow) throw new Error("Expected a row checkbox.");
     await user.click(firstRow);
-    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    expect(screen.getByText("1 Record Selected.")).toBeTruthy();
     navigation.params = new URLSearchParams("page=2&per_page=10");
     rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />);
     await waitFor(() => {
@@ -725,7 +725,8 @@ describe("ModuleListScreen", () => {
     if (!first || !second) throw new Error("Expected row checkboxes.");
     await user.click(first);
     await user.click(second);
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = screen.getByRole("alertdialog");
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => {
@@ -760,14 +761,15 @@ describe("ModuleListScreen", () => {
     const firstRow = screen.getAllByRole("checkbox", { name: /Select / })[1];
     if (!firstRow) throw new Error("Expected a row checkbox.");
     await user.click(firstRow);
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = screen.getByRole("alertdialog");
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toBe("Server error");
     });
     expect(screen.getByRole("alertdialog")).toBeTruthy();
-    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    expect(screen.getByText("1 Record Selected.")).toBeTruthy();
   });
 
   it("navigates to the previous page when every row on the page is deleted", async () => {
@@ -784,7 +786,8 @@ describe("ModuleListScreen", () => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
     await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = screen.getByRole("alertdialog");
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => {
@@ -1047,14 +1050,14 @@ describe("ModuleListScreen", () => {
     if (!rowSelect) throw new Error("Expected a row selection checkbox.");
     await user.click(rowSelect);
     await waitFor(() => {
-      expect(screen.getByText("1 Record Selected")).toBeTruthy();
+      expect(screen.getByText("1 Record Selected.")).toBeTruthy();
     });
     await pickLetter(user, "L");
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
     });
     await waitFor(() => {
-      expect(screen.queryByText("1 Record Selected")).toBeNull();
+      expect(screen.queryByText("1 Record Selected.")).toBeNull();
     });
     expect(navigation.push).toHaveBeenCalled();
   });
