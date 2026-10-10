@@ -95,40 +95,40 @@ export async function releaseE2eLock(): Promise<void> {
 }
 
 export type AcquireE2eLockOptions = {
-  /** When true, stop waiting and return without holding the lock. */
+  /** When true, stop waiting and return `false` without holding the lock. */
   shouldStop?: () => boolean;
 };
 
 /**
- * Waits for the machine-wide E2E lock. Returns a release function, or a no-op when
- * locking is disabled, the wait budget expired, or lock setup failed.
+ * Waits for the machine-wide E2E lock. Returns `true` only when this process created the
+ * lock directory, so the caller knows whether it must release it. Returns `false` when
+ * locking is disabled, the wait was stopped, the budget expired, or lock setup failed;
+ * such a run continues without the lock.
  */
-export async function acquireE2eLock(
-  options?: AcquireE2eLockOptions,
-): Promise<() => Promise<void>> {
-  if (!isE2eLockEnabled()) return async () => {};
+export async function acquireE2eLock(options?: AcquireE2eLockOptions): Promise<boolean> {
+  if (!isE2eLockEnabled()) return false;
 
   const dir = e2eLockDir();
   const waitMs = waitBudgetMs();
   const waitStart = Date.now();
   let lastLogMs = 0;
 
-  const lockLoop = async (): Promise<(() => Promise<void>) | null> => {
+  const lockLoop = async (): Promise<boolean> => {
     while (true) {
-      if (options?.shouldStop?.()) return null;
+      if (options?.shouldStop?.()) return false;
 
       if (await tryCreateLock(dir)) {
-        return releaseE2eLock;
+        return true;
       }
       await removeStaleLock(dir);
       if (await tryCreateLock(dir)) {
-        return releaseE2eLock;
+        return true;
       }
 
       const waitedMs = Date.now() - waitStart;
       if (waitedMs >= waitMs) {
         console.log("e2e: lock wait timed out; continuing without the machine-wide lock");
-        return async () => {};
+        return false;
       }
 
       const info = await readLockInfo(dir);
@@ -143,10 +143,9 @@ export async function acquireE2eLock(
   };
 
   try {
-    const release = await lockLoop();
-    return release ?? (async () => {});
+    return await lockLoop();
   } catch {
     console.log("e2e: could not use machine-wide lock; continuing without it");
-    return async () => {};
+    return false;
   }
 }
