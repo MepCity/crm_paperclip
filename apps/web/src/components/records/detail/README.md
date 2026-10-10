@@ -134,8 +134,10 @@ menu present/absent, and all four arrow availability combinations.
 
 - The portrait and icon glyphs use our own code; no reference image, icon, logo or font
   asset is added. Figtree remains the shared typeface; glyph advances can differ.
-- Title weight is unmeasured; it uses `--font-weight-normal` provisionally. Secondary
-  command and related-row weights are unmeasured and retain regular weight. The primary
+- The title name uses `--text-2xl` / `--font-weight-bold`; an optional subtitle (company)
+  uses `--text-md` / `--font-weight-normal`, separated by a hyphen with
+  `--size-record-title-separator-gap`. Secondary command and related-row weights are
+  unmeasured and retain regular weight. The primary
   command uses `--font-weight-semibold` per the CTO's 520–620 class. Rail heading uses
   `--font-weight-bold`. Tabs use `--text-lg`, selected semibold/inactive regular.
 - The title size uses `--text-2xl` (the adopted 20.5px end of 20.5–21px). The CTO maps
