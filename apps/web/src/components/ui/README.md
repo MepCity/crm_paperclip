@@ -347,15 +347,11 @@ what the "no colour constants" rule forbids.
 | `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
 | `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
 | `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
-| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
-| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
 | `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
-| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
 | `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
 | `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
 | `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
-| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
-| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `3px` | record-detail.md › Details field pencil › antialiased ink top 1.5 px above label cap and ink bottom on the baseline; the margin lands on the icon box, whose ink starts ~0.9 px inside it, so the box offset carries 1.5 px more than the spec's ink figure | derived from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
