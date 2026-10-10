@@ -27,8 +27,9 @@
   background: var(--color-surface-pressed);
 }
 
+/* The header cell clips its content, so the focus edge is drawn inside the box. */
 .alphabet-trigger[data-focus-visible] {
-  outline: 2px solid var(--color-focus-ring);
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Outer box: 59 px wide, 412 px visible height. Border, surface and shadow come from the

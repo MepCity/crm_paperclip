@@ -867,7 +867,8 @@ unselected text `--color-text`; the selected row carries no marker glyph, only `
 - The closed control. It is the shared listbox trigger pattern with existing tokens only: the
   Table column header text role (`--text-md`, `--font-weight-normal`, `--color-text-strong`),
   `--size-list-filter-row-padding` inline padding, `--color-surface-hover`/`-pressed` fills and
-  the `--color-focus-ring` outline. No width or height token is invented for it.
+  an inset `--color-focus-ring` edge (the header cell clips its content). No width or height
+  token is invented for it.
 - Row ink position inside the 45 px row and the row corner radius are not measured: the text is
   left-aligned on the row edge and the rows are square, matching the neighbouring value lists.
 - Row type has no row in `typography.md` → List and detail text roles. Nearest neighbour is the
