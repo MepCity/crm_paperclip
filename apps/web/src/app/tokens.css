@@ -234,8 +234,29 @@
   --size-filter-editor-inset: 23px;
   --size-filter-editor-top-gap: 8px;
   --size-filter-editor-value-gap: 7px;
+  --size-filter-date-range-gap: 3px;
+  --size-filter-date-unit-width: 80px;
+  --size-filter-role-group-width: 141px;
+  --size-filter-role-group-height: 25px;
+  --size-filter-role-group-search-width: 112px;
+  --size-filter-role-group-search-height: 16px;
+  --size-filter-address-width: 144px;
+  --size-filter-address-location-height: 25px;
+  --size-filter-address-radius-height: 54px;
   --size-filter-control-height: 24px;
-  --size-filter-contains-width: 79px;
+  --size-filter-operator-gap: 5.5px;
+  --size-filter-range-width: 100px;
+  --size-filter-currency-range-height: 25px;
+  --size-filter-state-width: 81px;
+  --size-filter-choice-width: 170px;
+  --size-filter-choice-height: 220px;
+  --size-filter-choice-row-height: 28px;
+  --size-filter-user-width: 327px;
+  --size-filter-user-type-width: 77px;
+  --size-filter-user-search-width: 229px;
+  --size-filter-user-header-height: 28px;
+  --size-filter-user-body-height: 174px;
+  --size-filter-user-row-height: 41px;
   --size-filter-control-min-width: 36px;
   --radius-filter-control: 3px;
   --size-filter-operator-list-width: 146px;
@@ -425,6 +446,12 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  --size-popover-sort-field-dropdown-width: 380px;
+  --size-popover-sort-field-dropdown-height: 268px;
+  /* 268 − 222, the band between the panel top and the list top in the Sort By field dropdown row. */
+  --size-popover-sort-field-dropdown-list-offset: 46px;
+  /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
+  --size-popover-sort-field-dropdown-list-height: 220px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;

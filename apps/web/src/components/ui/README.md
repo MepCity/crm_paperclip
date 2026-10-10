@@ -23,7 +23,9 @@ controlled or uncontrolled panel. The expand mark is an original filled triangle
 tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
 disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
 search height, a decorative magnifier, control border and placeholder tokens) and a
-separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+separate `placeholder` prop. Its `size` prop sets the width: `measured` (default) keeps the
+167 px filter search width token, `fill` spans the container it sits in, which is what an
+option panel that is wider than the filter row needs. Unchecked `Checkbox` boxes use the measured checkbox
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
@@ -244,8 +246,29 @@ what the "no colour constants" rule forbids.
 | `--size-filter-editor-inset` | `23px` | list-views.md › Visual layout › Checked filter checkbox / Filter operator dropdown: x 354 → 377 | from spec |
 | `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
 | `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
+| `--size-filter-date-range-gap` | `3px` | list-views.md › Visual layout › Date range filter inputs (between): y 590 → 593 | from spec |
+| `--size-filter-date-unit-width` | `80px` | list-views.md › Visual layout › Date unit filter dropdown: 80 × 24 px | from spec |
+| `--size-filter-role-group-width` | `141px` | list-views.md › Visual layout › Role/Group filter search input: 141 × 25 px | from spec |
+| `--size-filter-role-group-height` | `25px` | list-views.md › Visual layout › Role/Group filter search input: 141 × 25 px | from spec |
+| `--size-filter-role-group-search-width` | `112px` | list-views.md › Visual layout › Role/Group filter search input: embedded search 112 × 16 px | from spec |
+| `--size-filter-role-group-search-height` | `16px` | list-views.md › Visual layout › Role/Group filter search input: embedded search 112 × 16 px | from spec |
+| `--size-filter-address-width` | `144px` | list-views.md › Filter operators by field type › compound_address value editors | from spec |
+| `--size-filter-address-location-height` | `25px` | list-views.md › Filter operators by field type › compound_address location search input | from spec |
+| `--size-filter-address-radius-height` | `54px` | list-views.md › Filter operators by field type › compound_address radius dropdown | from spec |
 | `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
-| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-operator-gap` | `5.5px` | list-views.md › Visual layout › intrinsic widths calibrated against contains 79px and is 36px | implementation fit |
+| `--size-filter-range-width` | `100px` | list-views.md › Visual layout › Date range filter inputs (between): 100 × 24 px | from spec |
+| `--size-filter-currency-range-height` | `25px` | list-views.md › Visual layout › Currency range filter inputs | from spec |
+| `--size-filter-state-width` | `81px` | list-views.md › Visual layout › Boolean filter value dropdown | from spec |
+| `--size-filter-choice-width` | `170px` | list-views.md › Visual layout › Picklist filter multi-select popover | from spec |
+| `--size-filter-choice-height` | `220px` | list-views.md › Visual layout › Picklist filter multi-select popover | from spec |
+| `--size-filter-choice-row-height` | `28px` | list-views.md › Visual layout › Picklist filter multi-select popover option rows | from spec |
+| `--size-filter-user-width` | `327px` | list-views.md › Visual layout › Owner selector popover | from spec |
+| `--size-filter-user-type-width` | `77px` | list-views.md › Visual layout › Owner selector popover type selector | from spec |
+| `--size-filter-user-search-width` | `229px` | list-views.md › Visual layout › Owner selector popover search field | from spec |
+| `--size-filter-user-header-height` | `28px` | list-views.md › Visual layout › Owner selector popover header controls | from spec |
+| `--size-filter-user-body-height` | `174px` | list-views.md › Visual layout › Owner selector popover list body | from spec |
+| `--size-filter-user-row-height` | `41px` | list-views.md › Visual layout › Owner selector popover entry rows | from spec |
 | `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
 | `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
 | `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
@@ -413,6 +436,10 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-popover-sort-field-dropdown-width` | `380px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
+| `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -811,6 +838,25 @@ menus**. `Popover.hideTitle` keeps an accessible title without a visible heading
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
 
+## Searchable select primitive
+
+`SearchableSelect({ label, variant, valueText, options, optionKey, optionText, selectedKey, onSelect,
+searchLabel, panelTitle, children })` is a single-choice selector whose option panel carries a
+search field above the list. It loads no data, never sorts the options it is given, and filters
+them by `optionText` case-insensitively; with no match the list is empty and no message is drawn.
+Choosing an option reports it and closes the panel. Every opening starts with an empty search
+field. `offset` places the panel against the trigger (a negative value overlaps the trigger's
+border), `searchClassName` classes the band that holds the search field, and
+`TextField.size="fill"` makes the input span that band instead of the filter search width token.
+`variant` is the trigger's text role and matches `Select`'s: `sort` marks the trigger with
+`record-control-sort` (typography.md › List and detail text roles › Sort dialog field selector
+value); the default keeps the shared record-control appearance. Rows are the caller's
+`SelectItem`s, so the shared option appearance stays in one place. Its
+`/dev/ui` gallery is the searchable-select region; the component tests cover order preservation,
+filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
+Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
+sizes come from the Sort By field dropdown tokens.
+
 ## Record detail extensions
 
 Record-specific button, menu and tab appearances preserve the measured detail values.
@@ -862,3 +908,24 @@ screen gets a horizontal page range and the top bar and the rail slide sideways 
 rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
 inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
 container's own scroll at a narrow viewport and at the measured desktop viewport.
+
+### Filter value list tokens
+
+Source: `research/specs/list-views.md` → Visual layout (Boolean filter value
+dropdown, Picklist filter multi-select popover, Owner selector popover, Currency
+range filter inputs) and Value list structures.
+
+| Token | Value | Measured role |
+| --- | --- | --- |
+| `--size-filter-range-width` | 100px | Currency range input width |
+| `--size-filter-currency-range-height` | 25px | Currency range input height |
+| `--size-filter-state-width` | 81px | Boolean value trigger width |
+| `--size-filter-choice-width` | 170px | Picklist popover width |
+| `--size-filter-choice-height` | 220px | Picklist popover height |
+| `--size-filter-choice-row-height` | 28px | Picklist option row height |
+| `--size-filter-user-width` | 327px | Owner list width |
+| `--size-filter-user-type-width` | 77px | Owner type selector width |
+| `--size-filter-user-search-width` | 229px | Owner search width |
+| `--size-filter-user-header-height` | 28px | Owner header controls height |
+| `--size-filter-user-body-height` | 174px | Owner list height |
+| `--size-filter-user-row-height` | 41px | Owner entry height |

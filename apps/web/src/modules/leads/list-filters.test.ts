@@ -14,7 +14,7 @@ describe("buildLeadsFilterGroups", () => {
   it("maps labels to metadata fields and fills picklist and owner options", async () => {
     const service = createFixtureRecordService(ctx);
     const module = await service.getModule("Leads");
-    const users = [{ userId: "user-1", name: "Sample User" }];
+    const users = [{ userId: "user-1", name: "Sample User", email: "sample@example.test" }];
     const groups = buildLeadsFilterGroups({
       fields: module.fields,
       users,
@@ -41,13 +41,15 @@ describe("buildLeadsFilterGroups", () => {
 
     const owner = fieldGroup?.items.find((item) => item.label === "Lead Owner");
     expect(owner?.editor?.fieldType).toBe("ownerlookup");
-    expect(owner?.editor?.options).toEqual([{ id: "user-1", label: "Sample User" }]);
+    expect(owner?.editor?.options).toEqual([
+      { id: "user-1", label: "Sample User", detail: "sample@example.test" },
+    ]);
 
     const revenue = fieldGroup?.items.find((item) => item.label === "Annual Revenue");
     expect(revenue?.editor?.currencyCode).toBe("TRY");
   });
 
-  it("keeps unsupported types and Tag disabled", async () => {
+  it("enables observed Website and integer fields and keeps unresolved types disabled", async () => {
     const service = createFixtureRecordService(ctx);
     const module = await service.getModule("Leads");
     const groups = buildLeadsFilterGroups({
@@ -57,9 +59,16 @@ describe("buildLeadsFilterGroups", () => {
       currencyCode: "TRY",
     });
     const items = groups.find((group) => group.id === "fields")?.items ?? [];
-    expect(items.find((item) => item.label === "Tag")?.disabled).toBe(true);
-    expect(items.find((item) => item.label === "Website")?.disabled).toBe(true);
-    expect(items.find((item) => item.label === "No. of Employees")?.disabled).toBe(true);
-    expect(items.find((item) => item.label === "Connected To")?.disabled).toBe(true);
+    expect(items.find((item) => item.label === "Tag")?.editor?.fieldType).toBe("tag");
+    expect(items.find((item) => item.label === "Website")?.editor?.fieldType).toBe("website");
+    expect(items.find((item) => item.label === "No. of Employees")?.editor?.fieldType).toBe(
+      "integer",
+    );
+    expect(items.find((item) => item.label === "Connected To")?.editor?.fieldType).toBe(
+      "multilookup",
+    );
+    expect(items.find((item) => item.label === "Address")?.editor?.fieldType).toBe(
+      "compound_address",
+    );
   });
 });

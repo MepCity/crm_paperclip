@@ -8,6 +8,10 @@ if (!port)
 export default defineConfig({
   // Default 30s is too tight when other agents run verify on the same machine.
   timeout: 90_000,
+  expect: {
+    // Default 5s flakes when several verify runs share one machine (see MEP-213).
+    timeout: 30_000,
+  },
   testDir: "./e2e",
   fullyParallel: true,
   // Several agents share one machine; cap browsers per run. Override with MEP_TEST_WORKERS.
