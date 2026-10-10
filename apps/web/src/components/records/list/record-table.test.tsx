@@ -1,5 +1,5 @@
-import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { cleanup, screen, within } from "@testing-library/react";
+import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -54,6 +54,8 @@ function Harness({
   alphabet,
   footer,
   linkFieldLabel,
+  sortableFields = new Set(columns.map((field) => field.apiName)),
+  onSortChange = () => {},
 }: {
   records: readonly RecordData[];
   emptyMessage?: string;
@@ -62,6 +64,8 @@ function Harness({
   alphabet?: RecordTableProps["alphabet"];
   footer?: Partial<RecordTableProps["footer"]>;
   linkFieldLabel?: string;
+  sortableFields?: ReadonlySet<string>;
+  onSortChange?: (sort: SortSpec) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   return (
@@ -73,6 +77,8 @@ function Harness({
       rowHref={(item) => `/records/${item.id}`}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
+      sortableFields={sortableFields}
+      onSortChange={onSortChange}
       alphabet={alphabet}
       wrapText={wrapText}
       emptyMessage={emptyMessage}
@@ -145,6 +151,10 @@ test("selects the page from the header box and one row from its box, including t
   expect(first.checked).toBe(false);
   expect(second.checked).toBe(false);
 
+  // Past the header box come the three column option triggers, then the row boxes.
+  await user.tab();
+  await user.tab();
+  await user.tab();
   await user.tab();
   expect(document.activeElement).toBe(first);
   await user.keyboard(" ");
@@ -201,6 +211,68 @@ test("renders the settings slot and keeps selection off the rest of the page", a
   expect(screen.queryByRole("columnheader", { name: "View settings" })).toBeNull();
   await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
   expect(screen.queryByRole("toolbar")).toBeNull();
+});
+
+test("draws the column options trigger only for fields in the sortable set", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      sortableFields={new Set(["Full_Name", "Company"])}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "Name column options" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Company column options" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Email column options" })).toBeNull();
+});
+
+test("keeps the link column trigger visible and reveals the others on hover or focus", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+
+  const link = screen.getByRole("button", { name: "Name column options" });
+  const company = screen.getByRole("button", { name: "Company column options" });
+  expect(link.className).not.toContain("opacity-0");
+  expect(company.className).toContain("opacity-0");
+  expect(company.className).toContain("group-hover/column:opacity-100");
+  expect(company.className).toContain("group-focus-within/column:opacity-100");
+});
+
+test("opens the menu from the keyboard with Asc then Desc", async () => {
+  const user = userEvent.setup();
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+
+  screen.getByRole("button", { name: "Company column options" }).focus();
+  await user.keyboard("{Enter}");
+
+  const items = screen.getAllByRole("menuitem");
+  expect(items.map((item) => item.textContent?.trim())).toEqual(["Asc", "Desc"]);
+});
+
+test("applies the picked order and closes the menu", async () => {
+  const user = userEvent.setup();
+  const onSortChange = vi.fn();
+  render(<Harness records={[record("rec-001", "Lead 001")]} onSortChange={onSortChange} />);
+
+  await user.click(screen.getByRole("button", { name: "Company column options" }));
+  await user.click(screen.getByRole("menuitem", { name: "Desc" }));
+
+  expect(onSortChange).toHaveBeenCalledWith({ field: "Company", order: "desc" });
+  expect(screen.queryByRole("menuitem")).toBeNull();
+});
+
+test("Escape closes the menu and returns focus to the trigger", async () => {
+  const user = userEvent.setup();
+  const onSortChange = vi.fn();
+  render(<Harness records={[record("rec-001", "Lead 001")]} onSortChange={onSortChange} />);
+
+  const trigger = screen.getByRole("button", { name: "Name column options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menuitem", { name: "Asc" })).toBeTruthy();
+
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menuitem")).toBeNull();
+  expect(onSortChange).not.toHaveBeenCalled();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
 });
 
 test("no alphabetical control without the alphabet prop", () => {

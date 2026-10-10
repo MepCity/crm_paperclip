@@ -65,6 +65,7 @@
 
   /* Menus and popovers */
   --color-menu-surface: #ffffff;
+  --color-menu-icon: #adb0b6;
 
   /* Bottom utility strip */
   --color-utility-border: #c5c4d3;
@@ -505,6 +506,7 @@
   --size-popover-import-width: 180px;
   --size-popover-actions-width: 200px;
   --size-popover-settings-width: 264px;
+  --size-popover-column-options-width: 151px;
   --size-popover-sort-width: 385px;
   --size-popover-sort-height: 157px;
   --size-popover-sort-field-width: 150px;

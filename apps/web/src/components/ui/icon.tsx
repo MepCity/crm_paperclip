@@ -328,6 +328,50 @@ function RecordInfo(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
+ * Column options menu arrows. Original drawings: the list spec measures the glyph colour
+ * only, never its shape, so the shape follows the shared arrow idiom (stem plus head).
+ */
+function ColumnSortArrowUp(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M8 13V4" />
+      <path d="m4.5 7.5 3.5-3.5 3.5 3.5" />
+    </svg>
+  );
+}
+
+function ColumnSortArrowDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M8 3v9" />
+      <path d="m4.5 8.5 3.5 3.5 3.5-3.5" />
+    </svg>
+  );
+}
+
+/**
  * Create-menu row glyph. record-detail.md › Global create menu › Module list: every row starts
  * with the same plus, 7 × 7 px with about 1 px strokes, so the ink fills its whole box.
  */
@@ -369,6 +413,8 @@ export const Icons = {
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
   createRecordPlus: CreateRecordPlus,
+  columnSortAsc: ColumnSortArrowUp,
+  columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
   building: Building2,
   check: Check,

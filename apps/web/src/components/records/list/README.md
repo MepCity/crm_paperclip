@@ -18,6 +18,8 @@ components import types from `@crm/core/records` and format datetimes through
 | `rowHref` | Builds that column's address from the record. |
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
+| `sortableFields` | API names whose data header draws the column options trigger. |
+| `onSortChange` | Called with `{ field, order }` when an order is picked in that menu. |
 | `alphabet` | Optional alphabetical filter of the link column header: `{ value, onChange }`. `value` is the chosen letter, `null` is `All`. Omitting it draws no control. |
 | `wrapText` | Wrap cell text and grow the row. When false, the cell truncates. |
 | `emptyMessage` | Message in the first body band when `records` is empty. |
@@ -70,6 +72,50 @@ width whatever the column count or scroll position. The text is inset from the
 top of that band. The horizontal scroller is then a tab stop, because the empty
 page has no other focusable control inside it, and only then does that scroller
 have an accessible name.
+
+### Column options menu
+
+Source: `research/specs/list-views.md` → Filters / views / sorting / search (Column header
+options) and Layout → Visual layout (Column options menu).
+
+A data header whose field is in `sortableFields` draws a trigger named
+`<shown header label> column options` at the cell's trailing end, before its divider — the label
+the header itself shows, so `linkFieldLabel` is what the link column's trigger is named. It sits
+outside the label flow, so the label keeps its truncation width and the column keeps its measured
+width.
+The link column keeps the trigger visible; the others stay hidden until the header is hovered or
+holds keyboard focus, and stay visible while their menu is open.
+
+The menu has two rows, `Asc` then `Desc`. Picking one calls `onSortChange` with
+`{ field, order }` and closes the menu; Escape closes it and returns focus to the trigger. The
+menu is the shared measured `Menu`: 151 px wide (`--size-popover-column-options-width`), 30 px
+rows (`--size-menu-item-height`), a 1 px `--color-border` edge on `--color-menu-surface`,
+`--radius-md` corners, row text in the **List menu item** role (`--text-md`,
+`--font-weight-normal`) in `--color-text`, hovered row `--color-surface-hover`, and arrow glyphs
+in `--color-menu-icon` at `--size-menu-icon`. It opens under the trigger, aligned to its leading
+edge.
+
+#### Interim
+
+- Only `Lead Name` was captured, so the menu of every other column is assumed identical, and its
+  trigger is assumed to appear on mouse hover only.
+- The trigger's drawing, size and place are not measured: it reuses the list sort glyph at
+  `--size-menu-icon`, centred in the header and inset `--size-list-cell-inset` from the cell's
+  trailing edge, before the divider.
+- The trigger glyph keeps the shared icon-button tone (`--color-text-muted`); the spec row
+  measures only the menu's own glyphs.
+- The menu is anchored to the trigger's leading edge because the measured menu box (x 963–1114)
+  reaches past its column's right edge (x 988). The reference's own offset is not measured.
+- The row inset inside the menu is the shared measured menu inset (`--size-menu-inset`); the
+  list spec row measures the menu box and the rows, never their inset.
+- The sorted column keeps no header indicator, and the applied order is not marked in the menu.
+- Choosing an order closes the menu.
+
+#### Not drawn
+
+`Pin Column`, `Filter by` and `Hide Column` — the reference menu's other three entries. Their
+results were never observed, and pinning or hiding a column is a persisted view preference owned
+by the customisation module (M11).
 
 ## CellValue
 
@@ -127,12 +173,16 @@ The `record-table` demo uses synthetic values (`Lead 001`, `example.org`):
 - Empty records, total 0, the empty message, no badge, no checkboxes, no range.
 - Later page, Previous and Next both enabled.
 
+Column options are live in the demo: picking `Asc` or `Desc` re-orders that section's own rows.
+`Created` is kept outside the sortable set, so its header draws no trigger.
+
 ## Known deviations
 
 The captured list shows these controls, and none of their behaviour was
 observed, so they are not drawn: row hover actions, column resize, column
-drag, and sorting by clicking a header. The **All** alphabetical filter
-beside the link column header is drawn; its effect is `Interim` (see
+drag, and sorting by clicking a header label (sorting is offered through the
+column options menu). The **All** alphabetical filter beside the link column
+header is drawn; its effect is `Interim` (see
 Module list page below).
 
 Also:
@@ -416,7 +466,9 @@ and apply payloads. `e2e/list-chrome.spec.ts` checks real rendered geometry and 
 `Button` and button-styled `Link` use measured primary and secondary gradients with
 6 px corners. Existing hover/pressed fills are retained. `toolbar`, `listToolbar`, `splitPrimary`,
 `splitArrow`, `actions`, `listFilter` and `listIcon` sizes use list tokens. `Menu` accepts optional `width`
-(`create` or `actions`) for measured popover widths; default menus retain their width.
+(`create`, `actions` or `columnOptions`) for measured popover widths; default menus retain their width.
+`Menu` accepts `placement` too, which the column options menu uses to anchor on its trigger's
+leading edge; every other menu keeps `bottom end`.
 `Popover` accepts `hideTitle` (a visually hidden accessible title) and `contentClassName`
 for composing the compact Sort layout. Select interaction remains in the shared primitive;
 the scoped list CSS applies the measured selector dimensions.
@@ -458,12 +510,14 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | Table settings row label | `--text-md` | `--font-weight-normal` |
 | Table settings row value | `--text-md` | `--font-weight-bold` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
+| Column options menu row | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
 are retained. Toolbar labels, Sort dialog heading, disabled list menu items, and
 table settings labels map measured 14px to the existing 14.5px `--text-md`
 token; no separate 14px size is introduced. Sort disabled Apply maps measured
-weight 620 to `--font-weight-semibold` (510).
+weight 620 to `--font-weight-semibold` (510). The column options menu rows use
+typography.md's **List menu item** role (`--text-md`, `--font-weight-normal`).
 
 ## Module list page (Leads)
 
@@ -482,7 +536,8 @@ stored `list.per-page` preference supplies the page size; a stored value outside
 six sizes falls back to 30. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
 count queries without changing the URL. View Settings writes `per_page` and resets
-`page` to 1 through the same address helper.
+`page` to 1 through the same address helper. A column options pick writes the same
+`sort_by` / `sort_order` keys and starts the new sort on page 1.
 `sort_by` is accepted only for a field in the Sort By list, so the address and
 the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
 module's ordered `sortFieldLabels` against field metadata by label, and
@@ -563,6 +618,9 @@ answer the same restriction.
 - The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
   Sorting), none dropped: every label resolves to a Leads metadata field. A label
   without a metadata field would leave the list out and be named here.
+- The same set decides which headers draw a column options trigger.
+- A sort picked in a column header starts on page 1, while the Sort popover keeps the open
+  page. Neither path was applied in the reference, so no paging rule is observed.
 - The Sort By search input reuses the filter search tokens (34 px high, magnifier
   inset) because the spec measures only the panel and the list body. The band it
   sits in is measured (`--size-popover-sort-field-dropdown-list-offset`, 46 px from

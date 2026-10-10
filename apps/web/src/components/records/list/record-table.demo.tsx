@@ -1,6 +1,6 @@
 "use client";
 
-import type { FieldDefinition, RecordData } from "@crm/core/records";
+import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
 import { useState } from "react";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { RecordTable } from "./record-table";
@@ -80,6 +80,21 @@ const columns: FieldDefinition[] = [
 ];
 
 const ownerNames = { "user-1": "Owner One" };
+
+/** `Created` stays outside the sortable set, so its header draws no options button. */
+const sortableFields = new Set(
+  columns.filter((field) => field.apiName !== "Created_Time").map((field) => field.apiName),
+);
+
+function sortRecords(records: readonly RecordData[], sort: SortSpec | null) {
+  if (!sort) return records;
+  const text = (record: RecordData) => {
+    const value = record.fields[sort.field];
+    return typeof value === "string" ? value : String(value ?? "");
+  };
+  const factor = sort.order === "desc" ? -1 : 1;
+  return [...records].sort((a, b) => factor * text(a).localeCompare(text(b)));
+}
 
 function row(
   id: string,
@@ -164,14 +179,17 @@ function Demo({
   nextHref?: string | null;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
+  const [sort, setSort] = useState<SortSpec | null>(null);
   return (
     <RecordTable
       columns={columns}
-      records={records}
+      records={sortRecords(records, sort)}
       linkField="Full_Name"
       rowHref={(record) => `/records/${record.id}`}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
+      sortableFields={sortableFields}
+      onSortChange={setSort}
       wrapText={wrapText}
       emptyMessage="No records found."
       ownerNames={ownerNames}
