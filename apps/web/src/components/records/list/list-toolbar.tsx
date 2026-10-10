@@ -40,7 +40,7 @@ export function ListToolbar({
           size="listFilter"
           aria-pressed={filterOpen}
           onPress={() => onFilterChange(!filterOpen)}
-          className="gap-(--size-list-filter-toggle-icon-gap) rounded-(--radius-list-toolbar-tile) aria-pressed:bg-(--color-surface-active)"
+          className="gap-(--size-list-filter-toggle-icon-gap) rounded-(--radius-list-toolbar-tile)! aria-pressed:bg-(--color-surface-active)"
         >
           <Icons.filterToggle
             aria-hidden="true"

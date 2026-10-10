@@ -1475,7 +1475,7 @@ test.describe("Leads list page", () => {
 
   test("list view chrome matches the measured toolbar, switcher and selection rows", async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.setViewportSize({ width: 1470, height: 835 });
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -1533,6 +1533,9 @@ test.describe("Leads list page", () => {
       expect(Math.abs(box.width - 126)).toBeLessThanOrEqual(0.5);
       expect(box.height).toBeGreaterThanOrEqual(32);
     }
+
+    // Acceptance view: the 1470 × 835 list with the filter panel open, before selection.
+    await listPage.screenshot({ path: testInfo.outputPath("mep230-list-1470x835.png") });
 
     // Selection toolbar: counter strip and four record-action buttons at the measured widths.
     await page
