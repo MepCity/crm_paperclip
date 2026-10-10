@@ -29,8 +29,6 @@ test("two people join through an invitation and manage membership", async ({ pag
   await expect(page).toHaveURL(membersUrl);
   await expect(page.getByRole("link", { name: "Members" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByText("You")).toBeVisible();
-  // pending-announcement workaround
-  await page.reload();
   await expectNoA11yViolations(page);
   await page.getByRole("button", { name: "Invite member" }).click();
   await expect(page.getByRole("dialog", { name: "Invite member" })).toBeVisible();

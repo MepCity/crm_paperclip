@@ -52,11 +52,12 @@ export function RecordHeader({
   nextHref,
 }: RecordHeaderProps) {
   const groups = menuGroups.filter((group) => group.items.length > 0);
-  const backIcon = <Icons.chevronLeft aria-hidden className="h-4 w-4" />;
+  const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
+  const accessibleTitle = subtitle ? `${title} - ${subtitle}` : title;
   return (
     <header
       data-record-header
-      className="flex shrink-0 items-center h-(--size-record-header-height) border-b border-panel-border bg-surface pr-3"
+      className="flex shrink-0 items-center h-(--size-record-header-height) border-b border-panel-border bg-surface pr-(--size-record-header-end)"
     >
       <div className="flex shrink-0 items-center justify-center w-(--size-record-back-region)">
         {back.href ? (
@@ -77,16 +78,27 @@ export function RecordHeader({
       <div
         data-record-portrait
         aria-hidden
-        className="shrink-0 size-(--size-record-portrait) overflow-hidden bg-bg text-avatar"
+        className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
       >
         <Icons.recordPortrait className="h-full w-full" />
       </div>
       <h1
-        className="min-w-0 flex-1 truncate ml-(--size-record-title-gap) mr-3 text-2xl font-normal text-text"
-        title={subtitle ? `${title} - ${subtitle}` : title}
+        className="min-w-0 flex-1 truncate ml-(--size-record-title-gap) mr-3 text-text"
+        title={accessibleTitle}
+        aria-label={accessibleTitle}
       >
-        {title}
-        {subtitle && <> - {subtitle}</>}
+        <span className="text-2xl font-bold">{title}</span>
+        {subtitle ? (
+          <>
+            <span
+              className="text-md font-normal mx-(--size-record-title-separator-gap)"
+              aria-hidden
+            >
+              -
+            </span>
+            <span className="text-md font-normal">{subtitle}</span>
+          </>
+        ) : null}
       </h1>
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
@@ -156,8 +168,9 @@ function RecordArrow({
   label: string;
   direction: "previous" | "next";
 }) {
-  const Icon = direction === "previous" ? Icons.chevronLeft : Icons.chevronRight;
-  const icon = <Icon aria-hidden className="h-4 w-4" />;
+  const Icon =
+    direction === "previous" ? Icons.recordHeaderChevronLeft : Icons.recordHeaderChevronRight;
+  const icon = <Icon aria-hidden className="h-6 w-6" />;
   return href ? (
     <Link
       href={href}
