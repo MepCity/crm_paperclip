@@ -6,7 +6,7 @@ import { TextField } from "@/components/ui/text-field";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
 export default function UnsavedChangesDialogDemo() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [company, setCompany] = useState("");
 
   return (
