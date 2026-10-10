@@ -39,6 +39,7 @@ describe("panelFiltersToCriteria", () => {
   const operatorCases: {
     operatorId: FilterOperatorId;
     value: string | number | [number, number] | string[] | true | null;
+    daysUnit?: "days" | "weeks" | "months";
     expected: { comparator: string; value: unknown };
   }[] = [
     { operatorId: "equal", value: "x", expected: { comparator: "equal", value: "x" } },
@@ -153,17 +154,87 @@ describe("panelFiltersToCriteria", () => {
       value: null,
       expected: { comparator: "equal", value: { token: "PERIOD", name: "NEXT_YEAR" } },
     },
+    {
+      operatorId: "on",
+      value: "15.03.2024",
+      expected: { comparator: "equal", value: "2024-03-15" },
+    },
+    {
+      operatorId: "before",
+      value: "01.12.2023",
+      expected: { comparator: "less_than", value: "2023-12-01" },
+    },
+    {
+      operatorId: "after",
+      value: "01.12.2023",
+      expected: { comparator: "greater_than", value: "2023-12-01" },
+    },
+    {
+      operatorId: "between",
+      value: ["01.01.2024", "31.01.2024"],
+      expected: { comparator: "between", value: ["2024-01-01", "2024-01-31"] },
+    },
+    {
+      operatorId: "not_between",
+      value: ["01.01.2024", "31.01.2024"],
+      expected: { comparator: "not_between", value: ["2024-01-01", "2024-01-31"] },
+    },
+    {
+      operatorId: "previous",
+      value: 2,
+      expected: {
+        comparator: "equal",
+        value: { token: "RELATIVE", direction: "previous", count: 2, unit: "days" },
+      },
+    },
+    {
+      operatorId: "next",
+      value: 1,
+      daysUnit: "weeks",
+      expected: {
+        comparator: "equal",
+        value: { token: "RELATIVE", direction: "next", count: 1, unit: "weeks" },
+      },
+    },
+    {
+      operatorId: "age_in",
+      value: 4,
+      daysUnit: "months",
+      expected: {
+        comparator: "less_equal",
+        value: { token: "AGEINDAYS", offset: 4, unit: "months" },
+      },
+    },
+    {
+      operatorId: "due_in",
+      value: 7,
+      daysUnit: "weeks",
+      expected: {
+        comparator: "less_equal",
+        value: { token: "DUEINDAYS", offset: 7, unit: "weeks" },
+      },
+    },
   ];
 
-  for (const { operatorId, value, expected } of operatorCases) {
+  for (const { operatorId, value, daysUnit, expected } of operatorCases) {
     it(`maps ${operatorId} to ${expected.comparator}`, () => {
-      expect(panelFiltersToCriteria([{ field: "Created_Time", operatorId, value }])).toEqual({
+      expect(
+        panelFiltersToCriteria([{ field: "Created_Time", operatorId, value, daysUnit }]),
+      ).toEqual({
         field: "Created_Time",
         comparator: expected.comparator,
         value: expected.value,
       });
     });
   }
+});
+
+describe("panelFiltersToCriteria date validation", () => {
+  it("rejects invalid display dates at mapping time", () => {
+    expect(() =>
+      panelFiltersToCriteria([{ field: "Created_Time", operatorId: "on", value: "99.99.2024" }]),
+    ).toThrow();
+  });
 });
 
 it("preserves the Not Selected boolean state and integer range", () => {

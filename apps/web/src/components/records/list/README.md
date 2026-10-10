@@ -240,7 +240,7 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
 | boolean | is → equal | equal | boolean, Selected / Not Selected |
 | ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
-| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | number + `days` / `weeks` / `months` for age/due/Previous/Next; `DD.MM.YYYY` for On/before/after; From/To range for between/not between; fiscal presets block Apply until fiscal settings exist |
 | tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
 | multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
 | compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
@@ -277,8 +277,8 @@ existing primitive tokens:
   the scrollable group content. A constrained-height parent makes only the rows scroll.
 - The user-type selector contents beyond the initial Users option and current-user
   identification remain Interim; callers may supply `detail` and `currentUser` flags.
-  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
+- **after** shares the single `DD.MM.YYYY` control used for **before** (**Interim**; no separate spec row).
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -299,9 +299,6 @@ select two rows. Only synthetic data appears in demos and tests.
   and related-module editors: their respective modules.
 - Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
   rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
-- Date Previous / Next / On / before / after / between / not between: value editors
-  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
-- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
 - textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
@@ -364,11 +361,15 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
-- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
-  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
-  Selected` / `3 Records Selected`), a `Clear`
-  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
-  The page supplies module labels and wires delete confirmation.
+- `SelectionBar({ selectedCount, onClear, onDelete, onMassUpdate?, actions? })`: replaces
+  the toolbar while `selectedCount > 0`. Shows the measured toolbar height, a count
+  (`1 Record Selected` / `3 Records Selected`), a `Clear` text control, `Delete`, an
+  optional `Mass Update` button when `onMassUpdate` is set (113 × 32 px, same chrome as
+  `Delete`), and an optional `Actions` menu when `actions` is non-empty. The page
+  supplies module labels and wires delete confirmation.
+- `MassUpdateDialog` and `ChangeOwnerDialog`: bulk write dialogs opened from the selection
+  bar on the module list page. They call `useMassUpdate` / `useChangeOwner`, clear
+  selection and refresh the list on success without a toast.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }` in the order the caller supplies — the component never sorts it;
   `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
@@ -617,3 +618,23 @@ the card bottom while record rows scroll inside the card.
   control remain out of scope.
 - Column header copy follows field metadata labels (for example **Full Name** for
   `Full_Name`), not the reference list label **Lead Name**.
+
+## Interim (bulk dialogs)
+
+**Mass Update**
+
+- Enabled `Update` uses existing primary button tokens (reference enabled fill was not
+  observed).
+- Backdrop uses the shared dialog overlay token.
+- Value controls after a field is chosen follow the create/edit form input tokens at
+  285 px width.
+- Dialog height can grow when inline or general error text is shown.
+
+**Change Owner**
+
+- Entire dialog presentation (modal vs page) and `Cancel` styling were not observed;
+  frame, padding, buttons and backdrop follow the unsaved-changes modal tokens; the
+  owner control follows create/edit form input geometry.
+- Field order for mass update follows module layout order.
+- Optional mass-update values may be cleared by submitting an empty value.
+- No success toast or banner after either bulk action completes.

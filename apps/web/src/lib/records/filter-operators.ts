@@ -62,11 +62,6 @@ export type FilterOperatorId =
 
 /** Operators with observed editors that are not yet mapped to port criteria (MEP-222 / Platform contract). */
 export const operatorsWithoutCriteriaSupport = new Set<FilterOperatorId>([
-  "previous",
-  "next",
-  "on",
-  "before",
-  "after",
   "current_fy",
   "current_fq",
   "previous_fy",
@@ -219,4 +214,5 @@ export interface AppliedFilter {
   itemId: string;
   operatorId: FilterOperatorId;
   value: AppliedFilterValue;
+  daysUnit?: DateUnit;
 }

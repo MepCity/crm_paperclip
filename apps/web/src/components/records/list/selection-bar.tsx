@@ -8,6 +8,7 @@ export interface SelectionBarProps {
   selectedCount: number;
   onClear: () => void;
   onDelete: () => void;
+  onMassUpdate?: () => void;
   actions?: readonly MenuAction[];
 }
 
@@ -20,6 +21,7 @@ export function SelectionBar({
   selectedCount,
   onClear,
   onDelete,
+  onMassUpdate,
   actions = [],
 }: SelectionBarProps) {
   if (selectedCount <= 0) return null;
@@ -44,6 +46,16 @@ export function SelectionBar({
         <Button variant="secondary" size="listToolbar" onPress={onDelete}>
           Delete
         </Button>
+        {onMassUpdate ? (
+          <Button
+            variant="secondary"
+            size="listToolbar"
+            className="min-w-(--size-list-mass-update-button-width)"
+            onPress={onMassUpdate}
+          >
+            Mass Update
+          </Button>
+        ) : null}
         {actions.length > 0 ? (
           <MenuTrigger>
             <Button variant="secondary" size="actions" aria-label="Actions">

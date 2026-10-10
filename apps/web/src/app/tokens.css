@@ -340,15 +340,14 @@
   --size-detail-cap-height: 10.5px;
   --size-detail-card-width-rail-hidden: 1126px;
   --size-detail-column-width-rail-hidden: 543px;
-  --size-detail-rail-hidden-value-width: 273px;
-  --size-detail-field-pencil-inset-from-card-end: 113px;
   --size-detail-field-pencil-ink-left-rail-hidden: 1000.5px;
-  --size-detail-field-pencil-rail-hidden-translate-x: 10.5px;
   --size-detail-description-label-width: 73px;
   --size-detail-description-label-extend: 39px;
   --size-detail-field-pencil-size: 11.5px;
-  --size-detail-field-pencil-aa-size: 12.5px;
-  --size-detail-field-pencil-above-label-cap: 1.5px;
+  /* Ink-level target: the pencil's antialiased ink top sits 1.5 px above the label cap
+     (record-detail.md › Details field pencil). The margin is applied to the icon box, whose
+     ink starts ~0.9 px inside it, so the box offset carries the extra 1.5 px. */
+  --size-detail-field-pencil-above-label-cap: 3px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
@@ -406,6 +405,24 @@
   --size-confirm-dialog-title-gap: 18.5px;
   --size-confirm-dialog-message-actions-gap: 30.5px;
   --size-confirm-dialog-actions-gap: 10.5px;
+  --size-list-mass-update-button-width: 113px;
+  --size-mass-update-dialog-width: 484px;
+  --size-mass-update-dialog-height: 207px;
+  --size-mass-update-dialog-padding-inline: 31px;
+  --size-mass-update-dialog-title-padding-inline-start: 32.5px;
+  --size-mass-update-dialog-title-line-height: 18.5px;
+  --size-mass-update-dialog-padding-block-start: 29.5px;
+  --size-mass-update-dialog-padding-block-end: 31px;
+  --size-mass-update-dialog-title-fields-gap: 32px;
+  --size-mass-update-dialog-fields-actions-gap: 30px;
+  --size-mass-update-field-selector-width: 122px;
+  --size-mass-update-value-width: 285px;
+  --size-mass-update-field-gap: 15px;
+  --size-mass-update-cancel-width: 74px;
+  --size-mass-update-update-width: 76px;
+  --size-mass-update-actions-gap: 11.5px;
+  --color-mass-update-value-disabled-fill: #f5f6f8;
+  --color-mass-update-value-border: #d9dce2;
 
   /* List popovers */
   --size-popover-view-width: 128px;
@@ -619,6 +636,9 @@
   --size-record-portrait: 48px;
   --size-record-back-region: 52px;
   --size-record-title-gap: 15px;
+  --size-record-title-separator-gap: 6px;
+  --size-record-header-end: 24px;
+  --radius-record-menu-row: 5px;
   --size-record-rail-width: 220px;
   --size-record-rail-heading-height: 38px;
   --size-record-rail-text-inset: 8.5px;

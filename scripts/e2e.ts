@@ -10,6 +10,7 @@ import {
   startTestPostgres,
   type TestPostgres,
 } from "@crm/db/testing";
+import { runCleanupSteps } from "./e2e-cleanup";
 import { acquireE2eLock, releaseE2eLock } from "./e2e-lock";
 
 const execFileAsync = promisify(execFile);
@@ -117,18 +118,26 @@ async function stopListenersOnPort(port: number): Promise<void> {
 
 async function cleanupAfterRun(): Promise<void> {
   if (parentWatch) clearInterval(parentWatch);
-  if (playwrightStageStarted && activePort !== undefined) {
-    await stopListenersOnPort(activePort);
-    activePort = undefined;
-  }
-  if (postgres) {
-    await postgres.stop();
-    postgres = undefined;
-  }
-  if (lockHeld) {
-    await releaseE2eLock();
-    lockHeld = false;
-  }
+  await runCleanupSteps([
+    async () => {
+      if (playwrightStageStarted && activePort !== undefined) {
+        await stopListenersOnPort(activePort);
+        activePort = undefined;
+      }
+    },
+    async () => {
+      if (postgres) {
+        await postgres.stop();
+        postgres = undefined;
+      }
+    },
+    async () => {
+      if (lockHeld) {
+        await releaseE2eLock();
+        lockHeld = false;
+      }
+    },
+  ]);
 }
 
 async function shutdown(exitCode: number): Promise<void> {
