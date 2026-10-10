@@ -193,7 +193,7 @@
   line-height: 1;
   color: var(--color-text-muted);
   background-color: var(--color-surface);
-  transform: translateY(calc(-50% + 3px));
+  transform: translateY(calc(-50% + var(--size-form-field-group-legend-baseline-offset)));
 }
 
 .record-form-field-group__body {
