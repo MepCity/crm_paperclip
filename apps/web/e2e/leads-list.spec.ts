@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
+import { expectType } from "./support/typography";
 
 type ElementBox = NonNullable<
   Awaited<ReturnType<import("@playwright/test").Locator["boundingBox"]>>
@@ -200,6 +201,17 @@ function isSettingsOrUsersRequest(request: CrmRequest): boolean {
   );
 }
 
+async function sizeToken(page: import("@playwright/test").Page, token: string): Promise<number> {
+  return page.evaluate((name) => {
+    const probe = document.createElement("div");
+    probe.style.height = `var(${name})`;
+    document.body.append(probe);
+    const value = parseFloat(getComputedStyle(probe).height);
+    probe.remove();
+    return value;
+  }, token);
+}
+
 async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
   const companyIndex = await page
     .locator("thead [data-part=column]")
@@ -217,28 +229,122 @@ async function companyColumnTexts(page: import("@playwright/test").Page): Promis
 }
 
 async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
-  const rows = page.locator("table tbody tr");
-  const rowCount = await rows.count();
-  const ids: string[] = [];
-  for (let i = 0; i < rowCount; i++) {
-    const href = await rows.nth(i).getByRole("link").first().getAttribute("href");
-    const match = href?.match(/\/Leads\/([^/?#]+)/);
-    if (match?.[1]) ids.push(match[1]);
-  }
-  return ids;
+  return page.locator("table tbody tr").evaluateAll((rows) => {
+    const ids: string[] = [];
+    for (const row of rows) {
+      const link = row.querySelector("a[href*='/Leads/']");
+      const href = link?.getAttribute("href");
+      const match = href?.match(/\/Leads\/([^/?#]+)/);
+      if (match?.[1]) ids.push(match[1]);
+    }
+    return ids;
+  });
 }
 
-async function expectFilterResultsMatchResponses(
+type UnfilteredLeadRow = {
+  id: string;
+  Company: string | null;
+  Lead_Source: string | null;
+  Created_Time: string | null;
+};
+
+function captureNextBulkSearchParams(page: import("@playwright/test").Page) {
+  return page
+    .waitForRequest((request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      return parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk");
+    })
+    .then((request) => new URL(request.url()).searchParams);
+}
+
+function isCreatedOnUtcToday(createdTime: string | null, now: Date): boolean {
+  if (!createdTime) return false;
+  const parsed = Date.parse(createdTime);
+  if (Number.isNaN(parsed)) return false;
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return parsed >= start && parsed < start + 86_400_000;
+}
+
+function firstPageFilterExpectations(
+  rows: readonly UnfilteredLeadRow[],
+  perPage: number,
+  predicate: (row: UnfilteredLeadRow) => boolean,
+): { ids: string[]; total: number } {
+  const matching = rows.filter(predicate);
+  return {
+    ids: matching.slice(0, perPage).map((row) => row.id),
+    total: matching.length,
+  };
+}
+
+async function fetchUnfilteredLeadCatalog(
   page: import("@playwright/test").Page,
-  bulkResponse: import("@playwright/test").Response,
-  countResponse: import("@playwright/test").Response,
+  orgSlug: string,
+  bulkSearchParams: URLSearchParams,
+): Promise<UnfilteredLeadRow[]> {
+  const bulkParams = new URLSearchParams(bulkSearchParams);
+  const cvid = bulkParams.get("cvid");
+  if (!cvid) throw new Error("Expected cvid on bulk request.");
+  const perPage = bulkParams.get("per_page") ?? "30";
+  bulkParams.set("per_page", perPage);
+  const existingFields = bulkParams.get("fields")?.split(",").filter(Boolean) ?? [];
+  const fields = [...new Set([...existingFields, "Company", "Lead_Source", "Created_Time"])];
+  bulkParams.set("fields", fields.join(","));
+  bulkParams.delete("page");
+  return page.evaluate(
+    async ({ org, bulkQueryBase }) => {
+      const headers = {
+        "Content-Type": "application/json",
+        "X-CRM-ORG": org,
+      };
+      const rows: UnfilteredLeadRow[] = [];
+      let pageNumber = 1;
+      for (;;) {
+        const bulkQuery = new URLSearchParams(bulkQueryBase);
+        bulkQuery.set("page", String(pageNumber));
+        const bulkResponse = await fetch(`/crm/v2.2/Leads/bulk?${bulkQuery}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({}),
+        });
+        if (!bulkResponse.ok) {
+          throw new Error(`bulk ${bulkResponse.status}: ${await bulkResponse.text()}`);
+        }
+        const text = await bulkResponse.text();
+        if (!text) break;
+        const bulkJson = JSON.parse(text) as {
+          data?: {
+            id: string;
+            Company?: string | null;
+            Lead_Source?: string | null;
+            Created_Time?: string | null;
+          }[];
+          info?: { more_records?: boolean };
+        };
+        for (const row of bulkJson.data ?? []) {
+          rows.push({
+            id: row.id,
+            Company: row.Company ?? null,
+            Lead_Source: row.Lead_Source ?? null,
+            Created_Time: row.Created_Time ?? null,
+          });
+        }
+        if (!bulkJson.info?.more_records) break;
+        pageNumber += 1;
+      }
+      return rows;
+    },
+    { org: orgSlug, bulkQueryBase: bulkParams.toString() },
+  );
+}
+
+async function expectFilterResultsInDom(
+  page: import("@playwright/test").Page,
+  expectations: { ids: string[]; total: number },
 ) {
-  const bulkJson = (await bulkResponse.json()) as { data: { id: string }[] };
-  const countJson = (await countResponse.json()) as { count: number };
-  const expectedIds = bulkJson.data.map((row) => row.id);
-  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectedIds);
-  await expect(page.locator("[data-part=total-value]")).toHaveText(String(countJson.count));
-  expect(expectedIds.length).toBeLessThanOrEqual(countJson.count);
+  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectations.ids);
+  await expect(page.locator("[data-part=total-value]")).toHaveText(String(expectations.total));
+  expect(expectations.ids.length).toBeLessThanOrEqual(expectations.total);
 }
 
 async function waitForFilteredListResponses(page: import("@playwright/test").Page) {
@@ -292,12 +398,8 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLinkOnPage1 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    const firstLink = page.locator("table tbody tr").first().getByRole("link").first();
+    const firstLinkOnPage1 = await firstLink.innerText();
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
@@ -306,24 +408,18 @@ test.describe("Leads list page", () => {
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkOnPage2 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    // The list keeps the previous page's rows on screen while the next page loads, so
+    // the row count alone never proves the swap. Wait for the content, then read it.
+    await expect.poll(() => firstLink.innerText()).not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstLink.innerText();
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
     await page.getByLabel("Previous").click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkBack = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    await expect.poll(() => firstLink.innerText()).toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstLink.innerText();
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
@@ -343,7 +439,8 @@ test.describe("Leads list page", () => {
     await page.getByRole("button", { name: "Sort", exact: true }).click();
     const sortBy = page.getByRole("button", { name: /Sort By/ });
     await sortBy.click();
-    await page.getByRole("option", { name: "Company" }).click();
+    await page.getByRole("textbox", { name: "Search fields" }).fill("Company");
+    await page.getByRole("option", { name: "Company", exact: true }).click();
     await page.getByRole("button", { name: "Apply" }).click();
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_by")).toBe("Company");
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_order")).toBe("asc");
@@ -360,6 +457,199 @@ test.describe("Leads list page", () => {
     const bulkParams = new URL(lastBulk).searchParams;
     expect(bulkParams.get("sort_by")).toBe("Company");
     expect(bulkParams.get("sort_order")).toBe("asc");
+    // The applied field stays marked when the list is opened again.
+    await page.getByRole("button", { name: "Sort", exact: true }).click();
+    await sortBy.click();
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expectNoA11yViolations(page);
+  });
+
+  test("Sort By field dropdown matches the measured panel, rows and colours", async ({
+    page,
+  }, testInfo) => {
+    // list-views.md › Layout › Visual layout › Sort popover and Sort By field dropdown,
+    // both measured on a 1470 × 835 viewport. Coordinates and colours are the spec's literal
+    // values, so a token or an anchor that drifts away from them fails here. Text size and
+    // weight stay read from tokens (typography.md mapping).
+    const spec = {
+      /** "Outer box x 412.5–797.5, y 138–296" */
+      dialog: { x1: 412.5, y1: 138, x2: 797.5, y2: 296 },
+      /** "Both selectors sit at y 195–223: the first at x 443.5–593.5" */
+      selector: { x1: 443.5, y1: 195, x2: 593.5, y2: 223 },
+      /** "380 × 268 px popover (… x 443–823, y 222–490)" */
+      panel: { x1: 443, y1: 222, x2: 823, y2: 490 },
+      /** "scrollable list body 378 × 220 px (y 268–488)"; x is the panel inset by its border. */
+      list: { x1: 444, y1: 268, x2: 822, y2: 488 },
+      /** "white #FFFFFF surface, 1 px #CED0E1 border" */
+      surface: "rgb(255, 255, 255)",
+      border: "rgb(206, 208, 225)",
+      /** "option rows with text #313949, hover/selection fill #F0F4FC" */
+      ink: "rgb(49, 57, 73)",
+      fill: "rgb(240, 244, 252)",
+    };
+    const edges = (box: ElementBox) => ({
+      x: box.x,
+      y: box.y,
+      x2: box.x + box.width,
+      y2: box.y + box.height,
+      width: box.width,
+      height: box.height,
+    });
+    const offsets = (
+      box: ElementBox,
+      target: { x1: number; y1: number; x2: number; y2: number },
+    ) => ({
+      x: Math.round((box.x - target.x1) * 100) / 100,
+      y: Math.round((box.y - target.y1) * 100) / 100,
+      right: Math.round((box.x + box.width - target.x2) * 100) / 100,
+      bottom: Math.round((box.y + box.height - target.y2) * 100) / 100,
+    });
+    const expectSpecBox = (box: ElementBox, target: typeof spec.dialog) => {
+      expectEdge(box.x, target.x1);
+      expectEdge(box.y, target.y1);
+      expectEdge(box.x + box.width, target.x2);
+      expectEdge(box.y + box.height, target.y2);
+    };
+
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.getByRole("button", { name: "Sort", exact: true }).click();
+    const dialog = page.locator(".record-sort-popover");
+    const dialogBox = requireBox(await dialog.boundingBox(), "Sort dialog");
+    expectSpecBox(dialogBox, spec.dialog);
+    expectEdge(dialogBox.width, 385);
+    expectEdge(dialogBox.height, 157);
+    const sortBy = page.getByRole("button", { name: /Sort By/ });
+    const selectorBox = requireBox(await sortBy.boundingBox(), "Sort By selector");
+    expectSpecBox(selectorBox, spec.selector);
+
+    await sortBy.click();
+    const dropdown = page.locator(".record-sort-field-dropdown");
+    const dropdownBox = requireBox(await dropdown.boundingBox(), "Sort By dropdown");
+    expectSpecBox(dropdownBox, spec.panel);
+    expectEdge(dropdownBox.width, 380);
+    expectEdge(dropdownBox.height, 268);
+    await expect(dropdown).toHaveCSS("border-top-width", "1px");
+    await expect(dropdown).toHaveCSS("border-top-color", spec.border);
+    await expect(dropdown).toHaveCSS("background-color", spec.surface);
+    // The panel is left-aligned with the selector and covers its bottom border by 1 px.
+    expectEdge(dropdownBox.x, selectorBox.x);
+    expectEdge(dropdownBox.y, selectorBox.y + selectorBox.height - 1);
+
+    const list = page.getByRole("listbox", { name: "Sort By options" });
+    const listBox = requireBox(await list.boundingBox(), "Sort By list body");
+    expectSpecBox(listBox, spec.list);
+    expectEdge(listBox.width, 378);
+    expectEdge(listBox.height, 220);
+
+    const search = page.getByRole("textbox", { name: "Search fields" });
+    const searchBox = requireBox(await search.boundingBox(), "Sort By search input");
+    // Interim: the spec measures the band, not the input. The band is the 46 px between the
+    // panel top and the list top minus the panel border; the input keeps the filter search
+    // height token and fills the band's content box, so it is centred in the remaining slack.
+    const band = page.locator(".record-sort-field-search");
+    const bandBox = requireBox(await band.boundingBox(), "Sort By search band");
+    const bandPadding = await band.evaluate((node) => {
+      const computed = getComputedStyle(node);
+      return {
+        left: parseFloat(computed.paddingLeft),
+        right: parseFloat(computed.paddingRight),
+      };
+    });
+    expectEdge(bandBox.height, 45);
+    expectEdge(bandBox.y, dropdownBox.y + 1);
+    expectEdge(listBox.y, bandBox.y + bandBox.height);
+    expectEdge(searchBox.height, await sizeToken(page, "--size-list-filter-search-height"));
+    expectEdge(searchBox.x, bandBox.x + bandPadding.left);
+    expectEdge(searchBox.x + searchBox.width, bandBox.x + bandBox.width - bandPadding.right);
+    expect(searchBox.y).toBeGreaterThan(dropdownBox.y);
+    expect(searchBox.y + searchBox.height).toBeLessThanOrEqual(listBox.y + 1);
+
+    // None is the first option, then the module's fields in the configured order.
+    const options = list.getByRole("option");
+    await expect(options).toHaveCount(40);
+    await expect(options.first()).toHaveText("None");
+    await expect(options.nth(1)).toHaveText("Address - City");
+    await expect(options.nth(2)).toHaveText("Address - Country / Region");
+    await expect(options.nth(22)).toHaveText("Lead Name");
+    await expect(options.last()).toHaveText("Website");
+    const company = options.filter({ hasText: "Company" }).first();
+    await expect(company).toHaveCSS("color", spec.ink);
+    // Nearest role in typography.md › List and detail text roles: the searchable option row
+    // is drawn with the same regular size and weight as the filter operator list.
+    await expectType(page, company, "--text-sm", "--font-weight-normal");
+    await company.hover();
+    await expect(company).toHaveCSS("background-color", spec.fill);
+
+    const firstOptionBox = requireBox(await options.first().boundingBox(), "Sort By option row");
+    const optionStyle = await options.first().evaluate((node) => {
+      const computed = getComputedStyle(node);
+      return {
+        color: computed.color,
+        fontFamily: computed.fontFamily,
+        fontSize: computed.fontSize,
+        fontWeight: computed.fontWeight,
+        paddingTop: computed.paddingTop,
+        paddingLeft: computed.paddingLeft,
+      };
+    });
+    const measurements = {
+      viewport: { width: 1470, height: 835 },
+      spec: "list-views.md › Layout › Visual layout › Sort popover / Sort By field dropdown",
+      specBoxes: spec,
+      dialog: { actual: edges(dialogBox), offsetFromSpec: offsets(dialogBox, spec.dialog) },
+      selector: { actual: edges(selectorBox), offsetFromSpec: offsets(selectorBox, spec.selector) },
+      panel: { actual: edges(dropdownBox), offsetFromSpec: offsets(dropdownBox, spec.panel) },
+      listBody: { actual: edges(listBox), offsetFromSpec: offsets(listBox, spec.list) },
+      panelBorderWidth: "1px",
+      panelBorderColor: await dropdown.evaluate((node) => getComputedStyle(node).borderTopColor),
+      panelSurface: await dropdown.evaluate((node) => getComputedStyle(node).backgroundColor),
+      searchInput: searchBox,
+      searchBand: { box: bandBox, paddingInline: bandPadding, interim: true },
+      optionRowHeight: firstOptionBox.height,
+      optionRowCount: await options.count(),
+      optionText: optionStyle,
+      hoveredRowFill: await company.evaluate((node) => getComputedStyle(node).backgroundColor),
+      labels: await options.allInnerTexts(),
+    };
+    console.log(`SORT_FIELD_DROPDOWN_MEASUREMENTS ${JSON.stringify(measurements)}`);
+    await testInfo.attach("sort-field-dropdown-measurements", {
+      body: JSON.stringify(measurements, null, 2),
+      contentType: "application/json",
+    });
+    await page.screenshot({ path: testInfo.outputPath("sort-field-dropdown.png"), fullPage: true });
+
+    await company.click();
+    await sortBy.click();
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveCSS(
+      "background-color",
+      spec.fill,
+    );
+    await expect(page.getByRole("option", { name: "Company", exact: true })).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await expectType(page, company, "--text-sm", "--font-weight-normal");
+
+    // The search filters labels case-insensitively and an empty match leaves the list empty.
+    await search.fill("wEbs");
+    await expect(options).toHaveCount(1);
+    await expect(options.first()).toHaveText("Website");
+    await search.fill("nothing");
+    await expect(options).toHaveCount(0);
+
+    // None keeps Apply disabled.
+    await search.fill("");
+    await options.first().click();
+    await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+    await expectNoA11yViolations(page);
   });
 
   test("custom view route shows that view columns", async ({ page }) => {
@@ -602,10 +892,15 @@ test.describe("Leads list page", () => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
     const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const bulkSearchParams = await bulkSearchParamsPromise;
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
     const initialRows = await page.locator("table tbody tr").count();
     const initialTotal = await page.locator("[data-part=total-value]").innerText();
+    const perPage = Number(bulkSearchParams.get("per_page") ?? "30");
+    const unfilteredCatalog = await fetchUnfilteredLeadCatalog(page, org.slug, bulkSearchParams);
     const sampleCompany = (
       await page.locator("table tbody tr").first().locator("[data-part=column]").nth(1).innerText()
     ).trim();
@@ -629,10 +924,18 @@ test.describe("Leads list page", () => {
         lastCountBody = request.postDataJSON();
       }
     });
+    const companyNeedle = sampleCompany.toLowerCase();
+    const companyExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => typeof row.Company === "string" && row.Company.toLowerCase().includes(companyNeedle),
+    );
     const companyResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [companyBulk, companyCount] = await companyResponses;
-    await expectFilterResultsMatchResponses(page, companyBulk, companyCount);
+    expect(companyBulk.ok()).toBe(true);
+    expect(companyCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, companyExpectations);
     const filteredRows = await page.locator("table tbody tr").count();
     expect(filteredRows).toBeGreaterThan(0);
     expect(filteredRows).toBeLessThan(initialRows);
@@ -652,6 +955,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -663,10 +967,17 @@ test.describe("Leads list page", () => {
     await selectPicklistValues(page, panel, "Lead Source", [leadSourceA, leadSourceB]);
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const leadSourceExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => row.Lead_Source === leadSourceA || row.Lead_Source === leadSourceB,
+    );
     const leadSourceResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [leadSourceBulk, leadSourceCount] = await leadSourceResponses;
-    await expectFilterResultsMatchResponses(page, leadSourceBulk, leadSourceCount);
+    expect(leadSourceBulk.ok()).toBe(true);
+    expect(leadSourceCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, leadSourceExpectations);
     expect(lastBulkBody).toEqual(
       expect.objectContaining({
         filters: {
@@ -679,6 +990,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -687,10 +999,17 @@ test.describe("Leads list page", () => {
     await page.getByRole("option", { name: "Today", exact: true }).click();
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    // Fixture seeds mixed Created_Time ages; Today expectation is computed from unfiltered rows only.
+    const todayNow = new Date();
+    const todayExpectations = firstPageFilterExpectations(unfilteredCatalog, perPage, (row) =>
+      isCreatedOnUtcToday(row.Created_Time, todayNow),
+    );
     const todayResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [todayBulk, todayCount] = await todayResponses;
-    await expectFilterResultsMatchResponses(page, todayBulk, todayCount);
+    expect(todayBulk.ok()).toBe(true);
+    expect(todayCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
       filters: {
         field: { api_name: "Created_Time" },
@@ -701,6 +1020,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await openFilterRow(page, panel, "Company");
     await panel.getByRole("button", { name: /Company operator$/ }).click();
@@ -708,14 +1028,17 @@ test.describe("Leads list page", () => {
     await panel.getByRole("textbox", { name: "Company value" }).fill("zzzz-no-match-zzzz");
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const noMatchExpectations = { ids: [] as string[], total: 0 };
     const noMatchResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
-    await noMatchResponses;
+    const [noMatchBulk, noMatchCount] = await noMatchResponses;
+    expect(noMatchBulk.ok()).toBe(true);
+    expect(noMatchCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, noMatchExpectations);
     await expect(page.getByText("No Leads found.")).toBeVisible();
-    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
-    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);

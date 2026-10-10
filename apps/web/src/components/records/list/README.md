@@ -43,7 +43,9 @@ The badge strip is an empty placeholder. No activity ribbon is drawn.
 A single-line row is `--size-list-row-pad`, one `--size-list-line-height` line
 and `--size-list-row-pad` again. There is no minimum row height: each extra
 text line adds one line height, and cell content stays top-aligned. A 1px
-separator follows the row. Each data header has a short divider on its right
+separator follows the row. `wrapText` is decided by the cell box, so a link cell
+inherits it too: with `wrapText` false a long name or mail address stays on one
+line and is cut with an ellipsis instead of growing the row. Each data header has a short divider on its right
 edge; the first data column has none on its left, and body rows have no
 vertical dividers.
 
@@ -139,9 +141,29 @@ Also:
 - A view with fewer columns was measured near 204px. Column width stays 200px.
 - Figtree changes the measured advance of some labels. The largest recorded
   difference is 2px (`research/specs/typography.md`).
-- The settings menu is not drawn. The header overlay is a slot. Scrolled to the
-  end, it covers the last 40px of the last column header. That overlap was not
+- The View Settings button is drawn in the header overlay. Scrolled to the
+  end, the overlay covers the last 40px of the last column header. That overlap was not
   observed.
+- The popover follows the measured row (`--size-popover-settings-width` 264px,
+  `--size-list-settings-row-width` 250px by `--size-menu-item-height` 30px,
+  `--size-menu-inset` 6px). `Manage Columns` and `Reset Column Size` are not drawn: they
+  belong to the customization module, so the popover has only the page/view group and no
+  group divider.
+- The page-size submenu and the View Mode submenu are not measured in the spec. Their
+  width follows their content, the marker sits before the label, and the submenu chevron
+  is 16px (`--size-menu-icon`). The submenu's border keeps the shared popover border.
+- The parent rows' leading glyphs, the value column and the row gap are read from the
+  `list-settings` capture, not measured in the spec: the glyphs are 16px
+  (`--size-menu-icon`) with the 12px label gap (`--size-menu-label-gap`) already used by
+  measured menus, the value sits right-aligned before the submenu chevron. Their text
+  weights are measured (`typography.md` › Table settings row label / value); the label's
+  14px maps to the existing 14.5px `--text-md` token and the value's 640-660 band to
+  `--font-weight-bold` (650). The glyph drawings are our own (`Icons.list`, `Icons.eye`);
+  the spec forbids reusing the reference's icon assets.
+- The View Settings trigger is an icon-only button in a 40px cell; the reference's
+  control and icon sizes in that cell were not measured. It uses `--size-list-view-icon`,
+  and its glyph is the framed sliders drawing (`Icons.settingsSliders`), not the bare
+  gear used by the shell's Settings nav item.
 - A wide empty table's message position was not observed. The message is
   centred on the visible card.
 - A partially selected page does not draw an indeterminate header box. Partial
@@ -202,21 +224,37 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | text | is → equal; isn't → not_equal; contains → contains; doesn't contain → not_contains; starts with → starts_with; ends with → ends_with; is empty → is_empty; is not empty → is_not_empty | contains | string, Type here |
 | email, phone | Same eight text operators | equal | string, Type here |
 | picklist | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable multiple choice, None |
+| website | Same eight text operators | contains | string, Type here |
+| integer | Same ten numeric operators as currency | equal | number or [number, number], no prefix |
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
-| boolean | is → equal | equal | true, Selected |
-| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable users, Click to Select Users. |
-| datetime | age in → age_in; due in → due_in; Today → today; Tomorrow → tomorrow; Till Yesterday → till_yesterday; Starting tomorrow → starting_tomorrow; Yesterday → yesterday; This Week → this_week; This Month → this_month; Previous Week → previous_week; Previous Month → previous_month; This Year → this_year; Previous Year → previous_year; Next Year → next_year; is empty → is_empty; is not empty → is_not_empty | age_in | nonnegative integer days for age/due, otherwise null |
+| boolean | is → equal | equal | boolean, Selected / Not Selected |
+| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
+| multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
+| compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
 
 Empty operators always have no value control and emit null. Checking starts a
 fresh default draft. Changing the operator discards the old value. Unchecking,
 external deselection, and Clear discard drafts; search and group collapse keep them.
 Drafts are internal: the caller controls only item selection. Apply uses panel order,
-including checked fields hidden by search. Whitespace-only text is incomplete;
+including checked fields hidden by search. Text is trimmed before Apply and criteria
+generation; whitespace-only text is incomplete;
 currency requires finite numbers, ranges require two finite numbers, choices require
-at least one supplied option ID, and days require a nonnegative safe integer. The
-Selected state is complete immediately. Invalid numeric drafts are never emitted.
+at least one supplied option ID, and days require a nonnegative safe integer. Both
+state values are complete immediately. Invalid numeric drafts are never emitted.
 The page must supply synchronous option labels and IDs; these components never load
 options. Clear does not change the search query or group expansion.
+
+### Observed value list dimensions
+
+`list-views.md` → Value list structures and Visual layout define the boolean
+81 × 24 px trigger and two states, picklist 170 × 220 px popover with 158 × 28 px
+rows, and owner header 77 × 28 px type selector plus 229 × 28 px search, with
+327 × 174 px body and 315 × 41 px user rows. Caller options supply names and
+secondary details; avatars are original initials. Currency range inputs are
+100 × 25 px with From/To placeholders. All operator widths use one intrinsic
+text/chevron/padding rule; dropdown offset comes from its token.
 
 ### Interim
 
@@ -226,10 +264,10 @@ existing primitive tokens:
 
 - Apply Filter / Clear size and placement: existing small buttons, footer outside
   the scrollable group content. A constrained-height parent makes only the rows scroll.
-- Multiple choice, users, state and unit open lists use existing popover/list styling.
-- Currency ranges stack two equally sized inputs with the measured 7px value gap.
+- The user-type selector contents beyond the initial Users option and current-user
+  identification remain Interim; callers may supply `detail` and `currentUser` flags.
+  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
-- Valueless operators draw only the operator selector.
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -238,21 +276,22 @@ existing primitive tokens:
   all rows, including checkbox-only selections. No operator is invented for
   unobserved field types.
 
-`/dev/ui` → filter editors starts all eight supported rows checked, shows disabled
+`/dev/ui` → filter editors starts all supported rows checked, shows disabled
 Apply and the fixed footer, and lets reviewers open an operator list or Clear and
 select two rows. Only synthetic data appears in demos and tests.
 
 ### Not drawn
 
 - Email is blocked / is not blocked: email module (M10).
-- belongs to Role / does not belong to Role / belongs to Group: role/group
-  definitions; no parity checklist module has been assigned.
-- Date Previous / Next / On / before / after / between / not between: unobserved
-  value editors. Fiscal Current FY / Current FQ / Previous FY / Previous FQ /
-  Next FY / Next FQ: fiscal-year settings dependency.
-- State options other than Selected and units other than days: unobserved.
-- System-defined and related-module editors: their respective modules.
-- textarea, website, integer, double, bigint, lookup, multi_module_lookup,
+- Tag, Connected To and Address option sources and Apply criteria: editors drawn;
+  Apply stays disabled until the Platform contract lands (MEP-255). System-defined
+  and related-module editors: their respective modules.
+- Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
+  rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
+- Date Previous / Next / On / before / after / between / not between: value editors
+  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
+- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
+- textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
 ### Deviations
@@ -267,6 +306,42 @@ select two rows. Only synthetic data appears in demos and tests.
   source lists variable widths for examples, rather than a fixed selector width.
 - Open operator shadow parameters retain the existing soft-shadow token; they are
   not measured.
+
+## ViewSettingsMenu
+
+`view-settings-menu.tsx` — the control inside `RecordTable`'s `settings` slot.
+Source: `research/specs/list-views.md` › Layout (View Settings paragraph), Layout →
+Visual layout (View Settings popover; Data and trailing column widths), Actions
+(View Settings) and Flows 5.
+
+| Prop | Contract |
+| --- | --- |
+| `perPage` | Page size in effect: the address value when it carries `per_page`, otherwise the stored preference. Marks the submenu row. |
+| `onPerPageChange` | Receives the chosen `ListPerPage` (10, 20, 30, 40, 50, 100) and closes the menu. |
+| `wrapText` | Marks the Wrap Text row. |
+| `onWrapTextChange` | Receives the next boolean and closes the menu. |
+
+- Trigger: an icon-only button in the 40px header cell, accessible name **View Settings**.
+  Its glyph is the framed settings sliders (`Icons.settingsSliders`). Opens with click,
+  Enter or Space; Escape closes it and returns focus to the trigger. Opening focuses the
+  first row, so the first ArrowDown moves to the second.
+- Popover: 264px (`--size-popover-settings-width`), rows 30px
+  (`--size-menu-item-height`). Row text follows the two roles `research/specs/typography.md`
+  measures from `list-settings`: the label is Table settings row label (`--text-md` /
+  `--font-weight-normal`), the value in effect is Table settings row value (`--text-md` /
+  `--font-weight-bold`). The focused row uses the measured highlight fill.
+- Rows: **Records Per Page** and **View Mode**, each a submenu opened with ArrowRight
+  or a click. A row draws its leading glyph, its label, then the value in effect pushed
+  to the right edge and the submenu chevron: `Records Per Page 30`, `View Mode Wrap Text`.
+  The value belongs to the row's accessible name, and react-aria gives the submenu popover
+  that same name — which is how `list-page-size` names the page-size menu. View Mode shows
+  its value only while Wrap Text is on; the off-state label was never observed.
+- Wrap Text is a `menuitemcheckbox`; page sizes are `menuitemradio` and the current size
+  carries a check marker.
+- Not drawn: **Manage Columns** and **Reset Column Size** — parity checklist row 9's
+  column work belongs to M11 (Customization).
+- The component is presentational: the page owns the address, the preference keys and
+  the record query.
 
 ## View tab and toolbar
 
@@ -284,14 +359,35 @@ select two rows. Only synthetic data appears in demos and tests.
   text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
   The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
-  `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
-  from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
+  `{ apiName, label }` in the order the caller supplies — the component never sorts it;
+  `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
+  defaults to None and Ascending. Apply requires a field in the current
   collection and emits `{ field, order: "asc" | "desc" }`. Cancel, Escape and outside
   dismissal leave the applied value alone. The page supplies eligible sort fields.
   Only the Sort By label is visible; the order selector keeps the accessible name Order
   without a visible label, and the two selectors share a row. Insets, selector gap, button
-  size and the disabled Apply fill come from the Sort popover tokens. A portaled field list
+  size and the disabled Apply fill come from the Sort popover tokens. The dialog opens
+  6 px below the toolbar control (`SORT_ANCHOR_OFFSET`): the spec puts its outer box top at
+  y 138 while the toolbar row ends at y 132. A portaled field list
   does not dismiss the draft.
+- Sort By field list: the `SearchableSelect` primitive in `components/ui` draws it (ADR 0003
+  §1 keeps React Aria inside the primitive layer); this file only supplies the options, the
+  anchor offset and the classes the tokens below attach to. The first option is `None`, then
+  the given fields in the given order.
+  A search input above the list filters option labels case-insensitively; with no match the
+  list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
+  has to confirm it; choosing `None` disables Apply again. The selected option is marked and
+  the list scrolls. Panel size, the band above the list, list height, border and row colours
+  come from the Sort By field dropdown tokens and `list-views.md` › Sort By field dropdown.
+  The panel keeps the shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow), is
+  left-aligned with the selector and overlaps its bottom border by 1 px
+  (`SORT_FIELD_DROPDOWN_OFFSET`: panel top y 222, selector bottom y 223). The search band is
+  `--size-popover-sort-field-dropdown-list-offset` (panel y 222 → list y 268 = 46 px, minus the
+  panel border in `list-chrome.css`), so the list body starts on the measured edge. The
+  trigger and the option rows carry the Sort dialog text role (`variant="sort"`:
+  `--text-sm`, `--font-weight-normal`) from `typography.md` › List and detail text roles;
+  that role has no bold selected row, so the only row override left is the measured
+  selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -346,6 +442,8 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List menu item (More / Actions) | `--text-md` | `--font-weight-normal` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
+| Table settings row label | `--text-md` | `--font-weight-normal` |
+| Table settings row value | `--text-md` | `--font-weight-bold` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
@@ -366,9 +464,16 @@ Leads-only labels and filter rows sit in
 Query names mirror the reference list requests: `page` (default 1), `per_page`
 (default 30; allowed 10, 20, 30, 40, 50, 100), `sort_by`, `sort_order`.
 Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
-Invalid values fall back to defaults. Sort Apply and footer Previous / Next
+Invalid values fall back to defaults. When the address carries no `per_page`, the
+stored `list.per-page` preference supplies the page size; a stored value outside the
+six sizes falls back to 30. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
-count queries without changing the URL.
+count queries without changing the URL. View Settings writes `per_page` and resets
+`page` to 1 through the same address helper.
+`sort_by` is accepted only for a field in the Sort By list, so the address and
+the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
+module's ordered `sortFieldLabels` against field metadata by label, and
+`Lead Name` resolves to the config's `linkField`.
 
 ### Filter apply (Leads)
 
@@ -398,7 +503,7 @@ clears applied criteria and panel selection. `ValidationError` on `filters` show
 server message above the panel actions; the table keeps the previous page via
 `keepPreviousData`.
 
-Disabled filter rows (deviations): `textarea`, `website`, `integer`, `lookup`,
+Disabled filter rows (deviations): `textarea`, `lookup`,
 `multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
 and related-module groups stay disabled.
 
@@ -410,15 +515,39 @@ and related-module groups stay disabled.
   reference capture; they follow this task's authorized interim rules.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
+- View Settings preferences are stored in the browser, not on the server: `list.per-page`
+  and `list.wrap-text.<viewId>` go through `usePreference` (`lib/preferences.ts`), whose
+  key is scoped by organization and user id. Server-side storage waits for ADR 0002.
+  `PreferenceProvider` wraps the organization layout once.
+- The reference Wrap Text state was never switched, and the scope of these settings
+  (per user or per view) was not observed: the capture tool blocked preference writes.
+  Wrap Text is therefore stored per view and defaults to on, which is the behaviour the
+  populated list capture shows.
+- Choosing a page size closes the menu; whether the reference closes it was not observed.
 - Page size default 30 is captured preference, not persisted user choice.
-- Sort By options are all module fields except the nine non-sortable API names in
-  `list-views.md` › Sorting; the reference menu contents were not observed.
+- The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
+  Sorting), none dropped: every label resolves to a Leads metadata field. A label
+  without a metadata field would leave the list out and be named here.
+- The Sort By search input reuses the filter search tokens (34 px high, magnifier
+  inset) because the spec measures only the panel and the list body. The band it
+  sits in is measured (`--size-popover-sort-field-dropdown-list-offset`, 46 px from
+  the panel top to the list top); the input is centred in that band, so its own
+  inset (5.5 px above and below) is Interim.
+- An empty search result shows an empty list; the reference's no-match state was
+  not captured (no message is drawn).
+- Choosing `None` cannot clear an applied sort: Apply stays disabled, so the sort
+  in the address can only be replaced by another field. Clearing through Sort
+  was not observed.
+- While the field list is open, React Aria hides the rest of the Sort dialog from
+  assistive technology (nested overlay). Escape closes the list first, back to the
+  dialog and then to the page.
 - Multiple field filters combine with `AND`; filters are not stored in the address
   and clear on full page reload; no toolbar indicator after apply; empty results use
   the table empty state; validation errors appear above Apply/Clear; the panel stays
   open with rows checked after apply.
-- Split Create arrow, Actions menu, view selector, View Settings, and activity
-  ribbon are not drawn on the page.
+- Split Create arrow, Actions menu, view selector, and activity
+  ribbon are not drawn on the page. View Settings is drawn, but its
+  `Manage Columns` and `Reset Column Size` entries belong to M11 and are not drawn.
 
 ### Page layout
 

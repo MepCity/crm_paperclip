@@ -36,6 +36,15 @@ describe("list search params", () => {
     });
   });
 
+  it("applies the stored preference only when the address has no per_page", () => {
+    expect(parseListSearchParams(new URLSearchParams(), 10).perPage).toBe(10);
+    expect(parseListSearchParams(new URLSearchParams("per_page=50"), 10).perPage).toBe(50);
+    // An address value outside the six page sizes keeps the address rule, not the preference.
+    expect(parseListSearchParams(new URLSearchParams("per_page=99"), 10).perPage).toBe(30);
+    // A stored value outside the six page sizes falls back to the default.
+    expect(parseListSearchParams(new URLSearchParams(), 99).perPage).toBe(30);
+  });
+
   it("round-trips non-default paging and sort", () => {
     const state = parseListSearchParams(
       new URLSearchParams("page=3&per_page=50&sort_by=Email&sort_order=desc"),

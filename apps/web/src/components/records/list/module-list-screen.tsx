@@ -30,16 +30,21 @@ import {
 } from "@/lib/api/client/hooks";
 import { withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { usePreference } from "@/lib/preferences";
 import {
   appliedSortFromState,
   LIST_PAGE_DEFAULT,
+  LIST_PER_PAGE_DEFAULT,
+  type ListPerPage,
   type ListSearchState,
   listQueryFromSearchState,
   parseListSearchParams,
   searchParamsFromListState,
 } from "@/lib/records/list-search-params";
 import { writeRecordListContext } from "@/lib/records/record-list-context";
+import { resolveSortFieldLabels } from "@/lib/records/sort-fields";
 import { RecordTable } from "./record-table";
+import { ViewSettingsMenu } from "./view-settings-menu";
 import { ViewTabStrip } from "./view-tab-strip";
 
 export interface ModuleListPaths {
@@ -57,7 +62,8 @@ export interface ModuleListScreenConfig {
   createLabel: string;
   filterTitle: string;
   filterGroups: readonly FilterGroup[];
-  nonSortableFields: ReadonlySet<string>;
+  sortFieldLabels: readonly string[];
+  linkFieldLabel: string;
   paths: ModuleListPaths;
 }
 
@@ -110,7 +116,12 @@ function ModuleListScreenLoaded({
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
-  const searchState = useMemo(() => parseListSearchParams(searchParams), [searchParams]);
+  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", LIST_PER_PAGE_DEFAULT);
+  const [wrapText, setWrapText] = usePreference(`list.wrap-text.${viewId}`, true);
+  const searchState = useMemo(
+    () => parseListSearchParams(searchParams, storedPerPage),
+    [searchParams, storedPerPage],
+  );
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
@@ -131,14 +142,14 @@ function ModuleListScreenLoaded({
   const view = viewQuery.data;
 
   const columnApiNames = view?.columns ?? [];
-  const eligibleSortFields = useMemo(() => {
-    const fields = moduleQuery.data?.fields ?? [];
-    return new Set(
-      fields
-        .filter((field) => !config.nonSortableFields.has(field.apiName))
-        .map((field) => field.apiName),
-    );
-  }, [config.nonSortableFields, moduleQuery.data?.fields]);
+  const sortFields = useMemo(
+    () => resolveSortFieldLabels(config, moduleQuery.data?.fields ?? []),
+    [config, moduleQuery.data?.fields],
+  );
+  const eligibleSortFields = useMemo(
+    () => new Set(sortFields.map((field) => field.apiName)),
+    [sortFields],
+  );
 
   useEffect(() => {
     if (priorViewId.current === viewId) return;
@@ -226,14 +237,6 @@ function ModuleListScreenLoaded({
       .filter((field): field is FieldDefinition => field !== undefined);
   }, [columnApiNames, moduleQuery.data?.fields]);
 
-  const sortFields = useMemo(
-    () =>
-      (moduleQuery.data?.fields ?? [])
-        .filter((field) => !config.nonSortableFields.has(field.apiName))
-        .map((field) => ({ apiName: field.apiName, label: field.label })),
-    [config.nonSortableFields, moduleQuery.data?.fields],
-  );
-
   const listBasePath = useMemo(() => {
     if (routeViewId) return config.paths.customList(orgSlug, config.module, routeViewId);
     return config.paths.defaultList(orgSlug, config.module);
@@ -254,15 +257,6 @@ function ModuleListScreenLoaded({
       page: pageData.page,
       perPage: pageData.perPage,
       recordIds: pageData.records.map((record) => record.id),
-      listQuery: {
-        viewId: listQuery.viewId,
-        page: listQuery.page,
-        perPage: listQuery.perPage,
-        sort: listQuery.sort,
-        filters: listQuery.filters,
-        search: listQuery.search,
-        fields: listQuery.fields,
-      },
     });
   }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
 
@@ -283,6 +277,12 @@ function ModuleListScreenLoaded({
     searchState.sortOrder,
     filterSelection,
   ]);
+
+  /** A page-size choice is stored as a preference and applied to the address from page 1. */
+  function changePerPage(next: ListPerPage) {
+    setStoredPerPage(next);
+    navigate({ ...searchState, page: LIST_PAGE_DEFAULT, perPage: next });
+  }
 
   function refreshView() {
     setSelectedIds([]);
@@ -479,8 +479,16 @@ function ModuleListScreenLoaded({
               const allowed = new Set(records.map((record) => record.id));
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
-            wrapText
+            wrapText={wrapText}
             emptyMessage={emptyMessage}
+            settings={
+              <ViewSettingsMenu
+                perPage={searchState.perPage}
+                onPerPageChange={changePerPage}
+                wrapText={wrapText}
+                onWrapTextChange={setWrapText}
+              />
+            }
             ownerNames={ownerNames}
             format={DEFAULT_FORMAT}
             footer={{
