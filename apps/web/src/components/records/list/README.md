@@ -202,21 +202,37 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | text | is → equal; isn't → not_equal; contains → contains; doesn't contain → not_contains; starts with → starts_with; ends with → ends_with; is empty → is_empty; is not empty → is_not_empty | contains | string, Type here |
 | email, phone | Same eight text operators | equal | string, Type here |
 | picklist | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable multiple choice, None |
+| website | Same eight text operators | contains | string, Type here |
+| integer | Same ten numeric operators as currency | equal | number or [number, number], no prefix |
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
-| boolean | is → equal | equal | true, Selected |
-| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | string[], searchable users, Click to Select Users. |
-| datetime | age in → age_in; due in → due_in; Today → today; Tomorrow → tomorrow; Till Yesterday → till_yesterday; Starting tomorrow → starting_tomorrow; Yesterday → yesterday; This Week → this_week; This Month → this_month; Previous Week → previous_week; Previous Month → previous_month; This Year → this_year; Previous Year → previous_year; Next Year → next_year; is empty → is_empty; is not empty → is_not_empty | age_in | nonnegative integer days for age/due, otherwise null |
+| boolean | is → equal | equal | boolean, Selected / Not Selected |
+| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
+| multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
+| compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
 
 Empty operators always have no value control and emit null. Checking starts a
 fresh default draft. Changing the operator discards the old value. Unchecking,
 external deselection, and Clear discard drafts; search and group collapse keep them.
 Drafts are internal: the caller controls only item selection. Apply uses panel order,
-including checked fields hidden by search. Whitespace-only text is incomplete;
+including checked fields hidden by search. Text is trimmed before Apply and criteria
+generation; whitespace-only text is incomplete;
 currency requires finite numbers, ranges require two finite numbers, choices require
-at least one supplied option ID, and days require a nonnegative safe integer. The
-Selected state is complete immediately. Invalid numeric drafts are never emitted.
+at least one supplied option ID, and days require a nonnegative safe integer. Both
+state values are complete immediately. Invalid numeric drafts are never emitted.
 The page must supply synchronous option labels and IDs; these components never load
 options. Clear does not change the search query or group expansion.
+
+### Observed value list dimensions
+
+`list-views.md` → Value list structures and Visual layout define the boolean
+81 × 24 px trigger and two states, picklist 170 × 220 px popover with 158 × 28 px
+rows, and owner header 77 × 28 px type selector plus 229 × 28 px search, with
+327 × 174 px body and 315 × 41 px user rows. Caller options supply names and
+secondary details; avatars are original initials. Currency range inputs are
+100 × 25 px with From/To placeholders. All operator widths use one intrinsic
+text/chevron/padding rule; dropdown offset comes from its token.
 
 ### Interim
 
@@ -226,10 +242,10 @@ existing primitive tokens:
 
 - Apply Filter / Clear size and placement: existing small buttons, footer outside
   the scrollable group content. A constrained-height parent makes only the rows scroll.
-- Multiple choice, users, state and unit open lists use existing popover/list styling.
-- Currency ranges stack two equally sized inputs with the measured 7px value gap.
+- The user-type selector contents beyond the initial Users option and current-user
+  identification remain Interim; callers may supply `detail` and `currentUser` flags.
+  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
-- Valueless operators draw only the operator selector.
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -238,21 +254,22 @@ existing primitive tokens:
   all rows, including checkbox-only selections. No operator is invented for
   unobserved field types.
 
-`/dev/ui` → filter editors starts all eight supported rows checked, shows disabled
+`/dev/ui` → filter editors starts all supported rows checked, shows disabled
 Apply and the fixed footer, and lets reviewers open an operator list or Clear and
 select two rows. Only synthetic data appears in demos and tests.
 
 ### Not drawn
 
 - Email is blocked / is not blocked: email module (M10).
-- belongs to Role / does not belong to Role / belongs to Group: role/group
-  definitions; no parity checklist module has been assigned.
-- Date Previous / Next / On / before / after / between / not between: unobserved
-  value editors. Fiscal Current FY / Current FQ / Previous FY / Previous FQ /
-  Next FY / Next FQ: fiscal-year settings dependency.
-- State options other than Selected and units other than days: unobserved.
-- System-defined and related-module editors: their respective modules.
-- textarea, website, integer, double, bigint, lookup, multi_module_lookup,
+- Tag, Connected To and Address option sources and Apply criteria: editors drawn;
+  Apply stays disabled until the Platform contract lands (MEP-255). System-defined
+  and related-module editors: their respective modules.
+- Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
+  rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
+- Date Previous / Next / On / before / after / between / not between: value editors
+  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
+- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
+- textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
 ### Deviations
@@ -284,14 +301,35 @@ select two rows. Only synthetic data appears in demos and tests.
   text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
   The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
-  `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
-  from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
+  `{ apiName, label }` in the order the caller supplies — the component never sorts it;
+  `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
+  defaults to None and Ascending. Apply requires a field in the current
   collection and emits `{ field, order: "asc" | "desc" }`. Cancel, Escape and outside
   dismissal leave the applied value alone. The page supplies eligible sort fields.
   Only the Sort By label is visible; the order selector keeps the accessible name Order
   without a visible label, and the two selectors share a row. Insets, selector gap, button
-  size and the disabled Apply fill come from the Sort popover tokens. A portaled field list
+  size and the disabled Apply fill come from the Sort popover tokens. The dialog opens
+  6 px below the toolbar control (`SORT_ANCHOR_OFFSET`): the spec puts its outer box top at
+  y 138 while the toolbar row ends at y 132. A portaled field list
   does not dismiss the draft.
+- Sort By field list: the `SearchableSelect` primitive in `components/ui` draws it (ADR 0003
+  §1 keeps React Aria inside the primitive layer); this file only supplies the options, the
+  anchor offset and the classes the tokens below attach to. The first option is `None`, then
+  the given fields in the given order.
+  A search input above the list filters option labels case-insensitively; with no match the
+  list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
+  has to confirm it; choosing `None` disables Apply again. The selected option is marked and
+  the list scrolls. Panel size, the band above the list, list height, border and row colours
+  come from the Sort By field dropdown tokens and `list-views.md` › Sort By field dropdown.
+  The panel keeps the shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow), is
+  left-aligned with the selector and overlaps its bottom border by 1 px
+  (`SORT_FIELD_DROPDOWN_OFFSET`: panel top y 222, selector bottom y 223). The search band is
+  `--size-popover-sort-field-dropdown-list-offset` (panel y 222 → list y 268 = 46 px, minus the
+  panel border in `list-chrome.css`), so the list body starts on the measured edge. The
+  trigger and the option rows carry the Sort dialog text role (`variant="sort"`:
+  `--text-sm`, `--font-weight-normal`) from `typography.md` › List and detail text roles;
+  that role has no bold selected row, so the only row override left is the measured
+  selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -369,6 +407,42 @@ Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
 Invalid values fall back to defaults. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
 count queries without changing the URL.
+`sort_by` is accepted only for a field in the Sort By list, so the address and
+the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
+module's ordered `sortFieldLabels` against field metadata by label, and
+`Lead Name` resolves to the config's `linkField`.
+
+### Filter apply (Leads)
+
+`lib/records/filter-criteria.ts` maps `{ field, operatorId, value }` rows to port
+`Criteria`. `modules/leads/list-filters.ts` builds panel groups from module metadata;
+`modules/leads/leads-list-client.tsx` supplies the built groups once module fields
+and users are loaded. Labels keep the spec order; `Lead Name` maps to the page
+`linkField` (`Full_Name`); picklist options use stored values; owner rows use
+`useUsers`; currency rows use `LEADS_LIST_CURRENCY_CODE` from `list-config.ts`.
+`ModuleListScreen` wires Apply and Clear to `useRecordList` and `useRecordCount`.
+
+| Panel `operatorId` | Criterion (comparator + value) |
+| --- | --- |
+| equal | `equal` + string, string[], boolean, or number |
+| not_equal | `not_equal` + string, string[], or number |
+| contains / not_contains / starts_with / ends_with | same comparator + string |
+| is_empty / is_not_empty | same comparator + `null` |
+| less_than / less_equal / greater_than / greater_equal | same comparator + number |
+| between / not_between | same comparator + `[lower, upper]` |
+| age_in / due_in | `less_equal` + `{ token: "AGEINDAYS" \| "DUEINDAYS", offset: N }` |
+| today | `equal` + `{ token: "TODAY" }` |
+| tomorrow / yesterday / till_yesterday / starting_tomorrow / this_week / previous_week / this_month / previous_month / this_year / previous_year / next_year | `equal` + `{ token: "PERIOD", name: "<UTC period>" }` |
+
+Apply writes criteria to `useRecordList` and `useRecordCount`, resets row selection,
+and returns to page 1 when needed. Clear removes criteria. Changing the open view
+clears applied criteria and panel selection. `ValidationError` on `filters` shows the
+server message above the panel actions; the table keeps the previous page via
+`keepPreviousData`.
+
+Disabled filter rows (deviations): `textarea`, `lookup`,
+`multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
+and related-module groups stay disabled.
 
 ### Interim
 
@@ -379,9 +453,26 @@ count queries without changing the URL.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.
-- Sort By options are all module fields except the nine non-sortable API names in
-  `list-views.md` › Sorting; the reference menu contents were not observed.
-- Filter panel rows are drawn disabled; checking them does not filter records.
+- The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
+  Sorting), none dropped: every label resolves to a Leads metadata field. A label
+  without a metadata field would leave the list out and be named here.
+- The Sort By search input reuses the filter search tokens (34 px high, magnifier
+  inset) because the spec measures only the panel and the list body. The band it
+  sits in is measured (`--size-popover-sort-field-dropdown-list-offset`, 46 px from
+  the panel top to the list top); the input is centred in that band, so its own
+  inset (5.5 px above and below) is Interim.
+- An empty search result shows an empty list; the reference's no-match state was
+  not captured (no message is drawn).
+- Choosing `None` cannot clear an applied sort: Apply stays disabled, so the sort
+  in the address can only be replaced by another field. Clearing through Sort
+  was not observed.
+- While the field list is open, React Aria hides the rest of the Sort dialog from
+  assistive technology (nested overlay). Escape closes the list first, back to the
+  dialog and then to the page.
+- Multiple field filters combine with `AND`; filters are not stored in the address
+  and clear on full page reload; no toolbar indicator after apply; empty results use
+  the table empty state; validation errors appear above Apply/Clear; the panel stays
+  open with rows checked after apply.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
 
