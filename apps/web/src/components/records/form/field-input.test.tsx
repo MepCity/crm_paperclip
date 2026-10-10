@@ -261,3 +261,20 @@ test("checkbox inside a form row has one accessible label", () => {
   );
   expect(screen.getByRole("checkbox", { name: "Example" })).toBeTruthy();
 });
+
+// record-detail.md › Email Opt Out checkbox: the row's control slot is the measured inset hook.
+test("checkbox renders inside the form row control slot", () => {
+  render(
+    <FormRow label="Example" controlId="example-checkbox" column="left">
+      <FieldInput
+        id="example-checkbox"
+        hideLabel
+        field={field("boolean")}
+        value={false}
+        onChange={() => {}}
+      />
+    </FormRow>,
+  );
+  const slot = document.querySelector("[data-record-form-control-slot]");
+  expect(slot?.contains(screen.getByRole("checkbox"))).toBe(true);
+});

@@ -17,6 +17,11 @@ export interface RecordTableProps {
   records: readonly RecordData[];
   /** API name of the column whose value links to the row. */
   linkField: string;
+  /**
+   * Display label for the link column header. When omitted, the field's own
+   * metadata label is used.
+   */
+  linkFieldLabel?: string;
   rowHref: (record: RecordData) => string;
   /** Selected record ids. Selection of ids outside this page is preserved. */
   selectedIds: readonly string[];
@@ -81,6 +86,7 @@ export function RecordTable({
   columns,
   records,
   linkField,
+  linkFieldLabel,
   rowHref,
   selectedIds,
   onSelectedIdsChange,
@@ -166,42 +172,46 @@ export function RecordTable({
                   <span className="sr-only">Badges</span>
                 </th>
               )}
-              {columns.map((field) => (
-                <th
-                  key={field.apiName}
-                  scope="col"
-                  data-part="column"
-                  aria-label={field.label}
-                  className={`${dataColumn} ${headerBox} group/column`}
-                >
-                  <div className={`flex h-full items-center overflow-hidden ${inset}`}>
-                    <span data-part="header-label" className="min-w-0 truncate">
-                      {field.label}
-                    </span>
-                    {field.apiName === linkField && alphabet ? (
-                      <AlphabetFilter
-                        label="Filter by first letter"
-                        value={alphabet.value}
-                        onChange={alphabet.onChange}
-                        className="shrink-0"
+              {columns.map((field) => {
+                const isLinkField = field.apiName === linkField;
+                const label = isLinkField && linkFieldLabel ? linkFieldLabel : field.label;
+                return (
+                  <th
+                    key={field.apiName}
+                    scope="col"
+                    data-part="column"
+                    aria-label={label}
+                    className={`${dataColumn} ${headerBox} group/column`}
+                  >
+                    <div className={`flex h-full items-center overflow-hidden ${inset}`}>
+                      <span data-part="header-label" className="min-w-0 truncate">
+                        {label}
+                      </span>
+                      {isLinkField && alphabet ? (
+                        <AlphabetFilter
+                          label="Filter by first letter"
+                          value={alphabet.value}
+                          onChange={alphabet.onChange}
+                          className="shrink-0"
+                        />
+                      ) : null}
+                    </div>
+                    {sortableFields.has(field.apiName) ? (
+                      <ColumnOptionsMenu
+                        field={field.apiName}
+                        label={label}
+                        alwaysVisible={isLinkField}
+                        onSortChange={onSortChange}
                       />
                     ) : null}
-                  </div>
-                  {sortableFields.has(field.apiName) ? (
-                    <ColumnOptionsMenu
-                      field={field.apiName}
-                      label={field.label}
-                      alwaysVisible={field.apiName === linkField}
-                      onSortChange={onSortChange}
+                    <span
+                      data-part="divider"
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-(--size-list-header-rule-offset) right-0 h-(--size-list-header-rule) w-px bg-panel-border"
                     />
-                  ) : null}
-                  <span
-                    data-part="divider"
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-(--size-list-header-rule-offset) right-0 h-(--size-list-header-rule) w-px bg-panel-border"
-                  />
-                </th>
-              ))}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           {empty ? null : (

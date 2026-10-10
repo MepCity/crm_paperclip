@@ -176,7 +176,9 @@ function AvatarPerson(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Filled portrait silhouette clipped inside the Lead Image ring. */
+/** Filled portrait silhouette clipped inside the Lead Image ring.
+ * record-detail.md › Portrait icon, form and header: 16 × 15.5 px head, body joined at
+ * 31 px and 16 px wide there, 34 px wide at 37.5 px, merging with the ring below it. */
 function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -186,8 +188,8 @@ function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
       fill="currentColor"
       {...props}
     >
-      <circle cx="24" cy="23" r="8" />
-      <path d="M19.75 29h8.5v1.5C31.5 31 34.5 31.8 36 33c1.8 1.5 3.05 2.5 3.75 3L44 48H4l4.25-12C9 35.5 10.2 34.5 12 33c1.5-1.2 4.5-2 7.75-2.5Z" />
+      <ellipse cx="24" cy="22.75" rx="8" ry="7.75" />
+      <path d="M16 31h16l9 6.5L57 49H-9L7 37.5Z" />
     </svg>
   );
 }

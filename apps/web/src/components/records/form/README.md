@@ -4,6 +4,23 @@ Module-agnostic presentation for create and edit record forms. Field controls,
 validation, save flows and page wiring live in other issues; these components only
 provide the measured shell, sections, two-column rows and bordered field groups.
 
+## Form error banner (`form-error-banner.tsx`)
+
+Single-line `role="alert"` strip rendered directly under the sticky title strip when
+a save request fails without field-level validation errors. Ink uses
+`--color-form-required` (Validation error table in `record-detail.md`); typography
+uses `--text-sm` and `--font-weight-normal` (nearest List and detail text role to
+the measured 11.5 px validation message). General network and unexpected failures
+show `FORM_SAVE_GENERIC_ERROR_MESSAGE` (`Something went wrong.` from the wire
+codec). The banner clears when the user starts another save.
+
+### Interim (A10, not observed in reference)
+
+- Banner placement, padding and copy for non-field save failures.
+- No toast; form values stay on screen.
+
+`/dev/ui` › `form-error-banner` shows the banner under a synthetic Create Lead shell.
+
 ## RecordFormShell
 
 `record-form-shell.tsx`
@@ -14,6 +31,7 @@ provide the measured shell, sections, two-column rows and bordered field groups.
 | `formAriaLabel` | Accessible name on the `<form>` landmark inside the card. |
 | `actionLabels` | `cancel`, `saveAndNew`, and `save` button text. |
 | `onCancel`, `onSaveAndNew`, `onSave` | Optional press handlers for the strip actions. |
+| `errorBanner` | Optional node between the sticky strip and the card (save error banner). |
 | `children` | Form body inside the card. |
 
 The strip stays `position: sticky` while the card body scrolls. Action order in
@@ -166,6 +184,27 @@ the actual dialog belongs to MEP-139.
   the nearest selected picklist role (`--font-weight-semibold`).
 - Currency value inset after the measured divider was not captured; it uses
   `--space-3` like other framed inputs.
+- Disabled input (MEP-234): `record-detail.md` › Disabled input is `Not observed`, so the
+  dimming stays our own choice — one `opacity: 0.5` layer on the wrapper and the value
+  text at the same strength in a framed input, the owner field and a bare textarea.
+  Never two stacked layers (that rendered the framed value text at 0.25).
+- Portrait (MEP-234): `record-detail.md` › Portrait icon, form and header says **different
+  silhouette** — the form shows a gray vector placeholder, the record header shows an
+  uploaded photograph whose head/body bounds are `Not observed`. The two drawings stay
+  separate: `recordPortraitSilhouette` takes the measured form bounds, `recordPortrait`
+  stays the header's own placeholder in its 48 px container.
+
+### Measured form rows (MEP-234)
+
+- Email Opt Out checkbox: the 15 × 15 px box sits `--size-form-checkbox-inset-start`
+  (5 px) inside the input column and `--size-form-checkbox-inset-top` (10 px) below the
+  row top, which leaves 9 px to the row bottom and puts the box 42 px after the label.
+- Form text baselines: inside the 34 px row the label and the value ink tops both start 12 px
+  below the input's top edge. `--size-form-label-baseline-offset` paints the label text 1 px
+  lower (a wrapped label must keep the measured row height, so the offset is never padding on
+  the label box) and `--size-form-control-text-padding-top` puts the same 1 px on the interior
+  text of framed inputs, picklists, owner fields and the Salutation prefix. Inputs keep their
+  measured boxes; only the text moves.
 
 ### Empty selection contrast (MEP-157)
 
@@ -259,8 +298,9 @@ is wired to `Cancel` only (browser back and in-app links were not observed).
   customization controls (rows 20–21, customization module), and Client Script
   (automation module) remain omitted as scoped deferred controls. Placeholder
   portrait and our original icons are used; no reference assets are copied.
-- Unexpected write failure keeps input on the form with the existing generic
-  alert. Measured non-field error presentation belongs to MEP-168.
+- Non-field write failures keep input on the form and show `FormErrorBanner` under
+  the sticky strip (MEP-168). Field-level `ValidationError` messages stay on their
+  controls without a banner.
 
 Tests use an `ApiProvider` with the fixture service: create payload, populated edit,
 partial update, server error placement/focus, Save and New reset, origin cancel,

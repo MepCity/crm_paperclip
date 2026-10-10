@@ -11,9 +11,10 @@ components import types from `@crm/core/records` and format datetimes through
 
 | Prop | Meaning |
 | --- | --- |
-| `columns` | `FieldDefinition[]` in screen order. Header text is `field.label`. |
+| `columns` | `FieldDefinition[]` in screen order. Header text defaults to `field.label`. |
 | `records` | `RecordData[]` for the current page. |
 | `linkField` | API name of the column that links to the row. |
+| `linkFieldLabel` | Optional display label for the link column header. When omitted, `field.label` is used. |
 | `rowHref` | Builds that column's address from the record. |
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
@@ -678,8 +679,6 @@ so the gap under the card stays 13 px whatever the shell height.
   reference; our table grows into the freed horizontal space.
 - Create Lead control x position is not compared while the split arrow and Actions
   control remain out of scope.
-- Column header copy follows field metadata labels (for example **Full Name** for
-  `Full_Name`), not the reference list label **Lead Name**.
 
 ## Interim (bulk dialogs)
 
