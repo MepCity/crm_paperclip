@@ -2,7 +2,7 @@
 
 import "./record-input.css";
 import type { ReactNode } from "react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Button,
   Dialog,
@@ -67,6 +67,14 @@ export function RecordChoice({
   const [open, setOpen] = useState(defaultOpen && !disabled);
   const [query, setQuery] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const opening = useRef(inline && defaultOpen);
+  useEffect(() => {
+    if (!opening.current) return;
+    const frame = requestAnimationFrame(() => {
+      opening.current = false;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
   const selected = options.find((option) => option.value === value);
   const items = options.map((option, index) => ({ ...option, id: String(index) }));
   const selectedId = items.find((option) => option.value === value)?.id;
@@ -184,8 +192,8 @@ export function RecordChoice({
           shouldCloseOnInteractOutside={
             inline
               ? (element) => {
-                  // The opening pencil is removed when the inline editor mounts.
-                  return element.isConnected;
+                  // Let the newly mounted list take focus before handling outside blur.
+                  return !opening.current && element.isConnected;
                 }
               : undefined
           }
