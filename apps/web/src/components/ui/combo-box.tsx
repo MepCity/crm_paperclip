@@ -108,7 +108,7 @@ export function ComboBox<T extends object>({
   useLayoutEffect(() => {
     currentKey.current = key;
     currentInput.current = inputValue;
-  }, [key, inputValue]);
+  });
   const [search, setSearch] = useState<{ query: string } | null>(null);
   const [loaded, setLoaded] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
