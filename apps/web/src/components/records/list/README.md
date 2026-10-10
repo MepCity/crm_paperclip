@@ -353,11 +353,15 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
-- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
-  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
-  Selected` / `3 Records Selected`), a `Clear`
-  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
-  The page supplies module labels and wires delete confirmation.
+- `SelectionBar({ selectedCount, onClear, onDelete, onMassUpdate?, actions? })`: replaces
+  the toolbar while `selectedCount > 0`. Shows the measured toolbar height, a count
+  (`1 Record Selected` / `3 Records Selected`), a `Clear` text control, `Delete`, an
+  optional `Mass Update` button when `onMassUpdate` is set (113 × 32 px, same chrome as
+  `Delete`), and an optional `Actions` menu when `actions` is non-empty. The page
+  supplies module labels and wires delete confirmation.
+- `MassUpdateDialog` and `ChangeOwnerDialog`: bulk write dialogs opened from the selection
+  bar on the module list page. They call `useMassUpdate` / `useChangeOwner`, clear
+  selection and refresh the list on success without a toast.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }` in the order the caller supplies — the component never sorts it;
   `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
@@ -567,3 +571,23 @@ the card bottom while record rows scroll inside the card.
   control remain out of scope.
 - Column header copy follows field metadata labels (for example **Full Name** for
   `Full_Name`), not the reference list label **Lead Name**.
+
+## Interim (bulk dialogs)
+
+**Mass Update**
+
+- Enabled `Update` uses existing primary button tokens (reference enabled fill was not
+  observed).
+- Backdrop uses the shared dialog overlay token.
+- Value controls after a field is chosen follow the create/edit form input tokens at
+  285 px width.
+- Dialog height can grow when inline or general error text is shown.
+
+**Change Owner**
+
+- Entire dialog presentation (modal vs page) and `Cancel` styling were not observed;
+  frame, padding, buttons and backdrop follow the unsaved-changes modal tokens; the
+  owner control follows create/edit form input geometry.
+- Field order for mass update follows module layout order.
+- Optional mass-update values may be cleared by submitting an empty value.
+- No success toast or banner after either bulk action completes.
