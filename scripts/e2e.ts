@@ -14,6 +14,7 @@ import { acquireE2eLock, releaseE2eLock } from "./e2e-lock";
 const execFileAsync = promisify(execFile);
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const worktreeRoot = root.endsWith("/") ? root : `${root}/`;
 const webDir = `${root}apps/web`;
 
 const baseEnv = {
@@ -28,19 +29,47 @@ let postgres: TestPostgres | undefined;
 let activePort: number | undefined;
 let lockHeld = false;
 let playwrightStageStarted = false;
-const launchParentPid = process.ppid;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isCwdUnderWorktree(cwd: string): boolean {
+  return cwd === root || cwd.startsWith(worktreeRoot);
+}
+
+/** Reads a process cwd via lsof (macOS ps does not expose cwd). */
 async function processCwd(pid: number): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "cwd="]);
-    return stdout.trim() || null;
+    const { stdout } = await execFileAsync("lsof", ["-a", "-p", String(pid), "-d", "cwd", "-Fn"]);
+    for (const line of stdout.split("\n")) {
+      if (line.startsWith("n")) {
+        const path = line.slice(1).trim();
+        return path || null;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
+}
+
+async function collectLaunchAncestorChain(): Promise<number[]> {
+  const chain: number[] = [];
+  let pid = process.ppid;
+  while (pid > 0) {
+    chain.push(pid);
+    if (pid === 1) break;
+    try {
+      const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "ppid="]);
+      const ppid = Number(stdout.trim());
+      if (!Number.isFinite(ppid) || ppid === pid) break;
+      pid = ppid;
+    } catch {
+      break;
+    }
+  }
+  return chain;
 }
 
 /** Stops listeners on the E2E port when Playwright's webServer outlives the test driver. */
@@ -62,7 +91,7 @@ async function stopListenersOnPort(port: number): Promise<void> {
   const worktreePids: number[] = [];
   for (const pid of pids) {
     const cwd = await processCwd(pid);
-    if (cwd?.startsWith(root)) worktreePids.push(pid);
+    if (cwd && isCwdUnderWorktree(cwd)) worktreePids.push(pid);
   }
   for (const pid of worktreePids) {
     try {
@@ -124,16 +153,28 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-const parentWatch = setInterval(() => {
-  try {
-    process.kill(launchParentPid, 0);
-  } catch (error) {
-    const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
-    if (code === "ESRCH") void shutdown(143);
-  }
-}, 1_000);
+let parentWatch: ReturnType<typeof setInterval> | undefined;
+
+async function startParentWatch(): Promise<void> {
+  const chain = await collectLaunchAncestorChain();
+  const watchPids = chain.length > 0 ? chain : [process.ppid];
+  parentWatch = setInterval(() => {
+    for (const pid of watchPids) {
+      try {
+        process.kill(pid, 0);
+      } catch (error) {
+        const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+        if (code === "ESRCH") {
+          void shutdown(143);
+          return;
+        }
+      }
+    }
+  }, 1_000);
+}
 
 async function main(): Promise<number> {
+  await startParentWatch();
   console.log("e2e: starting a throwaway PostgreSQL");
   postgres = await startTestPostgres();
   try {
@@ -175,7 +216,7 @@ async function main(): Promise<number> {
       }
     }
   } finally {
-    clearInterval(parentWatch);
+    if (parentWatch) clearInterval(parentWatch);
     if (playwrightStageStarted && activePort !== undefined) {
       try {
         await stopListenersOnPort(activePort);
