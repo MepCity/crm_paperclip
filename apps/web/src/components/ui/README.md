@@ -824,9 +824,14 @@ Button primary and secondary variants use the measured vertical gradients from t
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
 opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
-`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`settings`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
-menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+menus** and `--size-popover-settings-width` from the **View Settings popover** row.
+`Menu.shouldCloseOnInteractOutside` is forwarded to the popover so a nested submenu that
+portals outside its parent does not dismiss it. `SubmenuTrigger` (React Aria's) and
+`Submenu` compose that nested layer: the trigger's first child is the row and its second is
+the submenu popover, which takes its placement from the trigger and sizes to its rows — the
+spec measures the parent popover only. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
 
