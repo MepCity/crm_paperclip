@@ -223,6 +223,7 @@ test.describe("Lead record detail page", () => {
       railXLeft: 320,
       railXRight: 540,
       canvasXLeft: 540,
+      canvasXRight: 1470,
       cardXLeft: 552,
       cardXRight: 1458,
       detailsLeftLabelEnd: 701,
@@ -267,6 +268,7 @@ test.describe("Lead record detail page", () => {
     const scroller = frame.locator("[data-record-scroller]");
     const scrollerBox = requireBox(await scroller.boundingBox(), "record scroller");
     expectSpecEdge(scrollerBox.x, SPEC.canvasXLeft);
+    expectSpecEdge(scrollerBox.x + scrollerBox.width, SPEC.canvasXRight);
 
     const businessCard = frame.getByRole("region", { name: "Business card" });
     const businessBox = requireBox(await businessCard.boundingBox(), "business card");
