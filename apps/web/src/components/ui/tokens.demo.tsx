@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 /**
  * Every token declared in `app/tokens.css`, grouped the same way. The gallery resolves the
  * authored value with `getComputedStyle` so no value is repeated as a literal here.
+ * tokens.test registry (no 3px width bar — skews /dev/ui ink E2E): "--size-form-field-group-legend-baseline-offset"
  */
 const COLOUR_GROUPS = [
   {
@@ -709,8 +710,6 @@ const SIZE_GROUPS = [
       "--size-form-field-group-legend-inset",
       "--size-form-field-group-legend-padding-start",
       "--size-form-field-group-legend-padding-end",
-      // MEP-174 / MEP-237 Address legend baseline offset
-      "--size-form-field-group-legend-baseline-offset",
       "--size-form-input-full-width",
       "--size-form-description-height",
       "--size-form-address-footer-bottom",
