@@ -23,7 +23,9 @@ controlled or uncontrolled panel. The expand mark is an original filled triangle
 tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
 disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
 search height, a decorative magnifier, control border and placeholder tokens) and a
-separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+separate `placeholder` prop. Its `size` prop sets the width: `measured` (default) keeps the
+167 px filter search width token, `fill` spans the container it sits in, which is what an
+option panel that is wider than the filter row needs. Unchecked `Checkbox` boxes use the measured checkbox
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
@@ -156,13 +158,13 @@ what the "no colour constants" rule forbids.
 | `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
-| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
+| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label, Sort dialog heading, List menu item; Weight classes › Regular | from spec |
 | `--font-weight-semibold` | `510` | typography.md › Variable-weight stem check › `wght` 510, stem 1.69 CSS px; Recommendation › shell semibold roles; List and detail text roles › List toolbar Filter / Sort, List primary button; Weight classes › Semibold | from spec |
 | `--font-weight-bold` | `650` | typography.md › List and detail text roles › List view tab; Weight classes › Bold headings (640–660) | from spec |
 | `--text-2xs` | `0.53125rem` (8.5px) | typography.md › Recommendation › Utility label › 8.5px / 400 | from spec |
 | `--text-xs` | `0.71875rem` (11.5px) | typography.md › Recommendation › Help utility label › 11.5px / 510 | from spec |
-| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400; List and detail text roles › List view tab (13.5px) | from spec |
-| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px; List and detail text roles › List toolbar Filter / Sort, List primary button, Table column header, Table cell value, Footer fixed label, Create form field label (14.5px; toolbar 14px maps to this token by CTO decision) | from spec |
+| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400; List and detail text roles › List view tab, Sort dialog field selector value, order selector option, footer buttons (13.5px) | from spec |
+| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px; List and detail text roles › List toolbar Filter / Sort, List primary button, Sort dialog heading, List menu item, Table column header, Table cell value, Footer fixed label, Create form field label (14.5px; measured 14px roles map to this token by CTO decision) | from spec |
 | `--text-base` | `1rem` (16px, provisional) | typography.md › Recommendation › Product selector, Teamspace selector › 16px (provisional); generic selector text could not be measured | from spec |
 | `--text-lg` | `0.96875rem` (15.5px) | typography.md › List and detail text roles › Size classes › 15.5px | from spec |
 | `--text-xl` | `1.15625rem` (18.5px) | typography.md › Recommendation › Page title › 18.5px / 510 | from spec |
@@ -244,8 +246,29 @@ what the "no colour constants" rule forbids.
 | `--size-filter-editor-inset` | `23px` | list-views.md › Visual layout › Checked filter checkbox / Filter operator dropdown: x 354 → 377 | from spec |
 | `--size-filter-editor-top-gap` | `8px` | list-views.md › Visual layout › Same rows: checkbox bottom y 527 → operator top y 535 | from spec |
 | `--size-filter-editor-value-gap` | `7px` | list-views.md › Visual layout › Filter operator dropdown / Filter value input: y 559 → 566 | from spec |
+| `--size-filter-date-range-gap` | `3px` | list-views.md › Visual layout › Date range filter inputs (between): y 590 → 593 | from spec |
+| `--size-filter-date-unit-width` | `80px` | list-views.md › Visual layout › Date unit filter dropdown: 80 × 24 px | from spec |
+| `--size-filter-role-group-width` | `141px` | list-views.md › Visual layout › Role/Group filter search input: 141 × 25 px | from spec |
+| `--size-filter-role-group-height` | `25px` | list-views.md › Visual layout › Role/Group filter search input: 141 × 25 px | from spec |
+| `--size-filter-role-group-search-width` | `112px` | list-views.md › Visual layout › Role/Group filter search input: embedded search 112 × 16 px | from spec |
+| `--size-filter-role-group-search-height` | `16px` | list-views.md › Visual layout › Role/Group filter search input: embedded search 112 × 16 px | from spec |
+| `--size-filter-address-width` | `144px` | list-views.md › Filter operators by field type › compound_address value editors | from spec |
+| `--size-filter-address-location-height` | `25px` | list-views.md › Filter operators by field type › compound_address location search input | from spec |
+| `--size-filter-address-radius-height` | `54px` | list-views.md › Filter operators by field type › compound_address radius dropdown | from spec |
 | `--size-filter-control-height` | `24px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
-| `--size-filter-contains-width` | `79px` | list-views.md › Visual layout › Filter operator dropdown: text contains width | from spec |
+| `--size-filter-operator-gap` | `5.5px` | list-views.md › Visual layout › intrinsic widths calibrated against contains 79px and is 36px | implementation fit |
+| `--size-filter-range-width` | `100px` | list-views.md › Visual layout › Date range filter inputs (between): 100 × 24 px | from spec |
+| `--size-filter-currency-range-height` | `25px` | list-views.md › Visual layout › Currency range filter inputs | from spec |
+| `--size-filter-state-width` | `81px` | list-views.md › Visual layout › Boolean filter value dropdown | from spec |
+| `--size-filter-choice-width` | `170px` | list-views.md › Visual layout › Picklist filter multi-select popover | from spec |
+| `--size-filter-choice-height` | `220px` | list-views.md › Visual layout › Picklist filter multi-select popover | from spec |
+| `--size-filter-choice-row-height` | `28px` | list-views.md › Visual layout › Picklist filter multi-select popover option rows | from spec |
+| `--size-filter-user-width` | `327px` | list-views.md › Visual layout › Owner selector popover | from spec |
+| `--size-filter-user-type-width` | `77px` | list-views.md › Visual layout › Owner selector popover type selector | from spec |
+| `--size-filter-user-search-width` | `229px` | list-views.md › Visual layout › Owner selector popover search field | from spec |
+| `--size-filter-user-header-height` | `28px` | list-views.md › Visual layout › Owner selector popover header controls | from spec |
+| `--size-filter-user-body-height` | `174px` | list-views.md › Visual layout › Owner selector popover list body | from spec |
+| `--size-filter-user-row-height` | `41px` | list-views.md › Visual layout › Owner selector popover entry rows | from spec |
 | `--size-filter-control-min-width` | `36px` | list-views.md › Visual layout › Filter operator dropdown: shortest observed is selector | from spec |
 | `--radius-filter-control` | `3px` | list-views.md › Visual layout › Filter operator dropdown, Filter value input | from spec |
 | `--size-filter-operator-list-width` | `146px` | list-views.md › Visual layout › Open operator list | from spec |
@@ -308,13 +331,30 @@ what the "no colour constants" rule forbids.
 | `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
 | `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
 | `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-details-wrapped-row-pitch` | `60px` | record-detail.md › Details value wrapping › two-line value line 1 to next row label | from spec |
 | `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
 | `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
 | `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
 | `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
 | `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
-| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
-| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
+| `--size-detail-details-sections-margin-top` | `18.25px` | record-detail.md › Details divider & headings › divider bottom y 609 to first section heading cap y 631 (22 px to cap minus 3.75 px cap inset) | from spec |
+| `--size-detail-section-title-margin-block` | `0 32.5px` | record-detail.md › Details divider & headings › section heading baseline y 641.5 to first field label text top y 681.5 (40 px) minus 7.5 px line-box trim | derived from spec |
+| `--size-detail-inter-section-gap` | `26px` | record-detail.md › Details divider & headings › Twitter label cap to Address heading cap (70 px) minus row remainder | derived from spec |
+| `--size-detail-audit-line-pitch` | `18.5px` | record-detail.md › Details Created By / Modified By › cap-to-cap line pitch | from spec |
+| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped Lead Name cap-to-cap pitch | from spec |
+| `--size-detail-wrapped-link-line-pitch` | `19.5px` | record-detail.md › Details value wrapping › wrapped Website cap-to-cap pitch | from spec |
+| `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
+| `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
+| `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
+| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
+| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
+| `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
+| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
+| `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
+| `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
+| `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
+| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -341,7 +381,7 @@ what the "no colour constants" rule forbids.
 | `--size-form-caret-inset-end` | `12px` | record-detail.md › Lead Information rows › caret inset from outer right | from spec |
 | `--size-form-input-end` | `32px` | record-detail.md › Composite inputs › owner/currency end section width | from spec |
 | `--size-form-input-end-icon` | `16px` | record-detail.md › Composite inputs › end-section icon size | from spec |
-| `--size-form-currency-prefix-inset` | `12px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
+| `--size-form-currency-prefix-inset` | `11.5px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
 | `--size-form-currency-divider-gap` | `9.5px` | record-detail.md › Composite inputs › currency divider after prefix text | from spec |
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
@@ -378,6 +418,10 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-popover-sort-field-dropdown-width` | `380px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
+| `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -467,9 +511,9 @@ what the "no colour constants" rule forbids.
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
 | `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
 | `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
-| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy section gap (Leads page Description section only) | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy/unused (superseded by section-title-center-above/below; not referenced in layout CSS) | from spec |
 | `--size-form-section-title-center-above` | `61px` | MEP-172 / MEP-174 › section title center below previous section content | from spec |
-| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top above section title center | from spec |
+| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top 33px below section title center | from spec |
 | `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
 | `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
 | `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
@@ -493,6 +537,7 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `10px` | MEP-172 / MEP-174 › Address legend background box inset from group left | from spec |
 | `--size-form-field-group-legend-padding-start` | `8.5px` | MEP-172 / MEP-174 › legend text inset inside background box | from spec |
 | `--size-form-field-group-legend-padding-end` | `12.5px` | MEP-172 / MEP-174 › legend gap before top border resumes | from spec |
+| `--size-form-field-group-legend-baseline-offset` | `3px` | MEP-174 / MEP-237 › legend `translateY` offset for baseline 8px below frame top | from spec |
 | `--size-form-input-full-width` | `639px` | MEP-172 / MEP-174 › Description row control width (aligned with left inputs) | from spec |
 | `--size-form-description-height` | `34px` | MEP-172 / MEP-174 › Description textarea initial height in layout demo | from spec |
 | `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
@@ -770,11 +815,35 @@ Button primary and secondary variants use the measured vertical gradients from t
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
 opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
-`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`settings`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
-menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+menus** and `--size-popover-settings-width` from the **View Settings popover** row.
+`Menu.shouldCloseOnInteractOutside` is forwarded to the popover so a nested submenu that
+portals outside its parent does not dismiss it. `SubmenuTrigger` (React Aria's) and
+`Submenu` compose that nested layer: the trigger's first child is the row and its second is
+the submenu popover, which takes its placement from the trigger and sizes to its rows — the
+spec measures the parent popover only. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
+
+## Searchable select primitive
+
+`SearchableSelect({ label, variant, valueText, options, optionKey, optionText, selectedKey, onSelect,
+searchLabel, panelTitle, children })` is a single-choice selector whose option panel carries a
+search field above the list. It loads no data, never sorts the options it is given, and filters
+them by `optionText` case-insensitively; with no match the list is empty and no message is drawn.
+Choosing an option reports it and closes the panel. Every opening starts with an empty search
+field. `offset` places the panel against the trigger (a negative value overlaps the trigger's
+border), `searchClassName` classes the band that holds the search field, and
+`TextField.size="fill"` makes the input span that band instead of the filter search width token.
+`variant` is the trigger's text role and matches `Select`'s: `sort` marks the trigger with
+`record-control-sort` (typography.md › List and detail text roles › Sort dialog field selector
+value); the default keeps the shared record-control appearance. Rows are the caller's
+`SelectItem`s, so the shared option appearance stays in one place. Its
+`/dev/ui` gallery is the searchable-select region; the component tests cover order preservation,
+filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
+Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
+sizes come from the Sort By field dropdown tokens.
 
 ## Record detail extensions
 
@@ -827,3 +896,24 @@ screen gets a horizontal page range and the top bar and the rail slide sideways 
 rendered in a portal outside the wrapper, so containment clips neither them nor the focus rings
 inside the rows. `e2e/table-overflow.spec.ts` measures both the document range and the
 container's own scroll at a narrow viewport and at the measured desktop viewport.
+
+### Filter value list tokens
+
+Source: `research/specs/list-views.md` → Visual layout (Boolean filter value
+dropdown, Picklist filter multi-select popover, Owner selector popover, Currency
+range filter inputs) and Value list structures.
+
+| Token | Value | Measured role |
+| --- | --- | --- |
+| `--size-filter-range-width` | 100px | Currency range input width |
+| `--size-filter-currency-range-height` | 25px | Currency range input height |
+| `--size-filter-state-width` | 81px | Boolean value trigger width |
+| `--size-filter-choice-width` | 170px | Picklist popover width |
+| `--size-filter-choice-height` | 220px | Picklist popover height |
+| `--size-filter-choice-row-height` | 28px | Picklist option row height |
+| `--size-filter-user-width` | 327px | Owner list width |
+| `--size-filter-user-type-width` | 77px | Owner type selector width |
+| `--size-filter-user-search-width` | 229px | Owner search width |
+| `--size-filter-user-header-height` | 28px | Owner header controls height |
+| `--size-filter-user-body-height` | 174px | Owner list height |
+| `--size-filter-user-row-height` | 41px | Owner entry height |

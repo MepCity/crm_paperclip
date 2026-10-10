@@ -5,8 +5,30 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectItem } from "@/components/ui/select";
 import "./list-chrome.css";
+
+/** ListBox key for the None option; no field API name uses this spelling. */
+const NONE_KEY = "sort-none";
+
+/**
+ * Gap between the toolbar control and the Sort dialog. list-views.md › Sort popover measures
+ * the outer box at y 138; the toolbar row the control sits in ends at y 132 (Create Lead y 99–132).
+ */
+const SORT_ANCHOR_OFFSET = 6;
+
+/**
+ * list-views.md › Sort By field dropdown measures the panel top at y 222, one pixel above the
+ * selector's bottom edge (y 223), so the panel covers the selector's bottom border.
+ */
+const SORT_FIELD_DROPDOWN_OFFSET = -1;
+
+interface FieldOption {
+  key: string;
+  label: string;
+  apiName: string | null;
+}
 
 export interface SortPopoverProps {
   fields: readonly { apiName: string; label: string }[];
@@ -35,22 +57,23 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
       <Popover
         title="Sort"
         hideTitle
+        offset={SORT_ANCHOR_OFFSET}
         placement="bottom start"
         className="record-sort-popover w-(--size-popover-sort-width) h-(--size-popover-sort-height)"
         contentClassName="record-sort-dialog"
-        shouldCloseOnInteractOutside={(element) => !element.closest("[data-trigger='Select']")}
+        shouldCloseOnInteractOutside={(element) =>
+          !element.closest("[data-trigger='Select']") &&
+          !element.closest(".record-sort-field-dropdown")
+        }
       >
         <div className="record-sort-fields">
-          <Select
-            label="Sort By"
-            placeholder="None"
-            items={fields}
+          <SortByFieldSelect
+            fields={fields}
             value={validField ? field : null}
-            onChange={(key) => setField(String(key ?? ""))}
-          >
-            {(item) => <SelectItem id={item.apiName}>{item.label}</SelectItem>}
-          </Select>
+            onChange={(apiName) => setField(apiName ?? "")}
+          />
           <Select
+            variant="sort"
             label="Order"
             hideLabel
             items={[
@@ -60,7 +83,11 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
             value={order}
             onChange={(key) => setOrder(key === "desc" ? "desc" : "asc")}
           >
-            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+            {(item) => (
+              <SelectItem variant="sort" id={item.id}>
+                {item.label}
+              </SelectItem>
+            )}
           </Select>
         </div>
         <div className="record-sort-actions">
@@ -80,5 +107,48 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
         </div>
       </Popover>
     </PopoverTrigger>
+  );
+}
+
+/** The Sort By field and its searchable option list: None first, then the given fields. */
+function SortByFieldSelect({
+  fields,
+  value,
+  onChange,
+}: {
+  fields: readonly { apiName: string; label: string }[];
+  value: string | null;
+  onChange: (apiName: string | null) => void;
+}) {
+  const options: FieldOption[] = [
+    { key: NONE_KEY, label: "None", apiName: null },
+    ...fields.map((field) => ({ key: field.apiName, label: field.label, apiName: field.apiName })),
+  ];
+  const selectedKey = value ?? NONE_KEY;
+  const selectedLabel = options.find((option) => option.key === selectedKey)?.label ?? "None";
+  return (
+    <SearchableSelect
+      variant="sort"
+      label="Sort By"
+      panelTitle="Sort By fields"
+      searchLabel="Search fields"
+      valueText={selectedLabel}
+      options={options}
+      optionKey={(option) => option.key}
+      optionText={(option) => option.label}
+      selectedKey={selectedKey}
+      onSelect={(option) => onChange(option.apiName)}
+      offset={SORT_FIELD_DROPDOWN_OFFSET}
+      popoverClassName="record-sort-field-dropdown w-(--size-popover-sort-field-dropdown-width) h-(--size-popover-sort-field-dropdown-height)"
+      contentClassName="record-sort-field-dialog"
+      searchClassName="record-sort-field-search px-1.5"
+      listClassName="record-sort-field-list h-(--size-popover-sort-field-dropdown-list-height) overflow-y-auto"
+    >
+      {(option) => (
+        <SelectItem variant="sort" id={option.key}>
+          {option.label}
+        </SelectItem>
+      )}
+    </SearchableSelect>
   );
 }

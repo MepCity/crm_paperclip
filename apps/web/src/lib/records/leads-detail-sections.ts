@@ -3,7 +3,9 @@ import type { BusinessCardField } from "@/components/records/detail/business-car
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
 import { formatLeadsCompositeAddress } from "./leads-address";
 import {
+  LEADS_DETAIL_FIELD_API_NAMES,
   LEADS_DETAIL_FIELD_LABELS,
+  LEADS_DETAIL_SECTION_LABELS,
   LEADS_OVERVIEW_SKIPPED_SECTIONS,
 } from "./leads-detail.constants";
 
@@ -40,8 +42,12 @@ export function buildLeadsBusinessCardFields(
 }
 
 function auditTimestampForField(record: RecordData, apiName: string): string | null | undefined {
-  if (apiName === "Created_By") return fieldOnRecord(record, "Created_Time") as string | null;
-  if (apiName === "Modified_By") return fieldOnRecord(record, "Modified_Time") as string | null;
+  if (apiName === LEADS_DETAIL_FIELD_API_NAMES.Created_By) {
+    return fieldOnRecord(record, LEADS_DETAIL_FIELD_API_NAMES.Created_Time) as string | null;
+  }
+  if (apiName === LEADS_DETAIL_FIELD_API_NAMES.Modified_By) {
+    return fieldOnRecord(record, LEADS_DETAIL_FIELD_API_NAMES.Modified_Time) as string | null;
+  }
   return undefined;
 }
 
@@ -73,12 +79,14 @@ function buildAddressSection(
   module: ModuleMetadata,
   record: RecordData,
 ): DetailSection {
-  const addressField = module.fields.find((field) => field.apiName === "Address");
+  const addressField = module.fields.find(
+    (field) => field.apiName === LEADS_DETAIL_FIELD_API_NAMES.Address,
+  );
   const composite = formatLeadsCompositeAddress(record.fields);
   const field =
     addressField ??
     ({
-      apiName: "Address",
+      apiName: LEADS_DETAIL_FIELD_API_NAMES.Address,
       label: "Address",
       dataType: "textarea",
       required: false,
@@ -125,15 +133,15 @@ export function buildLeadsDetailSections(
   const sections: DetailSection[] = [];
   for (const section of module.layout) {
     if (LEADS_OVERVIEW_SKIPPED_SECTIONS.has(section.label)) continue;
-    if (section.label === "Lead Information") {
+    if (section.label === LEADS_DETAIL_SECTION_LABELS.leadInformation) {
       sections.push(buildLeadInformationSection(section, module, record));
       continue;
     }
-    if (section.label === "Address Information") {
+    if (section.label === LEADS_DETAIL_SECTION_LABELS.addressInformation) {
       sections.push(buildAddressSection(section, module, record));
       continue;
     }
-    if (section.label === "Description Information") {
+    if (section.label === LEADS_DETAIL_SECTION_LABELS.descriptionInformation) {
       sections.push(buildDescriptionSection(section, module, record));
     }
   }

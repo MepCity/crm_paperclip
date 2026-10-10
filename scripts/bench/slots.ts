@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { cpus, tmpdir, totalmem } from "node:os";
 import { join } from "node:path";
 import { ensureDatabase, startLocalPostgres } from "@crm/db/local-postgres";
+import { startWithSignalShutdown } from "@crm/db/signal-shutdown";
 import pg from "pg";
 import { scaleCounts, universe } from "./dataset";
 import { assertSame } from "./exec";
@@ -101,7 +102,7 @@ export async function runSlotsBench(
   let admin: pg.Client | undefined;
   let app: pg.Client | undefined;
   try {
-    server = await startLocalPostgres({ dataDir: dir });
+    server = await startWithSignalShutdown(() => startLocalPostgres({ dataDir: dir }));
     await ensureDatabase(server.urlFor("postgres"), "slots");
     const db = new pg.Client({ connectionString: server.urlFor("slots") });
     admin = db;
