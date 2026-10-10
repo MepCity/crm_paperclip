@@ -284,14 +284,35 @@ select two rows. Only synthetic data appears in demos and tests.
   text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
   The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
-  `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
-  from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
+  `{ apiName, label }` in the order the caller supplies — the component never sorts it;
+  `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
+  defaults to None and Ascending. Apply requires a field in the current
   collection and emits `{ field, order: "asc" | "desc" }`. Cancel, Escape and outside
   dismissal leave the applied value alone. The page supplies eligible sort fields.
   Only the Sort By label is visible; the order selector keeps the accessible name Order
   without a visible label, and the two selectors share a row. Insets, selector gap, button
-  size and the disabled Apply fill come from the Sort popover tokens. A portaled field list
+  size and the disabled Apply fill come from the Sort popover tokens. The dialog opens
+  6 px below the toolbar control (`SORT_ANCHOR_OFFSET`): the spec puts its outer box top at
+  y 138 while the toolbar row ends at y 132. A portaled field list
   does not dismiss the draft.
+- Sort By field list: the `SearchableSelect` primitive in `components/ui` draws it (ADR 0003
+  §1 keeps React Aria inside the primitive layer); this file only supplies the options, the
+  anchor offset and the classes the tokens below attach to. The first option is `None`, then
+  the given fields in the given order.
+  A search input above the list filters option labels case-insensitively; with no match the
+  list stays empty. Choosing an option closes the list and keeps the draft, so Apply still
+  has to confirm it; choosing `None` disables Apply again. The selected option is marked and
+  the list scrolls. Panel size, the band above the list, list height, border and row colours
+  come from the Sort By field dropdown tokens and `list-views.md` › Sort By field dropdown.
+  The panel keeps the shared popover chrome (`bg-surface`, 1 px `--color-border`, shadow), is
+  left-aligned with the selector and overlaps its bottom border by 1 px
+  (`SORT_FIELD_DROPDOWN_OFFSET`: panel top y 222, selector bottom y 223). The search band is
+  `--size-popover-sort-field-dropdown-list-offset` (panel y 222 → list y 268 = 46 px, minus the
+  panel border in `list-chrome.css`), so the list body starts on the measured edge. The
+  trigger and the option rows carry the Sort dialog text role (`variant="sort"`:
+  `--text-sm`, `--font-weight-normal`) from `typography.md` › List and detail text roles;
+  that role has no bold selected row, so the only row override left is the measured
+  selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -369,6 +390,10 @@ Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
 Invalid values fall back to defaults. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
 count queries without changing the URL.
+`sort_by` is accepted only for a field in the Sort By list, so the address and
+the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
+module's ordered `sortFieldLabels` against field metadata by label, and
+`Lead Name` resolves to the config's `linkField`.
 
 ### Filter apply (Leads)
 
@@ -411,8 +436,22 @@ and related-module groups stay disabled.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.
-- Sort By options are all module fields except the nine non-sortable API names in
-  `list-views.md` › Sorting; the reference menu contents were not observed.
+- The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
+  Sorting), none dropped: every label resolves to a Leads metadata field. A label
+  without a metadata field would leave the list out and be named here.
+- The Sort By search input reuses the filter search tokens (34 px high, magnifier
+  inset) because the spec measures only the panel and the list body. The band it
+  sits in is measured (`--size-popover-sort-field-dropdown-list-offset`, 46 px from
+  the panel top to the list top); the input is centred in that band, so its own
+  inset (5.5 px above and below) is Interim.
+- An empty search result shows an empty list; the reference's no-match state was
+  not captured (no message is drawn).
+- Choosing `None` cannot clear an applied sort: Apply stays disabled, so the sort
+  in the address can only be replaced by another field. Clearing through Sort
+  was not observed.
+- While the field list is open, React Aria hides the rest of the Sort dialog from
+  assistive technology (nested overlay). Escape closes the list first, back to the
+  dialog and then to the page.
 - Multiple field filters combine with `AND`; filters are not stored in the address
   and clear on full page reload; no toolbar indicator after apply; empty results use
   the table empty state; validation errors appear above Apply/Clear; the panel stays

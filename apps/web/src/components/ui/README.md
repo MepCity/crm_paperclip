@@ -23,7 +23,9 @@ controlled or uncontrolled panel. The expand mark is an original filled triangle
 tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
 disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
 search height, a decorative magnifier, control border and placeholder tokens) and a
-separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+separate `placeholder` prop. Its `size` prop sets the width: `measured` (default) keeps the
+167 px filter search width token, `fill` spans the container it sits in, which is what an
+option panel that is wider than the filter row needs. Unchecked `Checkbox` boxes use the measured checkbox
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
@@ -395,6 +397,10 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-popover-sort-field-dropdown-width` | `380px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
+| `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -793,6 +799,25 @@ opacity, with the same white label, instead of a faded copy of the enabled gradi
 menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
+
+## Searchable select primitive
+
+`SearchableSelect({ label, variant, valueText, options, optionKey, optionText, selectedKey, onSelect,
+searchLabel, panelTitle, children })` is a single-choice selector whose option panel carries a
+search field above the list. It loads no data, never sorts the options it is given, and filters
+them by `optionText` case-insensitively; with no match the list is empty and no message is drawn.
+Choosing an option reports it and closes the panel. Every opening starts with an empty search
+field. `offset` places the panel against the trigger (a negative value overlaps the trigger's
+border), `searchClassName` classes the band that holds the search field, and
+`TextField.size="fill"` makes the input span that band instead of the filter search width token.
+`variant` is the trigger's text role and matches `Select`'s: `sort` marks the trigger with
+`record-control-sort` (typography.md › List and detail text roles › Sort dialog field selector
+value); the default keeps the shared record-control appearance. Rows are the caller's
+`SelectItem`s, so the shared option appearance stays in one place. Its
+`/dev/ui` gallery is the searchable-select region; the component tests cover order preservation,
+filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
+Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
+sizes come from the Sort By field dropdown tokens.
 
 ## Record detail extensions
 
