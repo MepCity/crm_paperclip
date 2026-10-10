@@ -31,6 +31,32 @@ function createService(): ClientRecordService {
   });
 }
 
+function expectLeadStatusOnRibbonStep(label: string) {
+  const ribbon = screen.getByRole("region", { name: "Lead status" });
+  const currentStage = ribbon.querySelector("[aria-current='step']");
+  expect(currentStage?.textContent).toContain(label);
+}
+
+function expectLeadStatusOnBusinessCard(label: string) {
+  const row = screen
+    .getByLabelText("Business card")
+    .querySelector('[data-detail-field="Lead_Status"] .detail-field-value-wrap');
+  expect(row?.textContent).toBe(label);
+}
+
+function expectLeadStatusOnDetailsCard(label: string) {
+  const row = screen
+    .getByLabelText("Details card")
+    .querySelector('[data-detail-field="Lead_Status"] .detail-field-value-wrap');
+  expect(row?.textContent).toBe(label);
+}
+
+function expectLeadStatusEverywhere(label: string) {
+  expectLeadStatusOnRibbonStep(label);
+  expectLeadStatusOnBusinessCard(label);
+  expectLeadStatusOnDetailsCard(label);
+}
+
 function renderScreen(service: ClientRecordService, recordId: string) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
@@ -149,6 +175,7 @@ describe("LeadRecordScreen", () => {
 
     const pendingGet: { release: (() => void) | null } = { release: null };
     let blockNextGet = false;
+    let deferredRefetchDone = false;
     const getRecord = service.get.bind(service);
     vi.spyOn(service, "get").mockImplementation(async (module, id) => {
       const data = await getRecord(module, id);
@@ -157,6 +184,7 @@ describe("LeadRecordScreen", () => {
         await new Promise<void>((resolve) => {
           pendingGet.release = resolve;
         });
+        deferredRefetchDone = true;
       }
       return data;
     });
@@ -169,16 +197,60 @@ describe("LeadRecordScreen", () => {
     await user.click(screen.getByRole("button", { name: "Choose lead status" }));
     await user.click(screen.getByRole("menuitemradio", { name: nextStatus }));
 
-    const expectNextStatusEverywhere = () => {
-      expect(screen.getAllByText(nextStatus).length).toBeGreaterThanOrEqual(2);
-    };
-
-    await waitFor(expectNextStatusEverywhere);
+    await waitFor(() => expectLeadStatusEverywhere(nextStatus));
     if (!pendingGet.release) throw new Error("Expected record refetch to be blocked.");
-    expectNextStatusEverywhere();
+    expectLeadStatusEverywhere(nextStatus);
 
+    if (!pendingGet.release) throw new Error("Expected record refetch to be blocked.");
     pendingGet.release();
-    await waitFor(expectNextStatusEverywhere);
+    await waitFor(() => expect(deferredRefetchDone).toBe(true));
+    await waitFor(() => expectLeadStatusEverywhere(nextStatus));
+  });
+
+  it("keeps the latest Lead_Status when a stale refetch resolves after reverting the stage", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[3];
+    if (!record) throw new Error("Expected seeded lead.");
+    const originalStatus = record.fields.Lead_Status;
+    if (typeof originalStatus !== "string") throw new Error("Expected string status.");
+    const interimStatus = originalStatus === "Contacted" ? "Pre-Qualified" : "Contacted";
+
+    const staleRelease: { run: (() => void) | null } = { run: null };
+    let deferStaleSnapshot = false;
+    const getRecord = service.get.bind(service);
+    vi.spyOn(service, "get").mockImplementation(async (module, id) => {
+      const data = await getRecord(module, id);
+      if (deferStaleSnapshot) {
+        deferStaleSnapshot = false;
+        const snapshot = data;
+        await new Promise<void>((resolve) => {
+          staleRelease.run = () => resolve();
+        });
+        return snapshot;
+      }
+      return data;
+    });
+
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
+
+    const user = userEvent.setup();
+    deferStaleSnapshot = true;
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: interimStatus }));
+    await waitFor(() => expectLeadStatusEverywhere(interimStatus));
+    if (!staleRelease.run) throw new Error("Expected stale refetch to be deferred.");
+
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: originalStatus }));
+    await waitFor(() => expectLeadStatusEverywhere(originalStatus));
+
+    staleRelease.run();
+    await waitFor(() => expectLeadStatusEverywhere(originalStatus));
   });
 
   it("reverts the ribbon and shows an error when the update fails", async () => {

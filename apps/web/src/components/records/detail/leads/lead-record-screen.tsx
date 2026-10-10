@@ -74,6 +74,9 @@ export function LeadRecordScreen({
 }: LeadRecordScreenProps) {
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
+  const [awaitingServerValue, setAwaitingServerValue] = useState<string | null | undefined>(
+    undefined,
+  );
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
   const moduleQuery = useModule(LEADS_MODULE);
@@ -112,10 +115,14 @@ export function LeadRecordScreen({
     : undefined;
 
   useEffect(() => {
-    if (statusOverride === undefined) return;
+    if (awaitingServerValue === undefined) return;
     if (serverLeadStatus === undefined) return;
-    if (serverLeadStatus === statusOverride) setStatusOverride(undefined);
-  }, [serverLeadStatus, statusOverride]);
+    if (recordQuery.isFetching) return;
+    if (serverLeadStatus !== awaitingServerValue) return;
+    if (statusOverride !== undefined && statusOverride !== awaitingServerValue) return;
+    setAwaitingServerValue(undefined);
+    setStatusOverride(undefined);
+  }, [awaitingServerValue, recordQuery.isFetching, serverLeadStatus, statusOverride]);
 
   const loading =
     moduleQuery.isLoading ||
@@ -170,6 +177,7 @@ export function LeadRecordScreen({
           field={statusField}
           value={displayStatus}
           onValueChange={setStatusOverride}
+          onWriteSuccess={setAwaitingServerValue}
         />
       ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}

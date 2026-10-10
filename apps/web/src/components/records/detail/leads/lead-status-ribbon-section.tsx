@@ -2,9 +2,11 @@
 
 import { isAppError } from "@crm/core/errors";
 import type { FieldDefinition, ModuleApiName, RecordId } from "@crm/core/records";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { StatusRibbon } from "@/components/records/detail/status-ribbon";
 import { useUpdateRecord } from "@/lib/api/client/hooks";
+import { apiKeys } from "@/lib/api/client/query-keys";
 import {
   buildLeadStatusStages,
   buildLeadStatusTerminalGroups,
@@ -17,6 +19,7 @@ export type LeadStatusRibbonSectionProps = {
   field: FieldDefinition;
   value: string | null;
   onValueChange: (value: string | null) => void;
+  onWriteSuccess?: (value: string | null) => void;
 };
 
 export function LeadStatusRibbonSection({
@@ -25,7 +28,9 @@ export function LeadStatusRibbonSection({
   field,
   value,
   onValueChange,
+  onWriteSuccess,
 }: LeadStatusRibbonSectionProps) {
+  const queryClient = useQueryClient();
   const update = useUpdateRecord(module);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const stages = buildLeadStatusStages(field);
@@ -39,13 +44,16 @@ export function LeadStatusRibbonSection({
       onValueChange(next);
       setErrorMessage(null);
       try {
-        await update.mutateAsync({ id: recordId, input: { Lead_Status: next } });
+        const updated = await update.mutateAsync({ id: recordId, input: { Lead_Status: next } });
+        await queryClient.cancelQueries({ queryKey: apiKeys.record(module, recordId) });
+        queryClient.setQueryData(apiKeys.record(module, recordId), updated);
+        onWriteSuccess?.(next);
       } catch (error) {
         onValueChange(previous);
         setErrorMessage(isAppError(error) ? error.message : "Unable to update lead status.");
       }
     },
-    [onValueChange, recordId, update, value],
+    [module, onValueChange, onWriteSuccess, queryClient, recordId, update, value],
   );
 
   return (
