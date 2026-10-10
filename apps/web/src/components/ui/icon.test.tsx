@@ -19,6 +19,8 @@ const expectedIcons = [
   "filterChevronRight",
   "filterSearch",
   "createRecordPlus",
+  "columnSortAsc",
+  "columnSortDesc",
   "building",
   "check",
   "chevronUp",
