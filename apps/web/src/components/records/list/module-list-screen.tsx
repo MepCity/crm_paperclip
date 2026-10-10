@@ -14,9 +14,12 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
+import { MassUpdateDialog } from "./mass-update-dialog";
+import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { SelectionBar } from "./selection-bar";
 import "./module-list-page.css";
 import {
@@ -31,9 +34,12 @@ import {
 } from "@/lib/api/client/hooks";
 import { withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { usePreference } from "@/lib/preferences";
 import {
   appliedSortFromState,
   LIST_PAGE_DEFAULT,
+  LIST_PER_PAGE_DEFAULT,
+  type ListPerPage,
   type ListSearchState,
   listQueryFromSearchState,
   parseListSearchParams,
@@ -42,6 +48,7 @@ import {
 import { writeRecordListContext } from "@/lib/records/record-list-context";
 import { resolveSortFieldLabels } from "@/lib/records/sort-fields";
 import { RecordTable } from "./record-table";
+import { ViewSettingsMenu } from "./view-settings-menu";
 import { ViewTabStrip } from "./view-tab-strip";
 
 export interface ModuleListPaths {
@@ -113,7 +120,12 @@ function ModuleListScreenLoaded({
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
-  const searchState = useMemo(() => parseListSearchParams(searchParams), [searchParams]);
+  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", LIST_PER_PAGE_DEFAULT);
+  const [wrapText, setWrapText] = usePreference(`list.wrap-text.${viewId}`, true);
+  const searchState = useMemo(
+    () => parseListSearchParams(searchParams, storedPerPage),
+    [searchParams, storedPerPage],
+  );
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
@@ -126,6 +138,8 @@ function ModuleListScreenLoaded({
   const priorViewId = useRef(viewId);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [massUpdateOpen, setMassUpdateOpen] = useState(false);
+  const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const deleteRecords = useDeleteRecords(config.module);
 
   const moduleQuery = useModule(config.module);
@@ -229,6 +243,26 @@ function ModuleListScreenLoaded({
       .filter((field): field is FieldDefinition => field !== undefined);
   }, [columnApiNames, moduleQuery.data?.fields]);
 
+  const massUpdateFields = useMemo(
+    () => (moduleQuery.data ? massUpdateFieldsInLayoutOrder(moduleQuery.data) : []),
+    [moduleQuery.data],
+  );
+
+  const ownerField = useMemo(
+    () => moduleQuery.data?.fields.find((field) => field.dataType === "ownerlookup") ?? null,
+    [moduleQuery.data?.fields],
+  );
+
+  const ownerOptions = useMemo(
+    () =>
+      (users.data ?? []).map((member) => ({
+        id: member.userId,
+        name: member.name,
+        email: member.email,
+      })),
+    [users.data],
+  );
+
   const listBasePath = useMemo(() => {
     if (routeViewId) return config.paths.customList(orgSlug, config.module, routeViewId);
     return config.paths.defaultList(orgSlug, config.module);
@@ -249,15 +283,6 @@ function ModuleListScreenLoaded({
       page: pageData.page,
       perPage: pageData.perPage,
       recordIds: pageData.records.map((record) => record.id),
-      listQuery: {
-        viewId: listQuery.viewId,
-        page: listQuery.page,
-        perPage: listQuery.perPage,
-        sort: listQuery.sort,
-        filters: listQuery.filters,
-        search: listQuery.search,
-        fields: listQuery.fields,
-      },
     });
   }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
 
@@ -278,6 +303,12 @@ function ModuleListScreenLoaded({
     searchState.sortOrder,
     filterSelection,
   ]);
+
+  /** A page-size choice is stored as a preference and applied to the address from page 1. */
+  function changePerPage(next: ListPerPage) {
+    setStoredPerPage(next);
+    navigate({ ...searchState, page: LIST_PAGE_DEFAULT, perPage: next });
+  }
 
   function refreshView() {
     setSelectedIds([]);
@@ -411,6 +442,18 @@ function ModuleListScreenLoaded({
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onDelete={openDeleteDialog}
+          onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
+          actions={
+            ownerField
+              ? [
+                  {
+                    id: "change-owner",
+                    label: "Change Owner",
+                    onAction: () => setChangeOwnerOpen(true),
+                  },
+                ]
+              : []
+          }
         />
       ) : (
         <ListToolbar
@@ -432,6 +475,28 @@ function ModuleListScreenLoaded({
           }}
         />
       )}
+      {massUpdateOpen && massUpdateFields.length > 0 ? (
+        <MassUpdateDialog
+          isOpen
+          onOpenChange={setMassUpdateOpen}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          fields={massUpdateFields}
+          users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
+      {changeOwnerOpen && ownerField ? (
+        <ChangeOwnerDialog
+          isOpen
+          onOpenChange={setChangeOwnerOpen}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          ownerField={ownerField}
+          users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
       {deleteOpen ? (
         <ConfirmDialog
           isOpen
@@ -474,8 +539,16 @@ function ModuleListScreenLoaded({
               const allowed = new Set(records.map((record) => record.id));
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
-            wrapText
+            wrapText={wrapText}
             emptyMessage={emptyMessage}
+            settings={
+              <ViewSettingsMenu
+                perPage={searchState.perPage}
+                onPerPageChange={changePerPage}
+                wrapText={wrapText}
+                onWrapTextChange={setWrapText}
+              />
+            }
             ownerNames={ownerNames}
             format={DEFAULT_FORMAT}
             footer={{

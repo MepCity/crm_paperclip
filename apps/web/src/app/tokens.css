@@ -381,7 +381,7 @@
   --size-form-caret-inset-end: 12px;
   --size-form-input-end: 32px;
   --size-form-input-end-icon: 16px;
-  --size-form-currency-prefix-inset: 12px;
+  --size-form-currency-prefix-inset: 11.5px;
   --size-form-currency-divider-gap: 9.5px;
   --size-form-currency-divider-height: 20px;
   --size-form-currency-divider-top: 7px;
@@ -406,6 +406,24 @@
   --size-confirm-dialog-title-gap: 18.5px;
   --size-confirm-dialog-message-actions-gap: 30.5px;
   --size-confirm-dialog-actions-gap: 10.5px;
+  --size-list-mass-update-button-width: 113px;
+  --size-mass-update-dialog-width: 484px;
+  --size-mass-update-dialog-height: 207px;
+  --size-mass-update-dialog-padding-inline: 31px;
+  --size-mass-update-dialog-title-padding-inline-start: 32.5px;
+  --size-mass-update-dialog-title-line-height: 18.5px;
+  --size-mass-update-dialog-padding-block-start: 29.5px;
+  --size-mass-update-dialog-padding-block-end: 31px;
+  --size-mass-update-dialog-title-fields-gap: 32px;
+  --size-mass-update-dialog-fields-actions-gap: 30px;
+  --size-mass-update-field-selector-width: 122px;
+  --size-mass-update-value-width: 285px;
+  --size-mass-update-field-gap: 15px;
+  --size-mass-update-cancel-width: 74px;
+  --size-mass-update-update-width: 76px;
+  --size-mass-update-actions-gap: 11.5px;
+  --color-mass-update-value-disabled-fill: #f5f6f8;
+  --color-mass-update-value-border: #d9dce2;
 
   /* List popovers */
   --size-popover-view-width: 128px;

@@ -15,6 +15,7 @@ import { useModule, useRecord, useRecordList, useUsers, useViews } from "@/lib/a
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
+import { resolveLeadsDetailBackHref } from "@/lib/records/leads-detail-back-href";
 import {
   buildLeadsBusinessCardFields,
   buildLeadsDetailSections,
@@ -74,10 +75,11 @@ export function LeadRecordScreen({
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
+  const viewsQueryEnabled = listContext === null;
   const moduleQuery = useModule(LEADS_MODULE);
   const recordQuery = useRecord(LEADS_MODULE, recordId);
   const usersQuery = useUsers();
-  const viewsQuery = useViews(LEADS_MODULE);
+  const viewsQuery = useViews(LEADS_MODULE, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -109,7 +111,7 @@ export function LeadRecordScreen({
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
     usersQuery.isLoading ||
-    viewsQuery.isLoading ||
+    (viewsQueryEnabled && viewsQuery.isLoading) ||
     (!listContext && fallbackListQuery !== null && fallbackList.isLoading && !fallbackList.data);
 
   if (loading) return <LeadRecordLoadingShell />;
@@ -120,7 +122,7 @@ export function LeadRecordScreen({
   }
   if (moduleQuery.isError) throw moduleQuery.error;
   if (usersQuery.isError) throw usersQuery.error;
-  if (viewsQuery.isError) throw viewsQuery.error;
+  if (viewsQueryEnabled && viewsQuery.isError) throw viewsQuery.error;
   if (!listContext && fallbackListQuery && fallbackList.isError) throw fallbackList.error;
 
   const module = moduleQuery.data;
@@ -129,11 +131,10 @@ export function LeadRecordScreen({
 
   const orderedIds =
     listContext?.recordIds ?? fallbackList.data?.records.map((row) => row.id) ?? [];
-  const backHref =
-    listContext?.listHref ??
-    (fallbackViewId
-      ? paths.defaultList(orgSlug, LEADS_MODULE)
-      : paths.defaultList(orgSlug, LEADS_MODULE));
+  const backHref = resolveLeadsDetailBackHref(
+    listContext,
+    paths.defaultList(orgSlug, LEADS_MODULE),
+  );
 
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 

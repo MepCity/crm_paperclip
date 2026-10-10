@@ -17,6 +17,7 @@ import {
   decodeView,
   encodeCriteria,
   encodeInput,
+  invalid,
 } from "@/lib/api/wire/codec";
 import { operationPath, operations } from "@/lib/api/wire/operations";
 import type {
@@ -186,8 +187,10 @@ export function createHttpRecordService({
     async getHomeCurrency() {
       const body = (await request(operationPath(operations.currencies), {
         method: operations.currencies.method,
-      })) as WireCurrenciesResponse;
-      return decodeCurrency(requiredWire(body.currencies[0], "Currency"));
+      })) as WireCurrenciesResponse | null;
+      const currencies = body?.currencies;
+      if (!Array.isArray(currencies)) invalid("currencies");
+      return decodeCurrency(requiredWire(currencies[0], "Currency"));
     },
     getModule: loadModuleMetadata,
 
