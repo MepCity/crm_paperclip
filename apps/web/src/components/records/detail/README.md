@@ -11,7 +11,8 @@ and page placement live in MEP-144.
 | Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
 | Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
-| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order |
+| More Options (Leads) | `lib/records/leads-record-more-options.ts` — full spec-ordered inventory (`LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS`); `buildLeadsRecordMoreMenuGroups` renders only handler-backed items (MEP-163: `Delete`). Unimplemented labels: `LEADS_RECORD_MORE_OPTIONS_DEVIATIONS`. |
+| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order, same-page neighbor scope |
 | Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
 | Status ribbon | `leads/lead-status-ribbon-section.tsx` with `lib/records/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
@@ -43,6 +44,12 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 
 ## Interim
 
+- Detail **Delete** (MEP-163): confirmation title `Delete Lead`, body
+  `Are you sure you want to delete this Lead?`, buttons `Cancel` and `Delete`; on
+  success navigate to the same list URL as Back (list context or default view) with
+  no toast. Related child records (notes, open/closed activities) are not removed
+  in Module 1; when Activities (M5) and notes/attachments (M6) ship, delete should
+  cascade per `leads-write-behaviour.md` › A1.
 - Lead status ribbon (MEP-167): stage changes apply immediately with no confirmation or toast;
   failed writes revert the ribbon and show form-style error text beneath it; only the current-stage
   and terminal menus change `Lead_Status` (other chevrons are not clickable); rejected-stage groups
