@@ -179,8 +179,7 @@ surrounding trigger.
   This component gallery is not the final page layout.
 - Owner picker dialog: MEP-139 (row 19). Action is rendered only with a callback.
 - Create/edit page actions and save: MEP-145 (rows 20–21).
-- Measured validation appearance: MEP-146 (row 22); existing invalid primitive
-  colour and accessible explanation remain in this issue.
+- Measured validation appearance and unsaved-changes dialog: MEP-146 (row 22).
 - Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported lookup/multi-module/date-time/long-integer controls: absent from
@@ -215,9 +214,14 @@ mapping and create/partial-update payloads. An edit form keeps its initial basel
 while queries refetch, preserving in-progress input. Writes use `useCreateRecord`
 and `useUpdateRecord`; all strip actions and inputs are disabled while a write is
 pending, and a synchronous guard prevents duplicate submissions. The form has
-`noValidate`: server validation owns these errors; measured validation and dirty
-form confirmation belong to MEP-146. Field errors appear at their controls and
-focus the first rendered error, including composite prefix and longitude controls.
+`noValidate`: client validation runs on `Save` before any write; server field errors
+reuse the same inline appearance. `UnsavedChangesDialog` opens from `Cancel` when
+the form is dirty. Field errors appear at their controls and focus the first
+rendered error, including composite prefix and longitude controls.
+
+**Interim (MEP-146):** email format uses the browser email validity check when
+available; integer format rejects non-integer numbers. Unsaved-changes confirmation
+is wired to `Cancel` only (browser back and in-app links were not observed).
 
 ### Interim page behavior and Leads rules
 

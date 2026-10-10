@@ -5,8 +5,108 @@ import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
 import { expectWithin1 } from "./support/geometry";
 import { createOrganization } from "./support/org";
-import { expect, ignoreFailedResponses, test } from "./support/test";
+import { expect, test } from "./support/test";
 import { expectType } from "./support/typography";
+
+function px(value: string) {
+  return Number.parseFloat(value);
+}
+
+async function tokenColor(page: Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  }, token);
+}
+
+async function sampleBackdropFromOverlayToken(page: Page) {
+  return page.evaluate(() => {
+    const overlay = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-overlay")
+      .trim();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = overlay;
+    context.globalAlpha = 0.5;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  });
+}
+
+async function sampleComputedBackground(page: Page, css: string) {
+  return page.evaluate((background) => {
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = background;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Expected canvas context.");
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = value;
+    context.fillRect(0, 0, 1, 1);
+    const pixels = context.getImageData(0, 0, 1, 1).data;
+    return {
+      red: pixels[0] ?? 0,
+      green: pixels[1] ?? 0,
+      blue: pixels[2] ?? 0,
+      alpha: pixels[3] ?? 0,
+    };
+  }, css);
+}
+
+function expectRgbaClose(
+  actual: { red: number; green: number; blue: number; alpha: number },
+  expected: { red: number; green: number; blue: number; alpha: number },
+) {
+  for (const channel of ["red", "green", "blue", "alpha"] as const) {
+    expect(Math.abs(actual[channel] - expected[channel])).toBeLessThanOrEqual(2);
+  }
+}
+
+async function expectLinearGradientUsesColors(
+  page: Page,
+  locator: import("@playwright/test").Locator,
+  startToken: string,
+  endToken: string,
+) {
+  const startColor = await tokenColor(page, startToken);
+  const endColor = await tokenColor(page, endToken);
+  const backgroundImage = await locator.evaluate(
+    (element) => getComputedStyle(element).backgroundImage,
+  );
+  expect(backgroundImage).toContain("linear-gradient");
+  expect(backgroundImage).toContain(startColor);
+  expect(backgroundImage).toContain(endColor);
+}
+
+async function tokenLength(page: Page, token: string) {
+  return page.evaluate((name) => {
+    const probe = document.createElement("div");
+    probe.style.width = `var(${name})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).width;
+    probe.remove();
+    return value;
+  }, token);
+}
 
 async function openCreate(page: Page) {
   await signUpNewUser(page);
@@ -75,15 +175,136 @@ test("Save and New clears the form and leaves a saved record in the list", async
   await expect(page.getByRole("link", { name: "Form Lead New", exact: true })).toBeVisible();
 });
 
-test("server field errors keep the form open and focus Company", async ({ page, pageErrors }) => {
+test("client validation keeps the form open, shows messages and focuses Company", async ({
+  page,
+}) => {
   await openCreate(page);
-  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Validation Lead");
+  const saveRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Leads",
+    { timeout: 2_000 },
+  );
   await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Company cannot be empty.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Last Name cannot be empty.", { exact: true })).toBeVisible();
   const company = page.getByRole("textbox", { name: "Company", exact: true });
   await expect(company).toHaveAttribute("aria-invalid", "true");
   await expect(company).toBeFocused();
   await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
-  ignoreFailedResponses(pageErrors, [400]);
+  await expect(saveRequest).rejects.toThrow();
+});
+
+test("invalid email shows a format message without saving", async ({ page }) => {
+  await openCreate(page);
+  await fillRequired(page);
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill("not-an-email");
+  const saveRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Leads",
+    { timeout: 2_000 },
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Please enter a valid Email.", { exact: true })).toBeVisible();
+  await expect(saveRequest).rejects.toThrow();
+});
+
+test("validation and unsaved dialog visuals match record-detail tokens", async ({ page }) => {
+  await openCreate(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const companyField = page.locator("[data-form-field=Company]");
+  const message = companyField.getByText("Company cannot be empty.", { exact: true });
+  const frame = companyField.locator(".record-input-frame");
+  const frameBox = await frame.boundingBox();
+  const messageBox = await message.boundingBox();
+  if (!frameBox || !messageBox) throw new Error("Missing validation geometry");
+  expectWithin1(messageBox.y - (frameBox.y + frameBox.height), 4);
+  await expect(message).toHaveCSS("color", "rgb(255, 93, 90)");
+  await expectType(page, message, "--text-sm", "--font-weight-normal");
+  await expect(frame).toHaveCSS("border-top-color", "rgb(255, 93, 90)");
+  await expect(frame).toHaveCSS("border-top-width", "1px");
+  await expect(frame).toHaveCSS("border-right-width", "1px");
+  await expect(frame).toHaveCSS("border-bottom-width", "1px");
+  await expect(frame).toHaveCSS("border-left-width", "1px");
+  await page.getByRole("textbox", { name: "Company", exact: true }).fill("Dirty");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  const dialog = page.getByRole("alertdialog");
+  const panel = dialog.locator("xpath=..");
+  const modalBox = await panel.boundingBox();
+  if (!modalBox) throw new Error("Missing dialog");
+  const dialogWidth = px(await tokenLength(page, "--size-dialog-width"));
+  expectWithin1(modalBox.width, dialogWidth);
+  const cornerRadius = px(await tokenLength(page, "--radius-create-menu"));
+  await expect(panel).toHaveCSS("border-radius", `${cornerRadius}px`);
+  const title = dialog.getByRole("heading");
+  const titleBox = await title.boundingBox();
+  if (!titleBox) throw new Error("Missing dialog title");
+  const paddingTop = px(await tokenLength(page, "--size-confirm-dialog-padding-block-start"));
+  const paddingInline = px(await tokenLength(page, "--size-confirm-dialog-padding-inline"));
+  const paddingBottom = px(await tokenLength(page, "--size-confirm-dialog-padding-block-end"));
+  expectWithin1(titleBox.y - modalBox.y, paddingTop);
+  expectWithin1(titleBox.x - modalBox.x, paddingInline);
+  const backdrop = dialog.locator('xpath=ancestor::*[contains(@class,"inset-0")][1]');
+  const backdropColor = await backdrop.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const expectedBackdrop = await sampleBackdropFromOverlayToken(page);
+  const actualBackdrop = await sampleComputedBackground(page, backdropColor);
+  expectRgbaClose(actualBackdrop, expectedBackdrop);
+  const stay = page.getByRole("button", { name: "Stay Here", exact: true });
+  const leave = page.getByRole("button", { name: "Yes, Leave Page", exact: true });
+  const stayBox = await stay.boundingBox();
+  const leaveBox = await leave.boundingBox();
+  if (!stayBox || !leaveBox) throw new Error("Missing dialog actions");
+  expectWithin1(stayBox.height, 32);
+  expectWithin1(leaveBox.height, 32);
+  const stayWidth = px(await tokenLength(page, "--size-unsaved-dialog-stay-width"));
+  const leaveWidth = px(await tokenLength(page, "--size-unsaved-dialog-leave-width"));
+  expectWithin1(stayBox.width, stayWidth);
+  expectWithin1(leaveBox.width, leaveWidth);
+  expectWithin1(leaveBox.x - (stayBox.x + stayBox.width), 10.5);
+  expectWithin1(modalBox.y + modalBox.height - (leaveBox.y + leaveBox.height), paddingBottom);
+  await expect(stay).toHaveCSS("border-radius", `${cornerRadius}px`);
+  await expect(leave).toHaveCSS("border-radius", `${cornerRadius}px`);
+  await expect(stay).toHaveCSS("border-top-width", "1px");
+  await expect(stay).toHaveCSS(
+    "border-top-color",
+    await tokenColor(page, "--color-unsaved-dialog-stay-border"),
+  );
+  await expect(stay).toHaveCSS("color", await tokenColor(page, "--color-unsaved-dialog-stay-text"));
+  await expect(leave).toHaveCSS(
+    "color",
+    await tokenColor(page, "--color-unsaved-dialog-leave-text"),
+  );
+  await expectType(page, stay, "--text-md", "--font-weight-normal");
+  await expectType(page, leave, "--text-md", "--font-weight-semibold");
+  await expectLinearGradientUsesColors(
+    page,
+    stay,
+    "--color-unsaved-dialog-stay-start",
+    "--color-unsaved-dialog-stay-end",
+  );
+  await expectLinearGradientUsesColors(
+    page,
+    leave,
+    "--color-unsaved-dialog-leave-start",
+    "--color-unsaved-dialog-leave-end",
+  );
+});
+
+test("dirty cancel opens unsaved dialog; Stay Here and Leave Page behave correctly", async ({
+  page,
+}) => {
+  const { list } = await openCreate(page);
+  await page.getByRole("textbox", { name: "Company", exact: true }).fill("Dirty Company");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  const dialog = page.getByRole("alertdialog", { name: "You have not saved your changes." });
+  await expect(dialog).toBeVisible();
+  await page.getByRole("button", { name: "Stay Here", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Yes, Leave Page", exact: true }).click();
+  await expect(page).toHaveURL(`${list}?page=2&per_page=10`);
 });
 
 test("Cancel on Edit returns to detail; the actual owner dialog opens", async ({ page }) => {

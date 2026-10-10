@@ -400,6 +400,15 @@ what the "no colour constants" rule forbids.
 | `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
 | `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
 | `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
+| `--size-unsaved-dialog-stay-width` | `91px` | record-detail.md › Unsaved changes modal › Secondary action | from spec |
+| `--size-unsaved-dialog-leave-width` | `130.5px` | record-detail.md › Unsaved changes modal › Destructive action | from spec |
+| `--color-unsaved-dialog-stay-border` | `#d6d8e8` | record-detail.md › Unsaved changes modal › Secondary action › border | from spec |
+| `--color-unsaved-dialog-stay-start` | `#ffffff` | record-detail.md › Unsaved changes modal › Secondary action › gradient start | from spec |
+| `--color-unsaved-dialog-stay-end` | `#f1f0f7` | record-detail.md › Unsaved changes modal › Secondary action › gradient end | from spec |
+| `--color-unsaved-dialog-stay-text` | `#313949` | record-detail.md › Unsaved changes modal › Secondary action › label ink | from spec |
+| `--color-unsaved-dialog-leave-start` | `#ff4657` | record-detail.md › Unsaved changes modal › Destructive action › gradient start | from spec |
+| `--color-unsaved-dialog-leave-end` | `#e33041` | record-detail.md › Unsaved changes modal › Destructive action › gradient end | from spec |
+| `--color-unsaved-dialog-leave-text` | `#ffffff` | record-detail.md › Unsaved changes modal › Destructive action › label ink | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |

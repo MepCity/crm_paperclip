@@ -252,7 +252,7 @@ export function RecordChoice({
         </Popover>
       </DialogTrigger>
       {errorMessage && (
-        <span id={errorId} className="text-sm text-danger">
+        <span id={errorId} className="record-form-validation-error">
           {errorMessage}
         </span>
       )}
