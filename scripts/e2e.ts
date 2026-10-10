@@ -24,6 +24,9 @@ const baseEnv = {
 
 let current: ChildProcess | undefined;
 let interrupted = false;
+// `shutdown` stores the signal's code here too: main() can resume from the killed child
+// before shutdown's cleanup finishes, and a hard-coded 130 there turned SIGTERM into 130.
+let interruptedExitCode = 130;
 let shuttingDown = false;
 let postgres: TestPostgres | undefined;
 let activePort: number | undefined;
@@ -129,6 +132,7 @@ async function cleanupAfterRun(): Promise<void> {
 async function shutdown(exitCode: number): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
+  interruptedExitCode = exitCode;
   interrupted = true;
   current?.kill("SIGTERM");
   await cleanupAfterRun();
@@ -182,12 +186,12 @@ async function main(): Promise<number> {
     const database = await createWorkerDatabase(postgres.adminUrl, "e2e");
 
     // No-op when Chromium is already installed.
-    if ((await run("playwright", ["install", "chromium"], baseEnv)) !== 0) return 1;
-    if (interrupted) return 130;
+    const installCode = await run("playwright", ["install", "chromium"], baseEnv);
+    if (interrupted) return interruptedExitCode;
+    if (installCode !== 0) return 1;
 
-    await acquireE2eLock({ shouldStop: () => interrupted });
-    if (interrupted) return 130;
-    lockHeld = true;
+    lockHeld = await acquireE2eLock({ shouldStop: () => interrupted });
+    if (interrupted) return interruptedExitCode;
 
     const port = await pickFreePort();
     activePort = port;
@@ -201,13 +205,14 @@ async function main(): Promise<number> {
 
     try {
       console.log("e2e: building the production bundle");
-      if ((await run("next", ["build"], env)) !== 0) return 1;
-      if (interrupted) return 130;
+      const buildCode = await run("next", ["build"], env);
+      if (interrupted) return interruptedExitCode;
+      if (buildCode !== 0) return 1;
       console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
       playwrightStageStarted = true;
       const playwrightArgs = ["test", ...process.argv.slice(2)];
       const code = await run("playwright", playwrightArgs, env);
-      if (interrupted) return 130;
+      if (interrupted) return interruptedExitCode;
       return code;
     } finally {
       if (lockHeld) {

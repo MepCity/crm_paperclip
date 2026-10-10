@@ -28,26 +28,25 @@ describe("e2e machine-wide lock", () => {
 
   it("acquires and releases the lock directory", async () => {
     const fs = await import("node:fs/promises");
-    const release = await acquireE2eLock();
+    expect(await acquireE2eLock()).toBe(true);
     await expect(fs.access(lockDir)).resolves.toBeUndefined();
-    await release();
+    await releaseE2eLock();
     await expect(fs.access(lockDir)).rejects.toThrow();
   });
 
   it("blocks a second acquirer until the first releases", async () => {
-    const firstRelease = await acquireE2eLock();
+    expect(await acquireE2eLock()).toBe(true);
     let secondAcquired = false;
-    const second = acquireE2eLock().then(async (release) => {
+    const second = acquireE2eLock().then((held) => {
       secondAcquired = true;
-      await release();
+      return held;
     });
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(secondAcquired).toBe(false);
 
-    await firstRelease();
-    await second;
-    expect(secondAcquired).toBe(true);
+    await releaseE2eLock();
+    expect(await second).toBe(true);
   });
 
   it("takes over a lock whose owner pid is not running", async () => {
@@ -56,23 +55,23 @@ describe("e2e machine-wide lock", () => {
     await fs.writeFile(join(lockDir, "pid"), "999999999");
     await fs.writeFile(join(lockDir, "startedAt"), String(Date.now()));
 
-    const release = await acquireE2eLock();
-    await release();
+    expect(await acquireE2eLock()).toBe(true);
+    await expect(fs.readFile(join(lockDir, "pid"), "utf8")).resolves.toBe(String(process.pid));
   });
 
-  it("continues without a lock when the wait budget expires", async () => {
+  it("reports no lock when the wait budget expires", async () => {
     process.env.MEP_E2E_LOCK_WAIT_MS = "50";
     const fs = await import("node:fs/promises");
+    const ownerPid = process.pid + 1;
     await fs.mkdir(lockDir);
-    await fs.writeFile(join(lockDir, "pid"), String(process.pid + 1));
+    await fs.writeFile(join(lockDir, "pid"), String(ownerPid));
     await fs.writeFile(join(lockDir, "startedAt"), String(Date.now()));
     vi.spyOn(process, "kill").mockImplementation(() => {
       throw Object.assign(new Error("alive"), { code: "EPERM" });
     });
 
-    const release = await acquireE2eLock();
-    expect(release).toBeTypeOf("function");
-    await release();
+    expect(await acquireE2eLock()).toBe(false);
+    await expect(fs.readFile(join(lockDir, "pid"), "utf8")).resolves.toBe(String(ownerPid));
   });
 
   it("does not remove another process lock on release", async () => {
@@ -95,9 +94,7 @@ describe("e2e machine-wide lock", () => {
     await fs.mkdir(lockDir);
     process.env.MEP_E2E_LOCK_WAIT_MS = "80";
 
-    const release = await acquireE2eLock();
-    expect(release).toBeTypeOf("function");
-    await release();
+    expect(await acquireE2eLock()).toBe(false);
     await expect(fs.access(lockDir)).resolves.toBeUndefined();
   });
 
@@ -107,19 +104,16 @@ describe("e2e machine-wide lock", () => {
     const elevenSecondsAgo = new Date(Date.now() - 11_000);
     await fs.utimes(lockDir, elevenSecondsAgo, elevenSecondsAgo);
 
-    const release = await acquireE2eLock();
+    expect(await acquireE2eLock()).toBe(true);
     await expect(fs.readFile(join(lockDir, "pid"), "utf8")).resolves.toBe(String(process.pid));
-    await release();
   });
 
-  it("continues without a lock when the lock parent path is missing", async () => {
+  it("reports no lock when the lock parent path is missing", async () => {
     process.env.MEP_E2E_LOCK_DIR = join(lockRoot, "missing", "nested", "lock");
-    const release = await acquireE2eLock();
-    expect(release).toBeTypeOf("function");
-    await release();
+    expect(await acquireE2eLock()).toBe(false);
   });
 
-  it("stops waiting when shouldStop becomes true", async () => {
+  it("reports no lock when shouldStop becomes true", async () => {
     const fs = await import("node:fs/promises");
     await fs.mkdir(lockDir);
     await fs.writeFile(join(lockDir, "pid"), String(process.pid + 1));
@@ -132,9 +126,27 @@ describe("e2e machine-wide lock", () => {
     setTimeout(() => {
       stop = true;
     }, 40);
-    const release = await acquireE2eLock({ shouldStop: () => stop });
-    expect(release).toBeTypeOf("function");
-    await release();
+    expect(await acquireE2eLock({ shouldStop: () => stop })).toBe(false);
+    await expect(fs.access(lockDir)).resolves.toBeUndefined();
+  });
+
+  it("reports no lock when locking is disabled, and creates nothing", async () => {
+    const fs = await import("node:fs/promises");
+    process.env.MEP_E2E_LOCK = "0";
+
+    expect(await acquireE2eLock()).toBe(false);
+    await expect(fs.access(lockDir)).rejects.toThrow();
+  });
+
+  it("leaves another run's lock in place when locking is disabled", async () => {
+    const fs = await import("node:fs/promises");
+    process.env.MEP_E2E_LOCK = "0";
+    await fs.mkdir(lockDir);
+    await fs.writeFile(join(lockDir, "pid"), "424242");
+    await fs.writeFile(join(lockDir, "startedAt"), String(Date.now()));
+
+    expect(await acquireE2eLock()).toBe(false);
+    await releaseE2eLock();
     await expect(fs.access(lockDir)).resolves.toBeUndefined();
   });
 });
