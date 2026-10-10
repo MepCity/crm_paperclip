@@ -79,8 +79,10 @@ Source: `research/specs/list-views.md` → Filters / views / sorting / search (C
 options) and Layout → Visual layout (Column options menu).
 
 A data header whose field is in `sortableFields` draws a trigger named
-`<column label> column options` at the cell's trailing end, before its divider. It sits outside
-the label flow, so the label keeps its truncation width and the column keeps its measured width.
+`<shown header label> column options` at the cell's trailing end, before its divider — the label
+the header itself shows, so `linkFieldLabel` is what the link column's trigger is named. It sits
+outside the label flow, so the label keeps its truncation width and the column keeps its measured
+width.
 The link column keeps the trigger visible; the others stay hidden until the header is hovered or
 holds keyboard focus, and stay visible while their menu is open.
 
