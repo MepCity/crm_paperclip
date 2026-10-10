@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  type InkBox,
   pageRasterInk,
   pageRasterInkShared,
   svgPathGeometrySize,
@@ -35,6 +36,16 @@ const fixture = `
 test.describe("page raster ink deltas", () => {
   test.use({ viewport: { width: 1470, height: 835 }, deviceScaleFactor: 2 });
 
+  /** An empty measurement must fail the guard, not read as ink at offset 0: with `?? 0` every
+   * delta would be 0 and the spread gate below would stay green while nothing was measured. */
+  function requireInk(box: InkBox | null | undefined, target: string, height: number): InkBox {
+    const message = `${target} produced no ink at spacer height ${height}`;
+    const measured: InkBox | null = box ?? null;
+    expect(measured, message).not.toBeNull();
+    if (measured === null) throw new Error(message);
+    return measured;
+  }
+
   test("ink deltas do not move with the content above the row", async ({ page }) => {
     // MEP-269: unrelated content above a row moves the row's subpixel alignment. Two effects
     // then show up in a cross-target ink offset: each target measured in its own crop adds the
@@ -59,13 +70,27 @@ test.describe("page raster ink deltas", () => {
         (document.getElementById("spacer") as HTMLDivElement).style.height = `${h}px`;
       }, height);
       const ink = await pageRasterInkShared(row, targets);
-      const pencilTop = ink.pencil?.antialiased.box?.top ?? 0;
-      likeForLike.push(pencilTop - (ink.label?.antialiased.box?.top ?? 0));
-      mixedCriterion.push(pencilTop - (ink.label?.solid.box?.top ?? 0));
+      const pencilAntialiased = requireInk(
+        ink.pencil?.antialiased.box,
+        "pencil antialiased",
+        height,
+      );
+      requireInk(ink.pencil?.solid.box, "pencil solid", height);
+      const labelAntialiased = requireInk(ink.label?.antialiased.box, "label antialiased", height);
+      const labelSolid = requireInk(ink.label?.solid.box, "label solid", height);
+      likeForLike.push(pencilAntialiased.top - labelAntialiased.top);
+      mixedCriterion.push(pencilAntialiased.top - labelSolid.top);
       const pencilInk = await pageRasterInk(pencil, true);
       const labelInk = await pageRasterInk(label);
-      separateCrops.push((pencilInk.antialiased.box?.top ?? 0) - (labelInk.solid.box?.top ?? 0));
+      const ownPencil = requireInk(
+        pencilInk.antialiased.box,
+        "own-crop pencil antialiased",
+        height,
+      );
+      const ownLabel = requireInk(labelInk.solid.box, "own-crop label solid", height);
+      separateCrops.push(ownPencil.top - ownLabel.top);
     }
+    expect(likeForLike, "one delta per spacer height").toHaveLength(heights.length);
     const spread = (values: number[]) => Math.max(...values) - Math.min(...values);
     console.log(
       `like-for-like: ${likeForLike.map((v) => v.toFixed(2)).join(", ")} ` +
