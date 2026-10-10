@@ -42,6 +42,7 @@ export function Select<T extends object>({
   ...props
 }: SelectProps<T>) {
   const [filterMaxHeight, setFilterMaxHeight] = useState<number>();
+  const [filterOffset, setFilterOffset] = useState<number>();
   useLayoutEffect(() => {
     if (variant !== "filter") {
       setFilterMaxHeight(undefined);
@@ -54,6 +55,12 @@ export function Select<T extends object>({
       ),
     );
     setFilterMaxHeight(Number.isFinite(height) ? height : undefined);
+    const offset = Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--size-filter-operator-list-offset",
+      ),
+    );
+    setFilterOffset(Number.isFinite(offset) ? offset : undefined);
   }, [variant]);
   return (
     <AriaSelect
@@ -94,7 +101,7 @@ export function Select<T extends object>({
           )}
           <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
           <Popover
-            offset={variant === "filter" ? 1 : undefined}
+            offset={variant === "filter" ? (filterOffset ?? 1) : undefined}
             maxHeight={filterMaxHeight}
             className={
               variant === "filter"
