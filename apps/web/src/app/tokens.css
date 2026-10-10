@@ -644,9 +644,19 @@
   --size-form-column-gap: 258.5px;
   --size-form-label-line-height: 17.5px;
   --size-form-label-padding-top: 8px;
+  /* record-detail.md › Form text baselines: label ink top sits 12 px below the input top;
+     the label box keeps the measured row rhythm, so the last pixel is painted, not laid out. */
+  --size-form-label-baseline-offset: 1px;
   --size-form-input-group-width: 303px;
   --size-form-input-height: 34px;
   --size-form-row-pitch: 54px;
+  /* record-detail.md › Email Opt Out checkbox: box sits 5 px inside the input column,
+     10 px below the row top and 9 px above its bottom inside the 34 px row. */
+  --size-form-checkbox-inset-start: 5px;
+  --size-form-checkbox-inset-top: 10px;
+  /* record-detail.md › Form text baselines: 12 px above the cap and 12 px below the flat
+     letter ink inside the 34 px box; the extra top inset centers the ink, not the line. */
+  --size-form-control-text-padding-top: 2px;
   --size-form-control-padding-inline: 10px;
   --size-form-control-padding-block: 8px;
   --size-form-action-height: 32px;

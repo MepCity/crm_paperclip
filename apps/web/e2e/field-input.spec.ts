@@ -261,6 +261,22 @@ test("form input geometry and composite inks match the measured form rows", asyn
   }
   await expect(disabledOwner).toHaveCSS("opacity", "0.5");
   await expect(disabledOwner.locator(".record-input-end")).toHaveCSS("opacity", "1");
+  // record-detail.md › Disabled input is Not observed: the value text keeps one 0.5 layer in
+  // both the framed input and the owner field, never two stacked layers (MEP-234).
+  await expect(demo.getByRole("textbox", { name: "text disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "1",
+  );
+  await expect(disabledOwner.locator(".record-choice-trigger")).toHaveCSS("opacity", "1");
+  await expect(disabledText.locator(".record-control")).toHaveCSS("opacity", "1");
+  await expect(demo.getByRole("textbox", { name: "textarea disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "0.5",
+  );
+  await expect(demo.getByRole("button", { name: "picklist disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "0.5",
+  );
   const textFrame = demo
     .getByRole("textbox", { name: "text empty", exact: true })
     .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
@@ -276,16 +292,23 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(profile).toHaveCSS("border-color", "rgb(180, 180, 180)");
   await expect(profile.locator("svg")).toHaveCSS("color", "rgb(178, 178, 178)");
   const profileBox = await bounds(profile);
-  const headBox = await bounds(profile.locator("circle"));
+  const headBox = await bounds(profile.locator("ellipse"));
   const bodyBox = await bounds(profile.locator("path"));
   const headTop = headBox.y - profileBox.y;
+  const bodyTop = await profile
+    .locator("path")
+    .evaluate((element) => (element as SVGGeometryElement).getBBox().y);
   expectPixels(headTop, 15);
   expectPixels(headBox.width, 16);
-  expect(bodyBox.y - profileBox.y).toBeLessThanOrEqual(32);
-  // The neck fills the space between the head and shoulders.
+  expectPixels(headBox.height, 15.5);
+  // record-detail.md › Portrait icon, form and header: the body joins the head at y 31 (0.5 px
+  // below its ink box) and is 16 px wide there, 34 px wide at y 37.5 where it is still inside
+  // the ring, and merges with the ring below that.
+  expectPixels(bodyTop, 31);
+  expectPixels(bodyBox.y - profileBox.y, 31);
   const bodyWidths = await profile.locator("path").evaluate((element) => {
     const path = element as SVGGeometryElement;
-    return [30, 33, 36].map((y) => {
+    return [31.01, 37.51].map((y) => {
       let halfWidth = 0;
       for (let x = 24; x <= 48; x += 0.05) {
         if (path.isPointInFill(new DOMPoint(x, y))) halfWidth = x - 24;
@@ -293,7 +316,7 @@ test("form input geometry and composite inks match the measured form rows", asyn
       return halfWidth * 2;
     });
   });
-  for (const [index, width] of [8.5, 24, 31.5].entries()) {
+  for (const [index, width] of [16, 34].entries()) {
     expectPixels(bodyWidths[index] ?? Number.NaN, width);
   }
   const measurements = {

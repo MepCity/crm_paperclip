@@ -446,3 +446,9 @@
 .record-filter-search-wrap--fill {
   max-width: none;
 }
+/* record-detail.md › Disabled input is Not observed: the wrapper already fades to 0.5, so the
+   inner control must not fade again (two stacked layers would render the value text at 0.25). */
+.record-input-frame:has(:disabled) .record-control,
+.record-choice-shell:has(:disabled) .record-control {
+  opacity: 1;
+}

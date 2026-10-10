@@ -567,6 +567,7 @@ function ModuleListScreenLoaded({
             columns={columns}
             records={records}
             linkField={config.linkField}
+            linkFieldLabel={config.linkFieldLabel}
             rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
             selectedIds={pageSelectedIds}
             onSelectedIdsChange={(ids) => {

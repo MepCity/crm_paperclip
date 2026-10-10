@@ -4,7 +4,7 @@ import { operationPath, operations } from "../src/lib/api/wire/operations";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
-import { expectWithin1 } from "./support/geometry";
+import { expectWithin1, textSolidInkBand } from "./support/geometry";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 import { expectType, tokenValue } from "./support/typography";
@@ -489,4 +489,157 @@ test("Edit geometry follows record-detail Visual layout and passes accessibility
   await expect(page.getByRole("heading", { name: "Edit Lead" })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await assertLeadFormVisualLayout(page, org.slug, "lead-edit");
+});
+
+async function measureBounds(locator: import("@playwright/test").Locator) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("Expected a rendered measurement target");
+  return box;
+}
+
+async function cssNumber(locator: import("@playwright/test").Locator, property: string) {
+  return locator.evaluate(
+    (element, name) => Number.parseFloat(getComputedStyle(element).getPropertyValue(name)),
+    property,
+  );
+}
+
+/** record-detail.md › Layout › Visual layout: the four rows MEP-228 measured for the form. */
+test("Email Opt Out checkbox, form ink baselines and portrait ink match the measured rows", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await page.evaluate(() => document.fonts.ready);
+  const measured: Record<string, number> = {};
+  const failures: string[] = [];
+  // Every row is measured first and reported together, so one run shows every offset.
+  function check(label: string, actual: number, target: number, tolerance = 0.5) {
+    measured[label] = Number(actual.toFixed(2));
+    const delta = Math.abs(actual - target);
+    if (delta > tolerance)
+      failures.push(
+        `${label}: actual=${measured[label]} target=${target} delta=${Number(delta.toFixed(2))}`,
+      );
+  }
+
+  // Email Opt Out checkbox: 15 × 15 px box at x 558, y 754 — 5 px inside the input column,
+  // 10 px below the row top, 9 px above its bottom and 42 px after the label.
+  const checkboxRow = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] .record-form-row'),
+  );
+  const checkboxSlot = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] [data-record-form-control-slot]'),
+  );
+  const checkboxLabel = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] .record-form-row__label'),
+  );
+  const checkbox = page.locator(
+    '[data-form-field="Email_Opt_Out"] [data-record-form-control-slot] [aria-hidden="true"]',
+  );
+  const box = await measureBounds(checkbox);
+  check("checkbox.x", box.x, 558);
+  check("checkbox.y", box.y, 754);
+  check("checkbox.width", box.width, 15);
+  check("checkbox.height", box.height, 15);
+  check("checkbox.insetStart", box.x - checkboxSlot.x, 5);
+  check("checkbox.insetTop", box.y - checkboxRow.y, 10);
+  check("checkbox.insetBottom", checkboxRow.y + checkboxRow.height - (box.y + box.height), 9);
+  check("checkbox.afterLabel", box.x - (checkboxLabel.x + checkboxLabel.width), 42);
+  check("checkbox.borderTopWidth", await cssNumber(checkbox, "border-top-width"), 2);
+  check("checkbox.radius", await cssNumber(checkbox, "border-top-left-radius"), 2.5, 0.5);
+  await expect(checkbox).toHaveCSS(
+    "border-color",
+    await tokenColor(page, "--color-control-border"),
+  );
+  await expect(checkbox).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  // Form text baselines: section heading ink y 273.5–283.5, inputs stay at y 312–346,
+  // row 1 label ink top y 324 and value ink top y 323.5–324, row 2 placeholder y 378.
+  const headingInk = await textSolidInkBand(
+    page.getByRole("heading", { name: "Lead Information", exact: true }),
+  );
+  check("heading.inkTop", headingInk.top, 273.5);
+  check("heading.inkBottom", headingInk.top + headingInk.height, 283.5);
+  const ownerInput = await measureBounds(
+    page.locator('[data-form-field="Owner"] .record-choice-shell'),
+  );
+  const ownerLabelInk = await textSolidInkBand(
+    page.locator('[data-form-field="Owner"] .record-form-row__label'),
+  );
+  const ownerValueInk = await textSolidInkBand(
+    page.locator('[data-form-field="Owner"] .record-choice-trigger'),
+  );
+  const companyInput = await measureBounds(
+    page.locator('[data-form-field="Company"] .record-input-frame'),
+  );
+  check("owner.inputTop", ownerInput.y, 312);
+  check("owner.inputBottom", ownerInput.y + ownerInput.height, 346);
+  check("owner.labelInkTop", ownerLabelInk.top, 324);
+  check("owner.labelInkBottom", ownerLabelInk.top + ownerLabelInk.height, 334.5);
+  check("owner.valueInkTop", ownerValueInk.top, 324);
+  check("owner.valueInkBottom", ownerValueInk.top + ownerValueInk.height, 334);
+  check("owner.labelValueDelta", ownerLabelInk.top - ownerValueInk.top, 0);
+  check("company.inputTop", companyInput.y, 312);
+  const firstNameRow = await measureBounds(
+    page.locator('[data-form-field="First_Name"] .record-form-row'),
+  );
+  const firstNameLabelInk = await textSolidInkBand(
+    page.locator('[data-form-field="First_Name"] .record-form-row__label'),
+  );
+  const prefixInk = await textSolidInkBand(
+    page.locator('[data-form-field="First_Name"] [data-part="empty-value"]'),
+  );
+  check("firstName.rowTop", firstNameRow.y, 366);
+  check("firstName.labelInkTop", firstNameLabelInk.top, 378.5);
+  check("firstName.placeholderInkTop", prefixInk.top, 378);
+  check("firstName.placeholderInkBottom", prefixInk.top + prefixInk.height, 388);
+
+  // Portrait icon: 48 px disc at x 344 y 170, 16 × 15.5 px head at x 360 y 185, body joined
+  // at y 201 and 16 px wide there, 34 px wide at y 207.5 before it merges with the ring.
+  const profile = page.getByRole("img", { name: "Lead Image", exact: true });
+  const disc = await measureBounds(profile);
+  check("portrait.discX", disc.x, 344);
+  check("portrait.discY", disc.y, 170);
+  check("portrait.discSize", disc.width, 48);
+  check("portrait.ringWidth", await cssNumber(profile, "border-top-width"), 1);
+  const head = await measureBounds(profile.locator("ellipse"));
+  check("portrait.headX", head.x, 360);
+  check("portrait.headY", head.y, 185);
+  check("portrait.headWidth", head.width, 16);
+  check("portrait.headHeight", head.height, 15.5);
+  const silhouette = profile.locator("path");
+  check(
+    "portrait.bodyTop",
+    disc.y + (await silhouette.evaluate((element) => (element as SVGGeometryElement).getBBox().y)),
+    201,
+  );
+  const bodyWidths = await silhouette.evaluate((element) => {
+    const path = element as SVGGeometryElement;
+    return [31.01, 37.51].map((y) => {
+      let halfWidth = 0;
+      for (let x = 24; x <= 48; x += 0.05) {
+        if (path.isPointInFill(new DOMPoint(x, y))) halfWidth = x - 24;
+      }
+      return halfWidth * 2;
+    });
+  });
+  check("portrait.bodyWidthAtJoin", bodyWidths[0] ?? Number.NaN, 16);
+  check("portrait.bodyWidthAtRingGap", bodyWidths[1] ?? Number.NaN, 34);
+  await expect(profile).toHaveCSS(
+    "border-color",
+    await tokenColor(page, "--color-form-portrait-ring"),
+  );
+  await expect(profile.locator("svg")).toHaveCSS(
+    "color",
+    await tokenColor(page, "--color-form-portrait"),
+  );
+
+  await test.info().attach("mep-234-form-measurements", {
+    body: JSON.stringify(measured, null, 2),
+    contentType: "application/json",
+  });
+  console.log("MEP234_FORM_MEASUREMENTS", JSON.stringify(measured));
+  const shot = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
+  if (shot) await page.screenshot({ path: join(shot, "lead-create-parity.png") });
+  expect(failures, failures.join("\n")).toEqual([]);
 });

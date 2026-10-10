@@ -173,11 +173,30 @@
   line-height: var(--size-form-label-line-height);
   color: var(--color-text-muted);
   text-align: right;
+  /* record-detail.md › Form text baselines: label ink top 12 px below the input top. Painted
+     so a wrapped label keeps the measured row height instead of pushing the next row down. */
+  transform: translateY(var(--size-form-label-baseline-offset));
 }
 
 .record-form-row__control {
   grid-column: 3;
   min-width: 0;
+}
+
+/* record-detail.md › Email Opt Out checkbox: the box sits 5 px inside the input column and
+   10 px below the row top (9 px above its bottom), not flush with the row's top-left corner.
+   Scoped to boolean rows so text, list and dialog checkboxes keep their own placement. */
+[data-form-type="boolean"] .record-form-row__control {
+  padding-top: var(--size-form-checkbox-inset-top);
+  padding-left: var(--size-form-checkbox-inset-start);
+}
+
+/* record-detail.md › Form text baselines: interior text keeps 12 px above the cap and 12 px
+   below the flat letter ink inside the 34 px box. The extra top inset centers the ink; the
+   box height never changes, so the measured rows stay where they are. */
+.record-form-row__control .record-input-frame > .record-control,
+.record-form-row__control .record-choice-trigger {
+  padding-top: var(--size-form-control-text-padding-top);
 }
 
 .record-form-row--full .record-form-row__control {
