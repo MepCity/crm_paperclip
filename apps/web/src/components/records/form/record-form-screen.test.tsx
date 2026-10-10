@@ -17,7 +17,11 @@ import { SelectUserDialog } from "./select-user-dialog";
 let counter = 0;
 function harness(
   record?: RecordData,
-  options: Partial<RecordFormConfig> & { formMode?: "edit" | "clone" } = {},
+  options: Partial<RecordFormConfig> & {
+    formMode?: "edit" | "clone";
+    /** The metadata picklists are empty for country/state until the database adapter lands. */
+    picklists?: Readonly<Record<string, readonly string[]>>;
+  } = {},
 ) {
   const ctx = {
     orgId: `form-screen-${++counter}`,
@@ -36,7 +40,7 @@ function harness(
     ],
   });
   const navigate = vi.fn();
-  const { formMode, ...configOptions } = options;
+  const { formMode, picklists, ...configOptions } = options;
   const config: RecordFormConfig = {
     module: "Leads",
     rules: leadsFormRules,
@@ -44,6 +48,26 @@ function harness(
     navigate,
     ...configOptions,
   };
+  if (picklists) {
+    vi.spyOn(service, "getModule").mockImplementation(async (moduleName) => {
+      const metadata = await fixture.getModule(moduleName);
+      return {
+        ...metadata,
+        fields: metadata.fields.map((field) => {
+          const values = picklists[field.apiName];
+          return values
+            ? {
+                ...field,
+                picklist: values.map((value) => ({
+                  displayValue: value,
+                  storedValue: value,
+                })),
+              }
+            : field;
+        }),
+      };
+    });
+  }
   if (record) vi.spyOn(service, "get").mockResolvedValue(record);
   const mode = formMode ?? (record ? "edit" : "create");
   render(
@@ -398,6 +422,59 @@ test("country/state show null only without a country, preserve saved inventory v
   await user.click(state);
   expect(screen.getAllByRole("option")).toHaveLength(1);
   expect(screen.getByRole("option", { name: "-None-" })).toBeTruthy();
+});
+
+test("clearing the country drops the state from a create payload", async () => {
+  const { service, navigate } = harness(undefined, {
+    picklists: {
+      [names.country]: ["Synthetic Country"],
+      [names.state]: ["Synthetic State"],
+    },
+  });
+  const create = vi.spyOn(service, "create");
+  await ready();
+  const user = await required();
+  await user.click(screen.getByRole("button", { name: "Country / Region" }));
+  await user.click(screen.getByRole("option", { name: "Synthetic Country" }));
+  await user.click(screen.getByRole("button", { name: "State / Province" }));
+  await user.click(screen.getByRole("option", { name: "Synthetic State" }));
+  await user.click(screen.getByRole("button", { name: "Country / Region" }));
+  await user.click(screen.getByRole("option", { name: "-None-" }));
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith(expect.stringMatching(/^detail:/)));
+  const input = create.mock.calls[0]?.[1];
+  expect(input).toHaveProperty(names.country, null);
+  expect(input?.[names.state] ?? null).toBeNull();
+});
+
+test("clearing the country on an edited record sends the saved state as null", async () => {
+  const record = {
+    id: "state-record",
+    fields: {
+      Company: "Address Company",
+      Last_Name: "Address Lead",
+      [names.owner]: "form-author",
+      [names.country]: "Synthetic Country",
+      [names.state]: "Synthetic State",
+    },
+  };
+  const { service, navigate } = harness(record, {
+    picklists: {
+      [names.country]: ["Synthetic Country"],
+      [names.state]: ["Synthetic State"],
+    },
+  });
+  const update = vi.spyOn(service, "update").mockResolvedValue(record);
+  await ready();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Country / Region" }));
+  await user.click(screen.getByRole("option", { name: "-None-" }));
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith(`detail:${record.id}`));
+  expect(update).toHaveBeenCalledWith("Leads", record.id, {
+    [names.country]: null,
+    [names.state]: null,
+  });
 });
 
 test("Clear All clears writable address subfields without clearing identity", async () => {
