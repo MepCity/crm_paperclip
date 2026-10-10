@@ -405,6 +405,15 @@
   --size-confirm-dialog-title-gap: 18.5px;
   --size-confirm-dialog-message-actions-gap: 30.5px;
   --size-confirm-dialog-actions-gap: 10.5px;
+  --size-unsaved-dialog-stay-width: 91px;
+  --size-unsaved-dialog-leave-width: 130.5px;
+  --color-unsaved-dialog-stay-border: #d6d8e8;
+  --color-unsaved-dialog-stay-start: #ffffff;
+  --color-unsaved-dialog-stay-end: #f1f0f7;
+  --color-unsaved-dialog-stay-text: #313949;
+  --color-unsaved-dialog-leave-start: #ff4657;
+  --color-unsaved-dialog-leave-end: #e33041;
+  --color-unsaved-dialog-leave-text: #ffffff;
   --size-list-mass-update-button-width: 113px;
   --size-mass-update-dialog-width: 484px;
   --size-mass-update-dialog-height: 207px;
@@ -451,6 +460,13 @@
   --size-popover-sort-field-dropdown-list-offset: 46px;
   /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
   --size-popover-sort-field-dropdown-list-height: 220px;
+  /* list-views.md › All alphabet dropdown: outer box x 881–940 (59 px) and y 182–594 (412 px visible). */
+  --size-popover-alphabet-width: 59px;
+  --size-popover-alphabet-height: 412px;
+  /* "approx 6 px horizontal padding around option rows"; rows are 45 × 23 px. */
+  --size-popover-alphabet-inset: 6px;
+  --size-popover-alphabet-row-width: 45px;
+  --size-popover-alphabet-row-height: 23px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;

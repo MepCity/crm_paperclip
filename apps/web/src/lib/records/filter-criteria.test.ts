@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { panelFiltersToCriteria } from "./filter-criteria";
+import { combineCriteriaAnd, firstLetterCriteria, panelFiltersToCriteria } from "./filter-criteria";
 import type { FilterOperatorId } from "./filter-operators";
 
 describe("panelFiltersToCriteria", () => {
@@ -244,4 +244,74 @@ it("preserves the Not Selected boolean state and integer range", () => {
   expect(
     panelFiltersToCriteria([{ field: "No_of_Employees", operatorId: "between", value: [2, 10] }]),
   ).toEqual({ field: "No_of_Employees", comparator: "between", value: [2, 10] });
+});
+
+describe("firstLetterCriteria", () => {
+  it("adds no criterion for All", () => {
+    expect(firstLetterCriteria("Full_Name", null)).toBeUndefined();
+  });
+
+  it("uses the text-family starts_with criterion on the link field", () => {
+    expect(firstLetterCriteria("Full_Name", "S")).toEqual({
+      field: "Full_Name",
+      comparator: "starts_with",
+      value: "S",
+    });
+  });
+});
+
+describe("combineCriteriaAnd", () => {
+  it("returns undefined when nothing restricts the list", () => {
+    expect(combineCriteriaAnd([])).toBeUndefined();
+    expect(combineCriteriaAnd([undefined, undefined])).toBeUndefined();
+  });
+
+  it("returns the single present criterion unchanged", () => {
+    const leaf = firstLetterCriteria("Full_Name", "A");
+    expect(combineCriteriaAnd([undefined, leaf])).toEqual(leaf);
+    expect(combineCriteriaAnd([leaf])).toEqual(leaf);
+  });
+
+  it("AND-combines a panel leaf with the letter", () => {
+    const panel = panelFiltersToCriteria([
+      { field: "Company", operatorId: "contains", value: "Example" },
+    ]);
+    expect(combineCriteriaAnd([panel, firstLetterCriteria("Full_Name", "L")])).toEqual({
+      groupOperator: "and",
+      group: [
+        { field: "Company", comparator: "contains", value: "Example" },
+        { field: "Full_Name", comparator: "starts_with", value: "L" },
+      ],
+    });
+  });
+
+  it("flattens a panel and-group instead of nesting it", () => {
+    const panel = panelFiltersToCriteria([
+      { field: "Company", operatorId: "contains", value: "Example" },
+      { field: "Lead_Source", operatorId: "equal", value: ["Advertisement"] },
+    ]);
+    const combined = combineCriteriaAnd([panel, firstLetterCriteria("Full_Name", "S")]);
+    expect(combined).toEqual({
+      groupOperator: "and",
+      group: [
+        { field: "Company", comparator: "contains", value: "Example" },
+        { field: "Lead_Source", comparator: "equal", value: ["Advertisement"] },
+        { field: "Full_Name", comparator: "starts_with", value: "S" },
+      ],
+    });
+  });
+
+  it("keeps an or-group as one member of the and-group", () => {
+    const or = {
+      groupOperator: "or" as const,
+      group: [
+        { field: "Company", comparator: "contains" as const, value: "a" },
+        { field: "Company", comparator: "contains" as const, value: "b" },
+      ],
+    };
+    expect(combineCriteriaAnd([or, firstLetterCriteria("Full_Name", "Z")])).toEqual({
+      groupOperator: "and",
+      group: [or, { field: "Full_Name", comparator: "starts_with", value: "Z" }],
+    });
+  });
 });
