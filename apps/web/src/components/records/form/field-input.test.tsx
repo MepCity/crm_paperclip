@@ -87,6 +87,16 @@ test.each(["integer", "double", "currency"] as const)(
     }
   },
 );
+test("integer keeps a typed decimal so Save can report it", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="integer" initial={null} onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  await user.type(input, "12.5");
+  await user.tab();
+  expect((input as HTMLInputElement).value).toBe("12.5");
+  expect(change).toHaveBeenLastCalledWith(12.5);
+});
 test("checkbox maps both boolean states", async () => {
   const change = vi.fn();
   const user = userEvent.setup();

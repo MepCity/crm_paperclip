@@ -408,6 +408,34 @@ test("invalid email shows a format message without saving", async ({ page }) => 
   await expect(saveRequest).rejects.toThrow();
 });
 
+test("a decimal employee count stays in the field, shows a format message and blocks the save", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await fillRequired(page);
+  const employees = page.getByRole("textbox", { name: "No. of Employees", exact: true });
+  await employees.fill("12.5");
+  await employees.press("Tab");
+  const saveRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Leads",
+    { timeout: 2_000 },
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(employees).toHaveValue("12.5");
+  const message = page.getByText("Please enter a valid No. of Employees.", { exact: true });
+  await expect(message).toBeVisible();
+  await expect(employees).toHaveAttribute("aria-invalid", "true");
+  await expect(employees).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
+  await expect(saveRequest).rejects.toThrow();
+  await employees.fill("12");
+  await employees.press("Tab");
+  await expect(message).toBeHidden();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead One");
+});
+
 test("validation and unsaved dialog visuals match record-detail tokens", async ({ page }) => {
   await openCreate(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
