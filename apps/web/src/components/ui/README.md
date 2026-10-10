@@ -747,6 +747,22 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-status-terminal-divider-bottom` | `6px` | record-detail.md › Visual layout › Terminal divider / next header offset |
 | `--size-status-demo-wide` | `1126px` | record-detail.md › Visual layout › Hidden-rail layout / Status strip card |
 | `--size-status-demo-narrow` | `906px` | record-detail.md › Visual layout › Record page / Status strip |
+| `--radius-detail-inline-control` | `4px` | record-detail.md › Inline editor › Value box / corners |
+| `--size-detail-inline-width` | `273px` | record-detail.md › Inline editor › Value box / width |
+| `--size-detail-inline-value-inset` | `12.5px` | record-detail.md › Inline editor › Placeholder and arrow / text inset; adjusted for the shared input border |
+| `--size-detail-inline-halo` | `7.5px` | record-detail.md › Inline editor › Value box / focus halo extent |
+| `--size-detail-inline-action-size` | `21px` | record-detail.md › Inline editor › Cancel button / diameter; Save uses the issue’s accepted 21px diameter |
+| `--size-detail-inline-action-icon` | `12px` | record-detail.md › Inline editor › Cancel button / original cross glyph, Interim implementation dimension |
+| `--size-detail-inline-action-inset` | `10px` | record-detail.md › Inline editor › Save button / gap from value box |
+| `--size-detail-inline-action-gap` | `6.5px` | record-detail.md › Inline editor › Cancel button / gap from Save |
+| `--size-detail-inline-trailing-inset` | `27.5px` | record-detail.md › Inline editor › Value box / anchor offset, derived from the card padding and trailing action span |
+| `--size-detail-inline-list-padding` | `6px` | record-detail.md › Inline editor › List panel / padding inside border |
+| `--size-detail-inline-option-height` | `32px` | record-detail.md › Inline editor › Highlighted row / height |
+| `--size-detail-inline-check-size` | `12px` | record-detail.md › Inline editor › Checkmark / original glyph width within the accepted ±1px tolerance |
+| `--size-detail-inline-check-height` | `9px` | record-detail.md › Inline editor › Checkmark / original glyph height within the accepted ±1px tolerance |
+| `--size-detail-inline-save-check-width` | `10px` | record-detail.md › Inline editor › Save button / checkmark width |
+| `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
+| `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
 
 ### Measured values that carry no token
 

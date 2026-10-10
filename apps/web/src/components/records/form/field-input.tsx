@@ -32,6 +32,7 @@ export interface FieldInputProps {
   defaultOpen?: boolean;
   id?: string;
   hideLabel?: boolean;
+  inline?: boolean;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -65,6 +66,7 @@ export function FieldInput({
   defaultOpen,
   id,
   hideLabel,
+  inline,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -72,6 +74,7 @@ export function FieldInput({
     name: field.apiName,
     id: controlId,
     hideLabel,
+    inline,
     isRequired: field.required,
     isDisabled: disabled || field.readOnly,
     isInvalid: Boolean(errorMessage),
@@ -171,6 +174,7 @@ export function FieldInput({
           required={field.required}
           errorMessage={errorMessage}
           defaultOpen={defaultOpen}
+          inline={inline}
         />
       );
     case "ownerlookup": {
@@ -196,6 +200,7 @@ export function FieldInput({
           required={field.required}
           errorMessage={errorMessage}
           defaultOpen={defaultOpen}
+          inline={inline}
           endAction={
             onOpenPicker ? (
               <button

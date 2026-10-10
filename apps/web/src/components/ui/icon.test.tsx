@@ -11,6 +11,7 @@ const expectedIcons = [
   "recordFormCaret",
   "recordChevron",
   "recordCheck",
+  "inlineCheck",
   "recordInfo",
   "recordPanelCheck",
   "recordPanelSearch",

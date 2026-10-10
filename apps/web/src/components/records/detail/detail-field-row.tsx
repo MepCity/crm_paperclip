@@ -2,9 +2,11 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
+import { useInlineEdit } from "./inline-edit-context";
+import { InlineFieldEditor } from "./inline-field-editor";
 
 export interface DetailFieldRowProps {
   field: FieldDefinition;
@@ -25,6 +27,27 @@ export function DetailFieldRow({
   layout,
   onEdit,
 }: DetailFieldRowProps) {
+  const inline = useInlineEdit();
+  const rowId = useId();
+  const editable = inline?.eligible(field) ?? false;
+  const editing = editable && inline?.activeId === rowId;
+  const valueButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (!editing && restoreFocus.current) {
+      restoreFocus.current = false;
+      valueButton.current?.focus();
+    }
+  }, [editing]);
+  function close() {
+    restoreFocus.current = true;
+    inline?.activate(null);
+  }
+  const edit = editable
+    ? () => inline?.activate(rowId)
+    : onEdit
+      ? () => onEdit(field.apiName)
+      : undefined;
   const rowClass =
     layout === "business"
       ? "detail-business-row"
@@ -39,7 +62,7 @@ export function DetailFieldRow({
   const [wrappedLink, setWrappedLink] = useState(false);
 
   useLayoutEffect(() => {
-    if (layout === "business") {
+    if (layout === "business" || editing) {
       setWrappedValue(false);
       setWrappedLink(false);
       return;
@@ -72,7 +95,7 @@ export function DetailFieldRow({
     const observer = new ResizeObserver(measure);
     observer.observe(wrap);
     return () => observer.disconnect();
-  }, [layout]);
+  }, [layout, editing]);
 
   return (
     <div
@@ -83,16 +106,46 @@ export function DetailFieldRow({
     >
       <div className="detail-field-label">{field.label}</div>
       <div className="detail-field-value-wrap" ref={valueWrapRef}>
-        <FieldValueView
-          field={field}
-          value={value}
-          ownerNames={ownerNames}
-          format={format}
-          auditTimestamp={auditTimestamp}
-        />
-        {onEdit ? (
-          <FieldPencil label={`Edit ${field.label}`} onClick={() => onEdit(field.apiName)} />
-        ) : null}
+        {editing && inline ? (
+          <InlineFieldEditor
+            key={rowId}
+            field={field}
+            value={value}
+            users={inline.users}
+            onSave={inline.save}
+            onCancel={close}
+            onComplete={close}
+          />
+        ) : (
+          <>
+            {editable && field.dataType !== "website" && field.dataType !== "email" ? (
+              <button
+                ref={valueButton}
+                type="button"
+                className="detail-inline-value-button"
+                aria-label={`Edit ${field.label} value`}
+                onClick={edit}
+              >
+                <FieldValueView
+                  field={field}
+                  value={value}
+                  ownerNames={ownerNames}
+                  format={format}
+                  auditTimestamp={auditTimestamp}
+                />
+              </button>
+            ) : (
+              <FieldValueView
+                field={field}
+                value={value}
+                ownerNames={ownerNames}
+                format={format}
+                auditTimestamp={auditTimestamp}
+              />
+            )}
+            {edit ? <FieldPencil label={`Edit ${field.label}`} onClick={edit} /> : null}
+          </>
+        )}
       </div>
     </div>
   );
