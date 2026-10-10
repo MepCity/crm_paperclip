@@ -31,12 +31,7 @@ export function CellValue({ field, value, href, ownerNames = {}, format }: CellV
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {
     return (
-      <Link
-        href={rendered.link.href}
-        variant="body"
-        prefetch={false}
-        className="inline-block max-w-full whitespace-normal break-words"
-      >
+      <Link href={rendered.link.href} variant="body" prefetch={false} className="break-words">
         {rendered.link.text}
       </Link>
     );

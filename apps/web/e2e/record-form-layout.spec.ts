@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectType, tokenValue } from "./support/typography";
 
-// record-detail.md › Layout › Visual layout › Create/edit form; MEP-172 interim vertical measures
+// record-detail.md › Layout › Visual layout › Create/edit form; MEP-172 / MEP-174 interim vertical measures
 test.use({ viewport: { width: 1470, height: 835 } });
 
 function px(value: string) {
@@ -241,7 +241,7 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
     Number.parseFloat(getComputedStyle(node).borderTopLeftRadius),
   );
   expect(Math.abs(groupRadius - fieldGroupRadiusPx)).toBeLessThanOrEqual(0.5);
-  // MEP-174 a: legend text inset and padding after text
+  // MEP-172 / MEP-174 a: legend text inset and padding after text
   const legendBox = await legend.boundingBox();
   expect(legendBox).not.toBeNull();
   const textStartX = await legendTextStartX(legend);
@@ -250,10 +250,10 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   expect(
     Math.abs((legendBox?.x ?? 0) + (legendBox?.width ?? 0) - textEndX - 12.5),
   ).toBeLessThanOrEqual(1);
-  // MEP-174 b: legend baseline below frame top
+  // MEP-172 / MEP-174 b: legend baseline below frame top
   const baselineY = await legendBaselineY(legend);
   expect(Math.abs(baselineY - ((groupBox?.y ?? 0) + 8))).toBeLessThanOrEqual(1);
-  // MEP-174 d: frame width and insets
+  // MEP-172 / MEP-174 d: frame width and insets
   expect(Math.abs((groupBox?.width ?? 0) - 529)).toBeLessThanOrEqual(0.5);
   expect(
     Math.abs(
@@ -265,7 +265,7 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   ).toBeLessThanOrEqual(1);
   expect(Math.abs((streetBox?.y ?? 0) - ((groupBox?.y ?? 0) + 31))).toBeLessThanOrEqual(1);
 
-  // MEP-174 e, f: section title vertical rhythm
+  // MEP-172 / MEP-174 e, f: section title vertical rhythm
   const leadInfoTitle = shell.getByRole("heading", { name: "Lead Information" });
   const addressTitle = shell.getByRole("heading", { name: "Address Information" });
   const descriptionTitle = shell.getByRole("heading", { name: "Description Information" });
@@ -285,12 +285,12 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   expect(Math.abs(descriptionCenter - addressGroupBottom - 78)).toBeLessThanOrEqual(1);
   expect(Math.abs(descriptionContentTop - descriptionCenter - 33)).toBeLessThanOrEqual(1);
 
-  // MEP-174 g: action button gaps
+  // MEP-172 / MEP-174 g: action button gaps
   const actionGap = px(await length(page, "--size-form-action-gap"));
   expect(Math.abs((await horizontalGap(cancel, saveAndNew)) - actionGap)).toBeLessThanOrEqual(1);
   expect(Math.abs((await horizontalGap(saveAndNew, save)) - actionGap)).toBeLessThanOrEqual(1);
 
-  // MEP-174 h: Description control geometry
+  // MEP-172 / MEP-174 h: Description control geometry
   const descriptionBox = await descriptionInput.boundingBox();
   expect(descriptionBox).not.toBeNull();
   await boxWidth(descriptionInput, 639);

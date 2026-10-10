@@ -11,7 +11,8 @@ and page placement live in MEP-144.
 | Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
 | Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
-| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): `Lead Name` label, composite address order, same-page neighbor scope |
+| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order |
+| Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
 
 The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
@@ -44,10 +45,11 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
-- MEP-171 tracks remaining visual gaps: value column wrap width, vertical
-  position of `Hide Details` and section headings (section heading is about 22 px
-  lower than reference; `Hide Details` about 1.5 px lower), spacing between
-  two-line field values, and pencil icon placement.
+- Left- and right-column value wrap container widths remain `not measured` in
+  `record-detail.md`; we do not fix a max width beyond the column grid.
+- Description view-mode value start and wrapped right edge remain `not measured`
+  when the sample field is blank or inline edit is active; Address uses the
+  standard left-column value start.
 
 ## Visual source
 
@@ -204,3 +206,22 @@ Measured wide-demo stage widths are 171.59, 142.20, 100.83, 117.73, 109.41,
 font; accumulated boundary drift reaches 3.23 px at the current stage's end.
 The generic component uses natural label widths; these differences are recorded
 for review. Absolute page placement belongs to MEP-134.
+
+## Details raster verification (MEP-203)
+
+`e2e/record-detail-cards.spec.ts` measures real Chromium page PNG pixels at
+1470 × 835 CSS px and device scale 2. Exact foreground RGB defines solid ink;
+every pixel differing from the flat background defines total antialiased ink.
+The inclusive final pixel is included in widths and heights. DOM ranges only
+select a crop; they do not provide ink coordinates. A synthetic overflow/hidden
+SVG probe verifies that the helper includes overflowing ink and respects actual
+page opacity. The pencil SVG allows overflow so its antialias fringe is visible.
+
+Description uses the measured 73px label width and a 39px extension (0.5px inside the measured 39.5px target), without a
+font-metric calibration translation. The Website role retains 19.5px wrapping
+pitch, plain wrapped text 15.5px, and audit timestamps 18.5px.
+
+The one-line synthetic Address → Description transition and final 44px row
+height are local regression contracts. The inline-editor capture's card bottom
+is not treated as a measured view-mode target. Left/right view-mode wrapping
+widths and Description value start/right edge remain unmeasured as listed above.

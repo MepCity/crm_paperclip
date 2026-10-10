@@ -139,11 +139,22 @@ Public documentation sources relied upon are referenced throughout this document
   - Post-action UI feedback toasts and confirmation dialog details.
 
 ### A4: Mass Update Flow
-- **Status**: `Documented [D1, D7]`
+- **Status**: `Documented [D1, D7]`; modal dialog layout and controls `Observed [w2e-mass-update]`
 - **Documented Flow & Rules**:
   - **Access Paths**:
-    1. From List View: Select record checkboxes -> Under `More Actions`, click `Mass Update` -> In the `Select field to update` popup, choose the field that you want to update for the records, specify the value, and click `Save` (`D1`).
+    1. From List View: Select record checkboxes -> In selection toolbar, click `Mass Update` button (or under unselected `Actions` menu) -> In the `Mass Update` modal dialog, choose the field to update from `Select a field` dropdown, enter value, and click `Update` (`D1`, `w2e-mass-update`).
     2. From Module Tools: Click `[Module] Tools` > `Mass Update [Module]` -> Specify criteria -> Click `Search` -> Under `Matching [records]`, select checkboxes -> Click `Mass Update` -> In `Select Field to Update` page, select field, enter data, and click `Save` (`D1`).
+  - **Live UI Observation (Mass Update Modal Dialog)**:
+    - Activating `Mass Update` in row-selected state opens a centered modal dialog window anchored to the top of the viewport over a dimmed backdrop (`w2e-mass-update`).
+    - **Modal surface & backdrop**: Centered card measuring 484 × 207 px (x 493–977, y 0–207) with a pure white `#FFFFFF` surface, 4 px bottom corners, and a soft outer drop shadow. The backdrop is a full-viewport translucent mask measuring sampled color `#293651` over underlying white page areas; base overlay color and exact alpha opacity are undetermined / not directly measurable.
+    - **Modal title**: Heading text `Mass Update` sits 32.5 px inside the dialog left edge (ink x 525.5–646.5, y 29.5–48; cap height 14.5 px, baseline y 48) rendered in bold `#202123` (candidate Figtree 20.5–21 px bold).
+    - **Field selection and value row** (y 80–114, 34 px high, 32 px below title baseline):
+      1. `Select a field` combobox: Measures 122 × 34 px (x 524–646, y 80–114) with a 1 px `#C5C4D3` border, 4 px corners, and white `#FFFFFF` fill. Displays placeholder text `Select a field` in `#313949` text ink, with a centered downward caret icon (8 × 5 px in `#838892`) at x 628–632. Inset 31 px from the modal left edge (524 - 493 = 31 px).
+      2. Value input placeholder: Measures 285 × 34 px (x 661–946, y 80–114) with a 1 px border `#D9DCE2`, 4 px corners, and disabled background fill `#F5F6F8`. Positioned horizontally beside the field selector with a 15 px gap (661 - 646 = 15 px). Inset 31 px from the modal right edge (977 - 946 = 31 px).
+    - **Modal action buttons row** (y 144–176, 32 px high, 30 px below inputs row):
+      1. `Cancel` button: Secondary action button measuring 74 × 32 px (x 784.5–858.5, y 144–176) with 4 px corners, a 1 px `#D5D8E9` border, light vertical gradient `#FDFDFE` to `#F3F2F8`, and regular `#313949` label ink.
+      2. `Update` button: Primary commit button measuring 76 × 32 px (x 870–946, y 144–176) with 4 px corners and white `#FFFFFF` label ink. In the initial unselected state, the button is disabled with flat lavender fill `#ADB3EE` (subsequent enabled state upon field selection was not observed).
+      - Spacing: 11.5 px horizontal gap between `Cancel` and `Update` (870 - 858.5 = 11.5 px); 31 px margin to modal right edge (977 - 946 = 31 px); 31 px margin to modal bottom edge (207 - 176 = 31 px).
   - **Ineligible Fields**:
     - Text Area and Lookup fields cannot be updated using the Mass Update feature (`D1`).
     - Email, lookup fields, layout fields, multi line fields, and line items cannot be mass updated via API (`D7`).
@@ -157,20 +168,32 @@ Public documentation sources relied upon are referenced throughout this document
     - Up to 50,000 records via custom view (`D7`), with the view-wide selection link not appearing if the view exceeds 50,000 records (`D12`).
   - **Permissions**:
     - Requires `Mass Update` profile permission for the module (`D1`).
+- **Visual Layout of Mass Update Modal**:
+
+| Element | Geometry and style (CSS px) | Visible state | Source slug |
+| --- | --- | --- | --- |
+| Modal container | Centered modal x 493–977 (484 px wide), y 0–207 (207 px high); white `#FFFFFF` surface, 4 px bottom corners, soft outer drop shadow | Anchored to top of viewport; equal 493 px side margins on 1470 px viewport | `w2e-mass-update` |
+| Dimmed backdrop | Full-viewport translucent mask; measured color `#293651` over white table content; base color and opacity undetermined | Underlying records remain visible beneath the mask | `w2e-mass-update` |
+| Modal title | Text `Mass Update` starts x 525.5 (32.5 px inside left edge), ink x 525.5–646.5, y 29.5–48; color `#202123`, bold, cap height 14.5 px | Heading role, Figtree 20.5–21 px bold | `w2e-mass-update` |
+| Field selector | Combobox 122 × 34 px (x 524–646, y 80–114); white fill `#FFFFFF`, 1 px border `#C5C4D3`, 4 px corners; placeholder text `Select a field` in `#313949`, caret 8 × 5 px in `#838892` at x 628–632 | 31 px margin from dialog left edge | `w2e-mass-update` |
+| Value placeholder | Input box 285 × 34 px (x 661–946, y 80–114); disabled fill `#F5F6F8`, 1 px border `#D9DCE2`, 4 px corners | Disabled empty placeholder beside field selector; 15 px horizontal gap | `w2e-mass-update` |
+| Cancel button | Button 74 × 32 px (x 784.5–858.5, y 144–176); gradient `#FDFDFE` to `#F3F2F8`, 1 px border `#D5D8E9`, 4 px corners, label `#313949` | Enabled secondary action | `w2e-mass-update` |
+| Update button | Button 76 × 32 px (x 870–946, y 144–176); flat fill `#ADB3EE`, white text `#FFFFFF`, 4 px corners | Disabled commit button in initial state (subsequent enabled state upon field selection was not observed) | `w2e-mass-update` |
+
 - **Not Documented**:
-  - Modal dialog window title (`Mass Update Leads` is not documented; the popup is titled `Select field to update` in `D1`).
-  - Form input styling and exact layout of field-specific input widgets within the popup.
-  - Result confirmation message or toast text upon completion.
+  - Form input styling and behavior for specific selected field types (e.g. picklist dropdowns, date pickers, multi-select checkboxes) within the popup.
+  - Result confirmation message or toast text upon completion (unobservable without write).
 
 ### A5: Mass Transfer / Ownership Transfer Flow
-- **Status**: `Documented [D1]`; entry point observed `[w2d-change-owner]`
+- **Status**: `Documented [D1]`; entry point observed `[w2d-change-owner]`; dialog unobserved due to safety intercept `[w2e-change-owner]`
 - **Documented Flow & Rules**:
   - **Access Paths**:
     1. List View Selection: Select record checkboxes -> Click `Actions` dropdown -> Select `Change Owner` -> In `Change Owner` page/dialog, select new user from `Change Owner` picklist, select checkboxes for associated related records, and click `Change Owner` (`D1`).
     2. Module Tools: Click `[Module] Tools` > `Mass Transfer [Module]` -> Navigates to `Mass Transfer [Module]` page (`D1`).
-  - **Live UI Observation (Change Owner Entry Point)**:
+  - **Live UI Observation (Change Owner Entry Point & Safety Intercept)**:
     - In row selection state, clicking `Actions` exposes `Change Owner` as the 3rd item in the 11-item bulk actions popover menu (`w2d-change-owner`).
-    - **Capture Tool Safety Skip**: In capture `w2d-change-owner`, the capture tool targeted the `Change Owner` menu item, but skipped the click because the element's framework event binding attribute contained the word `update` (`dangerous attribute: update`). Per Rule 6, the safety guard was not bypassed, and the mutation/dialog was not opened. Consequently, the Change Owner modal dialog or target page, new owner selector, and related records checkboxes remain `Not observed` in the live UI.
+    - **Capture Tool Open Attempt and Request Blocking**: In capture `w2e-change-owner`, the `Change Owner` menu item was clicked with `--allow-open "Change Owner"`, which successfully bypassed the click text/attribute safety filter. However, activating the control immediately triggered a client-side network request: `POST /crm/v9/settings/profiles/actions/get_assigned`. Because endpoints under `/actions/` are subject to write protection unless explicitly allowlisted, the capture proxy blocked and aborted this request. As a consequence, the Change Owner dialog failed to render (or was dismissed by the client upon request abortion).
+    - **Rule 5 Capture Halt**: Because the unallowlisted non-GET request `POST /crm/v9/settings/profiles/actions/get_assigned` was observed, execution was halted under Rule 5. The Change Owner dialog surface, new owner picker, and related records checkboxes remain `Not observed` in the live UI.
   - **Tool Page Configuration & Criteria**:
     - In `Select New Owner` section, select the owner's name for `Transfer From` and `Transfer To` fields (`D1`).
     - Criteria Step: Specify criteria to filter records -> Click `Search` -> Under `Matching [records]`, select checkboxes -> Click `Transfer` (`D1`).
@@ -180,7 +203,7 @@ Public documentation sources relied upon are referenced throughout this document
   - **Permissions**:
     - Requires the `Mass Transfer` profile permission for the module (`D1`). The `Change Owner` option is not available for records on which the user has read-only permission (`D1`).
 - **Not Documented**:
-  - Modal vs full-page presentation in the modern web UI (help documentation describes a dedicated `Change Owner page` and `Mass Transfer [Module] page`; live UI dialog remains unobserved due to capture safety skip).
+  - Modal vs full-page presentation in the modern web UI (help documentation describes a dedicated `Change Owner page` and `Mass Transfer [Module] page`; live UI dialog remains unobserved due to capture request blocking and Rule 5 halt).
   - Dialog title, user selector widget styling, and checkbox labels/default checked states for associated related records.
   - Checkbox labels and default checked states for closed activities.
   - Post-transfer result toast or banner message text.
@@ -406,8 +429,8 @@ The following functional behaviors, presentation details, and UI feedback mechan
 - **A1**: Delete confirmation modal window title, prompt body text, confirmation button labels, post-deletion redirection target page, and success toast notification message.
 - **A2**: Availability and behavior of `Save and New` and `Cancel` on clone form; post-save redirection destination; whether the UI clone form excludes the same fields as the Clone API (`D4`).
 - **A3**: Multi-page selection counter format and "Select all records in this view" presentation when more than 10 records exist. (Note: single-record selection counter `"1 Record Selected."` and selection toolbar styling are now observed; plural/multi-record counter format remains unobserved).
-- **A4**: Mass update modal title and input styling; post-update confirmation notification text.
-- **A5**: Web UI Change Owner modal vs full-page dialog presentation styling, user selector control, checkbox labels/styling for associated related records, and result toast message (skipped by capture tool due to `dangerous attribute: update`).
+- **A4**: Post-update confirmation notification text and subsequent field-type-specific editor widgets within Mass Update popup (initial modal dimensions 484 × 207 px, title `Mass Update`, `Select a field` dropdown, and `Update` button observed in `w2e-mass-update`).
+- **A5**: Web UI Change Owner modal vs full-page dialog presentation styling, user selector control, checkbox labels/styling for associated related records, and result toast message (in `w2e-change-owner`, `Change Owner` click passed the allow-open guard, but triggered client `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by the capture proxy, preventing dialog rendering and triggering the Rule 5 halt).
 - **A6**: Mass delete confirmation modal title, warning text, button labels, and result notification message.
 - **A7**: All post-action UI feedback for `Save` and `Save and New` (redirect target, toast notification text, form reset behavior).
 - **A8**: Inline editing hover affordance, cancel button, field-specific inline editor controls, and failure/error states.
@@ -447,3 +470,28 @@ This specification definitively resolves the following open questions from prior
    - Error response structure and field-level error detail keys (`api_name`, `json_path`, `expected_fields`, `ambiguity_due_to`) (`D18`); discrepancies with interim shapes identified; the decision stays with the CTO.
 
 *Note: `research/specs/record-detail.md › Open questions #1, #4` remain unresolved because public documentation does not specify UI stage ribbon click interactions or quick create subset selection rules. `research/specs/list-views.md › Open questions #2, #6` have now been largely resolved by the live capture research in MEP-223 (`w2d-*` captures), which documented filter operators across remaining field types, operator-specific value controls, value list structures, row selection toolbar layout, counter format, and bulk action menu items.*
+
+---
+
+## Interim Comparison Table (MEP-164 & MEP-165)
+
+Comparison of interim implementation rules defined in MEP-164 (Lead Clone) and MEP-165 (Mass Update & Change Owner) against live reference CRM observations:
+
+| Interim Rule / Topic | MEP-164 / MEP-165 Interim Decision | Reference CRM Observation | Parity | Evidence (Slug / Source) |
+| --- | --- | --- | --- | --- |
+| **Mass Update presentation** | Modal dialog window using existing dialog primitive | Centered modal dialog window (484 × 207 px, x 493–977, y 0–207) at top of viewport over dimmed backdrop (measured `#293651` over white surface; opacity undetermined) | Identical (modal dialog) | `w2e-mass-update` |
+| **Mass Update title** | `Select field to update` (per `D1` help doc text) | `Mass Update` heading in bold `#202123` (cap height 14.5 px) | Different (Interim used `Select field to update`, reference uses `Mass Update`) | `w2e-mass-update` |
+| **Mass Update input layout** | Field selector combobox; upon selection, field input renders vertically beneath it | `Select a field` combobox (122 × 34 px) and disabled value placeholder box (285 × 34 px) arranged horizontally side-by-side with 15 px gap | Different (Interim stacked vertically, reference arranged horizontally) | `w2e-mass-update` |
+| **Mass Update action buttons** | `Cancel` and `Save` buttons (`Save` disabled until field chosen) | `Cancel` (74 × 32 px, secondary gradient) and `Update` (76 × 32 px, `#ADB3EE` disabled flat fill in initial unselected state; subsequent enabled state upon field selection was not observed) | Different (Interim button named `Save`, reference button named `Update`; initial disabled state confirmed, enabled state unobserved) | `w2e-mass-update` |
+| **Mass Update modal geometry** | Unsaved changes modal dimensions (400 × 168 px, 26.5/29.5 px insets) | 484 × 207 px outer bounds with symmetric 31 px insets (left, right, bottom) | Different (400 × 168 px vs 484 × 207 px, 31 px paddings) | `w2e-mass-update` |
+| **Mass Update post-save feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |
+| **Change Owner presentation** | Modal dialog window (`change-owner-dialog.tsx`) | Opening triggered write-protected `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by capture proxy, halting execution under Rule 5; modal did not open | Not observed | Not observed (missing capture due to Rule 5 halt in `w2e-change-owner`) |
+| **Change Owner title & controls** | Title `Change Owner`, owner selector with user picker, `Cancel` and `Change Owner` buttons | Dialog unobserved due to safety network block and Rule 5 halt | Not observed | Not observed (missing capture due to Rule 5 halt in `w2e-change-owner`) |
+| **Change Owner post-transfer feedback** | Modal closes, selection clears, list refreshes; no toast message | Post-mutation feedback not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |
+| **Clone menu entry point** | First item in `More Options` menu above `Delete` | Item 1 in `More Options` dropdown (row height 30 px, text `Clone`, highlighted fill `#F0F4FC`, x 1169.5–1373, y 109.5–139.5) | Identical | `detail-more`, `w2f-detail-more` |
+| **Clone route pattern** | `/crm/[orgSlug]/tab/Leads/[recordId]/clone` | Route pattern `/crm/<org>/tab/Leads/<recordId>/clone?layoutId=<layoutId>` (appends layout query parameter `layoutId`, which was omitted in interim route pattern) | Different | `w2f-clone-form` |
+| **Clone form title** | `Clone Lead` | `Clone Lead` heading in `#202123` at x 332, y 66 | Identical | `w2f-clone-form` |
+| **Clone form buttons** | `Cancel` and `Save` (`Save and New` omitted) | `Cancel` (74 × 32 px), `Save and New` (120 × 32 px), and `Save` (59 × 32 px) in header action strip (all enabled); also `Edit Page Layout` link. Reference CRM includes `Save and New` | Different (reference CRM includes `Save and New`, interim omitted it) | `w2f-clone-form` |
+| **Clone excluded fields** | System fields, `Record_Image`, read-only fields excluded; create-visible fields copied | Standard form sections rendered; editable fields pre-populated with source record values (`Lead Owner`, `First Name`, `Title`, `Phone`, `Mobile`, `Lead Source`, `Industry`, `Annual Revenue`, `Company`, `Last Name`, `Email`, `Website`, `Lead Status`, `Skype ID`, `Twitter`, `Country / Region`, `Street Address`, `City`, `State / Province`, `Zip / Postal Code`). Blank fields remain empty (`Fax`, `No. of Employees`, `Rating`, `Secondary Email`, `Description`). `Lead Image` section displays the populated source record image (`img "Lead Image": - img "image"`). System fields (`Created By`, `Modified By`, `Created Time`, `Modified Time`) excluded. Post-save image persistence behavior is unobserved | Different (interim rule excluded `Record_Image`, but reference CRM clone form pre-populates `Lead Image` from source record; system fields remain excluded in both) | `w2f-clone-form` |
+| **Clone post-save destination** | `Save` navigates to new record detail; `Cancel` returns to source record | Post-save navigation not observable under read-only rule | Not observed | Not observed (no capture possible under read-only rule) |
+

@@ -2,6 +2,7 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import { useLayoutEffect, useRef, useState } from "react";
 import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
 
@@ -11,7 +12,7 @@ export interface DetailFieldRowProps {
   ownerNames?: Readonly<Record<string, string>>;
   format: FormatOptions;
   auditTimestamp?: string | null;
-  layout: "business" | "details" | "details-full";
+  layout: "business" | "details" | "details-full" | "details-full-description";
   onEdit?: (apiName: string) => void;
 }
 
@@ -27,14 +28,61 @@ export function DetailFieldRow({
   const rowClass =
     layout === "business"
       ? "detail-business-row"
-      : layout === "details-full"
-        ? "detail-details-row-full"
-        : "detail-details-row";
+      : layout === "details-full-description"
+        ? "detail-details-row-full detail-details-row-description"
+        : layout === "details-full"
+          ? "detail-details-row-full"
+          : "detail-details-row";
+
+  const valueWrapRef = useRef<HTMLDivElement>(null);
+  const [wrappedValue, setWrappedValue] = useState(false);
+  const [wrappedLink, setWrappedLink] = useState(false);
+
+  useLayoutEffect(() => {
+    if (layout === "business") {
+      setWrappedValue(false);
+      setWrappedLink(false);
+      return;
+    }
+    const wrap = valueWrapRef.current;
+    if (!wrap) {
+      setWrappedValue(false);
+      return;
+    }
+
+    const measure = () => {
+      const valueEl = wrap.querySelector(".detail-field-value, .detail-field-value-link");
+      if (!valueEl) {
+        setWrappedValue(false);
+        setWrappedLink(false);
+        return;
+      }
+      const lineHeight = Number.parseFloat(getComputedStyle(valueEl).lineHeight);
+      const isAuditValue = valueEl.querySelector(".detail-audit-timestamp") !== null;
+      const isLink = valueEl.classList.contains("detail-field-value-link");
+      const wraps = !isAuditValue && valueEl.scrollHeight > lineHeight + 1;
+      setWrappedValue(wraps);
+      setWrappedLink(wraps && isLink);
+    };
+
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, [layout]);
 
   return (
-    <div className={rowClass} data-detail-field={field.apiName}>
+    <div
+      className={rowClass}
+      data-detail-field={field.apiName}
+      data-detail-wrapped={wrappedValue ? "true" : undefined}
+      data-detail-wrapped-link={wrappedLink ? "true" : undefined}
+    >
       <div className="detail-field-label">{field.label}</div>
-      <div className="detail-field-value-wrap">
+      <div className="detail-field-value-wrap" ref={valueWrapRef}>
         <FieldValueView
           field={field}
           value={value}
