@@ -166,6 +166,47 @@ describe("panelFiltersToCriteria", () => {
   }
 });
 
+it("maps datetime panel operators with units and calendar dates", () => {
+  expect(
+    panelFiltersToCriteria([
+      { field: "Created_Time", operatorId: "previous", value: 2, daysUnit: "weeks" },
+    ]),
+  ).toEqual({
+    field: "Created_Time",
+    comparator: "equal",
+    value: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "WEEKS", count: 2 },
+  });
+  expect(
+    panelFiltersToCriteria([
+      { field: "Created_Time", operatorId: "age_in", value: 2, daysUnit: "months" },
+    ]),
+  ).toEqual({
+    field: "Created_Time",
+    comparator: "less_equal",
+    value: { token: "AGEINDAYS", offset: 60 },
+  });
+  expect(
+    panelFiltersToCriteria([{ field: "Created_Time", operatorId: "on", value: "05.01.2026" }]),
+  ).toEqual({
+    field: "Created_Time",
+    comparator: "equal",
+    value: "2026-01-05",
+  });
+  expect(
+    panelFiltersToCriteria([
+      {
+        field: "Created_Time",
+        operatorId: "between",
+        value: ["05.01.2026", "10.01.2026"],
+      },
+    ]),
+  ).toEqual({
+    field: "Created_Time",
+    comparator: "between",
+    value: ["2026-01-05", "2026-01-10"],
+  });
+});
+
 it("preserves the Not Selected boolean state and integer range", () => {
   expect(
     panelFiltersToCriteria([{ field: "Email_Opt_Out", operatorId: "equal", value: false }]),

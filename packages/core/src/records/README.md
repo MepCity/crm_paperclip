@@ -53,6 +53,10 @@ combinations raise `ValidationError` keyed by `filters` on both `list` and `coun
 | This Week / Previous Week | datetime | `equal`, `PERIOD` name `THIS_WEEK` / `PREVIOUS_WEEK` |
 | This Month / Previous Month | datetime | `equal`, `PERIOD` name `THIS_MONTH` / `PREVIOUS_MONTH` |
 | This Year / Previous Year / Next Year | datetime | `equal`, `PERIOD` name `THIS_YEAR` / `PREVIOUS_YEAR` / `NEXT_YEAR` |
+| Previous / Next (N + unit) | datetime | `equal`, `{ token: "RELATIVE_PERIOD", direction, unit, count }`; wire `"${PERIOD.<direction>_<unit>}+N"` with N in 1–1000 |
+| On | datetime | `equal`, `"YYYY-MM-DD"` calendar day (UTC half-open day) |
+| before / after | datetime | `less_than` / `greater_than`, `"YYYY-MM-DD"` |
+| between / not between | datetime | `between` / `not_between`, `["YYYY-MM-DD","YYYY-MM-DD"]` with first ≤ second |
 
 Interim boundaries and empty-value behavior:
 
@@ -72,8 +76,12 @@ Interim boundaries and empty-value behavior:
   tomorrow includes tomorrow's UTC midnight and all later dates.
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
-- Role/group membership, blocked email, arbitrary date offsets/dates/ranges,
-  fiscal periods, system filters and related-module filters are not introduced.
+- Panel `age in` / `due in` convert weeks to N×7 and months to N×30 before the
+  existing `AGEINDAYS` / `DUEINDAYS` tokens; unsafe products keep Apply disabled.
+- `RELATIVE_PERIOD` uses calendar months (not 30-day blocks). All UTC boundaries
+  are half-open `[start, end)`; null or unparseable datetimes never match.
+- Role/group membership, blocked email, fiscal periods, system filters and
+  related-module filters are not introduced.
 
 
 `ListQuery.fields` projects field API names, always including `id`. Omission

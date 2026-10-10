@@ -182,6 +182,10 @@ export function FilterPanel({
                               : typeof draft.value === "string"
                                 ? draft.value.trim()
                                 : draft.value,
+                          ...(draftOperator(item.editor, draft)?.control === "days" &&
+                          draft.daysUnit
+                            ? { daysUnit: draft.daysUnit }
+                            : {}),
                         },
                       ];
                     }),

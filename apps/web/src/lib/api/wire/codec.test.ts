@@ -195,6 +195,48 @@ describe("wire codec", () => {
     });
     expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
   });
+  it.each([
+    ["PREVIOUS", "DAYS", 2, `\${PERIOD.PREVIOUS_DAYS}+2`],
+    ["NEXT", "WEEKS", 1, `\${PERIOD.NEXT_WEEKS}+1`],
+    ["PREVIOUS", "MONTHS", 3, `\${PERIOD.PREVIOUS_MONTHS}+3`],
+  ] as const)("round-trips relative period %s %s count %s", (direction, unit, count, wire) => {
+    const criteria: Criteria = {
+      field: "Created_Time",
+      comparator: "equal",
+      value: { token: "RELATIVE_PERIOD", direction, unit, count },
+    };
+    expect(encodeCriteria(criteria)).toEqual({
+      field: { api_name: "Created_Time" },
+      comparator: "equal",
+      value: wire,
+    });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
+    `\${PERIOD.PREVIOUS_WEEKS}+0`,
+    `\${PERIOD.PREVIOUS_WEEKS}+1.0`,
+    `\${PERIOD.PREVIOUS_WEEKS}+1e2`,
+    `\${PERIOD.PREVIOUS_WEEKS}+-1`,
+    `\${PERIOD.UNKNOWN_DAYS}+1`,
+    `\${PERIOD.PREVIOUS_DAYS}+1001`,
+  ])("rejects invalid relative period wire %j", (value) => {
+    expect(() =>
+      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
+    ).toThrow(ValidationError);
+  });
+  it("passes calendar date strings and ranges through unchanged", () => {
+    for (const criteria of [
+      { field: "Created_Time", comparator: "equal" as const, value: "2026-01-05" },
+      { field: "Created_Time", comparator: "less_than" as const, value: "2026-01-05" },
+      {
+        field: "Created_Time",
+        comparator: "between" as const,
+        value: ["2026-01-05", "2026-01-06"],
+      },
+    ] satisfies Criteria[]) {
+      expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+    }
+  });
   it.each([0, 1, 31, 1e21])("round-trips DUEINDAYS offset %s", (offset) => {
     const criteria: Criteria = {
       field: "Created_Time",

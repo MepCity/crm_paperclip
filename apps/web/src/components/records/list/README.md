@@ -261,14 +261,13 @@ select two rows. Only synthetic data appears in demos and tests.
 ### Not drawn
 
 - Email is blocked / is not blocked: email module (M10).
-- Tag, Connected To and Address option sources and Apply criteria: editors drawn;
-  Apply stays disabled until the Platform contract lands (MEP-255). System-defined
-  and related-module editors: their respective modules.
-- Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
-  rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
-- Date Previous / Next / On / before / after / between / not between: value editors
-  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
-- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
+- System-defined and related-module editors: their respective modules.
+- Role / group membership (`belongs to Role`, `does not belong to Role`, `belongs to
+  Group`): editors drawn; Apply disabled until user/role management supplies entities.
+- Tag: no tag list source yet. Connected To: target modules from Module 2 onward.
+  Address: no location search service.
+- Fiscal period presets (Current/Previous/Next FY/FQ): Apply disabled until fiscal
+  settings and criteria exist.
 - textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 

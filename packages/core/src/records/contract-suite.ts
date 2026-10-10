@@ -907,6 +907,194 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         records.map((record) => record.id),
       );
     });
+    it("panel relative period: UTC boundaries, month/year rollover and named-period equivalence", async () => {
+      const marker = `Relative-${randomUUID()}`;
+      const boundaries: {
+        token: CriteriaToken;
+        start: string;
+        endExclusive: string;
+      }[] = [
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 2 },
+          start: "2026-01-03T00:00:00.000Z",
+          endExclusive: "2026-01-05T00:00:00.000Z",
+        },
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "NEXT", unit: "DAYS", count: 2 },
+          start: "2026-01-06T00:00:00.000Z",
+          endExclusive: "2026-01-08T00:00:00.000Z",
+        },
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "WEEKS", count: 1 },
+          start: "2025-12-29T00:00:00.000Z",
+          endExclusive: "2026-01-05T00:00:00.000Z",
+        },
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "NEXT", unit: "WEEKS", count: 1 },
+          start: "2026-01-12T00:00:00.000Z",
+          endExclusive: "2026-01-19T00:00:00.000Z",
+        },
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "MONTHS", count: 1 },
+          start: "2025-12-01T00:00:00.000Z",
+          endExclusive: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          token: { token: "RELATIVE_PERIOD", direction: "NEXT", unit: "MONTHS", count: 1 },
+          start: "2026-02-01T00:00:00.000Z",
+          endExclusive: "2026-03-01T00:00:00.000Z",
+        },
+      ];
+      for (const { token, start, endExclusive } of boundaries) {
+        let clock = new Date("2026-01-05T12:00:00.000Z");
+        const scoped = await makeService(ctx, { now: () => clock });
+        const scopedMarker = `${marker}-${
+          token.token === "RELATIVE_PERIOD" ? token.unit : "period"
+        }`;
+        const records: RecordData[] = [];
+        for (const timestamp of [
+          Date.parse(start) - 1,
+          Date.parse(start),
+          Date.parse(endExclusive) - 1,
+          Date.parse(endExclusive),
+        ]) {
+          clock = new Date(timestamp);
+          records.push(await scoped.create("Leads", input({ Company: scopedMarker })));
+        }
+        clock = new Date("2026-01-05T12:00:00.000Z");
+        await assertPanelSet(
+          scoped,
+          scopedMarker,
+          { field: "Created_Time", comparator: "equal", value: token },
+          [records[1]?.id as string, records[2]?.id as string],
+        );
+      }
+      const equivalences: [CriteriaToken, CriteriaToken][] = [
+        [
+          { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 1 },
+          { token: "PERIOD", name: "YESTERDAY" },
+        ],
+        [
+          { token: "RELATIVE_PERIOD", direction: "NEXT", unit: "DAYS", count: 1 },
+          { token: "PERIOD", name: "TOMORROW" },
+        ],
+        [
+          { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "WEEKS", count: 1 },
+          { token: "PERIOD", name: "PREVIOUS_WEEK" },
+        ],
+        [
+          { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "MONTHS", count: 1 },
+          { token: "PERIOD", name: "PREVIOUS_MONTH" },
+        ],
+      ];
+      const eqMarker = `Relative-eq-${randomUUID()}`;
+      let eqClock = new Date("2026-01-05T12:00:00.000Z");
+      const eqAdapter = await makeService(ctx, { now: () => eqClock });
+      for (const timestamp of [
+        "2026-01-04T12:00:00.000Z",
+        "2026-01-06T12:00:00.000Z",
+        "2025-12-30T12:00:00.000Z",
+        "2025-12-15T12:00:00.000Z",
+      ]) {
+        eqClock = new Date(timestamp);
+        await eqAdapter.create("Leads", input({ Company: eqMarker }));
+      }
+      eqClock = new Date("2026-01-05T12:00:00.000Z");
+      for (const [left, right] of equivalences) {
+        const leftIds = (
+          await eqAdapter.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 20,
+            filters: {
+              groupOperator: "and",
+              group: [
+                { field: "Company", comparator: "equal", value: eqMarker },
+                { field: "Created_Time", comparator: "equal", value: left },
+              ],
+            },
+          })
+        ).records.map((record) => record.id);
+        const rightIds = (
+          await eqAdapter.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 20,
+            filters: {
+              groupOperator: "and",
+              group: [
+                { field: "Company", comparator: "equal", value: eqMarker },
+                { field: "Created_Time", comparator: "equal", value: right },
+              ],
+            },
+          })
+        ).records.map((record) => record.id);
+        expect(leftIds.sort()).toEqual(rightIds.sort());
+      }
+    });
+    it("panel calendar date strings: on, before, after, between and not_between", async () => {
+      const marker = `Calendar-date-${randomUUID()}`;
+      const timestamps = [
+        "2026-01-04T23:59:59.999Z",
+        "2026-01-05T00:00:00.000Z",
+        "2026-01-05T12:00:00.000Z",
+        "2026-01-06T00:00:00.000Z",
+        "2026-01-06T12:00:00.000Z",
+      ];
+      let clock = new Date("2026-01-04T23:59:59.999Z");
+      const adapter = await makeService(ctx, { now: () => clock });
+      const records: RecordData[] = [];
+      for (const created of timestamps) {
+        clock = new Date(created);
+        records.push(await adapter.create("Leads", input({ Company: marker })));
+      }
+      clock = new Date("2026-01-05T12:00:00.000Z");
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "equal", value: "2026-01-05" },
+        [records[1]?.id as string, records[2]?.id as string],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "less_than", value: "2026-01-05" },
+        [records[0]?.id as string],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "greater_than", value: "2026-01-05" },
+        [records[3]?.id as string, records[4]?.id as string],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "between", value: ["2026-01-05", "2026-01-06"] },
+        [
+          records[1]?.id as string,
+          records[2]?.id as string,
+          records[3]?.id as string,
+          records[4]?.id as string,
+        ],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        { field: "Created_Time", comparator: "not_between", value: ["2026-01-05", "2026-01-06"] },
+        [records[0]?.id as string],
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        {
+          field: "Last_Activity_Time",
+          comparator: "not_between",
+          value: ["2026-01-05", "2026-01-06"],
+        },
+        [],
+      );
+    });
     it("panel rejects invalid field / comparator / value combinations on list and count", async () => {
       const invalidCriteria = [
         { field: "Company", comparator: "unknown", value: "x" },
@@ -933,6 +1121,22 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         { field: "Annual_Revenue", comparator: "not_between", value: [20, 10] },
         { field: "Lead_Status", comparator: "equal", value: { token: "CATEGORY", offset: 1 } },
         { field: "Created_Time", comparator: "less_than", value: { token: "TODAY" } },
+        { field: "Created_Time", comparator: "equal", value: "2026-02-30" },
+        { field: "Created_Time", comparator: "equal", value: "2026-01-05T00:00:00.000Z" },
+        { field: "Created_Time", comparator: "not_equal", value: "2026-01-05" },
+        { field: "Created_Time", comparator: "greater_equal", value: "2026-01-05" },
+        { field: "Created_Time", comparator: "between", value: ["2026-01-06", "2026-01-05"] },
+        { field: "Created_Time", comparator: "between", value: ["2026-01-05"] },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 0 },
+        },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE_PERIOD", direction: "SIDE", unit: "DAYS", count: 1 },
+        } as unknown as Criteria,
         { field: "Owner", comparator: "not_equal", value: "contract-user" },
         { field: "Lead_Status", comparator: "equal", value: [] },
         { field: "Owner", comparator: "equal", value: [true] },

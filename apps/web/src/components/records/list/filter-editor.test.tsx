@@ -125,6 +125,7 @@ for (const field of types) {
               ? "age_in"
               : "equal",
         value,
+        ...(field === "datetime" ? { daysUnit: "days" as const } : {}),
       },
     ]);
   });
@@ -383,17 +384,17 @@ test("operators without criteria support keep Apply incomplete", () => {
   }
 });
 
-test("weeks and months on day operators keep Apply disabled; unit change keeps the number", async () => {
+test("age in accepts weeks and months when offset stays a safe integer", async () => {
   const user = userEvent.setup();
   render(<Panel initial={["datetime"]} />);
   const valueInput = screen.getByRole("textbox", { name: "datetime value" });
   await user.type(valueInput, "3");
   await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
   await user.click(screen.getByRole("option", { name: "weeks" }));
-  expect(apply().disabled).toBe(true);
+  expect(apply().disabled).toBe(false);
   expect((valueInput as HTMLInputElement).value).toBe("3");
   await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
-  await user.click(screen.getByRole("option", { name: "days" }));
+  await user.click(screen.getByRole("option", { name: "months" }));
   expect(apply().disabled).toBe(false);
 });
 

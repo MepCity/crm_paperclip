@@ -1,10 +1,18 @@
-import type { Comparator, Criteria, CriteriaPeriod, CriteriaValue } from "@crm/core/records";
-import type { AppliedFilterValue, FilterOperatorId } from "./filter-operators";
+import type {
+  Comparator,
+  Criteria,
+  CriteriaPeriod,
+  CriteriaRelativeUnit,
+  CriteriaValue,
+} from "@crm/core/records";
+import type { AppliedFilterValue, DateUnit, FilterOperatorId } from "./filter-operators";
+import { compareCalendarDates, parsePanelDateText } from "./panel-date";
 
 export interface PanelFilterInput {
   field: string;
   operatorId: FilterOperatorId;
   value: AppliedFilterValue;
+  daysUnit?: DateUnit;
 }
 
 const periodByOperator: Partial<Record<FilterOperatorId, CriteriaPeriod>> = {
@@ -21,7 +29,38 @@ const periodByOperator: Partial<Record<FilterOperatorId, CriteriaPeriod>> = {
   next_year: "NEXT_YEAR",
 };
 
-function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue): CriteriaValue {
+function wireUnit(unit: DateUnit | undefined): CriteriaRelativeUnit {
+  if (unit === "weeks") return "WEEKS";
+  if (unit === "months") return "MONTHS";
+  return "DAYS";
+}
+
+function dayOffset(count: number, unit: DateUnit | undefined): number {
+  if (unit === "weeks") return count * 7;
+  if (unit === "months") return count * 30;
+  return count;
+}
+
+function panelDateValue(value: AppliedFilterValue): string {
+  if (typeof value !== "string") throw new Error("Expected panel date text");
+  const iso = parsePanelDateText(value);
+  if (!iso) throw new Error("Invalid panel date");
+  return iso;
+}
+
+function panelDateRange(value: AppliedFilterValue): readonly [string, string] {
+  if (!Array.isArray(value) || value.length !== 2) throw new Error("Expected date range");
+  const from = typeof value[0] === "string" ? parsePanelDateText(value[0]) : null;
+  const to = typeof value[1] === "string" ? parsePanelDateText(value[1]) : null;
+  if (!from || !to || compareCalendarDates(from, to) > 0) throw new Error("Invalid date range");
+  return [from, to];
+}
+
+function criterionValue(
+  operatorId: FilterOperatorId,
+  value: AppliedFilterValue,
+  daysUnit?: DateUnit,
+): CriteriaValue {
   switch (operatorId) {
     case "is_empty":
     case "is_not_empty":
@@ -29,9 +68,40 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "today":
       return { token: "TODAY" };
     case "age_in":
-      return { token: "AGEINDAYS", offset: value as number };
+      return { token: "AGEINDAYS", offset: dayOffset(value as number, daysUnit) };
     case "due_in":
-      return { token: "DUEINDAYS", offset: value as number };
+      return { token: "DUEINDAYS", offset: dayOffset(value as number, daysUnit) };
+    case "previous":
+      return {
+        token: "RELATIVE_PERIOD",
+        direction: "PREVIOUS",
+        unit: wireUnit(daysUnit),
+        count: value as number,
+      };
+    case "next":
+      return {
+        token: "RELATIVE_PERIOD",
+        direction: "NEXT",
+        unit: wireUnit(daysUnit),
+        count: value as number,
+      };
+    case "on":
+      return panelDateValue(value);
+    case "before":
+      return panelDateValue(value);
+    case "after":
+      return panelDateValue(value);
+    case "between":
+    case "not_between":
+      if (
+        Array.isArray(value) &&
+        value.length === 2 &&
+        typeof value[0] === "number" &&
+        typeof value[1] === "number"
+      ) {
+        return value as CriteriaValue;
+      }
+      return panelDateRange(value) as CriteriaValue;
     case "tomorrow":
     case "yesterday":
     case "till_yesterday":
@@ -47,11 +117,6 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
       if (!name) throw new Error(`Missing period for ${operatorId}`);
       return { token: "PERIOD", name };
     }
-    case "previous":
-    case "next":
-    case "on":
-    case "before":
-    case "after":
     case "current_fy":
     case "current_fq":
     case "previous_fy":
@@ -73,8 +138,6 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "less_equal":
     case "greater_than":
     case "greater_equal":
-    case "between":
-    case "not_between":
       return (typeof value === "string" ? value.trim() : value) as CriteriaValue;
     default: {
       const _exhaustive: never = operatorId;
@@ -86,6 +149,7 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
 function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
   switch (operatorId) {
     case "equal":
+    case "on":
       return "equal";
     case "not_equal":
       return "not_equal";
@@ -102,10 +166,12 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "is_not_empty":
       return "is_not_empty";
     case "less_than":
+    case "before":
       return "less_than";
     case "less_equal":
       return "less_equal";
     case "greater_than":
+    case "after":
       return "greater_than";
     case "greater_equal":
       return "greater_equal";
@@ -128,12 +194,9 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "this_year":
     case "previous_year":
     case "next_year":
-      return "equal";
     case "previous":
     case "next":
-    case "on":
-    case "before":
-    case "after":
+      return "equal";
     case "current_fy":
     case "current_fq":
     case "previous_fy":
@@ -156,7 +219,7 @@ function leaf(input: PanelFilterInput): Criteria {
   return {
     field: input.field,
     comparator: comparatorForOperator(input.operatorId),
-    value: criterionValue(input.operatorId, input.value),
+    value: criterionValue(input.operatorId, input.value, input.daysUnit),
   };
 }
 

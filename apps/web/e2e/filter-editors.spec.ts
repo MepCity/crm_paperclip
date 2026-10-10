@@ -341,3 +341,70 @@ test("observed operator value editors cover date, range, days unit, role search 
   await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
 });
+
+test("datetime criteria mapping enables Apply for relative and calendar operators", async ({
+  page,
+}) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  const footer = panel.getByRole("button", { name: "Apply Filter" });
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await expect(panel.getByRole("checkbox", { checked: true })).toHaveCount(1);
+
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "Previous", exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime unit$/ }).click();
+  await page.getByRole("option", { name: "weeks", exact: true }).click();
+  const countInput = panel.locator(".filter-days-control").getByRole("textbox");
+  await countInput.click();
+  await countInput.fill("2");
+  await countInput.blur();
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await expect(demo.getByRole("status")).toContainText('"operatorId":"previous"');
+  await expect(demo.getByRole("status")).toContainText('"daysUnit":"weeks"');
+  await expect(demo.getByRole("status")).toContainText('"value":2');
+
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "On", exact: true }).click();
+  await panel.getByRole("textbox", { name: "Sample datetime value" }).fill("05.01.2026");
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await expect(demo.getByRole("status")).toContainText('"operatorId":"on"');
+  await expect(demo.getByRole("status")).toContainText('"value":"05.01.2026"');
+
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "between", exact: true }).click();
+  await panel.getByRole("textbox", { name: "Sample datetime from date" }).fill("05.01.2026");
+  await panel.getByRole("textbox", { name: "Sample datetime to date" }).fill("10.01.2026");
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await expect(demo.getByRole("status")).toContainText('"operatorId":"between"');
+  await expect(demo.getByRole("status")).toContainText('"05.01.2026"');
+
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "age in", exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime unit$/ }).click();
+  await page.getByRole("option", { name: "months", exact: true }).click();
+  const ageInput = panel.locator(".filter-days-control").getByRole("textbox");
+  await ageInput.fill("2");
+  await ageInput.blur();
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await expect(demo.getByRole("status")).toContainText('"operatorId":"age_in"');
+  await expect(demo.getByRole("status")).toContainText('"daysUnit":"months"');
+
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample ownerlookup", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample ownerlookup operator$/ }).click();
+  await page.getByRole("option", { name: "belongs to Role", exact: true }).click();
+  await expect(footer).toBeDisabled();
+});

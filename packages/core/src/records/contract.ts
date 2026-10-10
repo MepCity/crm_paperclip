@@ -117,13 +117,22 @@ export type CriteriaPeriod =
   | "NEXT_YEAR";
 
 /** A `${…}` value of a view definition; the adapter resolves it when the query runs. */
+export type CriteriaRelativeUnit = "DAYS" | "WEEKS" | "MONTHS";
+export type CriteriaRelativeDirection = "PREVIOUS" | "NEXT";
+
 export type CriteriaToken =
   | { token: "CURRENTUSER" }
   | { token: "TODAY" }
   | { token: "AGEINDAYS"; offset: number }
   | { token: "CATEGORY"; name: string }
   | { token: "DUEINDAYS"; offset: number }
-  | { token: "PERIOD"; name: CriteriaPeriod };
+  | { token: "PERIOD"; name: CriteriaPeriod }
+  | {
+      token: "RELATIVE_PERIOD";
+      direction: CriteriaRelativeDirection;
+      unit: CriteriaRelativeUnit;
+      count: number;
+    };
 
 export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
 

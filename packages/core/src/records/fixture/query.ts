@@ -14,6 +14,9 @@ import { categoryStoredValues } from "./picklists";
 import { acceptsFieldValue } from "./validation";
 
 const DAY_MS = 86_400_000;
+const CALENDAR_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const RELATIVE_UNITS = new Set(["DAYS", "WEEKS", "MONTHS"]);
+const RELATIVE_DIRECTIONS = new Set(["PREVIOUS", "NEXT"]);
 const COMPARATORS = new Set<Comparator>([
   "equal",
   "contains",
@@ -73,8 +76,87 @@ function isCriteriaToken(value: CriteriaValue): value is CriteriaToken {
     );
   if (record.token === "PERIOD")
     return keys.length === 2 && typeof record.name === "string" && PERIODS.has(record.name);
+  if (record.token === "RELATIVE_PERIOD")
+    return (
+      keys.length === 4 &&
+      RELATIVE_DIRECTIONS.has(record.direction as string) &&
+      RELATIVE_UNITS.has(record.unit as string) &&
+      typeof record.count === "number" &&
+      Number.isInteger(record.count) &&
+      record.count >= 1 &&
+      record.count <= 1000
+    );
   if (record.token === "CATEGORY") return keys.length === 2 && typeof record.name === "string";
   return false;
+}
+
+function isCalendarDateString(value: unknown): boolean {
+  if (typeof value !== "string" || !CALENDAR_DAY.test(value)) return false;
+  const timestamp = Date.UTC(
+    Number(value.slice(0, 4)),
+    Number(value.slice(5, 7)) - 1,
+    Number(value.slice(8, 10)),
+  );
+  return new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
+function isCalendarDateRange(value: CriteriaValue): boolean {
+  if (!isValueList(value) || value.length !== 2) return false;
+  const [lower, upper] = value;
+  return (
+    typeof lower === "string" &&
+    typeof upper === "string" &&
+    isCalendarDateString(lower) &&
+    isCalendarDateString(upper) &&
+    lower <= upper
+  );
+}
+
+function calendarDayBounds(isoDate: string): readonly [number, number] | null {
+  if (!isCalendarDateString(isoDate)) return null;
+  const start = Date.UTC(
+    Number(isoDate.slice(0, 4)),
+    Number(isoDate.slice(5, 7)) - 1,
+    Number(isoDate.slice(8, 10)),
+  );
+  return [start, start + DAY_MS];
+}
+
+function datetimeMillis(value: FieldValue): number | null {
+  if (typeof value !== "string") return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function unitStart(unit: "DAYS" | "WEEKS" | "MONTHS", now: Date): number {
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const dayStart = Date.UTC(year, month, now.getUTCDate());
+  if (unit === "DAYS") return dayStart;
+  if (unit === "WEEKS") return dayStart - ((now.getUTCDay() + 6) % 7) * DAY_MS;
+  return Date.UTC(year, month, 1);
+}
+
+function addCalendarMonths(timestamp: number, months: number): number {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, date.getUTCDate());
+}
+
+function shiftUnit(timestamp: number, unit: "DAYS" | "WEEKS" | "MONTHS", delta: number): number {
+  if (unit === "DAYS") return timestamp + delta * DAY_MS;
+  if (unit === "WEEKS") return timestamp + delta * 7 * DAY_MS;
+  return addCalendarMonths(timestamp, delta);
+}
+
+function relativePeriodBounds(
+  expected: Extract<CriteriaToken, { token: "RELATIVE_PERIOD" }>,
+  now: Date,
+): readonly [number, number] | null {
+  const u0 = unitStart(expected.unit, now);
+  if (expected.direction === "PREVIOUS") {
+    return [shiftUnit(u0, expected.unit, -expected.count), u0];
+  }
+  return [shiftUnit(u0, expected.unit, 1), shiftUnit(u0, expected.unit, expected.count + 1)];
 }
 
 function comparatorFits(
@@ -86,10 +168,23 @@ function comparatorFits(
   if (["contains", "not_contains", "starts_with", "ends_with"].includes(comparator))
     return TEXT_TYPES.has(field.dataType) && typeof value === "string";
   if (field.dataType === "datetime") {
-    if (!isCriteriaToken(value)) return false;
-    return comparator === "less_equal"
-      ? value.token === "AGEINDAYS" || value.token === "DUEINDAYS"
-      : comparator === "equal" && (value.token === "TODAY" || value.token === "PERIOD");
+    if (comparator === "less_equal") {
+      return isCriteriaToken(value) && (value.token === "AGEINDAYS" || value.token === "DUEINDAYS");
+    }
+    if (comparator === "equal") {
+      if (isCalendarDateString(value)) return true;
+      return (
+        isCriteriaToken(value) &&
+        (value.token === "TODAY" || value.token === "PERIOD" || value.token === "RELATIVE_PERIOD")
+      );
+    }
+    if (comparator === "less_than" || comparator === "greater_than") {
+      return isCalendarDateString(value);
+    }
+    if (comparator === "between" || comparator === "not_between") {
+      return isCalendarDateRange(value);
+    }
+    return false;
   }
   if (NUMBER_TYPES.has(field.dataType)) {
     const number = (item: FieldValue) => typeof item === "number" && acceptsFieldValue(field, item);
@@ -198,19 +293,27 @@ function matchesEqual(
     if (expected.token === "CURRENTUSER") return value === runtime.userId;
     if (expected.token === "TODAY" || expected.token === "PERIOD") {
       const bounds = periodBounds(expected, runtime.now);
-      const parsed = typeof value === "string" ? Date.parse(value) : NaN;
-      return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
+      const parsed = datetimeMillis(value);
+      return bounds !== null && parsed !== null && parsed >= bounds[0] && parsed < bounds[1];
+    }
+    if (expected.token === "RELATIVE_PERIOD") {
+      const bounds = relativePeriodBounds(expected, runtime.now);
+      const parsed = datetimeMillis(value);
+      return bounds !== null && parsed !== null && parsed >= bounds[0] && parsed < bounds[1];
     }
     if (expected.token === "CATEGORY")
       return categoryStoredValues(field, expected.name).some((stored) => value === stored);
     return false;
   }
-  if (
-    TEXT_TYPES.has(fieldByName.get(field)?.dataType ?? "") &&
-    typeof value === "string" &&
-    typeof expected === "string"
-  )
-    return value.toLowerCase() === expected.toLowerCase();
+  if (typeof expected === "string") {
+    if (isCalendarDateString(expected)) {
+      const bounds = calendarDayBounds(expected);
+      const parsed = datetimeMillis(value);
+      return bounds !== null && parsed !== null && parsed >= bounds[0] && parsed < bounds[1];
+    }
+    if (TEXT_TYPES.has(fieldByName.get(field)?.dataType ?? "") && typeof value === "string")
+      return value.toLowerCase() === expected.toLowerCase();
+  }
   return equalValues(value, expected);
 }
 
@@ -266,10 +369,20 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
           : value.toLowerCase().endsWith(criteria.value.toLowerCase()))
       );
     case "less_than":
+      if (typeof criteria.value === "string" && isCalendarDateString(criteria.value)) {
+        const bounds = calendarDayBounds(criteria.value);
+        const parsed = datetimeMillis(value);
+        return bounds !== null && parsed !== null && parsed < bounds[0];
+      }
       return (
         typeof value === "number" && typeof criteria.value === "number" && value < criteria.value
       );
     case "greater_than":
+      if (typeof criteria.value === "string" && isCalendarDateString(criteria.value)) {
+        const bounds = calendarDayBounds(criteria.value);
+        const parsed = datetimeMillis(value);
+        return bounds !== null && parsed !== null && parsed >= bounds[1];
+      }
       return (
         typeof value === "number" && typeof criteria.value === "number" && value > criteria.value
       );
@@ -279,6 +392,14 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
       );
     case "between":
     case "not_between": {
+      if (isValueList(criteria.value) && typeof criteria.value[0] === "string") {
+        const lower = calendarDayBounds(criteria.value[0] as string);
+        const upper = calendarDayBounds(criteria.value[1] as string);
+        const parsed = datetimeMillis(value);
+        if (!lower || !upper || parsed === null) return false;
+        const inside = parsed >= lower[0] && parsed < upper[1];
+        return criteria.comparator === "between" ? inside : !inside;
+      }
       if (typeof value !== "number" || !isValueList(criteria.value)) return false;
       const inside =
         value >= (criteria.value[0] as number) && value <= (criteria.value[1] as number);

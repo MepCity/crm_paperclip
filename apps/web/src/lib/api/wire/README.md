@@ -185,8 +185,11 @@ nested groups. Both bulk and actions/count send JSON `{filters: <criteria>}`.
 | --- | --- |
 | `{ token: "DUEINDAYS", offset: N }` | `"${DUEINDAYS}+N"` |
 | `{ token: "PERIOD", name: P }` | `"${PERIOD.P}"` |
+| `{ token: "RELATIVE_PERIOD", direction, unit, count }` | `"${PERIOD.<direction>_<unit>}+N"` |
+| `"YYYY-MM-DD"` / `["YYYY-MM-DD","YYYY-MM-DD"]` | unchanged |
 
-P is exactly one of `TOMORROW`, `YESTERDAY`, `TILL_YESTERDAY`,
+`direction` is `PREVIOUS` or `NEXT`; `unit` is `DAYS`, `WEEKS` or `MONTHS`; N is
+1–1000 with decimal digits only after `+`. P is exactly one of `TOMORROW`, `YESTERDAY`, `TILL_YESTERDAY`,
 `STARTING_TOMORROW`, `THIS_WEEK`, `PREVIOUS_WEEK`, `THIS_MONTH`,
 `PREVIOUS_MONTH`, `THIS_YEAR`, `PREVIOUS_YEAR`, `NEXT_YEAR`. TODAY remains its
 existing token, and age-in introduces no new wire value. Due uses `less_equal`;

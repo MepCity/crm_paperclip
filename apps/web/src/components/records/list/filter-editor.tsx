@@ -14,6 +14,7 @@ import {
   filterOperators,
   operatorsWithoutCriteriaSupport,
 } from "@/lib/records/filter-operators";
+import { compareCalendarDates, parsePanelDateText } from "@/lib/records/panel-date";
 
 const defaultConnectedModule = "contacts";
 const defaultAddressRadius = "2.00_mi";
@@ -89,17 +90,24 @@ export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDr
       return false;
     case "state":
       return typeof value === "boolean";
-    case "days":
-      return (
-        (draft.daysUnit ?? "days") === "days" &&
-        typeof value === "number" &&
-        Number.isSafeInteger(value) &&
-        value >= 0
-      );
+    case "days": {
+      if (typeof value !== "number" || !Number.isSafeInteger(value)) return false;
+      const unit = draft.daysUnit ?? "days";
+      if (draft.operatorId === "previous" || draft.operatorId === "next") {
+        return value >= 1 && value <= 1000;
+      }
+      if (value < 0) return false;
+      const offset = unit === "days" ? value : unit === "weeks" ? value * 7 : value * 30;
+      return Number.isSafeInteger(offset);
+    }
     case "date":
-      return typeof value === "string" && value.trim().length > 0;
-    case "date_range":
-      return false;
+      return typeof value === "string" && parsePanelDateText(value) !== null;
+    case "date_range": {
+      if (!Array.isArray(value) || value.length !== 2) return false;
+      const from = typeof value[0] === "string" ? parsePanelDateText(value[0]) : null;
+      const to = typeof value[1] === "string" ? parsePanelDateText(value[1]) : null;
+      return from !== null && to !== null && compareCalendarDates(from, to) <= 0;
+    }
     default:
       return false;
   }

@@ -223,7 +223,12 @@ const criteriaPeriods = new Set<CriteriaPeriod>([
 ]);
 function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
   if (typeof value === "object" && value !== null && "token" in value) {
-    const expectedKeys = value.token === "CURRENTUSER" || value.token === "TODAY" ? 1 : 2;
+    const expectedKeys =
+      value.token === "CURRENTUSER" || value.token === "TODAY"
+        ? 1
+        : value.token === "RELATIVE_PERIOD"
+          ? 4
+          : 2;
     if (Object.keys(value).length !== expectedKeys)
       return invalid("filters", "Invalid token shape.");
     switch (value.token) {
@@ -245,6 +250,18 @@ function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
       case "PERIOD":
         if (!criteriaPeriods.has(value.name)) return invalid("filters", "Unknown period.");
         return `\${PERIOD.${value.name}}`;
+      case "RELATIVE_PERIOD": {
+        const { direction, unit, count } = value;
+        if (
+          (direction !== "PREVIOUS" && direction !== "NEXT") ||
+          (unit !== "DAYS" && unit !== "WEEKS" && unit !== "MONTHS") ||
+          !Number.isInteger(count) ||
+          count < 1 ||
+          count > 1000
+        )
+          return invalid("filters", "Invalid relative period.");
+        return `\${PERIOD.${direction}_${unit}}+${count}`;
+      }
       default:
         return invalid("filters", "Unknown token.");
     }
@@ -262,6 +279,18 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
     const due = /^\$\{DUEINDAYS\}\+(\d+(?:e[+]?\d+)?)$/.exec(value);
     if (due?.[0] === value && Number.isInteger(Number(due[1])) && Number(due[1]) >= 0)
       return { token: "DUEINDAYS", offset: Number(due[1]) };
+    const relative = /^\$\{PERIOD\.(PREVIOUS|NEXT)_(DAYS|WEEKS|MONTHS)\}\+(\d+)$/.exec(value);
+    if (relative?.[0] === value) {
+      const count = Number(relative[3]);
+      if (!Number.isInteger(count) || count < 1 || count > 1000)
+        return invalid("filters", "Invalid relative period.");
+      return {
+        token: "RELATIVE_PERIOD",
+        direction: relative[1] as "PREVIOUS" | "NEXT",
+        unit: relative[2] as "DAYS" | "WEEKS" | "MONTHS",
+        count,
+      };
+    }
     const period = /^\$\{PERIOD\.([^{}]+)\}$/.exec(value);
     if (period && criteriaPeriods.has(period[1] as CriteriaPeriod))
       return { token: "PERIOD", name: period[1] as CriteriaPeriod };
