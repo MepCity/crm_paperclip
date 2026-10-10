@@ -17,7 +17,6 @@ export type LeadStatusRibbonSectionProps = {
   field: FieldDefinition;
   value: string | null;
   onValueChange: (value: string | null) => void;
-  onCommit: () => void;
 };
 
 export function LeadStatusRibbonSection({
@@ -26,7 +25,6 @@ export function LeadStatusRibbonSection({
   field,
   value,
   onValueChange,
-  onCommit,
 }: LeadStatusRibbonSectionProps) {
   const update = useUpdateRecord(module);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -42,13 +40,12 @@ export function LeadStatusRibbonSection({
       setErrorMessage(null);
       try {
         await update.mutateAsync({ id: recordId, input: { Lead_Status: next } });
-        onCommit();
       } catch (error) {
         onValueChange(previous);
         setErrorMessage(isAppError(error) ? error.message : "Unable to update lead status.");
       }
     },
-    [onCommit, onValueChange, recordId, update, value],
+    [onValueChange, recordId, update, value],
   );
 
   return (

@@ -135,13 +135,59 @@ describe("LeadRecordScreen", () => {
     expect(updateSpy).not.toHaveBeenCalled();
   });
 
-  it("reverts the ribbon and shows an error when the update fails", async () => {
+  it("keeps the new Lead_Status visible while the record refetch is in flight", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
     if (!view) throw new Error("Missing default view.");
     const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
     const record = page.records[3];
+    if (!record) throw new Error("Expected seeded lead.");
+    const current = record.fields.Lead_Status;
+    if (typeof current !== "string") throw new Error("Expected string status.");
+    const nextStatus = current === "Contacted" ? "Pre-Qualified" : "Contacted";
+
+    const pendingGet: { release: (() => void) | null } = { release: null };
+    let blockNextGet = false;
+    const getRecord = service.get.bind(service);
+    vi.spyOn(service, "get").mockImplementation(async (module, id) => {
+      const data = await getRecord(module, id);
+      if (blockNextGet) {
+        blockNextGet = false;
+        await new Promise<void>((resolve) => {
+          pendingGet.release = resolve;
+        });
+      }
+      return data;
+    });
+
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
+
+    blockNextGet = true;
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Choose lead status" }));
+    await user.click(screen.getByRole("menuitemradio", { name: nextStatus }));
+
+    const expectNextStatusEverywhere = () => {
+      expect(screen.getAllByText(nextStatus).length).toBeGreaterThanOrEqual(2);
+    };
+
+    await waitFor(expectNextStatusEverywhere);
+    if (!pendingGet.release) throw new Error("Expected record refetch to be blocked.");
+    expectNextStatusEverywhere();
+
+    pendingGet.release();
+    await waitFor(expectNextStatusEverywhere);
+  });
+
+  it("reverts the ribbon and shows an error when the update fails", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[4];
     if (!record) throw new Error("Expected seeded lead.");
     const current = record.fields.Lead_Status;
     if (typeof current !== "string") throw new Error("Expected string status.");

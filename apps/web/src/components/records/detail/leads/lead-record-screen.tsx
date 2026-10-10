@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@crm/core/errors";
 import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
@@ -74,7 +74,6 @@ export function LeadRecordScreen({
 }: LeadRecordScreenProps) {
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
-  const commitStatus = useCallback(() => setStatusOverride(undefined), []);
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
   const moduleQuery = useModule(LEADS_MODULE);
@@ -107,6 +106,16 @@ export function LeadRecordScreen({
     for (const member of usersQuery.data ?? []) map[member.userId] = member.name;
     return map;
   }, [usersQuery.data]);
+
+  const serverLeadStatus = recordQuery.data
+    ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
+    : undefined;
+
+  useEffect(() => {
+    if (statusOverride === undefined) return;
+    if (serverLeadStatus === undefined) return;
+    if (serverLeadStatus === statusOverride) setStatusOverride(undefined);
+  }, [serverLeadStatus, statusOverride]);
 
   const loading =
     moduleQuery.isLoading ||
@@ -141,7 +150,7 @@ export function LeadRecordScreen({
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 
   const statusField = module.fields.find((field) => field.apiName === "Lead_Status");
-  const serverStatus = readLeadStatusValue(record.fields.Lead_Status);
+  const serverStatus = serverLeadStatus ?? readLeadStatusValue(record.fields.Lead_Status);
   const displayStatus = statusOverride !== undefined ? statusOverride : serverStatus;
   const displayRecord = {
     ...record,
@@ -161,7 +170,6 @@ export function LeadRecordScreen({
           field={statusField}
           value={displayStatus}
           onValueChange={setStatusOverride}
-          onCommit={commitStatus}
         />
       ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
