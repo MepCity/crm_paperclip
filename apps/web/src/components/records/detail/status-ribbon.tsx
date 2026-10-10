@@ -26,6 +26,7 @@ export interface StatusRibbonProps {
     scrollNext: string;
   };
   defaultOpenMenu?: "stage" | "terminal";
+  isDisabled?: boolean;
 }
 
 export function StatusRibbon({
@@ -35,6 +36,7 @@ export function StatusRibbon({
   onSelect,
   labels,
   defaultOpenMenu,
+  isDisabled = false,
 }: StatusRibbonProps) {
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLOListElement>(null);
@@ -74,14 +76,20 @@ export function StatusRibbon({
     emptyLabel: labels.empty,
   };
   return (
-    <section aria-label={labels.ribbon} className="status-ribbon" data-status-ribbon>
+    <section
+      aria-label={labels.ribbon}
+      className="status-ribbon"
+      data-status-ribbon
+      data-disabled={isDisabled ? "" : undefined}
+      aria-busy={isDisabled || undefined}
+    >
       <div className="status-ribbon-lane">
         {overflow && (
           <Button
             variant="ghost"
             className="status-scroll status-scroll-previous"
             aria-label={labels.scrollPrevious}
-            isDisabled={scroll.start}
+            isDisabled={isDisabled || scroll.start}
             onPress={() => move(-1)}
           >
             <Icons.chevronLeft aria-hidden />
@@ -115,11 +123,13 @@ export function StatusRibbon({
                       appearance="stage"
                       options={stages}
                       defaultOpen={defaultOpenMenu === "stage"}
+                      isDisabled={isDisabled}
                       trigger={
                         <Button
                           variant="ghost"
                           className="status-current"
                           aria-label={labels.stageMenu}
+                          isDisabled={isDisabled}
                         >
                           {terminal.has(stage.value) && (
                             <Icons.thumbDown aria-hidden className="status-stage-thumb" />
@@ -146,7 +156,7 @@ export function StatusRibbon({
             variant="ghost"
             className="status-scroll status-scroll-next"
             aria-label={labels.scrollNext}
-            isDisabled={scroll.end}
+            isDisabled={isDisabled || scroll.end}
             onPress={() => move(1)}
           >
             <Icons.chevronRight aria-hidden />
@@ -159,8 +169,14 @@ export function StatusRibbon({
         appearance="terminal"
         groups={terminalGroups}
         defaultOpen={defaultOpenMenu === "terminal"}
+        isDisabled={isDisabled}
         trigger={
-          <Button variant="ghost" className="status-terminal" aria-label={labels.terminalMenu}>
+          <Button
+            variant="ghost"
+            className="status-terminal"
+            aria-label={labels.terminalMenu}
+            isDisabled={isDisabled}
+          >
             <Icons.thumbDown aria-hidden />
           </Button>
         }

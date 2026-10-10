@@ -21,12 +21,14 @@ import {
 } from "@/lib/records/leads-detail-sections";
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
+import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
 import {
   type RecordListContext,
   readRecordListContext,
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
@@ -72,6 +74,7 @@ export function LeadRecordScreen({
   now = new Date(),
 }: LeadRecordScreenProps) {
   const [selectedTabId, setSelectedTabId] = useState("overview");
+  const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
   const viewsQueryEnabled = listContext === null;
@@ -106,6 +109,10 @@ export function LeadRecordScreen({
     return map;
   }, [usersQuery.data]);
 
+  const serverLeadStatus = recordQuery.data
+    ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
+    : undefined;
+
   const loading =
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
@@ -137,13 +144,29 @@ export function LeadRecordScreen({
 
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 
+  const statusField = module.fields.find((field) => field.apiName === "Lead_Status");
+  const serverStatus = serverLeadStatus ?? readLeadStatusValue(record.fields.Lead_Status);
+  const displayStatus = statusOverride !== undefined ? statusOverride : serverStatus;
+  const displayRecord = {
+    ...record,
+    fields: { ...record.fields, Lead_Status: displayStatus },
+  };
   const { title, subtitle } = leadsRecordHeaderIdentity(record);
   const lastUpdate = formatLeadsLastUpdateLabel(record, now, DEFAULT_FORMAT);
-  const businessFields = buildLeadsBusinessCardFields(module, record);
-  const detailSections = buildLeadsDetailSections(module, record);
+  const businessFields = buildLeadsBusinessCardFields(module, displayRecord);
+  const detailSections = buildLeadsDetailSections(module, displayRecord);
 
   const overview = (
     <>
+      {statusField ? (
+        <LeadStatusRibbonSection
+          module={LEADS_MODULE}
+          recordId={recordId}
+          field={statusField}
+          value={displayStatus}
+          onValueChange={setStatusOverride}
+        />
+      ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
       <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
       <DetailsCard sections={detailSections} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
