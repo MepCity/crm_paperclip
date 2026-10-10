@@ -4,6 +4,7 @@ import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-selec
 import { NumberField } from "@/components/ui/number-field";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
+import { displayDateToIso, isValidDisplayDateRange } from "@/lib/records/filter-date-input";
 import {
   type AppliedFilterValue,
   type DateUnit,
@@ -89,17 +90,20 @@ export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDr
       return false;
     case "state":
       return typeof value === "boolean";
-    case "days":
-      return (
-        (draft.daysUnit ?? "days") === "days" &&
-        typeof value === "number" &&
-        Number.isSafeInteger(value) &&
-        value >= 0
-      );
+    case "days": {
+      if (typeof value !== "number" || !Number.isSafeInteger(value)) return false;
+      if (draft.operatorId === "previous" || draft.operatorId === "next") return value >= 1;
+      return value >= 0;
+    }
     case "date":
-      return typeof value === "string" && value.trim().length > 0;
+      return typeof value === "string" && displayDateToIso(value) !== null;
     case "date_range":
-      return false;
+      return (
+        Array.isArray(value) &&
+        typeof value[0] === "string" &&
+        typeof value[1] === "string" &&
+        isValidDisplayDateRange(value[0], value[1])
+      );
     default:
       return false;
   }
@@ -327,21 +331,23 @@ export function FilterEditor({
           )}
           {control === "date_range" && (
             <div className="filter-date-range">
-              <TextField
-                label={`${label} from date`}
-                hideLabel
-                placeholder="From Date"
-                value={Array.isArray(value) && typeof value[0] === "string" ? value[0] : ""}
-                onChange={(from) =>
-                  setValue([
-                    from,
-                    Array.isArray(value) && typeof value[1] === "string" ? value[1] : "",
-                  ])
-                }
-              />
-              <span className="filter-date-range-separator" aria-hidden>
-                -
-              </span>
+              <div className="filter-date-range-from">
+                <TextField
+                  label={`${label} from date`}
+                  hideLabel
+                  placeholder="From Date"
+                  value={Array.isArray(value) && typeof value[0] === "string" ? value[0] : ""}
+                  onChange={(from) =>
+                    setValue([
+                      from,
+                      Array.isArray(value) && typeof value[1] === "string" ? value[1] : "",
+                    ])
+                  }
+                />
+                <span className="filter-date-range-separator" aria-hidden>
+                  -
+                </span>
+              </div>
               <TextField
                 label={`${label} to date`}
                 hideLabel
