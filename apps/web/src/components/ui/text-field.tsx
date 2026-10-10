@@ -21,6 +21,8 @@ export interface TextFieldProps extends AriaTextFieldProps {
   hideLabel?: boolean;
   placeholder?: string;
   variant?: "default" | "filter-search";
+  /** `measured` keeps the filter search width token; `fill` spans the container it sits in. */
+  size?: "measured" | "fill";
   description?: string;
   errorMessage?: string | ((v: import("react-aria-components").ValidationResult) => string);
 }
@@ -33,6 +35,7 @@ export function TextField({
   hideLabel = false,
   placeholder,
   variant = "default",
+  size = "measured",
   description,
   errorMessage,
   ...props
@@ -40,7 +43,13 @@ export function TextField({
   return (
     <AriaTextField
       {...props}
-      className={variant === "filter-search" ? "flex flex-col gap-0" : "flex flex-col gap-1"}
+      className={
+        variant === "filter-search"
+          ? size === "fill"
+            ? "flex w-full flex-col gap-0"
+            : "flex flex-col gap-0"
+          : "flex flex-col gap-1"
+      }
     >
       <Label
         className={variant === "filter-search" || hideLabel ? "sr-only" : "record-label text-md"}
@@ -48,7 +57,13 @@ export function TextField({
         {label}
       </Label>
       {variant === "filter-search" ? (
-        <div className="relative w-full max-w-(--size-list-filter-search-width)">
+        <div
+          className={
+            size === "fill"
+              ? "relative w-full"
+              : "relative w-full max-w-(--size-list-filter-search-width)"
+          }
+        >
           <Icons.filterSearch
             aria-hidden
             className="pointer-events-none absolute top-1/2 left-(--size-list-filter-search-icon-inset) h-(--size-list-filter-search-icon) w-(--size-list-filter-search-icon) -translate-y-1/2 text-text"

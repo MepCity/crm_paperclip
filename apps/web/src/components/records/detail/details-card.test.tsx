@@ -109,3 +109,45 @@ test("two-column sections keep left and right fields in separate columns", () =>
   expect(rightColumn?.querySelector('[data-detail-field="Right"]')).toBeTruthy();
   expect(leftColumn?.querySelector('[data-detail-field="Right"]')).toBeNull();
 });
+
+test("full-width Description row uses the description label layout modifier", () => {
+  const { container } = render(
+    <DetailsCard
+      format={DEFAULT_FORMAT}
+      sections={[
+        {
+          title: "Address Information",
+          fields: [
+            {
+              column: "full",
+              field: textField("Description", "Description"),
+              value: "",
+            },
+          ],
+        },
+      ]}
+    />,
+  );
+  expect(container.querySelector(".detail-details-row-description")).toBeTruthy();
+});
+
+test("full-width Address row does not use the description label modifier", () => {
+  const { container } = render(
+    <DetailsCard
+      format={DEFAULT_FORMAT}
+      sections={[
+        {
+          title: "Address Information",
+          fields: [
+            {
+              column: "full",
+              field: textField("Address", "Address"),
+              value: "Line one",
+            },
+          ],
+        },
+      ]}
+    />,
+  );
+  expect(container.querySelector(".detail-details-row-description")).toBeNull();
+});

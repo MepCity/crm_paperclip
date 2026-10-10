@@ -184,7 +184,11 @@ nested groups. Both bulk and actions/count send JSON `{filters: <criteria>}`.
 | Port token | Interim wire value |
 | --- | --- |
 | `{ token: "DUEINDAYS", offset: N }` | `"${DUEINDAYS}+N"` |
+| `{ token: "AGEINDAYS", offset: N, unit: "weeks" \| "months" }` | `"${AGEINWEEKS}+N"` / `"${AGEINMONTHS}+N"` (**Interim**) |
+| `{ token: "DUEINDAYS", offset: N, unit: "weeks" \| "months" }` | `"${DUEINWEEKS}+N"` / `"${DUEINMONTHS}+N"` (**Interim**) |
+| `{ token: "RELATIVE", direction, count, unit }` | `"${PREVIOUS.*}+N"` / `"${NEXT.*}+N"` (**Interim**) |
 | `{ token: "PERIOD", name: P }` | `"${PERIOD.P}"` |
+| `"YYYY-MM-DD"` and `["YYYY-MM-DD", "YYYY-MM-DD"]` on datetime filters | same JSON strings/arrays on the wire (**Interim**) |
 
 P is exactly one of `TOMORROW`, `YESTERDAY`, `TILL_YESTERDAY`,
 `STARTING_TOMORROW`, `THIS_WEEK`, `PREVIOUS_WEEK`, `THIS_MONTH`,

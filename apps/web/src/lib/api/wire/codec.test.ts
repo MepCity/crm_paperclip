@@ -5,6 +5,7 @@ import type {
   Criteria,
   CriteriaPeriod,
   CriteriaToken,
+  CriteriaValue,
   FieldDataType,
   FieldDefinition,
   ListView,
@@ -209,6 +210,116 @@ describe("wire codec", () => {
     expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
   });
   it.each([
+    {
+      token: "AGEINDAYS" as const,
+      offset: 2,
+      unit: "weeks" as const,
+      wire: `\${AGEINWEEKS}+2`,
+      comparator: "less_equal" as const,
+    },
+    {
+      token: "AGEINDAYS" as const,
+      offset: 3,
+      unit: "months" as const,
+      wire: `\${AGEINMONTHS}+3`,
+      comparator: "less_equal" as const,
+    },
+    {
+      token: "DUEINDAYS" as const,
+      offset: 4,
+      unit: "weeks" as const,
+      wire: `\${DUEINWEEKS}+4`,
+      comparator: "less_equal" as const,
+    },
+    {
+      token: "DUEINDAYS" as const,
+      offset: 5,
+      unit: "months" as const,
+      wire: `\${DUEINMONTHS}+5`,
+      comparator: "less_equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "previous" as const,
+      count: 2,
+      unit: "days" as const,
+      wire: `\${PREVIOUS.DAYS}+2`,
+      comparator: "equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "previous" as const,
+      count: 2,
+      unit: "weeks" as const,
+      wire: `\${PREVIOUS.WEEKS}+2`,
+      comparator: "equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "previous" as const,
+      count: 2,
+      unit: "months" as const,
+      wire: `\${PREVIOUS.MONTHS}+2`,
+      comparator: "equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "next" as const,
+      count: 1,
+      unit: "days" as const,
+      wire: `\${NEXT.DAYS}+1`,
+      comparator: "equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "next" as const,
+      count: 1,
+      unit: "weeks" as const,
+      wire: `\${NEXT.WEEKS}+1`,
+      comparator: "equal" as const,
+    },
+    {
+      token: "RELATIVE" as const,
+      direction: "next" as const,
+      count: 2,
+      unit: "months" as const,
+      wire: `\${NEXT.MONTHS}+2`,
+      comparator: "equal" as const,
+    },
+  ])("round-trips interim datetime token %j", (entry) => {
+    const value: CriteriaValue =
+      entry.token === "RELATIVE"
+        ? {
+            token: "RELATIVE",
+            direction: entry.direction,
+            count: entry.count,
+            unit: entry.unit,
+          }
+        : { token: entry.token, offset: entry.offset, unit: entry.unit };
+    const criteria: Criteria = { field: "Created_Time", comparator: entry.comparator, value };
+    expect(encodeCriteria(criteria)).toMatchObject({ value: entry.wire });
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
+    `\${PREVIOUS.DAYS}+0`,
+    `\${NEXT.MONTHS}+1.5`,
+    `\${AGEINWEEKS}+1suffix`,
+    `\${PREVIOUS.YEARS}+1`,
+    `\${NEXT.DAYS}`,
+  ])("rejects malformed interim datetime wire token %j", (value) => {
+    expect(() =>
+      decodeCriteria({ field: { api_name: "Created_Time" }, comparator: "equal", value }),
+    ).toThrow(ValidationError);
+  });
+  it("round-trips calendar date strings unchanged", () => {
+    const criteria: Criteria = {
+      field: "Created_Time",
+      comparator: "between",
+      value: ["2026-01-04", "2026-01-05"],
+    };
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+  it.each([
     `\${UNKNOWN}`,
     `\${PERIOD.CURRENT_FY}`,
     `\${DUEINDAYS}-1`,
@@ -247,6 +358,20 @@ describe("wire codec", () => {
             value: { token, offset },
           }),
         ).toThrow(ValidationError);
+    expect(() =>
+      encodeCriteria({
+        field: "Created_Time",
+        comparator: "equal",
+        value: { token: "RELATIVE", direction: "previous", count: 0, unit: "days" },
+      }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      encodeCriteria({
+        field: "Created_Time",
+        comparator: "equal",
+        value: { token: "AGEINDAYS", offset: 1, unit: "years" as "days" },
+      }),
+    ).toThrow(ValidationError);
   });
   it("decodes exact literal token strings as tokens and preserves category spaces", () => {
     for (const { port, wire } of tokens.filter(({ wire }) => typeof wire === "string"))
