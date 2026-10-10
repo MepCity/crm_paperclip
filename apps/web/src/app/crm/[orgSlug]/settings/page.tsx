@@ -2,9 +2,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireOrgContext } from "@/lib/session";
-import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
-
-export const metadata = shellPageMetadata(shellPageTitle.settings);
 
 export default async function GeneralSettingsPage({
   params,
@@ -15,7 +12,7 @@ export default async function GeneralSettingsPage({
   const org = await requireOrgContext(orgSlug);
   return (
     <>
-      <PageTitle title={shellPageTitle.settings} />
+      <PageTitle title="Settings" />
       <PageHeader description="Organization details." />
       <Card>
         <CardContent>

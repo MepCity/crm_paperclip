@@ -1,7 +1,7 @@
 import { demos } from "./demos";
 
 export const metadata = {
-  title: "Component Gallery",
+  title: "Component Gallery - MepCity CRM",
 };
 
 export default function UIComponentsPage() {

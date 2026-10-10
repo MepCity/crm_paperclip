@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { shellPageTitle } from "@/lib/shell-page-title";
 
 export default function OrganizationError({
   retry,
@@ -14,7 +13,7 @@ export default function OrganizationError({
 }) {
   return (
     <div className="p-6">
-      <PageTitle title={shellPageTitle.somethingWentWrong} />
+      <PageTitle title="Something went wrong" />
       <PageHeader
         actions={
           <Button variant="secondary" onPress={retry}>

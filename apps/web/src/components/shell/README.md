@@ -4,12 +4,9 @@ The organization layout authorizes membership and reads the user and organizatio
 list on the server. It passes only display data to `AppShell`.
 
 Each page (including loading and error fallbacks) renders exactly one
-`<PageTitle title={shellPageTitle.settings} />`. It registers the toolbar `h1`.
-Matching `export const metadata = shellPageMetadata(...)` on each `page.tsx` (and
-organization `not-found.tsx`) keeps the browser title correct on client
-navigations; `PageTitle` still sets `document.title` after paint for loading and
-error fallbacks that cannot export metadata. Pages remain server components; the
-marker alone is a client component. Do not duplicate the title in content.
+`<PageTitle title="Settings" />`. It registers the toolbar `h1` and updates the
+browser title on hydration and client navigation. Pages remain server components;
+the marker alone is a client component. Do not duplicate the title in content.
 
 For our settings screens, add `<PageHeader description="…" actions={…} />` above
 the content. Both slots are optional. Module screens follow their own toolbar spec.

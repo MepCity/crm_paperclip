@@ -21,6 +21,8 @@ async function openCreateRecords(page: Page): Promise<Locator> {
 test.beforeEach(async ({ page }) => {
   await signUpNewUser(page);
   await createOrganization(page);
+  // pending-announcement workaround
+  await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
 });
 
