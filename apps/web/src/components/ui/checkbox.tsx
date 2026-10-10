@@ -59,6 +59,8 @@ export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" |
   /** `first-line` keeps the box on the first wrapped line. The default stays centered. */
   align?: "center" | "first-line";
   variant?: "default" | "filter";
+  /** Extra classes on the visible label span, used to cap the filter row's wrap width. */
+  labelClassName?: string;
 }
 
 export function Checkbox({
@@ -68,6 +70,7 @@ export function Checkbox({
   errorMessage,
   align = "center",
   variant = "default",
+  labelClassName,
   ...props
 }: CheckboxProps) {
   const wraps = align === "first-line";
@@ -88,7 +91,9 @@ export function Checkbox({
             >
               {isSelected && <Icons.check className={styles.check} />}
             </span>
-            <span className={hideLabel ? "sr-only" : wraps ? styles.labelFirstLine : styles.label}>
+            <span
+              className={`${hideLabel ? "sr-only" : wraps ? styles.labelFirstLine : styles.label} ${labelClassName ?? ""}`}
+            >
               {label}
             </span>
           </>
