@@ -1563,7 +1563,7 @@ test.describe("Leads list page", () => {
       expect(Math.abs(b.height - 32)).toBeLessThanOrEqual(0.5);
     }
     expect(Math.abs(tags.x - (sendEmail.x + sendEmail.width) - 8)).toBeLessThanOrEqual(0.5);
-    await expect(sendEmail).toHaveCSS(
+    await expect(bar.getByRole("button", { name: "Send Email" })).toHaveCSS(
       "background-image",
       /rgb\(253, 253, 254\).*rgb\(243, 242, 248\)/,
     );
