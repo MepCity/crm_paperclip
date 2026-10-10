@@ -1,6 +1,9 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
+import { signUpNewUser } from "./support/auth";
+import { LEADS_MODULE, moduleListDefaultPath } from "./support/crm-paths";
+import { createOrganization } from "./support/org";
 import { expectType } from "./support/typography";
 
 const near = (actual: number, expected: number) =>
@@ -10,6 +13,8 @@ const nearOperatorWidth = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
 /** Popover gap below anchor: sub-pixel layout may differ from spec row by up to 1px. */
 const nearPopoverGap = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+const nearOnePx = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
 test.use({ viewport: { width: 1470, height: 835 } });
 test("field filter editors match measured rows, keyboard, sticky actions and accessibility", async ({
@@ -306,7 +311,12 @@ test("observed operator value editors cover date, range, days unit, role search 
   near(toBox.width, 100);
   near(toBox.height, 24);
   near(toBox.y - (fromBox.y + fromBox.height), 3);
-  await expect(panel.locator(".filter-date-range-separator")).toHaveText("-");
+  const separator = panel.locator(".filter-date-range-separator");
+  await expect(separator).toHaveText("-");
+  const sepBox = await separator.boundingBox();
+  if (!sepBox) throw new Error("Missing date range separator");
+  expect(sepBox.x).toBeGreaterThan(fromBox.x + fromBox.width - 0.5);
+  nearOnePx(sepBox.y + sepBox.height / 2, fromBox.y + fromBox.height / 2);
 
   await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
   await page.getByRole("option", { name: "age in", exact: true }).click();
@@ -324,12 +334,29 @@ test("observed operator value editors cover date, range, days unit, role search 
   if (!roleBox) throw new Error("Missing role search");
   near(roleBox.width, 141);
   near(roleBox.height, 25);
+  const roleSearch = panel.getByRole("textbox", { name: /role or group search/ }).locator("..");
+  const roleSearchBox = await roleSearch.boundingBox();
+  if (!roleSearchBox) throw new Error("Missing role search input");
+  near(roleSearchBox.width, 112);
+  near(roleSearchBox.height, 16);
   await expect(panel.getByRole("textbox", { name: /role or group search/ })).toHaveAttribute(
     "placeholder",
     "None",
   );
 
   await panel.getByText("Sample compound_address", { exact: true }).click();
+  const location = panel
+    .getByRole("textbox", { name: "Sample compound_address location" })
+    .locator("..");
+  const locationBox = await location.boundingBox();
+  if (!locationBox) throw new Error("Missing address location");
+  near(locationBox.width, 144);
+  near(locationBox.height, 25);
+  const radius = panel.getByRole("button", { name: /Sample compound_address radius$/ });
+  const radiusBox = await radius.boundingBox();
+  if (!radiusBox) throw new Error("Missing address radius");
+  near(radiusBox.width, 144);
+  near(radiusBox.height, 54);
   await expect(
     panel.getByRole("textbox", { name: "Sample compound_address location" }),
   ).toHaveAttribute("placeholder", "Choose Location");
@@ -340,4 +367,129 @@ test("observed operator value editors cover date, range, days unit, role search 
   await panel.getByText("Sample tag", { exact: true }).click();
   await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
+});
+
+test("datetime filter value editors emit expected list request bodies", async ({ page }) => {
+  test.setTimeout(180_000);
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+  const panel = page.getByRole("region", { name: "Filter Leads by" });
+  const createdTimeCheckbox = panel.getByRole("checkbox", { name: "Created Time", exact: true });
+  await createdTimeCheckbox.scrollIntoViewIfNeeded();
+  await expect(createdTimeCheckbox).toBeEnabled({ timeout: 30_000 });
+  if (!(await panel.getByRole("button", { name: /Created Time operator$/ }).count())) {
+    await createdTimeCheckbox.focus();
+    await page.keyboard.press("Space");
+  }
+  await expect(panel.getByRole("button", { name: /Created Time operator$/ })).toBeVisible();
+
+  let lastBulkBody: unknown;
+  page.on("request", (request) => {
+    if (request.method() !== "POST") return;
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.endsWith("/Leads/bulk")) {
+      lastBulkBody = request.postDataJSON();
+    }
+  });
+
+  const cases: { operator: string; fill: () => Promise<void>; body: unknown }[] = [
+    {
+      operator: "On",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "On", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("15.03.2024");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "equal",
+          value: "2024-03-15",
+        },
+      },
+    },
+    {
+      operator: "before",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "before", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("01.01.2025");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "less_than",
+          value: "2025-01-01",
+        },
+      },
+    },
+    {
+      operator: "between",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "between", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time from date" }).fill("01.01.2024");
+        await panel.getByRole("textbox", { name: "Created Time to date" }).fill("31.01.2024");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "between",
+          value: ["2024-01-01", "2024-01-31"],
+        },
+      },
+    },
+    {
+      operator: "age in weeks",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "age in", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("2");
+        await panel.getByRole("button", { name: /Created Time unit$/ }).click();
+        await page.getByRole("option", { name: "weeks", exact: true }).click();
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "less_equal",
+          value: "$" + "{AGEINWEEKS}+2",
+        },
+      },
+    },
+    {
+      operator: "Previous",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "Previous", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("3");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "equal",
+          value: "$" + "{PREVIOUS.DAYS}+3",
+        },
+      },
+    },
+  ];
+
+  for (const { operator, fill, body } of cases) {
+    lastBulkBody = undefined;
+    await fill();
+    const bulkResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname.endsWith("/Leads/bulk"),
+    );
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    await bulkResponse;
+    expect(lastBulkBody).toEqual(body);
+    await panel.getByRole("button", { name: "Clear" }).click();
+    await panel.getByRole("button", { name: /Created Time operator$/ }).waitFor();
+    await expect(panel.getByRole("button", { name: /Created Time operator$/ })).toBeVisible();
+    void operator;
+  }
 });
