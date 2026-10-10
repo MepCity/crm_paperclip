@@ -19,17 +19,23 @@ export function OrganizationSwitcher({
 }) {
   const router = useRouter();
   const current = organizations.find((org) => org.slug === currentSlug);
+  const switcherLabel = current
+    ? `Organization switcher: ${current.name}`
+    : "Organization switcher";
   return (
     <MenuTrigger>
       <Button
         variant="rail"
         size="selector"
-        aria-label="Organization switcher"
+        aria-label={switcherLabel}
         className="h-(--size-rail-product-selector-height) min-w-0 gap-(--size-rail-product-gap) "
       >
         <Icons.building className="size-(--size-rail-product-mark) shrink-0" aria-hidden />
         <span className="truncate">{current?.name}</span>
-        <Icons.chevronDown className="size-(--size-rail-group-icon) shrink-0" aria-hidden />
+        <Icons.productCaretDown
+          className="w-(--size-rail-product-caret) h-[calc(var(--size-rail-product-caret)/2)] shrink-0 text-rail-text"
+          aria-hidden
+        />
       </Button>
       <Menu
         appearance="measured"

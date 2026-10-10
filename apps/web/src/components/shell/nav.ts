@@ -2,6 +2,27 @@ import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { LEADS_MODULE } from "@/modules/leads/list-config";
 
+/** Pinned-link icon accent tokens from the design system (`tokens.css`). */
+export type NavLinkIconAccentToken = "--color-accent-blue";
+
+const navLinkIconAccentClass: Record<NavLinkIconAccentToken, string> = {
+  "--color-accent-blue": "text-accent-blue",
+};
+
+export function navLinkIconClassName(
+  link: NavLink,
+  options: { nested: boolean; active: boolean },
+): string {
+  const base = "size-(--size-rail-icon) shrink-0";
+  if (link.iconAccentToken) {
+    return `${base} ${navLinkIconAccentClass[link.iconAccentToken]}`;
+  }
+  if (options.nested && !options.active) {
+    return `${base} text-rail-icon`;
+  }
+  return base;
+}
+
 export interface NavLink {
   id: string;
   label: string;
@@ -10,6 +31,8 @@ export interface NavLink {
   match: "exact" | "prefix";
   /** When set, prefix matching uses this root instead of `href`. */
   activePrefix?: (orgSlug: string) => string;
+  /** Pinned-link icon accent; label colour rules are unchanged. */
+  iconAccentToken?: NavLinkIconAccentToken;
 }
 
 export interface NavGroup {
@@ -32,7 +55,14 @@ export interface NavConfig {
 
 export const shellNav: NavConfig = {
   links: [
-    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/crm/${slug}`, match: "exact" },
+    {
+      id: "home",
+      label: "Home",
+      icon: Icons.home,
+      href: (slug) => `/crm/${slug}`,
+      match: "exact",
+      iconAccentToken: "--color-accent-blue",
+    },
   ],
   sections: [
     {
