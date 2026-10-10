@@ -483,9 +483,11 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("heading", { name: "Leads", level: 1 })).toBeVisible();
     await expect(page.getByText("All Leads")).toBeVisible();
-    for (const label of ["Full Name", "Company", "Email", "Phone", "Lead Source", "Lead Owner"]) {
+    for (const label of ["Lead Name", "Company", "Email", "Phone", "Lead Source", "Lead Owner"]) {
       await expect(page.getByRole("columnheader", { name: label })).toBeVisible();
     }
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toHaveText(/Lead Name/);
+    await expect(page.getByRole("columnheader", { name: "Full Name" })).toHaveCount(0);
   });
 
   test("paginates and keeps page size in the address", async ({ page }) => {
@@ -757,7 +759,9 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListCustomPath(org.slug, LEADS_MODULE, "converted-leads"));
     await expect(page.getByText("Converted Leads")).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Phone" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Full Name" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toHaveText(/Lead Name/);
+    await expect(page.getByRole("columnheader", { name: "Full Name" })).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "Lead Source" })).toHaveCount(0);
   });
 

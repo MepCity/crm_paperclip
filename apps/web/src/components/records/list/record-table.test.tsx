@@ -53,6 +53,7 @@ function Harness({
   settings,
   alphabet,
   footer,
+  linkFieldLabel,
 }: {
   records: readonly RecordData[];
   emptyMessage?: string;
@@ -60,6 +61,7 @@ function Harness({
   settings?: RecordTableProps["settings"];
   alphabet?: RecordTableProps["alphabet"];
   footer?: Partial<RecordTableProps["footer"]>;
+  linkFieldLabel?: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   return (
@@ -67,6 +69,7 @@ function Harness({
       columns={columns}
       records={records}
       linkField="Full_Name"
+      linkFieldLabel={linkFieldLabel}
       rowHref={(item) => `/records/${item.id}`}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
@@ -255,4 +258,33 @@ test("the empty view keeps the alphabetical control in its header", () => {
   render(<Harness records={[]} alphabet={{ value: "C", onChange: vi.fn() }} />);
   expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
   expect(control().textContent).toBe("C");
+});
+
+test("shows configured linkFieldLabel in link column header, or falls back to metadata label", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} linkFieldLabel="Lead Name" />);
+  expect(screen.getByRole("columnheader", { name: "Lead Name" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Name" })).toBeNull();
+  expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
+
+  cleanup();
+
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Lead Name" })).toBeNull();
+  expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
+});
+
+test("the alphabetical control works alongside linkFieldLabel", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      linkFieldLabel="Lead Name"
+      alphabet={{ value: null, onChange: vi.fn() }}
+    />,
+  );
+  const header = screen.getByRole("columnheader", { name: "Lead Name" });
+  expect(within(header).getByRole("button", { name: "Filter by first letter" })).toBeTruthy();
+  expect(header.getAttribute("aria-label")).toBe("Lead Name");
 });
