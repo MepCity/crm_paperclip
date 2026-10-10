@@ -29,6 +29,20 @@ From the repository root:
 corepack pnpm test:e2e
 ```
 
+Pass extra Playwright CLI arguments after the script name (for example `corepack pnpm test:e2e auth.spec.ts --repeat-each=10`).
+
 That builds the app, starts a throwaway database, and runs Playwright.
 
-Pass extra Playwright CLI arguments after the script name (for example `corepack pnpm test:e2e auth.spec.ts --repeat-each=10`).
+## Machine load and locking
+
+Several agents may run `verify` on the same host. The E2E driver (`scripts/e2e.ts`) starts PostgreSQL outside the lock, then serializes `next build` and `playwright test` with a machine-wide directory lock (default `/tmp/crm-e2e.lock`). A second run waits and logs `e2e: waiting for another run (pid …)` about every minute until the holder finishes.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MEP_E2E_LOCK` | enabled | Set to `0` to disable locking (single-run behaviour). |
+| `MEP_E2E_LOCK_DIR` | `/tmp/crm-e2e.lock` | Lock directory (use a dedicated path in tests). |
+| `MEP_E2E_LOCK_WAIT_MS` | `1200000` (20 min) | Max wait for the lock; then the run continues without it. |
+
+The default wait budget fits under the merge bot's 45-minute `verify` ceiling (`check` + unit tests + wait + build + Playwright); raise it only if the full pipeline still stays below that limit.
+
+Playwright assertions use a **30s** default expect timeout (`playwright.config.ts`). Per-call timeouts in specs (for example `{ timeout: 50 }`) are unchanged.

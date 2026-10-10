@@ -23,7 +23,9 @@ controlled or uncontrolled panel. The expand mark is an original filled triangle
 tooltip title, in `--color-text-strong`. Its `/dev/ui` demo includes open, closed and
 disabled states. `TextField` has a `filter-search` variant (visually hidden label, measured
 search height, a decorative magnifier, control border and placeholder tokens) and a
-separate `placeholder` prop. Unchecked `Checkbox` boxes use the measured checkbox
+separate `placeholder` prop. Its `size` prop sets the width: `measured` (default) keeps the
+167 px filter search width token, `fill` spans the container it sits in, which is what an
+option panel that is wider than the filter row needs. Unchecked `Checkbox` boxes use the measured checkbox
 size/border tokens; checked boxes retain the previous appearance. `align="first-line"`
 keeps that box on the first line when a filter label wraps. Sources: list-views.md →
 Visual layout → Filter content, Surface and line colors, Selected / disabled.
@@ -308,13 +310,30 @@ what the "no colour constants" rule forbids.
 | `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
 | `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
 | `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-details-wrapped-row-pitch` | `60px` | record-detail.md › Details value wrapping › two-line value line 1 to next row label | from spec |
 | `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
 | `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
 | `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
 | `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
 | `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
-| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
-| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
+| `--size-detail-details-sections-margin-top` | `18.25px` | record-detail.md › Details divider & headings › divider bottom y 609 to first section heading cap y 631 (22 px to cap minus 3.75 px cap inset) | from spec |
+| `--size-detail-section-title-margin-block` | `0 32.5px` | record-detail.md › Details divider & headings › section heading baseline y 641.5 to first field label text top y 681.5 (40 px) minus 7.5 px line-box trim | derived from spec |
+| `--size-detail-inter-section-gap` | `26px` | record-detail.md › Details divider & headings › Twitter label cap to Address heading cap (70 px) minus row remainder | derived from spec |
+| `--size-detail-audit-line-pitch` | `18.5px` | record-detail.md › Details Created By / Modified By › cap-to-cap line pitch | from spec |
+| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped Lead Name cap-to-cap pitch | from spec |
+| `--size-detail-wrapped-link-line-pitch` | `19.5px` | record-detail.md › Details value wrapping › wrapped Website cap-to-cap pitch | from spec |
+| `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
+| `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
+| `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
+| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
+| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
+| `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
+| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
+| `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
+| `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
+| `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
+| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -378,6 +397,10 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-cancel-width` | `66.5px` | list-views.md › Sort popover › "Cancel is 66.5 px wide" | from spec |
 | `--size-popover-sort-apply-width` | `60px` | list-views.md › Sort popover › "disabled Apply is 60 px wide" | from spec |
 | `--size-popover-sort-button-gap` | `8px` | list-views.md › Sort popover › "after an 8 px gap" | from spec |
+| `--size-popover-sort-field-dropdown-width` | `380px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
+| `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
+| `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -775,6 +798,25 @@ opacity, with the same white label, instead of a faded copy of the enabled gradi
 menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
+
+## Searchable select primitive
+
+`SearchableSelect({ label, variant, valueText, options, optionKey, optionText, selectedKey, onSelect,
+searchLabel, panelTitle, children })` is a single-choice selector whose option panel carries a
+search field above the list. It loads no data, never sorts the options it is given, and filters
+them by `optionText` case-insensitively; with no match the list is empty and no message is drawn.
+Choosing an option reports it and closes the panel. Every opening starts with an empty search
+field. `offset` places the panel against the trigger (a negative value overlaps the trigger's
+border), `searchClassName` classes the band that holds the search field, and
+`TextField.size="fill"` makes the input span that band instead of the filter search width token.
+`variant` is the trigger's text role and matches `Select`'s: `sort` marks the trigger with
+`record-control-sort` (typography.md › List and detail text roles › Sort dialog field selector
+value); the default keeps the shared record-control appearance. Rows are the caller's
+`SelectItem`s, so the shared option appearance stays in one place. Its
+`/dev/ui` gallery is the searchable-select region; the component tests cover order preservation,
+filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
+Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
+sizes come from the Sort By field dropdown tokens.
 
 ## Record detail extensions
 

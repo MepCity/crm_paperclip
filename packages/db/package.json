@@ -8,7 +8,8 @@
     "./local-postgres": "./src/local-postgres.ts",
     "./testing": "./src/testing.ts",
     "./ports": "./src/ports.ts",
-    "./migrate": "./src/migrate.ts"
+    "./migrate": "./src/migrate.ts",
+    "./shared-memory": "./src/shared-memory.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate"
