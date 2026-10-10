@@ -6,7 +6,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
 import { expectWithin1, textCapLeft } from "./support/geometry";
 import { createOrganization } from "./support/org";
-import { expect, ignoreFailedResponses, test } from "./support/test";
+import { expect, test } from "./support/test";
 import { expectType, tokenValue } from "./support/typography";
 
 function px(value: string) {
