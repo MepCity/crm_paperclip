@@ -2,6 +2,7 @@
 
 import { NotFoundError } from "@crm/core/errors";
 import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
@@ -10,7 +11,15 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
-import { useModule, useRecord, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  useDeleteRecords,
+  useModule,
+  useRecord,
+  useRecordList,
+  useUsers,
+  useViews,
+} from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
@@ -21,8 +30,14 @@ import {
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
 import {
+  buildLeadsRecordMoreMenuGroups,
+  LEADS_DELETE_CONFIRM_MESSAGE,
+  LEADS_DELETE_CONFIRM_TITLE,
+} from "@/lib/records/leads-record-more-options";
+import {
   type RecordListContext,
   readRecordListContext,
+  removeRecordFromListContext,
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
@@ -70,8 +85,12 @@ export function LeadRecordScreen({
   paths,
   now = new Date(),
 }: LeadRecordScreenProps) {
+  const router = useRouter();
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteRecords = useDeleteRecords(LEADS_MODULE);
   const listContext = useLeadsListContext(orgSlug);
   const moduleQuery = useModule(LEADS_MODULE);
   const recordQuery = useRecord(LEADS_MODULE, recordId);
@@ -141,6 +160,27 @@ export function LeadRecordScreen({
   const businessFields = buildLeadsBusinessCardFields(module, record);
   const detailSections = buildLeadsDetailSections(module, record);
 
+  function openDeleteDialog() {
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    setDeleteError(null);
+    try {
+      await deleteRecords.mutateAsync([recordId]);
+      removeRecordFromListContext(orgSlug, LEADS_MODULE, recordId);
+      setDeleteOpen(false);
+      router.push(backHref);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Delete failed.";
+      setDeleteError(message);
+      throw error;
+    }
+  }
+
+  const moreMenuGroups = buildLeadsRecordMoreMenuGroups({ onDelete: openDeleteDialog });
+
   const overview = (
     <>
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
@@ -150,38 +190,57 @@ export function LeadRecordScreen({
   );
 
   return (
-    <RecordPageFrame
-      header={
-        <RecordHeader
-          title={title}
-          subtitle={subtitle}
-          back={{ label: "Back", href: backHref }}
-          commands={[
-            {
-              id: "edit",
-              label: "Edit",
-              variant: "secondary",
-              href: paths.edit(orgSlug, LEADS_MODULE, recordId),
-            },
-          ]}
-          moreLabel="More Options"
-          previousLabel="Previous Record"
-          nextLabel="Next Record"
-          previousHref={previousId ? paths.record(orgSlug, LEADS_MODULE, previousId) : undefined}
-          nextHref={nextId ? paths.record(orgSlug, LEADS_MODULE, nextId) : undefined}
+    <>
+      {deleteOpen ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open && !deleteRecords.isPending) setDeleteOpen(false);
+          }}
+          title={LEADS_DELETE_CONFIRM_TITLE}
+          message={LEADS_DELETE_CONFIRM_MESSAGE}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          tone="danger"
+          busy={deleteRecords.isPending}
+          errorMessage={deleteError}
+          onConfirm={confirmDelete}
         />
-      }
-      relatedListLabel="Related List"
-      relatedEntries={[]}
-      tabsLabel="Record detail"
-      selectedTabId={selectedTabId}
-      onTabChange={setSelectedTabId}
-      tabs={[{ id: "overview", label: "Overview", content: overview }]}
-      relatedRailVisible={railVisible}
-      railControl={
-        <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
-      }
-      scrollTopLabel="Scroll To Top"
-    />
+      ) : null}
+      <RecordPageFrame
+        header={
+          <RecordHeader
+            title={title}
+            subtitle={subtitle}
+            back={{ label: "Back", href: backHref }}
+            commands={[
+              {
+                id: "edit",
+                label: "Edit",
+                variant: "secondary",
+                href: paths.edit(orgSlug, LEADS_MODULE, recordId),
+              },
+            ]}
+            menuGroups={moreMenuGroups}
+            moreLabel="More Options"
+            previousLabel="Previous Record"
+            nextLabel="Next Record"
+            previousHref={previousId ? paths.record(orgSlug, LEADS_MODULE, previousId) : undefined}
+            nextHref={nextId ? paths.record(orgSlug, LEADS_MODULE, nextId) : undefined}
+          />
+        }
+        relatedListLabel="Related List"
+        relatedEntries={[]}
+        tabsLabel="Record detail"
+        selectedTabId={selectedTabId}
+        onTabChange={setSelectedTabId}
+        tabs={[{ id: "overview", label: "Overview", content: overview }]}
+        relatedRailVisible={railVisible}
+        railControl={
+          <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+        }
+        scrollTopLabel="Scroll To Top"
+      />
+    </>
   );
 }
