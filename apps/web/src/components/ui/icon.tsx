@@ -81,8 +81,8 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
-      <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="5.75" cy="5.75" r="5" strokeWidth="1.5" />
+      <path d="M9.3 9.3 12.75 12.75" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
