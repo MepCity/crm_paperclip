@@ -241,21 +241,46 @@ async function sizeToken(page: import("@playwright/test").Page, token: string): 
   }, token);
 }
 
-async function columnTexts(page: import("@playwright/test").Page, headerLabel: string) {
-  const columnIndex = await page
-    .locator("thead [data-part=column]")
-    .evaluateAll(
-      (nodes, label) => nodes.findIndex((node) => node.textContent?.trim().includes(label)),
-      headerLabel,
+/**
+ * Reads one column in a single evaluate: rows stay consistent while a re-render is still landing.
+ */
+async function columnTexts(
+  page: import("@playwright/test").Page,
+  headerLabel: string,
+): Promise<string[]> {
+  return page.locator("table").evaluate((table, label) => {
+    const headers = Array.from(table.querySelectorAll("thead [data-part=column]"));
+    const index = headers.findIndex((node) => node.textContent?.trim().includes(label));
+    if (index < 0) throw new Error(`${label} column not found.`);
+    return Array.from(table.querySelectorAll("tbody tr")).map((row) => {
+      const cell = row.querySelectorAll("[data-part=column]")[index] as HTMLElement | undefined;
+      return cell ? cell.innerText : "";
+    });
+  }, headerLabel);
+}
+
+/** Rows keep showing the previous data until the response renders; the 5 s default is tight here. */
+const RENDER_TIMEOUT_MS = 15_000;
+
+/**
+ * The `bulk` response for the request an address change triggers. Settle it before reading rows:
+ * the address changes while the previous page's rows are still on screen.
+ */
+function leadsBulkResponse(
+  page: import("@playwright/test").Page,
+  expectedParams: Readonly<Record<string, string>>,
+) {
+  return page.waitForResponse((response) => {
+    const request = parseCrmRequest(response.url(), response.request().method());
+    if (request?.method !== "POST" || !request.pathname.endsWith("/Leads/bulk")) return false;
+    return Object.entries(expectedParams).every(
+      ([name, value]) => request.searchParams.get(name) === value,
     );
-  if (columnIndex < 0) throw new Error(`${headerLabel} column not found.`);
-  const rows = page.locator("tbody tr");
-  const rowCount = await rows.count();
-  const texts: string[] = [];
-  for (let i = 0; i < rowCount; i++) {
-    texts.push(await rows.nth(i).locator("[data-part=column]").nth(columnIndex).innerText());
-  }
-  return texts;
+  });
+}
+
+async function firstRowLinkText(page: import("@playwright/test").Page): Promise<string> {
+  return page.locator("table tbody tr").first().getByRole("link").first().innerText();
 }
 
 async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
@@ -473,28 +498,37 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLink = page.locator("table tbody tr").first().getByRole("link").first();
-    const firstLinkOnPage1 = await firstLink.innerText();
+    const firstLinkOnPage1 = await firstRowLinkText(page);
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
+    const pageTwoBulk = leadsBulkResponse(page, { page: "2" });
     await next.click();
+    const pageTwoResponse = await pageTwoBulk;
+    expect(pageTwoResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     // The list keeps the previous page's rows on screen while the next page loads, so
     // the row count alone never proves the swap. Wait for the content, then read it.
-    await expect.poll(() => firstLink.innerText()).not.toBe(firstLinkOnPage1);
-    const firstLinkOnPage2 = await firstLink.innerText();
+    await expect
+      .poll(() => firstRowLinkText(page), { timeout: RENDER_TIMEOUT_MS })
+      .not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstRowLinkText(page);
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
+    const pageOneBulk = leadsBulkResponse(page, { page: "1" });
     await page.getByLabel("Previous").click();
+    const pageOneResponse = await pageOneBulk;
+    expect(pageOneResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    await expect.poll(() => firstLink.innerText()).toBe(firstLinkOnPage1);
-    const firstLinkBack = await firstLink.innerText();
+    await expect
+      .poll(() => firstRowLinkText(page), { timeout: RENDER_TIMEOUT_MS })
+      .toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstRowLinkText(page);
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
@@ -504,32 +538,27 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     const beforeSort = await companyColumnTexts(page);
-    const bulkUrls: string[] = [];
-    page.on("request", (request) => {
-      const parsed = parseCrmRequest(request.url(), request.method());
-      if (parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk")) {
-        bulkUrls.push(request.url());
-      }
-    });
     await page.getByRole("button", { name: "Sort", exact: true }).click();
     const sortBy = page.getByRole("button", { name: /Sort By/ });
     await sortBy.click();
     await page.getByRole("textbox", { name: "Search fields" }).fill("Company");
     await page.getByRole("option", { name: "Company", exact: true }).click();
+    const sortedBulk = leadsBulkResponse(page, { sort_by: "Company", sort_order: "asc" });
     await page.getByRole("button", { name: "Apply" }).click();
+    const sortedResponse = await sortedBulk;
+    expect(sortedResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_by")).toBe("Company");
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_order")).toBe("asc");
-    const afterSort = await companyColumnTexts(page);
-    const normalized = afterSort.map((text) => text.trim().toLowerCase());
-    for (let i = 1; i < normalized.length; i++) {
-      const previous = normalized[i - 1] ?? "";
-      const current = normalized[i] ?? "";
-      expect(previous <= current).toBe(true);
-    }
-    expect(afterSort.join("|")).not.toBe(beforeSort.join("|"));
-    const lastBulk = bulkUrls.at(-1);
-    if (!lastBulk) throw new Error("Expected a bulk request after sort.");
-    const bulkParams = new URL(lastBulk).searchParams;
+    await expect
+      .poll(
+        async () => {
+          const afterSort = await companyColumnTexts(page);
+          return isOrdered(afterSort, "asc") && afterSort.join("|") !== beforeSort.join("|");
+        },
+        { timeout: RENDER_TIMEOUT_MS },
+      )
+      .toBe(true);
+    const bulkParams = new URL(sortedResponse.url()).searchParams;
     expect(bulkParams.get("sort_by")).toBe("Company");
     expect(bulkParams.get("sort_order")).toBe("asc");
     // The applied field stays marked when the list is opened again.
@@ -1049,16 +1078,9 @@ test.describe("Leads list page", () => {
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
     // Navigation updates the URL before the asynchronous bulk request completes.
-    const pageTwoResponse = page.waitForResponse((response) => {
-      const request = parseCrmRequest(response.url(), response.request().method());
-      return (
-        request?.method === "POST" &&
-        request.pathname.endsWith("/Leads/bulk") &&
-        request.searchParams.get("page") === "2"
-      );
-    });
+    const pageTwoBulk = leadsBulkResponse(page, { page: "2" });
     await next.click();
-    const bulkResponse = await pageTwoResponse;
+    const bulkResponse = await pageTwoBulk;
     expect(bulkResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const page2Request = parseCrmRequest(bulkResponse.url(), bulkResponse.request().method());
@@ -1394,6 +1416,17 @@ test.describe("Leads list page", () => {
     expectEdge(footerBox.y, 760);
     expectEdge(footerBox.y + footerBox.height, 793);
     expect(Math.abs(footerBox.height - 33)).toBeLessThanOrEqual(1);
+
+    const pageBox = requireBox(await listPage.boundingBox(), "list page");
+    expectEdge(pageBox.y + pageBox.height, 807);
+    const cardBottomGap = pageBox.y + pageBox.height - (cardBox.y + cardBox.height);
+    expectEdge(cardBottomGap, 13);
+    const cardBottomGapToken = px(
+      await listPage.evaluate((element) =>
+        getComputedStyle(element).getPropertyValue("--list-card-bottom-gap"),
+      ),
+    );
+    expectEdge(cardBottomGap, cardBottomGapToken);
 
     expect(Math.abs(1470 - (cardBox.x + cardBox.width) - 16)).toBeLessThanOrEqual(1);
   });
