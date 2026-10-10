@@ -604,6 +604,11 @@ const SIZE_GROUPS = [
       "--size-popover-sort-field-dropdown-height",
       "--size-popover-sort-field-dropdown-list-offset",
       "--size-popover-sort-field-dropdown-list-height",
+      "--size-popover-alphabet-width",
+      "--size-popover-alphabet-height",
+      "--size-popover-alphabet-inset",
+      "--size-popover-alphabet-row-width",
+      "--size-popover-alphabet-row-height",
     ],
   },
   {
