@@ -18,6 +18,7 @@ export interface InlineFieldEditorProps {
   onComplete: () => void;
   initialError?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
 export function InlineFieldEditor({
@@ -29,6 +30,7 @@ export function InlineFieldEditor({
   onComplete,
   initialError,
   disabled,
+  autoFocus = true,
 }: InlineFieldEditorProps) {
   const [draft, setDraft] = useState(value);
   const [error, setError] = useState(initialError);
@@ -45,7 +47,7 @@ export function InlineFieldEditor({
   };
   useEffect(() => {
     mounted.current = true;
-    if (field.dataType !== "picklist" && field.dataType !== "ownerlookup") {
+    if (autoFocus && field.dataType !== "picklist" && field.dataType !== "ownerlookup") {
       root.current?.querySelector<HTMLElement>("input, textarea")?.focus();
     }
     // Overlay Escape can stop propagation before React's portal capture handler.
@@ -66,7 +68,7 @@ export function InlineFieldEditor({
       document.removeEventListener("keydown", handleEscape, true);
       mounted.current = false;
     };
-  }, [field.dataType]);
+  }, [field.dataType, autoFocus]);
 
   async function save() {
     if (inFlight.current || disabled) return;

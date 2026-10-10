@@ -218,3 +218,32 @@ test.each(["email", "website"] as const)(
     expect(screen.getByRole("button", { name: "Edit Company" })).toBeTruthy();
   },
 );
+
+test("static demo error preserves focus while an opened editor takes focus", () => {
+  render(<button type="button">Gallery control</button>);
+  const control = screen.getByRole("button", { name: "Gallery control" });
+  control.focus();
+  const editor = render(
+    <InlineFieldEditor
+      field={field()}
+      value=""
+      initialError="Company cannot be empty."
+      autoFocus={false}
+      onSave={async () => {}}
+      onCancel={() => {}}
+      onComplete={() => {}}
+    />,
+  );
+  expect(document.activeElement).toBe(control);
+  editor.rerender(
+    <InlineFieldEditor
+      field={field()}
+      value=""
+      autoFocus
+      onSave={async () => {}}
+      onCancel={() => {}}
+      onComplete={() => {}}
+    />,
+  );
+  expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Company" }));
+});

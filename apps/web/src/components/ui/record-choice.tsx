@@ -181,6 +181,14 @@ export function RecordChoice({
         )}
         <Popover
           isNonModal={inline}
+          shouldCloseOnInteractOutside={
+            inline
+              ? (element) => {
+                  // The opening pencil is removed when the inline editor mounts.
+                  return element.isConnected;
+                }
+              : undefined
+          }
           offset={inline ? -1 : 0}
           placement="bottom start"
           style={prefix ? { width: "var(--size-form-prefix-width)" } : undefined}

@@ -49,6 +49,7 @@ export default function InlineFieldEditorDemo() {
         field={{ ...field, label: "Error example" }}
         value=""
         initialError="Error example cannot be empty."
+        autoFocus={false}
         onCancel={() => {}}
         onComplete={() => {}}
         onSave={async () => {}}
