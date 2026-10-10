@@ -297,6 +297,19 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const twoLineOffset = await checkboxTop(longLabel);
   expect(Math.abs(oneLineOffset - 7)).toBeLessThanOrEqual(1);
   expect(Math.abs(twoLineOffset - oneLineOffset)).toBeLessThanOrEqual(1);
+  // list-views.md › Filter panel row label: the label's text field is capped at
+  // --size-list-filter-label-width so long labels wrap instead of clipping.
+  const labelWidth = await panel
+    .getByText("Recent samples", { exact: true })
+    .evaluate((element) => element.getBoundingClientRect().width);
+  expect(Math.abs(labelWidth - 126)).toBeLessThanOrEqual(0.5);
+  // Text role of the row label is --text-md / normal weight.
+  await expectType(
+    page,
+    panel.getByText("Recent samples", { exact: true }),
+    "--text-md",
+    "--font-weight-normal",
+  );
   // Empty-list copy from the sibling record-table demo on /dev/ui is the measured #8B9AB9 on white (2.83:1).
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });

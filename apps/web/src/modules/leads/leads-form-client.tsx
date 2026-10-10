@@ -14,21 +14,26 @@ export function LeadsFormClient({
   orgSlug,
   currentUserId,
   recordId,
+  cloneSourceId,
 }: {
   orgSlug: string;
   currentUserId: string;
   recordId?: string;
+  cloneSourceId?: string;
 }) {
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
-  const defaultCancel = recordId
-    ? moduleRecordPath(orgSlug, LEADS_MODULE, recordId)
-    : moduleListDefaultPath(orgSlug, LEADS_MODULE);
+  const defaultCancel = cloneSourceId
+    ? moduleRecordPath(orgSlug, LEADS_MODULE, cloneSourceId)
+    : recordId
+      ? moduleRecordPath(orgSlug, LEADS_MODULE, recordId)
+      : moduleListDefaultPath(orgSlug, LEADS_MODULE);
   return (
     <div className="leads-form-page record-form-page">
       <RecordFormScreen
         currentUserId={currentUserId}
         recordId={recordId}
+        cloneSourceId={cloneSourceId}
         config={{
           module: LEADS_MODULE,
           rules: leadsFormRules,
@@ -40,7 +45,7 @@ export function LeadsFormClient({
           },
           navigate: (path) => {
             const destination =
-              !recordId && path === defaultCancel
+              !recordId && !cloneSourceId && path === defaultCancel
                 ? (readRecordListContext(orgSlug, LEADS_MODULE)?.listHref ?? path)
                 : path;
             router.push(destination);

@@ -120,6 +120,7 @@ export function FilterPanel({
                       align="first-line"
                       variant="filter"
                       label={item.label}
+                      labelClassName="w-(--size-list-filter-label-width)"
                       isDisabled={item.disabled}
                       isSelected={selectedIds.includes(item.id)}
                       onChange={(selected) => {

@@ -139,6 +139,8 @@ what the "no colour constants" rule forbids.
 | `--color-button-border` | `#d5d8e9` | list-views.md › Create and action buttons › "1 px `#D5D8E9` border" | from spec |
 | `--color-button-gradient-start` | `#fefefe` | list-views.md › Create and action buttons › "light vertical gradient fill from `#FEFEFE` at top" | from spec |
 | `--color-button-gradient-end` | `#f2f1f8` | list-views.md › Create and action buttons › "to `#F2F1F8` at bottom" | from spec |
+| `--color-selection-button-gradient-start` | `#fdfdfe` | list-views.md › Selection toolbar › "light vertical gradient" on the four record-action buttons | from spec |
+| `--color-selection-button-gradient-end` | `#f3f2f8` | list-views.md › Selection toolbar › "light vertical gradient" on the four record-action buttons | from spec |
 | `--color-primary-gradient-start` | `#5767f6` | list-views.md › Create and action buttons › "vertical gradient `#5767F6` at top" | from spec |
 | `--color-primary-gradient-end` | `#154ec5` | list-views.md › Create and action buttons › "to `#154EC5` at bottom" | from spec |
 | `--color-primary-divider` | `#c3c8f4` | list-views.md › Create and action buttons › "1 px `#C3C8F4` divider" | from spec |
@@ -146,6 +148,7 @@ what the "no colour constants" rule forbids.
 | `--color-popover-sort-border` | `#ced0e1` | list-views.md › Sort popover › "1 px `#CED0E1` border" | from spec |
 | `--color-surface-selected` | `#f0f4fc` | list-views.md › Header and tab strip › "with 6 px corners and `#F0F4FC` fill" | from spec |
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
+| `--color-list-filter-toggle-icon` | `#000000` | list-views.md › Filter toggle, panel open › the funnel "solid glyph ink" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › All Modules and All Sources placeholders `#8B9AB9` | from spec |
@@ -218,6 +221,7 @@ what the "no colour constants" rule forbids.
 | `--size-rail-header-inset` | `15px` | app-shell.md › Rail/product selector › Visible occupied box › "x 15-150, y 11-41" | from spec |
 | `--size-rail-product-selector-height` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "30 high" | from spec |
 | `--size-rail-product-mark` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "Product mark occupies x 15-45, 30 x 30" | from spec |
+| `--size-rail-product-caret` | `10px` | app-shell.md › Rail/product selector › Visible occupied box › "solid filled down caret, `#C2CBDE`, ink x 138-148, y 24-29 (10 wide × 5 high; 9 px wide on its top row, narrowing to a point)" | from spec |
 | `--size-rail-selector-height` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "y 289-313; about 24 high" | from spec |
 | `--size-rail-selector-inset` | `13px` | app-shell.md › Rail/teamspace selector › Occupied row › "left inset 13 px" | from spec |
 | `--size-rail-monogram` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "24 x 24 coloured monogram block at x 13-37" | from spec |
@@ -291,12 +295,17 @@ what the "no colour constants" rule forbids.
 | `--size-list-filter-group-gap` | `16px` | list-views.md › Filter content › last row bottom to next group baseline 31 px, minus 15 px baseline inset in line box | derived from spec |
 | `--size-list-filter-row-height` | `30px` | list-views.md › Filter content › "checkbox rows about 30 px high" | from spec |
 | `--size-list-filter-row-padding` | `6px` | list-views.md › Filter content › "with lines 16 px apart" and "a two-line row 44 px high". Each side is (44 − 32) / 2 | from spec |
+| `--size-list-filter-label-width` | `126px` | list-views.md › Filter panel row label › "wrapping container width boundary is" `Not observed`; 126 px is fitted so "Latest Email Status" (119.5 px) stays one line while "Untouched Records" and the compound-address label wrap after their first word group | lead decision (MEP-230, fitted to the measured breaks) |
 | `--size-list-filter-chevron-width` | `8px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-height` | `4.5px` | list-views.md › Filter content › "about 8 × 4.5 px" | from spec |
 | `--size-list-filter-chevron-offset` | `1.25px` | list-views.md › Filter content › triangle top 6 px above heading baseline; centers chevron in 20 px line box (3.75 px above baseline vs 5 px box center) | derived from spec |
 | `--size-list-filter-heading-inset` | `17.5px` | list-views.md › Filter content › "the heading text starting 17.5 px inside that edge" | from spec |
 | `--size-list-filter-button-width` | `69.5px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
 | `--size-list-filter-button-height` | `27px` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px" | from spec |
+| `--size-list-filter-toggle-icon-width` | `15px` | list-views.md › Filter toggle, panel open › funnel "solid glyph ink" box "15 × 16 px" | from spec |
+| `--size-list-filter-toggle-icon-height` | `16px` | list-views.md › Filter toggle, panel open › funnel "solid glyph ink" box "15 × 16 px" | from spec |
+| `--size-list-filter-toggle-icon-gap` | `9.5px` | list-views.md › Filter toggle, panel open › gap from the funnel "solid glyph ink" right edge to "Text label" left edge | derived from spec |
+| `--radius-list-toolbar-tile` | `3.5px` | list-views.md › Filter toggle, panel open › "corner radius" (3.5–4 px); the View type switcher selected tile uses the same range. Kept at the low end | from spec |
 | `--size-list-header-height` | `37px` | list-views.md › Table header and rows › "Header 37 px high: 35 px white plus a 2 px `#DCDBEE` bottom border". The 37 px box includes that border | from spec |
 | `--size-list-header-border` | `2px` | list-views.md › Table header and rows › "2 px `#DCDBEE` bottom border" | from spec |
 | `--size-list-header-rule` | `23.5px` | list-views.md › Table header and rows › "23.5 px tall" | from spec |
@@ -322,6 +331,18 @@ what the "no colour constants" rule forbids.
 | `--size-list-chevron-width` | `6px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-chevron-height` | `11px` | list-views.md › Table footer › "Chevron ink is 6 × 11 px" | from spec |
 | `--size-list-view-icon` | `26px` | list-views.md › Selected / disabled › "active list presentation icon tile 26 × 26 px" | from spec |
+| `--size-list-view-switcher-gap` | `6px` | list-views.md › View type switcher › "6 px uniform inter-button gap" | from spec |
+| `--size-list-view-switcher-offset` | `7.5px` | list-views.md › View type switcher › fitted from "32 px center pitch" so the first tile lands on the measured edge against the 8 px group gap | derived from spec |
+| `--size-list-view-type-list` | `15.5px` | list-views.md › View type switcher › bulleted-list "15.5 × 15.5 px" ink box | from spec |
+| `--size-list-view-type-split` | `16px` | list-views.md › View type switcher › vertical-split "16 × 16 px" ink box | from spec |
+| `--size-list-view-type-grid` | `16px` | list-views.md › View type switcher › grid "16 × 16 px" ink box | from spec |
+| `--size-list-view-type-chart` | `15px` | list-views.md › View type switcher › pie "15 × 15 px" ink box | from spec |
+| `--size-list-view-type-connected-width` | `17px` | list-views.md › View type switcher › connected-blocks "17 × 13 px" ink box | from spec |
+| `--size-list-view-type-connected-height` | `13px` | list-views.md › View type switcher › connected-blocks "17 × 13 px" ink box | from spec |
+| `--size-list-view-type-cards-width` | `16px` | list-views.md › View type switcher › stacked-rows "16 × 15.5 px" ink box | from spec |
+| `--size-list-view-type-cards-height` | `15.5px` | list-views.md › View type switcher › stacked-rows "16 × 15.5 px" ink box | from spec |
+| `--size-list-view-type-arrow-width` | `11px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
+| `--size-list-view-type-arrow-height` | `6.5px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
 | `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
 | `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
@@ -382,6 +403,27 @@ what the "no colour constants" rule forbids.
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
 | `--size-form-owner-caret-gap` | `9px` | record-detail.md › Composite inputs › owner caret before end section | from spec |
+| `--shadow-form-focus-glow` | `0 0 6px rgb(84 100 255 / 0.56)` | record-detail.md › Lead Information rows › focused input soft glow (Interim) | lead decision |
+| `--size-form-panel-inset-inline` | `11px` | record-detail.md › Dropdown panel › Country / Owner search horizontal inset | from spec |
+| `--size-form-panel-search-top` | `12px` | record-detail.md › Dropdown panel › search top inset | from spec |
+| `--size-form-panel-search-height-owner` | `30px` | record-detail.md › Dropdown panel › Owner search height | from spec |
+| `--size-form-panel-check-inset` | `15px` | record-detail.md › Dropdown panel › check mark from panel outer left | from spec |
+| `--size-form-panel-owner-check-inset` | `16px` | record-detail.md › Dropdown panel › Owner selected check mark | from spec |
+| `--size-form-panel-check-width` | `11.5px` | record-detail.md › Dropdown panel › check ink width | from spec |
+| `--size-form-panel-check-height` | `8.5px` | record-detail.md › Dropdown panel › check ink height | from spec |
+| `--size-form-panel-option-text-inset` | `32.5px` | record-detail.md › Dropdown panel › option text start | from spec |
+| `--size-form-panel-selected-fill-inset` | `7px` | record-detail.md › Dropdown panel › Standard picklist selected fill inset | from spec |
+| `--size-form-panel-selected-fill-height` | `32px` | record-detail.md › Dropdown panel › Standard picklist selected fill height | from spec |
+| `--size-form-panel-search-icon-inset` | `11.5px` | record-detail.md › Dropdown panel › magnifier inset in search | from spec |
+| `--size-form-panel-search-icon-size` | `13.5px` | record-detail.md › Dropdown panel › magnifier size | from spec |
+| `--size-form-panel-search-text-inset` | `33px` | record-detail.md › Dropdown panel › search text after icon (11.5 + 13.5 + 8) | derived from spec |
+| `--size-form-panel-list-first-gap` | `7.5px` | record-detail.md › Dropdown panel › Country first row below search | from spec |
+| `--size-form-panel-owner-avatar-inset` | `32px` | record-detail.md › Dropdown panel › Owner avatar from panel left | from spec |
+| `--size-form-panel-owner-row-pitch` | `41px` | record-detail.md › Dropdown panel › Owner row pitch | from spec |
+| `--size-form-panel-owner-avatar-size` | `30px` | record-detail.md › Dropdown panel › Owner avatar diameter | from spec |
+| `--size-form-panel-owner-name-gap` | `11px` | record-detail.md › Dropdown panel › Owner name after avatar | from spec |
+| `--size-form-panel-owner-content-top` | `12px` | record-detail.md › Dropdown panel › first owner row below search | from spec |
+| `--size-form-panel-owner-content-bottom` | `13px` | record-detail.md › Dropdown panel › last avatar above panel bottom | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
 | `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
@@ -405,6 +447,16 @@ what the "no colour constants" rule forbids.
 | `--color-unsaved-dialog-leave-start` | `#ff4657` | record-detail.md › Unsaved changes modal › Destructive action › gradient start | from spec |
 | `--color-unsaved-dialog-leave-end` | `#e33041` | record-detail.md › Unsaved changes modal › Destructive action › gradient end | from spec |
 | `--color-unsaved-dialog-leave-text` | `#ffffff` | record-detail.md › Unsaved changes modal › Destructive action › label ink | from spec |
+| `--size-list-selection-counter-width` | `170px` | list-views.md › Selection toolbar › counter strip "170 × 42 px" | from spec |
+| `--size-list-selection-counter-height` | `42px` | list-views.md › Selection toolbar › counter strip "170 × 42 px" | from spec |
+| `--size-list-selection-clear-width` | `34px` | list-views.md › Selection toolbar › Clear action link "34 × 16 px" | from spec |
+| `--size-list-selection-clear-height` | `16px` | list-views.md › Selection toolbar › Clear action link "34 × 16 px" | from spec |
+| `--size-list-selection-strip-gap` | `15px` | list-views.md › Selection toolbar › gap between the counter "170 × 42 px" strip and the record-action "356 × 32 px" strip | derived from spec |
+| `--size-list-selection-button-gap` | `8px` | list-views.md › Selection toolbar › pitch across the "356 × 32 px" strip of the four buttons | derived from spec |
+| `--size-list-selection-send-email-width` | `101px` | list-views.md › Selection toolbar › Send Email "101 × 32 px" | from spec |
+| `--size-list-selection-tags-width` | `73px` | list-views.md › Selection toolbar › Tags "73 × 32 px" | from spec |
+| `--size-list-selection-actions-width` | `45px` | list-views.md › Selection toolbar › Actions menu button "45 × 32 px" | from spec |
+| `--size-list-selection-menu-row-height` | `32px` | list-views.md › Selection Actions menu › "item rows 32 px high" | from spec |
 | `--size-list-mass-update-button-width` | `113px` | list-views.md › Visual layout › Selection toolbar › Mass Update button | from spec |
 | `--size-mass-update-dialog-width` | `484px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
 | `--size-mass-update-dialog-height` | `207px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |

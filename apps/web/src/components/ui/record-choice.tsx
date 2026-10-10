@@ -181,9 +181,10 @@ export function RecordChoice({
             {searchable && (
               <TextField className="record-panel-search" value={query} onChange={setQuery}>
                 <Label className="sr-only">{searchLabel}</Label>
+                <Icons.recordPanelSearch aria-hidden className="record-panel-search-icon" />
                 <Input
                   autoFocus
-                  placeholder={searchLabel}
+                  placeholder={owner ? searchLabel : ""}
                   className="record-control"
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
@@ -220,12 +221,12 @@ export function RecordChoice({
                 >
                   {({ isSelected }) => (
                     <>
+                      {isSelected && (
+                        <Icons.recordPanelCheck aria-hidden className="record-choice-check" />
+                      )}
                       {owner && (
-                        <span
-                          aria-hidden
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-avatar"
-                        >
-                          <Icons.recordUser className="h-4 w-4" />
+                        <span aria-hidden className="record-owner-avatar">
+                          <Icons.avatarPerson className="record-owner-avatar-icon" />
                         </span>
                       )}
                       <span className="min-w-0 flex-1 truncate">
@@ -233,14 +234,11 @@ export function RecordChoice({
                           {option.label}
                         </span>
                         {owner && option.secondaryLabel && (
-                          <span className="block truncate font-normal text-text-muted">
+                          <span className="record-owner-email block truncate font-normal">
                             {option.secondaryLabel}
                           </span>
                         )}
                       </span>
-                      {isSelected && (owner || searchable) && (
-                        <Icons.recordCheck aria-hidden className="h-4 w-4 shrink-0" />
-                      )}
                     </>
                   )}
                 </ListBoxItem>

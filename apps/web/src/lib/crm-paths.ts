@@ -40,6 +40,14 @@ export function moduleRecordEditPath(
   return moduleTabPath(orgSlug, moduleApiName, recordId, "edit");
 }
 
+export function moduleRecordClonePath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "clone");
+}
+
 export function moduleCreatePath(orgSlug: string, moduleApiName: string): string {
   return moduleTabPath(orgSlug, moduleApiName, "create");
 }
