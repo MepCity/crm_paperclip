@@ -63,6 +63,7 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 - Description view-mode value start and wrapped right edge remain `not measured`
   when the sample field is blank or inline edit is active; Address uses the
   standard left-column value start.
+- Record detail Timeline (MEP-275): Timeline tab is wired with an empty event list (no dedicated event source or network requests yet); when empty, the area beneath the header remains blank without synthetic placeholder events or text.
 
 ## Visual source
 
