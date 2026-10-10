@@ -95,8 +95,8 @@ describe("describeSysVSharedMemory", () => {
       describeSysVSharedMemory(parseSysVSharedMemoryTable(IPCS_OUTPUT), isPidAlive) ?? "";
     expect(line).toContain("6 kernel IDs in use");
     expect(line).toContain("3 stale");
-    expect(line).toContain("ipcrm -m");
-    expect(line).toContain("list-stale-shared-memory");
+    expect(line).toContain("pnpm ipc:sweep");
+    expect(line).toContain("dry run");
     expect(line).toContain("removes nothing");
   });
 

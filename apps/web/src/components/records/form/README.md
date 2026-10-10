@@ -185,8 +185,9 @@ surrounding trigger.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported lookup/multi-module/date-time/long-integer controls: absent from
   Leads form; their corresponding later modules must supply primitives.
-- Currency prefix/information content is supplied by callers; the spec does not
-  publish the organization currency. Company stays a text field (suggestions unseen).
+- Currency prefix/information content is supplied by callers; the organization
+  currency comes from `useHomeCurrency` (MEP-225, decision MEP-221), never a fixed
+  symbol, an ISO code or a locale guess. Company stays a text field (suggestions unseen).
 - Own user silhouette and shared icon components replace reference assets. No
   reference logo, image, icon or font files are added. Font advances may differ.
 - Dropdown border, option geometry and panel heights are measured. Unmeasured
@@ -233,9 +234,13 @@ focus the first rendered error, including composite prefix and longitude control
   option; without Country, State displays only the null option. The existing
   saved State is preserved internally until an explicit edit; no unresearched
   dependency clearing is introduced.
-- Currency prefix text and divider are deferred to MEP-226, using the organization
-  currency contract from MEP-225 (CTO decision MEP-221). This route supplies no
-  prefix and guesses no currency. The measured information icon remains a passive
+- The route supplies the Annual Revenue prefix: `leads-form-client.tsx` passes the
+  `symbol` from `useHomeCurrency` (organization currency contract from MEP-225, CTO
+  decision MEP-221); the prefix and divider geometry is the measured sentence in
+  `record-detail.md`. While the value loads, or when its request fails, no prefix is
+  drawn and the form keeps working. Interim: an organization whose currency reports
+  `prefixSymbol: false` was not observed in the reference, so in this form the symbol
+  is drawn as a prefix either way. The measured information icon remains a passive
   image in its 32px end section, with no tab stop, click handler or tooltip. Its
   hover/click behavior is an open research question awaiting MEP-201.
 - `renderOwnerPicker` is an integration slot for the approved Select User dialog.
