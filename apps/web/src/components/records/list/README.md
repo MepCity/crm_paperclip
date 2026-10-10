@@ -35,7 +35,8 @@ that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
 
 The header checkbox selects or clears every row on the page. A row checkbox
-selects that row. Nothing else changes: there is no selection toolbar.
+selects that row. The selection toolbar is composed on the module list page,
+not inside this table.
 
 The badge strip is an empty placeholder. No activity ribbon is drawn.
 
@@ -277,6 +278,11 @@ select two rows. Only synthetic data appears in demos and tests.
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
+- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
+  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
+  Selected` / `3 Records Selected`), a `Clear`
+  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
+  The page supplies module labels and wires delete confirmation.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }`; `sort` is `SortSpec | null`. A new opening resets the local draft
   from `sort`. Null defaults to None and Ascending. Apply requires a field in the current
@@ -333,14 +339,20 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List view tab | `--text-sm` | `--font-weight-bold` |
 | List toolbar Filter / Sort | `--text-md` | `--font-weight-semibold` |
 | List primary button (button or link) | `--text-md` | `--font-weight-semibold` |
+| Sort dialog heading (`Sort By` label) | `--text-md` | `--font-weight-normal` |
+| Sort dialog field selector value | `--text-sm` | `--font-weight-normal` |
+| Sort dialog order selector option | `--text-sm` | `--font-weight-normal` |
+| Sort dialog footer button (Cancel / Apply) | `--text-sm` | `--font-weight-semibold` |
+| List menu item (More / Actions) | `--text-md` | `--font-weight-normal` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
-are retained. Toolbar labels map the measured 14px to the existing 14.5px token;
-no separate 14px size is introduced. The Sort popover action buttons retain their
-existing size until their screen typography task.
+are retained. Toolbar labels, Sort dialog heading, disabled list menu items, and
+table settings labels map measured 14px to the existing 14.5px `--text-md`
+token; no separate 14px size is introduced. Sort disabled Apply maps measured
+weight 620 to `--font-weight-semibold` (510).
 
 ## Module list page (Leads)
 
@@ -358,14 +370,53 @@ Invalid values fall back to defaults. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
 count queries without changing the URL.
 
+### Filter apply (Leads)
+
+`lib/records/filter-criteria.ts` maps `{ field, operatorId, value }` rows to port
+`Criteria`. `modules/leads/list-filters.ts` builds panel groups from module metadata;
+`modules/leads/leads-list-client.tsx` supplies the built groups once module fields
+and users are loaded. Labels keep the spec order; `Lead Name` maps to the page
+`linkField` (`Full_Name`); picklist options use stored values; owner rows use
+`useUsers`; currency rows use `LEADS_LIST_CURRENCY_CODE` from `list-config.ts`.
+`ModuleListScreen` wires Apply and Clear to `useRecordList` and `useRecordCount`.
+
+| Panel `operatorId` | Criterion (comparator + value) |
+| --- | --- |
+| equal | `equal` + string, string[], boolean, or number |
+| not_equal | `not_equal` + string, string[], or number |
+| contains / not_contains / starts_with / ends_with | same comparator + string |
+| is_empty / is_not_empty | same comparator + `null` |
+| less_than / less_equal / greater_than / greater_equal | same comparator + number |
+| between / not_between | same comparator + `[lower, upper]` |
+| age_in / due_in | `less_equal` + `{ token: "AGEINDAYS" \| "DUEINDAYS", offset: N }` |
+| today | `equal` + `{ token: "TODAY" }` |
+| tomorrow / yesterday / till_yesterday / starting_tomorrow / this_week / previous_week / this_month / previous_month / this_year / previous_year / next_year | `equal` + `{ token: "PERIOD", name: "<UTC period>" }` |
+
+Apply writes criteria to `useRecordList` and `useRecordCount`, resets row selection,
+and returns to page 1 when needed. Clear removes criteria. Changing the open view
+clears applied criteria and panel selection. `ValidationError` on `filters` shows the
+server message above the panel actions; the table keeps the previous page via
+`keepPreviousData`.
+
+Disabled filter rows (deviations): `textarea`, `website`, `integer`, `lookup`,
+`multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
+and related-module groups stay disabled.
+
 ### Interim
 
+- Selection bar placement, counter copy (`Clear`, delete dialog title and body,
+  button labels), no toast after delete, and selection limited to the loaded page
+  (cleared on view, address, filter draft, or refresh) were not observed in the
+  reference capture; they follow this task's authorized interim rules.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
 - Page size default 30 is captured preference, not persisted user choice.
 - Sort By options are all module fields except the nine non-sortable API names in
   `list-views.md` › Sorting; the reference menu contents were not observed.
-- Filter panel rows are drawn disabled; checking them does not filter records.
+- Multiple field filters combine with `AND`; filters are not stored in the address
+  and clear on full page reload; no toolbar indicator after apply; empty results use
+  the table empty state; validation errors appear above Apply/Clear; the panel stays
+  open with rows checked after apply.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
 

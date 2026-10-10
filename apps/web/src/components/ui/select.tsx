@@ -22,7 +22,7 @@ import { Icons } from "./icon";
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
   label: string;
-  variant?: "default" | "filter";
+  variant?: "default" | "filter" | "sort";
   /** Keeps the accessible name and removes the label from the visual layout. */
   hideLabel?: boolean;
   description?: string;
@@ -72,7 +72,9 @@ export function Select<T extends object>({
             className={
               variant === "filter"
                 ? "filter-operator-control"
-                : "record-control flex items-center justify-between text-left"
+                : variant === "sort"
+                  ? "record-control record-control-sort flex items-center justify-between text-left"
+                  : "record-control flex items-center justify-between text-left"
             }
           >
             <SelectValue className="truncate" />
@@ -116,14 +118,16 @@ export function Select<T extends object>({
 export function SelectItem({
   variant = "default",
   ...props
-}: ListBoxItemProps & { variant?: "default" | "filter" }) {
+}: ListBoxItemProps & { variant?: "default" | "filter" | "sort" }) {
   return (
     <ListBoxItem
       {...props}
       className={
         variant === "filter"
           ? "filter-operator-option"
-          : "cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
+          : variant === "sort"
+            ? "cursor-default rounded px-3 py-2 text-sm font-normal outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover"
+            : "cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
       }
     />
   );

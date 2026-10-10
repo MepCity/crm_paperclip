@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { PreferenceProvider, usePreference } from "@/lib/preferences";
+import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "./record-detail-rail";
 import { RecordHeader, type RecordHeaderProps } from "./record-header";
 import { RecordPageFrame } from "./record-page-frame";
+import { RecordRailToggle } from "./record-rail-toggle";
 
 const headerProps: RecordHeaderProps = {
   title: "Example Record",
@@ -13,10 +16,11 @@ const headerProps: RecordHeaderProps = {
   nextLabel: "Next Record",
 };
 
-export default function RecordDetailDemo() {
+function RecordDetailDemoInner() {
   const [tab, setTab] = useState("overview");
   const [related, setRelated] = useState("section-a");
   const [action, setAction] = useState("Ready");
+  const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const commands: RecordHeaderProps["commands"] = [
     {
       id: "primary",
@@ -66,6 +70,10 @@ export default function RecordDetailDemo() {
           tabsLabel="Record views"
           selectedTabId={tab}
           onTabChange={setTab}
+          relatedRailVisible={railVisible}
+          railControl={
+            <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+          }
           scrollTopLabel="Scroll To Top"
           tabs={[
             {
@@ -126,5 +134,13 @@ export default function RecordDetailDemo() {
         />
       </div>
     </div>
+  );
+}
+
+export default function RecordDetailDemo() {
+  return (
+    <PreferenceProvider orgSlug="dev-ui" userId="dev-ui">
+      <RecordDetailDemoInner />
+    </PreferenceProvider>
   );
 }

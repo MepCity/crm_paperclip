@@ -9,6 +9,9 @@ import { leadsFilterGroups } from "./list-filters";
 
 export const LEADS_MODULE: ModuleApiName = "Leads";
 
+/** ISO 4217 code for currency filter rows; list cells use the same interim default. */
+export const LEADS_LIST_CURRENCY_CODE = "TRY";
+
 /** Non-sortable Leads field API names from list-views.md › Sorting. */
 export const LEADS_NON_SORTABLE_FIELDS = new Set([
   "Description",
@@ -26,6 +29,7 @@ export const leadsListPageConfig = {
   module: LEADS_MODULE,
   linkField: "Full_Name",
   pluralLabel: "Leads",
+  singularLabel: "Lead",
   createLabel: "Create Lead",
   filterTitle: "Filter Leads by",
   filterGroups: leadsFilterGroups,

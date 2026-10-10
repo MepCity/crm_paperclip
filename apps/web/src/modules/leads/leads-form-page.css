@@ -1,0 +1,66 @@
+/* record-detail.md: card and heading x 332 within the expanded CRM shell. */
+.leads-form-page {
+  min-height: 100%;
+  padding-inline: var(--size-form-card-inset);
+  background: var(--color-bg);
+}
+
+/* record-detail.md › Address frame and Description Information and textarea. */
+.leads-form-page .record-form-field-group {
+  min-inline-size: 0;
+  padding-inline-end: calc(var(--size-form-field-group-padding-end) - 1px);
+  border-radius: var(--size-form-address-radius);
+}
+.leads-form-page [data-form-type="textarea"] .record-form-row__control {
+  max-width: var(--size-form-description-width);
+}
+.leads-form-page .record-textarea {
+  height: var(--size-form-input-height);
+}
+.record-form-clear-address {
+  align-self: flex-end;
+  margin-bottom: calc(var(--size-form-address-footer-bottom) - 1px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-form-clear-address);
+  font-size: var(--text-md);
+  line-height: var(--size-form-label-line-height);
+  cursor: pointer;
+}
+
+.leads-form-page .record-form-coordinates {
+  gap: var(--size-form-coordinate-gap);
+}
+.leads-form-page .record-form-coordinates > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.leads-form-page .record-form-field-group__body {
+  padding-top: calc(var(--size-form-field-group-body-top) - 1px);
+}
+.leads-form-page .record-form-strip__actions {
+  gap: var(--space-2);
+}
+
+.leads-form-page .record-form-strip__actions > button:nth-child(1) {
+  width: var(--size-form-page-cancel-width);
+}
+.leads-form-page .record-form-strip__actions > button:nth-child(2) {
+  width: var(--size-form-page-save-new-width);
+}
+.leads-form-page .record-form-strip__actions > button:nth-child(3) {
+  width: var(--size-form-page-save-width);
+}
+.leads-form-page .record-form-card__body {
+  padding-bottom: var(--size-form-description-rule-gap);
+  border-bottom: 1px solid var(--color-detail-divider);
+}
+
+.leads-form-page .record-form-strip__actions > button {
+  white-space: nowrap;
+}
+.record-form-label-line {
+  display: block;
+}
