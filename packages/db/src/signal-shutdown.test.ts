@@ -4,7 +4,14 @@ import { tmpdir, userInfo } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { confirmedDead, parseIpcTable, removeSegment, runCommand, selectOrphans } from "./sysv-ipc";
+import {
+  type CommandRunner,
+  confirmedDead,
+  parseIpcTable,
+  removeSegment,
+  runCommand,
+  selectOrphans,
+} from "./sysv-ipc";
 
 function table() {
   const parsed = parseIpcTable(runCommand("ipcs", ["-m", "-a"]), Date.now());
@@ -25,12 +32,16 @@ function exited(child: ChildProcess): Promise<number | null> {
 describe.skipIf(process.platform !== "darwin")("signal shutdown and owned SysV cleanup", () => {
   it("awaits SIGTERM cleanup and removes only its own SIGKILL orphan", async () => {
     const baseline = new Set(table().rows.map((row) => row.id));
-    const dir = await mkdtemp(
-      join(process.env.PAPERCLIP_RUN_SCRATCH_DIR ?? tmpdir(), "crm-shutdown-"),
-    );
+    const dir = await mkdtemp(join(tmpdir(), "crm-shutdown-"));
+    const ipcrmCalls: string[][] = [];
+    const recordRun: CommandRunner = (command, args) => {
+      if (command === "ipcrm") ipcrmCalls.push([...args]);
+      return runCommand(command, args);
+    };
     let child: ChildProcess | undefined;
     let ownId: number | undefined;
     let ownPid: number | undefined;
+    let sigkillOwnId: number | undefined;
     try {
       // One cluster at a time, reusing the same initialized directory.
       for (const mode of ["SIGTERM", "SIGKILL"] as const) {
@@ -82,14 +93,15 @@ describe.skipIf(process.platform !== "darwin")("signal shutdown and owned SysV c
             deadPids: new Set([ownPid]),
           }).filter((item) => item.selected);
           expect(selected.map((item) => item.row.id)).toEqual([ownId]);
-          removeSegment(ownId, runCommand);
+          sigkillOwnId = ownId;
+          removeSegment(ownId, recordRun);
           expect(table().rows.some((row) => row.id === ownId)).toBe(false);
         }
         child = undefined;
         ownId = undefined;
       }
-      const after = new Set(table().rows.map((row) => row.id));
-      for (const id of baseline) expect(after.has(id)).toBe(true);
+      if (sigkillOwnId === undefined) throw new Error("missing SIGKILL segment id");
+      expect(ipcrmCalls).toEqual([["-m", String(sigkillOwnId)]]);
     } finally {
       if (child && child.exitCode === null && child.signalCode === null) {
         const exit = exited(child);
@@ -99,7 +111,7 @@ describe.skipIf(process.platform !== "darwin")("signal shutdown and owned SysV c
       if (ownId !== undefined && ownPid !== undefined && !baseline.has(ownId)) {
         const row = table().rows.find((row) => row.id === ownId);
         if (row && row.cpid === ownPid && row.nattch === 0 && confirmedDead(ownPid))
-          removeSegment(ownId, runCommand);
+          removeSegment(ownId, recordRun);
       }
       await rm(dir, { recursive: true, force: true });
     }

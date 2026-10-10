@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { confirmedDead, parseIpcTable, type Segment, selectOrphans } from "./sysv-ipc";
 
-export const ipcHeader =
+const ipcHeader =
   "T ID KEY MODE OWNER GROUP CREATOR CGROUP NATTCH SEGSZ CPID LPID ATIME DTIME CTIME\nShared Memory:\n";
-export const ipcRow =
+const ipcRow =
   "m 987 0x123 --rw------- test-owner test-group test-owner test-group 0 56 765 765 no-entry no-entry 10:00:00\n";
 const now = new Date(2026, 9, 10, 10, 10).getTime();
 const table = () => parseIpcTable(ipcHeader + ipcRow, now);
