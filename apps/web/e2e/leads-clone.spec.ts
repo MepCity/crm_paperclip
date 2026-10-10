@@ -54,12 +54,19 @@ test("clone from detail saves a new record and preserves the source", async ({ p
     "Clone Source Lead",
   );
   await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Clone Saved Lead");
-  const createRequest = page.waitForRequest(
-    (request) =>
-      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Leads",
+  let createPostCount = 0;
+  const isLeadCreatePost = (url: string, method: string) =>
+    method === "POST" && new URL(url).pathname === "/crm/v2.2/Leads";
+  page.on("request", (request) => {
+    if (isLeadCreatePost(request.url(), request.method())) createPostCount += 1;
+  });
+  const createRequest = page.waitForRequest((request) =>
+    isLeadCreatePost(request.url(), request.method()),
   );
   await page.getByRole("button", { name: "Save", exact: true }).click();
   const request = await createRequest;
+  await expect(page.locator("[data-record-header]")).toBeVisible();
+  expect(createPostCount).toBe(1);
   expect(request.postDataJSON().data[0]).toMatchObject({
     Company: "Clone Source Co",
     Last_Name: "Clone Saved Lead",

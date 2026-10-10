@@ -379,8 +379,13 @@ test("clone shows title, copied fields and enabled action strip", async () => {
   expect((screen.getByRole("textbox", { name: "Last Name" }) as HTMLInputElement).value).toBe(
     "Source Name",
   );
-  for (const name of ["Cancel", "Save and New", "Save"])
-    expect((screen.getByRole("button", { name }) as HTMLButtonElement).disabled).toBe(false);
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  const saveAndNew = screen.getByRole("button", { name: "Save and New" });
+  const save = screen.getByRole("button", { name: "Save" });
+  for (const button of [cancel, saveAndNew, save])
+    expect((button as HTMLButtonElement).disabled).toBe(false);
+  const actions = document.querySelector("[data-record-form-actions]");
+  expect(Array.from(actions?.children ?? [])).toEqual([cancel, saveAndNew, save]);
 });
 
 test("clone Save creates with edited values", async () => {

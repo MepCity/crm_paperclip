@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
+import { operationPath, operations } from "../src/lib/api/wire/operations";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
-import { expectWithin1 } from "./support/geometry";
+import { expectWithin1, textCapLeft } from "./support/geometry";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
-import { expectType } from "./support/typography";
+import { expectType, tokenValue } from "./support/typography";
 
 function px(value: string) {
   return Number.parseFloat(value);
@@ -326,7 +327,7 @@ test("Cancel on Edit returns to detail; the actual owner dialog opens", async ({
 test("Create geometry follows record-detail Visual layout and passes accessibility", async ({
   page,
 }) => {
-  await openCreate(page);
+  const { org } = await openCreate(page);
   await page.evaluate(() => document.fonts.ready);
   const strip = page.locator("[data-record-form-strip]");
   const stripBox = await strip.boundingBox();
@@ -396,7 +397,7 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
     "box-shadow",
     "rgb(255, 93, 90) 3px 0px 0px 0px inset",
   );
-  // Composite inputs: the prefix/divider move to MEP-226; the end section stays here.
+  // Composite inputs: Annual Revenue sentence (record-detail.md Visual layout).
   const revenue = page.locator("[data-form-field=Annual_Revenue]");
   const information = revenue.getByRole("img", { name: "Currency information" });
   const informationBox = await information.boundingBox();
@@ -409,7 +410,39 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
   expectWithin1(iconBox.height, 16);
   await expect(information).toHaveCSS("background-color", "rgb(240, 244, 255)");
   await expect(information).toHaveCSS("color", "rgb(49, 57, 73)");
-  await expect(revenue.locator(".record-currency-prefix")).toHaveCount(0);
+  const currencyResponse = await page.request.get(operationPath(operations.currencies), {
+    headers: { "X-CRM-ORG": org.slug },
+  });
+  expect(currencyResponse.status()).toBe(200);
+  const currencies = (await currencyResponse.json()).currencies as [{ symbol: string }];
+  const prefix = revenue.locator(".record-currency-prefix > span").first();
+  const divider = revenue.locator(".record-currency-divider");
+  await expect(prefix).toHaveText(currencies[0].symbol);
+  await expect(prefix).toHaveCSS("color", await tokenValue(page, "color", "--color-text-muted"));
+  const input = await revenue.locator(".record-input-frame").boundingBox();
+  const prefixBox = await prefix.boundingBox();
+  const dividerBox = await divider.boundingBox();
+  if (!input || !prefixBox || !dividerBox) throw new Error("Missing currency prefix");
+  expectWithin1(prefixBox.x - input.x, 11.5);
+  expectWithin1(dividerBox.x - (prefixBox.x + prefixBox.width), 9.5);
+  expectWithin1(dividerBox.width, 1);
+  await expect(divider).toHaveCSS(
+    "background-color",
+    await tokenValue(page, "background-color", "--color-control-border"),
+  );
+  expectWithin1(dividerBox.height, 20);
+  expectWithin1(dividerBox.y - input.y, 7);
+  expectWithin1(input.y + input.height - dividerBox.y - dividerBox.height, 7);
+  console.log(
+    "currency prefix",
+    JSON.stringify({
+      symbol: currencies[0].symbol,
+      input,
+      prefixBox,
+      dividerBox,
+      capLeft: await textCapLeft(prefix),
+    }),
+  );
   await expect(revenue.getByRole("button")).toHaveCount(0);
   const address = await page.locator("[data-record-form-field-group]").boundingBox();
   const country = await page.locator("[data-form-field=Country] .record-control").boundingBox();
