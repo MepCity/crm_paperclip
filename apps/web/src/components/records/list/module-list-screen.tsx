@@ -319,6 +319,7 @@ function ModuleListScreenLoaded({
       field: row.itemId,
       operatorId: row.operatorId,
       value: row.value,
+      daysUnit: row.daysUnit,
     }));
     setFilterApplyError(null);
     setAppliedCriteria(panelFiltersToCriteria(inputs));

@@ -1,5 +1,7 @@
 /* list-views.md > Visual layout > Filter operator dropdown, Filter value input,
    Open operator list. Typography uses the neighboring Status stage value role. */
+/* Operator widths follow text advance plus one shared chevron/padding rule.
+   Measured in Chromium on the filter editors demo: contains ≈79px, is ≈36.92px. */
 .filter-select {
   display: flex;
   flex-direction: column;
@@ -102,8 +104,6 @@
   color: var(--color-text-placeholder);
 }
 
-/* Operator widths follow text advance plus one shared chevron/padding rule.
-   Measured in Chromium on the filter editors demo: contains ≈79px, is ≈36.92px. */
 .filter-value > .filter-number-range {
   display: flex;
   flex-direction: column;
@@ -203,18 +203,27 @@
   gap: var(--size-filter-date-range-gap);
   width: var(--size-filter-range-width);
 }
-.filter-editor[data-field-type="datetime"] .filter-date-range .record-input-frame {
+.filter-editor[data-field-type="datetime"] .filter-date-range-from {
+  position: relative;
+  width: 100%;
+  height: var(--size-filter-control-height);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range-from .record-input-frame {
+  width: 100%;
+  height: var(--size-filter-control-height);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range > .record-input-frame {
   width: 100%;
   height: var(--size-filter-control-height);
 }
 .filter-editor[data-field-type="datetime"] .filter-date-range-separator {
   position: absolute;
-  top: calc(var(--size-filter-control-height) + var(--size-filter-date-range-gap) / 2);
-  left: 50%;
+  left: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--color-text);
   font-size: var(--text-sm);
   line-height: 1;
-  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 .filter-editor[data-field-type="datetime"]
