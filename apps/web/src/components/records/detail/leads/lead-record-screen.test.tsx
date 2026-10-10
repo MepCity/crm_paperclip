@@ -29,6 +29,7 @@ const paths: LeadRecordPaths = {
   defaultList: (orgSlug, module) => `/crm/${orgSlug}/tab/${module}/list`,
   record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
   edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
+  clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
 };
 
 function createService(): ClientRecordService {
@@ -192,6 +193,22 @@ describe("LeadRecordScreen", () => {
     expect(updateSpy).not.toHaveBeenCalled();
   });
 
+  it("navigates to clone from More Options", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected a list row.");
+    const user = userEvent.setup();
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+    await user.click(screen.getByRole("button", { name: "More Options" }));
+    await user.click(screen.getByRole("menuitem", { name: "Clone" }));
+    expect(navigation.push).toHaveBeenCalledWith(paths.clone(ctx.orgSlug, "Leads", record.id));
+  });
+
   it("shows the new Lead_Status on ribbon, business card, and details without refetching the record", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
@@ -273,6 +290,7 @@ describe("LeadRecordScreen", () => {
       defaultList: (orgSlug, module) => `/crm/${orgSlug}/tab/${module}/list`,
       record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
       edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
+      clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
     };
     const records = createFixtureRecordService(deleteCtx);
     const service = createClientRecordService(records, {
@@ -318,8 +336,7 @@ describe("LeadRecordScreen", () => {
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
     const more = screen.getByRole("button", { name: "More Options" });
     await user.click(more);
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Delete" })).toBeTruthy());
-    await user.keyboard("{ArrowDown}{Enter}");
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = await waitFor(() => screen.getByRole("alertdialog"));
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => {
@@ -344,6 +361,7 @@ describe("LeadRecordScreen", () => {
       defaultList: (orgSlug, module) => `/crm/${orgSlug}/tab/${module}/list`,
       record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
       edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
+      clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
     };
     const records = createFixtureRecordService(deleteCtx);
     const service = createClientRecordService(records, {
@@ -380,8 +398,7 @@ describe("LeadRecordScreen", () => {
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
     const more = screen.getByRole("button", { name: "More Options" });
     await user.click(more);
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Delete" })).toBeTruthy());
-    await user.keyboard("{ArrowDown}{Enter}");
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = await waitFor(() => screen.getByRole("alertdialog"));
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => {
