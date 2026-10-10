@@ -451,6 +451,13 @@
   --size-popover-sort-field-dropdown-list-offset: 46px;
   /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
   --size-popover-sort-field-dropdown-list-height: 220px;
+  /* list-views.md › All alphabet dropdown: outer box x 881–940 (59 px) and y 182–594 (412 px visible). */
+  --size-popover-alphabet-width: 59px;
+  --size-popover-alphabet-height: 412px;
+  /* "approx 6 px horizontal padding around option rows"; rows are 45 × 23 px. */
+  --size-popover-alphabet-inset: 6px;
+  --size-popover-alphabet-row-width: 45px;
+  --size-popover-alphabet-row-height: 23px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;

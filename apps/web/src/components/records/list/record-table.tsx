@@ -3,6 +3,7 @@
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, RecordData } from "@crm/core/records";
 import type { ReactNode } from "react";
+import { AlphabetFilter } from "@/components/ui/alphabet-filter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
@@ -17,6 +18,11 @@ export interface RecordTableProps {
   /** Selected record ids. Selection of ids outside this page is preserved. */
   selectedIds: readonly string[];
   onSelectedIdsChange: (ids: readonly string[]) => void;
+  /**
+   * Alphabetical filter of the link column header. Drawn only when it is supplied:
+   * `value` is the chosen letter, or null for `All`.
+   */
+  alphabet?: { value: string | null; onChange: (letter: string | null) => void };
   /** When set, cell text wraps and the row grows. Otherwise the cell truncates. */
   wrapText: boolean;
   emptyMessage: string;
@@ -71,6 +77,7 @@ export function RecordTable({
   rowHref,
   selectedIds,
   onSelectedIdsChange,
+  alphabet,
   wrapText,
   emptyMessage,
   settings,
@@ -155,12 +162,21 @@ export function RecordTable({
                   key={field.apiName}
                   scope="col"
                   data-part="column"
+                  aria-label={field.label}
                   className={`${dataColumn} ${headerBox}`}
                 >
                   <div className={`flex h-full items-center overflow-hidden ${inset}`}>
                     <span data-part="header-label" className="min-w-0 truncate">
                       {field.label}
                     </span>
+                    {field.apiName === linkField && alphabet ? (
+                      <AlphabetFilter
+                        label="Filter by first letter"
+                        value={alphabet.value}
+                        onChange={alphabet.onChange}
+                        className="shrink-0"
+                      />
+                    ) : null}
                   </div>
                   <span
                     data-part="divider"
