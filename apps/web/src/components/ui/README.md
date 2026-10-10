@@ -123,6 +123,7 @@ what the "no colour constants" rule forbids.
 | `--color-topbar-surface` | `#ffffff` | app-shell.md › Top bar › Bounds and surface › "50 high; `#FFFFFF`" | from spec |
 | `--color-topbar-border` | `#dcdbee` | app-shell.md › Colour summary › "`#DCDBEE` › Top-bar lower rule" | from spec |
 | `--color-menu-surface` | `#ffffff` | app-shell.md › Teamspace More Actions menu › Surface, edge, corners, shadow › "`#FFFFFF` fill" | from spec |
+| `--color-menu-icon` | `#adb0b6` | list-views.md › Column options menu › "icon glyphs `#ADB0B6`" | from spec |
 | `--color-utility-border` | `#c5c4d3` | app-shell.md › Colour summary › "`#C5C4D3` › Utility-strip cell rules" | from spec |
 | `--color-utility-help` | `#7875e6` | app-shell.md › Colour summary › "`#7875E6` › Help utility cell" | from spec |
 | `--color-monogram` | `#00b96f` | app-shell.md › Colour summary › "`#00B96F` › Teamspace monogram block" | from spec |
@@ -221,6 +222,7 @@ what the "no colour constants" rule forbids.
 | `--size-rail-header-inset` | `15px` | app-shell.md › Rail/product selector › Visible occupied box › "x 15-150, y 11-41" | from spec |
 | `--size-rail-product-selector-height` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "30 high" | from spec |
 | `--size-rail-product-mark` | `30px` | app-shell.md › Rail/product selector › Visible occupied box › "Product mark occupies x 15-45, 30 x 30" | from spec |
+| `--size-rail-product-caret` | `10px` | app-shell.md › Rail/product selector › Visible occupied box › "solid filled down caret, `#C2CBDE`, ink x 138-148, y 24-29 (10 wide × 5 high; 9 px wide on its top row, narrowing to a point)" | from spec |
 | `--size-rail-selector-height` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "y 289-313; about 24 high" | from spec |
 | `--size-rail-selector-inset` | `13px` | app-shell.md › Rail/teamspace selector › Occupied row › "left inset 13 px" | from spec |
 | `--size-rail-monogram` | `24px` | app-shell.md › Rail/teamspace selector › Occupied row › "24 x 24 coloured monogram block at x 13-37" | from spec |
@@ -402,6 +404,27 @@ what the "no colour constants" rule forbids.
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
 | `--size-form-owner-caret-gap` | `9px` | record-detail.md › Composite inputs › owner caret before end section | from spec |
+| `--shadow-form-focus-glow` | `0 0 6px rgb(84 100 255 / 0.56)` | record-detail.md › Lead Information rows › focused input soft glow (Interim) | lead decision |
+| `--size-form-panel-inset-inline` | `11px` | record-detail.md › Dropdown panel › Country / Owner search horizontal inset | from spec |
+| `--size-form-panel-search-top` | `12px` | record-detail.md › Dropdown panel › search top inset | from spec |
+| `--size-form-panel-search-height-owner` | `30px` | record-detail.md › Dropdown panel › Owner search height | from spec |
+| `--size-form-panel-check-inset` | `15px` | record-detail.md › Dropdown panel › check mark from panel outer left | from spec |
+| `--size-form-panel-owner-check-inset` | `16px` | record-detail.md › Dropdown panel › Owner selected check mark | from spec |
+| `--size-form-panel-check-width` | `11.5px` | record-detail.md › Dropdown panel › check ink width | from spec |
+| `--size-form-panel-check-height` | `8.5px` | record-detail.md › Dropdown panel › check ink height | from spec |
+| `--size-form-panel-option-text-inset` | `32.5px` | record-detail.md › Dropdown panel › option text start | from spec |
+| `--size-form-panel-selected-fill-inset` | `7px` | record-detail.md › Dropdown panel › Standard picklist selected fill inset | from spec |
+| `--size-form-panel-selected-fill-height` | `32px` | record-detail.md › Dropdown panel › Standard picklist selected fill height | from spec |
+| `--size-form-panel-search-icon-inset` | `11.5px` | record-detail.md › Dropdown panel › magnifier inset in search | from spec |
+| `--size-form-panel-search-icon-size` | `13.5px` | record-detail.md › Dropdown panel › magnifier size | from spec |
+| `--size-form-panel-search-text-inset` | `33px` | record-detail.md › Dropdown panel › search text after icon (11.5 + 13.5 + 8) | derived from spec |
+| `--size-form-panel-list-first-gap` | `7.5px` | record-detail.md › Dropdown panel › Country first row below search | from spec |
+| `--size-form-panel-owner-avatar-inset` | `32px` | record-detail.md › Dropdown panel › Owner avatar from panel left | from spec |
+| `--size-form-panel-owner-row-pitch` | `41px` | record-detail.md › Dropdown panel › Owner row pitch | from spec |
+| `--size-form-panel-owner-avatar-size` | `30px` | record-detail.md › Dropdown panel › Owner avatar diameter | from spec |
+| `--size-form-panel-owner-name-gap` | `11px` | record-detail.md › Dropdown panel › Owner name after avatar | from spec |
+| `--size-form-panel-owner-content-top` | `12px` | record-detail.md › Dropdown panel › first owner row below search | from spec |
+| `--size-form-panel-owner-content-bottom` | `13px` | record-detail.md › Dropdown panel › last avatar above panel bottom | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
 | `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
@@ -457,6 +480,7 @@ what the "no colour constants" rule forbids.
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
 | `--size-popover-settings-width` | `264px` | list-views.md › View Settings popover › "About 264 px wide" | from spec |
+| `--size-popover-column-options-width` | `151px` | list-views.md › Column options menu › "151 px wide (x 963–1114)" | from spec |
 | `--size-popover-sort-width` | `385px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
 | `--size-popover-sort-height` | `157px` | list-views.md › Sort popover › "About 385 × 157 px" | from spec |
 | `--size-popover-sort-field-width` | `150px` | list-views.md › Sort popover › "two side-by-side selectors around 150 px wide" | from spec |
@@ -555,6 +579,8 @@ what the "no colour constants" rule forbids.
 | `--color-select-user-row-divider` | `#eef1f7` | record-detail.md › Select User dialog › User table › "1 px `#EEF1F7` rules" | from spec |
 | `--size-select-user-table-radio-inset` | `20px` | record-detail.md › Select User dialog › User table › radio x 346 with frame x 325 (346 − 325 − 1 px frame edge) | from spec |
 | `--size-select-user-table-radio-row-inset` | `13px` | record-detail.md › Select User dialog › User table › radio y 167 with row band y 154–192 | from spec |
+| `--size-select-user-table-avatar-row-inset` | `4px` | record-detail.md › Select User dialog › User table › row avatar band y 158.5–188.5 within row y 154–192 | from spec |
+| `--size-select-user-table-text-row-inset` | `14.5px` | record-detail.md › Select User dialog › User table › row name cap y 168.5 within row band | from spec |
 | `--size-select-user-table-radio-column` | `36px` | record-detail.md › Select User dialog › User table › radio x 346–361 | from spec |
 | `--size-select-user-table-avatar-column` | `60px` | record-detail.md › Select User dialog › User table › row avatar x 391–421 | from spec |
 | `--size-select-user-table-name-column` | `141.5px` | record-detail.md › Select User dialog › User table › name x 432, Role x 573.5 | from spec |
@@ -563,7 +589,7 @@ what the "no colour constants" rule forbids.
 | `--size-select-user-table-name-header-inset` | `31px` | record-detail.md › Select User dialog › User table › `User Name` label x 392, avatar column ends x 361 | from spec |
 | `--size-select-user-table-avatar-inset` | `30px` | record-detail.md › Select User dialog › User table › avatar x 391 after radio column | from spec |
 | `--size-select-user-table-name-text-inset` | `11px` | record-detail.md › Select User dialog › User table › name x 432 after avatar x 421 | from spec |
-| `--size-select-user-table-frame-adjust` | `1.5px` | record-detail.md › Select User dialog › User table › frame y 119–270.5 minus row band sum for three rows | from spec |
+| `--size-form-layout-subpixel-trim` | `1px` | record-detail.md › Layout › Visual layout › Create/edit form › layout width helpers subtract 1 px for subpixel alignment | from spec |
 | `--size-form-strip-height` | `57px` | record-detail.md › Layout › Visual layout › Create/edit form › Fixed title/action strip › "y 50–107" | from spec |
 | `--size-form-strip-padding-end` | `8px` | MEP-172 interim › Save button inset from card right edge | from spec |
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
@@ -580,10 +606,14 @@ what the "no colour constants" rule forbids.
 | `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
 | `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
 | `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
-| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-label-padding-top` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › label block below the row top (MEP-172 interim, kept by MEP-234) | from spec |
+| `--size-form-label-baseline-offset` | `1px` | record-detail.md › Layout › Visual layout › Form text baselines › row 1 label cap top y 324 (12 px below the input top y 312); painted so a wrapped label keeps the measured row height | from spec |
 | `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
 | `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
 | `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-checkbox-inset-start` | `5px` | record-detail.md › Layout › Visual layout › Email Opt Out checkbox › "5 px inside left input column boundary (x 553)" | from spec |
+| `--size-form-checkbox-inset-top` | `10px` | record-detail.md › Layout › Visual layout › Email Opt Out checkbox › box top "10 px top padding from y 744" inside the 34 px row | from spec |
+| `--size-form-control-text-padding-top` | `2px` | record-detail.md › Layout › Visual layout › Form text baselines › input interior text "12 px top margin (input top y 312 to cap top y 324) and 12 px bottom margin (flat letter ink bottom y 334 to input bottom y 346)" | from spec |
 | `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
 | `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
 | `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
@@ -719,6 +749,22 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-status-terminal-divider-bottom` | `6px` | record-detail.md › Visual layout › Terminal divider / next header offset |
 | `--size-status-demo-wide` | `1126px` | record-detail.md › Visual layout › Hidden-rail layout / Status strip card |
 | `--size-status-demo-narrow` | `906px` | record-detail.md › Visual layout › Record page / Status strip |
+| `--radius-detail-inline-control` | `4px` | record-detail.md › Inline editor › Value box / corners |
+| `--size-detail-inline-width` | `273px` | record-detail.md › Inline editor › Value box / width |
+| `--size-detail-inline-value-inset` | `12.5px` | record-detail.md › Inline editor › Placeholder and arrow / text inset; adjusted for the shared input border |
+| `--size-detail-inline-halo` | `7.5px` | record-detail.md › Inline editor › Value box / focus halo extent |
+| `--size-detail-inline-action-size` | `21px` | record-detail.md › Inline editor › Cancel button / diameter; Save uses the issue’s accepted 21px diameter |
+| `--size-detail-inline-action-icon` | `12px` | record-detail.md › Inline editor › Cancel button / original cross glyph, Interim implementation dimension |
+| `--size-detail-inline-action-inset` | `10px` | record-detail.md › Inline editor › Save button / gap from value box |
+| `--size-detail-inline-action-gap` | `6.5px` | record-detail.md › Inline editor › Cancel button / gap from Save |
+| `--size-detail-inline-trailing-inset` | `27.5px` | record-detail.md › Inline editor › Value box / anchor offset, derived from the card padding and trailing action span |
+| `--size-detail-inline-list-padding` | `6px` | record-detail.md › Inline editor › List panel / padding inside border |
+| `--size-detail-inline-option-height` | `32px` | record-detail.md › Inline editor › Highlighted row / height |
+| `--size-detail-inline-check-size` | `12px` | record-detail.md › Inline editor › Checkmark / original glyph width within the accepted ±1px tolerance |
+| `--size-detail-inline-check-height` | `9px` | record-detail.md › Inline editor › Checkmark / original glyph height within the accepted ±1px tolerance |
+| `--size-detail-inline-save-check-width` | `10px` | record-detail.md › Inline editor › Save button / checkmark width |
+| `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
+| `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
 
 ### Measured values that carry no token
 
@@ -876,9 +922,11 @@ Button primary and secondary variants use the measured vertical gradients from t
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
 opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
-`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`settings`) consumes
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`settings`/`columnOptions`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
-menus** and `--size-popover-settings-width` from the **View Settings popover** row.
+menus**, `--size-popover-settings-width` from the **View Settings popover** row and
+`--size-popover-column-options-width` from **Column options menu**. `Menu.placement`
+overrides the popover anchor side; menus keep `bottom end` unless the caller passes it.
 `Menu.shouldCloseOnInteractOutside` is forwarded to the popover so a nested submenu that
 portals outside its parent does not dismiss it. `SubmenuTrigger` (React Aria's) and
 `Submenu` compose that nested layer: the trigger's first child is the row and its second is

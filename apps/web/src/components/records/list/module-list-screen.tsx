@@ -323,6 +323,19 @@ function ModuleListScreenLoaded({
     navigate({ ...searchState, page: LIST_PAGE_DEFAULT, perPage: next });
   }
 
+  /**
+   * Column header options write the same address keys as the Sort popover's Apply, and start
+   * the new sort on page 1. The Sort popover keeps the open page (MEP-77 behaviour).
+   */
+  function applyColumnSort(next: SortSpec) {
+    navigate({
+      ...searchState,
+      page: LIST_PAGE_DEFAULT,
+      sortBy: next.field,
+      sortOrder: next.order,
+    });
+  }
+
   function refreshView() {
     setSelectedIds([]);
     refreshModuleListData();
@@ -567,12 +580,15 @@ function ModuleListScreenLoaded({
             columns={columns}
             records={records}
             linkField={config.linkField}
+            linkFieldLabel={config.linkFieldLabel}
             rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
             selectedIds={pageSelectedIds}
             onSelectedIdsChange={(ids) => {
               const allowed = new Set(records.map((record) => record.id));
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
+            sortableFields={eligibleSortFields}
+            onSortChange={applyColumnSort}
             alphabet={{ value: letter, onChange: applyLetter }}
             wrapText={wrapText}
             emptyMessage={emptyMessage}

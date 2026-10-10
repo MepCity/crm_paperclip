@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { AppShell } from "./app-shell";
-import { isNavLinkActive, type NavConfig } from "./nav";
+import { isNavLinkActive, type NavConfig, navLinkIconClassName, shellNav } from "./nav";
 import { Navigation } from "./navigation";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { PageHeader } from "./page-header";
@@ -84,6 +84,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test("Pinned links without an icon accent token keep the previous icon class rules", () => {
+  const link = config.links[0]!;
+  expect(navLinkIconClassName(link, { nested: false, active: true })).toBe(
+    "size-(--size-rail-icon) shrink-0",
+  );
+  const leads = config.sections[0]!.groups[0]!.links[0]!;
+  expect(navLinkIconClassName(leads, { nested: true, active: false })).toContain("text-rail-icon");
+  expect(navLinkIconClassName(leads, { nested: true, active: true })).toBe(
+    "size-(--size-rail-icon) shrink-0",
+  );
+  expect(navLinkIconClassName(shellNav.links[0]!, { nested: false, active: true })).toContain(
+    "text-accent-blue",
+  );
+});
+
 test("Navigation renders configured links and populated groups, with correct active paths", () => {
   const view = render(<Navigation orgSlug="example" config={config} />);
   const home = screen.getByRole("link", { name: "Home" });
@@ -121,6 +136,11 @@ test("Default navigation renders Leads under Sales and omits empty groups", () =
   expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
 });
 
+test("Organization switcher exposes the current organization in its accessible name", () => {
+  render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
+  expect(screen.getByRole("button", { name: "Organization switcher: Example team" })).toBeTruthy();
+});
+
 test("Organization switcher lists organizations, marks the current one and selects using the keyboard", async () => {
   const keyboard = userEvent.setup();
   render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
@@ -138,7 +158,7 @@ test("Organization switcher lists organizations, marks the current one and selec
 test("Organization switcher creates organizations and does not confuse a slug named create", async () => {
   const keyboard = userEvent.setup();
   render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
-  const trigger = screen.getByRole("button", { name: "Organization switcher" });
+  const trigger = screen.getByRole("button", { name: "Organization switcher: Example team" });
   await keyboard.click(trigger);
   await keyboard.click(screen.getByRole("menuitemradio", { name: "Create team" }));
   expect(navigation.push).toHaveBeenLastCalledWith("/crm/create");

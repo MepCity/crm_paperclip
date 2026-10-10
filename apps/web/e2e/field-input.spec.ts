@@ -41,6 +41,12 @@ async function outerRightInset(frame: Locator, inner: Locator) {
   );
 }
 
+async function horizontalGap(left: Locator, right: Locator) {
+  const leftBox = await left.boundingBox();
+  const rightBox = await right.boundingBox();
+  return (rightBox?.x ?? 0) - ((leftBox?.x ?? 0) + (leftBox?.width ?? 0));
+}
+
 async function bounds(locator: Locator) {
   const box = await locator.boundingBox();
   if (!box) throw new Error("Expected a rendered measurement target");
@@ -49,6 +55,64 @@ async function bounds(locator: Locator) {
 
 function expectPixels(actual: number, target: number) {
   expect(Math.abs(actual - target)).toBeLessThanOrEqual(1);
+}
+
+async function focusGlowToken(page: import("@playwright/test").Page) {
+  return page.evaluate(() => {
+    const probe = document.createElement("div");
+    document.body.appendChild(probe);
+    probe.style.setProperty("box-shadow", "var(--shadow-form-focus-glow)");
+    const shadow = getComputedStyle(probe).boxShadow;
+    probe.remove();
+    return shadow;
+  });
+}
+
+function expectFocusGlow(shadow: string, tokenShadow: string) {
+  expect(shadow).toContain(tokenShadow);
+}
+
+async function pseudoBeforeStyles(locator: Locator) {
+  return locator.evaluate((element) => {
+    const before = getComputedStyle(element, "::before");
+    const row = element.getBoundingClientRect();
+    const left = Number.parseFloat(before.left) + row.left;
+    const width = Number.parseFloat(before.width);
+    const height = Number.parseFloat(before.height);
+    const top = row.top + (row.height - height) / 2;
+    return {
+      backgroundColor: before.backgroundColor,
+      borderRadius: before.borderRadius,
+      box: { x: left, y: top, width, height },
+    };
+  });
+}
+
+async function expectInsetUnselectedHighlight(row: Locator, panel: Locator) {
+  const panelBox = await bounds(panel);
+  const fill = await pseudoBeforeStyles(row);
+  expect(fill.backgroundColor).toBe("rgb(240, 244, 252)");
+  expect(fill.borderRadius).toBe("5px");
+  expectPixels(fill.box.x - panelBox.x, 7);
+  expectPixels(panelBox.x + panelBox.width - (fill.box.x + fill.box.width), 7);
+  expectPixels(fill.box.height, 32);
+}
+
+async function expectNoInsetHighlight(row: Locator) {
+  const hasHighlight = await row.evaluate((element) => {
+    const before = getComputedStyle(element, "::before");
+    return before.content !== "none" && before.content !== "normal";
+  });
+  expect(hasHighlight).toBe(false);
+}
+
+function verticalCenterOffset(
+  container: { y: number; height: number },
+  inner: { y: number; height: number },
+) {
+  const containerCenter = container.y + container.height / 2;
+  const innerCenter = inner.y + inner.height / 2;
+  return innerCenter - containerCenter;
 }
 
 test("form input geometry and composite inks match the measured form rows", async ({ page }) => {
@@ -92,6 +156,16 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(required).toHaveCSS("box-shadow", "rgb(255, 93, 90) 3px 0px 0px 0px inset");
   await input.focus();
   await expect(frame).toHaveCSS("border-color", "rgb(84, 100, 242)");
+  const requiredInput = demo.getByRole("textbox", { name: "text required", exact: true });
+  const focusToken = await focusGlowToken(page);
+  expectFocusGlow(
+    await frame.evaluate((element) => getComputedStyle(element).boxShadow),
+    focusToken,
+  );
+  await requiredInput.focus();
+  const requiredShadow = await required.evaluate((element) => getComputedStyle(element).boxShadow);
+  expect(requiredShadow).toContain("rgb(255, 93, 90) 3px 0px 0px 0px inset");
+  expectFocusGlow(requiredShadow, focusToken);
   for (const type of ["email", "phone", "website", "integer", "double", "currency"]) {
     await expect(
       demo.getByRole("textbox", { name: `${type} empty`, exact: true }).locator(".."),
@@ -187,6 +261,22 @@ test("form input geometry and composite inks match the measured form rows", asyn
   }
   await expect(disabledOwner).toHaveCSS("opacity", "0.5");
   await expect(disabledOwner.locator(".record-input-end")).toHaveCSS("opacity", "1");
+  // record-detail.md › Disabled input is Not observed: the value text keeps one 0.5 layer in
+  // both the framed input and the owner field, never two stacked layers (MEP-234).
+  await expect(demo.getByRole("textbox", { name: "text disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "1",
+  );
+  await expect(disabledOwner.locator(".record-choice-trigger")).toHaveCSS("opacity", "1");
+  await expect(disabledText.locator(".record-control")).toHaveCSS("opacity", "1");
+  await expect(demo.getByRole("textbox", { name: "textarea disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "0.5",
+  );
+  await expect(demo.getByRole("button", { name: "picklist disabled", exact: true })).toHaveCSS(
+    "opacity",
+    "0.5",
+  );
   const textFrame = demo
     .getByRole("textbox", { name: "text empty", exact: true })
     .locator("xpath=ancestor::*[contains(@class,'record-input-frame')][1]");
@@ -202,16 +292,23 @@ test("form input geometry and composite inks match the measured form rows", asyn
   await expect(profile).toHaveCSS("border-color", "rgb(180, 180, 180)");
   await expect(profile.locator("svg")).toHaveCSS("color", "rgb(178, 178, 178)");
   const profileBox = await bounds(profile);
-  const headBox = await bounds(profile.locator("circle"));
+  const headBox = await bounds(profile.locator("ellipse"));
   const bodyBox = await bounds(profile.locator("path"));
   const headTop = headBox.y - profileBox.y;
+  const bodyTop = await profile
+    .locator("path")
+    .evaluate((element) => (element as SVGGeometryElement).getBBox().y);
   expectPixels(headTop, 15);
   expectPixels(headBox.width, 16);
-  expect(bodyBox.y - profileBox.y).toBeLessThanOrEqual(32);
-  // The neck fills the space between the head and shoulders.
+  expectPixels(headBox.height, 15.5);
+  // record-detail.md › Portrait icon, form and header: the body joins the head at y 31 (0.5 px
+  // below its ink box) and is 16 px wide there, 34 px wide at y 37.5 where it is still inside
+  // the ring, and merges with the ring below that.
+  expectPixels(bodyTop, 31);
+  expectPixels(bodyBox.y - profileBox.y, 31);
   const bodyWidths = await profile.locator("path").evaluate((element) => {
     const path = element as SVGGeometryElement;
-    return [30, 33, 36].map((y) => {
+    return [31.01, 37.51].map((y) => {
       let halfWidth = 0;
       for (let x = 24; x <= 48; x += 0.05) {
         if (path.isPointInFill(new DOMPoint(x, y))) halfWidth = x - 24;
@@ -219,7 +316,7 @@ test("form input geometry and composite inks match the measured form rows", asyn
       return halfWidth * 2;
     });
   });
-  for (const [index, width] of [8.5, 24, 31.5].entries()) {
+  for (const [index, width] of [16, 34].entries()) {
     expectPixels(bodyWidths[index] ?? Number.NaN, width);
   }
   const measurements = {
@@ -244,7 +341,6 @@ test("form input geometry and composite inks match the measured form rows", asyn
     body: JSON.stringify(measurements, null, 2),
     contentType: "application/json",
   });
-  console.log("ROUND_TWO_MEASUREMENTS", JSON.stringify(measurements));
   await expect(demo.getByRole("textbox", { name: "textarea empty" })).toHaveCSS("resize", "both");
   await expect(demo.getByRole("textbox", { name: "Latitude" })).toHaveAttribute(
     "placeholder",
@@ -263,27 +359,49 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
 }) => {
   await page.setViewportSize({ width: 1470, height: 835 });
   await page.goto("/dev/ui");
+  const focusToken = await focusGlowToken(page);
   const demo = page.getByRole("region", { name: "field input" });
   const standard = demo.getByRole("button", { name: "picklist empty", exact: true });
   await hydrate(standard);
   await standard.click();
   let panel = page.locator(".record-choice-panel");
-  // Standard picklist: 1px CED0E1 edge, 6px upper/lower padding, 32px rows, F0F4FC selected fill.
-  await expect(panel).toHaveCSS("border-top-width", "1px");
-  await expect(panel).toHaveCSS("border-color", "rgb(206, 208, 225)");
-  await expect(page.getByRole("listbox")).toHaveCSS("padding-top", "6px");
-  await expect(page.getByRole("listbox")).toHaveCSS("padding-bottom", "6px");
-  await expect(page.getByRole("option", { name: "-None-" })).toHaveCSS("height", "32px");
-  await expect(page.getByRole("option", { name: "-None-" })).toHaveCSS(
-    "background-color",
-    "rgb(240, 244, 252)",
-  );
-  await expectType(
-    page,
-    page.getByRole("option", { name: "-None-" }),
-    "--text-md",
-    "--font-weight-semibold",
-  );
+  // a: Panel corners have a 5 px radius.
+  await expect(panel).toHaveCSS("border-radius", "5px");
+  const selectedNone = page.getByRole("option", { name: "-None-" });
+  const unselected = page.getByRole("option", { name: "Alpha" });
+  const check = selectedNone.locator(".record-choice-check");
+  // b: Standard picklist selected check at 15 px from panel outer left, ink #313949.
+  expectPixels(await outerLeftInset(panel, check), 15);
+  await expect(check).toHaveCSS("width", "11.5px");
+  await expect(check).toHaveCSS("height", "8.5px");
+  await expect(check).toHaveCSS("color", "rgb(49, 57, 73)");
+  const selectedRowBox = await bounds(selectedNone);
+  const checkBox = await bounds(check);
+  expectPixels(verticalCenterOffset(selectedRowBox, checkBox), 0);
+  // c: Option text starts 32.5 px after the panel outer left edge.
+  const selectedText = selectedNone.locator(".min-w-0").first();
+  const unselectedText = unselected.locator(".min-w-0").first();
+  expectPixels(await outerLeftInset(panel, selectedText), 32.5);
+  expectPixels(await outerLeftInset(panel, unselectedText), 32.5);
+  // d: Inset selected fill on standard picklist only.
+  const selectedFill = await pseudoBeforeStyles(selectedNone);
+  expect(selectedFill.backgroundColor).toBe("rgb(240, 244, 252)");
+  expect(selectedFill.borderRadius).toBe("5px");
+  const panelBox = await bounds(panel);
+  const fillBox = selectedFill.box;
+  expectPixels(fillBox.x - panelBox.x, 7);
+  expectPixels(panelBox.x + panelBox.width - (fillBox.x + fillBox.width), 7);
+  expectPixels(fillBox.height, 32);
+  await expect(selectedNone).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expectType(page, selectedNone, "--text-md", "--font-weight-semibold");
+  // Interim: keyboard-focused and hovered unselected rows use inset fill geometry.
+  await page.keyboard.press("ArrowDown");
+  await expect(unselected).toHaveAttribute("data-focused", "true");
+  await expectInsetUnselectedHighlight(unselected, panel);
+  await page.keyboard.press("ArrowUp");
+  await unselected.hover();
+  await expect(unselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(unselected, panel);
   expect(await page.getByRole("dialog").getByRole("textbox").count()).toBe(0);
   expect((await panel.boundingBox())?.width).toBeCloseTo(
     (await standard.boundingBox())?.width ?? 0,
@@ -295,19 +413,65 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   await hydrate(country);
   await country.click();
   panel = page.locator(".record-choice-panel");
-  // Country panel: 270px total height, 34px focused search and 32px pitch.
+  await expect(panel).toHaveCSS("border-radius", "5px");
+  // record-detail.md › Country panel: 270 px high; search auto-focus and focus edge #5464F2.
   await expect(panel).toHaveCSS("height", "270px");
   const search = page.getByRole("textbox", { name: "Search", exact: true });
   await expect(search).toBeFocused();
-  await expect(search).toHaveCSS("height", "34px");
   await expect(search).toHaveCSS("border-color", "rgb(84, 100, 242)");
-  const first = await page.getByRole("option", { name: "-None-" }).boundingBox();
+  // e: Search input inset 11 px from panel sides, 12 px from panel top.
+  expectPixels(await outerLeftInset(panel, search), 11);
+  expectPixels(await outerRightInset(panel, search), 11);
+  const panelTop = (await bounds(panel)).y;
+  const searchTop = (await bounds(search)).y;
+  expectPixels(searchTop - panelTop, 12);
+  // f: Country search height 34 px.
+  await expect(search).toHaveCSS("height", "34px");
+  const searchIcon = panel.locator(".record-panel-search-icon");
+  // g: Magnifier 13.5 × 13.5 px, #313949, 11.5 px after search outer left.
+  await expect(searchIcon).toHaveCSS("width", "13.5px");
+  await expect(searchIcon).toHaveCSS("height", "13.5px");
+  await expect(searchIcon).toHaveCSS("color", "rgb(49, 57, 73)");
+  expectPixels(await outerLeftInset(search, searchIcon), 11.5);
+  const searchBox = await bounds(search);
+  const searchIconBox = await bounds(searchIcon);
+  expectPixels(verticalCenterOffset(searchBox, searchIconBox), 0);
+  // h: No placeholder on country search.
+  await expect(search).toHaveAttribute("placeholder", "");
+  // k: Focused panel search uses the focus glow token.
+  expectFocusGlow(
+    await search.evaluate((element) => getComputedStyle(element).boxShadow),
+    focusToken,
+  );
+  const countrySelected = page.getByRole("option", { name: "-None-" });
+  const countryCheck = countrySelected.locator(".record-choice-check");
+  expectPixels(await outerLeftInset(panel, countryCheck), 15);
+  await expect(countryCheck).toHaveCSS("width", "11.5px");
+  await expect(countryCheck).toHaveCSS("height", "8.5px");
+  await expect(countryCheck).toHaveCSS("color", "rgb(49, 57, 73)");
+  const countrySelectedRowBox = await bounds(countrySelected);
+  const countryCheckBox = await bounds(countryCheck);
+  expectPixels(verticalCenterOffset(countrySelectedRowBox, countryCheckBox), 0);
+  const countryUnselected = page.getByRole("option", { name: "Alpha" });
+  expectPixels(await outerLeftInset(panel, countryUnselected.locator(".min-w-0").first()), 32.5);
+  expectPixels(await outerLeftInset(panel, countrySelected.locator(".min-w-0").first()), 32.5);
+  await expect(countrySelected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expectNoInsetHighlight(countrySelected);
+  // i: First row starts 7.5 px below search bottom; 32 px pitch.
+  const searchBottom = (await bounds(search)).y + (await bounds(search)).height;
+  const firstRowTop = (await bounds(countrySelected)).y;
+  expectPixels(firstRowTop - searchBottom, 7.5);
   const second = await page.getByRole("option", { name: "Alpha" }).boundingBox();
+  const first = await countrySelected.boundingBox();
   expect((second?.y ?? 0) - (first?.y ?? 0)).toBe(32);
-  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
-    await page.screenshot({
-      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/form-country-panel.png`,
-    });
+  await search.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(countryUnselected).toHaveAttribute("data-focused", "true");
+  await expectInsetUnselectedHighlight(countryUnselected, panel);
+  await search.focus();
+  await countryUnselected.hover();
+  await expect(countryUnselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(countryUnselected, panel);
   await search.fill("ALP");
   await expect(page.getByRole("option")).toHaveCount(2);
   await page.keyboard.press("Escape");
@@ -315,10 +479,39 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   await hydrate(owner);
   await owner.click();
   panel = page.locator(".record-choice-panel");
-  // Owner dropdown: 179px panel with 1px CED0E1 border; selected name is heavier.
+  await expect(panel).toHaveCSS("border-radius", "5px");
+  // record-detail.md › Owner dropdown: 179 px panel, 1 px CED0E1 edge; search auto-focus.
   await expect(panel).toHaveCSS("height", "179px");
   await expect(panel).toHaveCSS("border-color", "rgb(206, 208, 225)");
-  await expect(page.getByRole("textbox", { name: "Search Users" })).toBeFocused();
+  const ownerSearch = page.getByRole("textbox", { name: "Search Users" });
+  await expect(ownerSearch).toBeFocused();
+  // e: Owner search inset 11 px from panel sides, 12 px from panel top.
+  expectPixels(await outerLeftInset(panel, ownerSearch), 11);
+  expectPixels(await outerRightInset(panel, ownerSearch), 11);
+  const ownerPanelTop = (await bounds(panel)).y;
+  const ownerSearchTop = (await bounds(ownerSearch)).y;
+  expectPixels(ownerSearchTop - ownerPanelTop, 12);
+  // f: Owner search height 30 px.
+  await expect(ownerSearch).toHaveCSS("height", "30px");
+  const ownerSearchIcon = panel.locator(".record-panel-search-icon");
+  await expect(ownerSearchIcon).toHaveCSS("width", "13.5px");
+  await expect(ownerSearchIcon).toHaveCSS("height", "13.5px");
+  await expect(ownerSearchIcon).toHaveCSS("color", "rgb(49, 57, 73)");
+  expectPixels(await outerLeftInset(ownerSearch, ownerSearchIcon), 11.5);
+  const ownerSearchBox = await bounds(ownerSearch);
+  const ownerSearchIconBox = await bounds(ownerSearchIcon);
+  expectPixels(verticalCenterOffset(ownerSearchBox, ownerSearchIconBox), 0);
+  // h: Search Users placeholder on owner panel (#8C91AB), 8 px after magnifier.
+  await expect(ownerSearch).toHaveAttribute("placeholder", "Search Users");
+  await expect(ownerSearch).toHaveCSS("color", "rgb(49, 57, 73)");
+  const placeholderColor = await ownerSearch.evaluate(
+    (element) => getComputedStyle(element, "::placeholder").color,
+  );
+  expect(placeholderColor).toBe("rgb(140, 145, 171)");
+  const ownerSearchPaddingLeft = await ownerSearch.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).paddingLeft),
+  );
+  expectPixels(ownerSearchPaddingLeft - (11.5 + 13.5), 8);
   const selected = page.getByRole("option", { name: /Alex Example/ });
   await expect(selected).toHaveAttribute("aria-selected", "true");
   await expectType(
@@ -327,12 +520,66 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
     "--text-md",
     "--font-weight-semibold",
   );
-  await expect(selected.locator("svg")).toHaveCount(2);
-  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
-    await page.screenshot({
-      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/form-owner-panel.png`,
-    });
+  await expect(selected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expectNoInsetHighlight(selected);
+  const ownerCheck = selected.locator(".record-choice-check");
+  expectPixels(await outerLeftInset(panel, ownerCheck), 16);
+  await expect(ownerCheck).toHaveCSS("width", "11.5px");
+  await expect(ownerCheck).toHaveCSS("height", "8.5px");
+  await expect(ownerCheck).toHaveCSS("color", "rgb(49, 57, 73)");
+  const selectedOwnerRow = await bounds(selected);
+  const ownerCheckBox = await bounds(ownerCheck);
+  expectPixels(verticalCenterOffset(selectedOwnerRow, ownerCheckBox), 0);
+  const avatar = selected.locator(".record-owner-avatar");
+  expectPixels(await outerLeftInset(panel, avatar), 32);
+  await expect(avatar).toHaveCSS("width", "30px");
+  await expect(avatar).toHaveCSS("height", "30px");
+  const tokenAvatarColor = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    document.body.appendChild(probe);
+    probe.style.setProperty("background-color", "var(--color-avatar)");
+    const color = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return color;
+  });
+  await expect(avatar).toHaveCSS("background-color", tokenAvatarColor);
+  expectPixels(await horizontalGap(avatar, selected.locator(".record-owner-name")), 11);
+  await expect(selected.locator(".record-owner-email")).toHaveCSS("color", "rgb(97, 110, 136)");
+  const avatars = panel.locator(".record-owner-avatar");
+  const firstAvatar = await bounds(avatars.first());
+  const secondAvatar = await bounds(avatars.nth(1));
+  // j: first avatar 12 px below owner search; 41 px avatar pitch; last avatar 13 px above panel bottom.
+  const ownerSearchBottom = ownerSearchBox.y + ownerSearchBox.height;
+  expectPixels(firstAvatar.y - ownerSearchBottom, 12);
+  expectPixels(secondAvatar.y - firstAvatar.y, 41);
+  const lastAvatar = await bounds(avatars.last());
+  const ownerPanelBox = await bounds(panel);
+  expectPixels(ownerPanelBox.y + ownerPanelBox.height - (lastAvatar.y + lastAvatar.height), 13);
+  const ownerUnselected = page.getByRole("option", { name: /Robin Example/ });
+  await ownerSearch.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(ownerUnselected).toHaveAttribute("data-focused", "true");
+  await expectInsetUnselectedHighlight(ownerUnselected, panel);
+  await ownerSearch.focus();
+  await ownerUnselected.hover();
+  await expect(ownerUnselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(ownerUnselected, panel);
   await page.keyboard.press("Escape");
+  const requiredOwner = demo.getByRole("button", { name: "ownerlookup required", exact: true });
+  await hydrate(requiredOwner);
+  const requiredOwnerShell = requiredOwner.locator(
+    "xpath=ancestor::*[contains(@class,'record-choice-shell')][1]",
+  );
+  await expect(requiredOwnerShell).toHaveCSS(
+    "box-shadow",
+    "rgb(255, 93, 90) 3px 0px 0px 0px inset",
+  );
+  await requiredOwner.focus();
+  const requiredOwnerShadow = await requiredOwnerShell.evaluate(
+    (element) => getComputedStyle(element).boxShadow,
+  );
+  expect(requiredOwnerShadow).toContain("rgb(255, 93, 90) 3px 0px 0px 0px inset");
+  expectFocusGlow(requiredOwnerShadow, focusToken);
 });
 
 test("form demo meets the accessibility baseline", async ({ page }) => {

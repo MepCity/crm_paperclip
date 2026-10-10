@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Triangle,
   Users,
   X,
 } from "lucide-react";
@@ -38,6 +39,23 @@ function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 8 4.5" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
       <path d="M0 0h8L4 4.5Z" />
     </svg>
+  );
+}
+
+/** Rail/product selector caret; app-shell.md › Rail/product selector (10 × 5 ink). */
+function ProductCaretDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, style, ...rest } = props;
+  return (
+    <Triangle
+      fill="currentColor"
+      strokeWidth={0}
+      viewBox="3 4 20 17"
+      preserveAspectRatio="none"
+      overflow="hidden"
+      style={{ transform: "rotate(180deg)", ...style }}
+      {...filterIconRoleProps(props)}
+      {...rest}
+    />
   );
 }
 
@@ -158,7 +176,9 @@ function AvatarPerson(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Filled portrait silhouette clipped inside the Lead Image ring. */
+/** Filled portrait silhouette clipped inside the Lead Image ring.
+ * record-detail.md › Portrait icon, form and header: 16 × 15.5 px head, body joined at
+ * 31 px and 16 px wide there, 34 px wide at 37.5 px, merging with the ring below it. */
 function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -168,8 +188,8 @@ function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
       fill="currentColor"
       {...props}
     >
-      <circle cx="24" cy="23" r="8" />
-      <path d="M19.75 29h8.5v1.5C31.5 31 34.5 31.8 36 33c1.8 1.5 3.05 2.5 3.75 3L44 48H4l4.25-12C9 35.5 10.2 34.5 12 33c1.5-1.2 4.5-2 7.75-2.5Z" />
+      <ellipse cx="24" cy="22.75" rx="8" ry="7.75" />
+      <path d="M16 31h16l9 6.5L57 49H-9L7 37.5Z" />
     </svg>
   );
 }
@@ -273,6 +293,24 @@ function RecordCheck(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** Dropdown panel row checkmark; record-detail.md › Dropdown panel geometry. */
+function RecordPanelCheck(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 11.5 8.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="m0.6 4.2 2.9 2.6 7.5-7.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 function RecordInfo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -285,6 +323,50 @@ function RecordInfo(props: SVGProps<SVGSVGElement>) {
     >
       <circle cx="8" cy="8" r="6" />
       <path d="M8 7v4M8 4v1" />
+    </svg>
+  );
+}
+
+/**
+ * Column options menu arrows. Original drawings: the list spec measures the glyph colour
+ * only, never its shape, so the shape follows the shared arrow idiom (stem plus head).
+ */
+function ColumnSortArrowUp(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M8 13V4" />
+      <path d="m4.5 7.5 3.5-3.5 3.5 3.5" />
+    </svg>
+  );
+}
+
+function ColumnSortArrowDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M8 3v9" />
+      <path d="m4.5 8.5 3.5 3.5 3.5-3.5" />
     </svg>
   );
 }
@@ -319,14 +401,20 @@ export const Icons = {
   recordFormCaret: RecordFormCaret,
   recordChevron: RecordChevron,
   recordCheck: RecordCheck,
+  inlineCheck: InlineCheck,
+  recordPanelCheck: RecordPanelCheck,
+  recordPanelSearch: FilterSearch,
   recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
   thumbDown: ThumbDown,
   statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
+  productCaretDown: ProductCaretDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
   createRecordPlus: CreateRecordPlus,
+  columnSortAsc: ColumnSortArrowUp,
+  columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
   building: Building2,
   check: Check,
@@ -478,6 +566,23 @@ function TimelineGenericIcon(props: SVGProps<SVGSVGElement>) {
     <ListGlyph {...props}>
       <circle cx="12" cy="12" r="4" />
     </ListGlyph>
+  );
+}
+
+/** Original detail-inline check, sized to the measured option/checkmark role. */
+function InlineCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 12 9"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.75"
+      {...props}
+    >
+      <path d="m0.5 5.5 3.5 3 7.5-8" />
+    </svg>
   );
 }
 

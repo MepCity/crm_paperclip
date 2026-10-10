@@ -1155,4 +1155,38 @@ describe("ModuleListScreen", () => {
       "truncate",
     );
   });
+
+  it("writes the column header sort into the address and starts on page one", async () => {
+    navigation.params = new URLSearchParams("page=2&per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Company column options" }));
+    await user.click(screen.getByRole("menuitem", { name: "Desc" }));
+
+    await waitFor(() => {
+      const href = navigation.push.mock.calls.at(-1)?.[0] ?? "";
+      expect(String(href)).toContain("sort_by=Company");
+      const params = new URL(String(href), "http://localhost").searchParams;
+      expect(params.get("sort_order")).toBe("desc");
+      expect(params.get("page")).toBeNull();
+      expect(params.get("per_page")).toBe("10");
+    });
+  });
+
+  it("shows the configured linkFieldLabel in the table column header", async () => {
+    screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+    expect(screen.getByRole("columnheader", { name: "Lead Name" })).toBeTruthy();
+    expect(screen.queryByRole("columnheader", { name: "Full Name" })).toBeNull();
+  });
 });

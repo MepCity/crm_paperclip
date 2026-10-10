@@ -42,6 +42,35 @@
   gap: var(--size-form-action-gap);
 }
 
+.record-form-strip__action--cancel {
+  width: var(--size-form-page-cancel-width);
+}
+
+.record-form-strip__action--save-new {
+  width: var(--size-form-page-save-new-width);
+}
+
+.record-form-strip__action--save {
+  width: var(--size-form-page-save-width);
+}
+
+.record-form-strip__action {
+  white-space: nowrap;
+}
+
+.record-form-error-banner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--record-form-content-width) + 2 * var(--size-form-card-inset));
+  margin: 0;
+  padding: var(--space-2) var(--size-form-card-inset) 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.2;
+  color: var(--color-form-required);
+  background-color: var(--color-surface);
+}
+
 .record-form-card {
   box-sizing: border-box;
   width: 100%;
@@ -157,11 +186,30 @@
   line-height: var(--size-form-label-line-height);
   color: var(--color-text-muted);
   text-align: right;
+  /* record-detail.md › Form text baselines: label ink top 12 px below the input top. Painted
+     so a wrapped label keeps the measured row height instead of pushing the next row down. */
+  transform: translateY(var(--size-form-label-baseline-offset));
 }
 
 .record-form-row__control {
   grid-column: 3;
   min-width: 0;
+}
+
+/* record-detail.md › Email Opt Out checkbox: the box sits 5 px inside the input column and
+   10 px below the row top (9 px above its bottom), not flush with the row's top-left corner.
+   Scoped to boolean rows so text, list and dialog checkboxes keep their own placement. */
+[data-form-type="boolean"] .record-form-row__control {
+  padding-top: var(--size-form-checkbox-inset-top);
+  padding-left: var(--size-form-checkbox-inset-start);
+}
+
+/* record-detail.md › Form text baselines: interior text keeps 12 px above the cap and 12 px
+   below the flat letter ink inside the 34 px box. The extra top inset centers the ink; the
+   box height never changes, so the measured rows stay where they are. */
+.record-form-row__control .record-input-frame > .record-control,
+.record-form-row__control .record-choice-trigger {
+  padding-top: var(--size-form-control-text-padding-top);
 }
 
 .record-form-row--full .record-form-row__control {
@@ -177,9 +225,14 @@
     var(--size-form-input-left-width)
   );
   margin: 0 0 var(--size-form-field-group-margin-bottom);
-  padding: 0 var(--size-form-field-group-padding-end) 0 0;
+  padding: 0 calc(var(--size-form-field-group-padding-end) - var(--size-form-layout-subpixel-trim))
+    0 0;
   border: 1px solid var(--color-form-field-group-border);
   border-radius: var(--radius-form-field-group);
+}
+
+.record-form-page .record-form-field-group {
+  border-radius: var(--size-form-address-radius);
 }
 
 .record-form-field-group__legend {
@@ -200,7 +253,44 @@
   display: flex;
   flex-direction: column;
   gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
-  padding-top: var(--size-form-field-group-body-top);
+  padding-top: calc(var(--size-form-field-group-body-top) - var(--size-form-layout-subpixel-trim));
+}
+
+.record-form-clear-address {
+  align-self: flex-end;
+  margin-bottom: calc(
+    var(--size-form-address-footer-bottom) -
+    var(--size-form-layout-subpixel-trim)
+  );
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-form-clear-address);
+  font-size: var(--text-md);
+  line-height: var(--size-form-label-line-height);
+  cursor: pointer;
+}
+
+.record-form-label-line {
+  display: block;
+}
+
+.record-form-page .record-form-coordinates {
+  gap: var(--size-form-coordinate-gap);
+}
+
+.record-form-page .record-form-coordinates > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-form-page .record-form-strip__actions {
+  gap: var(--space-2);
+}
+
+.record-form-page .record-form-card__body {
+  padding-bottom: var(--size-form-description-rule-gap);
+  border-bottom: 1px solid var(--color-detail-divider);
 }
 
 .record-form-field-group .record-form-row--left {

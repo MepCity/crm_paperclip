@@ -11,7 +11,10 @@ const expectedIcons = [
   "recordFormCaret",
   "recordChevron",
   "recordCheck",
+  "inlineCheck",
   "recordInfo",
+  "recordPanelCheck",
+  "recordPanelSearch",
   "recordPortrait",
   "thumbDown",
   "statusCheck",
@@ -19,6 +22,8 @@ const expectedIcons = [
   "filterChevronRight",
   "filterSearch",
   "createRecordPlus",
+  "columnSortAsc",
+  "columnSortDesc",
   "building",
   "check",
   "chevronUp",
@@ -28,6 +33,7 @@ const expectedIcons = [
   "hideMenu",
   "showMenu",
   "plus",
+  "productCaretDown",
   "settings",
   "users",
   "spinner",
@@ -80,6 +86,22 @@ test("Icons stays decorative when a primitive hides it", () => {
   render(<Icon aria-hidden="true" />);
 
   expect(screen.queryByRole("img")).toBeNull();
+});
+
+test("form portrait keeps its measured silhouette and stays separate from the header one", () => {
+  const { container: form } = render(<Icons.recordPortraitSilhouette aria-label="Lead Image" />);
+  const { container: header } = render(<Icons.recordPortrait aria-label="Record image" />);
+
+  // record-detail.md › Portrait icon, form and header: different silhouette, so the form
+  // placeholder keeps its own drawing instead of merging into the header icon.
+  expect(form.innerHTML).not.toBe(header.innerHTML);
+  // Head ink box 16 × 15.5 px inside the 48 px disc; the body joins it 0.5 px below.
+  const head = form.querySelector("ellipse");
+  expect(head?.getAttribute("cx")).toBe("24");
+  expect(head?.getAttribute("cy")).toBe("22.75");
+  expect(head?.getAttribute("rx")).toBe("8");
+  expect(head?.getAttribute("ry")).toBe("7.75");
+  expect(form.querySelector("path")?.getAttribute("d")).toContain("M16 31h16");
 });
 
 test("filter icons expose img role only with aria-label", () => {

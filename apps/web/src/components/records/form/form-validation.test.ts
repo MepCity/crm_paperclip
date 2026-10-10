@@ -63,6 +63,13 @@ test("email and integer format failures use format message", () => {
   expect(errors.No_of_Employees).toBe("Please enter a valid No. of Employees.");
 });
 
+test("whole numbers and empty optional integers pass", () => {
+  const fields = [field("No_of_Employees", "No. of Employees", "integer", false)];
+  for (const value of [12, 0, null]) {
+    expect(validateRecordForm(fields, { No_of_Employees: value }, (f) => f.label)).toEqual({});
+  }
+});
+
 test("isEmailFormatValid accepts common addresses", () => {
   expect(isEmailFormatValid("user@example.test")).toBe(true);
   expect(isEmailFormatValid("bad")).toBe(false);

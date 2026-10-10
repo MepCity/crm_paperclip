@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -90,12 +90,14 @@ export function Submenu<T extends object>({
 export function Menu<T extends object>({
   width,
   appearance = "default",
+  placement,
   header,
   shouldCloseOnInteractOutside,
   ...props
 }: AriaMenuProps<T> & {
-  width?: "create" | "actions" | "settings";
+  width?: "create" | "actions" | "settings" | "columnOptions";
   appearance?: "default" | "measured" | "record";
+  placement?: ComponentProps<typeof Popover>["placement"];
   header?: ReactNode;
   /** Lets a nested submenu popover count as inside the menu (it portals outside it). */
   shouldCloseOnInteractOutside?: (element: Element) => boolean;
@@ -109,12 +111,14 @@ export function Menu<T extends object>({
           ? "w-(--size-popover-actions-width)"
           : width === "settings"
             ? "w-(--size-popover-settings-width)"
-            : appearance === "measured"
-              ? "w-(--size-menu-width)"
-              : "w-48";
+            : width === "columnOptions"
+              ? "w-(--size-popover-column-options-width)"
+              : appearance === "measured"
+                ? "w-(--size-menu-width)"
+                : "w-48";
   return (
     <Popover
-      placement="bottom end"
+      placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
       className={menuPopoverClass(widthClass, appearance)}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}

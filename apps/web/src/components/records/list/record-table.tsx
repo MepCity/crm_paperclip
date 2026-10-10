@@ -1,10 +1,13 @@
 "use client";
 
 import type { FormatOptions } from "@crm/core/format";
-import type { FieldDefinition, RecordData } from "@crm/core/records";
-import type { ReactNode } from "react";
+import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
+import { type ReactNode, useState } from "react";
 import { AlphabetFilter } from "@/components/ui/alphabet-filter";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Icons } from "@/components/ui/icon";
+import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
 
@@ -14,10 +17,19 @@ export interface RecordTableProps {
   records: readonly RecordData[];
   /** API name of the column whose value links to the row. */
   linkField: string;
+  /**
+   * Display label for the link column header. When omitted, the field's own
+   * metadata label is used.
+   */
+  linkFieldLabel?: string;
   rowHref: (record: RecordData) => string;
   /** Selected record ids. Selection of ids outside this page is preserved. */
   selectedIds: readonly string[];
   onSelectedIdsChange: (ids: readonly string[]) => void;
+  /** API names whose header offers the column options menu. */
+  sortableFields: ReadonlySet<string>;
+  /** Called with the order picked in that menu. The page owns the applied sort. */
+  onSortChange: (sort: SortSpec) => void;
   /**
    * Alphabetical filter of the link column header. Drawn only when it is supplied:
    * `value` is the chosen letter, or null for `All`.
@@ -74,9 +86,12 @@ export function RecordTable({
   columns,
   records,
   linkField,
+  linkFieldLabel,
   rowHref,
   selectedIds,
   onSelectedIdsChange,
+  sortableFields,
+  onSortChange,
   alphabet,
   wrapText,
   emptyMessage,
@@ -157,34 +172,46 @@ export function RecordTable({
                   <span className="sr-only">Badges</span>
                 </th>
               )}
-              {columns.map((field) => (
-                <th
-                  key={field.apiName}
-                  scope="col"
-                  data-part="column"
-                  aria-label={field.label}
-                  className={`${dataColumn} ${headerBox}`}
-                >
-                  <div className={`flex h-full items-center overflow-hidden ${inset}`}>
-                    <span data-part="header-label" className="min-w-0 truncate">
-                      {field.label}
-                    </span>
-                    {field.apiName === linkField && alphabet ? (
-                      <AlphabetFilter
-                        label="Filter by first letter"
-                        value={alphabet.value}
-                        onChange={alphabet.onChange}
-                        className="shrink-0"
+              {columns.map((field) => {
+                const isLinkField = field.apiName === linkField;
+                const label = isLinkField && linkFieldLabel ? linkFieldLabel : field.label;
+                return (
+                  <th
+                    key={field.apiName}
+                    scope="col"
+                    data-part="column"
+                    aria-label={label}
+                    className={`${dataColumn} ${headerBox} group/column`}
+                  >
+                    <div className={`flex h-full items-center overflow-hidden ${inset}`}>
+                      <span data-part="header-label" className="min-w-0 truncate">
+                        {label}
+                      </span>
+                      {isLinkField && alphabet ? (
+                        <AlphabetFilter
+                          label="Filter by first letter"
+                          value={alphabet.value}
+                          onChange={alphabet.onChange}
+                          className="shrink-0"
+                        />
+                      ) : null}
+                    </div>
+                    {sortableFields.has(field.apiName) ? (
+                      <ColumnOptionsMenu
+                        field={field.apiName}
+                        label={label}
+                        alwaysVisible={isLinkField}
+                        onSortChange={onSortChange}
                       />
                     ) : null}
-                  </div>
-                  <span
-                    data-part="divider"
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-(--size-list-header-rule-offset) right-0 h-(--size-list-header-rule) w-px bg-panel-border"
-                  />
-                </th>
-              ))}
+                    <span
+                      data-part="divider"
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-(--size-list-header-rule-offset) right-0 h-(--size-list-header-rule) w-px bg-panel-border"
+                    />
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           {empty ? null : (
@@ -264,6 +291,72 @@ export function RecordTable({
       </div>
       <RecordTableFooter {...footer} />
     </div>
+  );
+}
+
+/** Kept invisible until the header is hovered or holds keyboard focus. */
+const hoverReveal = [
+  "opacity-0 pointer-events-none",
+  "group-hover/column:opacity-100 group-hover/column:pointer-events-auto",
+  "group-focus-within/column:opacity-100 group-focus-within/column:pointer-events-auto",
+].join(" ");
+
+/**
+ * Column header options: the trigger sits at the header cell's trailing end, before its
+ * divider, and is placed outside the label flow so the label keeps its truncation width.
+ * The menu offers `Asc` and `Desc` only; the reference's other three entries are not drawn.
+ */
+function ColumnOptionsMenu({
+  field,
+  label,
+  alwaysVisible,
+  onSortChange,
+}: {
+  field: string;
+  label: string;
+  alwaysVisible: boolean;
+  onSortChange: (sort: SortSpec) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const name = `${label} column options`;
+  return (
+    <MenuTrigger isOpen={open} onOpenChange={setOpen}>
+      <Button
+        aria-label={name}
+        variant="icon"
+        size="compact"
+        data-part="column-options"
+        className={[
+          "absolute top-1/2 right-(--size-list-cell-inset) -translate-y-1/2",
+          "h-(--size-menu-icon) w-(--size-menu-icon)",
+          alwaysVisible || open ? "" : hoverReveal,
+        ].join(" ")}
+      >
+        <Icons.sort aria-hidden="true" className="h-(--size-menu-icon) w-(--size-menu-icon)" />
+      </Button>
+      <Menu
+        aria-label={name}
+        width="columnOptions"
+        appearance="measured"
+        placement="bottom start"
+        onAction={(key) => onSortChange({ field, order: key === "desc" ? "desc" : "asc" })}
+      >
+        <MenuItem id="asc" appearance="measured" textValue="Asc">
+          <Icons.columnSortAsc
+            aria-hidden="true"
+            className="shrink-0 text-menu-icon h-(--size-menu-icon) w-(--size-menu-icon)"
+          />
+          Asc
+        </MenuItem>
+        <MenuItem id="desc" appearance="measured" textValue="Desc">
+          <Icons.columnSortDesc
+            aria-hidden="true"
+            className="shrink-0 text-menu-icon h-(--size-menu-icon) w-(--size-menu-icon)"
+          />
+          Desc
+        </MenuItem>
+      </Menu>
+    </MenuTrigger>
   );
 }
 

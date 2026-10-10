@@ -1,6 +1,6 @@
 "use client";
 
-import { isAppError, NotFoundError, type ValidationError } from "@crm/core/errors";
+import { isAppError, NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -15,6 +15,7 @@ import { buildCloneInput } from "./build-clone-input";
 import { CoordinatesInput, PrefixInput } from "./composite-inputs";
 import { FieldGroup } from "./field-group";
 import { FieldInput, type OwnerOption } from "./field-input";
+import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
 import {
   addressLabel,
@@ -29,8 +30,10 @@ import {
   textValue,
 } from "./form-model";
 import { FormRow, type FormRowColumn } from "./form-row";
+import { formSaveBannerMessage, formSaveFieldErrors } from "./form-save-error";
 import { FormSection } from "./form-section";
 import { validateRecordForm } from "./form-validation";
+import { RECORD_FORM_COPY } from "./record-form-copy";
 import { RecordFormShell } from "./record-form-shell";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
@@ -122,7 +125,7 @@ function LoadedRecordForm({
     intent === "create" && !cloneSeed ? emptyValues() : baseline,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [unsavedOpen, setUnsavedOpen] = useState(false);
   const [dirtyBaseline, setDirtyBaseline] = useState(() => ({ ...values }));
@@ -238,10 +241,10 @@ function LoadedRecordForm({
 
   async function save(andNew: boolean) {
     if (writeInFlight.current) return;
-    setFormError(false);
     if (!runClientValidation()) return;
     writeInFlight.current = true;
     setErrors({});
+    setBannerMessage(null);
     try {
       const input = formPayload(fields, values, editing ? baseline : undefined);
       const saved = editing
@@ -254,14 +257,15 @@ function LoadedRecordForm({
         config.navigate(config.paths.create);
       } else config.navigate(config.paths.detail(saved.id));
     } catch (error) {
-      if (isAppError(error) && error.code === "validation") {
-        const fieldErrors = (error as ValidationError).fieldErrors;
-        const messages = Object.fromEntries(
-          Object.entries(fieldErrors).map(([name, items]) => [name, items.join(" ")]),
-        );
+      if (isAppError(error) && error.code === "unauthenticated") return;
+      const fieldMessages = formSaveFieldErrors(error);
+      if (fieldMessages) {
         errorFocusPending.current = true;
-        setErrors(messages);
-      } else setFormError(true);
+        setErrors(fieldMessages);
+        return;
+      }
+      const message = formSaveBannerMessage(error);
+      if (message) setBannerMessage(message);
     } finally {
       writeInFlight.current = false;
     }
@@ -285,9 +289,17 @@ function LoadedRecordForm({
         <CoordinatesInput
           hideClearAction
           id={id}
-          label={coordinates && parent ? addressLabel(coordinates, parent) : "Coordinates"}
+          label={
+            coordinates && parent
+              ? addressLabel(coordinates, parent)
+              : RECORD_FORM_COPY.coordinatesFallback
+          }
           latitudeLabel={label}
-          longitudeLabel={longitude && parent ? addressLabel(longitude, parent) : "Longitude"}
+          longitudeLabel={
+            longitude && parent
+              ? addressLabel(longitude, parent)
+              : RECORD_FORM_COPY.longitudeFallback
+          }
           latitude={numberValue(values[field.apiName])}
           longitude={numberValue(values[address.longitude])}
           disabled={saving || field.readOnly || longitude?.readOnly}
@@ -303,7 +315,11 @@ function LoadedRecordForm({
       return (
         <div key={field.apiName} data-form-field={field.apiName}>
           <FormRow
-            label={coordinates && parent ? addressLabel(coordinates, parent) : "Coordinates"}
+            label={
+              coordinates && parent
+                ? addressLabel(coordinates, parent)
+                : RECORD_FORM_COPY.coordinatesFallback
+            }
             controlId={id}
             column={column}
           >
@@ -366,7 +382,7 @@ function LoadedRecordForm({
           textPrefix={rules.textPrefixes?.[field.apiName]}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
           currencyInformation={
-            field.apiName === rules.currency ? "Currency information" : undefined
+            field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined
           }
         />
       );
@@ -398,6 +414,7 @@ function LoadedRecordForm({
         title={title}
         formAriaLabel={title}
         actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
+        errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
         disabled={saving}
         onCancel={requestCancel}
         onSave={() => {
@@ -411,7 +428,6 @@ function LoadedRecordForm({
           void save(false);
         }}
       >
-        {formError ? <Alert variant="danger">Unable to save the record.</Alert> : null}
         {sections.map((section) => {
           const address =
             config.rules.address &&
@@ -442,7 +458,7 @@ function LoadedRecordForm({
                       }
                     }}
                   >
-                    <span>Clear All</span>
+                    <span>{RECORD_FORM_COPY.clearAll}</span>
                   </button>
                 </FieldGroup>
               ) : columns.length === 1 ? (

@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
+import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "../src/components/records/form/form-save-error";
 import { operationPath, operations } from "../src/lib/api/wire/operations";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
-import { expectWithin1, textCapLeft } from "./support/geometry";
+import { expectWithin1, textSolidInkBand } from "./support/geometry";
 import { createOrganization } from "./support/org";
-import { expect, test } from "./support/test";
+import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType, tokenValue } from "./support/typography";
 
 function px(value: string) {
@@ -124,6 +125,152 @@ async function fillRequired(page: Page, suffix = "One") {
   await page.getByRole("textbox", { name: "Last Name", exact: true }).fill(`Form Lead ${suffix}`);
 }
 
+async function assertLeadFormVisualLayout(page: Page, orgSlug: string, screenshotPrefix: string) {
+  const strip = page.locator("[data-record-form-strip]");
+  const stripBox = await strip.boundingBox();
+  if (!stripBox) throw new Error("Missing strip");
+  expectWithin1(stripBox.x, 332);
+  expectWithin1(stripBox.y, 50);
+  expectWithin1(stripBox.height, 57);
+  const card = await page.locator("[data-record-form-card]").boundingBox();
+  if (!card) throw new Error("Missing card");
+  expectWithin1(card.x, 332);
+  expectWithin1(card.y, 107);
+  expectWithin1(card.width, 1126);
+  await expect(strip).toHaveCSS("background-color", "rgb(238, 241, 249)");
+  await expectType(
+    page,
+    page.locator("[data-record-form-title]"),
+    "--text-2xl",
+    "--font-weight-bold",
+  );
+  const left = await page.locator("[data-form-field=Owner] .record-choice-shell").boundingBox();
+  const right = await page.locator("[data-form-field=Company] .record-input-frame").boundingBox();
+  if (!left || !right) throw new Error("Missing input");
+  expectWithin1(left.x, 553);
+  expectWithin1(left.y, 312);
+  expectWithin1(left.width, 320);
+  expectWithin1(left.height, 34);
+  expectWithin1(right.x, 1131.5);
+  expectWithin1(right.width, 314.5);
+  expectWithin1(right.y, 312);
+  const name = await page.locator("[data-form-field=Last_Name] .record-input-frame").boundingBox();
+  if (!name) throw new Error("Missing name input");
+  expectWithin1(name.y - right.y, 54);
+  const label = await page
+    .locator(".record-form-row__label")
+    .filter({ hasText: /^Company$/ })
+    .boundingBox();
+  if (!label) throw new Error("Missing label");
+  expectWithin1(label.x + label.width, 1094.5);
+  const actions = await page.locator("[data-record-form-actions] > button").evaluateAll((buttons) =>
+    buttons.map((button) => {
+      const box = button.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    }),
+  );
+  for (const [index, expected] of [
+    [1181, 74],
+    [1263, 119.5],
+    [1390.5, 59.5],
+  ].entries()) {
+    const box = actions[index];
+    if (!box) throw new Error("Missing action");
+    expectWithin1(box.x, expected[0] ?? 0);
+    expectWithin1(box.width, expected[1] ?? 0);
+    expectWithin1(box.y, 62);
+    expectWithin1(box.height, 32);
+  }
+  const portrait = await page.getByRole("img", { name: "Lead Image", exact: true }).boundingBox();
+  if (!portrait) throw new Error("Missing portrait");
+  expectWithin1(portrait.x, 344);
+  expectWithin1(portrait.y, 170);
+  expectWithin1(portrait.width, 48);
+  const picker = await page.getByRole("button", { name: "Open owner picker" }).boundingBox();
+  if (!picker) throw new Error("Missing picker");
+  expectWithin1(picker.x, 840);
+  expectWithin1(picker.width, 32);
+  await expect(page.locator("[data-form-field=Company] .record-input-frame")).toHaveCSS(
+    "box-shadow",
+    "rgb(255, 93, 90) 3px 0px 0px 0px inset",
+  );
+  const revenue = page.locator("[data-form-field=Annual_Revenue]");
+  const information = revenue.getByRole("img", { name: "Currency information" });
+  const informationBox = await information.boundingBox();
+  const iconBox = await information.locator("svg").boundingBox();
+  if (!informationBox || !iconBox) throw new Error("Missing currency information icon");
+  expectWithin1(informationBox.x, 840);
+  expectWithin1(informationBox.width, 32);
+  expectWithin1(informationBox.height, 32);
+  expectWithin1(iconBox.width, 16);
+  expectWithin1(iconBox.height, 16);
+  await expect(information).toHaveCSS("background-color", "rgb(240, 244, 255)");
+  await expect(information).toHaveCSS("color", "rgb(49, 57, 73)");
+  const currencyResponse = await page.request.get(operationPath(operations.currencies), {
+    headers: { "X-CRM-ORG": orgSlug },
+  });
+  expect(currencyResponse.status()).toBe(200);
+  const currencies = (await currencyResponse.json()).currencies as [{ symbol: string }];
+  const prefix = revenue.locator(".record-currency-prefix > span").first();
+  const divider = revenue.locator(".record-currency-divider");
+  await expect(prefix).toHaveText(currencies[0].symbol);
+  await expect(prefix).toHaveCSS("color", await tokenValue(page, "color", "--color-text-muted"));
+  const input = await revenue.locator(".record-input-frame").boundingBox();
+  const prefixBox = await prefix.boundingBox();
+  const dividerBox = await divider.boundingBox();
+  if (!input || !prefixBox || !dividerBox) throw new Error("Missing currency prefix");
+  expectWithin1(prefixBox.x - input.x, 11.5);
+  expectWithin1(dividerBox.x - (prefixBox.x + prefixBox.width), 9.5);
+  expectWithin1(dividerBox.width, 1);
+  await expect(divider).toHaveCSS(
+    "background-color",
+    await tokenValue(page, "background-color", "--color-control-border"),
+  );
+  expectWithin1(dividerBox.height, 20);
+  expectWithin1(dividerBox.y - input.y, 7);
+  expectWithin1(input.y + input.height - dividerBox.y - dividerBox.height, 7);
+  await expect(revenue.getByRole("button")).toHaveCount(0);
+  const address = await page.locator("[data-record-form-field-group]").boundingBox();
+  const country = await page
+    .locator("[data-form-field=Country] .record-choice-trigger")
+    .boundingBox();
+  if (!address || !country) throw new Error("Missing address");
+  expectWithin1(address.x, 344);
+  expectWithin1(address.width, 529);
+  expectWithin1(address.height, 467);
+  expectWithin1(country.x, 554);
+  expectWithin1(country.width, 303);
+  expectWithin1(country.y - address.y, 31);
+  const building = await page
+    .locator("[data-form-field=Flat_House_No_Building_Apartment_Name] .record-input-frame")
+    .boundingBox();
+  const street = await page.locator("[data-form-field=Street] .record-input-frame").boundingBox();
+  const coordinates = await page.locator(".record-form-coordinates").boundingBox();
+  if (!building || !street || !coordinates) throw new Error("Missing address row");
+  expectWithin1(street.y - building.y, 80);
+  expectWithin1(address.y + address.height - coordinates.y - coordinates.height, 52.5);
+  const description = await page
+    .getByRole("textbox", { name: "Description", exact: true })
+    .boundingBox();
+  if (!description) throw new Error("Missing description");
+  expectWithin1(description.x, 553);
+  expectWithin1(description.width, 639);
+  expectWithin1(description.height, 34);
+  expectWithin1(description.y - address.y - address.height, 111);
+  await expectNoA11yViolations(page, {
+    exclude: [
+      "#record-form-Salutation-value.record-prefix-empty",
+      ".record-form-clear-address > span",
+    ],
+  });
+  const output = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
+  if (output) {
+    await page.screenshot({ path: join(output, `${screenshotPrefix}.png`) });
+    await page.locator("[data-record-form-field-group]").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(output, `${screenshotPrefix}-address.png`) });
+  }
+}
+
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1470, height: 835 });
 });
@@ -176,6 +323,47 @@ test("Save and New clears the form and leaves a saved record in the list", async
   await expect(page.getByRole("link", { name: "Form Lead New", exact: true })).toBeVisible();
 });
 
+test("blocked save keeps the form, values and error banner below the strip", async ({
+  page,
+  pageErrors,
+}) => {
+  await openCreate(page);
+  await fillRequired(page, "Net");
+  let blocked = true;
+  await page.route("**/crm/v2.2/Leads", async (route) => {
+    if (route.request().method() === "POST" && blocked) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const banner = page.locator("[data-record-form-error-banner]");
+  await expect(banner).toHaveText(FORM_SAVE_GENERIC_ERROR_MESSAGE);
+  await expect(page.getByRole("textbox", { name: "Company", exact: true })).toHaveValue(
+    "Form Company Net",
+  );
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
+  const strip = await page.locator("[data-record-form-strip]").boundingBox();
+  const bannerBox = await banner.boundingBox();
+  if (!strip || !bannerBox) throw new Error("Missing strip or banner");
+  expectWithin1(bannerBox.y, strip.y + strip.height);
+  await expect(banner).toHaveCSS("color", await tokenValue(page, "color", "--color-form-required"));
+  // ADR 0003 §8: measured reference error ink #ff5d5a on white remains below AA.
+  await expectNoA11yViolations(page, {
+    exclude: [
+      "#record-form-Salutation-value.record-prefix-empty",
+      ".record-form-clear-address > span",
+      "[data-record-form-error-banner]",
+    ],
+  });
+  const next = pageErrors.filter((error) => !error.includes("net::ERR_FAILED"));
+  pageErrors.splice(0, pageErrors.length, ...next);
+  blocked = false;
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead Net");
+});
+
 test("client validation keeps the form open, shows messages and focuses Company", async ({
   page,
 }) => {
@@ -195,6 +383,17 @@ test("client validation keeps the form open, shows messages and focuses Company"
   await expect(saveRequest).rejects.toThrow();
 });
 
+test("server field errors keep the form open and focus Company", async ({ page, pageErrors }) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Validation Lead");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const company = page.getByRole("textbox", { name: "Company", exact: true });
+  await expect(company).toHaveAttribute("aria-invalid", "true");
+  await expect(company).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
+  ignoreFailedResponses(pageErrors, [400]);
+});
+
 test("invalid email shows a format message without saving", async ({ page }) => {
   await openCreate(page);
   await fillRequired(page);
@@ -207,6 +406,34 @@ test("invalid email shows a format message without saving", async ({ page }) => 
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Please enter a valid Email.", { exact: true })).toBeVisible();
   await expect(saveRequest).rejects.toThrow();
+});
+
+test("a decimal employee count stays in the field, shows a format message and blocks the save", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await fillRequired(page);
+  const employees = page.getByRole("textbox", { name: "No. of Employees", exact: true });
+  await employees.fill("12.5");
+  await employees.press("Tab");
+  const saveRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Leads",
+    { timeout: 2_000 },
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(employees).toHaveValue("12.5");
+  const message = page.getByText("Please enter a valid No. of Employees.", { exact: true });
+  await expect(message).toBeVisible();
+  await expect(employees).toHaveAttribute("aria-invalid", "true");
+  await expect(employees).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
+  await expect(saveRequest).rejects.toThrow();
+  await employees.fill("12");
+  await employees.press("Tab");
+  await expect(message).toBeHidden();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead One");
 });
 
 test("validation and unsaved dialog visuals match record-detail tokens", async ({ page }) => {
@@ -329,177 +556,171 @@ test("Create geometry follows record-detail Visual layout and passes accessibili
 }) => {
   const { org } = await openCreate(page);
   await page.evaluate(() => document.fonts.ready);
-  const strip = page.locator("[data-record-form-strip]");
-  const stripBox = await strip.boundingBox();
-  if (!stripBox) throw new Error("Missing strip");
-  expectWithin1(stripBox.x, 332);
-  expectWithin1(stripBox.y, 50);
-  expectWithin1(stripBox.height, 57);
-  const card = await page.locator("[data-record-form-card]").boundingBox();
-  if (!card) throw new Error("Missing card");
-  expectWithin1(card.x, 332);
-  expectWithin1(card.y, 107);
-  expectWithin1(card.width, 1126);
-  await expect(strip).toHaveCSS("background-color", "rgb(238, 241, 249)");
-  await expectType(
-    page,
-    page.locator("[data-record-form-title]"),
-    "--text-2xl",
-    "--font-weight-bold",
+  await assertLeadFormVisualLayout(page, org.slug, "lead-create");
+});
+
+test("Edit geometry follows record-detail Visual layout and passes accessibility", async ({
+  page,
+}) => {
+  const { org } = await openCreate(page);
+  await fillRequired(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead One");
+  await page.getByRole("link", { name: "Edit", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Edit Lead" })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await assertLeadFormVisualLayout(page, org.slug, "lead-edit");
+});
+
+async function measureBounds(locator: import("@playwright/test").Locator) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("Expected a rendered measurement target");
+  return box;
+}
+
+async function cssNumber(locator: import("@playwright/test").Locator, property: string) {
+  return locator.evaluate(
+    (element, name) => Number.parseFloat(getComputedStyle(element).getPropertyValue(name)),
+    property,
   );
-  const left = await page.locator("[data-form-field=Owner] .record-choice-shell").boundingBox();
-  const right = await page.locator("[data-form-field=Company] .record-input-frame").boundingBox();
-  if (!left || !right) throw new Error("Missing input");
-  expectWithin1(left.x, 553);
-  expectWithin1(left.y, 312);
-  expectWithin1(left.width, 320);
-  expectWithin1(left.height, 34);
-  expectWithin1(right.x, 1131.5);
-  expectWithin1(right.width, 314.5);
-  expectWithin1(right.y, 312);
-  const name = await page.locator("[data-form-field=Last_Name] .record-input-frame").boundingBox();
-  if (!name) throw new Error("Missing name input");
-  expectWithin1(name.y - right.y, 54);
-  const label = await page
-    .locator(".record-form-row__label")
-    .filter({ hasText: /^Company$/ })
-    .boundingBox();
-  if (!label) throw new Error("Missing label");
-  expectWithin1(label.x + label.width, 1094.5);
-  const actions = await page.locator("[data-record-form-actions] > button").evaluateAll((buttons) =>
-    buttons.map((button) => {
-      const box = button.getBoundingClientRect();
-      return { x: box.x, y: box.y, width: box.width, height: box.height };
-    }),
-  );
-  for (const [index, expected] of [
-    [1181, 74],
-    [1263, 119.5],
-    [1390.5, 59.5],
-  ].entries()) {
-    const box = actions[index];
-    if (!box) throw new Error("Missing action");
-    expectWithin1(box.x, expected[0] ?? 0);
-    expectWithin1(box.width, expected[1] ?? 0);
-    expectWithin1(box.y, 62);
-    expectWithin1(box.height, 32);
+}
+
+/** record-detail.md › Layout › Visual layout: the four rows MEP-228 measured for the form. */
+test("Email Opt Out checkbox, form ink baselines and portrait ink match the measured rows", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await page.evaluate(() => document.fonts.ready);
+  const measured: Record<string, number> = {};
+  const failures: string[] = [];
+  // Every row is measured first and reported together, so one run shows every offset.
+  function check(label: string, actual: number, target: number, tolerance = 0.5) {
+    measured[label] = Number(actual.toFixed(2));
+    const delta = Math.abs(actual - target);
+    if (delta > tolerance)
+      failures.push(
+        `${label}: actual=${measured[label]} target=${target} delta=${Number(delta.toFixed(2))}`,
+      );
   }
-  const portrait = await page.getByRole("img", { name: "Lead Image", exact: true }).boundingBox();
-  if (!portrait) throw new Error("Missing portrait");
-  expectWithin1(portrait.x, 344);
-  expectWithin1(portrait.y, 170);
-  expectWithin1(portrait.width, 48);
-  const picker = await page.getByRole("button", { name: "Open owner picker" }).boundingBox();
-  if (!picker) throw new Error("Missing picker");
-  expectWithin1(picker.x, 840);
-  expectWithin1(picker.width, 32);
-  await expect(page.locator("[data-form-field=Company] .record-input-frame")).toHaveCSS(
-    "box-shadow",
-    "rgb(255, 93, 90) 3px 0px 0px 0px inset",
+
+  // Email Opt Out checkbox: 15 × 15 px box at x 558, y 754 — 5 px inside the input column,
+  // 10 px below the row top, 9 px above its bottom and 42 px after the label.
+  const checkboxRow = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] .record-form-row'),
   );
-  // Composite inputs: Annual Revenue sentence (record-detail.md Visual layout).
-  const revenue = page.locator("[data-form-field=Annual_Revenue]");
-  const information = revenue.getByRole("img", { name: "Currency information" });
-  const informationBox = await information.boundingBox();
-  const iconBox = await information.locator("svg").boundingBox();
-  if (!informationBox || !iconBox) throw new Error("Missing currency information icon");
-  expectWithin1(informationBox.x, 840);
-  expectWithin1(informationBox.width, 32);
-  expectWithin1(informationBox.height, 32);
-  expectWithin1(iconBox.width, 16);
-  expectWithin1(iconBox.height, 16);
-  await expect(information).toHaveCSS("background-color", "rgb(240, 244, 255)");
-  await expect(information).toHaveCSS("color", "rgb(49, 57, 73)");
-  const currencyResponse = await page.request.get(operationPath(operations.currencies), {
-    headers: { "X-CRM-ORG": org.slug },
+  const checkboxSlot = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] [data-record-form-control-slot]'),
+  );
+  const checkboxLabel = await measureBounds(
+    page.locator('[data-form-field="Email_Opt_Out"] .record-form-row__label'),
+  );
+  const checkbox = page.locator(
+    '[data-form-field="Email_Opt_Out"] [data-record-form-control-slot] [aria-hidden="true"]',
+  );
+  const box = await measureBounds(checkbox);
+  check("checkbox.x", box.x, 558);
+  check("checkbox.y", box.y, 754);
+  check("checkbox.width", box.width, 15);
+  check("checkbox.height", box.height, 15);
+  check("checkbox.insetStart", box.x - checkboxSlot.x, 5);
+  check("checkbox.insetTop", box.y - checkboxRow.y, 10);
+  check("checkbox.insetBottom", checkboxRow.y + checkboxRow.height - (box.y + box.height), 9);
+  check("checkbox.afterLabel", box.x - (checkboxLabel.x + checkboxLabel.width), 42);
+  check("checkbox.borderTopWidth", await cssNumber(checkbox, "border-top-width"), 2);
+  check("checkbox.radius", await cssNumber(checkbox, "border-top-left-radius"), 2.5, 0.5);
+  await expect(checkbox).toHaveCSS(
+    "border-color",
+    await tokenColor(page, "--color-control-border"),
+  );
+  await expect(checkbox).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  // Form text baselines: section heading ink y 273.5–283.5, inputs stay at y 312–346,
+  // row 1 label ink top y 324 and value ink top y 323.5–324, row 2 placeholder y 378.
+  const headingInk = await textSolidInkBand(
+    page.getByRole("heading", { name: "Lead Information", exact: true }),
+  );
+  check("heading.inkTop", headingInk.top, 273.5);
+  check("heading.inkBottom", headingInk.top + headingInk.height, 283.5);
+  const ownerInput = await measureBounds(
+    page.locator('[data-form-field="Owner"] .record-choice-shell'),
+  );
+  const ownerLabelInk = await textSolidInkBand(
+    page.locator('[data-form-field="Owner"] .record-form-row__label'),
+  );
+  const ownerValueInk = await textSolidInkBand(
+    page.locator('[data-form-field="Owner"] .record-choice-trigger'),
+  );
+  const companyInput = await measureBounds(
+    page.locator('[data-form-field="Company"] .record-input-frame'),
+  );
+  check("owner.inputTop", ownerInput.y, 312);
+  check("owner.inputBottom", ownerInput.y + ownerInput.height, 346);
+  check("owner.labelInkTop", ownerLabelInk.top, 324);
+  check("owner.labelInkBottom", ownerLabelInk.top + ownerLabelInk.height, 334.5);
+  check("owner.valueInkTop", ownerValueInk.top, 324);
+  check("owner.valueInkBottom", ownerValueInk.top + ownerValueInk.height, 334);
+  check("owner.labelValueDelta", ownerLabelInk.top - ownerValueInk.top, 0);
+  check("company.inputTop", companyInput.y, 312);
+  const firstNameRow = await measureBounds(
+    page.locator('[data-form-field="First_Name"] .record-form-row'),
+  );
+  const firstNameLabelInk = await textSolidInkBand(
+    page.locator('[data-form-field="First_Name"] .record-form-row__label'),
+  );
+  const prefixInk = await textSolidInkBand(
+    page.locator('[data-form-field="First_Name"] [data-part="empty-value"]'),
+  );
+  check("firstName.rowTop", firstNameRow.y, 366);
+  check("firstName.labelInkTop", firstNameLabelInk.top, 378.5);
+  check("firstName.placeholderInkTop", prefixInk.top, 378);
+  check("firstName.placeholderInkBottom", prefixInk.top + prefixInk.height, 388);
+
+  // Portrait icon: 48 px disc at x 344 y 170, 16 × 15.5 px head at x 360 y 185, body joined
+  // at y 201 and 16 px wide there, 34 px wide at y 207.5 before it merges with the ring.
+  const profile = page.getByRole("img", { name: "Lead Image", exact: true });
+  const disc = await measureBounds(profile);
+  check("portrait.discX", disc.x, 344);
+  check("portrait.discY", disc.y, 170);
+  check("portrait.discSize", disc.width, 48);
+  check("portrait.ringWidth", await cssNumber(profile, "border-top-width"), 1);
+  const head = await measureBounds(profile.locator("ellipse"));
+  check("portrait.headX", head.x, 360);
+  check("portrait.headY", head.y, 185);
+  check("portrait.headWidth", head.width, 16);
+  check("portrait.headHeight", head.height, 15.5);
+  const silhouette = profile.locator("path");
+  check(
+    "portrait.bodyTop",
+    disc.y + (await silhouette.evaluate((element) => (element as SVGGeometryElement).getBBox().y)),
+    201,
+  );
+  const bodyWidths = await silhouette.evaluate((element) => {
+    const path = element as SVGGeometryElement;
+    return [31.01, 37.51].map((y) => {
+      let halfWidth = 0;
+      for (let x = 24; x <= 48; x += 0.05) {
+        if (path.isPointInFill(new DOMPoint(x, y))) halfWidth = x - 24;
+      }
+      return halfWidth * 2;
+    });
   });
-  expect(currencyResponse.status()).toBe(200);
-  const currencies = (await currencyResponse.json()).currencies as [{ symbol: string }];
-  const prefix = revenue.locator(".record-currency-prefix > span").first();
-  const divider = revenue.locator(".record-currency-divider");
-  await expect(prefix).toHaveText(currencies[0].symbol);
-  await expect(prefix).toHaveCSS("color", await tokenValue(page, "color", "--color-text-muted"));
-  const input = await revenue.locator(".record-input-frame").boundingBox();
-  const prefixBox = await prefix.boundingBox();
-  const dividerBox = await divider.boundingBox();
-  if (!input || !prefixBox || !dividerBox) throw new Error("Missing currency prefix");
-  expectWithin1(prefixBox.x - input.x, 11.5);
-  expectWithin1(dividerBox.x - (prefixBox.x + prefixBox.width), 9.5);
-  expectWithin1(dividerBox.width, 1);
-  await expect(divider).toHaveCSS(
-    "background-color",
-    await tokenValue(page, "background-color", "--color-control-border"),
+  check("portrait.bodyWidthAtJoin", bodyWidths[0] ?? Number.NaN, 16);
+  check("portrait.bodyWidthAtRingGap", bodyWidths[1] ?? Number.NaN, 34);
+  await expect(profile).toHaveCSS(
+    "border-color",
+    await tokenColor(page, "--color-form-portrait-ring"),
   );
-  expectWithin1(dividerBox.height, 20);
-  expectWithin1(dividerBox.y - input.y, 7);
-  expectWithin1(input.y + input.height - dividerBox.y - dividerBox.height, 7);
-  console.log(
-    "currency prefix",
-    JSON.stringify({
-      symbol: currencies[0].symbol,
-      input,
-      prefixBox,
-      dividerBox,
-      capLeft: await textCapLeft(prefix),
-    }),
+  await expect(profile.locator("svg")).toHaveCSS(
+    "color",
+    await tokenColor(page, "--color-form-portrait"),
   );
-  await expect(revenue.getByRole("button")).toHaveCount(0);
-  const address = await page.locator("[data-record-form-field-group]").boundingBox();
-  const country = await page.locator("[data-form-field=Country] .record-control").boundingBox();
-  if (!address || !country) throw new Error("Missing address");
-  expectWithin1(address.x, 344);
-  expectWithin1(address.width, 529);
-  expectWithin1(address.height, 467);
-  expectWithin1(country.x, 554);
-  expectWithin1(country.width, 303);
-  expectWithin1(country.y - address.y, 31);
-  const building = await page
-    .locator("[data-form-field=Flat_House_No_Building_Apartment_Name] .record-input-frame")
-    .boundingBox();
-  const street = await page.locator("[data-form-field=Street] .record-input-frame").boundingBox();
-  const coordinates = await page.locator(".record-form-coordinates").boundingBox();
-  if (!building || !street || !coordinates) throw new Error("Missing address row");
-  expectWithin1(street.y - building.y, 80);
-  expectWithin1(address.y + address.height - coordinates.y - coordinates.height, 52.5);
-  const description = await page
-    .getByRole("textbox", { name: "Description", exact: true })
-    .boundingBox();
-  if (!description) throw new Error("Missing description");
-  expectWithin1(description.x, 553);
-  expectWithin1(description.width, 639);
-  expectWithin1(description.height, 34);
-  expectWithin1(description.y - address.y - address.height, 111);
-  console.log(
-    "form geometry",
-    JSON.stringify({
-      strip: stripBox,
-      card,
-      left,
-      right,
-      portrait,
-      picker,
-      address,
-      country,
-      description,
-      actions,
-      building,
-      street,
-      coordinates,
-    }),
-  );
-  // ADR 0003 §8: measured empty Salutation ink #8c91ab on white remains below AA.
-  // Clear All ink #a0a8b8 on white is a newly measured pair reported to CTO;
-  // only its text is excluded, while the functional button remains in the scan.
-  await expectNoA11yViolations(page, {
-    exclude: [
-      "#record-form-Salutation-value.record-prefix-empty",
-      ".record-form-clear-address > span",
-    ],
+
+  await test.info().attach("mep-234-form-measurements", {
+    body: JSON.stringify(measured, null, 2),
+    contentType: "application/json",
   });
-  const output = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
-  if (output) {
-    await page.screenshot({ path: join(output, "lead-create.png") });
-    await page.locator("[data-record-form-field-group]").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: join(output, "lead-address.png") });
-  }
+  console.log("MEP234_FORM_MEASUREMENTS", JSON.stringify(measured));
+  const shot = process.env.PAPERCLIP_RUN_SCRATCH_DIR;
+  if (shot) await page.screenshot({ path: join(shot, "lead-create-parity.png") });
+  expect(failures, failures.join("\n")).toEqual([]);
 });

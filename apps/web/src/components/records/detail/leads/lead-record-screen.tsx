@@ -11,6 +11,7 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
+import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -18,6 +19,7 @@ import {
   useModule,
   useRecord,
   useRecordList,
+  useUpdateRecord,
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
@@ -29,6 +31,7 @@ import {
   buildLeadsBusinessCardFields,
   buildLeadsDetailSections,
 } from "@/lib/records/leads-detail-sections";
+import { isLeadInlineEditable } from "@/lib/records/leads-inline-edit";
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
 import {
@@ -38,12 +41,19 @@ import {
 } from "@/lib/records/leads-record-more-options";
 import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
 import {
+  LEADS_TIMELINE_EMPTY_EVENTS,
+  LEADS_TIMELINE_MODULE_OPTIONS,
+  LEADS_TIMELINE_SOURCE_OPTIONS,
+  LEADS_TIMELINE_SUBTABS,
+} from "@/lib/records/leads-timeline";
+import {
   type RecordListContext,
   readRecordListContext,
   removeRecordFromListContext,
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { InlineEditProvider } from "../inline-edit-context";
 import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
@@ -96,6 +106,7 @@ export function LeadRecordScreen({
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const updateRecord = useUpdateRecord(LEADS_MODULE);
   const deleteRecords = useDeleteRecords(LEADS_MODULE);
   const listContext = useLeadsListContext(orgSlug);
   const viewsQueryEnabled = listContext === null;
@@ -129,6 +140,15 @@ export function LeadRecordScreen({
     for (const member of usersQuery.data ?? []) map[member.userId] = member.name;
     return map;
   }, [usersQuery.data]);
+
+  const timelineUserOptions = useMemo(
+    () =>
+      (usersQuery.data ?? []).map((user) => ({
+        id: user.userId,
+        label: user.name,
+      })),
+    [usersQuery.data],
+  );
 
   const serverLeadStatus = recordQuery.data
     ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
@@ -201,8 +221,10 @@ export function LeadRecordScreen({
     onDelete: openDeleteDialog,
   });
 
+  // Overview order is the spec's: the `Last Update` age label, then the Lead Status ribbon.
   const overview = (
     <>
+      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField ? (
         <LeadStatusRibbonSection
           module={LEADS_MODULE}
@@ -212,10 +234,52 @@ export function LeadRecordScreen({
           onValueChange={setStatusOverride}
         />
       ) : null}
-      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
-      <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-      <DetailsCard sections={detailSections} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+      <InlineEditProvider
+        key={recordId}
+        eligible={isLeadInlineEditable}
+        users={(usersQuery.data ?? []).map((user) => ({
+          id: user.userId,
+          name: user.name,
+          email: user.email,
+        }))}
+        save={async (input) => {
+          await updateRecord.mutateAsync({ id: recordId, input });
+          await recordQuery.refetch();
+        }}
+      >
+        <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+        <DetailsCard
+          sections={detailSections}
+          ownerNames={ownerNames}
+          format={DEFAULT_FORMAT}
+          railLayout={railVisible ? "shown" : "hidden"}
+        />
+      </InlineEditProvider>
     </>
+  );
+
+  const timeline = (
+    <TimelineSurface subtabs={LEADS_TIMELINE_SUBTABS} activeSubtabId="history">
+      <TimelineHistory
+        heading="Timeline History"
+        filterButtonLabel="History filter"
+        events={LEADS_TIMELINE_EMPTY_EVENTS}
+        format={DEFAULT_FORMAT}
+        initialFilterExpanded={false}
+        modulesLabel="Modules"
+        modulesAllLabel="All Modules"
+        moduleOptions={LEADS_TIMELINE_MODULE_OPTIONS}
+        usersLabel="Users"
+        usersAllLabel="All Users"
+        userOptions={timelineUserOptions}
+        timeLabel="Time"
+        sourcesLabel="Sources"
+        sourcesAllLabel="All Sources"
+        sourceOptions={LEADS_TIMELINE_SOURCE_OPTIONS}
+        applyLabel="Apply Filter"
+        onApply={() => {}}
+      />
+    </TimelineSurface>
   );
 
   return (
@@ -263,7 +327,10 @@ export function LeadRecordScreen({
         tabsLabel="Record detail"
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}
-        tabs={[{ id: "overview", label: "Overview", content: overview }]}
+        tabs={[
+          { id: "overview", label: "Overview", content: overview },
+          { id: "timeline", label: "Timeline", content: timeline },
+        ]}
         relatedRailVisible={railVisible}
         railControl={
           <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />

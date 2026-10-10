@@ -97,6 +97,8 @@ export function SelectUserDialog({
         <div className="select-user-search-field">
           <TextField
             variant="filter-search"
+            size="fill"
+            filterSearchWrapperClassName="select-user-search-input-wrap"
             label={searchLabel}
             placeholder={searchPlaceholder}
             value={search}
@@ -129,7 +131,7 @@ export function SelectUserDialog({
                 <col className="select-user-col-profile" />
               </colgroup>
               <thead>
-                <tr>
+                <tr className="select-user-header-band">
                   <th scope="col" className="select-user-th-radio">
                     <span className="sr-only">{selectColumnLabel}</span>
                   </th>
@@ -143,22 +145,34 @@ export function SelectUserDialog({
                   <th scope="col">{columnEmail}</th>
                   <th scope="col">{columnProfile}</th>
                 </tr>
+                <tr className="select-user-header-rule" aria-hidden>
+                  <td colSpan={6} />
+                </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="select-user-td-radio">
-                      <TableRadio value={user.id} aria-label={user.name} />
-                    </td>
-                    <td className="select-user-td-avatar">
-                      <UserAvatarPlaceholder />
-                    </td>
-                    <td className="select-user-td-name">{user.name}</td>
-                    <td className="select-user-td-role">{user.role ?? ""}</td>
-                    <td className="select-user-td-email">{user.email}</td>
-                    <td className="select-user-td-profile">{user.profile ?? ""}</td>
-                  </tr>
-                ))}
+                {filteredUsers.flatMap((user, index) => {
+                  const dataRow = (
+                    <tr key={user.id}>
+                      <td className="select-user-td-radio">
+                        <TableRadio value={user.id} aria-label={user.name} />
+                      </td>
+                      <td className="select-user-td-avatar">
+                        <UserAvatarPlaceholder />
+                      </td>
+                      <td className="select-user-td-name">{user.name}</td>
+                      <td className="select-user-td-role">{user.role ?? ""}</td>
+                      <td className="select-user-td-email">{user.email}</td>
+                      <td className="select-user-td-profile">{user.profile ?? ""}</td>
+                    </tr>
+                  );
+                  if (index === filteredUsers.length - 1) return [dataRow];
+                  return [
+                    dataRow,
+                    <tr key={`${user.id}-divider`} className="select-user-row-divider" aria-hidden>
+                      <td colSpan={6} />
+                    </tr>,
+                  ];
+                })}
               </tbody>
             </table>
           </TableRadioGroup>
@@ -168,15 +182,15 @@ export function SelectUserDialog({
       <div className="select-user-footer">
         <Button
           variant="secondary"
-          size="formAction"
-          className="select-user-footer-action"
+          size="selectUserFooter"
+          className="select-user-footer-action select-user-footer-action--cancel"
           onPress={onCancel}
         >
           {cancelLabel}
         </Button>
         <Button
-          size="formAction"
-          className="select-user-footer-action"
+          size="selectUserFooter"
+          className="select-user-footer-action select-user-footer-action--done"
           isDisabled={!selectionChanged}
           onPress={() => onDone(draftId)}
         >

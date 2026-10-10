@@ -39,6 +39,7 @@ export interface RecordChoiceProps {
   defaultOpen?: boolean;
   id?: string;
   endAction?: ReactNode;
+  inline?: boolean;
 }
 
 /** Pure option UI; supplies no inventories and performs no data loading. */
@@ -59,6 +60,7 @@ export function RecordChoice({
   defaultOpen = false,
   id: controlId,
   endAction,
+  inline = false,
 }: RecordChoiceProps) {
   const generatedId = useId();
   const id = controlId ?? generatedId;
@@ -86,9 +88,7 @@ export function RecordChoice({
       : "record-control record-choice-trigger";
   const shellClass = endAction
     ? "record-control record-choice-shell record-choice-shell--owner"
-    : prefix
-      ? undefined
-      : undefined;
+    : undefined;
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <span id={labelId} className={hideLabel ? "sr-only" : "record-label"}>
@@ -97,6 +97,9 @@ export function RecordChoice({
       <DialogTrigger
         isOpen={open && !disabled}
         onOpenChange={(next) => {
+          // Non-modal focus can scroll an ancestor, which requests overlay closure.
+          // Keep the list open while its option still holds focus.
+          if (inline && !next && listRef.current?.contains(document.activeElement)) return;
           setOpen(next);
           setQuery("");
         }}
@@ -105,6 +108,7 @@ export function RecordChoice({
           <div
             className={shellClass}
             data-required={required || undefined}
+            data-inline-empty={(inline && value === null) || undefined}
             data-invalid={Boolean(errorMessage) || undefined}
           >
             <Button
@@ -127,9 +131,11 @@ export function RecordChoice({
               <span
                 id={valueId}
                 className={`truncate ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
-                {...(mutedEmpty && value === null ? { "data-part": "empty-value" } : {})}
+                {...((mutedEmpty || inline) && value === null
+                  ? { "data-part": "empty-value" }
+                  : {})}
               >
-                {selected?.label ?? value ?? "-None-"}
+                {inline && value === null ? "None" : (selected?.label ?? value ?? "-None-")}
               </span>
               <Icons.recordFormCaret
                 className="record-form-caret"
@@ -147,6 +153,7 @@ export function RecordChoice({
             render={(domProps) => (
               <button {...domProps} aria-invalid={errorMessage ? true : undefined} />
             )}
+            data-inline-empty={(inline && value === null) || undefined}
             data-invalid={Boolean(errorMessage) || undefined}
             data-required={required || undefined}
             isDisabled={disabled}
@@ -162,9 +169,9 @@ export function RecordChoice({
             <span
               id={valueId}
               className={`truncate ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
-              {...(mutedEmpty && value === null ? { "data-part": "empty-value" } : {})}
+              {...((mutedEmpty || inline) && value === null ? { "data-part": "empty-value" } : {})}
             >
-              {selected?.label ?? value ?? "-None-"}
+              {inline && value === null ? "None" : (selected?.label ?? value ?? "-None-")}
             </span>
             <Icons.recordFormCaret
               className="record-form-caret"
@@ -174,18 +181,20 @@ export function RecordChoice({
           </Button>
         )}
         <Popover
-          offset={0}
+          isNonModal={inline}
+          offset={inline ? -1 : 0}
           placement="bottom start"
           style={prefix ? { width: "var(--size-form-prefix-width)" } : undefined}
-          className={`record-choice-panel ${owner ? "record-owner-panel" : searchable ? "record-search-panel" : ""}`}
+          className={`record-choice-panel ${inline ? "record-inline-choice-panel" : ""} ${owner ? "record-owner-panel" : searchable ? "record-search-panel" : ""}`}
         >
           <Dialog aria-label={`${label} options`} className="record-search-dialog">
             {searchable && (
               <TextField className="record-panel-search" value={query} onChange={setQuery}>
                 <Label className="sr-only">{searchLabel}</Label>
+                <Icons.recordPanelSearch aria-hidden className="record-panel-search-icon" />
                 <Input
                   autoFocus
-                  placeholder={searchLabel}
+                  placeholder={owner ? searchLabel : ""}
                   className="record-control"
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
@@ -222,12 +231,17 @@ export function RecordChoice({
                 >
                   {({ isSelected }) => (
                     <>
+                      {inline && (
+                        <span className="record-inline-choice-check" aria-hidden>
+                          {isSelected && <Icons.inlineCheck />}
+                        </span>
+                      )}
+                      {!inline && isSelected && (
+                        <Icons.recordPanelCheck aria-hidden className="record-choice-check" />
+                      )}
                       {owner && (
-                        <span
-                          aria-hidden
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-avatar"
-                        >
-                          <Icons.recordUser className="h-4 w-4" />
+                        <span aria-hidden className="record-owner-avatar">
+                          <Icons.avatarPerson className="record-owner-avatar-icon" />
                         </span>
                       )}
                       <span className="min-w-0 flex-1 truncate">
@@ -235,14 +249,11 @@ export function RecordChoice({
                           {option.label}
                         </span>
                         {owner && option.secondaryLabel && (
-                          <span className="block truncate font-normal text-text-muted">
+                          <span className="record-owner-email block truncate font-normal">
                             {option.secondaryLabel}
                           </span>
                         )}
                       </span>
-                      {isSelected && (owner || searchable) && (
-                        <Icons.recordCheck aria-hidden className="h-4 w-4 shrink-0" />
-                      )}
                     </>
                   )}
                 </ListBoxItem>

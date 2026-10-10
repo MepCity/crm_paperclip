@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
@@ -240,24 +241,22 @@ async function sizeToken(page: import("@playwright/test").Page, token: string): 
   }, token);
 }
 
-async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
-  return page.locator("table").evaluate((table) => {
+/**
+ * Reads one column in a single evaluate: rows stay consistent while a re-render is still landing.
+ */
+async function columnTexts(
+  page: import("@playwright/test").Page,
+  headerLabel: string,
+): Promise<string[]> {
+  return page.locator("table").evaluate((table, label) => {
     const headers = Array.from(table.querySelectorAll("thead [data-part=column]"));
-    const index = headers.findIndex((node) => node.textContent?.trim().includes("Company"));
-    if (index < 0) throw new Error("Company column not found.");
+    const index = headers.findIndex((node) => node.textContent?.trim().includes(label));
+    if (index < 0) throw new Error(`${label} column not found.`);
     return Array.from(table.querySelectorAll("tbody tr")).map((row) => {
       const cell = row.querySelectorAll("[data-part=column]")[index] as HTMLElement | undefined;
       return cell ? cell.innerText : "";
     });
-  });
-}
-
-function isAscending(texts: readonly string[]): boolean {
-  const normalized = texts.map((text) => text.trim().toLowerCase());
-  for (let i = 1; i < normalized.length; i++) {
-    if ((normalized[i - 1] ?? "") > (normalized[i] ?? "")) return false;
-  }
-  return true;
+  }, headerLabel);
 }
 
 /** Rows keep showing the previous data until the response renders; the 5 s default is tight here. */
@@ -438,6 +437,51 @@ async function selectPicklistValues(
   await page.keyboard.press("Escape");
 }
 
+async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
+  return columnTexts(page, "Company");
+}
+
+function tokenFontLength(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.fontSize = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).fontSize;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function tokenWeight(page: import("@playwright/test").Page, name: string) {
+  return page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.fontWeight = `var(${token})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).fontWeight;
+    probe.remove();
+    return value;
+  }, name);
+}
+
+function expectPx(actual: number, expected: string) {
+  expect(Math.abs(actual - Number.parseFloat(expected))).toBeLessThanOrEqual(1);
+}
+
+async function boxWidth(locator: Locator) {
+  return locator.evaluate((element) => element.getBoundingClientRect().width);
+}
+
+function isOrdered(values: readonly string[], direction: "asc" | "desc") {
+  const normalized = values.map((value) => value.trim().toLowerCase());
+  for (let i = 1; i < normalized.length; i++) {
+    const previous = normalized[i - 1] ?? "";
+    const current = normalized[i] ?? "";
+    if (direction === "asc" && previous > current) return false;
+    if (direction === "desc" && previous < current) return false;
+  }
+  return true;
+}
+
 const ALPHABET_CONTROL = "Filter by first letter";
 
 function alphabetControl(page: import("@playwright/test").Page) {
@@ -483,9 +527,11 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("heading", { name: "Leads", level: 1 })).toBeVisible();
     await expect(page.getByText("All Leads")).toBeVisible();
-    for (const label of ["Full Name", "Company", "Email", "Phone", "Lead Source", "Lead Owner"]) {
+    for (const label of ["Lead Name", "Company", "Email", "Phone", "Lead Source", "Lead Owner"]) {
       await expect(page.getByRole("columnheader", { name: label })).toBeVisible();
     }
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toHaveText(/Lead Name/);
+    await expect(page.getByRole("columnheader", { name: "Full Name" })).toHaveCount(0);
   });
 
   test("paginates and keeps page size in the address", async ({ page }) => {
@@ -548,7 +594,7 @@ test.describe("Leads list page", () => {
       .poll(
         async () => {
           const afterSort = await companyColumnTexts(page);
-          return isAscending(afterSort) && afterSort.join("|") !== beforeSort.join("|");
+          return isOrdered(afterSort, "asc") && afterSort.join("|") !== beforeSort.join("|");
         },
         { timeout: RENDER_TIMEOUT_MS },
       )
@@ -751,13 +797,130 @@ test.describe("Leads list page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("sorts the list from the column header options menu", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=2`);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const nameTrigger = page.getByRole("button", { name: "Lead Name column options" });
+    const companyTrigger = page.getByRole("button", { name: "Company column options" });
+    await expect(nameTrigger).toHaveCSS("opacity", "1");
+    await expect(companyTrigger).toHaveCSS("opacity", "0");
+    await page.getByRole("columnheader", { name: "Company" }).hover();
+    await expect(companyTrigger).toHaveCSS("opacity", "1");
+
+    const bulkUrls: string[] = [];
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk")) {
+        bulkUrls.push(request.url());
+      }
+    });
+
+    await companyTrigger.click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveCount(2);
+    expect((await menu.getByRole("menuitem").allTextContents()).map((text) => text.trim())).toEqual(
+      ["Asc", "Desc"],
+    );
+    await menu.getByRole("menuitem", { name: "Desc" }).click();
+    await expect(menu).toHaveCount(0);
+
+    const afterDesc = () => new URL(page.url()).searchParams;
+    await expect.poll(() => afterDesc().get("sort_by")).toBe("Company");
+    expect(afterDesc().get("sort_order")).toBe("desc");
+    expect(afterDesc().get("page")).toBeNull();
+    await expect(page.locator("tbody tr")).toHaveCount(10);
+    expect(isOrdered(await companyColumnTexts(page), "desc")).toBe(true);
+    const lastBulk = bulkUrls.at(-1);
+    if (!lastBulk) throw new Error("Expected a bulk request after the header sort.");
+    const bulkParams = new URL(lastBulk).searchParams;
+    expect(bulkParams.get("sort_by")).toBe("Company");
+    expect(bulkParams.get("sort_order")).toBe("desc");
+
+    await nameTrigger.click();
+    await page.getByRole("menu").getByRole("menuitem", { name: "Asc" }).click();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    const afterAsc = () => new URL(page.url()).searchParams;
+    await expect.poll(() => afterAsc().get("sort_by")).toBe("Full_Name");
+    expect(afterAsc().get("sort_order")).toBe("asc");
+    await expect
+      .poll(async () => isOrdered(await columnTexts(page, "Lead Name"), "asc"))
+      .toBe(true);
+  });
+
+  test("column options menu matches the measured visual layout", async ({ page }) => {
+    // list-views.md › Layout › Visual layout › Column options menu and Table header and rows.
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const menuWidth = await tokenLength(page, "--size-popover-column-options-width");
+    const rowHeight = await tokenLength(page, "--size-menu-item-height");
+    const iconSize = await tokenLength(page, "--size-menu-icon");
+    const cellInset = await tokenLength(page, "--size-list-cell-inset");
+    const headerHeight = await tokenLength(page, "--size-list-header-height");
+    const columnWidth = await tokenLength(page, "--size-list-column-width");
+    const borderInk = await tokenColor(page, "--color-border");
+    const surface = await tokenColor(page, "--color-menu-surface");
+    const hoverInk = await tokenColor(page, "--color-surface-hover");
+    const textInk = await tokenColor(page, "--color-text");
+    const iconInk = await tokenColor(page, "--color-menu-icon");
+    const menuText = await tokenFontLength(page, "--text-md");
+    const menuWeight = await tokenWeight(page, "--font-weight-normal");
+    const radius = await tokenLength(page, "--radius-md");
+
+    const headerCell = page.getByRole("columnheader", { name: "Company" });
+    const trigger = page.getByRole("button", { name: "Company column options" });
+    await headerCell.hover();
+    await trigger.click();
+
+    const menu = page.getByRole("menu");
+    // The visible menu box is the popover that holds the list of rows.
+    const menuSurface = menu.locator("xpath=..");
+    await expect(menu).toBeVisible();
+    const menuBox = requireBox(await menuSurface.boundingBox(), "column options menu");
+    expectPx(menuBox.width, menuWidth);
+    await expect(menuSurface).toHaveCSS("border-top-width", "1px");
+    await expect(menuSurface).toHaveCSS("border-top-color", borderInk);
+    await expect(menuSurface).toHaveCSS("background-color", surface);
+    // The spec row does not measure corners; the shared popover radius is kept.
+    await expect(menuSurface).toHaveCSS("border-radius", radius);
+
+    const item = menu.getByRole("menuitem", { name: "Asc" });
+    const itemBox = requireBox(await item.boundingBox(), "Asc row");
+    expectPx(itemBox.height, rowHeight);
+    await expect(item).toHaveCSS("font-size", menuText);
+    await expect(item).toHaveCSS("font-weight", menuWeight);
+    await expect(item).toHaveCSS("color", textInk);
+    const glyph = item.locator("svg");
+    await expect(glyph).toHaveCSS("color", iconInk);
+    expectPx(await boxWidth(glyph), iconSize);
+    await item.hover();
+    await expect(item).toHaveCSS("background-color", hoverInk);
+
+    // The trigger sits at the header cell's trailing end, before its divider, and keeps
+    // the header box and the column width exactly as they were.
+    const triggerBox = requireBox(await trigger.boundingBox(), "column options trigger");
+    const headerBox = requireBox(await headerCell.boundingBox(), "Company header");
+    expectPx(headerBox.x + headerBox.width - (triggerBox.x + triggerBox.width), cellInset);
+    expectPx(headerBox.height, headerHeight);
+    expectPx(headerBox.width, columnWidth);
+
+    await expectNoA11yViolations(page);
+  });
+
   test("custom view route shows that view columns", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await page.goto(moduleListCustomPath(org.slug, LEADS_MODULE, "converted-leads"));
     await expect(page.getByText("Converted Leads")).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Phone" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Full Name" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Lead Name" })).toHaveText(/Lead Name/);
+    await expect(page.getByRole("columnheader", { name: "Full Name" })).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "Lead Source" })).toHaveCount(0);
   });
 

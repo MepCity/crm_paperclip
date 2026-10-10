@@ -18,6 +18,7 @@ export interface RecordFormShellProps {
   onSaveAndNew?: () => void;
   onSave?: () => void;
   children: ReactNode;
+  errorBanner?: ReactNode;
   disabled?: boolean;
   onSubmit?: FormEventHandler<HTMLFormElement>;
 }
@@ -30,6 +31,7 @@ export function RecordFormShell({
   onSaveAndNew,
   onSave,
   children,
+  errorBanner,
   disabled = false,
   onSubmit,
 }: RecordFormShellProps) {
@@ -44,6 +46,7 @@ export function RecordFormShell({
             type="button"
             variant="secondary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--cancel"
             isDisabled={disabled}
             onPress={onCancel}
           >
@@ -53,6 +56,7 @@ export function RecordFormShell({
             type="button"
             variant="secondary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--save-new"
             isDisabled={disabled}
             onPress={onSaveAndNew}
           >
@@ -62,6 +66,7 @@ export function RecordFormShell({
             type="button"
             variant="primary"
             size="formAction"
+            className="record-form-strip__action record-form-strip__action--save"
             isDisabled={disabled}
             onPress={onSave}
           >
@@ -69,6 +74,7 @@ export function RecordFormShell({
           </Button>
         </div>
       </header>
+      {errorBanner}
       <div className="record-form-card" data-record-form-card>
         <form
           className="record-form-card__body"

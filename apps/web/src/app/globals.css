@@ -51,6 +51,7 @@
   --color-topbar-surface: var(--color-topbar-surface);
   --color-topbar-border: var(--color-topbar-border);
   --color-menu-surface: var(--color-menu-surface);
+  --color-menu-icon: var(--color-menu-icon);
   --color-utility-border: var(--color-utility-border);
   --color-utility-help: var(--color-utility-help);
   --color-panel-border: var(--color-panel-border);

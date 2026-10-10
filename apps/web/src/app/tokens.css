@@ -65,6 +65,7 @@
 
   /* Menus and popovers */
   --color-menu-surface: #ffffff;
+  --color-menu-icon: #adb0b6;
 
   /* Bottom utility strip */
   --color-utility-border: #c5c4d3;
@@ -200,6 +201,7 @@
   --size-rail-header-inset: 15px;
   --size-rail-product-selector-height: 30px;
   --size-rail-product-mark: 30px;
+  --size-rail-product-caret: 10px;
   --size-rail-selector-height: 24px;
   --size-rail-selector-inset: 13px;
   --size-rail-monogram: 24px;
@@ -416,6 +418,27 @@
   --size-form-currency-divider-height: 20px;
   --size-form-currency-divider-top: 7px;
   --size-form-owner-caret-gap: 9px;
+  --shadow-form-focus-glow: 0 0 6px rgb(84 100 255 / 0.56);
+  --size-form-panel-inset-inline: 11px;
+  --size-form-panel-search-top: 12px;
+  --size-form-panel-search-height-owner: 30px;
+  --size-form-panel-check-inset: 15px;
+  --size-form-panel-owner-check-inset: 16px;
+  --size-form-panel-check-width: 11.5px;
+  --size-form-panel-check-height: 8.5px;
+  --size-form-panel-option-text-inset: 32.5px;
+  --size-form-panel-selected-fill-inset: 7px;
+  --size-form-panel-selected-fill-height: 32px;
+  --size-form-panel-search-icon-inset: 11.5px;
+  --size-form-panel-search-icon-size: 13.5px;
+  --size-form-panel-search-text-inset: 33px;
+  --size-form-panel-list-first-gap: 7.5px;
+  --size-form-panel-owner-avatar-inset: 32px;
+  --size-form-panel-owner-row-pitch: 41px;
+  --size-form-panel-owner-avatar-size: 30px;
+  --size-form-panel-owner-name-gap: 11px;
+  --size-form-panel-owner-content-top: 12px;
+  --size-form-panel-owner-content-bottom: 13px;
 
   /* Checkbox */
   --size-checkbox: 15px;
@@ -483,6 +506,7 @@
   --size-popover-import-width: 180px;
   --size-popover-actions-width: 200px;
   --size-popover-settings-width: 264px;
+  --size-popover-column-options-width: 151px;
   --size-popover-sort-width: 385px;
   --size-popover-sort-height: 157px;
   --size-popover-sort-field-width: 150px;
@@ -591,6 +615,8 @@
   --color-select-user-row-divider: #eef1f7;
   --size-select-user-table-radio-inset: 20px;
   --size-select-user-table-radio-row-inset: 13px;
+  --size-select-user-table-avatar-row-inset: 4px;
+  --size-select-user-table-text-row-inset: 14.5px;
   --size-select-user-table-radio-column: 36px;
   --size-select-user-table-avatar-column: 60px;
   --size-select-user-table-name-column: 141.5px;
@@ -599,10 +625,9 @@
   --size-select-user-table-name-header-inset: 31px;
   --size-select-user-table-avatar-inset: 30px;
   --size-select-user-table-name-text-inset: 11px;
-  /* Frame outer height minus row sum; record-detail.md › User table › y 119–270.5 with three rows. */
-  --size-select-user-table-frame-adjust: 1.5px;
 
   /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-layout-subpixel-trim: 1px;
   --size-form-strip-height: 57px;
   --size-form-strip-padding-end: 8px;
   --size-form-card-inset: 12px;
@@ -621,9 +646,19 @@
   --size-form-column-gap: 258.5px;
   --size-form-label-line-height: 17.5px;
   --size-form-label-padding-top: 8px;
+  /* record-detail.md › Form text baselines: label ink top sits 12 px below the input top;
+     the label box keeps the measured row rhythm, so the last pixel is painted, not laid out. */
+  --size-form-label-baseline-offset: 1px;
   --size-form-input-group-width: 303px;
   --size-form-input-height: 34px;
   --size-form-row-pitch: 54px;
+  /* record-detail.md › Email Opt Out checkbox: box sits 5 px inside the input column,
+     10 px below the row top and 9 px above its bottom inside the 34 px row. */
+  --size-form-checkbox-inset-start: 5px;
+  --size-form-checkbox-inset-top: 10px;
+  /* record-detail.md › Form text baselines: 12 px above the cap and 12 px below the flat
+     letter ink inside the 34 px box; the extra top inset centers the ink, not the line. */
+  --size-form-control-text-padding-top: 2px;
   --size-form-control-padding-inline: 10px;
   --size-form-control-padding-block: 8px;
   --size-form-action-height: 32px;
@@ -757,4 +792,24 @@
   --size-status-terminal-divider-bottom: 6px;
   --size-status-demo-wide: 1126px;
   --size-status-demo-narrow: 906px;
+}
+
+/* record-detail.md → Inline editor */
+:root {
+  --radius-detail-inline-control: 4px;
+  --size-detail-inline-width: 273px;
+  --size-detail-inline-value-inset: 12.5px;
+  --size-detail-inline-halo: 7.5px;
+  --size-detail-inline-action-size: 21px;
+  --size-detail-inline-action-icon: 12px;
+  --size-detail-inline-action-inset: 10px;
+  --size-detail-inline-action-gap: 6.5px;
+  --size-detail-inline-trailing-inset: 27.5px;
+  --size-detail-inline-list-padding: 6px;
+  --size-detail-inline-option-height: 32px;
+  --size-detail-inline-check-size: 12px;
+  --size-detail-inline-check-height: 9px;
+  --size-detail-inline-save-check-width: 10px;
+  --size-detail-inline-save-check-height: 7.5px;
+  --size-detail-inline-check-gap: 6px;
 }
