@@ -55,6 +55,7 @@ export type LeadRecordPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   edit: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  clone: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
 };
 
 export type LeadRecordScreenProps = {
@@ -199,7 +200,10 @@ export function LeadRecordScreen({
     }
   }
 
-  const moreMenuGroups = buildLeadsRecordMoreMenuGroups({ onDelete: openDeleteDialog });
+  const moreMenuGroups = buildLeadsRecordMoreMenuGroups({
+    onClone: () => router.push(paths.clone(orgSlug, LEADS_MODULE, recordId)),
+    onDelete: openDeleteDialog,
+  });
 
   const overview = (
     <>

@@ -354,8 +354,16 @@ export const Icons = {
   recordHeaderChevronRight: RecordHeaderChevronRight,
   close: X,
   filter: FilterIcon,
+  filterToggle: FilterToggleIcon,
   sort: SortIcon,
   list: ListIcon,
+  viewTypeList: ViewTypeListIcon,
+  viewTypeSplit: ViewTypeSplitIcon,
+  viewTypeGrid: ViewTypeGridIcon,
+  viewTypeChart: ViewTypeChartIcon,
+  viewTypeConnected: ViewTypeConnectedIcon,
+  viewTypeCards: ViewTypeCardsIcon,
+  viewTypeArrow: ViewTypeArrowIcon,
   settingsSliders: SettingsSlidersIcon,
   eye: EyeIcon,
   refresh: RefreshIcon,
@@ -488,5 +496,95 @@ function InlineCheck(props: SVGProps<SVGSVGElement>) {
     >
       <path d="m0.5 5.5 3.5 3 7.5-8" />
     </svg>
+  );
+}
+
+/**
+ * Filled glyphs whose viewBox is the ink box itself, so the painted area is the element box.
+ * The measured size is applied by the call site. Original drawings; no reference assets.
+ */
+function InkGlyph({ viewBox, children, ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative; the element box is the measured ink box
+    <svg viewBox={viewBox} fill="currentColor" {...props}>
+      {children}
+    </svg>
+  );
+}
+
+/** Advanced-filter toggle funnel: ink box 15 × 16 px. */
+function FilterToggleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 15 16" {...props}>
+      <path d="M0 0h15v2.4L8.9 10v4L6.1 16v-6L0 2.4Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type, bulleted list: ink box 15.5 × 15.5 px. */
+function ViewTypeListIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 15.5 15.5" {...props}>
+      <path d="M0 0h2v2H0Zm0 6.75h2v2H0Zm0 6.75h2v2H0Z" />
+      <path d="M4.5 0h11v2h-11Zm0 6.75h11v2h-11Zm0 6.75h11v2h-11Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type, two columns split vertically: ink box 16 × 16 px. */
+function ViewTypeSplitIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h7v16H0Zm9 0h7v16H9Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type, grid of four cells: ink box 16 × 16 px. */
+function ViewTypeGridIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h7v7H0Zm9 0h7v7H9ZM0 9h7v7H0Zm9 0h7v7H9Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type, pie chart with one slice cut: ink box 15 × 15 px. */
+function ViewTypeChartIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 15 15" {...props}>
+      <path
+        fillRule="evenodd"
+        d="M7.5 0a7.5 7.5 0 1 1 0 15 7.5 7.5 0 1 1 0-15ZM8.5 1.6a6.5 6.5 0 0 1 4.9 4.9H8.5Z"
+      />
+    </InkGlyph>
+  );
+}
+
+/** View type, connected blocks: ink box 17 × 13 px. */
+function ViewTypeConnectedIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 17 13" {...props}>
+      <path d="M6 0h5v4H6ZM0 9h5v4H0Zm12 0h5v4h-5Z" />
+      <path d="M8 4h1v2.5H8Zm-5.5 2.5h12v1h-12ZM2.5 7.5h1V9h-1Zm11 0h1V9h-1Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type, stacked cards: ink box 16 × 15.5 px. */
+function ViewTypeCardsIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 16 15.5" {...props}>
+      <path d="M0 0h16v4.5H0Zm0 5.5h16v4.5H0Zm0 5.5h16v4.5H0Z" />
+    </InkGlyph>
+  );
+}
+
+/** View type switcher overflow arrow: ink box 11 × 6.5 px. */
+function ViewTypeArrowIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <InkGlyph viewBox="0 0 11 6.5" {...props}>
+      <path d="M5.5 6.5 0 0h11Z" />
+    </InkGlyph>
   );
 }

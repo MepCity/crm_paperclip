@@ -89,6 +89,9 @@
   --color-button-border: #d5d8e9;
   --color-button-gradient-start: #fefefe;
   --color-button-gradient-end: #f2f1f8;
+  /* list-views.md › Selection toolbar: the four record-action buttons use their own gradient. */
+  --color-selection-button-gradient-start: #fdfdfe;
+  --color-selection-button-gradient-end: #f3f2f8;
   --color-primary-gradient-start: #5767f6;
   --color-primary-gradient-end: #154ec5;
   --color-primary-divider: #c3c8f4;
@@ -97,6 +100,7 @@
   --color-popover-sort-border: #ced0e1;
   --color-surface-selected: #f0f4fc;
   --color-surface-active: #edf0f9;
+  --color-list-filter-toggle-icon: #000000;
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
@@ -279,12 +283,23 @@
   --size-list-filter-group-gap: 16px;
   --size-list-filter-row-height: 30px;
   --size-list-filter-row-padding: 6px;
+  /* list-views.md › Filter panel row label. The row's own container boundary is `Not observed`;
+     126 px is the width that reproduces every break the row records: the longest unbroken label
+     ink (Latest Email Status, 119.5 px) stays on one line, while Related Records Action,
+     Untouched Records and Address - Country / Region wrap after their first word group. */
+  --size-list-filter-label-width: 126px;
   --size-list-filter-chevron-width: 8px;
   --size-list-filter-chevron-height: 4.5px;
   --size-list-filter-chevron-offset: 1.25px;
   --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
+  /* list-views.md › Filter toggle, panel open: funnel glyph ink box and the gap to the label ink. */
+  --size-list-filter-toggle-icon-width: 15px;
+  --size-list-filter-toggle-icon-height: 16px;
+  --size-list-filter-toggle-icon-gap: 9.5px;
+  /* list-views.md › Filter toggle, panel open and View type switcher: 3.5–4 px corner radius. */
+  --radius-list-toolbar-tile: 3.5px;
 
   /* Records table. Header height includes the 2 px bottom border. A single-line row is
      the 9 px pad, one 18 px line and the 9 px pad again; the pitch adds the 1 px
@@ -314,6 +329,22 @@
   --size-list-chevron-width: 6px;
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
+  /* list-views.md › View type switcher: six type tiles and the trailing arrow on a 32 px pitch
+     (26 px box plus a 6 px gap). The glyph tokens are each control's measured ink box. */
+  --size-list-view-switcher-gap: 6px;
+  /* The row puts the first tile at x 500 and the Filter/Sort group ends at x 484.5 on the measured
+     viewport. The group's 8 px gap plus this offset places the switcher on that edge. */
+  --size-list-view-switcher-offset: 7.5px;
+  --size-list-view-type-list: 15.5px;
+  --size-list-view-type-split: 16px;
+  --size-list-view-type-grid: 16px;
+  --size-list-view-type-chart: 15px;
+  --size-list-view-type-connected-width: 17px;
+  --size-list-view-type-connected-height: 13px;
+  --size-list-view-type-cards-width: 16px;
+  --size-list-view-type-cards-height: 15.5px;
+  --size-list-view-type-arrow-width: 11px;
+  --size-list-view-type-arrow-height: 6.5px;
 
   /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
   --color-detail-divider: #d6d6e3;
@@ -414,6 +445,20 @@
   --color-unsaved-dialog-leave-start: #ff4657;
   --color-unsaved-dialog-leave-end: #e33041;
   --color-unsaved-dialog-leave-text: #ffffff;
+
+  /* list-views.md › Selection toolbar and Selection Actions menu. The counter strip and the
+     record-action strip are the row's two boxes; the action buttons are measured individually
+     and sit on an 8 px pitch (101 + 73 + 113 + 45 + three 8 px gaps = the measured 356 px). */
+  --size-list-selection-counter-width: 170px;
+  --size-list-selection-counter-height: 42px;
+  --size-list-selection-clear-width: 34px;
+  --size-list-selection-clear-height: 16px;
+  --size-list-selection-strip-gap: 15px;
+  --size-list-selection-button-gap: 8px;
+  --size-list-selection-send-email-width: 101px;
+  --size-list-selection-tags-width: 73px;
+  --size-list-selection-actions-width: 45px;
+  --size-list-selection-menu-row-height: 32px;
   --size-list-mass-update-button-width: 113px;
   --size-mass-update-dialog-width: 484px;
   --size-mass-update-dialog-height: 207px;
