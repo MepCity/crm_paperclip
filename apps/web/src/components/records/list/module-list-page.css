@@ -18,6 +18,15 @@
   padding-inline-start: var(--list-tab-inset-start);
 }
 
+/* list-views.md › Filter toggle, panel open: the active `#EDF0F9` fill reads against a
+   white `#FFFFFF` toolbar surface. Without it the fill matches the page canvas and is
+   indistinguishable. The selection bar replaces the toolbar in the same band, so it keeps
+   the same surface. */
+.module-list-page > [data-list-toolbar],
+.module-list-page > [data-selection-bar] {
+  background-color: var(--color-surface);
+}
+
 .module-list-page > [data-list-toolbar] {
   padding-inline-start: var(--list-content-inset-start);
   padding-inline-end: var(--list-toolbar-inset-end);

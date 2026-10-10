@@ -19,6 +19,11 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   }
   // Header and tab strip; Text roles.
   await box("tab strip", chrome.locator("[data-view-tab-strip]"), null, 42);
+  // list-views.md › Tab strip bottom rule: a 1 px #DCDBEE divider beneath the strip.
+  const tabStrip = chrome.locator("[data-view-tab-strip]");
+  await expect(tabStrip).toHaveCSS("border-bottom-width", "1px");
+  await expect(tabStrip).toHaveCSS("border-bottom-color", "rgb(220, 219, 238)");
+  await expect(tabStrip).toHaveCSS("box-sizing", "border-box");
   const pill = chrome.locator("[data-view-pill]");
   await box("selected pill", pill, 75.5, 26);
   await expect(pill).toHaveCSS("border-radius", "6px");
@@ -37,16 +42,65 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
     "--font-weight-semibold",
   );
   await expect(filter).toHaveCSS("color", "rgb(49, 57, 73)");
-  const list = chrome.getByRole("img", { name: "List presentation" });
+  // list-views.md › Filter toggle, panel open: border none, 3.5–4 px radius, funnel ink
+  // #000000 at 15 × 16 px. The demo toolbar renders the pressed (panel-open) toggle.
+  await expect(filter).toHaveCSS("border-top-width", "0px");
+  await expect(filter).toHaveCSS("border-radius", "3.5px");
+  // The single presentation span is replaced by the measured switcher.
+  const switcher = chrome.locator("[data-view-type-switcher]");
+  const list = chrome.getByRole("button", { name: "List presentation" });
   await box("presentation", list, 26, 26);
   await expect(list).toHaveCSS("background-color", "rgb(240, 241, 255)");
   await expect(list).toHaveCSS("color", "rgb(84, 100, 242)");
-  await box("Filter icon", filter.locator("svg"), 16, 16);
+  await expect(list).toHaveCSS("border-radius", "3.5px");
+  await box("Filter icon", filter.locator("svg"), 15, 16);
+  await expect(filter.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
   await box(
     "Refresh icon",
     chrome.getByRole("button", { name: "Refresh Custom View" }).locator("svg"),
     16,
     16,
+  );
+  // list-views.md › View type switcher: 6 type tiles plus the overflow control, 26 × 26 boxes
+  // on a 6 px gap, the active list tile pressed, every other control aria-disabled with the
+  // muted glyph colour. Each glyph's svg box is its measured ink box.
+  const tiles = switcher.locator("button");
+  await expect(tiles).toHaveCount(7);
+  for (let i = 0; i < 7; i += 1) {
+    const b = await tiles.nth(i).boundingBox();
+    if (!b) throw new Error(`Missing view-type tile ${i} box.`);
+    expect(Math.abs(b.width - 26)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(b.height - 26)).toBeLessThanOrEqual(0.5);
+  }
+  for (let i = 1; i < 7; i += 1) {
+    const prev = await tiles.nth(i - 1).boundingBox();
+    const cur = await tiles.nth(i).boundingBox();
+    if (!prev || !cur) throw new Error("Missing tile box for gap.");
+    const gap = cur.x - (prev.x + prev.width);
+    expect(Math.abs(gap - 6)).toBeLessThanOrEqual(0.5);
+  }
+  await expect(list).toHaveAttribute("aria-pressed", "true");
+  const inkBoxes: [string, number, number][] = [
+    ["Split presentation", 16, 16],
+    ["Grid presentation", 16, 16],
+    ["Chart presentation", 15, 15],
+    ["Connected presentation", 17, 13],
+    ["Cards presentation", 16, 15.5],
+    ["More presentations", 11, 6.5],
+  ];
+  for (const [name, w, h] of inkBoxes) {
+    const svg = chrome.getByRole("button", { name }).locator("svg");
+    const b = await svg.boundingBox();
+    if (!b) throw new Error(`Missing ${name} svg ink box.`);
+    expect(Math.abs(b.width - w), `${name} ink width`).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(b.height - h), `${name} ink height`).toBeLessThanOrEqual(0.5);
+  }
+  for (const name of ["Grid presentation", "More presentations"]) {
+    await expect(chrome.getByRole("button", { name })).toHaveAttribute("aria-disabled", "true");
+  }
+  await expect(chrome.getByRole("button", { name: "Grid presentation" })).toHaveCSS(
+    "color",
+    "rgb(97, 110, 136)",
   );
   // Create and action buttons.
   const split = chrome.locator("[data-split-button]");
