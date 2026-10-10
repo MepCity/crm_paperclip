@@ -229,28 +229,127 @@ async function companyColumnTexts(page: import("@playwright/test").Page): Promis
 }
 
 async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
-  const rows = page.locator("table tbody tr");
-  const rowCount = await rows.count();
-  const ids: string[] = [];
-  for (let i = 0; i < rowCount; i++) {
-    const href = await rows.nth(i).getByRole("link").first().getAttribute("href");
-    const match = href?.match(/\/Leads\/([^/?#]+)/);
-    if (match?.[1]) ids.push(match[1]);
-  }
-  return ids;
+  return page.locator("table tbody tr").evaluateAll((rows) => {
+    const ids: string[] = [];
+    for (const row of rows) {
+      const link = row.querySelector("a[href*='/Leads/']");
+      const href = link?.getAttribute("href");
+      const match = href?.match(/\/Leads\/([^/?#]+)/);
+      if (match?.[1]) ids.push(match[1]);
+    }
+    return ids;
+  });
 }
 
-async function expectFilterResultsMatchResponses(
+type UnfilteredLeadRow = {
+  id: string;
+  Full_Name: string | null;
+  Company: string | null;
+  Lead_Source: string | null;
+  Created_Time: string | null;
+};
+
+function captureNextBulkSearchParams(page: import("@playwright/test").Page) {
+  return page
+    .waitForRequest((request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      return parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk");
+    })
+    .then((request) => new URL(request.url()).searchParams);
+}
+
+function isCreatedOnUtcToday(createdTime: string | null, now: Date): boolean {
+  if (!createdTime) return false;
+  const parsed = Date.parse(createdTime);
+  if (Number.isNaN(parsed)) return false;
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return parsed >= start && parsed < start + 86_400_000;
+}
+
+function firstPageFilterExpectations(
+  rows: readonly UnfilteredLeadRow[],
+  perPage: number,
+  predicate: (row: UnfilteredLeadRow) => boolean,
+): { ids: string[]; total: number } {
+  const matching = rows.filter(predicate);
+  return {
+    ids: matching.slice(0, perPage).map((row) => row.id),
+    total: matching.length,
+  };
+}
+
+async function fetchUnfilteredLeadCatalog(
   page: import("@playwright/test").Page,
-  bulkResponse: import("@playwright/test").Response,
-  countResponse: import("@playwright/test").Response,
+  orgSlug: string,
+  bulkSearchParams: URLSearchParams,
+): Promise<UnfilteredLeadRow[]> {
+  const bulkParams = new URLSearchParams(bulkSearchParams);
+  const cvid = bulkParams.get("cvid");
+  if (!cvid) throw new Error("Expected cvid on bulk request.");
+  const perPage = bulkParams.get("per_page") ?? "30";
+  bulkParams.set("per_page", perPage);
+  const existingFields = bulkParams.get("fields")?.split(",").filter(Boolean) ?? [];
+  const fields = [
+    ...new Set([...existingFields, "Full_Name", "Company", "Lead_Source", "Created_Time"]),
+  ];
+  bulkParams.set("fields", fields.join(","));
+  bulkParams.delete("page");
+  return page.evaluate(
+    async ({ org, bulkQueryBase }) => {
+      const headers = {
+        "Content-Type": "application/json",
+        "X-CRM-ORG": org,
+      };
+      const rows: UnfilteredLeadRow[] = [];
+      let pageNumber = 1;
+      for (;;) {
+        const bulkQuery = new URLSearchParams(bulkQueryBase);
+        bulkQuery.set("page", String(pageNumber));
+        const bulkResponse = await fetch(`/crm/v2.2/Leads/bulk?${bulkQuery}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({}),
+        });
+        if (!bulkResponse.ok) {
+          throw new Error(`bulk ${bulkResponse.status}: ${await bulkResponse.text()}`);
+        }
+        const text = await bulkResponse.text();
+        if (!text) break;
+        const bulkJson = JSON.parse(text) as {
+          data?: {
+            id: string;
+            Full_Name?: string | null;
+            Company?: string | null;
+            Lead_Source?: string | null;
+            Created_Time?: string | null;
+          }[];
+          info?: { more_records?: boolean };
+        };
+        for (const row of bulkJson.data ?? []) {
+          rows.push({
+            id: row.id,
+            Full_Name: row.Full_Name ?? null,
+            Company: row.Company ?? null,
+            Lead_Source: row.Lead_Source ?? null,
+            Created_Time: row.Created_Time ?? null,
+          });
+        }
+        if (!bulkJson.info?.more_records) break;
+        pageNumber += 1;
+      }
+      return rows;
+    },
+    { org: orgSlug, bulkQueryBase: bulkParams.toString() },
+  );
+}
+
+async function expectFilterResultsInDom(
+  page: import("@playwright/test").Page,
+  expectations: { ids: string[]; total: number },
 ) {
-  const bulkJson = (await bulkResponse.json()) as { data: { id: string }[] };
-  const countJson = (await countResponse.json()) as { count: number };
-  const expectedIds = bulkJson.data.map((row) => row.id);
-  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectedIds);
-  await expect(page.locator("[data-part=total-value]")).toHaveText(String(countJson.count));
-  expect(expectedIds.length).toBeLessThanOrEqual(countJson.count);
+  await expect.poll(async () => recordIdsInTable(page)).toEqual(expectations.ids);
+  await expect(page.locator("[data-part=total-value]")).toHaveText(String(expectations.total));
+  expect(expectations.ids.length).toBeLessThanOrEqual(expectations.total);
 }
 
 async function waitForFilteredListResponses(page: import("@playwright/test").Page) {
@@ -338,12 +437,8 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLinkOnPage1 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    const firstLink = page.locator("table tbody tr").first().getByRole("link").first();
+    const firstLinkOnPage1 = await firstLink.innerText();
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
@@ -352,24 +447,18 @@ test.describe("Leads list page", () => {
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkOnPage2 = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    // The list keeps the previous page's rows on screen while the next page loads, so
+    // the row count alone never proves the swap. Wait for the content, then read it.
+    await expect.poll(() => firstLink.innerText()).not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstLink.innerText();
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
     await page.getByLabel("Previous").click();
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    const firstLinkBack = await page
-      .locator("table tbody tr")
-      .first()
-      .getByRole("link")
-      .first()
-      .innerText();
+    await expect.poll(() => firstLink.innerText()).toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstLink.innerText();
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
@@ -842,10 +931,15 @@ test.describe("Leads list page", () => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
     const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const bulkSearchParams = await bulkSearchParamsPromise;
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
     const initialRows = await page.locator("table tbody tr").count();
     const initialTotal = await page.locator("[data-part=total-value]").innerText();
+    const perPage = Number(bulkSearchParams.get("per_page") ?? "30");
+    const unfilteredCatalog = await fetchUnfilteredLeadCatalog(page, org.slug, bulkSearchParams);
     const sampleCompany = (
       await page.locator("table tbody tr").first().locator("[data-part=column]").nth(1).innerText()
     ).trim();
@@ -869,10 +963,18 @@ test.describe("Leads list page", () => {
         lastCountBody = request.postDataJSON();
       }
     });
+    const companyNeedle = sampleCompany.toLowerCase();
+    const companyExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => typeof row.Company === "string" && row.Company.toLowerCase().includes(companyNeedle),
+    );
     const companyResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [companyBulk, companyCount] = await companyResponses;
-    await expectFilterResultsMatchResponses(page, companyBulk, companyCount);
+    expect(companyBulk.ok()).toBe(true);
+    expect(companyCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, companyExpectations);
     const filteredRows = await page.locator("table tbody tr").count();
     expect(filteredRows).toBeGreaterThan(0);
     expect(filteredRows).toBeLessThan(initialRows);
@@ -892,6 +994,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -903,10 +1006,17 @@ test.describe("Leads list page", () => {
     await selectPicklistValues(page, panel, "Lead Source", [leadSourceA, leadSourceB]);
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const leadSourceExpectations = firstPageFilterExpectations(
+      unfilteredCatalog,
+      perPage,
+      (row) => row.Lead_Source === leadSourceA || row.Lead_Source === leadSourceB,
+    );
     const leadSourceResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [leadSourceBulk, leadSourceCount] = await leadSourceResponses;
-    await expectFilterResultsMatchResponses(page, leadSourceBulk, leadSourceCount);
+    expect(leadSourceBulk.ok()).toBe(true);
+    expect(leadSourceCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, leadSourceExpectations);
     expect(lastBulkBody).toEqual(
       expect.objectContaining({
         filters: {
@@ -919,6 +1029,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
 
@@ -927,10 +1038,17 @@ test.describe("Leads list page", () => {
     await page.getByRole("option", { name: "Today", exact: true }).click();
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    // Fixture seeds mixed Created_Time ages; Today expectation is computed from unfiltered rows only.
+    const todayNow = new Date();
+    const todayExpectations = firstPageFilterExpectations(unfilteredCatalog, perPage, (row) =>
+      isCreatedOnUtcToday(row.Created_Time, todayNow),
+    );
     const todayResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
     const [todayBulk, todayCount] = await todayResponses;
-    await expectFilterResultsMatchResponses(page, todayBulk, todayCount);
+    expect(todayBulk.ok()).toBe(true);
+    expect(todayCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
       filters: {
         field: { api_name: "Created_Time" },
@@ -941,6 +1059,7 @@ test.describe("Leads list page", () => {
     expect(lastCountBody).toEqual(lastBulkBody);
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await openFilterRow(page, panel, "Company");
     await panel.getByRole("button", { name: /Company operator$/ }).click();
@@ -948,14 +1067,17 @@ test.describe("Leads list page", () => {
     await panel.getByRole("textbox", { name: "Company value" }).fill("zzzz-no-match-zzzz");
     lastBulkBody = undefined;
     lastCountBody = undefined;
+    const noMatchExpectations = { ids: [] as string[], total: 0 };
     const noMatchResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Apply Filter" }).click();
-    await noMatchResponses;
+    const [noMatchBulk, noMatchCount] = await noMatchResponses;
+    expect(noMatchBulk.ok()).toBe(true);
+    expect(noMatchCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, noMatchExpectations);
     await expect(page.getByText("No Leads found.")).toBeVisible();
-    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
-    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
 
     await panel.getByRole("button", { name: "Clear" }).click();
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);
@@ -965,11 +1087,15 @@ test.describe("Leads list page", () => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
     const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const bulkSearchParams = await bulkSearchParamsPromise;
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     await expect(alphabetControl(page)).toHaveText("All");
+    const baselineIds = await recordIdsInTable(page);
     const initialTotal = Number(await page.locator("[data-part=total-value]").innerText());
-    const beforeIds = await recordIdsInTable(page);
+    const perPage = Number(bulkSearchParams.get("per_page") ?? "30");
+    const catalog = await fetchUnfilteredLeadCatalog(page, org.slug, bulkSearchParams);
 
     let lastBulkBody: unknown;
     let lastCountBody: unknown;
@@ -980,10 +1106,18 @@ test.describe("Leads list page", () => {
       if (parsed.pathname.endsWith("/Leads/actions/count")) lastCountBody = request.postDataJSON();
     });
 
+    const startsWith = (letter: string) => (row: UnfilteredLeadRow) =>
+      (row.Full_Name ?? "").toLowerCase().startsWith(letter.toLowerCase());
+    const letterExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("L"));
+    expect(letterExpectations.total).toBeGreaterThan(0);
+    expect(letterExpectations.total).toBeLessThan(initialTotal);
+
     const letterResponses = waitForFilteredListResponses(page);
     await pickLetter(page, "L");
     const [letterBulk, letterCount] = await letterResponses;
-    await expectFilterResultsMatchResponses(page, letterBulk, letterCount);
+    expect(letterBulk.ok()).toBe(true);
+    expect(letterCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, letterExpectations);
     expect(lastBulkBody).toEqual(
       expect.objectContaining({
         filters: {
@@ -998,33 +1132,33 @@ test.describe("Leads list page", () => {
     const names = await leadNameColumnTexts(page);
     expect(names.length).toBeGreaterThan(0);
     for (const name of names) expect(name.startsWith("L")).toBe(true);
-    const letterTotal = Number(await page.locator("[data-part=total-value]").innerText());
-    expect(letterTotal).toBeLessThan(initialTotal);
-    const letterIds = await recordIdsInTable(page);
 
+    const otherExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("S"));
+    expect(otherExpectations.total).toBeGreaterThan(0);
     const otherResponses = waitForFilteredListResponses(page);
     await pickLetter(page, "S");
     await otherResponses;
+    await expectFilterResultsInDom(page, otherExpectations);
     const otherNames = await leadNameColumnTexts(page);
-    expect(otherNames.length).toBeGreaterThan(0);
     for (const name of otherNames) expect(name.startsWith("S")).toBe(true);
     // Two different letters answer disjoint record sets on the first page.
     const otherIds = await recordIdsInTable(page);
-    expect(otherIds.filter((id) => letterIds.includes(id))).toEqual([]);
+    expect(otherIds.filter((id) => letterExpectations.ids.includes(id))).toEqual([]);
 
+    const emptyExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("Z"));
+    expect(emptyExpectations).toEqual({ ids: [], total: 0 });
     const emptyResponses = waitForFilteredListResponses(page);
     await pickLetter(page, "Z");
     await emptyResponses;
     await expect(page.getByText("No Leads found.")).toBeVisible();
-    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
-    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
+    await expectFilterResultsInDom(page, emptyExpectations);
 
     const allResponses = waitForFilteredListResponses(page);
     await pickLetter(page, "All");
     await allResponses;
     await expect(alphabetControl(page)).toHaveText("All");
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
     await expect(page.locator("[data-part=total-value]")).toHaveText(String(initialTotal));
-    await expect.poll(async () => recordIdsInTable(page)).toEqual(beforeIds);
     await expectNoA11yViolations(page);
   });
 

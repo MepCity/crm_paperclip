@@ -34,9 +34,12 @@ import {
 } from "@/lib/api/client/hooks";
 import { withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { usePreference } from "@/lib/preferences";
 import {
   appliedSortFromState,
   LIST_PAGE_DEFAULT,
+  LIST_PER_PAGE_DEFAULT,
+  type ListPerPage,
   type ListSearchState,
   listQueryFromSearchState,
   parseListSearchParams,
@@ -45,6 +48,7 @@ import {
 import { writeRecordListContext } from "@/lib/records/record-list-context";
 import { resolveSortFieldLabels } from "@/lib/records/sort-fields";
 import { RecordTable } from "./record-table";
+import { ViewSettingsMenu } from "./view-settings-menu";
 import { ViewTabStrip } from "./view-tab-strip";
 
 export interface ModuleListPaths {
@@ -116,7 +120,12 @@ function ModuleListScreenLoaded({
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
-  const searchState = useMemo(() => parseListSearchParams(searchParams), [searchParams]);
+  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", LIST_PER_PAGE_DEFAULT);
+  const [wrapText, setWrapText] = usePreference(`list.wrap-text.${viewId}`, true);
+  const searchState = useMemo(
+    () => parseListSearchParams(searchParams, storedPerPage),
+    [searchParams, storedPerPage],
+  );
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
@@ -289,6 +298,12 @@ function ModuleListScreenLoaded({
     searchState.sortOrder,
     filterSelection,
   ]);
+
+  /** A page-size choice is stored as a preference and applied to the address from page 1. */
+  function changePerPage(next: ListPerPage) {
+    setStoredPerPage(next);
+    navigate({ ...searchState, page: LIST_PAGE_DEFAULT, perPage: next });
+  }
 
   function refreshView() {
     setSelectedIds([]);
@@ -498,8 +513,16 @@ function ModuleListScreenLoaded({
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
             alphabet={{ value: letter, onChange: applyLetter }}
-            wrapText
+            wrapText={wrapText}
             emptyMessage={emptyMessage}
+            settings={
+              <ViewSettingsMenu
+                perPage={searchState.perPage}
+                onPerPageChange={changePerPage}
+                wrapText={wrapText}
+                onWrapTextChange={setWrapText}
+              />
+            }
             ownerNames={ownerNames}
             format={DEFAULT_FORMAT}
             footer={{

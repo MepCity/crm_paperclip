@@ -1,3 +1,4 @@
+import { ValidationError } from "@crm/core/errors";
 import type { Criteria, OrgContext } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it, vi } from "vitest";
@@ -546,4 +547,14 @@ it("requests home currency by GET without module metadata or query parameters", 
     prefixSymbol: true,
   });
   expect(fetch).toHaveBeenCalledExactlyOnceWith("/crm/v2.2/org/currencies", { method: "GET" });
+});
+
+it("reports a missing or malformed currencies list as a validation error", async () => {
+  for (const body of [null, {}, { currencies: null }, { currencies: "TL" }]) {
+    const fetch = vi.fn().mockResolvedValue(body);
+    const service = createHttpRecordService({ orgSlug: "currency-test", fetch });
+    const error = await service.getHomeCurrency().catch((cause: unknown) => cause);
+    expect(error, JSON.stringify(body)).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).fieldErrors).toEqual({ currencies: ["Invalid value."] });
+  }
 });
