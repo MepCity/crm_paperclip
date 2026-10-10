@@ -407,6 +407,62 @@ describe("LeadRecordScreen", () => {
     });
   });
 
+  it("renders both Overview and Timeline tabs and switches between them", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected seeded lead.");
+
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+
+    const overviewTab = screen.getByRole("tab", { name: "Overview" });
+    const timelineTab = screen.getByRole("tab", { name: "Timeline" });
+    expect(overviewTab).toBeTruthy();
+    expect(timelineTab).toBeTruthy();
+    expect(overviewTab.getAttribute("aria-selected")).toBe("true");
+    expect(timelineTab.getAttribute("aria-selected")).toBe("false");
+    expect(screen.getByLabelText("Business card")).toBeTruthy();
+
+    const user = userEvent.setup();
+
+    await user.click(timelineTab);
+    expect(timelineTab.getAttribute("aria-selected")).toBe("true");
+    expect(overviewTab.getAttribute("aria-selected")).toBe("false");
+    expect(screen.getByRole("heading", { level: 3, name: "Timeline History" })).toBeTruthy();
+
+    const filterBtn = screen.getByRole("button", { name: "History filter" });
+    expect(filterBtn).toBeTruthy();
+    expect(document.querySelector("[data-timeline-filter-panel]")).toBeNull();
+
+    await user.click(filterBtn);
+    expect(document.querySelector("[data-timeline-filter-panel]")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Modules All Modules" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Users All Users" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Time Any Time" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sources All Sources" })).toBeTruthy();
+
+    const applyBtn = screen.getByRole("button", { name: "Apply Filter" });
+    expect((applyBtn as HTMLButtonElement).disabled).toBe(true);
+
+    await user.click(filterBtn);
+    expect(document.querySelector("[data-timeline-filter-panel]")).toBeNull();
+
+    await user.click(overviewTab);
+    expect(overviewTab.getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByLabelText("Business card")).toBeTruthy();
+    expect(screen.getByLabelText("Details card")).toBeTruthy();
+
+    const details = screen.getByRole("region", { name: "Details card" });
+    await user.click(within(details).getByRole("button", { name: "Edit Company" }));
+    expect(screen.getByRole("textbox", { name: "Company" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("textbox", { name: "Company" })).toBeNull();
+  });
+
   it("shows not found for a missing record", async () => {
     const service = createService();
     renderScreen(service, "missing-record-id");

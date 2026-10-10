@@ -470,4 +470,64 @@ test.describe("Lead record detail page", () => {
     expectEdge(statusBox.y, STATUS_TOP);
     expectEdge(statusBox.height, STATUS_HEIGHT);
   });
+
+  test("Timeline tab switches to History, opens filter panel, and returns to Overview without errors", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+
+    const frame = page.locator("[data-record-frame]");
+    const overviewTab = frame.getByRole("tab", { name: "Overview" });
+    const timelineTab = frame.getByRole("tab", { name: "Timeline" });
+    await expect(overviewTab).toBeVisible();
+    await expect(timelineTab).toBeVisible();
+    await expect(overviewTab).toHaveAttribute("aria-selected", "true");
+
+    const failedResponses: string[] = [];
+    const onResponse = (response: import("@playwright/test").Response) => {
+      if (response.status() >= 400) {
+        failedResponses.push(`${response.status()} ${response.url()}`);
+      }
+    };
+    page.on("response", onResponse);
+
+    // Switch to Timeline
+    await timelineTab.click();
+    await expect(timelineTab).toHaveAttribute("aria-selected", "true");
+    await expect(frame.locator("[data-timeline-surface]")).toBeVisible();
+    await expect(frame.locator("[data-timeline-history]")).toBeVisible();
+    await expect(frame.getByRole("heading", { level: 3, name: "Timeline History" })).toBeVisible();
+
+    // Filter button is visible and opens filter panel
+    const filterButton = frame.getByRole("button", { name: "History filter" });
+    await expect(filterButton).toBeVisible();
+    await expect(frame.locator("[data-timeline-filter-panel]")).toHaveCount(0);
+
+    await filterButton.click();
+    const filterPanel = frame.locator("[data-timeline-filter-panel]");
+    await expect(filterPanel).toBeVisible();
+    await expect(filterPanel.getByRole("button", { name: "Modules All Modules" })).toBeVisible();
+    await expect(filterPanel.getByRole("button", { name: "Users All Users" })).toBeVisible();
+    await expect(filterPanel.getByRole("button", { name: "Time Any Time" })).toBeVisible();
+    await expect(filterPanel.getByRole("button", { name: "Sources All Sources" })).toBeVisible();
+
+    const applyButton = filterPanel.getByRole("button", { name: "Apply Filter" });
+    await expect(applyButton).toBeVisible();
+    await expect(applyButton).toBeDisabled();
+
+    // Close filter panel
+    await filterButton.click();
+    await expect(frame.locator("[data-timeline-filter-panel]")).toHaveCount(0);
+
+    // Return to Overview
+    await overviewTab.click();
+    await expect(overviewTab).toHaveAttribute("aria-selected", "true");
+    await expect(frame.getByRole("region", { name: "Business card" })).toBeVisible();
+    await expect(frame.getByRole("region", { name: "Details card" })).toBeVisible();
+
+    page.off("response", onResponse);
+    expect(failedResponses).toHaveLength(0);
+  });
 });
