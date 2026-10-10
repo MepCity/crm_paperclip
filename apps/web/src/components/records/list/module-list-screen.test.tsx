@@ -83,11 +83,48 @@ async function firstFixtureRecordOnCurrentListPage(
   return { selectedRecord, selectedName };
 }
 
+function tableRowSelectCheckboxes(): HTMLInputElement[] {
+  const table = screen.getByRole("table", { name: "Records" });
+  return within(table).getAllByRole("checkbox", { name: /Select / }) as HTMLInputElement[];
+}
+
+async function expectAllTableRowSelectsUnchecked() {
+  await waitFor(() => {
+    for (const checkbox of tableRowSelectCheckboxes()) {
+      expect(checkbox.checked).toBe(false);
+    }
+  });
+}
+
+function expectRowAbsentFromTable(recordName: string) {
+  expect(screen.queryByRole("row", { name: new RegExp(recordName) })).toBeNull();
+}
+
 function expectRowSelectUnchecked(recordName: string) {
-  const row = screen.queryByRole("row", { name: new RegExp(recordName) });
-  if (!row) return;
+  const row = screen.getByRole("row", { name: new RegExp(recordName) });
   const checkbox = within(row).getByRole("checkbox", { name: /Select / }) as HTMLInputElement;
   expect(checkbox.checked).toBe(false);
+}
+
+async function selectFirstFixtureRecordOnCurrentListPage(
+  records: ReturnType<typeof createFixtureRecordService>,
+  listSpy: ReturnType<typeof vi.spyOn>,
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
+  await user.click(rowSelectCheckboxForRecordName(selectedName));
+  await waitFor(() => {
+    expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByText("1 Record Selected")).toBeTruthy();
+  });
+  return { selectedName };
+}
+
+async function expectNoTableRowSelection() {
+  await waitFor(() => {
+    expect(screen.queryByText("1 Record Selected")).toBeNull();
+  });
+  await expectAllTableRowSelectsUnchecked();
 }
 
 async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRecordService>) {
@@ -228,7 +265,8 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.queryByText("1 Record Selected")).toBeNull();
     });
-    expectRowSelectUnchecked(selectedName);
+    expectRowAbsentFromTable(selectedName);
+    await expectAllTableRowSelectsUnchecked();
     expect(navigation.push).toHaveBeenCalled();
   });
 
@@ -291,21 +329,13 @@ describe("ModuleListScreen", () => {
     });
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
     await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
-    const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
-    await user.click(rowSelectCheckboxForRecordName(selectedName));
-    await waitFor(() => {
-      expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
-      expect(screen.getByText("1 Record Selected")).toBeTruthy();
-    });
     await user.click(screen.getByRole("button", { name: "Apply Filter" }));
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
       expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
-    await waitFor(() => {
-      expect(screen.queryByText("1 Record Selected")).toBeNull();
-    });
-    expectRowSelectUnchecked(selectedName);
+    await selectFirstFixtureRecordOnCurrentListPage(records, listSpy, user);
     rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="converted-leads" />);
     await waitFor(() => {
       const query = listSpy.mock.calls.at(-1)?.[1];
@@ -315,6 +345,7 @@ describe("ModuleListScreen", () => {
       expect(query?.perPage).toBe(10);
       expect(query?.sort).toEqual({ field: "Company", order: "asc" });
     });
+    await expectNoTableRowSelection();
     const panel = screen.getByRole("region", { name: "Filter Leads by" });
     const companyCheckbox = within(panel).getByRole("checkbox", { name: "Company" });
     expect(companyCheckbox.getAttribute("aria-checked")).not.toBe("true");
@@ -325,6 +356,7 @@ describe("ModuleListScreen", () => {
       expect(query?.viewId).toBe("all-leads");
       expect(query?.filters).toBeUndefined();
     });
+    await expectNoTableRowSelection();
     const panelAgain = screen.getByRole("region", { name: "Filter Leads by" });
     expect(within(panelAgain).queryByRole("textbox", { name: "Company value" })).toBeNull();
   });
