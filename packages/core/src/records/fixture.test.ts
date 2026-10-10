@@ -11,6 +11,7 @@ import type {
   RecordInput,
 } from "./contract";
 import { describeRecordServiceContract } from "./contract-suite";
+import { leadsRecordServiceContractModule } from "./contract-suite-module";
 import { createFixtureRecordService } from "./fixture";
 import { sortRecords } from "./fixture/query";
 import { generateFixtureLeads } from "./fixture/seed";
@@ -28,7 +29,11 @@ const input = (extra: RecordInput = {}): RecordInput => ({
   Company: "Example Company",
   ...extra,
 });
-describeRecordServiceContract("fixture", createFixtureRecordService);
+describeRecordServiceContract(
+  "fixture",
+  createFixtureRecordService,
+  leadsRecordServiceContractModule,
+);
 
 describe("Leads surface metadata", () => {
   it("publishes the exact surface counts and observed layout columns", async () => {
