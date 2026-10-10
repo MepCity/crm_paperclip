@@ -43,7 +43,9 @@ test("Filter toggles via props and reports aria-pressed, refresh delegates", asy
   expect(changed.mock.calls).toEqual([[true], [false]]);
   await user.click(screen.getByRole("button", { name: "Refresh Custom View" }));
   expect(refresh).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole("img", { name: "List presentation" }).tabIndex).toBe(-1);
+  expect(
+    screen.getByRole("button", { name: "List presentation" }).getAttribute("aria-pressed"),
+  ).toBe("true");
 });
 
 test("No items omits More and Actions; the selected view has no extra controls", () => {

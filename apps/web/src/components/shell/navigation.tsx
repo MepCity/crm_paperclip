@@ -3,7 +3,13 @@
 import { usePathname } from "next/navigation";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Link } from "@/components/ui/link";
-import { isNavLinkActive, type NavConfig, type NavLink, shellNav } from "./nav";
+import {
+  isNavLinkActive,
+  type NavConfig,
+  type NavLink,
+  navLinkIconClassName,
+  shellNav,
+} from "./nav";
 
 function NavigationLink({
   link,
@@ -25,10 +31,7 @@ function NavigationLink({
       aria-current={active ? "page" : undefined}
     >
       <span className={nested ? "ml-(--size-rail-nested-icon-offset) inline-flex" : "inline-flex"}>
-        <IconComponent
-          className={`size-(--size-rail-icon) shrink-0 ${nested && !active ? "text-rail-icon" : ""}`}
-          aria-hidden
-        />
+        <IconComponent className={navLinkIconClassName(link, { nested, active })} aria-hidden />
       </span>
       <span>{link.label}</span>
     </Link>

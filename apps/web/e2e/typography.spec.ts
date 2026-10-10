@@ -93,7 +93,7 @@ test("list sort popover and menus use measured dialog and menu text roles", asyn
     "--font-weight-semibold",
   );
   await page.keyboard.press("Escape");
-  const more = chrome.getByRole("button", { name: "More" });
+  const more = chrome.getByRole("button", { name: "More", exact: true });
   await more.focus();
   await page.keyboard.press("ArrowDown");
   const menuItem = page.getByRole("menuitem", { name: "Example action", exact: true });

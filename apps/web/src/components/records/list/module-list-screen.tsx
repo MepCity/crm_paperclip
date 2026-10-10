@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import type { MenuAction } from "@/components/ui/menu";
 import {
   combineCriteriaAnd,
   firstLetterCriteria,
@@ -472,6 +473,25 @@ function ModuleListScreenLoaded({
       ? withSearchParams(listBasePath, searchParamsFromListState(nextState))
       : null;
 
+  const inert = () => {};
+  const selectionActions: MenuAction[] = [
+    { id: "run-macro", label: "Run Macro", onAction: inert },
+    { id: "create-task", label: "Create Task", onAction: inert },
+    {
+      id: "change-owner",
+      label: "Change Owner",
+      onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
+    },
+    { id: "cadences", label: "Cadences", onAction: inert },
+    { id: "add-to-campaigns", label: "Add to Campaigns", onAction: inert },
+    { id: "print-mailing-labels", label: "Print Mailing Labels", onAction: inert },
+    { id: "print-using-canvas", label: "Print Using Canvas", onAction: inert },
+    { id: "mail-merge", label: "Mail Merge", onAction: inert },
+    { id: "mass-convert", label: "Mass Convert", onAction: inert },
+    { id: "delete", label: "Delete", onAction: openDeleteDialog },
+    { id: "export-selected", label: "Export Selected Records", onAction: inert },
+  ];
+
   return (
     <div className="module-list-page">
       <ViewTabStrip viewName={view.name} />
@@ -479,19 +499,8 @@ function ModuleListScreenLoaded({
         <SelectionBar
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
-          onDelete={openDeleteDialog}
           onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
-          actions={
-            ownerField
-              ? [
-                  {
-                    id: "change-owner",
-                    label: "Change Owner",
-                    onAction: () => setChangeOwnerOpen(true),
-                  },
-                ]
-              : []
-          }
+          actions={selectionActions}
         />
       ) : (
         <ListToolbar

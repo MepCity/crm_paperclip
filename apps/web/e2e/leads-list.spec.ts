@@ -948,15 +948,16 @@ test.describe("Leads list page", () => {
     const deletedIds: string[] = [];
     await rowChecks.nth(1).check({ force: true });
     await rowChecks.nth(2).check({ force: true });
-    await expect(page.getByText("2 Records Selected")).toBeVisible();
+    await expect(page.getByText("2 Records Selected.")).toBeVisible();
     await expectNoA11yViolations(page);
     await expect(page.getByRole("button", { name: "Filter", exact: true })).toHaveCount(0);
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
     await expect(page.getByRole("alertdialog")).toBeVisible();
     await expectNoA11yViolations(page);
     await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
-    await expect(page.getByText("2 Records Selected")).toBeVisible();
+    await expect(page.getByText("2 Records Selected.")).toBeVisible();
     const deleteDone = page.waitForResponse(async (response) => {
       if (response.request().method() !== "POST") return false;
       if (!response.url().includes("/actions/mass_delete")) return false;
@@ -965,7 +966,8 @@ test.describe("Leads list page", () => {
       deletedIds.push(...(body?.ids ?? []));
       return response.ok();
     });
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
     await deleteDone;
     expect(deletedIds).toHaveLength(2);
@@ -1462,7 +1464,8 @@ test.describe("Leads list page", () => {
     expectEdge(barBox.y, toolbarBox.y);
     expectEdge(barBox.height, toolbarHeight);
 
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
     const dialog = page.getByRole("alertdialog");
     await expect(dialog).toBeVisible();
     const panel = dialog.locator("xpath=..");
@@ -1846,5 +1849,126 @@ test.describe("Leads list page", () => {
     );
     await expect(ownerCancel).toHaveCSS("border-radius", `${cornerRadius}px`);
     await expect(ownerConfirm).toHaveCSS("border-radius", `${cornerRadius}px`);
+  });
+
+  test("list view chrome matches the measured toolbar, switcher and selection rows", async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 1470, height: 835 });
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const listPage = page.locator(".module-list-page");
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    // Tab strip bottom rule: 1 px #DCDBEE spanning the full content canvas (x 320–1470).
+    const tabStrip = listPage.locator("[data-view-tab-strip]");
+    await expect(tabStrip).toHaveCSS("border-bottom-width", "1px");
+    await expect(tabStrip).toHaveCSS("border-bottom-color", "rgb(220, 219, 238)");
+    const pageBox = requireBox(await listPage.boundingBox(), "list page");
+    const stripBox = requireBox(await tabStrip.boundingBox(), "tab strip");
+    expect(Math.abs(stripBox.x - pageBox.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(stripBox.width - pageBox.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(pageBox.width - 1150)).toBeLessThanOrEqual(1);
+
+    // Filter toggle, panel open, sits on the white toolbar surface with the measured fill and
+    // a black funnel glyph in a 15 × 16 ink box (list-views.md › Filter toggle, panel open).
+    const toolbar = listPage.locator("[data-list-toolbar]");
+    await expect(toolbar).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    const filter = listPage.getByRole("button", { name: "Filter", exact: true });
+    await expect(filter).toHaveAttribute("aria-pressed", "true");
+    await expect(filter).toHaveCSS("background-color", "rgb(237, 240, 249)");
+    const funnel = requireBox(await filter.locator("svg").boundingBox(), "funnel ink");
+    expect(Math.abs(funnel.width - 15)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(funnel.height - 16)).toBeLessThanOrEqual(0.5);
+    await expect(filter.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
+
+    // View type switcher: seven controls on a 6 px gap, the first tile on the measured edge,
+    // the unimplemented presentations aria-disabled (Interim).
+    const switcher = listPage.locator("[data-view-type-switcher]");
+    await expect(switcher.locator("button")).toHaveCount(7);
+    const listTile = requireBox(
+      await listPage.getByRole("button", { name: "List presentation" }).boundingBox(),
+      "list tile",
+    );
+    expect(Math.abs(listTile.width - 26)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(listTile.x - 500)).toBeLessThanOrEqual(2);
+    const splitTile = requireBox(
+      await listPage.getByRole("button", { name: "Split presentation" }).boundingBox(),
+      "split tile",
+    );
+    expect(Math.abs(splitTile.x - (listTile.x + listTile.width + 6))).toBeLessThanOrEqual(0.5);
+    await expect(switcher.getByRole("button", { name: "Grid presentation" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+
+    // Filter panel row label: the measured labels wrap within the capped text field.
+    for (const label of ["Untouched Records", "Address - Country / Region"]) {
+      const el = listPage.getByText(label, { exact: true });
+      const box = requireBox(await el.boundingBox(), `label ${label}`);
+      expect(Math.abs(box.width - 126)).toBeLessThanOrEqual(0.5);
+      expect(box.height).toBeGreaterThanOrEqual(32);
+    }
+
+    // Acceptance view: the 1470 × 835 list with the filter panel open, before selection.
+    await listPage.screenshot({ path: testInfo.outputPath("mep230-list-1470x835.png") });
+
+    // Selection toolbar: counter strip and four record-action buttons at the measured widths.
+    await page
+      .getByRole("checkbox", { name: /Select / })
+      .nth(1)
+      .check({ force: true });
+    const bar = listPage.locator("[data-selection-bar]");
+    await expect(bar).toBeVisible();
+    await expect(bar.getByText("1 Record Selected.", { exact: true })).toBeVisible();
+    const counter = requireBox(
+      await bar.locator("[data-part=selection-strip]").boundingBox(),
+      "counter",
+    );
+    expect(Math.abs(counter.width - 170)).toBeLessThanOrEqual(1);
+    const sendEmail = requireBox(
+      await bar.getByRole("button", { name: "Send Email" }).boundingBox(),
+    );
+    const tags = requireBox(await bar.getByRole("button", { name: "Tags" }).boundingBox());
+    const massUpdate = requireBox(
+      await bar.getByRole("button", { name: "Mass Update" }).boundingBox(),
+    );
+    const actionsBtn = requireBox(await bar.getByRole("button", { name: "Actions" }).boundingBox());
+    expect(Math.abs(sendEmail.width - 101)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(tags.width - 73)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(massUpdate.width - 113)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(actionsBtn.width - 45)).toBeLessThanOrEqual(0.5);
+    for (const b of [sendEmail, tags, massUpdate, actionsBtn]) {
+      expect(Math.abs(b.height - 32)).toBeLessThanOrEqual(0.5);
+    }
+    expect(Math.abs(tags.x - (sendEmail.x + sendEmail.width) - 8)).toBeLessThanOrEqual(0.5);
+    await expect(bar.getByRole("button", { name: "Send Email" })).toHaveCSS(
+      "background-image",
+      /rgb\(253, 253, 254\).*rgb\(243, 242, 248\)/,
+    );
+
+    // Selection Actions menu: the 11 operations in screen order, rows 32 px high.
+    await bar.getByRole("button", { name: "Actions" }).click();
+    const items = (await page.getByRole("menuitem").allInnerTexts()).map((text) => text.trim());
+    expect(items).toEqual([
+      "Run Macro",
+      "Create Task",
+      "Change Owner",
+      "Cadences",
+      "Add to Campaigns",
+      "Print Mailing Labels",
+      "Print Using Canvas",
+      "Mail Merge",
+      "Mass Convert",
+      "Delete",
+      "Export Selected Records",
+    ]);
+    const firstItem = requireBox(
+      await page.getByRole("menuitem", { name: "Run Macro" }).boundingBox(),
+      "menu row",
+    );
+    expect(Math.abs(firstItem.height - 32)).toBeLessThanOrEqual(0.5);
   });
 });
