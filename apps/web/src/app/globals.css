@@ -57,6 +57,7 @@
   --color-panel-border: var(--color-panel-border);
   --color-row-separator: var(--color-row-separator);
   --color-text-strong: var(--color-text-strong);
+  --color-confirm-dialog-body: var(--color-confirm-dialog-body);
   --color-text-disabled: var(--color-text-disabled);
   --color-text-empty: var(--color-text-empty);
 

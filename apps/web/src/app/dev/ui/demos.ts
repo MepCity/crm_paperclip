@@ -1,5 +1,6 @@
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
@@ -8,6 +9,7 @@ import FilterEditorsDemo from "@/components/records/list/filter-editors.demo";
 import FilterPanelDemo from "@/components/records/list/filter-panel.demo";
 import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
+import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -15,6 +17,7 @@ import ButtonDemo from "@/components/ui/button.demo";
 import CardDemo from "@/components/ui/card.demo";
 import CheckboxDemo from "@/components/ui/checkbox.demo";
 import ComboBoxDemo from "@/components/ui/combo-box.demo";
+import ConfirmDialogDemo from "@/components/ui/confirm-dialog.demo";
 import DatePickerDemo from "@/components/ui/date-picker.demo";
 import DialogDemo from "@/components/ui/dialog.demo";
 import DisclosureDemo from "@/components/ui/disclosure.demo";
@@ -27,6 +30,7 @@ import NumberFieldDemo from "@/components/ui/number-field.demo";
 import PaginationDemo from "@/components/ui/pagination.demo";
 import PopoverDemo from "@/components/ui/popover.demo";
 import RadioGroupDemo from "@/components/ui/radio-group.demo";
+import SearchableSelectDemo from "@/components/ui/searchable-select.demo";
 import SelectDemo from "@/components/ui/select.demo";
 import SkeletonDemo from "@/components/ui/skeleton.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
@@ -43,6 +47,7 @@ import TooltipDemo from "@/components/ui/tooltip.demo";
 export const demos: Record<string, React.ComponentType> = {
   "field-input": FieldInputDemo,
   "record-detail": RecordDetailDemo,
+  "status-ribbon": StatusRibbonDemo,
   "filter-panel": FilterPanelDemo,
   "filter-editors": FilterEditorsDemo,
   "select-user-dialog": SelectUserDialogDemo,
@@ -61,9 +66,11 @@ export const demos: Record<string, React.ComponentType> = {
   "radio-group": RadioGroupDemo,
   "date-picker": DatePickerDemo,
   "combo-box": ComboBoxDemo,
+  "searchable-select": SearchableSelectDemo,
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,
+  "confirm-dialog": ConfirmDialogDemo,
   disclosure: DisclosureDemo,
   menu: MenuDemo,
   table: TableDemo,
@@ -79,6 +86,7 @@ export const demos: Record<string, React.ComponentType> = {
   "empty-state": EmptyStateDemo,
   skeleton: SkeletonDemo,
   "list-chrome": ListChromeDemo,
+  "selection-bar": SelectionBarDemo,
   "record-form-layout": RecordFormLayoutDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,

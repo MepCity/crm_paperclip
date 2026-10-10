@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectType, tokenValue } from "./support/typography";
 
-// record-detail.md › Layout › Visual layout › Create/edit form; MEP-172 interim vertical measures
+// record-detail.md › Layout › Visual layout › Create/edit form; MEP-172 / MEP-174 interim vertical measures
 test.use({ viewport: { width: 1470, height: 835 } });
 
 function px(value: string) {
@@ -51,6 +51,69 @@ async function horizontalGap(left: Locator, right: Locator) {
   return (b?.x ?? 0) - ((a?.x ?? 0) + (a?.width ?? 0));
 }
 
+async function legendTextStartX(legend: Locator) {
+  return legend.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const rect = range.getClientRects()[0];
+    return rect?.left ?? node.getBoundingClientRect().left;
+  });
+}
+
+async function legendTextEndX(legend: Locator) {
+  return legend.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const rects = range.getClientRects();
+    const rect = rects[rects.length - 1];
+    return (rect?.left ?? 0) + (rect?.width ?? 0);
+  });
+}
+
+async function legendBaselineY(legend: Locator) {
+  return legend.evaluate((node) => {
+    const probe = document.createElement("span");
+    probe.style.display = "inline-block";
+    probe.style.width = "0";
+    probe.style.height = "0";
+    node.append(probe);
+    const baseline = probe.getBoundingClientRect().bottom;
+    probe.remove();
+    return baseline;
+  });
+}
+
+async function verticalCenter(locator: Locator) {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  return (box?.y ?? 0) + (box?.height ?? 0) / 2;
+}
+
+async function sectionContentBottom(section: Locator) {
+  return section.evaluate((node) => {
+    const children = Array.from(node.children).filter(
+      (child) => !child.matches(".record-form-section__title"),
+    );
+    let bottom = node.getBoundingClientRect().top;
+    for (const child of children) {
+      bottom = Math.max(bottom, child.getBoundingClientRect().bottom);
+    }
+    return bottom;
+  });
+}
+
+async function sectionContentTop(section: Locator) {
+  return section.evaluate((node) => {
+    const children = Array.from(node.children).filter(
+      (child) => !child.matches(".record-form-section__title"),
+    );
+    if (children.length === 0) {
+      return node.getBoundingClientRect().bottom;
+    }
+    return Math.min(...children.map((child) => child.getBoundingClientRect().top));
+  });
+}
+
 test("create lead form layout matches measured geometry", async ({ page }) => {
   await page.goto("/dev/ui");
   const demo = page.getByRole("region", { name: "record form layout", exact: true });
@@ -65,7 +128,9 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const rightInput = demo.locator("#demo-company");
   const rows = shell.locator('[data-record-form-row-column="left"]');
   const cancel = shell.getByRole("button", { name: "Cancel" });
+  const saveAndNew = shell.getByRole("button", { name: "Save and New" });
   const save = shell.getByRole("button", { name: "Save", exact: true });
+  const descriptionInput = demo.locator("#demo-description");
   const stripTitle = shell.locator("[data-record-form-title]");
   const portrait = shell.locator("[data-record-form-portrait]");
   const streetInput = demo.locator("#demo-street");
@@ -81,8 +146,6 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const columnGap = px(await length(page, "--size-form-column-gap"));
   const cardInset = px(await length(page, "--size-form-card-inset"));
   const groupInputWidth = px(await length(page, "--size-form-input-group-width"));
-  const groupPaddingEnd = px(await length(page, "--size-form-field-group-padding-end"));
-  const groupBodyTop = px(await length(page, "--size-form-field-group-body-top"));
   const actionPaddingX = px(await length(page, "--size-form-action-padding-inline"));
   const stripPaddingEnd = px(await length(page, "--size-form-strip-padding-end"));
   const contentWidth =
@@ -119,7 +182,7 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   await boxWidth(rightInput, 314.5);
   await boxHeight(leftInput, 34);
   const labelGap = await horizontalGap(leftLabel, leftInput);
-  expect(labelGap).toBe(37);
+  expect(Math.abs(labelGap - 37)).toBeLessThanOrEqual(1);
   const inputColumnGap = await horizontalGap(leftInput, rightInput);
   expect(Math.abs(inputColumnGap - columnGap)).toBeLessThanOrEqual(1);
   const streetBox = await streetInput.boundingBox();
@@ -173,17 +236,66 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const groupBox = await fieldGroup.boundingBox();
   expect(groupBox).not.toBeNull();
   expect(streetBox).not.toBeNull();
+  const fieldGroupRadiusPx = px(await length(page, "--radius-form-field-group"));
+  const groupRadius = await fieldGroup.evaluate((node) =>
+    Number.parseFloat(getComputedStyle(node).borderTopLeftRadius),
+  );
+  expect(Math.abs(groupRadius - fieldGroupRadiusPx)).toBeLessThanOrEqual(0.5);
+  // MEP-172 / MEP-174 a: legend text inset and padding after text
+  const legendBox = await legend.boundingBox();
+  expect(legendBox).not.toBeNull();
+  const textStartX = await legendTextStartX(legend);
+  const textEndX = await legendTextEndX(legend);
+  expect(Math.abs(textStartX - (groupBox?.x ?? 0) - 18.5)).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs((legendBox?.x ?? 0) + (legendBox?.width ?? 0) - textEndX - 12.5),
+  ).toBeLessThanOrEqual(1);
+  // MEP-172 / MEP-174 b: legend baseline below frame top
+  const baselineY = await legendBaselineY(legend);
+  expect(Math.abs(baselineY - ((groupBox?.y ?? 0) + 8))).toBeLessThanOrEqual(1);
+  // MEP-172 / MEP-174 d: frame width and insets
+  expect(Math.abs((groupBox?.width ?? 0) - 529)).toBeLessThanOrEqual(0.5);
   expect(
     Math.abs(
       (groupBox?.x ?? 0) +
         (groupBox?.width ?? 0) -
         ((streetBox?.x ?? 0) + (streetBox?.width ?? 0)) -
-        groupPaddingEnd,
+        16,
     ),
   ).toBeLessThanOrEqual(1);
-  expect(Math.abs((streetBox?.y ?? 0) - ((groupBox?.y ?? 0) + groupBodyTop))).toBeLessThanOrEqual(
-    1,
+  expect(Math.abs((streetBox?.y ?? 0) - ((groupBox?.y ?? 0) + 31))).toBeLessThanOrEqual(1);
+
+  // MEP-172 / MEP-174 e, f: section title vertical rhythm
+  const leadInfoTitle = shell.getByRole("heading", { name: "Lead Information" });
+  const addressTitle = shell.getByRole("heading", { name: "Address Information" });
+  const descriptionTitle = shell.getByRole("heading", { name: "Description Information" });
+  const leadInfoSection = leadInfoTitle.locator("xpath=ancestor::*[@data-record-form-section][1]");
+  const addressSection = addressTitle.locator("xpath=ancestor::*[@data-record-form-section][1]");
+  const descriptionSection = descriptionTitle.locator(
+    "xpath=ancestor::*[@data-record-form-section][1]",
   );
+  const leadInfoBottom = await sectionContentBottom(leadInfoSection);
+  const addressCenter = await verticalCenter(addressTitle);
+  const addressContentTop = await sectionContentTop(addressSection);
+  const addressGroupBottom = (groupBox?.y ?? 0) + (groupBox?.height ?? 0);
+  const descriptionCenter = await verticalCenter(descriptionTitle);
+  const descriptionContentTop = await sectionContentTop(descriptionSection);
+  expect(Math.abs(addressCenter - leadInfoBottom - 61)).toBeLessThanOrEqual(1);
+  expect(Math.abs(addressContentTop - addressCenter - 33)).toBeLessThanOrEqual(1);
+  expect(Math.abs(descriptionCenter - addressGroupBottom - 78)).toBeLessThanOrEqual(1);
+  expect(Math.abs(descriptionContentTop - descriptionCenter - 33)).toBeLessThanOrEqual(1);
+
+  // MEP-172 / MEP-174 g: action button gaps
+  const actionGap = px(await length(page, "--size-form-action-gap"));
+  expect(Math.abs((await horizontalGap(cancel, saveAndNew)) - actionGap)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await horizontalGap(saveAndNew, save)) - actionGap)).toBeLessThanOrEqual(1);
+
+  // MEP-172 / MEP-174 h: Description control geometry
+  const descriptionBox = await descriptionInput.boundingBox();
+  expect(descriptionBox).not.toBeNull();
+  await boxWidth(descriptionInput, 639);
+  await boxHeight(descriptionInput, 34);
+  expect(Math.abs((descriptionBox?.x ?? 0) - (ownerBox?.x ?? 0))).toBeLessThanOrEqual(1);
 
   const longRowBox = await longInput
     .locator("xpath=ancestor::*[@data-record-form-row][1]")

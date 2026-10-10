@@ -28,7 +28,7 @@ const organizations = [
   { name: "Second team", slug: "second" },
   { name: "Create team", slug: "create" },
 ];
-const user = { name: "Example User", email: "user@example.test" };
+const user = { id: "user-test", name: "Example User", email: "user@example.test" };
 const leadsLink = {
   id: "leads",
   label: "Leads",

@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { PreferenceProvider } from "@/lib/preferences";
 import { CreateRecordsMenu } from "./create-records";
 import { Navigation } from "./navigation";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
@@ -112,7 +113,9 @@ export function AppShell({
             tabIndex={-1}
             className="min-h-0 flex-1 overflow-auto bg-surface outline-none"
           >
-            {children}
+            <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
+              {children}
+            </PreferenceProvider>
           </main>
         </div>
       </div>

@@ -32,6 +32,8 @@ export interface FilterPanelProps {
   onSelectionChange: (selectedIds: string[]) => void;
   onApply?: (filters: AppliedFilter[]) => void;
   onClear?: () => void;
+  /** Shown above the footer actions when a server-side filter validation fails. */
+  applyErrorMessage?: string | null;
 }
 
 export function FilterPanel({
@@ -43,6 +45,7 @@ export function FilterPanel({
   onSelectionChange,
   onApply,
   onClear,
+  applyErrorMessage,
 }: FilterPanelProps) {
   const titleId = useId();
   const [drafts, setDrafts] = useState<Record<string, FilterDraft>>({});
@@ -152,45 +155,54 @@ export function FilterPanel({
         ))}
       </div>
       {selectedItems.length > 0 && (
-        <div className="filter-panel-actions flex items-center gap-2 py-3">
-          {onApply && (
+        <div className="filter-panel-actions flex flex-col gap-2 py-3">
+          {applyErrorMessage ? (
+            <p className="m-0 text-sm text-danger" role="alert">
+              {applyErrorMessage}
+            </p>
+          ) : null}
+          <div className="flex items-center gap-2">
+            {onApply && (
+              <Button
+                size="sm"
+                isDisabled={!completed}
+                onPress={() => {
+                  if (!completed) return;
+                  onApply(
+                    selectedItems.flatMap((item) => {
+                      if (!item.editor) return [];
+                      const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
+                      return [
+                        {
+                          itemId: item.id,
+                          operatorId: draft.operatorId,
+                          value:
+                            draftOperator(item.editor, draft)?.control === "none"
+                              ? null
+                              : typeof draft.value === "string"
+                                ? draft.value.trim()
+                                : draft.value,
+                        },
+                      ];
+                    }),
+                  );
+                }}
+              >
+                Apply Filter
+              </Button>
+            )}
             <Button
               size="sm"
-              isDisabled={!completed}
+              variant="secondary"
               onPress={() => {
-                if (!completed) return;
-                onApply(
-                  selectedItems.flatMap((item) => {
-                    if (!item.editor) return [];
-                    const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
-                    return [
-                      {
-                        itemId: item.id,
-                        operatorId: draft.operatorId,
-                        value:
-                          draftOperator(item.editor, draft)?.control === "none"
-                            ? null
-                            : draft.value,
-                      },
-                    ];
-                  }),
-                );
+                setDrafts({});
+                onSelectionChange([]);
+                onClear?.();
               }}
             >
-              Apply Filter
+              Clear
             </Button>
-          )}
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={() => {
-              setDrafts({});
-              onSelectionChange([]);
-              onClear?.();
-            }}
-          >
-            Clear
-          </Button>
+          </div>
         </div>
       )}
     </section>
