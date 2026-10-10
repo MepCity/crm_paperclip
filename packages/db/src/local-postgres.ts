@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
+import { sweep } from "./ipc-sweep";
 import { isPortFree, pickFreePort } from "./ports";
 import {
   describeSysVSharedMemory,
@@ -197,8 +198,22 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
     };
   };
 
+  let swept = false;
   try {
     return await retryOnSharedMemoryExhaustion(startOnce, {
+      onExhaustion: () => {
+        if (swept || process.platform !== "darwin") return false;
+        swept = true;
+        const log = (line: string) => report(`[ipc-sweep] ${line}`);
+        try {
+          const result = sweep({ apply: true, log });
+          if (result.exitCode !== 0) log("Sweep failed; continuing the server start retry flow.");
+          return result.removed > 0;
+        } catch (error) {
+          log(`Sweep threw: ${String(error)}; continuing the server start retry flow.`);
+          return false;
+        }
+      },
       onRetry: (_error, delayMs) =>
         report(`shared memory table is full, retrying the server start in ${delayMs} ms`),
     });
