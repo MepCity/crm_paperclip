@@ -292,3 +292,13 @@
 .record-input-frame:has(.record-currency-prefix) > input.record-control {
   padding-left: var(--space-3);
 }
+
+.record-filter-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--size-list-filter-search-width);
+}
+
+.record-filter-search-wrap--fill {
+  max-width: none;
+}

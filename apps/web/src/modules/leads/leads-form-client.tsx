@@ -25,7 +25,7 @@ export function LeadsFormClient({
     ? moduleRecordPath(orgSlug, LEADS_MODULE, recordId)
     : moduleListDefaultPath(orgSlug, LEADS_MODULE);
   return (
-    <div className="leads-form-page">
+    <div className="leads-form-page record-form-page">
       <RecordFormScreen
         currentUserId={currentUserId}
         recordId={recordId}

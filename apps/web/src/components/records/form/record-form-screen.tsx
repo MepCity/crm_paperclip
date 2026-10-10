@@ -28,6 +28,7 @@ import {
 } from "./form-model";
 import { FormRow, type FormRowColumn } from "./form-row";
 import { FormSection } from "./form-section";
+import { RECORD_FORM_COPY } from "./record-form-copy";
 
 import { RecordFormShell } from "./record-form-shell";
 
@@ -203,9 +204,17 @@ function LoadedRecordForm({
         <CoordinatesInput
           hideClearAction
           id={id}
-          label={coordinates && parent ? addressLabel(coordinates, parent) : "Coordinates"}
+          label={
+            coordinates && parent
+              ? addressLabel(coordinates, parent)
+              : RECORD_FORM_COPY.coordinatesFallback
+          }
           latitudeLabel={label}
-          longitudeLabel={longitude && parent ? addressLabel(longitude, parent) : "Longitude"}
+          longitudeLabel={
+            longitude && parent
+              ? addressLabel(longitude, parent)
+              : RECORD_FORM_COPY.longitudeFallback
+          }
           latitude={numberValue(values[field.apiName])}
           longitude={numberValue(values[address.longitude])}
           disabled={saving || field.readOnly || longitude?.readOnly}
@@ -221,7 +230,11 @@ function LoadedRecordForm({
       return (
         <div key={field.apiName} data-form-field={field.apiName}>
           <FormRow
-            label={coordinates && parent ? addressLabel(coordinates, parent) : "Coordinates"}
+            label={
+              coordinates && parent
+                ? addressLabel(coordinates, parent)
+                : RECORD_FORM_COPY.coordinatesFallback
+            }
             controlId={id}
             column={column}
           >
@@ -284,7 +297,7 @@ function LoadedRecordForm({
           textPrefix={rules.textPrefixes?.[field.apiName]}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
           currencyInformation={
-            field.apiName === rules.currency ? "Currency information" : undefined
+            field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined
           }
         />
       );
@@ -360,7 +373,7 @@ function LoadedRecordForm({
                       }
                     }}
                   >
-                    <span>Clear All</span>
+                    <span>{RECORD_FORM_COPY.clearAll}</span>
                   </button>
                 </FieldGroup>
               ) : columns.length === 1 ? (

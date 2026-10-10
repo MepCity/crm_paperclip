@@ -35,6 +35,8 @@ export const buttonSizes = {
   splitArrow: "h-(--size-button-split-height) w-(--size-button-split-arrow) text-sm p-0",
   actions: "h-(--size-button-ellipsis-height) w-(--size-button-ellipsis-width) text-sm p-0",
   formAction: "h-(--size-form-action-height) text-md px-(--size-form-action-padding-inline) py-0",
+  selectUserFooter:
+    "box-border h-(--size-form-action-height) min-h-(--size-form-action-height) p-0 text-md font-semibold",
   sm: "text-sm px-3 py-1.5",
   md: "text-base px-4 py-2",
 };

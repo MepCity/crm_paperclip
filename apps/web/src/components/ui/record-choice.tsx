@@ -86,9 +86,7 @@ export function RecordChoice({
       : "record-control record-choice-trigger";
   const shellClass = endAction
     ? "record-control record-choice-shell record-choice-shell--owner"
-    : prefix
-      ? undefined
-      : undefined;
+    : undefined;
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <span id={labelId} className={hideLabel ? "sr-only" : "record-label"}>

@@ -42,6 +42,22 @@
   gap: var(--size-form-action-gap);
 }
 
+.record-form-strip__action--cancel {
+  width: var(--size-form-page-cancel-width);
+}
+
+.record-form-strip__action--save-new {
+  width: var(--size-form-page-save-new-width);
+}
+
+.record-form-strip__action--save {
+  width: var(--size-form-page-save-width);
+}
+
+.record-form-strip__action {
+  white-space: nowrap;
+}
+
 .record-form-card {
   box-sizing: border-box;
   width: 100%;
@@ -177,9 +193,14 @@
     var(--size-form-input-left-width)
   );
   margin: 0 0 var(--size-form-field-group-margin-bottom);
-  padding: 0 var(--size-form-field-group-padding-end) 0 0;
+  padding: 0
+    calc(var(--size-form-field-group-padding-end) - var(--size-form-layout-subpixel-trim)) 0 0;
   border: 1px solid var(--color-form-field-group-border);
   border-radius: var(--radius-form-field-group);
+}
+
+.record-form-page .record-form-field-group {
+  border-radius: var(--size-form-address-radius);
 }
 
 .record-form-field-group__legend {
@@ -200,7 +221,45 @@
   display: flex;
   flex-direction: column;
   gap: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
-  padding-top: var(--size-form-field-group-body-top);
+  padding-top: calc(
+    var(--size-form-field-group-body-top) - var(--size-form-layout-subpixel-trim)
+  );
+}
+
+.record-form-clear-address {
+  align-self: flex-end;
+  margin-bottom: calc(
+    var(--size-form-address-footer-bottom) - var(--size-form-layout-subpixel-trim)
+  );
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-form-clear-address);
+  font-size: var(--text-md);
+  line-height: var(--size-form-label-line-height);
+  cursor: pointer;
+}
+
+.record-form-label-line {
+  display: block;
+}
+
+.record-form-page .record-form-coordinates {
+  gap: var(--size-form-coordinate-gap);
+}
+
+.record-form-page .record-form-coordinates > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-form-page .record-form-strip__actions {
+  gap: var(--space-2);
+}
+
+.record-form-page .record-form-card__body {
+  padding-bottom: var(--size-form-description-rule-gap);
+  border-bottom: 1px solid var(--color-detail-divider);
 }
 
 .record-form-field-group .record-form-row--left {

@@ -721,12 +721,12 @@ const SIZE_GROUPS = [
       "--size-select-user-table-name-header-inset",
       "--size-select-user-table-avatar-inset",
       "--size-select-user-table-name-text-inset",
-      "--size-select-user-table-frame-adjust",
     ],
   },
   {
     label: "Create/edit form",
     tokens: [
+      "--size-form-layout-subpixel-trim",
       "--size-form-strip-height",
       "--size-form-strip-padding-end",
       "--size-form-card-inset",

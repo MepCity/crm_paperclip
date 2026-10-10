@@ -23,6 +23,8 @@ export interface TextFieldProps extends AriaTextFieldProps {
   variant?: "default" | "filter-search";
   /** `measured` keeps the filter search width token; `fill` spans the container it sits in. */
   size?: "measured" | "fill";
+  /** Optional class on the filter-search field wrapper (replaces styling primitive internals). */
+  filterSearchWrapperClassName?: string;
   description?: string;
   errorMessage?: string | ((v: import("react-aria-components").ValidationResult) => string);
 }
@@ -36,6 +38,7 @@ export function TextField({
   placeholder,
   variant = "default",
   size = "measured",
+  filterSearchWrapperClassName,
   description,
   errorMessage,
   ...props
@@ -59,9 +62,10 @@ export function TextField({
       {variant === "filter-search" ? (
         <div
           className={
-            size === "fill"
-              ? "relative w-full"
-              : "relative w-full max-w-(--size-list-filter-search-width)"
+            filterSearchWrapperClassName ??
+            (size === "fill"
+              ? "record-filter-search-wrap record-filter-search-wrap--fill"
+              : "record-filter-search-wrap")
           }
         >
           <Icons.filterSearch

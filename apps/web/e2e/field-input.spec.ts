@@ -244,7 +244,6 @@ test("form input geometry and composite inks match the measured form rows", asyn
     body: JSON.stringify(measurements, null, 2),
     contentType: "application/json",
   });
-  console.log("ROUND_TWO_MEASUREMENTS", JSON.stringify(measurements));
   await expect(demo.getByRole("textbox", { name: "textarea empty" })).toHaveCSS("resize", "both");
   await expect(demo.getByRole("textbox", { name: "Latitude" })).toHaveAttribute(
     "placeholder",

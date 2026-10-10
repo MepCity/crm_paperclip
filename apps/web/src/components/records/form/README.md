@@ -14,7 +14,7 @@ provide the measured shell, sections, two-column rows and bordered field groups.
 | `formAriaLabel` | Accessible name on the `<form>` landmark inside the card. |
 | `actionLabels` | `cancel`, `saveAndNew`, and `save` button text. |
 | `onCancel`, `onSaveAndNew`, `onSave` | Optional press handlers for the strip actions. |
-| `children` | Form body inside the card. |
+| `children` | Form body inside the white card (`record-form-card`). |
 
 The strip stays `position: sticky` while the card body scrolls. Action order in
 the tab sequence is Cancel, Save and New, then Save.
@@ -144,7 +144,7 @@ All copy/data may be supplied through props; fallback copy is generic English.
 Empty Salutation uses muted placeholder ink.
 `TextPrefixInput` attaches a literal prefix (such as `@`). `CoordinatesInput` takes
 `label`, `latitude`, `longitude`, `onChange` and optional `disabled`,
-`errorMessage`, `latitudeLabel`, `longitudeLabel`, `clearLabel`, `id?`, `hideLabel?`.
+`errorMessage`, `latitudeLabel`, `longitudeLabel`, `clearLabel`, `id?`.
 Changes preserve the other coordinate; Clear All emits both coordinates as null.
 
 The `/dev/ui` field-input demo has empty, filled, required and disabled states
