@@ -345,6 +345,7 @@ const SIZE_GROUPS = [
       "--size-rail-nested-label-gap",
       "--size-rail-header-top",
       "--size-rail-nav-start",
+      "--size-rail-product-caret",
       "--size-rail-product-gap",
       "--size-rail-pinned-region",
       "--size-rail-teamspace-top",
