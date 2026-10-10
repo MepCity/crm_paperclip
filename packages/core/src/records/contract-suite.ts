@@ -1108,18 +1108,19 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         "filters",
       );
     });
-    it("panel age in N weeks: instant lower bound at N calendar weeks", async () => {
+    it("panel age in N weeks: same window as N×7 days", async () => {
       const queryAt = new Date("2026-01-05T12:00:00.000Z");
       let now = queryAt;
       const adapter = await makeService(ctx, { now: () => now });
       const marker = `Age-weeks-${randomUUID()}`;
-      const stamps = ["2025-12-28T11:59:59.999Z", "2025-12-28T12:00:00.000Z"];
+      const stamps = ["2025-12-28T12:00:00.000Z", "2025-12-28T12:00:00.001Z"];
       const records: RecordData[] = [];
       for (const timestamp of stamps) {
         now = new Date(timestamp);
         records.push(await adapter.create("Leads", input({ Company: marker })));
       }
       now = queryAt;
+      const expectedIds = [records[1]?.id as string];
       await assertPanelSet(
         adapter,
         marker,
@@ -1128,7 +1129,17 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 1, unit: "weeks" },
         },
-        [records[1]?.id as string],
+        expectedIds,
+      );
+      await assertPanelSet(
+        adapter,
+        marker,
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "AGEINDAYS", offset: 7 },
+        },
+        expectedIds,
       );
       const wrapped = {
         groupOperator: "and" as const,

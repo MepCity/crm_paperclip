@@ -400,7 +400,7 @@ function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: Criteri
     return parsed <= addCalendarMonths(runtime.now, expected.offset);
   }
   if (unit === "days") return Math.floor((nowMs - parsed) / DAY_MS) <= expected.offset;
-  if (unit === "weeks") return parsed >= nowMs - (expected.offset * 7 + 1) * DAY_MS;
+  if (unit === "weeks") return Math.floor((nowMs - parsed) / DAY_MS) <= expected.offset * 7;
   return parsed >= subtractCalendarMonths(runtime.now, expected.offset);
 }
 
