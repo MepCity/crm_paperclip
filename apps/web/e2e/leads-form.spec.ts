@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
+import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "../src/components/records/form/form-save-error";
 import { operationPath, operations } from "../src/lib/api/wire/operations";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
@@ -74,6 +75,40 @@ test("Save and New clears the form and leaves a saved record in the list", async
   await expect(page).toHaveURL(`${list}?page=2&per_page=10`);
   await page.goto(list);
   await expect(page.getByRole("link", { name: "Form Lead New", exact: true })).toBeVisible();
+});
+
+test("blocked save keeps the form, values and error banner below the strip", async ({ page }) => {
+  await openCreate(page);
+  await fillRequired(page, "Net");
+  let blocked = true;
+  await page.route("**/crm/v2.2/Leads", async (route) => {
+    if (route.request().method() === "POST" && blocked) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const banner = page.locator("[data-record-form-error-banner]");
+  await expect(banner).toHaveText(FORM_SAVE_GENERIC_ERROR_MESSAGE);
+  await expect(page.getByRole("textbox", { name: "Company", exact: true })).toHaveValue(
+    "Form Company Net",
+  );
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
+  const strip = await page.locator("[data-record-form-strip]").boundingBox();
+  const bannerBox = await banner.boundingBox();
+  if (!strip || !bannerBox) throw new Error("Missing strip or banner");
+  expectWithin1(bannerBox.y, strip.y + strip.height);
+  await expect(banner).toHaveCSS("color", await tokenValue(page, "color", "--color-form-required"));
+  blocked = false;
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead Net");
+  await expectNoA11yViolations(page, {
+    exclude: [
+      "#record-form-Salutation-value.record-prefix-empty",
+      ".record-form-clear-address > span",
+    ],
+  });
 });
 
 test("server field errors keep the form open and focus Company", async ({ page, pageErrors }) => {

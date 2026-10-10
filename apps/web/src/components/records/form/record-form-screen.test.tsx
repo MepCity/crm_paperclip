@@ -1,4 +1,4 @@
-import { ValidationError } from "@crm/core/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@crm/core/errors";
 import type { RecordData } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -6,7 +6,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
+import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import { render } from "@/test/render";
+import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
 import { leadsFormRules, leadsFormFields as names } from "./leads-form-rules";
 import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
 
@@ -113,6 +115,61 @@ test("edit initializes saved values and submits only changed fields", async () =
     expect(update).toHaveBeenCalledWith("Leads", record.id, { Company: "After" }),
   );
   expect(navigate).toHaveBeenCalledWith(`detail:${record.id}`);
+});
+
+test.each([
+  ["conflict", new ConflictError("That email is already in use."), "That email is already in use."],
+  ["forbidden", new ForbiddenError("You cannot create leads."), "You cannot create leads."],
+  ["not found", new NotFoundError("This lead was deleted."), "This lead was deleted."],
+  ["unexpected api", new UnexpectedApiError(502), FORM_SAVE_GENERIC_ERROR_MESSAGE],
+  ["network", new TypeError("Failed to fetch"), FORM_SAVE_GENERIC_ERROR_MESSAGE],
+])(
+  "non-field save error %s keeps values, re-enables actions and shows the banner",
+  async (_label, rejected, message) => {
+    const { service, navigate } = harness();
+    vi.spyOn(service, "create").mockRejectedValue(rejected);
+    await ready();
+    const user = await required();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    const banner = await screen.findByRole("alert");
+    expect(banner.hasAttribute("data-record-form-error-banner")).toBe(true);
+    expect(banner.textContent).toBe(message);
+    expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
+      "Synthetic Company",
+    );
+    expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+    expect(navigate).not.toHaveBeenCalled();
+  },
+);
+
+test("clears the banner at the start of a later save attempt", async () => {
+  const { service, navigate } = harness();
+  vi.spyOn(service, "create")
+    .mockRejectedValueOnce(new ConflictError("Temporary failure."))
+    .mockResolvedValueOnce({ id: "saved-after-retry", fields: {} });
+  await ready();
+  const user = await required();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByRole("alert");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith("detail:saved-after-retry"));
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+test("duplicate field validation shows inline error without a banner", async () => {
+  const { service } = harness();
+  vi.spyOn(service, "create").mockRejectedValue(
+    new ValidationError({ Email: ["A lead with this email already exists."] }),
+  );
+  await ready();
+  const user = await required();
+  await user.click(screen.getByRole("textbox", { name: "Email" }));
+  await user.paste("taken@example.test");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("A lead with this email already exists.");
+  expect(screen.queryByRole("alert")).toBeNull();
 });
 
 test("field validation remains on form, shows messages and focuses the first visible error", async () => {

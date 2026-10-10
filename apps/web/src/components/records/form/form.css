@@ -42,6 +42,19 @@
   gap: var(--size-form-action-gap);
 }
 
+.record-form-error-banner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--record-form-content-width) + 2 * var(--size-form-card-inset));
+  margin: 0;
+  padding: var(--space-2) var(--size-form-card-inset) 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.2;
+  color: var(--color-form-required);
+  background-color: var(--color-surface);
+}
+
 .record-form-card {
   box-sizing: border-box;
   width: 100%;

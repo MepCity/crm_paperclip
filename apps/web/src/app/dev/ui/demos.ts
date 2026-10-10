@@ -3,6 +3,7 @@ import RecordDetailCardsDemo from "@/components/records/detail/record-detail-car
 import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
+import FormErrorBannerDemo from "@/components/records/form/form-error-banner.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import ChangeOwnerDialogDemo from "@/components/records/list/change-owner-dialog.demo";
@@ -48,6 +49,7 @@ import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
   "field-input": FieldInputDemo,
+  "form-error-banner": FormErrorBannerDemo,
   "record-detail": RecordDetailDemo,
   "status-ribbon": StatusRibbonDemo,
   "filter-panel": FilterPanelDemo,
