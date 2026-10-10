@@ -50,6 +50,10 @@ const PERIODS = new Set([
 const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
+function isDatetimeField(field: string): boolean {
+  return fieldByName.get(field)?.dataType === "datetime";
+}
+
 export interface CriteriaRuntime {
   userId: string;
   now: Date;
@@ -306,7 +310,7 @@ function matchesEqual(
     return false;
   }
   if (typeof expected === "string") {
-    if (isCalendarDateString(expected)) {
+    if (isCalendarDateString(expected) && isDatetimeField(field)) {
       const bounds = calendarDayBounds(expected);
       const parsed = datetimeMillis(value);
       return bounds !== null && parsed !== null && parsed >= bounds[0] && parsed < bounds[1];
@@ -369,7 +373,11 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
           : value.toLowerCase().endsWith(criteria.value.toLowerCase()))
       );
     case "less_than":
-      if (typeof criteria.value === "string" && isCalendarDateString(criteria.value)) {
+      if (
+        isDatetimeField(criteria.field) &&
+        typeof criteria.value === "string" &&
+        isCalendarDateString(criteria.value)
+      ) {
         const bounds = calendarDayBounds(criteria.value);
         const parsed = datetimeMillis(value);
         return bounds !== null && parsed !== null && parsed < bounds[0];
@@ -378,7 +386,11 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
         typeof value === "number" && typeof criteria.value === "number" && value < criteria.value
       );
     case "greater_than":
-      if (typeof criteria.value === "string" && isCalendarDateString(criteria.value)) {
+      if (
+        isDatetimeField(criteria.field) &&
+        typeof criteria.value === "string" &&
+        isCalendarDateString(criteria.value)
+      ) {
         const bounds = calendarDayBounds(criteria.value);
         const parsed = datetimeMillis(value);
         return bounds !== null && parsed !== null && parsed >= bounds[1];
@@ -392,7 +404,11 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
       );
     case "between":
     case "not_between": {
-      if (isValueList(criteria.value) && typeof criteria.value[0] === "string") {
+      if (
+        isDatetimeField(criteria.field) &&
+        isValueList(criteria.value) &&
+        typeof criteria.value[0] === "string"
+      ) {
         const lower = calendarDayBounds(criteria.value[0] as string);
         const upper = calendarDayBounds(criteria.value[1] as string);
         const parsed = datetimeMillis(value);

@@ -185,7 +185,7 @@ nested groups. Both bulk and actions/count send JSON `{filters: <criteria>}`.
 | --- | --- |
 | `{ token: "DUEINDAYS", offset: N }` | `"${DUEINDAYS}+N"` |
 | `{ token: "PERIOD", name: P }` | `"${PERIOD.P}"` |
-| `{ token: "RELATIVE_PERIOD", direction, unit, count }` | `"${PERIOD.<direction>_<unit>}+N"` |
+| `{ token: "RELATIVE_PERIOD", direction, unit, count }` | `"${PERIOD.PREVIOUS_DAYS}+N"`, `"${PERIOD.PREVIOUS_WEEKS}+N"`, `"${PERIOD.PREVIOUS_MONTHS}+N"`, `"${PERIOD.NEXT_DAYS}+N"`, `"${PERIOD.NEXT_WEEKS}+N"`, or `"${PERIOD.NEXT_MONTHS}+N"` |
 | `"YYYY-MM-DD"` / `["YYYY-MM-DD","YYYY-MM-DD"]` | unchanged |
 
 `direction` is `PREVIOUS` or `NEXT`; `unit` is `DAYS`, `WEEKS` or `MONTHS`; N is

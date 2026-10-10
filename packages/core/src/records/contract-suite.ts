@@ -969,6 +969,34 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           [records[1]?.id as string, records[2]?.id as string],
         );
       }
+      const spanMarker = `Relative-span-${randomUUID()}`;
+      let spanClock = new Date("2026-03-31T23:59:59.999Z");
+      const spanService = await makeService(ctx, { now: () => spanClock });
+      const spanToken: CriteriaToken = {
+        token: "RELATIVE_PERIOD",
+        direction: "PREVIOUS",
+        unit: "MONTHS",
+        count: 14,
+      };
+      const spanStart = "2025-01-01T00:00:00.000Z";
+      const spanEndExclusive = "2026-03-01T00:00:00.000Z";
+      const spanRecords: RecordData[] = [];
+      for (const timestamp of [
+        Date.parse(spanStart) - 1,
+        Date.parse(spanStart),
+        Date.parse(spanEndExclusive) - 1,
+        Date.parse(spanEndExclusive),
+      ]) {
+        spanClock = new Date(timestamp);
+        spanRecords.push(await spanService.create("Leads", input({ Company: spanMarker })));
+      }
+      spanClock = new Date("2026-03-31T23:59:59.999Z");
+      await assertPanelSet(
+        spanService,
+        spanMarker,
+        { field: "Created_Time", comparator: "equal", value: spanToken },
+        [spanRecords[1]?.id as string, spanRecords[2]?.id as string],
+      );
       const equivalences: [CriteriaToken, CriteriaToken][] = [
         [
           { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 1 },
@@ -1137,6 +1165,48 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
           comparator: "equal",
           value: { token: "RELATIVE_PERIOD", direction: "SIDE", unit: "DAYS", count: 1 },
         } as unknown as Criteria,
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 1001 },
+        },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 1.5 },
+        },
+        {
+          field: "Created_Time",
+          comparator: "equal",
+          value: {
+            token: "RELATIVE_PERIOD",
+            direction: "PREVIOUS",
+            unit: "DAYS",
+            count: 1,
+            extra: true,
+          },
+        } as unknown as Criteria,
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: { token: "RELATIVE_PERIOD", direction: "PREVIOUS", unit: "DAYS", count: 1 },
+        },
+        {
+          field: "Created_Time",
+          comparator: "between",
+          value: ["2026-01-05", "2026-01-06", "2026-01-07"],
+        },
+        {
+          field: "Created_Time",
+          comparator: "not_between",
+          value: ["2026-01-06", "2026-01-05"],
+        },
+        { field: "Created_Time", comparator: "equal", value: 20260105 },
+        {
+          field: "Created_Time",
+          comparator: "less_equal",
+          value: "2026-01-05",
+        },
         { field: "Owner", comparator: "not_equal", value: "contract-user" },
         { field: "Lead_Status", comparator: "equal", value: [] },
         { field: "Owner", comparator: "equal", value: [true] },

@@ -197,8 +197,11 @@ describe("wire codec", () => {
   });
   it.each([
     ["PREVIOUS", "DAYS", 2, `\${PERIOD.PREVIOUS_DAYS}+2`],
-    ["NEXT", "WEEKS", 1, `\${PERIOD.NEXT_WEEKS}+1`],
+    ["PREVIOUS", "WEEKS", 1, `\${PERIOD.PREVIOUS_WEEKS}+1`],
     ["PREVIOUS", "MONTHS", 3, `\${PERIOD.PREVIOUS_MONTHS}+3`],
+    ["NEXT", "DAYS", 4, `\${PERIOD.NEXT_DAYS}+4`],
+    ["NEXT", "WEEKS", 1, `\${PERIOD.NEXT_WEEKS}+1`],
+    ["NEXT", "MONTHS", 5, `\${PERIOD.NEXT_MONTHS}+5`],
   ] as const)("round-trips relative period %s %s count %s", (direction, unit, count, wire) => {
     const criteria: Criteria = {
       field: "Created_Time",

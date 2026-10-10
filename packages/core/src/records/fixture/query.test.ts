@@ -97,6 +97,43 @@ describe("panel predicate boundaries", () => {
         validateCriteria({ field: "Annual_Revenue", comparator: "equal", value }),
       ).toThrow(ValidationError);
   });
+  it("calendar date strings match only datetime fields, not text that looks like a date", () => {
+    const isoTimestamp = "2026-01-05T10:00:00.000Z";
+    const calendarDay = "2026-01-05";
+    expect(
+      matches(
+        record("Company", isoTimestamp),
+        {
+          field: "Company",
+          comparator: "equal",
+          value: calendarDay,
+        },
+        runtime,
+      ),
+    ).toBe(false);
+    expect(
+      matches(
+        record("Company", isoTimestamp),
+        {
+          field: "Company",
+          comparator: "not_equal",
+          value: calendarDay,
+        },
+        runtime,
+      ),
+    ).toBe(true);
+    expect(
+      matches(
+        record("Company", calendarDay),
+        {
+          field: "Company",
+          comparator: "equal",
+          value: calendarDay,
+        },
+        runtime,
+      ),
+    ).toBe(true);
+  });
   it("periods re-evaluate Sunday to Monday and preserve leap-day month boundaries", () => {
     const week: Criteria = {
       field: "Created_Time",

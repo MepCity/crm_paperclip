@@ -53,7 +53,7 @@ combinations raise `ValidationError` keyed by `filters` on both `list` and `coun
 | This Week / Previous Week | datetime | `equal`, `PERIOD` name `THIS_WEEK` / `PREVIOUS_WEEK` |
 | This Month / Previous Month | datetime | `equal`, `PERIOD` name `THIS_MONTH` / `PREVIOUS_MONTH` |
 | This Year / Previous Year / Next Year | datetime | `equal`, `PERIOD` name `THIS_YEAR` / `PREVIOUS_YEAR` / `NEXT_YEAR` |
-| Previous / Next (N + unit) | datetime | `equal`, `{ token: "RELATIVE_PERIOD", direction, unit, count }`; wire `"${PERIOD.<direction>_<unit>}+N"` with N in 1–1000 |
+| Previous / Next (N + unit) | datetime | `equal`, `{ token: "RELATIVE_PERIOD", direction, unit, count }`; wire one of `"${PERIOD.PREVIOUS_DAYS}+N"`, `"${PERIOD.PREVIOUS_WEEKS}+N"`, `"${PERIOD.PREVIOUS_MONTHS}+N"`, `"${PERIOD.NEXT_DAYS}+N"`, `"${PERIOD.NEXT_WEEKS}+N"`, `"${PERIOD.NEXT_MONTHS}+N"` (N in 1–1000) |
 | On | datetime | `equal`, `"YYYY-MM-DD"` calendar day (UTC half-open day) |
 | before / after | datetime | `less_than` / `greater_than`, `"YYYY-MM-DD"` |
 | between / not between | datetime | `between` / `not_between`, `["YYYY-MM-DD","YYYY-MM-DD"]` with first ≤ second |
@@ -80,6 +80,11 @@ Interim boundaries and empty-value behavior:
   existing `AGEINDAYS` / `DUEINDAYS` tokens; unsafe products keep Apply disabled.
 - `RELATIVE_PERIOD` uses calendar months (not 30-day blocks). All UTC boundaries
   are half-open `[start, end)`; null or unparseable datetimes never match.
+- Calendar `YYYY-MM-DD` strings (On / before / after / between / not between): `On`
+  → `d 00:00 ≤ field < d+1`; `before` → `field < d 00:00`; `after` →
+  `field ≥ d+1` (the chosen UTC day is excluded); `between` →
+  `first 00:00 ≤ field < second+1`; `not between` → populated, parseable field
+  values outside that inclusive-start half-open range.
 - Role/group membership, blocked email, fiscal periods, system filters and
   related-module filters are not introduced.
 

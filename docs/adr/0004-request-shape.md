@@ -96,12 +96,14 @@ leaf/group body on `bulk` and `actions/count`; `field` carries `api_name` and
   `${PERIOD.PREVIOUS_WEEK}`, `${PERIOD.THIS_MONTH}`,
   `${PERIOD.PREVIOUS_MONTH}`, `${PERIOD.THIS_YEAR}`,
   `${PERIOD.PREVIOUS_YEAR}`, `${PERIOD.NEXT_YEAR}`.
-- Relative panel periods use `equal` and
-  `"${PERIOD.<direction>_<unit>}+N"` where `direction` is `PREVIOUS` or `NEXT`,
-  `unit` is `DAYS`, `WEEKS` or `MONTHS`, and N is a decimal integer from 1 through
-  1000 (`+` then digits only). Port shape:
-  `{ token: "RELATIVE_PERIOD", direction, unit, count }`. Semantics: current-unit
-  start `u0` in UTC; `PREVIOUS` → `[u0 − N units, u0)`; `NEXT` →
+- Relative panel periods use `equal` and one of
+  `"${PERIOD.PREVIOUS_DAYS}+N"`, `"${PERIOD.PREVIOUS_WEEKS}+N"`,
+  `"${PERIOD.PREVIOUS_MONTHS}+N"`, `"${PERIOD.NEXT_DAYS}+N"`,
+  `"${PERIOD.NEXT_WEEKS}+N"`, `"${PERIOD.NEXT_MONTHS}+N"` where N is a decimal
+  integer from 1 through 1000 (`+` then digits only). Port shape:
+  `{ token: "RELATIVE_PERIOD", direction, unit, count }` with `direction`
+  `PREVIOUS` or `NEXT` and `unit` `DAYS`, `WEEKS` or `MONTHS`. Semantics:
+  current-unit start `u0` in UTC; `PREVIOUS` → `[u0 − N units, u0)`; `NEXT` →
   `[u0 + 1 unit, u0 + (N + 1) units)`; months use calendar arithmetic.
 - Calendar-day panel operators use `YYYY-MM-DD` strings (and two-element arrays for
   ranges) unchanged on the wire: `On` → `equal`; `before` → `less_than`;
@@ -278,5 +280,5 @@ Verification:
 
 1. The board selected public developer documentation on 2026-10-04 (§5). It describes the external API; browser write requests remain unobserved because the reference CRM is read-only. Remaining undocumented details are explicitly Interim above.
 2. Request header names are not in the captures. `X-CRM-ORG` is our choice; only `server.ts` and the fetch wrapper know it.
-3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)? Which comparator/token literals and empty/date/range semantics does an applied panel filter use? Panel labels were observed, but no applied request or result was captured; all panel filter values listed in §4—including `${PERIOD.<direction>_<unit>}+N`, calendar `YYYY-MM-DD` strings and their semantic table—remain Interim pending evidence.
+3. How do an ad-hoc filter, a search text and a changed sort travel in the reference (§4, interim)? Which comparator/token literals and empty/date/range semantics does an applied panel filter use? Panel labels were observed, but no applied request or result was captured; all panel filter values listed in §4—including the six `${PERIOD.PREVIOUS_DAYS}+N` … `${PERIOD.NEXT_MONTHS}+N` spellings, calendar `YYYY-MM-DD` strings and their semantic table—remain Interim pending evidence.
 4. Which value does `info.sort_by` carry when neither the request nor the view sets a sort? The observed default view returns strings. Until known we send `null`.
