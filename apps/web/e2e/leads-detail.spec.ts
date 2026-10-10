@@ -96,7 +96,9 @@ async function openFirstLeadFromList(
 ) {
   const listUrl = `${moduleListDefaultPath(orgSlug, LEADS_MODULE)}${listQuery}`;
   await page.goto(listUrl);
-  await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible({
+    timeout: 15_000,
+  });
   const link = page.locator("table tbody tr").first().getByRole("link").first();
   const name = await link.innerText();
   const href = await link.getAttribute("href");
@@ -215,8 +217,41 @@ test.describe("Lead record detail page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("updates lead status from the ribbon and keeps cards in sync after reload", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const ribbon = page.locator("[data-status-ribbon]");
+    await expect(ribbon).toBeVisible();
+    const updates: { method: string; body: string }[] = [];
+    page.on("request", (request) => {
+      if (request.method() !== "PUT") return;
+      if (!request.url().includes("/crm/v") || !request.url().includes("/Leads/")) return;
+      updates.push({ method: request.method(), body: request.postData() ?? "" });
+    });
+    await ribbon.getByRole("button", { name: "Choose lead status" }).click();
+    await ribbon.page().getByRole("menuitemradio", { name: "Contacted", exact: true }).click();
+    await expect.poll(() => updates.length).toBe(1);
+    expect(updates[0]?.body).toContain("Lead_Status");
+    expect(updates[0]?.body).not.toMatch(/"(Company|Email|Last_Name)"/);
+    const frame = page.locator("[data-record-frame]");
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Contacted");
+    await expect(frame.getByRole("region", { name: "Details card" })).toContainText("Contacted");
+    await page.reload();
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Contacted");
+    await ribbon.getByRole("button", { name: "Choose rejected lead status" }).click();
+    await page.getByRole("menuitemradio", { name: "Junk Lead" }).click();
+    await expect.poll(() => updates.length).toBe(2);
+    await expect(frame.getByRole("region", { name: "Business card" })).toContainText("Junk Lead");
+    await expect(frame.getByRole("region", { name: "Details card" })).toContainText("Junk Lead");
+  });
+
   test("layout matches record-detail visual layout at 1470×835", async ({ page }) => {
     const CARD_WIDTH = 906;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
     const BUSINESS_LABEL_END = 173.5;
     const BUSINESS_VALUE_START = 219;
     const SPEC = {
@@ -239,6 +274,17 @@ test.describe("Lead record detail page", () => {
     await page.evaluate(() => document.fonts.ready);
 
     const frame = page.locator("[data-record-frame]");
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon");
+    expect(Math.abs(statusBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
+    if (process.env.LEAD_DETAIL_ARTIFACT_DIR) {
+      await mkdir(process.env.LEAD_DETAIL_ARTIFACT_DIR, { recursive: true });
+      await page.screenshot({
+        path: join(process.env.LEAD_DETAIL_ARTIFACT_DIR, "lead-detail-status-ribbon.png"),
+      });
+    }
     const header = frame.locator("[data-record-header]");
     await expect(header).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const headerBox = requireBox(await header.boundingBox(), "record header");
@@ -397,5 +443,29 @@ test.describe("Lead record detail page", () => {
         path: join(scratch, "leads-detail-more-options-delete.png"),
       });
     }
+  });
+
+  test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
+    const HIDDEN_CARD_WIDTH = 1126;
+    const STATUS_TOP = 185;
+    const STATUS_HEIGHT = 68;
+    const CANVAS_LEFT = 332;
+    const CANVAS_RIGHT = 1458;
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    await page.evaluate(() => document.fonts.ready);
+
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("button", { name: "Hide Related List" }).click();
+    await expect(frame.locator("[data-record-rail]")).toHaveCount(0);
+
+    const statusRibbon = frame.locator("[data-status-ribbon]");
+    const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
+    expectEdge(statusBox.x, CANVAS_LEFT);
+    expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
+    expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
+    expectEdge(statusBox.y, STATUS_TOP);
+    expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 });

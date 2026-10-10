@@ -189,6 +189,39 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expect(Math.abs(magnifierInset.left - 11.5)).toBeLessThanOrEqual(1);
   expect(Math.abs(magnifierInset.vertical)).toBeLessThanOrEqual(1);
 
+  const magnifierGeometry = await magnifier.evaluate((svg) => {
+    const circle = svg.querySelector("circle");
+    const path = svg.querySelector("path");
+    if (!circle || !path) {
+      return null;
+    }
+    const strokeWidth = Number.parseFloat(circle.getAttribute("stroke-width") ?? "0");
+    const circleBox = circle.getBBox();
+    const pathBox = path.getBBox();
+    const halfStroke = strokeWidth / 2;
+    const inkLeft = Math.min(circleBox.x, pathBox.x) - halfStroke;
+    const inkTop = Math.min(circleBox.y, pathBox.y) - halfStroke;
+    const inkRight =
+      Math.max(circleBox.x + circleBox.width, pathBox.x + pathBox.width) + halfStroke;
+    const inkBottom =
+      Math.max(circleBox.y + circleBox.height, pathBox.y + pathBox.height) + halfStroke;
+    return {
+      lensOuterWidth: circleBox.width + strokeWidth,
+      inkLeft,
+      inkTop,
+      inkRight,
+      inkBottom,
+    };
+  });
+  if (!magnifierGeometry) {
+    throw new Error("filter search magnifier geometry missing");
+  }
+  expect(Math.abs(magnifierGeometry.lensOuterWidth - 11.5)).toBeLessThanOrEqual(0.5);
+  expect(magnifierGeometry.inkLeft).toBeLessThanOrEqual(0.5);
+  expect(magnifierGeometry.inkTop).toBeLessThanOrEqual(0.5);
+  expect(magnifierGeometry.inkRight).toBeGreaterThanOrEqual(13);
+  expect(magnifierGeometry.inkBottom).toBeGreaterThanOrEqual(13);
+
   const triggers = panel.getByRole("button");
   for (const trigger of await triggers.all()) {
     await expectType(page, trigger, "--text-lg", "--font-weight-bold");

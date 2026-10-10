@@ -81,8 +81,8 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
-      <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="5.75" cy="5.75" r="5" strokeWidth="1.5" />
+      <path d="M9.3 9.3 12.75 12.75" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -125,16 +125,17 @@ function StatusCheck(props: SVGProps<SVGSVGElement>) {
 }
 
 /** Original user silhouette for form placeholders and picker action. */
-function RecordUser(props: SVGProps<SVGSVGElement>) {
+function RecordUser({ "aria-hidden": ariaHidden, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       {...props}
+      aria-hidden={ariaHidden}
+      role={ariaHidden ? undefined : "img"}
+      aria-label={ariaHidden ? undefined : props["aria-label"]}
     >
       <circle cx="12" cy="7" r="4" />
       <path d="M4 22v-3a8 8 0 0 1 16 0v3M2 22h20" />
@@ -174,14 +175,15 @@ function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
 }
 
 /** Filled downward caret for form picklists (8 × 5 px measured). */
-function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
+function RecordFormCaret({ "aria-hidden": ariaHidden, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 8 5"
       fill="currentColor"
       {...props}
+      aria-hidden={ariaHidden}
+      role={ariaHidden ? undefined : "img"}
+      aria-label={ariaHidden ? undefined : props["aria-label"]}
     >
       <path d="M0 0h8L4 5Z" />
     </svg>

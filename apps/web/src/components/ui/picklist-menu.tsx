@@ -37,6 +37,7 @@ export interface PicklistMenuProps {
   onSelect: (value: string | null) => void;
   appearance: "stage" | "terminal";
   defaultOpen?: boolean;
+  isDisabled?: boolean;
 }
 
 // Index keys preserve a null value without reserving a possible stored string.
@@ -52,6 +53,7 @@ export function PicklistMenu({
   onSelect,
   appearance,
   defaultOpen = false,
+  isDisabled = false,
 }: PicklistMenuProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState("");
@@ -89,6 +91,7 @@ export function PicklistMenu({
     <DialogTrigger
       isOpen={open}
       onOpenChange={(next) => {
+        if (isDisabled) return;
         setQuery("");
         setOpen(next);
       }}

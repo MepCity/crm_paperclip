@@ -80,6 +80,11 @@ test("filter icons expose img role only with aria-label", () => {
   render(<Icons.filterChevronDown aria-label="Expand" />);
   expect(screen.getByRole("img", { name: "Expand" }).getAttribute("aria-label")).toBe("Expand");
 
+  render(<Icons.filterChevronRight aria-label="Next filter group" />);
+  expect(screen.getByRole("img", { name: "Next filter group" }).getAttribute("aria-label")).toBe(
+    "Next filter group",
+  );
+
   const { container: rightContainer } = render(<Icons.filterChevronRight />);
   expect(rightContainer.querySelector("svg")?.getAttribute("role")).toBeNull();
 });

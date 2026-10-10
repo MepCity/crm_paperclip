@@ -42,7 +42,7 @@ export function LeadsListScreen() {
 | `useRecord` | Single record |
 | `useUsers` | Organization members for owner display |
 | `useCreateRecord` | Create; invalidates list, count and the new record |
-| `useUpdateRecord` | Update; invalidates list, count and the record |
+| `useUpdateRecord` | Update; writes the response into the record cache, cancels in-flight record reads, invalidates list and count (not the record query) |
 | `useDeleteRecords` | Delete; invalidates list, count and each record |
 | `useMassUpdate` | Update one eligible field; invalidates list, count and each selected record |
 | `useChangeOwner` | Transfer ownership; invalidates list, count and each selected record |

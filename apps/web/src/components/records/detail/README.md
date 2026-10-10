@@ -15,6 +15,7 @@ and page placement live in MEP-144.
 | Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order, same-page neighbor scope |
 | Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
+| Status ribbon | `leads/lead-status-ribbon-section.tsx` with `lib/records/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
 
 The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
 `requireOrgContext` and renders `LeadsDetailClient` (`modules/leads/leads-detail-client.tsx`).
@@ -49,6 +50,11 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
   no toast. Related child records (notes, open/closed activities) are not removed
   in Module 1; when Activities (M5) and notes/attachments (M6) ship, delete should
   cascade per `leads-write-behaviour.md` › A1.
+- Lead status ribbon (MEP-167): stage changes apply immediately with no confirmation or toast;
+  failed writes revert the ribbon and show form-style error text beneath it; only the current-stage
+  and terminal menus change `Lead_Status` (other chevrons are not clickable); rejected-stage groups
+  (`Junk`, `Not Qualified`) are fixed in `leads-status-ribbon.ts` because metadata does not expose
+  `record_category_value` on the client.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
