@@ -161,7 +161,9 @@ test("clears the banner at the start of a later save attempt", async () => {
 test("duplicate field validation shows inline error without a banner", async () => {
   const { service } = harness();
   vi.spyOn(service, "create").mockRejectedValue(
-    new ValidationError({ Email: ["A lead with this email already exists."] }),
+    Object.assign(new ConflictError("A lead with this email already exists."), {
+      fieldErrors: { Email: ["A lead with this email already exists."] },
+    }),
   );
   await ready();
   const user = await required();

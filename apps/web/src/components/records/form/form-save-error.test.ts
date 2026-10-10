@@ -21,6 +21,24 @@ test("formSaveFieldErrors maps validation errors", () => {
   ).toEqual({ Company: "Required.", Last_Name: "Also required." });
 });
 
+test("formSaveFieldErrors maps conflict errors that carry fieldErrors", () => {
+  expect(
+    formSaveFieldErrors(
+      Object.assign(new ConflictError("Duplicate."), {
+        fieldErrors: { Email: ["Taken.", "Invalid."] },
+      }),
+    ),
+  ).toEqual({ Email: "Taken. Invalid." });
+  expect(formSaveBannerMessage(new ConflictError("Duplicate lead."))).toBe("Duplicate lead.");
+  expect(
+    formSaveBannerMessage(
+      Object.assign(new ConflictError("Duplicate."), {
+        fieldErrors: { Email: ["Taken."] },
+      }),
+    ),
+  ).toBeNull();
+});
+
 test("formSaveBannerMessage returns app messages and generic text for unknown failures", () => {
   expect(formSaveBannerMessage(new ConflictError("Duplicate lead."))).toBe("Duplicate lead.");
   expect(formSaveBannerMessage(new ForbiddenError("Denied."))).toBe("Denied.");

@@ -77,7 +77,10 @@ test("Save and New clears the form and leaves a saved record in the list", async
   await expect(page.getByRole("link", { name: "Form Lead New", exact: true })).toBeVisible();
 });
 
-test("blocked save keeps the form, values and error banner below the strip", async ({ page }) => {
+test("blocked save keeps the form, values and error banner below the strip", async ({
+  page,
+  pageErrors,
+}) => {
   await openCreate(page);
   await fillRequired(page, "Net");
   let blocked = true;
@@ -100,15 +103,19 @@ test("blocked save keeps the form, values and error banner below the strip", asy
   if (!strip || !bannerBox) throw new Error("Missing strip or banner");
   expectWithin1(bannerBox.y, strip.y + strip.height);
   await expect(banner).toHaveCSS("color", await tokenValue(page, "color", "--color-form-required"));
-  blocked = false;
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator("[data-record-header]")).toContainText("Form Lead Net");
+  // ADR 0003 §8: measured reference error ink #ff5d5a on white remains below AA.
   await expectNoA11yViolations(page, {
     exclude: [
       "#record-form-Salutation-value.record-prefix-empty",
       ".record-form-clear-address > span",
+      "[data-record-form-error-banner]",
     ],
   });
+  const next = pageErrors.filter((error) => !error.includes("net::ERR_FAILED"));
+  pageErrors.splice(0, pageErrors.length, ...next);
+  blocked = false;
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead Net");
 });
 
 test("server field errors keep the form open and focus Company", async ({ page, pageErrors }) => {
