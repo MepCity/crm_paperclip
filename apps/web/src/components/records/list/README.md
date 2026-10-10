@@ -17,6 +17,7 @@ components import types from `@crm/core/records` and format datetimes through
 | `rowHref` | Builds that column's address from the record. |
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
+| `alphabet` | Optional alphabetical filter of the link column header: `{ value, onChange }`. `value` is the chosen letter, `null` is `All`. Omitting it draws no control. |
 | `wrapText` | Wrap cell text and grow the row. When false, the cell truncates. |
 | `emptyMessage` | Message in the first body band when `records` is empty. |
 | `settings` | Content of the header-only 40px View Settings overlay. Omit it to leave the cell empty. |
@@ -33,6 +34,14 @@ badge strip stay pinned. View Settings is not a column: a
 1px left border, and body rows have no cell there. Omitting `settings` leaves
 that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
+
+When `alphabet` is supplied, the link column header draws the `AlphabetFilter` control from
+`components/ui` right after the label, and only there: other headers keep their plain label.
+The control's accessible name is `Filter by first letter` and its text is the current choice,
+`All` or a letter. Each data header keeps `aria-label` as its own accessible name, so the
+control inside the cell does not change how the column is announced. The table does not filter
+anything: the page owns the choice (`list-views.md` › Filters / views / sorting / search ›
+Alphabetical filter, Layout › Visual layout › All alphabet dropdown).
 
 The header checkbox selects or clears every row on the page. A row checkbox
 selects that row. The selection toolbar is composed on the module list page,
@@ -118,8 +127,10 @@ The `record-table` demo uses synthetic values (`Lead 001`, `example.org`):
 ## Known deviations
 
 The captured list shows these controls, and none of their behaviour was
-observed, so they are not drawn: the **All** menu on the name header, row
-hover actions, column resize, column drag, and sorting by clicking a header.
+observed, so they are not drawn: row hover actions, column resize, column
+drag, and sorting by clicking a header. The **All** alphabetical filter
+beside the link column header is drawn; its effect is `Interim` (see
+Module list page below).
 
 Also:
 
@@ -444,6 +455,28 @@ Disabled filter rows (deviations): `textarea`, `lookup`,
 `multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
 and related-module groups stay disabled.
 
+### First-letter filter (Leads)
+
+The link column header carries the `AlphabetFilter` control
+(`list-views.md` › Filters / views / sorting / search › Alphabetical filter;
+`leads-write-behaviour.md` › B1: a letter limits the list to the records whose name starts
+with it). `ModuleListScreen` holds the choice in page state, where `null` is `All`.
+
+`firstLetterCriteria(config.linkField, letter)` builds the leaf
+`{ field: linkField, comparator: "starts_with", value: letter }`, and `combineCriteriaAnd`
+from `lib/records/filter-criteria.ts` merges it with the criteria the panel applied into one
+`and` group — the shape several panel rows already produce, with no extra nesting.
+`useRecordList` and `useRecordCount` both get the merged criteria, so the rows and the total
+answer the same restriction.
+
+- Choosing a letter returns the list to page 1 and drops row selection, like applying a panel
+  filter. `All` removes the leaf; with nothing else applied the queries carry no filters.
+- The panel's `Clear` removes only what the panel applied; the letter stays.
+- Changing the open view returns the control to `All`, together with the criteria, the panel
+  draft and the selection it already discarded.
+- With no matching record the table shows its normal empty state (`No Leads found.`) and a zero
+  total.
+
 ### Interim
 
 - Selection bar placement, counter copy (`Clear`, delete dialog title and body,
@@ -473,6 +506,23 @@ and related-module groups stay disabled.
   and clear on full page reload; no toolbar indicator after apply; empty results use
   the table empty state; validation errors appear above Apply/Clear; the panel stays
   open with rows checked after apply.
+- The letter compares the link column's field (`config.linkField`, `Full_Name`, the column
+  the reference labels `Lead Name`). The spec documents that a letter limits the list to the
+  records starting with it but never records which field it targets, so the link field is the
+  authorized interim choice (`leads-write-behaviour.md` › B1, open question 5).
+- The comparison is the service's text-family `starts_with`, case-insensitive
+  (`packages/core/records/README.md`); no separate letter rule was observed.
+- The letter is not carried in the address, like applied panel filters: it clears on a full
+  page reload. Whether the reference keeps it in the URL was not observed.
+- The letter combines with the panel filter in one `and` group; the reference's combination
+  rule was never observed (only one control was opened, never applied).
+- The closed control's measure and its chosen-letter display use existing tokens only
+  (`components/ui/README.md` › Alphabet filter primitive › Interim).
+- With no matching record the letter shows the table's normal empty state; that state for a
+  letter result was not observed.
+- Module-local record text search is not drawn: its fields, matching rule and result states
+  were never observed (`list-views.md` › Open questions 5), and it stays the remaining part of
+  parity checklist row 10.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
 

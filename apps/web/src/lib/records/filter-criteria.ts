@@ -170,3 +170,30 @@ export function panelFiltersToCriteria(inputs: readonly PanelFilterInput[]): Cri
   }
   return { groupOperator: "and", group: inputs.map(leaf) };
 }
+
+/**
+ * Criterion for the list header's first-letter choice. `null` means All and adds nothing. The
+ * comparison itself is the text-family case-insensitive `starts_with` rule
+ * (`packages/core/src/records/README.md`).
+ */
+export function firstLetterCriteria(
+  linkField: string,
+  letter: string | null,
+): Criteria | undefined {
+  if (!letter) return undefined;
+  return { field: linkField, comparator: "starts_with", value: letter };
+}
+
+/**
+ * AND-combines the criteria that restrict a list, ignoring absent parts and flattening a part
+ * that is already an `and` group instead of nesting it. Undefined when nothing restricts.
+ */
+export function combineCriteriaAnd(parts: readonly (Criteria | undefined)[]): Criteria | undefined {
+  const present = parts.filter((part): part is Criteria => part !== undefined);
+  if (present.length === 0) return undefined;
+  const group = present.flatMap((part) =>
+    "groupOperator" in part && part.groupOperator === "and" ? [...part.group] : [part],
+  );
+  if (group.length === 1) return group[0];
+  return { groupOperator: "and", group };
+}
