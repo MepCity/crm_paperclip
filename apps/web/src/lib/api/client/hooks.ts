@@ -30,11 +30,12 @@ export function useModule(module: ModuleApiName) {
   });
 }
 
-export function useViews(module: ModuleApiName) {
+export function useViews(module: ModuleApiName, options?: { enabled?: boolean }) {
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.views(module),
     queryFn: () => service.listViewSummaries(module),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -99,24 +100,10 @@ function invalidateModuleLists(
   if (recordId) void queryClient.invalidateQueries({ queryKey: apiKeys.record(module, recordId) });
 }
 
-function isModuleListOrCountQuery(queryKey: readonly unknown[], module: ModuleApiName): boolean {
-  return (
-    queryKey.length >= 4 &&
-    queryKey[0] === "crm" &&
-    queryKey[1] === "module" &&
-    queryKey[2] === module &&
-    (queryKey[3] === "list" || queryKey[3] === "count")
-  );
-}
-
 /** Re-requests open list and count queries for a module; does not reload module metadata. */
 export function useRefreshModuleListData(module: ModuleApiName) {
   const queryClient = useQueryClient();
-  return () => {
-    void queryClient.invalidateQueries({
-      predicate: (query) => isModuleListOrCountQuery(query.queryKey, module),
-    });
-  };
+  return () => invalidateModuleLists(queryClient, module);
 }
 
 export function useCreateRecord(module: ModuleApiName) {
@@ -134,7 +121,12 @@ export function useUpdateRecord(module: ModuleApiName) {
   return useMutation({
     mutationFn: ({ id, input }: { id: RecordId; input: RecordInput }) =>
       service.update(module, id, input),
-    onSuccess: (record) => invalidateModuleLists(queryClient, module, record.id),
+    onSuccess: async (record) => {
+      await queryClient.cancelQueries({ queryKey: apiKeys.record(module, record.id) });
+      queryClient.setQueryData(apiKeys.record(module, record.id), record);
+      void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(module) });
+      void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(module) });
+    },
   });
 }
 

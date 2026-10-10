@@ -81,8 +81,8 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
       {...filterIconRoleProps(props)}
       {...rest}
     >
-      <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
-      <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="5.75" cy="5.75" r="5" strokeWidth="1.5" />
+      <path d="M9.3 9.3 12.75 12.75" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -125,16 +125,17 @@ function StatusCheck(props: SVGProps<SVGSVGElement>) {
 }
 
 /** Original user silhouette for form placeholders and picker action. */
-function RecordUser(props: SVGProps<SVGSVGElement>) {
+function RecordUser({ "aria-hidden": ariaHidden, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       {...props}
+      aria-hidden={ariaHidden}
+      role={ariaHidden ? undefined : "img"}
+      aria-label={ariaHidden ? undefined : props["aria-label"]}
     >
       <circle cx="12" cy="7" r="4" />
       <path d="M4 22v-3a8 8 0 0 1 16 0v3M2 22h20" />
@@ -174,16 +175,72 @@ function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {
 }
 
 /** Filled downward caret for form picklists (8 × 5 px measured). */
-function RecordFormCaret(props: SVGProps<SVGSVGElement>) {
+function RecordFormCaret({ "aria-hidden": ariaHidden, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 8 5"
       fill="currentColor"
       {...props}
+      aria-hidden={ariaHidden}
+      role={ariaHidden ? undefined : "img"}
+      aria-label={ariaHidden ? undefined : props["aria-label"]}
     >
       <path d="M0 0h8L4 5Z" />
+    </svg>
+  );
+}
+
+/** Left arrow with shaft for record header Back (ink about 16 × 13.5 px). */
+function ArrowLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 13.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M15.25 6.75H0.75M0.75 6.75 4.5 0.75M0.75 6.75 4.5 12.75" />
+    </svg>
+  );
+}
+
+/** Record header previous/next chevron ink target 7 × 13 px in a 24 × 24 box. */
+function RecordHeaderChevronLeft(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M14 6.25 8.5 12 14 17.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RecordHeaderChevronRight(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="M10 6.25 15.5 12 10 17.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -309,12 +366,17 @@ export const Icons = {
   warning: AlertTriangle,
   calendar: Calendar,
   chevronDown: ChevronDown,
+  arrowLeft: ArrowLeft,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  recordHeaderChevronLeft: RecordHeaderChevronLeft,
+  recordHeaderChevronRight: RecordHeaderChevronRight,
   close: X,
   filter: FilterIcon,
   sort: SortIcon,
   list: ListIcon,
+  settingsSliders: SettingsSlidersIcon,
+  eye: EyeIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
   timelinePencil: TimelinePencilIcon,
@@ -374,6 +436,28 @@ function ListIcon(props: SVGProps<SVGSVGElement>) {
     <ListGlyph {...props}>
       <path d="M9 6h12M9 12h12M9 18h12" />
       <path d="M3 6h1M3 12h1M3 18h1" strokeWidth="3" />
+    </ListGlyph>
+  );
+}
+
+/** View Settings: sliders inside a rounded frame, drawn in the inherited text colour. */
+function SettingsSlidersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="3.75" />
+      <path d="M6.75 9.5h10.5M6.75 14.5h10.5" />
+      <circle cx="10.25" cy="9.5" r="2" fill="currentColor" stroke="none" />
+      <circle cx="13.75" cy="14.5" r="2" fill="currentColor" stroke="none" />
+    </ListGlyph>
+  );
+}
+
+/** View Mode: an eye with a pupil, same 24 box and stroke as the other list glyphs. */
+function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <ListGlyph {...props}>
+      <path d="M2.75 12.5C5.5 8.75 8.5 7 12 7s6.5 1.75 9.25 5.5C18.5 16.25 15.5 18 12 18s-6.5-1.75-9.25-5.5Z" />
+      <circle cx="12" cy="12.4" r="2.6" />
     </ListGlyph>
   );
 }

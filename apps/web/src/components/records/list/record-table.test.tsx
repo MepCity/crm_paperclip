@@ -1,8 +1,8 @@
 import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { RecordTable, type RecordTableProps } from "./record-table";
@@ -51,12 +51,14 @@ function Harness({
   emptyMessage = "No records found.",
   wrapText = false,
   settings,
+  alphabet,
   footer,
 }: {
   records: readonly RecordData[];
   emptyMessage?: string;
   wrapText?: boolean;
   settings?: RecordTableProps["settings"];
+  alphabet?: RecordTableProps["alphabet"];
   footer?: Partial<RecordTableProps["footer"]>;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
@@ -68,6 +70,7 @@ function Harness({
       rowHref={(item) => `/records/${item.id}`}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
+      alphabet={alphabet}
       wrapText={wrapText}
       emptyMessage={emptyMessage}
       settings={settings}
@@ -84,6 +87,10 @@ function Harness({
       }}
     />
   );
+}
+
+function control() {
+  return screen.getByRole("button", { name: "Filter by first letter" });
 }
 
 test("exposes the table, column headers and row links", () => {
@@ -168,6 +175,21 @@ test("empty state keeps the header and footer, drops the badge and checkboxes, a
   expect(scroller?.getAttribute("aria-label")).toBe("Records");
 });
 
+test("link cells take the cell's wrap mode instead of forcing their own", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText={false} />);
+  const truncated = document.querySelector("[data-part=row] [data-part=value]");
+  expect(truncated?.className).toContain("truncate");
+  const link = truncated?.querySelector("a");
+  expect(link?.className).not.toContain("whitespace-normal");
+  expect(link?.className).not.toContain("inline-block");
+  cleanup();
+
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText />);
+  const wrapped = document.querySelector("[data-part=row] [data-part=value]");
+  expect(wrapped?.className).toContain("whitespace-normal");
+  expect(wrapped?.querySelector("a")?.className).toContain("break-words");
+});
+
 test("renders the settings slot and keeps selection off the rest of the page", async () => {
   const user = userEvent.setup();
   render(<Harness records={[record("rec-001", "Lead 001")]} settings={<span>Columns</span>} />);
@@ -176,4 +198,61 @@ test("renders the settings slot and keeps selection off the rest of the page", a
   expect(screen.queryByRole("columnheader", { name: "View settings" })).toBeNull();
   await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
   expect(screen.queryByRole("toolbar")).toBeNull();
+});
+
+test("no alphabetical control without the alphabet prop", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  expect(screen.queryByRole("button", { name: "Filter by first letter" })).toBeNull();
+});
+
+test("the alphabetical control sits in the link column header and keeps its name", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: null, onChange: vi.fn() }}
+    />,
+  );
+  const headers = screen.getAllByRole("columnheader");
+  const withControl = headers.filter((header) =>
+    within(header).queryByRole("button", { name: "Filter by first letter" }),
+  );
+  expect(withControl).toHaveLength(1);
+  expect(withControl[0]?.getAttribute("aria-label")).toBe("Name");
+  expect(control().textContent).toBe("All");
+});
+
+test("the alphabetical control shows the chosen letter", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: "R", onChange: vi.fn() }}
+    />,
+  );
+  expect(control().textContent).toBe("R");
+});
+
+test("picking a letter in the list reports it, All reports null, and the list closes", async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  render(
+    <Harness records={[record("rec-001", "Lead 001")]} alphabet={{ value: null, onChange }} />,
+  );
+  await user.click(control());
+  const list = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  expect(within(list).getAllByRole("option")).toHaveLength(27);
+  await user.click(within(list).getByRole("option", { name: "B" }));
+  expect(onChange).toHaveBeenCalledWith("B");
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  await user.click(control());
+  const reopened = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  await user.click(within(reopened).getByRole("option", { name: "All" }));
+  expect(onChange).toHaveBeenLastCalledWith(null);
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
+
+test("the empty view keeps the alphabetical control in its header", () => {
+  render(<Harness records={[]} alphabet={{ value: "C", onChange: vi.fn() }} />);
+  expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(control().textContent).toBe("C");
 });

@@ -180,14 +180,14 @@ surrounding trigger.
   This component gallery is not the final page layout.
 - Owner picker dialog: MEP-139 (row 19). Action is rendered only with a callback.
 - Create/edit page actions and save: MEP-145 (rows 20–21).
-- Measured validation appearance: MEP-146 (row 22); existing invalid primitive
-  colour and accessible explanation remain in this issue.
+- Measured validation appearance and unsaved-changes dialog: MEP-146 (row 22).
 - Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported lookup/multi-module/date-time/long-integer controls: absent from
   Leads form; their corresponding later modules must supply primitives.
-- Currency prefix/information content is supplied by callers; the spec does not
-  publish the organization currency. Company stays a text field (suggestions unseen).
+- Currency prefix/information content is supplied by callers; the organization
+  currency comes from `useHomeCurrency` (MEP-225, decision MEP-221), never a fixed
+  symbol, an ISO code or a locale guess. Company stays a text field (suggestions unseen).
 - Own user silhouette and shared icon components replace reference assets. No
   reference logo, image, icon or font files are added. Font advances may differ.
 - Dropdown panel corners, check placement, option text inset, standard selected
@@ -219,9 +219,14 @@ mapping and create/partial-update payloads. An edit form keeps its initial basel
 while queries refetch, preserving in-progress input. Writes use `useCreateRecord`
 and `useUpdateRecord`; all strip actions and inputs are disabled while a write is
 pending, and a synchronous guard prevents duplicate submissions. The form has
-`noValidate`: server validation owns these errors; measured validation and dirty
-form confirmation belong to MEP-146. Field errors appear at their controls and
-focus the first rendered error, including composite prefix and longitude controls.
+`noValidate`: client validation runs on `Save` before any write; server field errors
+reuse the same inline appearance. `UnsavedChangesDialog` opens from `Cancel` when
+the form is dirty. Field errors appear at their controls and focus the first
+rendered error, including composite prefix and longitude controls.
+
+**Interim (MEP-146):** email format uses the browser email validity check when
+available; integer format rejects non-integer numbers. Unsaved-changes confirmation
+is wired to `Cancel` only (browser back and in-app links were not observed).
 
 ### Interim page behavior and Leads rules
 
@@ -237,9 +242,13 @@ focus the first rendered error, including composite prefix and longitude control
   option; without Country, State displays only the null option. The existing
   saved State is preserved internally until an explicit edit; no unresearched
   dependency clearing is introduced.
-- Currency prefix text and divider are deferred to MEP-226, using the organization
-  currency contract from MEP-225 (CTO decision MEP-221). This route supplies no
-  prefix and guesses no currency. The measured information icon remains a passive
+- The route supplies the Annual Revenue prefix: `leads-form-client.tsx` passes the
+  `symbol` from `useHomeCurrency` (organization currency contract from MEP-225, CTO
+  decision MEP-221); the prefix and divider geometry is the measured sentence in
+  `record-detail.md`. While the value loads, or when its request fails, no prefix is
+  drawn and the form keeps working. Interim: an organization whose currency reports
+  `prefixSymbol: false` was not observed in the reference, so in this form the symbol
+  is drawn as a prefix either way. The measured information icon remains a passive
   image in its 32px end section, with no tab stop, click handler or tooltip. Its
   hover/click behavior is an open research question awaiting MEP-201.
 - `renderOwnerPicker` is an integration slot for the approved Select User dialog.

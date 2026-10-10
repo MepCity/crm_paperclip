@@ -1,7 +1,8 @@
 import { NotFoundError } from "@crm/core/errors";
 import type { ListQuery } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { renderHook, waitFor } from "@testing-library/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "./client-record-service";
@@ -11,12 +12,18 @@ import {
   useDeleteRecords,
   useHomeCurrency,
   useMassUpdate,
+  useModule,
   useRecord,
   useRecordCount,
   useRecordList,
+  useRefreshModuleListData,
+  useUpdateRecord,
+  useUsers,
+  useViews,
 } from "./hooks";
 import type { ClientRecordService } from "./http-record-service";
 import { ApiProvider } from "./provider";
+import { apiKeys } from "./query-keys";
 
 const ctx = {
   orgId: "hooks-org",
@@ -113,6 +120,53 @@ describe("record hooks", () => {
     await waitFor(() => expect(countSpy.mock.calls.length).toBeGreaterThan(countCallsBefore));
   });
 
+  it("refresh re-requests the open list and count without reloading metadata", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const viewId = view.id;
+    const query: ListQuery = { viewId, page: 1, perPage: 10 };
+    const listSpy = vi.spyOn(service, "list");
+    const countSpy = vi.spyOn(service, "count");
+    const moduleSpy = vi.spyOn(service, "getModule");
+    const summariesSpy = vi.spyOn(service, "listViewSummaries");
+    const usersSpy = vi.spyOn(service, "listUsers");
+    function useHarness() {
+      return {
+        list: useRecordList("Leads", query),
+        count: useRecordCount("Leads", { viewId }),
+        module: useModule("Leads"),
+        viewSummaries: useViews("Leads"),
+        users: useUsers(),
+        refresh: useRefreshModuleListData("Leads"),
+      };
+    }
+    const { result } = renderHook(() => useHarness(), { wrapper: wrapper(service) });
+    await waitFor(() =>
+      expect(
+        result.current.list.isSuccess &&
+          result.current.count.isSuccess &&
+          result.current.module.isSuccess &&
+          result.current.viewSummaries.isSuccess &&
+          result.current.users.isSuccess,
+      ).toBe(true),
+    );
+    listSpy.mockClear();
+    countSpy.mockClear();
+    moduleSpy.mockClear();
+    summariesSpy.mockClear();
+    usersSpy.mockClear();
+    act(() => result.current.refresh());
+    await waitFor(() => {
+      expect(listSpy).toHaveBeenCalledTimes(1);
+      expect(countSpy).toHaveBeenCalledTimes(1);
+    });
+    expect(moduleSpy).not.toHaveBeenCalled();
+    expect(summariesSpy).not.toHaveBeenCalled();
+    expect(usersSpy).not.toHaveBeenCalled();
+  });
+
   it.each(["massUpdate", "changeOwner", "delete"] as const)(
     "invalidates lists, counts and each selected record after %s",
     async (action) => {
@@ -174,5 +228,106 @@ describe("record hooks", () => {
     });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(NotFoundError);
+  });
+
+  it("writes the update response to the record cache and ignores a stale in-flight read", async () => {
+    const service = createService();
+    const created = await service.create("Leads", {
+      Last_Name: "Cache Lead",
+      Company: "Cache Co",
+      Lead_Status: "Attempted to Contact",
+    });
+    const recordKey = apiKeys.record("Leads", created.id);
+    const pendingGet: { release: (() => void) | null } = { release: null };
+    let blockNextGet = false;
+    let staleGetFinished = false;
+    const getRecord = service.get.bind(service);
+    const getSpy = vi.spyOn(service, "get").mockImplementation(async (module, id) => {
+      const data = await getRecord(module, id);
+      if (blockNextGet) {
+        blockNextGet = false;
+        await new Promise<void>((resolve) => {
+          pendingGet.release = () => {
+            staleGetFinished = true;
+            resolve();
+          };
+        });
+        return { ...data, fields: { ...data.fields, Lead_Status: "Attempted to Contact" } };
+      }
+      return data;
+    });
+
+    function useHarness() {
+      const queryClient = useQueryClient();
+      const record = useRecord("Leads", created.id);
+      const update = useUpdateRecord("Leads");
+      return { queryClient, record, update };
+    }
+
+    const { result } = renderHook(() => useHarness(), { wrapper: wrapper(service) });
+    await waitFor(() => expect(result.current.record.isSuccess).toBe(true));
+    const getCallsAfterLoad = getSpy.mock.calls.length;
+
+    blockNextGet = true;
+    void result.current.queryClient.refetchQueries({ queryKey: recordKey });
+    await waitFor(() => expect(pendingGet.release).not.toBeNull());
+
+    const updated = await result.current.update.mutateAsync({
+      id: created.id,
+      input: { Lead_Status: "Contacted" },
+    });
+    expect(result.current.queryClient.getQueryData(recordKey)).toEqual(updated);
+    expect(getSpy.mock.calls.length).toBe(getCallsAfterLoad + 1);
+
+    pendingGet.release?.();
+    await waitFor(() => expect(staleGetFinished).toBe(true));
+    expect(result.current.queryClient.getQueryData(recordKey)).toEqual(updated);
+    expect(updated.fields.Lead_Status).toBe("Contacted");
+  });
+
+  it("invalidates list and count but not the record query after update", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const viewId = view.id;
+    const query: ListQuery = { viewId, page: 1, perPage: 10 };
+    const created = await service.create("Leads", {
+      Last_Name: "Invalidate Lead",
+      Company: "Invalidate Co",
+    });
+    const listSpy = vi.spyOn(service, "list");
+    const countSpy = vi.spyOn(service, "count");
+    const getSpy = vi.spyOn(service, "get");
+
+    function useHarness() {
+      const list = useRecordList("Leads", query);
+      const count = useRecordCount("Leads", { viewId });
+      const record = useRecord("Leads", created.id);
+      const update = useUpdateRecord("Leads");
+      return { list, count, record, update };
+    }
+
+    const { result } = renderHook(() => useHarness(), { wrapper: wrapper(service) });
+    await waitFor(() =>
+      expect(
+        result.current.list.isSuccess &&
+          result.current.count.isSuccess &&
+          result.current.record.isSuccess,
+      ).toBe(true),
+    );
+    const listCallsBefore = listSpy.mock.calls.length;
+    const countCallsBefore = countSpy.mock.calls.length;
+    const getCallsBefore = getSpy.mock.calls.length;
+
+    await result.current.update.mutateAsync({
+      id: created.id,
+      input: { Company: "Invalidate Changed" },
+    });
+
+    await waitFor(() => expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore));
+    await waitFor(() => expect(countSpy.mock.calls.length).toBeGreaterThan(countCallsBefore));
+    expect(getSpy.mock.calls.length).toBe(getCallsBefore);
+    expect(result.current.record.data?.fields.Company).toBe("Invalidate Changed");
   });
 });

@@ -17,6 +17,7 @@ components import types from `@crm/core/records` and format datetimes through
 | `rowHref` | Builds that column's address from the record. |
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
+| `alphabet` | Optional alphabetical filter of the link column header: `{ value, onChange }`. `value` is the chosen letter, `null` is `All`. Omitting it draws no control. |
 | `wrapText` | Wrap cell text and grow the row. When false, the cell truncates. |
 | `emptyMessage` | Message in the first body band when `records` is empty. |
 | `settings` | Content of the header-only 40px View Settings overlay. Omit it to leave the cell empty. |
@@ -34,6 +35,14 @@ badge strip stay pinned. View Settings is not a column: a
 that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
 
+When `alphabet` is supplied, the link column header draws the `AlphabetFilter` control from
+`components/ui` right after the label, and only there: other headers keep their plain label.
+The control's accessible name is `Filter by first letter` and its text is the current choice,
+`All` or a letter. Each data header keeps `aria-label` as its own accessible name, so the
+control inside the cell does not change how the column is announced. The table does not filter
+anything: the page owns the choice (`list-views.md` › Filters / views / sorting / search ›
+Alphabetical filter, Layout › Visual layout › All alphabet dropdown).
+
 The header checkbox selects or clears every row on the page. A row checkbox
 selects that row. The selection toolbar is composed on the module list page,
 not inside this table.
@@ -43,7 +52,9 @@ The badge strip is an empty placeholder. No activity ribbon is drawn.
 A single-line row is `--size-list-row-pad`, one `--size-list-line-height` line
 and `--size-list-row-pad` again. There is no minimum row height: each extra
 text line adds one line height, and cell content stays top-aligned. A 1px
-separator follows the row. Each data header has a short divider on its right
+separator follows the row. `wrapText` is decided by the cell box, so a link cell
+inherits it too: with `wrapText` false a long name or mail address stays on one
+line and is cut with an ellipsis instead of growing the row. Each data header has a short divider on its right
 edge; the first data column has none on its left, and body rows have no
 vertical dividers.
 
@@ -118,8 +129,10 @@ The `record-table` demo uses synthetic values (`Lead 001`, `example.org`):
 ## Known deviations
 
 The captured list shows these controls, and none of their behaviour was
-observed, so they are not drawn: the **All** menu on the name header, row
-hover actions, column resize, column drag, and sorting by clicking a header.
+observed, so they are not drawn: row hover actions, column resize, column
+drag, and sorting by clicking a header. The **All** alphabetical filter
+beside the link column header is drawn; its effect is `Interim` (see
+Module list page below).
 
 Also:
 
@@ -139,9 +152,29 @@ Also:
 - A view with fewer columns was measured near 204px. Column width stays 200px.
 - Figtree changes the measured advance of some labels. The largest recorded
   difference is 2px (`research/specs/typography.md`).
-- The settings menu is not drawn. The header overlay is a slot. Scrolled to the
-  end, it covers the last 40px of the last column header. That overlap was not
+- The View Settings button is drawn in the header overlay. Scrolled to the
+  end, the overlay covers the last 40px of the last column header. That overlap was not
   observed.
+- The popover follows the measured row (`--size-popover-settings-width` 264px,
+  `--size-list-settings-row-width` 250px by `--size-menu-item-height` 30px,
+  `--size-menu-inset` 6px). `Manage Columns` and `Reset Column Size` are not drawn: they
+  belong to the customization module, so the popover has only the page/view group and no
+  group divider.
+- The page-size submenu and the View Mode submenu are not measured in the spec. Their
+  width follows their content, the marker sits before the label, and the submenu chevron
+  is 16px (`--size-menu-icon`). The submenu's border keeps the shared popover border.
+- The parent rows' leading glyphs, the value column and the row gap are read from the
+  `list-settings` capture, not measured in the spec: the glyphs are 16px
+  (`--size-menu-icon`) with the 12px label gap (`--size-menu-label-gap`) already used by
+  measured menus, the value sits right-aligned before the submenu chevron. Their text
+  weights are measured (`typography.md` › Table settings row label / value); the label's
+  14px maps to the existing 14.5px `--text-md` token and the value's 640-660 band to
+  `--font-weight-bold` (650). The glyph drawings are our own (`Icons.list`, `Icons.eye`);
+  the spec forbids reusing the reference's icon assets.
+- The View Settings trigger is an icon-only button in a 40px cell; the reference's
+  control and icon sizes in that cell were not measured. It uses `--size-list-view-icon`,
+  and its glyph is the framed sliders drawing (`Icons.settingsSliders`), not the bare
+  gear used by the shell's Settings nav item.
 - A wide empty table's message position was not observed. The message is
   centred on the visible card.
 - A partially selected page does not draw an indeterminate header box. Partial
@@ -207,7 +240,7 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
 | boolean | is → equal | equal | boolean, Selected / Not Selected |
 | ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
-| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | number + `days` / `weeks` / `months` for age/due/Previous/Next; `DD.MM.YYYY` for On/before/after; From/To range for between/not between; fiscal presets block Apply until fiscal settings exist |
 | tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
 | multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
 | compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
@@ -244,8 +277,8 @@ existing primitive tokens:
   the scrollable group content. A constrained-height parent makes only the rows scroll.
 - The user-type selector contents beyond the initial Users option and current-user
   identification remain Interim; callers may supply `detail` and `currentUser` flags.
-  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
+- **after** shares the single `DD.MM.YYYY` control used for **before** (**Interim**; no separate spec row).
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -266,9 +299,6 @@ select two rows. Only synthetic data appears in demos and tests.
   and related-module editors: their respective modules.
 - Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
   rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
-- Date Previous / Next / On / before / after / between / not between: value editors
-  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
-- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
 - textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
@@ -285,6 +315,42 @@ select two rows. Only synthetic data appears in demos and tests.
 - Open operator shadow parameters retain the existing soft-shadow token; they are
   not measured.
 
+## ViewSettingsMenu
+
+`view-settings-menu.tsx` — the control inside `RecordTable`'s `settings` slot.
+Source: `research/specs/list-views.md` › Layout (View Settings paragraph), Layout →
+Visual layout (View Settings popover; Data and trailing column widths), Actions
+(View Settings) and Flows 5.
+
+| Prop | Contract |
+| --- | --- |
+| `perPage` | Page size in effect: the address value when it carries `per_page`, otherwise the stored preference. Marks the submenu row. |
+| `onPerPageChange` | Receives the chosen `ListPerPage` (10, 20, 30, 40, 50, 100) and closes the menu. |
+| `wrapText` | Marks the Wrap Text row. |
+| `onWrapTextChange` | Receives the next boolean and closes the menu. |
+
+- Trigger: an icon-only button in the 40px header cell, accessible name **View Settings**.
+  Its glyph is the framed settings sliders (`Icons.settingsSliders`). Opens with click,
+  Enter or Space; Escape closes it and returns focus to the trigger. Opening focuses the
+  first row, so the first ArrowDown moves to the second.
+- Popover: 264px (`--size-popover-settings-width`), rows 30px
+  (`--size-menu-item-height`). Row text follows the two roles `research/specs/typography.md`
+  measures from `list-settings`: the label is Table settings row label (`--text-md` /
+  `--font-weight-normal`), the value in effect is Table settings row value (`--text-md` /
+  `--font-weight-bold`). The focused row uses the measured highlight fill.
+- Rows: **Records Per Page** and **View Mode**, each a submenu opened with ArrowRight
+  or a click. A row draws its leading glyph, its label, then the value in effect pushed
+  to the right edge and the submenu chevron: `Records Per Page 30`, `View Mode Wrap Text`.
+  The value belongs to the row's accessible name, and react-aria gives the submenu popover
+  that same name — which is how `list-page-size` names the page-size menu. View Mode shows
+  its value only while Wrap Text is on; the off-state label was never observed.
+- Wrap Text is a `menuitemcheckbox`; page sizes are `menuitemradio` and the current size
+  carries a check marker.
+- Not drawn: **Manage Columns** and **Reset Column Size** — parity checklist row 9's
+  column work belongs to M11 (Customization).
+- The component is presentational: the page owns the address, the preference keys and
+  the record query.
+
 ## View tab and toolbar
 
 - `ViewTabStrip({ viewName })`: renders the selected view label in the measured pill.
@@ -295,11 +361,15 @@ select two rows. Only synthetic data appears in demos and tests.
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
-- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
-  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
-  Selected` / `3 Records Selected`), a `Clear`
-  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
-  The page supplies module labels and wires delete confirmation.
+- `SelectionBar({ selectedCount, onClear, onDelete, onMassUpdate?, actions? })`: replaces
+  the toolbar while `selectedCount > 0`. Shows the measured toolbar height, a count
+  (`1 Record Selected` / `3 Records Selected`), a `Clear` text control, `Delete`, an
+  optional `Mass Update` button when `onMassUpdate` is set (113 × 32 px, same chrome as
+  `Delete`), and an optional `Actions` menu when `actions` is non-empty. The page
+  supplies module labels and wires delete confirmation.
+- `MassUpdateDialog` and `ChangeOwnerDialog`: bulk write dialogs opened from the selection
+  bar on the module list page. They call `useMassUpdate` / `useChangeOwner`, clear
+  selection and refresh the list on success without a toast.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }` in the order the caller supplies — the component never sorts it;
   `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
@@ -384,6 +454,8 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List menu item (More / Actions) | `--text-md` | `--font-weight-normal` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
+| Table settings row label | `--text-md` | `--font-weight-normal` |
+| Table settings row value | `--text-md` | `--font-weight-bold` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
@@ -404,9 +476,12 @@ Leads-only labels and filter rows sit in
 Query names mirror the reference list requests: `page` (default 1), `per_page`
 (default 30; allowed 10, 20, 30, 40, 50, 100), `sort_by`, `sort_order`.
 Parsing and list-query assembly live in `lib/records/list-search-params.ts`.
-Invalid values fall back to defaults. Sort Apply and footer Previous / Next
+Invalid values fall back to defaults. When the address carries no `per_page`, the
+stored `list.per-page` preference supplies the page size; a stored value outside the
+six sizes falls back to 30. Sort Apply and footer Previous / Next
 update the address; Refresh Custom View re-requests the open view's list and
-count queries without changing the URL.
+count queries without changing the URL. View Settings writes `per_page` and resets
+`page` to 1 through the same address helper.
 `sort_by` is accepted only for a field in the Sort By list, so the address and
 the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
 module's ordered `sortFieldLabels` against field metadata by label, and
@@ -444,6 +519,28 @@ Disabled filter rows (deviations): `textarea`, `lookup`,
 `multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
 and related-module groups stay disabled.
 
+### First-letter filter (Leads)
+
+The link column header carries the `AlphabetFilter` control
+(`list-views.md` › Filters / views / sorting / search › Alphabetical filter;
+`leads-write-behaviour.md` › B1: a letter limits the list to the records whose name starts
+with it). `ModuleListScreen` holds the choice in page state, where `null` is `All`.
+
+`firstLetterCriteria(config.linkField, letter)` builds the leaf
+`{ field: linkField, comparator: "starts_with", value: letter }`, and `combineCriteriaAnd`
+from `lib/records/filter-criteria.ts` merges it with the criteria the panel applied into one
+`and` group — the shape several panel rows already produce, with no extra nesting.
+`useRecordList` and `useRecordCount` both get the merged criteria, so the rows and the total
+answer the same restriction.
+
+- Choosing a letter returns the list to page 1 and drops row selection, like applying a panel
+  filter. `All` removes the leaf; with nothing else applied the queries carry no filters.
+- The panel's `Clear` removes only what the panel applied; the letter stays.
+- Changing the open view returns the control to `All`, together with the criteria, the panel
+  draft and the selection it already discarded.
+- With no matching record the table shows its normal empty state (`No Leads found.`) and a zero
+  total.
+
 ### Interim
 
 - Selection bar placement, counter copy (`Clear`, delete dialog title and body,
@@ -452,6 +549,15 @@ and related-module groups stay disabled.
   reference capture; they follow this task's authorized interim rules.
 - Refresh re-requests `bulk` and `count` for the open view; the reference's
   refresh requests were not observed.
+- View Settings preferences are stored in the browser, not on the server: `list.per-page`
+  and `list.wrap-text.<viewId>` go through `usePreference` (`lib/preferences.ts`), whose
+  key is scoped by organization and user id. Server-side storage waits for ADR 0002.
+  `PreferenceProvider` wraps the organization layout once.
+- The reference Wrap Text state was never switched, and the scope of these settings
+  (per user or per view) was not observed: the capture tool blocked preference writes.
+  Wrap Text is therefore stored per view and defaults to on, which is the behaviour the
+  populated list capture shows.
+- Choosing a page size closes the menu; whether the reference closes it was not observed.
 - Page size default 30 is captured preference, not persisted user choice.
 - The Sort By list is the 39 labels in `LEADS_SORT_FIELD_LABELS` (`list-views.md` ›
   Sorting), none dropped: every label resolves to a Leads metadata field. A label
@@ -473,8 +579,26 @@ and related-module groups stay disabled.
   and clear on full page reload; no toolbar indicator after apply; empty results use
   the table empty state; validation errors appear above Apply/Clear; the panel stays
   open with rows checked after apply.
-- Split Create arrow, Actions menu, view selector, View Settings, and activity
-  ribbon are not drawn on the page.
+- The letter compares the link column's field (`config.linkField`, `Full_Name`, the column
+  the reference labels `Lead Name`). The spec documents that a letter limits the list to the
+  records starting with it but never records which field it targets, so the link field is the
+  authorized interim choice (`leads-write-behaviour.md` › B1, open question 5).
+- The comparison is the service's text-family `starts_with`, case-insensitive
+  (`packages/core/records/README.md`); no separate letter rule was observed.
+- The letter is not carried in the address, like applied panel filters: it clears on a full
+  page reload. Whether the reference keeps it in the URL was not observed.
+- The letter combines with the panel filter in one `and` group; the reference's combination
+  rule was never observed (only one control was opened, never applied).
+- The closed control's measure and its chosen-letter display use existing tokens only
+  (`components/ui/README.md` › Alphabet filter primitive › Interim).
+- With no matching record the letter shows the table's normal empty state; that state for a
+  letter result was not observed.
+- Module-local record text search is not drawn: its fields, matching rule and result states
+  were never observed (`list-views.md` › Open questions 5), and it stays the remaining part of
+  parity checklist row 10.
+- Split Create arrow, Actions menu, view selector, and activity
+  ribbon are not drawn on the page. View Settings is drawn, but its
+  `Manage Columns` and `Reset Column Size` entries belong to M11 and are not drawn.
 
 ### Page layout
 
@@ -486,6 +610,12 @@ edge. A 15 px gap separates the toolbar from the filter/table row. The page fill
 shell main height; the table card grows in the body row and keeps the footer on
 the card bottom while record rows scroll inside the card.
 
+The card does not reach the bottom of the content area. At 1470 × 835 the content
+area ends at y 807 and the card ends at y 794, so 13 px of canvas stays visible
+under the card. `--list-card-bottom-gap` carries that value and is applied as the
+page's `padding-bottom`; the body row flexes to fill the rest of the page height,
+so the gap under the card stays 13 px whatever the shell height.
+
 ### Page deviations
 
 - Panel closed: table widening beside the filter lane was not verified in the
@@ -494,3 +624,23 @@ the card bottom while record rows scroll inside the card.
   control remain out of scope.
 - Column header copy follows field metadata labels (for example **Full Name** for
   `Full_Name`), not the reference list label **Lead Name**.
+
+## Interim (bulk dialogs)
+
+**Mass Update**
+
+- Enabled `Update` uses existing primary button tokens (reference enabled fill was not
+  observed).
+- Backdrop uses the shared dialog overlay token.
+- Value controls after a field is chosen follow the create/edit form input tokens at
+  285 px width.
+- Dialog height can grow when inline or general error text is shown.
+
+**Change Owner**
+
+- Entire dialog presentation (modal vs page) and `Cancel` styling were not observed;
+  frame, padding, buttons and backdrop follow the unsaved-changes modal tokens; the
+  owner control follows create/edit form input geometry.
+- Field order for mass update follows module layout order.
+- Optional mass-update values may be cleared by submitting an empty value.
+- No success toast or banner after either bulk action completes.

@@ -9,6 +9,8 @@ export const DEV_UI_A11Y_EXCLUDE = [
   "[data-part=empty-value]",
   '.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-selector-label',
   '.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-selector-label',
+  /** Reference CRM measured validation ink (`--color-form-required`, ~3.04:1 on white). */
+  ".record-form-validation-error",
 ] as const;
 
 type AxeViolations = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];

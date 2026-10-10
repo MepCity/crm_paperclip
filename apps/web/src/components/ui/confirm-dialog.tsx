@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
-import { Button } from "./button";
+import { Button, type buttonStyles } from "./button";
 
 export interface ConfirmDialogProps {
   title: string;
@@ -15,6 +15,10 @@ export interface ConfirmDialogProps {
   onConfirm: () => void | Promise<void>;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  cancelClassName?: string;
+  confirmClassName?: string;
+  cancelVariant?: keyof typeof buttonStyles;
+  confirmVariant?: keyof typeof buttonStyles;
 }
 
 function isPromise(value: void | Promise<void>): value is Promise<void> {
@@ -33,6 +37,10 @@ function ConfirmDialogBody({
   close,
   descriptionId,
   onPendingChange,
+  cancelClassName,
+  confirmClassName,
+  cancelVariant,
+  confirmVariant,
 }: Omit<ConfirmDialogProps, "isOpen" | "onOpenChange"> & {
   message: string;
   tone: "danger" | "default";
@@ -44,7 +52,8 @@ function ConfirmDialogBody({
   const [pending, setPending] = useState(false);
   const started = useRef(false);
   const disabled = Boolean(busy) || pending;
-  const confirmVariant = tone === "danger" ? "danger" : "primary";
+  const resolvedCancelVariant = cancelVariant ?? "secondary";
+  const resolvedConfirmVariant = confirmVariant ?? (tone === "danger" ? "danger" : "primary");
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => cancelRef.current?.focus());
@@ -82,16 +91,18 @@ function ConfirmDialogBody({
       <div className="flex justify-end gap-(--size-confirm-dialog-actions-gap)">
         <Button
           ref={cancelRef}
-          variant="secondary"
+          variant={resolvedCancelVariant}
           size="record"
+          className={cancelClassName}
           onPress={close}
           isDisabled={disabled}
         >
           {cancelLabel}
         </Button>
         <Button
-          variant={confirmVariant}
+          variant={resolvedConfirmVariant}
           size="record"
+          className={confirmClassName}
           isPending={pending}
           isDisabled={disabled}
           onPress={() => {
@@ -132,6 +143,10 @@ export function ConfirmDialog({
   onConfirm,
   isOpen,
   onOpenChange,
+  cancelClassName,
+  confirmClassName,
+  cancelVariant,
+  confirmVariant,
 }: ConfirmDialogProps) {
   const descriptionId = useId();
   const [pending, setPending] = useState(false);
@@ -167,6 +182,10 @@ export function ConfirmDialog({
               close={close}
               descriptionId={descriptionId}
               onPendingChange={setPending}
+              cancelClassName={cancelClassName}
+              confirmClassName={confirmClassName}
+              cancelVariant={cancelVariant}
+              confirmVariant={confirmVariant}
             />
           )}
         </AriaDialog>

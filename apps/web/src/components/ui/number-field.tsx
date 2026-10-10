@@ -18,7 +18,7 @@ const styles = {
   label: "record-label text-md",
   input: "record-control",
   description: "text-sm text-text-muted",
-  error: "text-sm text-danger",
+  error: "record-form-validation-error",
 } as const;
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
