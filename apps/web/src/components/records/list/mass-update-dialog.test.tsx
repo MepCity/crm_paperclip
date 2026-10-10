@@ -164,6 +164,42 @@ describe("MassUpdateDialog", () => {
     });
   });
 
+  it("shows a long general error above the actions without clipping action buttons", async () => {
+    const longMessage =
+      "The selected records could not be updated because one or more values conflict with validation rules enforced by the organization.";
+    const records = createFixtureRecordService(ctx);
+    vi.spyOn(records, "massUpdate").mockRejectedValue(new Error(longMessage));
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <MassUpdateDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a"]}
+        fields={fields}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(screen.getByRole("button", { name: leadSource.label }));
+    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain(longMessage);
+    });
+    const panel = document.querySelector(".mass-update-modal-panel");
+    const update = screen.getByRole("button", { name: "Update" });
+    expect(panel).toBeTruthy();
+    const panelBottom = panel?.getBoundingClientRect().bottom ?? 0;
+    const updateBottom = update.getBoundingClientRect().bottom;
+    expect(updateBottom).toBeLessThanOrEqual(panelBottom);
+  });
+
   it("shows a general error above the actions when mutation fails", async () => {
     const records = createFixtureRecordService(ctx);
     vi.spyOn(records, "massUpdate").mockRejectedValue(new Error("Network failed."));

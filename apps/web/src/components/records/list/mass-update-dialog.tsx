@@ -127,12 +127,19 @@ export function MassUpdateDialog({
     }
   }
 
+  const panelClassName = [
+    "mass-update-modal-panel",
+    fieldError || generalError ? "mass-update-modal-panel--grow" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <TopAlignedModal
       isOpen={isOpen}
       isDismissable={!busy}
       aria-labelledby={titleId}
-      panelClassName="mass-update-modal-panel"
+      panelClassName={panelClassName}
       onOpenChange={(open) => {
         if (!open) close();
       }}

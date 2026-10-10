@@ -5,6 +5,11 @@ import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType } from "./support/typography";
 
+/** Decorative owner avatar in RecordChoice rows (aria-hidden); known open question on img-alt. */
+const OWNER_OPTION_AVATAR_A11Y_EXCLUDE = [
+  ".record-owner-row > span[aria-hidden].rounded-full",
+] as const;
+
 type ElementBox = NonNullable<
   Awaited<ReturnType<import("@playwright/test").Locator["boundingBox"]>>
 >;
@@ -1136,6 +1141,10 @@ test.describe("Leads list page", () => {
     await page.getByRole("option", { name: "Lead Source" }).click();
     await massDialog.getByRole("button", { name: "Lead Source" }).click();
     await page.getByRole("option", { name: "Advertisement" }).click();
+    await expectNoA11yViolations(page, {
+      include: ["[data-mass-update-dialog]"],
+      exclude: [...OWNER_OPTION_AVATAR_A11Y_EXCLUDE],
+    });
     await massDialog.getByRole("button", { name: "Update" }).click();
     await expect(massDialog).toBeHidden();
     await expect(listPage.locator("[data-selection-bar]")).toBeHidden();
@@ -1154,14 +1163,17 @@ test.describe("Leads list page", () => {
     const ownerOption = ownerOptions.nth(ownerOptionCount > 1 ? 1 : 0);
     const newOwnerName = (await ownerOption.innerText()).split("\n")[0]?.trim() ?? "";
     await ownerOption.click();
+    await page.keyboard.press("Escape");
+    await expectNoA11yViolations(page, {
+      include: ["[data-change-owner-dialog]"],
+      exclude: [...OWNER_OPTION_AVATAR_A11Y_EXCLUDE],
+    });
     await ownerDialog.getByRole("button", { name: "Change Owner" }).click();
     await expect(ownerDialog).toBeHidden();
     expect(await rowColumnValue(firstRow, ownerIndex)).toBe(newOwnerName);
     expect(await rowColumnValue(secondRow, ownerIndex)).toBe(newOwnerName);
     await page.keyboard.press("Escape");
     await expect(listPage.locator("[data-selection-bar]")).toBeHidden();
-    // Owner lookup options render decorative avatars outside the list surface; scan the list only.
-    await expectNoA11yViolations(page, { include: [".module-list-page"] });
   });
 
   test("mass update cancel leaves data and selection unchanged", async ({ page }) => {
@@ -1192,6 +1204,45 @@ test.describe("Leads list page", () => {
     await expect(listPage.locator("[data-selection-bar]")).toBeVisible();
     expect(await rowColumnValue(firstRow, leadSourceIndex)).toBe(beforeFirst);
     expect(await rowColumnValue(secondRow, leadSourceIndex)).toBe(beforeSecond);
+  });
+
+  test("mass update field validation grows the dialog and keeps actions inside", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    await page
+      .getByRole("checkbox", { name: /Select / })
+      .nth(1)
+      .check({ force: true });
+    await page.getByRole("button", { name: "Mass Update" }).click();
+    const massDialog = page.getByRole("dialog", { name: "Mass Update" });
+    const massPanel = page.locator(".mass-update-modal-panel");
+    await massDialog.getByRole("button", { name: "Field" }).click();
+    await page.getByRole("option", { name: "Company" }).click();
+    await massDialog.getByRole("button", { name: "Update" }).click();
+    await expect(massDialog.getByText("Company cannot be empty.")).toBeVisible();
+    const panelBox = requireBox(await massPanel.boundingBox(), "mass update panel");
+    const baseHeight = px(await tokenLength(page, "--size-mass-update-dialog-height"));
+    expect(panelBox.height).toBeGreaterThan(baseHeight);
+    const cancel = massPanel.getByRole("button", { name: "Cancel" });
+    const update = massPanel.getByRole("button", { name: "Update" });
+    const cancelBox = requireBox(await cancel.boundingBox(), "cancel");
+    const updateBox = requireBox(await update.boundingBox(), "update");
+    const padBottom = px(await tokenLength(page, "--size-mass-update-dialog-padding-block-end"));
+    const updateBottomGap = panelBox.y + panelBox.height - (updateBox.y + updateBox.height);
+    const cancelBottomGap = panelBox.y + panelBox.height - (cancelBox.y + cancelBox.height);
+    expect(updateBottomGap).toBeGreaterThanOrEqual(padBottom - 1);
+    expect(cancelBottomGap).toBeGreaterThanOrEqual(padBottom - 1);
+    expect(updateBox.y + updateBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    expect(cancelBox.y + cancelBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    const errorBox = requireBox(
+      await massDialog.getByText("Company cannot be empty.").boundingBox(),
+      "field error",
+    );
+    expect(errorBox.y + errorBox.height).toBeLessThan(cancelBox.y);
   });
 
   test("bulk dialog visual layout at 1470×835", async ({ page }) => {
@@ -1247,6 +1298,7 @@ test.describe("Leads list page", () => {
     const actionsGap = px(await tokenLength(page, "--size-mass-update-actions-gap"));
     const inputHeight = px(await tokenLength(page, "--size-form-input-height"));
     const buttonHeight = px(await tokenLength(page, "--size-button-ellipsis-height"));
+    const actionCornerRadius = px(await tokenLength(page, "--radius-create-menu"));
     expectEdge(titleBox.x - panelBox.x, titlePadInline);
     expectEdge(titleBox.y - panelBox.y, padTop);
     expectEdge(fieldBox.y - (titleBox.y + titleBox.height), titleFieldsGap);
@@ -1265,6 +1317,8 @@ test.describe("Leads list page", () => {
     expectEdge(updateBox.x - (cancelBox.x + cancelBox.width), actionsGap);
     expectEdge(panelBox.x + panelBox.width - (updateBox.x + updateBox.width), padInline);
     expectEdge(panelBox.y + panelBox.height - (updateBox.y + updateBox.height), padBottom);
+    await expect(cancel).toHaveCSS("border-radius", `${actionCornerRadius}px`);
+    await expect(update).toHaveCSS("border-radius", `${actionCornerRadius}px`);
     await cancel.click();
     await page.getByRole("button", { name: "Actions" }).click();
     await page.getByRole("menuitem", { name: "Change Owner" }).click();
@@ -1295,5 +1349,7 @@ test.describe("Leads list page", () => {
       ownerPanelBox.y + ownerPanelBox.height - (ownerConfirmBox.y + ownerConfirmBox.height),
       paddingBottom,
     );
+    await expect(ownerCancel).toHaveCSS("border-radius", `${cornerRadius}px`);
+    await expect(ownerConfirm).toHaveCSS("border-radius", `${cornerRadius}px`);
   });
 });

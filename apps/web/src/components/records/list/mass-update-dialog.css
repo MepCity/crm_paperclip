@@ -2,14 +2,14 @@
   --top-aligned-modal-width: var(--size-mass-update-dialog-width);
   --top-aligned-modal-bottom-radius: var(--radius-create-menu);
   box-sizing: border-box;
+  min-height: var(--size-mass-update-dialog-height);
   height: var(--size-mass-update-dialog-height);
   padding: var(--size-mass-update-dialog-padding-block-start)
     var(--size-mass-update-dialog-padding-inline) var(--size-mass-update-dialog-padding-block-end);
 }
 
-.mass-update-modal-panel:has(.mass-update-general-error) {
+.mass-update-modal-panel--grow {
   height: auto;
-  min-height: var(--size-mass-update-dialog-height);
 }
 
 .mass-update-title {
@@ -63,10 +63,12 @@
 
 .mass-update-cancel {
   width: var(--size-mass-update-cancel-width);
+  border-radius: var(--radius-create-menu);
 }
 
 .mass-update-update {
   width: var(--size-mass-update-update-width);
+  border-radius: var(--radius-create-menu);
 }
 
 .mass-update-form-error {

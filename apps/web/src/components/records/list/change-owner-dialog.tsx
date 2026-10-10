@@ -11,6 +11,7 @@ import {
 } from "@/components/records/form/select-user-dialog";
 import { Button } from "@/components/ui/button";
 import { useChangeOwner } from "@/lib/api/client/hooks";
+import "./change-owner-dialog.css";
 
 export interface ChangeOwnerDialogProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export function ChangeOwnerDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const changeOwner = useChangeOwner(module);
 
@@ -50,6 +52,7 @@ export function ChangeOwnerDialog({
     if (!isOpen) return;
     setOwnerId(null);
     setPickerOpen(false);
+    setFieldError(null);
     setGeneralError(null);
     const frame = requestAnimationFrame(() => cancelRef.current?.focus());
     return () => cancelAnimationFrame(frame);
@@ -65,6 +68,7 @@ export function ChangeOwnerDialog({
 
   async function submit() {
     if (!ownerId || busy) return;
+    setFieldError(null);
     setGeneralError(null);
     try {
       await changeOwner.mutateAsync({ ids: recordIds, ownerId });
@@ -74,7 +78,7 @@ export function ChangeOwnerDialog({
       if (error instanceof ValidationError) {
         const ownerMessages = error.fieldErrors[ownerField.apiName];
         if (ownerMessages?.length) {
-          setGeneralError(ownerMessages.join(" "));
+          setFieldError(ownerMessages.join(" "));
           return;
         }
         const first = Object.values(error.fieldErrors).flat()[0];
@@ -122,7 +126,11 @@ export function ChangeOwnerDialog({
               <FieldInput
                 field={ownerField}
                 value={ownerId}
-                onChange={(next) => setOwnerId(typeof next === "string" ? next : null)}
+                onChange={(next) => {
+                  setOwnerId(typeof next === "string" ? next : null);
+                  setFieldError(null);
+                }}
+                errorMessage={fieldError ?? undefined}
                 users={users}
                 hideLabel={false}
                 disabled={busy}
@@ -141,6 +149,7 @@ export function ChangeOwnerDialog({
                 ref={cancelRef}
                 variant="secondary"
                 size="record"
+                className="change-owner-action-button"
                 isDisabled={busy}
                 onPress={close}
               >
@@ -149,6 +158,7 @@ export function ChangeOwnerDialog({
               <Button
                 variant="primary"
                 size="record"
+                className="change-owner-action-button"
                 isDisabled={!ownerId || busy}
                 isPending={busy}
                 onPress={() => void submit()}
