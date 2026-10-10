@@ -56,13 +56,14 @@ function FieldEdit(props: SVGProps<SVGSVGElement>) {
     <svg
       role="img"
       aria-label={props["aria-label"]}
-      viewBox="0 0 12.5 12"
+      viewBox="0 0 11.5 11.5"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M1.5 10.5h1.2l6.6-6.6-1.2-1.2-6.6 6.6v1.2zM9.9 3.3l1.2-1.2c.3-.3.3-.8 0-1.1l-.9-.9c-.3-.3-.8-.3-1.1 0l-1.2 1.2 1.2 1.2z"
+        transform="translate(-0.5 0.5) scale(1.38 1.23) translate(-1.38 0.11)"
+        d="M1.38 9.66h1.1l6.07-6.07-1.1-1.1-6.07 6.07v1.1zM9.11 3.04l1.1-1.1c.28-.28.28-.74 0-1.01l-.83-.83c-.28-.28-.74-.28-1.01 0l-1.1 1.1 1.1 1.1z"
         fill="currentColor"
       />
     </svg>

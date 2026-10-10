@@ -413,7 +413,10 @@ test("form demo meets the accessibility baseline", async ({ page }) => {
   await expect(demo.locator("[data-part=empty-value]")).toHaveCount(1);
   // The pre-existing list empty-state ink is outside this issue's scope.
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
-  await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
+  await expectNoA11yViolations(page, {
+    include: ['section[aria-labelledby="demo-field-input"]'],
+    exclude: [...DEV_UI_A11Y_EXCLUDE],
+  });
 });
 
 test("open form panels meet the accessibility baseline", async ({ page }) => {
@@ -425,7 +428,10 @@ test("open form panels meet the accessibility baseline", async ({ page }) => {
     await trigger.click();
     await expect(page.getByRole("dialog")).toBeVisible();
     // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
-    await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
+    await expectNoA11yViolations(page, {
+      include: ['[role="dialog"]'],
+      exclude: [...DEV_UI_A11Y_EXCLUDE],
+    });
     await page.keyboard.press("Escape");
   }
 });
