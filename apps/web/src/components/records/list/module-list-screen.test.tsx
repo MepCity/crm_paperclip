@@ -1,11 +1,12 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import userEvent, { type UserEvent } from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
+import { resetPreferenceStoreForTests } from "@/lib/preferences";
 import { recordListContextKey } from "@/lib/records/record-list-context";
 import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
 import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
@@ -143,9 +144,38 @@ async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRe
 afterEach(() => {
   cleanup();
   navigation.params = new URLSearchParams();
+  resetPreferenceStoreForTests();
   sessionStorage.clear();
   vi.restoreAllMocks();
 });
+
+function screenWithFixture() {
+  const records = createFixtureRecordService(ctx);
+  const listSpy = vi.spyOn(records, "list");
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+  });
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  return {
+    listSpy,
+    /** The query the screen last used for the default view, whatever id the fixture gives it. */
+    perPageSizesRequested: () => listSpy.mock.calls.map(([, query]) => query?.perPage),
+  };
+}
+
+/** Opens View Settings and one of its submenus from the keyboard. `rowName` is the parent
+ * row's label plus the value in effect, which is also the submenu's accessible name. */
+async function openViewSubmenu(user: UserEvent, rowName: string) {
+  const trigger = screen.getByRole("button", { name: "View Settings" });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  const item = screen.getByRole("menuitem", { name: rowName });
+  item.focus();
+  await user.keyboard("{ArrowRight}");
+  await waitFor(() => expect(screen.getByRole("menu", { name: rowName })).toBeTruthy());
+}
 
 describe("ModuleListScreen", () => {
   it("shows empty state and zero total for an empty view", async () => {
@@ -776,5 +806,66 @@ describe("ModuleListScreen", () => {
         "Owner",
       ]);
     });
+  });
+
+  it("stores a page-size choice, puts it in the address and starts at page 1", async () => {
+    const user = userEvent.setup();
+    navigation.params = new URLSearchParams("page=2&sort_by=Company&sort_order=asc");
+    const { perPageSizesRequested } = screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+
+    await openViewSubmenu(user, "Records Per Page 30");
+    await user.click(screen.getByRole("menuitemradio", { name: "10" }));
+
+    const href = navigation.push.mock.calls.at(-1)?.[0] ?? "";
+    const params = new URLSearchParams(String(href).split("?")[1] ?? "");
+    expect(params.get("per_page")).toBe("10");
+    expect(params.get("page")).toBeNull();
+    expect(params.get("sort_by")).toBe("Company");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(perPageSizesRequested()).toContain(10);
+  });
+
+  it("uses the stored page size when the address carries no per_page", async () => {
+    const user = userEvent.setup();
+    screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+    await openViewSubmenu(user, "Records Per Page 30");
+    await user.click(screen.getByRole("menuitemradio", { name: "20" }));
+
+    cleanup();
+    navigation.params = new URLSearchParams();
+    const again = screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+    expect(again.perPageSizesRequested()).toContain(20);
+
+    await openViewSubmenu(user, "Records Per Page 20");
+    expect(screen.getByRole("menuitemradio", { name: "20" }).getAttribute("aria-checked")).toBe(
+      "true",
+    );
+  });
+
+  it("truncates cell text when Wrap Text is switched off", async () => {
+    const user = userEvent.setup();
+    screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+
+    const wrapped = document.querySelector("[data-part=row] [data-part=value]");
+    expect(wrapped?.className).toContain("whitespace-normal");
+
+    await openViewSubmenu(user, "View Mode Wrap Text");
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Wrap Text" }));
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+
+    const truncated = document.querySelector("[data-part=row] [data-part=value]");
+    expect(truncated?.className).toContain("truncate");
+    expect(truncated?.className).not.toContain("whitespace-normal");
+
+    cleanup();
+    screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+    expect(document.querySelector("[data-part=row] [data-part=value]")?.className).toContain(
+      "truncate",
+    );
   });
 });
