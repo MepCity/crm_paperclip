@@ -22,7 +22,7 @@ import { Icons } from "./icon";
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
   label: string;
-  variant?: "default" | "filter";
+  variant?: "default" | "filter" | "sort";
   /** Keeps the accessible name and removes the label from the visual layout. */
   hideLabel?: boolean;
   description?: string;
@@ -42,6 +42,7 @@ export function Select<T extends object>({
   ...props
 }: SelectProps<T>) {
   const [filterMaxHeight, setFilterMaxHeight] = useState<number>();
+  const [filterOffset, setFilterOffset] = useState<number>();
   useLayoutEffect(() => {
     if (variant !== "filter") {
       setFilterMaxHeight(undefined);
@@ -54,6 +55,12 @@ export function Select<T extends object>({
       ),
     );
     setFilterMaxHeight(Number.isFinite(height) ? height : undefined);
+    const offset = Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--size-filter-operator-list-offset",
+      ),
+    );
+    setFilterOffset(Number.isFinite(offset) ? offset : undefined);
   }, [variant]);
   return (
     <AriaSelect
@@ -72,7 +79,9 @@ export function Select<T extends object>({
             className={
               variant === "filter"
                 ? "filter-operator-control"
-                : "record-control flex items-center justify-between text-left"
+                : variant === "sort"
+                  ? "record-control record-control-sort flex items-center justify-between text-left"
+                  : "record-control flex items-center justify-between text-left"
             }
           >
             <SelectValue className="truncate" />
@@ -92,7 +101,7 @@ export function Select<T extends object>({
           )}
           <FieldError className="text-sm text-danger">{errorMessage}</FieldError>
           <Popover
-            offset={variant === "filter" ? 1 : undefined}
+            offset={variant === "filter" ? (filterOffset ?? 1) : undefined}
             maxHeight={filterMaxHeight}
             className={
               variant === "filter"
@@ -116,14 +125,16 @@ export function Select<T extends object>({
 export function SelectItem({
   variant = "default",
   ...props
-}: ListBoxItemProps & { variant?: "default" | "filter" }) {
+}: ListBoxItemProps & { variant?: "default" | "filter" | "sort" }) {
   return (
     <ListBoxItem
       {...props}
       className={
         variant === "filter"
           ? "filter-operator-option"
-          : "cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
+          : variant === "sort"
+            ? "cursor-default rounded px-3 py-2 text-sm font-normal outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover"
+            : "cursor-default rounded px-3 py-2 text-sm outline-none data-disabled:opacity-50 data-focused:bg-surface-hover data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-hovered:bg-surface-hover data-selected:font-semibold"
       }
     />
   );

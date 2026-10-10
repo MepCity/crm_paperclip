@@ -56,13 +56,14 @@ function FieldEdit(props: SVGProps<SVGSVGElement>) {
     <svg
       role="img"
       aria-label={props["aria-label"]}
-      viewBox="0 0 12.5 12"
+      viewBox="0 0 11.5 11.5"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M1.5 10.5h1.2l6.6-6.6-1.2-1.2-6.6 6.6v1.2zM9.9 3.3l1.2-1.2c.3-.3.3-.8 0-1.1l-.9-.9c-.3-.3-.8-.3-1.1 0l-1.2 1.2 1.2 1.2z"
+        transform="translate(-0.5 0.5) scale(1.38 1.23) translate(-1.38 0.11)"
+        d="M1.38 9.66h1.1l6.07-6.07-1.1-1.1-6.07 6.07v1.1zM9.11 3.04l1.1-1.1c.28-.28.28-.74 0-1.01l-.83-.83c-.28-.28-.74-.28-1.01 0l-1.1 1.1 1.1 1.1z"
         fill="currentColor"
       />
     </svg>
@@ -82,6 +83,43 @@ function FilterSearch(props: SVGProps<SVGSVGElement>) {
     >
       <circle cx="5.5" cy="5.5" r="3.85" strokeWidth="1.5" />
       <path d="M8.8 8.8 12.4 12.4" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Original outlined thumb, with no copied icon asset. */
+function ThumbDown(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 28.5 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path
+        d="M22 1h5v8h-5zM22 2h-8L5 1C3 1 2 2 2 4l1 4c0 1 1 2 3 2h7l-1 3h3l5-5h2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Original checkmark sized to the status menu's measured ink box. */
+function StatusCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 10 6.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path d="m0.6 3.3 2.9 2.6L9.4 0.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -226,6 +264,8 @@ export const Icons = {
   recordCheck: RecordCheck,
   recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
+  thumbDown: ThumbDown,
+  statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,

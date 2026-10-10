@@ -1,5 +1,6 @@
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
@@ -29,6 +30,7 @@ import NumberFieldDemo from "@/components/ui/number-field.demo";
 import PaginationDemo from "@/components/ui/pagination.demo";
 import PopoverDemo from "@/components/ui/popover.demo";
 import RadioGroupDemo from "@/components/ui/radio-group.demo";
+import SearchableSelectDemo from "@/components/ui/searchable-select.demo";
 import SelectDemo from "@/components/ui/select.demo";
 import SkeletonDemo from "@/components/ui/skeleton.demo";
 import SpinnerDemo from "@/components/ui/spinner.demo";
@@ -45,6 +47,7 @@ import TooltipDemo from "@/components/ui/tooltip.demo";
 export const demos: Record<string, React.ComponentType> = {
   "field-input": FieldInputDemo,
   "record-detail": RecordDetailDemo,
+  "status-ribbon": StatusRibbonDemo,
   "filter-panel": FilterPanelDemo,
   "filter-editors": FilterEditorsDemo,
   "select-user-dialog": SelectUserDialogDemo,
@@ -63,6 +66,7 @@ export const demos: Record<string, React.ComponentType> = {
   "radio-group": RadioGroupDemo,
   "date-picker": DatePickerDemo,
   "combo-box": ComboBoxDemo,
+  "searchable-select": SearchableSelectDemo,
   select: SelectDemo,
   form: FormDemo,
   dialog: DialogDemo,

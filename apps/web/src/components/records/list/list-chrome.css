@@ -34,6 +34,11 @@
   padding-block: 0;
 }
 
+.record-sort-fields .record-control-sort {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+}
+
 /* React Aria renders the field label as a span, not a native label. */
 .record-sort-fields span.text-md:not(.sr-only) {
   position: absolute;
@@ -65,4 +70,31 @@
 
 .record-sort-actions button:last-of-type {
   width: var(--size-popover-sort-apply-width);
+}
+
+/* Sort By field dropdown, from list-views.md › Sort By field dropdown. The panel keeps the
+   shared popover chrome (white surface, 1 px border, shadow); only the inner padding changes. */
+.record-sort-field-dropdown .record-sort-field-dialog {
+  height: 100%;
+  padding: 0;
+}
+
+/* Band above the list: the panel top (y 222) and the list top (y 268) are 46 px apart.
+   The 1 px subtraction is the panel's border, so the list starts on the measured edge. */
+.record-sort-field-search {
+  display: flex;
+  align-items: center;
+  height: calc(var(--size-popover-sort-field-dropdown-list-offset) - 1px);
+}
+
+.record-sort-field-list {
+  color: var(--color-text);
+}
+
+/* The shared sort row has no fill for the selected option; list-views.md › Sort By field
+   dropdown measures one, the same value as the hover fill. React Aria writes data-selected
+   only on the selected row, so presence is the selection. Text size and weight come from
+   SelectItem's sort role. */
+.record-sort-field-list [data-selected]:not([data-selected="false"]) {
+  background-color: var(--color-surface-selected);
 }

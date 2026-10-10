@@ -139,6 +139,7 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   --radius-form-control: 5px;
+  --radius-form-field-group: 10px;
   --radius-create-menu: 4px;
   --radius-create-menu-search: 4px;
 
@@ -233,8 +234,29 @@
   --size-filter-editor-inset: 23px;
   --size-filter-editor-top-gap: 8px;
   --size-filter-editor-value-gap: 7px;
+  --size-filter-date-range-gap: 3px;
+  --size-filter-date-unit-width: 80px;
+  --size-filter-role-group-width: 141px;
+  --size-filter-role-group-height: 25px;
+  --size-filter-role-group-search-width: 112px;
+  --size-filter-role-group-search-height: 16px;
+  --size-filter-address-width: 144px;
+  --size-filter-address-location-height: 25px;
+  --size-filter-address-radius-height: 54px;
   --size-filter-control-height: 24px;
-  --size-filter-contains-width: 79px;
+  --size-filter-operator-gap: 5.5px;
+  --size-filter-range-width: 100px;
+  --size-filter-currency-range-height: 25px;
+  --size-filter-state-width: 81px;
+  --size-filter-choice-width: 170px;
+  --size-filter-choice-height: 220px;
+  --size-filter-choice-row-height: 28px;
+  --size-filter-user-width: 327px;
+  --size-filter-user-type-width: 77px;
+  --size-filter-user-search-width: 229px;
+  --size-filter-user-header-height: 28px;
+  --size-filter-user-body-height: 174px;
+  --size-filter-user-row-height: 41px;
   --size-filter-control-min-width: 36px;
   --radius-filter-control: 3px;
   --size-filter-operator-list-width: 146px;
@@ -303,13 +325,30 @@
   --size-detail-details-label-width: 129px;
   --size-detail-details-label-value-gap: 36.5px;
   --size-detail-details-row-pitch: 44px;
+  --size-detail-details-wrapped-row-pitch: 60px;
   --size-detail-column-width: 433.5px;
   --size-detail-business-min-height: 287px;
   --size-detail-business-padding-block-start: 42.75px;
   --size-detail-business-padding-block-end: 21.75px;
   --size-detail-details-toggle-padding-block: 12.75px;
-  --size-detail-details-sections-margin-top: 39px;
-  --size-detail-section-title-margin-block: 16px 8px;
+  --size-detail-details-sections-margin-top: 18.25px;
+  --size-detail-section-title-margin-block: 0 32.5px;
+  --size-detail-inter-section-gap: 26px;
+  --size-detail-audit-line-pitch: 18.5px;
+  --size-detail-multiline-line-pitch: 15.5px;
+  --size-detail-wrapped-link-line-pitch: 19.5px;
+  --size-detail-cap-height: 10.5px;
+  --size-detail-card-width-rail-hidden: 1126px;
+  --size-detail-column-width-rail-hidden: 543px;
+  --size-detail-rail-hidden-value-width: 273px;
+  --size-detail-field-pencil-inset-from-card-end: 113px;
+  --size-detail-field-pencil-ink-left-rail-hidden: 1000.5px;
+  --size-detail-field-pencil-rail-hidden-translate-x: 10.5px;
+  --size-detail-description-label-width: 73px;
+  --size-detail-description-label-extend: 39px;
+  --size-detail-field-pencil-size: 11.5px;
+  --size-detail-field-pencil-aa-size: 12.5px;
+  --size-detail-field-pencil-above-label-cap: 1.5px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
@@ -389,6 +428,12 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  --size-popover-sort-field-dropdown-width: 380px;
+  --size-popover-sort-field-dropdown-height: 268px;
+  /* 268 − 222, the band between the panel top and the list top in the Sort By field dropdown row. */
+  --size-popover-sort-field-dropdown-list-offset: 46px;
+  /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
+  --size-popover-sort-field-dropdown-list-height: 220px;
 
   /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
   --size-detail-timeline-width: 906px;
@@ -487,8 +532,8 @@
   --size-form-first-title-center: 30px;
   --size-form-first-content-top: 63px;
   --size-form-section-gap: 55.5px;
-  --size-form-section-title-gap: 28px;
-  --size-form-section-title-box-trim: 4px;
+  --size-form-section-title-center-above: 61px;
+  --size-form-section-title-center-below: 33px;
   --size-form-portrait: 48px;
   --size-form-label-column-left: 172px;
   --size-form-label-column-right: 221.5px;
@@ -504,14 +549,16 @@
   --size-form-control-padding-inline: 10px;
   --size-form-control-padding-block: 8px;
   --size-form-action-height: 32px;
-  --size-form-action-gap: 10px;
+  --size-form-action-gap: 8px;
   --size-form-action-padding-inline: 14.5px;
-  --size-form-field-group-padding-end: 16px;
-  --size-form-field-group-body-top: 31px;
-  --size-form-field-group-legend-inset: 18.5px;
-  --size-form-field-group-legend-padding: 12.5px;
-  /* Description textarea height is not measurable in the capture; demo placeholder only. */
-  --size-form-description-height: 80px;
+  --size-form-field-group-padding-end: 15px;
+  --size-form-field-group-body-top: 30px;
+  --size-form-field-group-margin-bottom: 17px;
+  --size-form-field-group-legend-inset: 10px;
+  --size-form-field-group-legend-padding-start: 8.5px;
+  --size-form-field-group-legend-padding-end: 12.5px;
+  --size-form-input-full-width: 639px;
+  --size-form-description-height: 34px;
   /* record-detail.md › Address frame; Description Information and textarea. */
   --size-form-address-footer-bottom: 15px;
   --size-form-address-radius: 10px;
@@ -583,4 +630,48 @@
   --size-record-scroll-top: 36px;
   --size-record-scroll-offset: 16px;
   --size-record-demo-height: 560px;
+  /* record-detail.md: status ribbon and picklist panels. */
+  --color-status-current: #eeeffc;
+  --color-status-terminal-border: #ffadac;
+  --color-status-terminal-fill: #ffecec;
+  --color-status-terminal-icon: #ff5d5a;
+  --color-status-check: #333333;
+  --radius-status-control: 4px;
+  --size-status-card-height: 68px;
+  --size-status-card-inset: 20px;
+  --size-status-band-height: 28px;
+  --size-status-chevron-tip: 6px;
+  --size-status-stage-inset: 18px;
+  --size-status-label-gap: 6.5px;
+  --size-status-stage-thumb: 14px;
+  --size-status-terminal-gap: 11px;
+  --size-status-terminal-width: 52px;
+  --size-status-terminal-height: 27px;
+  --size-status-terminal-icon-width: 28.5px;
+  --size-status-terminal-icon-height: 14px;
+  --size-status-scroll-width: 20px;
+  --size-status-stage-menu-width: 207px;
+  --size-status-stage-menu-height: 244px;
+  --size-status-stage-search-height: 31px;
+  --size-status-terminal-menu-width: 215.5px;
+  --size-status-terminal-search-height: 30.5px;
+  --size-status-pointer-width: 17px;
+  --size-status-pointer-height: 8.5px;
+  --size-status-pointer-right: 18px;
+  --size-status-option-height: 35px;
+  --size-status-option-inset: 31.5px;
+  --size-status-search-icon-inset: 10px;
+  --size-status-options-padding: 5px;
+  --size-status-check-inset: 9px;
+  --size-status-check-width: 10px;
+  --size-status-check-height: 6.5px;
+  --size-status-group-inset: 10.5px;
+  --size-status-terminal-options-top: 6px;
+  --size-status-terminal-options-bottom: 8px;
+  --size-status-terminal-header-height: 29.5px;
+  --size-status-terminal-option-height: 29.5px;
+  --size-status-terminal-divider-top: 8.5px;
+  --size-status-terminal-divider-bottom: 6px;
+  --size-status-demo-wide: 1126px;
+  --size-status-demo-narrow: 906px;
 }
