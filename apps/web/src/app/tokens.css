@@ -418,6 +418,27 @@
   --size-form-currency-divider-height: 20px;
   --size-form-currency-divider-top: 7px;
   --size-form-owner-caret-gap: 9px;
+  --shadow-form-focus-glow: 0 0 6px rgb(84 100 255 / 0.56);
+  --size-form-panel-inset-inline: 11px;
+  --size-form-panel-search-top: 12px;
+  --size-form-panel-search-height-owner: 30px;
+  --size-form-panel-check-inset: 15px;
+  --size-form-panel-owner-check-inset: 16px;
+  --size-form-panel-check-width: 11.5px;
+  --size-form-panel-check-height: 8.5px;
+  --size-form-panel-option-text-inset: 32.5px;
+  --size-form-panel-selected-fill-inset: 7px;
+  --size-form-panel-selected-fill-height: 32px;
+  --size-form-panel-search-icon-inset: 11.5px;
+  --size-form-panel-search-icon-size: 13.5px;
+  --size-form-panel-search-text-inset: 33px;
+  --size-form-panel-list-first-gap: 7.5px;
+  --size-form-panel-owner-avatar-inset: 32px;
+  --size-form-panel-owner-row-pitch: 41px;
+  --size-form-panel-owner-avatar-size: 30px;
+  --size-form-panel-owner-name-gap: 11px;
+  --size-form-panel-owner-content-top: 12px;
+  --size-form-panel-owner-content-bottom: 13px;
 
   /* Checkbox */
   --size-checkbox: 15px;

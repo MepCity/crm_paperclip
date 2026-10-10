@@ -404,6 +404,27 @@ what the "no colour constants" rule forbids.
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
 | `--size-form-owner-caret-gap` | `9px` | record-detail.md › Composite inputs › owner caret before end section | from spec |
+| `--shadow-form-focus-glow` | `0 0 6px rgb(84 100 255 / 0.56)` | record-detail.md › Lead Information rows › focused input soft glow (Interim) | lead decision |
+| `--size-form-panel-inset-inline` | `11px` | record-detail.md › Dropdown panel › Country / Owner search horizontal inset | from spec |
+| `--size-form-panel-search-top` | `12px` | record-detail.md › Dropdown panel › search top inset | from spec |
+| `--size-form-panel-search-height-owner` | `30px` | record-detail.md › Dropdown panel › Owner search height | from spec |
+| `--size-form-panel-check-inset` | `15px` | record-detail.md › Dropdown panel › check mark from panel outer left | from spec |
+| `--size-form-panel-owner-check-inset` | `16px` | record-detail.md › Dropdown panel › Owner selected check mark | from spec |
+| `--size-form-panel-check-width` | `11.5px` | record-detail.md › Dropdown panel › check ink width | from spec |
+| `--size-form-panel-check-height` | `8.5px` | record-detail.md › Dropdown panel › check ink height | from spec |
+| `--size-form-panel-option-text-inset` | `32.5px` | record-detail.md › Dropdown panel › option text start | from spec |
+| `--size-form-panel-selected-fill-inset` | `7px` | record-detail.md › Dropdown panel › Standard picklist selected fill inset | from spec |
+| `--size-form-panel-selected-fill-height` | `32px` | record-detail.md › Dropdown panel › Standard picklist selected fill height | from spec |
+| `--size-form-panel-search-icon-inset` | `11.5px` | record-detail.md › Dropdown panel › magnifier inset in search | from spec |
+| `--size-form-panel-search-icon-size` | `13.5px` | record-detail.md › Dropdown panel › magnifier size | from spec |
+| `--size-form-panel-search-text-inset` | `33px` | record-detail.md › Dropdown panel › search text after icon (11.5 + 13.5 + 8) | derived from spec |
+| `--size-form-panel-list-first-gap` | `7.5px` | record-detail.md › Dropdown panel › Country first row below search | from spec |
+| `--size-form-panel-owner-avatar-inset` | `32px` | record-detail.md › Dropdown panel › Owner avatar from panel left | from spec |
+| `--size-form-panel-owner-row-pitch` | `41px` | record-detail.md › Dropdown panel › Owner row pitch | from spec |
+| `--size-form-panel-owner-avatar-size` | `30px` | record-detail.md › Dropdown panel › Owner avatar diameter | from spec |
+| `--size-form-panel-owner-name-gap` | `11px` | record-detail.md › Dropdown panel › Owner name after avatar | from spec |
+| `--size-form-panel-owner-content-top` | `12px` | record-detail.md › Dropdown panel › first owner row below search | from spec |
+| `--size-form-panel-owner-content-bottom` | `13px` | record-detail.md › Dropdown panel › last avatar above panel bottom | from spec |
 | `--size-checkbox` | `15px` | list-views.md › Selected / disabled › "Unselected checkboxes about 15 × 15 px"; Leading table strips › "The 15 × 15 px checkbox" | from spec |
 | `--size-checkbox-border` | `2px` | list-views.md › Selected / disabled › "2 px `#C5C4D3` border"; Surface and line colors › "checkbox outline about 2 px" | from spec |
 | `--size-checkbox-label-gap` | `8.5px` | list-views.md › Filter content › "the label starts 8.5 px after the checkbox" | from spec |
