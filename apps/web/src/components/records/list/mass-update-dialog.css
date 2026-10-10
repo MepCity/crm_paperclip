@@ -4,7 +4,7 @@
   box-sizing: border-box;
   height: var(--size-mass-update-dialog-height);
   padding: var(--size-mass-update-dialog-padding-block-start)
-    var(--size-mass-update-dialog-padding-inline)     var(--size-mass-update-dialog-padding-block-end);
+    var(--size-mass-update-dialog-padding-inline) var(--size-mass-update-dialog-padding-block-end);
 }
 
 .mass-update-modal-panel:has(.mass-update-general-error) {
