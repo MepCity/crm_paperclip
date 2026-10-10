@@ -49,6 +49,9 @@ function ProductCaretDown(props: SVGProps<SVGSVGElement>) {
     <Triangle
       fill="currentColor"
       strokeWidth={0}
+      viewBox="3 4 20 17"
+      preserveAspectRatio="none"
+      overflow="hidden"
       style={{ transform: "rotate(180deg)", ...style }}
       {...filterIconRoleProps(props)}
       {...rest}

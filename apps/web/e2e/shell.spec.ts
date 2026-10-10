@@ -269,6 +269,25 @@ test("Home icon accent and product selector caret match app-shell pinned-link an
   expect(caretBox.width).toBeLessThanOrEqual(11);
   const fill = await caret.evaluate((node) => getComputedStyle(node).fill);
   expect(fill).not.toBe("none");
+
+  // app-shell.md › Rail/product selector: caret ink 10 wide × 5 high (not only the SVG viewport).
+  const ink = await caret.evaluate((svg) => {
+    const path = svg.querySelector("path");
+    if (!path || !(svg instanceof SVGSVGElement)) return null;
+    const bbox = path.getBBox();
+    const viewBox = svg.viewBox.baseVal;
+    const layout = svg.getBoundingClientRect();
+    if (viewBox.width === 0 || viewBox.height === 0) return null;
+    return {
+      width: (bbox.width / viewBox.width) * layout.width,
+      height: (bbox.height / viewBox.height) * layout.height,
+    };
+  });
+  if (!ink) throw new Error("Expected product selector caret path ink.");
+  expect(ink.width).toBeGreaterThanOrEqual(9);
+  expect(ink.width).toBeLessThanOrEqual(11);
+  expect(ink.height).toBeGreaterThanOrEqual(4.5);
+  expect(ink.height).toBeLessThanOrEqual(6.5);
 });
 
 test("the measured Home layout matches every rendered Module 1 shell region", async ({
