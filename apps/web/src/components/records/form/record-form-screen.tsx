@@ -1,6 +1,6 @@
 "use client";
 
-import { isAppError, type ValidationError } from "@crm/core/errors";
+import { isAppError, NotFoundError, type ValidationError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -11,6 +11,7 @@ import {
   useUpdateRecord,
   useUsers,
 } from "@/lib/api/client/hooks";
+import { buildCloneInput } from "./build-clone-input";
 import { CoordinatesInput, PrefixInput } from "./composite-inputs";
 import { FieldGroup } from "./field-group";
 import { FieldInput, type OwnerOption } from "./field-input";
@@ -33,6 +34,16 @@ import { validateRecordForm } from "./form-validation";
 import { RecordFormShell } from "./record-form-shell";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
+type FormIntent = "create" | "edit" | "clone";
+
+function RecordNotFound() {
+  return (
+    <div className="p-6 text-md text-text">
+      <p>The requested page could not be found.</p>
+    </div>
+  );
+}
+
 export interface OwnerPickerProps {
   users: OwnerOption[];
   selectedId: string;
@@ -53,23 +64,30 @@ export interface RecordFormScreenProps {
   config: RecordFormConfig;
   currentUserId: string;
   recordId?: string;
+  cloneSourceId?: string;
 }
 
 /** Page addresses and navigation come from the route layer; this screen has no URL rules. */
 export function RecordFormScreen(props: RecordFormScreenProps) {
   const metadata = useModule(props.config.module);
-  const record = useRecord(props.config.module, props.recordId ?? "");
+  const loadId = props.cloneSourceId ?? props.recordId ?? "";
+  const needsRecord = Boolean(props.cloneSourceId || props.recordId);
+  const record = useRecord(props.config.module, loadId);
   const users = useUsers();
-  const error = metadata.error ?? users.error ?? (props.recordId ? record.error : null);
+  const recordError = needsRecord ? record.error : null;
+  const error = metadata.error ?? users.error ?? recordError;
+  if (recordError instanceof NotFoundError) return <RecordNotFound />;
   if (error) return <Alert variant="danger">Unable to load the form.</Alert>;
-  if (!metadata.data || !users.data || (props.recordId && !record.data))
+  if (!metadata.data || !users.data || (needsRecord && !record.data))
     return <p role="status">Loading...</p>;
+  const intent: FormIntent = props.cloneSourceId ? "clone" : props.recordId ? "edit" : "create";
   return (
     <LoadedRecordForm
-      key={props.recordId ?? "create"}
+      key={props.cloneSourceId ?? props.recordId ?? "create"}
       {...props}
+      intent={intent}
       metadata={metadata.data}
-      record={props.recordId ? record.data : undefined}
+      sourceRecord={needsRecord ? record.data : undefined}
       users={users.data.map((user) => ({ id: user.userId, name: user.name, email: user.email }))}
     />
   );
@@ -78,21 +96,31 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
 function LoadedRecordForm({
   config,
   currentUserId,
+  intent,
   metadata,
-  record,
+  sourceRecord,
   users,
 }: RecordFormScreenProps & {
+  intent: FormIntent;
   metadata: ModuleMetadata;
-  record?: RecordData;
+  sourceRecord?: RecordData;
   users: OwnerOption[];
 }) {
-  const mode: FormMode = record ? "edit" : "create";
+  const mode: FormMode = intent === "edit" ? "edit" : "create";
   const sections = buildFormModel(metadata, mode);
   const fields = formFields(metadata, sections, mode, config.rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const emptyValues = () => initialFormValues(fields, { [config.rules.owner]: currentUserId });
-  const [baseline] = useState(() => initialFormValues(fields, record?.fields));
-  const [values, setValues] = useState(() => (record ? baseline : emptyValues()));
+  const cloneSeed =
+    intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
+  const [baseline] = useState(() =>
+    intent === "edit"
+      ? initialFormValues(fields, sourceRecord?.fields)
+      : initialFormValues(fields, cloneSeed),
+  );
+  const [values, setValues] = useState(() =>
+    intent === "create" && !cloneSeed ? emptyValues() : baseline,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -105,7 +133,13 @@ function LoadedRecordForm({
   const create = useCreateRecord(config.module);
   const update = useUpdateRecord(config.module);
   const saving = create.isPending || update.isPending;
-  const title = `${record ? "Edit" : "Create"} ${metadata.singularLabel}`;
+  const editing = intent === "edit" ? sourceRecord : undefined;
+  const title =
+    intent === "clone"
+      ? `Clone ${metadata.singularLabel}`
+      : intent === "edit"
+        ? `Edit ${metadata.singularLabel}`
+        : `Create ${metadata.singularLabel}`;
   const labelsByField = useMemo(() => {
     const labels = new Map<string, string>();
     for (const section of sections) {
@@ -209,9 +243,9 @@ function LoadedRecordForm({
     writeInFlight.current = true;
     setErrors({});
     try {
-      const input = formPayload(fields, values, record ? baseline : undefined);
-      const saved = record
-        ? await update.mutateAsync({ id: record.id, input })
+      const input = formPayload(fields, values, editing ? baseline : undefined);
+      const saved = editing
+        ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
       if (andNew) {
         const next = emptyValues();
