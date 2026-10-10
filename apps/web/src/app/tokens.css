@@ -716,6 +716,7 @@
 
 /* record-detail.md → Inline editor */
 :root {
+  --radius-detail-inline-control: 4px;
   --size-detail-inline-width: 273px;
   --size-detail-inline-value-inset: 12.5px;
   --size-detail-inline-halo: 7.5px;
@@ -726,5 +727,8 @@
   --size-detail-inline-list-padding: 6px;
   --size-detail-inline-option-height: 32px;
   --size-detail-inline-check-size: 12px;
+  --size-detail-inline-check-height: 9px;
+  --size-detail-inline-save-check-width: 10px;
+  --size-detail-inline-save-check-height: 7.5px;
   --size-detail-inline-check-gap: 6px;
 }

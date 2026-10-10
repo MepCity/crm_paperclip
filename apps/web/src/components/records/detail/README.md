@@ -252,6 +252,7 @@ Leads exclusions live in `lib/records/leads-inline-edit.ts`.
 
 Save/Cancel have accessible names, original inline glyphs and 21px circles. The
 Rating list opens immediately, with 32px option rows and a selected checkmark.
+Email and Website values retain their links; their pencils open the editor.
 All measured geometry and colors use tokens. `/dev/ui` → `inline-field-editor`
 shows text, picklist and numeric controls, closed/open/error/saving examples.
 
@@ -280,6 +281,10 @@ shows text, picklist and numeric controls, closed/open/error/saving examples.
 - `Mandatory fields form` is omitted: layout-rule mandatory collection belongs to
   customization (M11). No inert control is drawn.
 - Save circle is 21px per task; measured reference fill is approximately 20px.
+- Placeholder ink follows ADR 0003 §8. Shared form validation ink retains its
+  existing sub-AA contrast (~3.04:1 on white); scans exclude these text roles
+  only, leaving the controls scanned. The validation color remains a Module 1
+  gate disclosure, as in the shared form components.
 - Exact glyph raster bounds and halo decay cannot be asserted from CSS geometry;
   original glyph drawings and existing shared shadow tokens are used.
 

@@ -133,7 +133,7 @@ export function InlineFieldEditor({
           disabled={busy}
           onClick={() => void save()}
         >
-          <Icons.recordCheck aria-hidden />
+          <Icons.inlineCheck aria-hidden />
         </button>
         <button
           type="button"

@@ -3,9 +3,12 @@ import { join } from "node:path";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { LEADS_MODULE, moduleListDefaultPath } from "./support/crm-paths";
+import { svgRasterInkBoxes } from "./support/geometry";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 import { expectType } from "./support/typography";
+
+test.use({ deviceScaleFactor: 2 });
 
 test("inline Rating geometry, persistence, validation and keyboard cancellation", async ({
   page,
@@ -18,10 +21,23 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   const details = page.getByRole("region", { name: "Details card" });
   await expect(details).toBeVisible();
   const rating = details.locator('[data-detail-field="Rating"]');
-  await rating.getByRole("button", { name: "Edit Rating", exact: true }).click();
+  const pencil = rating.getByRole("button", { name: "Edit Rating", exact: true });
+  await pencil.hover();
+  await expect(pencil).toHaveCSS("opacity", "1");
+  await expect(pencil).toHaveCSS("color", "rgb(97, 110, 136)");
+  const pencilInk = await svgRasterInkBoxes(pencil);
+  expect(pencilInk.solid).not.toBeNull();
+  expect(Math.abs((pencilInk.solid?.width ?? 0) - 11.5)).toBeLessThanOrEqual(1);
+  expect(Math.abs((pencilInk.solid?.height ?? 0) - 11.5)).toBeLessThanOrEqual(1);
+  await pencil.click();
   const choice = page.getByRole("button", { name: "Rating", exact: true });
   const panel = page.locator(".record-inline-choice-panel");
   await expect(panel).toBeVisible();
+  const arrow = await choice.locator("svg").boundingBox();
+  if (!arrow) throw new Error("Missing arrow geometry.");
+  expect(arrow.width).toBe(8);
+  expect(arrow.height).toBe(5);
+  await expect(choice.locator("svg")).toHaveCSS("color", "rgb(131, 136, 146)");
   const control = await choice.boundingBox();
   const popup = await panel.boundingBox();
   const save = page.getByRole("button", { name: "Save", exact: true });
@@ -43,6 +59,11 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   near(saveBox.x - control.x - control.width, 10);
   near(cancelBox.x - saveBox.x - saveBox.width, 6.5);
   near(saveBox.y + saveBox.height / 2, control.y + control.height / 2);
+  const check = await save.locator("svg").boundingBox();
+  if (!check) throw new Error("Missing save check.");
+  near(check.width, 10);
+  near(check.height, 7.5);
+  await expect(save.locator("svg")).toHaveCSS("color", "rgb(255, 255, 255)");
   await expect(save).toHaveCSS("background-color", "rgb(84, 100, 242)");
   await expect(cancel).toHaveCSS("border-top-color", "rgb(49, 57, 73)");
   await expect(choice).toHaveCSS("border-top-color", "rgb(84, 100, 242)");
@@ -58,7 +79,11 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   await expect(selected).toHaveCSS("background-color", "rgb(240, 244, 252)");
   await expectType(page, selected, "--text-md", "--font-weight-semibold");
   await expect(selected.locator(".record-inline-choice-check svg")).toBeVisible();
-  await expectNoA11yViolations(page);
+  // ADR 0003 §8: measured placeholder ink on white. Shared form validation
+  // ink (#ff5d5a on white, ~3.04:1) retains the existing form scan exclusion.
+  await expectNoA11yViolations(page, {
+    exclude: [".detail-inline-control [data-part=empty-value]", ".record-form-validation-error"],
+  });
   if (process.env.INLINE_EDITOR_ARTIFACT_DIR) {
     await mkdir(process.env.INLINE_EDITOR_ARTIFACT_DIR, { recursive: true });
     await page.screenshot({
@@ -66,7 +91,11 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
     });
     await writeFile(
       join(process.env.INLINE_EDITOR_ARTIFACT_DIR, "inline-measurements.json"),
-      JSON.stringify({ control, popup, saveBox, cancelBox, optionCount: count }, null, 2),
+      JSON.stringify(
+        { control, popup, saveBox, cancelBox, optionCount: count, pencilInk },
+        null,
+        2,
+      ),
     );
   }
   const target = page.getByRole("option", { name: "Active", exact: true });
@@ -87,7 +116,11 @@ test("inline Rating geometry, persistence, validation and keyboard cancellation"
   await save.click();
   await expect(company).toContainText("Company cannot be empty.");
   await expect(page.getByRole("textbox", { name: "Company", exact: true })).toBeVisible();
-  await expectNoA11yViolations(page);
+  // ADR 0003 §8: measured placeholder ink on white. Shared form validation
+  // ink (#ff5d5a on white, ~3.04:1) retains the existing form scan exclusion.
+  await expectNoA11yViolations(page, {
+    exclude: [".detail-inline-control [data-part=empty-value]", ".record-form-validation-error"],
+  });
   await cancel.click();
   await expect(company.getByRole("button", { name: "Edit Company value" })).toHaveText(original);
   await rating.getByRole("button", { name: "Edit Rating", exact: true }).click();

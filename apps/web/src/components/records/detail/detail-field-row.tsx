@@ -111,7 +111,7 @@ export function DetailFieldRow({
           />
         ) : (
           <>
-            {editable && field.dataType !== "website" ? (
+            {editable && field.dataType !== "website" && field.dataType !== "email" ? (
               <button
                 ref={valueButton}
                 type="button"

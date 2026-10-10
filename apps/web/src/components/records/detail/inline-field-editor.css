@@ -9,6 +9,7 @@
   flex: none;
 }
 .detail-inline-control .record-control {
+  border-radius: var(--radius-detail-inline-control);
   box-shadow: none;
 }
 .detail-inline-control .record-control:focus,
@@ -71,7 +72,7 @@
   cursor: pointer;
 }
 .record-inline-choice-panel {
-  border-radius: 0 0 var(--radius-form-control) var(--radius-form-control);
+  border-radius: 0 0 var(--radius-detail-inline-control) var(--radius-detail-inline-control);
   box-shadow: var(--shadow-md);
 }
 .record-inline-choice-panel .record-choice-list {
@@ -79,7 +80,7 @@
 }
 .record-inline-choice-panel .record-choice-row {
   height: var(--size-detail-inline-option-height);
-  border-radius: var(--radius-form-control);
+  border-radius: var(--radius-detail-inline-control);
   padding-inline: var(--space-2);
   gap: var(--size-detail-inline-check-gap);
 }
@@ -89,7 +90,7 @@
 }
 .record-inline-choice-check svg {
   width: 100%;
-  height: var(--size-detail-inline-check-size);
+  height: var(--size-detail-inline-check-height);
 }
 .detail-inline-control .record-choice-trigger[data-inline-empty] > span:first-child {
   color: var(--color-text-placeholder);
@@ -101,4 +102,9 @@
   .detail-inline-value-button
   > .detail-field-value {
   line-height: var(--size-detail-multiline-line-pitch);
+}
+
+.detail-inline-save svg {
+  width: var(--size-detail-inline-save-check-width);
+  height: var(--size-detail-inline-save-check-height);
 }

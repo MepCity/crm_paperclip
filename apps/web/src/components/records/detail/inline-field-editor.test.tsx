@@ -200,3 +200,21 @@ test("Escape from the open picklist cancels the editor", async () => {
   expect(cancel).toHaveBeenCalledOnce();
   expect(save).not.toHaveBeenCalled();
 });
+
+test.each(["email", "website"] as const)(
+  "%s retains its link and a separate edit pencil",
+  (type) => {
+    render(
+      <InlineEditProvider eligible={isLeadInlineEditable} save={vi.fn()}>
+        <DetailFieldRow
+          field={field(type)}
+          value={type === "email" ? "person@example.test" : "https://example.test"}
+          layout="details"
+          format={DEFAULT_FORMAT}
+        />
+      </InlineEditProvider>,
+    );
+    expect(screen.getByRole("link").closest("button")).toBeNull();
+    expect(screen.getByRole("button", { name: "Edit Company" })).toBeTruthy();
+  },
+);

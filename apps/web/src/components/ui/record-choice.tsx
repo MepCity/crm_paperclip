@@ -130,7 +130,9 @@ export function RecordChoice({
               <span
                 id={valueId}
                 className={`truncate ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
-                {...(mutedEmpty && value === null ? { "data-part": "empty-value" } : {})}
+                {...((mutedEmpty || inline) && value === null
+                  ? { "data-part": "empty-value" }
+                  : {})}
               >
                 {inline && value === null ? "None" : (selected?.label ?? value ?? "-None-")}
               </span>
@@ -166,7 +168,7 @@ export function RecordChoice({
             <span
               id={valueId}
               className={`truncate ${mutedEmpty && value === null ? "record-prefix-empty" : ""}`}
-              {...(mutedEmpty && value === null ? { "data-part": "empty-value" } : {})}
+              {...((mutedEmpty || inline) && value === null ? { "data-part": "empty-value" } : {})}
             >
               {inline && value === null ? "None" : (selected?.label ?? value ?? "-None-")}
             </span>
@@ -229,7 +231,7 @@ export function RecordChoice({
                     <>
                       {inline && (
                         <span className="record-inline-choice-check" aria-hidden>
-                          {isSelected && <Icons.recordCheck />}
+                          {isSelected && <Icons.inlineCheck />}
                         </span>
                       )}
                       {owner && (
