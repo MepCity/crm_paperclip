@@ -581,10 +581,14 @@ what the "no colour constants" rule forbids.
 | `--size-form-input-right-width` | `314.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "right inputs x 1131.5–1446 (314.5 px wide)" | from spec |
 | `--size-form-column-gap` | `258.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › horizontal span from left input end to right input start (right label column + label gap; not a CSS flex gap) | from spec |
 | `--size-form-label-line-height` | `17.5px` | MEP-172 interim › wrapped field label line height | from spec |
-| `--size-form-label-padding-top` | `8px` | MEP-172 interim › single-line label cap alignment with input top | from spec |
+| `--size-form-label-padding-top` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › label block below the row top (MEP-172 interim, kept by MEP-234) | from spec |
+| `--size-form-label-baseline-offset` | `1px` | record-detail.md › Layout › Visual layout › Form text baselines › row 1 label cap top y 324 (12 px below the input top y 312); painted so a wrapped label keeps the measured row height | from spec |
 | `--size-form-input-group-width` | `303px` | MEP-172 interim › Address group input width | from spec |
 | `--size-form-input-height` | `34px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "34 px high" | from spec |
 | `--size-form-row-pitch` | `54px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "rows repeat every 54 px" (column gap uses pitch minus input height) | from spec |
+| `--size-form-checkbox-inset-start` | `5px` | record-detail.md › Layout › Visual layout › Email Opt Out checkbox › "5 px inside left input column boundary (x 553)" | from spec |
+| `--size-form-checkbox-inset-top` | `10px` | record-detail.md › Layout › Visual layout › Email Opt Out checkbox › box top "10 px top padding from y 744" inside the 34 px row | from spec |
+| `--size-form-control-text-padding-top` | `2px` | record-detail.md › Layout › Visual layout › Form text baselines › input interior text "12 px top margin (input top y 312 to cap top y 324) and 12 px bottom margin (flat letter ink bottom y 334 to input bottom y 346)" | from spec |
 | `--size-form-control-padding-inline` | `10px` | record-detail.md › Layout › Visual layout › Create/edit form › horizontal inset inside inputs | from spec |
 | `--size-form-control-padding-block` | `8px` | record-detail.md › Layout › Visual layout › Create/edit form › Description textarea vertical inset | from spec |
 | `--size-form-action-height` | `32px` | record-detail.md › Layout › Visual layout › Create/edit form › Create form button row; Select User dialog footer | from spec |
