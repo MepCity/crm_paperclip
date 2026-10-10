@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-1);
+  gap: var(--size-filter-operator-gap);
   height: var(--size-filter-control-height);
   min-width: var(--size-filter-control-min-width);
   max-width: 100%;
@@ -26,9 +26,6 @@
 }
 .filter-operator-control[data-focus-visible] {
   outline: 2px solid var(--color-focus-ring);
-}
-.filter-operator-control[data-value="contains"] {
-  min-width: var(--size-filter-contains-width);
 }
 .filter-operator-popover {
   width: var(--size-filter-operator-list-width);
@@ -103,4 +100,166 @@
 /* Filter value input: empty selection text uses the measured placeholder ink. */
 .filter-multi-trigger[data-empty] > [data-part="empty-value"] {
   color: var(--color-text-placeholder);
+}
+
+/* Operator widths follow text advance plus one shared chevron/padding rule.
+   Measured in Chromium on the filter editors demo: contains ≈79px, is ≈36.92px. */
+.filter-value > .filter-number-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  width: var(--size-filter-range-width);
+}
+.filter-editor[data-field-type="currency"] .filter-number-range .record-input-frame {
+  height: var(--size-filter-currency-range-height);
+}
+
+.filter-choice-popover {
+  width: var(--size-filter-choice-width);
+  height: var(--size-filter-choice-height);
+  overflow: hidden;
+}
+.filter-choice-content {
+  padding: 0;
+}
+.filter-choice-search {
+  padding: 6px;
+}
+.filter-choice-list {
+  margin: 0;
+  padding: 0 5px;
+  overflow: auto;
+  outline: none;
+}
+.filter-choice-popover .filter-choice-list {
+  height: calc(var(--size-filter-choice-height) - 38px);
+}
+.filter-choice-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--size-filter-choice-row-height);
+  padding: 0 6px;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  outline: none;
+}
+.filter-choice-option[data-selected],
+.filter-choice-option[data-focused],
+.filter-choice-option[data-hovered] {
+  background: var(--color-surface-selected);
+}
+.filter-choice-option[data-focus-visible] {
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+}
+.filter-user-popover {
+  width: var(--size-filter-user-width);
+}
+.filter-user-header {
+  display: flex;
+  margin: 10px 10px 3px;
+}
+.filter-user-header .filter-operator-control {
+  width: var(--size-filter-user-type-width);
+  height: var(--size-filter-user-header-height);
+}
+.filter-user-search {
+  flex-shrink: 0;
+  width: var(--size-filter-user-search-width);
+}
+.filter-user-search .record-control {
+  height: var(--size-filter-user-header-height);
+}
+.filter-user-body {
+  width: var(--size-filter-user-width);
+  padding-inline: 6px;
+  height: var(--size-filter-user-body-height);
+}
+.filter-user-body .filter-choice-option {
+  height: var(--size-filter-user-row-height);
+}
+.filter-user-avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-selected);
+}
+
+.filter-editor[data-field-type="boolean"] .filter-value .filter-operator-control {
+  width: var(--size-filter-state-width);
+}
+
+.filter-user-header > .filter-select {
+  flex-shrink: 0;
+}
+
+.filter-editor[data-field-type="datetime"] .filter-date-range {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--size-filter-date-range-gap);
+  width: var(--size-filter-range-width);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range .record-input-frame {
+  width: 100%;
+  height: var(--size-filter-control-height);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range-separator {
+  position: absolute;
+  top: calc(var(--size-filter-control-height) + var(--size-filter-date-range-gap) / 2);
+  left: 50%;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.filter-editor[data-field-type="datetime"]
+  .filter-days-control
+  > .filter-select
+  .filter-operator-control {
+  width: var(--size-filter-date-unit-width);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group {
+  width: var(--size-filter-role-group-width);
+  height: var(--size-filter-role-group-height);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-filter-control);
+  background: var(--color-surface);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group .record-input-frame {
+  height: var(--size-filter-role-group-search-height);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group .record-control {
+  height: var(--size-filter-role-group-search-height);
+  width: var(--size-filter-role-group-search-width);
+  padding-inline: 0;
+  border: none;
+}
+.filter-editor[data-field-type="multilookup"] .filter-connected-to {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  min-width: 0;
+}
+.filter-editor[data-field-type="compound_address"] .filter-address-nearby {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  width: var(--size-filter-address-width);
+}
+.filter-editor[data-field-type="compound_address"] .filter-address-nearby .record-input-frame {
+  height: var(--size-filter-address-location-height);
+}
+.filter-editor[data-field-type="compound_address"]
+  .filter-address-nearby
+  > .filter-select
+  .filter-operator-control {
+  width: 100%;
+  min-height: var(--size-filter-address-radius-height);
+  height: auto;
 }
