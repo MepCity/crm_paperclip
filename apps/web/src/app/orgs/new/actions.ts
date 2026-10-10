@@ -15,13 +15,15 @@ export async function createOrganizationAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser("/orgs/new");
+  let destination: string;
   try {
     const organization = await createOrganization(user, {
       name: readField(formData, "name"),
       slug: readField(formData, "slug"),
     });
-    redirect(`/crm/${organization.slug}`);
+    destination = `/crm/${organization.slug}`;
   } catch (error) {
     return toActionState(error);
   }
+  redirect(destination);
 }

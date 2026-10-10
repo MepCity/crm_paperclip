@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 /** Computed value of a token applied to a temporary element. */
 export async function tokenValue(
   page: Page,
-  property: "font-size" | "font-weight" | "line-height",
+  property: "font-size" | "font-weight" | "line-height" | "color" | "background-color",
   token: string,
 ) {
   return page.evaluate(

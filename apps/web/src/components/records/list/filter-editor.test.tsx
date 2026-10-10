@@ -125,6 +125,7 @@ for (const field of types) {
               ? "age_in"
               : "equal",
         value,
+        ...(field === "datetime" ? { daysUnit: "days" } : {}),
       },
     ]);
   });
@@ -383,17 +384,40 @@ test("operators without criteria support keep Apply incomplete", () => {
   }
 });
 
-test("weeks and months on day operators keep Apply disabled; unit change keeps the number", async () => {
+test("weeks and months on day operators enable Apply with a valid count", async () => {
   const user = userEvent.setup();
   render(<Panel initial={["datetime"]} />);
   const valueInput = screen.getByRole("textbox", { name: "datetime value" });
   await user.type(valueInput, "3");
   await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
   await user.click(screen.getByRole("option", { name: "weeks" }));
-  expect(apply().disabled).toBe(true);
+  expect(apply().disabled).toBe(false);
   expect((valueInput as HTMLInputElement).value).toBe("3");
-  await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
-  await user.click(screen.getByRole("option", { name: "days" }));
+});
+
+test("previous requires a positive integer day count", async () => {
+  const user = userEvent.setup();
+  render(<Panel initial={["datetime"]} />);
+  await operator(user, "datetime", "Previous");
+  const valueInput = screen.getByRole("textbox", { name: "datetime value" });
+  expect(apply().disabled).toBe(true);
+  await user.type(valueInput, "0");
+  await user.tab();
+  expect(apply().disabled).toBe(true);
+  await user.clear(valueInput);
+  await user.type(valueInput, "2");
+  await user.tab();
+  expect(apply().disabled).toBe(false);
+});
+
+test("on date requires a valid DD.MM.YYYY value", async () => {
+  const user = userEvent.setup();
+  render(<Panel initial={["datetime"]} />);
+  await operator(user, "datetime", "On");
+  await user.type(screen.getByRole("textbox", { name: "datetime value" }), "31.02.2024");
+  expect(apply().disabled).toBe(true);
+  await user.clear(screen.getByRole("textbox", { name: "datetime value" }));
+  await user.type(screen.getByRole("textbox", { name: "datetime value" }), "29.02.2024");
   expect(apply().disabled).toBe(false);
 });
 

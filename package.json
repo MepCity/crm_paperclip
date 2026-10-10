@@ -16,7 +16,8 @@
     "check": "biome check . && node scripts/typecheck.mjs",
     "typecheck": "node scripts/typecheck.mjs",
     "bench:storage": "tsx scripts/bench/record-storage.ts",
-    "verify": "biome check . && node scripts/typecheck.mjs && vitest run && tsx scripts/e2e.ts"
+    "verify": "biome check . && node scripts/typecheck.mjs && vitest run && tsx scripts/e2e.ts",
+    "ipc:sweep": "tsx scripts/ipc-sweep.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

@@ -17,6 +17,7 @@ components import types from `@crm/core/records` and format datetimes through
 | `rowHref` | Builds that column's address from the record. |
 | `selectedIds` | Controlled selection. Ids that are not on this page are kept. |
 | `onSelectedIdsChange` | Called with the next id list. |
+| `alphabet` | Optional alphabetical filter of the link column header: `{ value, onChange }`. `value` is the chosen letter, `null` is `All`. Omitting it draws no control. |
 | `wrapText` | Wrap cell text and grow the row. When false, the cell truncates. |
 | `emptyMessage` | Message in the first body band when `records` is empty. |
 | `settings` | Content of the header-only 40px View Settings overlay. Omit it to leave the cell empty. |
@@ -33,6 +34,14 @@ badge strip stay pinned. View Settings is not a column: a
 1px left border, and body rows have no cell there. Omitting `settings` leaves
 that overlay empty, with no accessible name. Scrolled to the end, the overlay
 covers the last `--size-list-settings-width` of the last column header.
+
+When `alphabet` is supplied, the link column header draws the `AlphabetFilter` control from
+`components/ui` right after the label, and only there: other headers keep their plain label.
+The control's accessible name is `Filter by first letter` and its text is the current choice,
+`All` or a letter. Each data header keeps `aria-label` as its own accessible name, so the
+control inside the cell does not change how the column is announced. The table does not filter
+anything: the page owns the choice (`list-views.md` › Filters / views / sorting / search ›
+Alphabetical filter, Layout › Visual layout › All alphabet dropdown).
 
 The header checkbox selects or clears every row on the page. A row checkbox
 selects that row. The selection toolbar is composed on the module list page,
@@ -120,8 +129,10 @@ The `record-table` demo uses synthetic values (`Lead 001`, `example.org`):
 ## Known deviations
 
 The captured list shows these controls, and none of their behaviour was
-observed, so they are not drawn: the **All** menu on the name header, row
-hover actions, column resize, column drag, and sorting by clicking a header.
+observed, so they are not drawn: row hover actions, column resize, column
+drag, and sorting by clicking a header. The **All** alphabetical filter
+beside the link column header is drawn; its effect is `Interim` (see
+Module list page below).
 
 Also:
 
@@ -229,7 +240,7 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
 | boolean | is → equal | equal | boolean, Selected / Not Selected |
 | ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
-| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | number + `days` / `weeks` / `months` for age/due/Previous/Next; `DD.MM.YYYY` for On/before/after; From/To range for between/not between; fiscal presets block Apply until fiscal settings exist |
 | tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
 | multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
 | compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
@@ -266,8 +277,8 @@ existing primitive tokens:
   the scrollable group content. A constrained-height parent makes only the rows scroll.
 - The user-type selector contents beyond the initial Users option and current-user
   identification remain Interim; callers may supply `detail` and `currentUser` flags.
-  Unit lists remain pending the contract decision.
 - The days unit sits next to the numeric input with the existing smallest spacing.
+- **after** shares the single `DD.MM.YYYY` control used for **before** (**Interim**; no separate spec row).
 - Apply stays disabled until every checked editable row is complete.
 - Multiple field rows can be open simultaneously.
 - Board-authorized reversible assumption (MEP-198): rows without an editor keep
@@ -288,9 +299,6 @@ select two rows. Only synthetic data appears in demos and tests.
   and related-module editors: their respective modules.
 - Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
   rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
-- Date Previous / Next / On / before / after / between / not between: value editors
-  are drawn; Apply stays disabled until the Platform Lead criteria contract lands.
-- weeks/months on day operators: unit list matches spec; only `days` enables Apply.
 - textarea, double, bigint, lookup, multi_module_lookup,
   profileimage: no observed operator catalog.
 
@@ -353,11 +361,15 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
   rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
-- `SelectionBar({ selectedCount, onClear, onDelete, actions? })`: replaces the toolbar
-  while `selectedCount > 0`. Shows the measured toolbar height, a count (`1 Record
-  Selected` / `3 Records Selected`), a `Clear`
-  text control, `Delete`, and an optional `Actions` menu when `actions` is non-empty.
-  The page supplies module labels and wires delete confirmation.
+- `SelectionBar({ selectedCount, onClear, onDelete, onMassUpdate?, actions? })`: replaces
+  the toolbar while `selectedCount > 0`. Shows the measured toolbar height, a count
+  (`1 Record Selected` / `3 Records Selected`), a `Clear` text control, `Delete`, an
+  optional `Mass Update` button when `onMassUpdate` is set (113 × 32 px, same chrome as
+  `Delete`), and an optional `Actions` menu when `actions` is non-empty. The page
+  supplies module labels and wires delete confirmation.
+- `MassUpdateDialog` and `ChangeOwnerDialog`: bulk write dialogs opened from the selection
+  bar on the module list page. They call `useMassUpdate` / `useChangeOwner`, clear
+  selection and refresh the list on success without a toast.
 - `SortPopover({ fields, sort, onApply })`: `fields` is a readonly array of
   `{ apiName, label }` in the order the caller supplies — the component never sorts it;
   `sort` is `SortSpec | null`. A new opening resets the local draft from `sort`. Null
@@ -507,6 +519,28 @@ Disabled filter rows (deviations): `textarea`, `lookup`,
 `multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
 and related-module groups stay disabled.
 
+### First-letter filter (Leads)
+
+The link column header carries the `AlphabetFilter` control
+(`list-views.md` › Filters / views / sorting / search › Alphabetical filter;
+`leads-write-behaviour.md` › B1: a letter limits the list to the records whose name starts
+with it). `ModuleListScreen` holds the choice in page state, where `null` is `All`.
+
+`firstLetterCriteria(config.linkField, letter)` builds the leaf
+`{ field: linkField, comparator: "starts_with", value: letter }`, and `combineCriteriaAnd`
+from `lib/records/filter-criteria.ts` merges it with the criteria the panel applied into one
+`and` group — the shape several panel rows already produce, with no extra nesting.
+`useRecordList` and `useRecordCount` both get the merged criteria, so the rows and the total
+answer the same restriction.
+
+- Choosing a letter returns the list to page 1 and drops row selection, like applying a panel
+  filter. `All` removes the leaf; with nothing else applied the queries carry no filters.
+- The panel's `Clear` removes only what the panel applied; the letter stays.
+- Changing the open view returns the control to `All`, together with the criteria, the panel
+  draft and the selection it already discarded.
+- With no matching record the table shows its normal empty state (`No Leads found.`) and a zero
+  total.
+
 ### Interim
 
 - Selection bar placement, counter copy (`Clear`, delete dialog title and body,
@@ -545,6 +579,23 @@ and related-module groups stay disabled.
   and clear on full page reload; no toolbar indicator after apply; empty results use
   the table empty state; validation errors appear above Apply/Clear; the panel stays
   open with rows checked after apply.
+- The letter compares the link column's field (`config.linkField`, `Full_Name`, the column
+  the reference labels `Lead Name`). The spec documents that a letter limits the list to the
+  records starting with it but never records which field it targets, so the link field is the
+  authorized interim choice (`leads-write-behaviour.md` › B1, open question 5).
+- The comparison is the service's text-family `starts_with`, case-insensitive
+  (`packages/core/records/README.md`); no separate letter rule was observed.
+- The letter is not carried in the address, like applied panel filters: it clears on a full
+  page reload. Whether the reference keeps it in the URL was not observed.
+- The letter combines with the panel filter in one `and` group; the reference's combination
+  rule was never observed (only one control was opened, never applied).
+- The closed control's measure and its chosen-letter display use existing tokens only
+  (`components/ui/README.md` › Alphabet filter primitive › Interim).
+- With no matching record the letter shows the table's normal empty state; that state for a
+  letter result was not observed.
+- Module-local record text search is not drawn: its fields, matching rule and result states
+  were never observed (`list-views.md` › Open questions 5), and it stays the remaining part of
+  parity checklist row 10.
 - Split Create arrow, Actions menu, view selector, and activity
   ribbon are not drawn on the page. View Settings is drawn, but its
   `Manage Columns` and `Reset Column Size` entries belong to M11 and are not drawn.
@@ -559,6 +610,12 @@ edge. A 15 px gap separates the toolbar from the filter/table row. The page fill
 shell main height; the table card grows in the body row and keeps the footer on
 the card bottom while record rows scroll inside the card.
 
+The card does not reach the bottom of the content area. At 1470 × 835 the content
+area ends at y 807 and the card ends at y 794, so 13 px of canvas stays visible
+under the card. `--list-card-bottom-gap` carries that value and is applied as the
+page's `padding-bottom`; the body row flexes to fill the rest of the page height,
+so the gap under the card stays 13 px whatever the shell height.
+
 ### Page deviations
 
 - Panel closed: table widening beside the filter lane was not verified in the
@@ -567,3 +624,23 @@ the card bottom while record rows scroll inside the card.
   control remain out of scope.
 - Column header copy follows field metadata labels (for example **Full Name** for
   `Full_Name`), not the reference list label **Lead Name**.
+
+## Interim (bulk dialogs)
+
+**Mass Update**
+
+- Enabled `Update` uses existing primary button tokens (reference enabled fill was not
+  observed).
+- Backdrop uses the shared dialog overlay token.
+- Value controls after a field is chosen follow the create/edit form input tokens at
+  285 px width.
+- Dialog height can grow when inline or general error text is shown.
+
+**Change Owner**
+
+- Entire dialog presentation (modal vs page) and `Cancel` styling were not observed;
+  frame, padding, buttons and backdrop follow the unsaved-changes modal tokens; the
+  owner control follows create/edit form input geometry.
+- Field order for mass update follows module layout order.
+- Optional mass-update values may be cleared by submitting an empty value.
+- No success toast or banner after either bulk action completes.

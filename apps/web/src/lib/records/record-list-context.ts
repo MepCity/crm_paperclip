@@ -1,4 +1,4 @@
-import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
+import type { ModuleApiName, RecordId } from "@crm/core/records";
 
 /** List navigation context written by the list page and read on record detail (session lifetime). */
 export type RecordListContext = {
@@ -8,10 +8,6 @@ export type RecordListContext = {
   page: number;
   perPage: number;
   recordIds: readonly RecordId[];
-  listQuery: Pick<
-    ListQuery,
-    "viewId" | "page" | "perPage" | "sort" | "filters" | "search" | "fields"
-  >;
 };
 
 const STORAGE_PREFIX = "mep:record-list-context:";
@@ -66,6 +62,21 @@ export function writeRecordListContext(orgSlug: string, context: RecordListConte
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("mep:record-list-context", { detail: { storageKey } }));
   }
+}
+
+/** Drops one record id from stored list navigation context after a successful delete. */
+export function removeRecordFromListContext(
+  orgSlug: string,
+  module: ModuleApiName,
+  recordId: RecordId,
+): void {
+  const context = readRecordListContext(orgSlug, module);
+  if (!context) return;
+  if (!context.recordIds.includes(recordId)) return;
+  writeRecordListContext(orgSlug, {
+    ...context,
+    recordIds: context.recordIds.filter((id) => id !== recordId),
+  });
 }
 
 export function subscribeRecordListContext(

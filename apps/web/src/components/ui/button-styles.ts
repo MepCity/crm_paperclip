@@ -18,6 +18,10 @@ export const buttonStyles = {
     "font-semibold rounded-md bg-transparent text-text data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
   danger:
     "font-semibold rounded-md bg-danger text-danger-text data-hovered:bg-danger-hover data-pressed:bg-danger-pressed",
+  unsavedDialogStay:
+    "font-normal rounded-(--radius-create-menu) bg-surface bg-linear-to-b from-(--color-unsaved-dialog-stay-start) to-(--color-unsaved-dialog-stay-end) text-(--color-unsaved-dialog-stay-text) border border-(--color-unsaved-dialog-stay-border) shadow-none data-hovered:bg-none data-hovered:from-(--color-unsaved-dialog-stay-start) data-hovered:to-(--color-unsaved-dialog-stay-end) data-hovered:bg-surface-hover data-pressed:bg-none data-pressed:from-(--color-unsaved-dialog-stay-start) data-pressed:to-(--color-unsaved-dialog-stay-end) data-pressed:bg-surface-pressed",
+  unsavedDialogLeave:
+    "font-semibold rounded-(--radius-create-menu) bg-linear-to-b from-(--color-unsaved-dialog-leave-start) to-(--color-unsaved-dialog-leave-end) text-(--color-unsaved-dialog-leave-text) data-hovered:bg-none data-hovered:from-(--color-unsaved-dialog-leave-start) data-hovered:to-(--color-unsaved-dialog-leave-end) data-pressed:bg-none data-pressed:from-(--color-unsaved-dialog-leave-start) data-pressed:to-(--color-unsaved-dialog-leave-end)",
 };
 
 export const buttonSizes = {

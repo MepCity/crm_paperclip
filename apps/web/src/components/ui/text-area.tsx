@@ -17,7 +17,7 @@ const styles = {
   label: "record-label text-md",
   input: "record-control record-textarea",
   description: "text-sm text-text-muted",
-  error: "text-sm text-danger",
+  error: "record-form-validation-error",
 } as const;
 
 export interface TextAreaProps extends Omit<AriaTextFieldProps, "rows"> {

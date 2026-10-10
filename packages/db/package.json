@@ -9,7 +9,10 @@
     "./testing": "./src/testing.ts",
     "./ports": "./src/ports.ts",
     "./migrate": "./src/migrate.ts",
-    "./shared-memory": "./src/shared-memory.ts"
+    "./shared-memory": "./src/shared-memory.ts",
+    "./signal-shutdown": "./src/signal-shutdown.ts",
+    "./ipc-sweep": "./src/ipc-sweep.ts",
+    "./sysv-ipc": "./src/sysv-ipc.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate"

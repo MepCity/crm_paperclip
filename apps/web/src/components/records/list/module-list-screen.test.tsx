@@ -149,6 +149,19 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function letterControl() {
+  return screen.getByRole("button", { name: "Filter by first letter" });
+}
+
+async function pickLetter(user: ReturnType<typeof userEvent.setup>, letter: string) {
+  await user.click(letterControl());
+  const list = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  await user.click(within(list).getByRole("option", { name: letter }));
+  await waitFor(() => {
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+}
+
 function screenWithFixture() {
   const records = createFixtureRecordService(ctx);
   const listSpy = vi.spyOn(records, "list");
@@ -781,6 +794,89 @@ describe("ModuleListScreen", () => {
     expect(lastHref).toContain("page=1");
   });
 
+  it("mass-updates selected records and clears selection on success", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const massSpy = vi.spyOn(records, "massUpdate");
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: ctx.userId, name: "User", email: "u@example.test" },
+        { userId: "user-2", name: "Other", email: "o@example.test" },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const page = await records.list("Leads", listQuery);
+    const ids = page.records.slice(0, 2).map((record) => record.id);
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    await user.click(rows[1] as HTMLElement);
+    await user.click(rows[2] as HTMLElement);
+    const listCallsBefore = listSpy.mock.calls.length;
+    await user.click(screen.getByRole("button", { name: "Mass Update" }));
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: "Lead Source" }));
+    await user.click(screen.getByRole("button", { name: "Lead Source" }));
+    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    await waitFor(() => {
+      expect(massSpy).toHaveBeenCalledWith("Leads", ids, { Lead_Source: "Advertisement" });
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/Record Selected/)).toBeNull();
+    });
+    await waitFor(() => {
+      expect(listSpy.mock.calls.length).toBeGreaterThan(listCallsBefore);
+    });
+  });
+
+  it("changes owner for selected records from the Actions menu", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx, {
+      listMemberIds: async () => [ctx.userId, "batch-owner"],
+    });
+    const ownerSpy = vi.spyOn(records, "changeOwner");
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: ctx.userId, name: "User", email: "u@example.test" },
+        { userId: "batch-owner", name: "Batch Owner", email: "batch@example.test" },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    if (!listQuery) throw new Error("Expected list query.");
+    const page = await records.list("Leads", listQuery);
+    const ids = page.records.slice(0, 2).map((record) => record.id);
+    const rows = screen.getAllByRole("checkbox", { name: /Select / });
+    await user.click(rows[1] as HTMLElement);
+    await user.click(rows[2] as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Change Owner" }));
+    await user.click(screen.getByRole("button", { name: "Lead Owner" }));
+    await user.click(screen.getByRole("option", { name: /Batch Owner/ }));
+    await user.click(screen.getByRole("button", { name: "Change Owner" }));
+    await waitFor(() => {
+      expect(ownerSpy).toHaveBeenCalledWith("Leads", ids, "batch-owner");
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/Record Selected/)).toBeNull();
+    });
+  });
+
   it("passes list query fields and paging from the address", async () => {
     navigation.params = new URLSearchParams("page=2&per_page=10&sort_by=Company&sort_order=asc");
     const records = createFixtureRecordService(ctx);
@@ -806,6 +902,194 @@ describe("ModuleListScreen", () => {
         "Owner",
       ]);
     });
+  });
+
+  it("restricts list and count with the letter chosen in the header", async () => {
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+    await pickLetter(user, "L");
+    await waitFor(() => {
+      const leaf = { field: "Full_Name", comparator: "starts_with", value: "L" };
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(leaf);
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(leaf);
+    });
+    expect(letterControl().textContent).toBe("L");
+  });
+
+  it("drops the letter criterion when All is chosen again", async () => {
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await pickLetter(user, "S");
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+    });
+    await pickLetter(user, "All");
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+    });
+    expect(letterControl().textContent).toBe("All");
+  });
+
+  it("combines the letter with the applied panel filter in one and-group", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+        field: "Company",
+        comparator: "contains",
+        value: "Example",
+      });
+    });
+    await pickLetter(user, "L");
+    const group = {
+      groupOperator: "and",
+      group: [
+        { field: "Company", comparator: "contains", value: "Example" },
+        { field: "Full_Name", comparator: "starts_with", value: "L" },
+      ],
+    };
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(group);
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(group);
+    });
+  });
+
+  it("keeps the letter when the panel is cleared", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await pickLetter(user, "S");
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+        groupOperator: "and",
+        group: [
+          { field: "Company", comparator: "contains", value: "Example" },
+          { field: "Full_Name", comparator: "starts_with", value: "S" },
+        ],
+      });
+    });
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+        field: "Full_Name",
+        comparator: "starts_with",
+        value: "S",
+      });
+    });
+    expect(letterControl().textContent).toBe("S");
+  });
+
+  it("starts the letter filter on page 1 and clears the row selection", async () => {
+    navigation.params = new URLSearchParams("page=2");
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const rowSelect = screen.getAllByRole("checkbox", { name: /Select / })[1];
+    if (!rowSelect) throw new Error("Expected a row selection checkbox.");
+    await user.click(rowSelect);
+    await waitFor(() => {
+      expect(screen.getByText("1 Record Selected")).toBeTruthy();
+    });
+    await pickLetter(user, "L");
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    await waitFor(() => {
+      expect(screen.queryByText("1 Record Selected")).toBeNull();
+    });
+    expect(navigation.push).toHaveBeenCalled();
+  });
+
+  it("returns the letter to All when the view changes", async () => {
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} viewId="all-leads" />,
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    await pickLetter(user, "L");
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+    });
+    rerender(
+      <ModuleListScreen
+        orgSlug={ctx.orgSlug}
+        config={leadsListPageConfig}
+        viewId="converted-leads"
+      />,
+    );
+    await waitFor(() => {
+      const query = listSpy.mock.calls.at(-1)?.[1];
+      expect(query?.viewId).toBe("converted-leads");
+      expect(query?.filters).toBeUndefined();
+    });
+    expect(letterControl().textContent).toBe("All");
   });
 
   it("stores a page-size choice, puts it in the address and starts at page 1", async () => {

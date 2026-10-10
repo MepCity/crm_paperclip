@@ -1,10 +1,12 @@
 import type { Comparator, Criteria, CriteriaPeriod, CriteriaValue } from "@crm/core/records";
-import type { AppliedFilterValue, FilterOperatorId } from "./filter-operators";
+import { displayDateToIso } from "./filter-date-input";
+import type { AppliedFilterValue, DateUnit, FilterOperatorId } from "./filter-operators";
 
 export interface PanelFilterInput {
   field: string;
   operatorId: FilterOperatorId;
   value: AppliedFilterValue;
+  daysUnit?: DateUnit;
 }
 
 const periodByOperator: Partial<Record<FilterOperatorId, CriteriaPeriod>> = {
@@ -21,7 +23,36 @@ const periodByOperator: Partial<Record<FilterOperatorId, CriteriaPeriod>> = {
   next_year: "NEXT_YEAR",
 };
 
-function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue): CriteriaValue {
+function isoDateValue(value: AppliedFilterValue): string {
+  if (typeof value !== "string") throw new Error("Expected a display date string");
+  const iso = displayDateToIso(value);
+  if (!iso) throw new Error("Invalid display date");
+  return iso;
+}
+
+function isoDateRangeValue(value: AppliedFilterValue): [string, string] {
+  if (!Array.isArray(value) || value.length !== 2) throw new Error("Expected a date range");
+  const from = typeof value[0] === "string" ? displayDateToIso(value[0]) : null;
+  const to = typeof value[1] === "string" ? displayDateToIso(value[1]) : null;
+  if (!from || !to || from > to) throw new Error("Invalid date range");
+  return [from, to];
+}
+
+function dayTokenValue(
+  operatorId: "age_in" | "due_in",
+  offset: number,
+  unit: DateUnit,
+): CriteriaValue {
+  const token = operatorId === "age_in" ? "AGEINDAYS" : "DUEINDAYS";
+  if (unit === "days") return { token, offset };
+  return { token, offset, unit };
+}
+
+function criterionValue(
+  operatorId: FilterOperatorId,
+  value: AppliedFilterValue,
+  daysUnit?: DateUnit,
+): CriteriaValue {
   switch (operatorId) {
     case "is_empty":
     case "is_not_empty":
@@ -29,9 +60,37 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "today":
       return { token: "TODAY" };
     case "age_in":
-      return { token: "AGEINDAYS", offset: value as number };
-    case "due_in":
-      return { token: "DUEINDAYS", offset: value as number };
+    case "due_in": {
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+        throw new Error("Invalid day offset");
+      }
+      return dayTokenValue(operatorId, value, daysUnit ?? "days");
+    }
+    case "previous":
+    case "next": {
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+        throw new Error("Invalid relative count");
+      }
+      const unit = daysUnit ?? "days";
+      return {
+        token: "RELATIVE",
+        direction: operatorId === "previous" ? "previous" : "next",
+        count: value,
+        unit,
+      };
+    }
+    case "on":
+      return isoDateValue(value);
+    case "before":
+    case "after":
+      return isoDateValue(value);
+    case "between":
+    case "not_between": {
+      if (Array.isArray(value) && typeof value[0] === "string" && typeof value[1] === "string") {
+        return isoDateRangeValue(value);
+      }
+      return value as CriteriaValue;
+    }
     case "tomorrow":
     case "yesterday":
     case "till_yesterday":
@@ -47,11 +106,6 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
       if (!name) throw new Error(`Missing period for ${operatorId}`);
       return { token: "PERIOD", name };
     }
-    case "previous":
-    case "next":
-    case "on":
-    case "before":
-    case "after":
     case "current_fy":
     case "current_fq":
     case "previous_fy":
@@ -73,8 +127,6 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "less_equal":
     case "greater_than":
     case "greater_equal":
-    case "between":
-    case "not_between":
       return (typeof value === "string" ? value.trim() : value) as CriteriaValue;
     default: {
       const _exhaustive: never = operatorId;
@@ -116,6 +168,13 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "age_in":
     case "due_in":
       return "less_equal";
+    case "before":
+      return "less_than";
+    case "after":
+      return "greater_than";
+    case "previous":
+    case "next":
+    case "on":
     case "today":
     case "tomorrow":
     case "yesterday":
@@ -129,11 +188,6 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "previous_year":
     case "next_year":
       return "equal";
-    case "previous":
-    case "next":
-    case "on":
-    case "before":
-    case "after":
     case "current_fy":
     case "current_fq":
     case "previous_fy":
@@ -156,7 +210,7 @@ function leaf(input: PanelFilterInput): Criteria {
   return {
     field: input.field,
     comparator: comparatorForOperator(input.operatorId),
-    value: criterionValue(input.operatorId, input.value),
+    value: criterionValue(input.operatorId, input.value, input.daysUnit),
   };
 }
 
@@ -169,4 +223,31 @@ export function panelFiltersToCriteria(inputs: readonly PanelFilterInput[]): Cri
     return leaf(only);
   }
   return { groupOperator: "and", group: inputs.map(leaf) };
+}
+
+/**
+ * Criterion for the list header's first-letter choice. `null` means All and adds nothing. The
+ * comparison itself is the text-family case-insensitive `starts_with` rule
+ * (`packages/core/src/records/README.md`).
+ */
+export function firstLetterCriteria(
+  linkField: string,
+  letter: string | null,
+): Criteria | undefined {
+  if (!letter) return undefined;
+  return { field: linkField, comparator: "starts_with", value: letter };
+}
+
+/**
+ * AND-combines the criteria that restrict a list, ignoring absent parts and flattening a part
+ * that is already an `and` group instead of nesting it. Undefined when nothing restricts.
+ */
+export function combineCriteriaAnd(parts: readonly (Criteria | undefined)[]): Criteria | undefined {
+  const present = parts.filter((part): part is Criteria => part !== undefined);
+  if (present.length === 0) return undefined;
+  const group = present.flatMap((part) =>
+    "groupOperator" in part && part.groupOperator === "and" ? [...part.group] : [part],
+  );
+  if (group.length === 1) return group[0];
+  return { groupOperator: "and", group };
 }

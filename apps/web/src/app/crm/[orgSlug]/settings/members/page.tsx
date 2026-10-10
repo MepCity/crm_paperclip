@@ -7,12 +7,15 @@ import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { requireOrgContext } from "@/lib/session";
+import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import {
   changeMemberRoleAction,
   createInvitationAction,
   removeMemberAction,
   revokeInvitationAction,
 } from "./actions";
+
+export const metadata = shellPageMetadata(shellPageTitle.settings);
 
 export default async function MembersSettingsPage({
   params,
@@ -29,7 +32,7 @@ export default async function MembersSettingsPage({
 
   return (
     <>
-      <PageTitle title="Settings" />
+      <PageTitle title={shellPageTitle.settings} />
       <PageHeader
         description="People in this organization."
         actions={

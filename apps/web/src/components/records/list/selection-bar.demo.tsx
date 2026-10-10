@@ -21,6 +21,7 @@ export default function SelectionBarDemo() {
         selectedCount={3}
         onClear={() => setMessage("Cleared three")}
         onDelete={() => setMessage("Delete three")}
+        onMassUpdate={() => setMessage("Mass Update")}
         actions={sampleActions}
       />
       <p role="status">{message}</p>

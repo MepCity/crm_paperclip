@@ -10,12 +10,20 @@ import type {
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { panelFiltersToCriteria } from "@/lib/records/filter-criteria";
+import {
+  combineCriteriaAnd,
+  firstLetterCriteria,
+  panelFiltersToCriteria,
+} from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
+import { MassUpdateDialog } from "./mass-update-dialog";
+import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { SelectionBar } from "./selection-bar";
 import "./module-list-page.css";
 import {
@@ -77,7 +85,7 @@ export interface ModuleListScreenProps {
 function ListNotFound() {
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <NotFoundMessage />
     </div>
   );
 }
@@ -126,6 +134,7 @@ function ModuleListScreenLoaded({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
+  const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
     list: ListResult;
@@ -134,6 +143,8 @@ function ModuleListScreenLoaded({
   const priorViewId = useRef(viewId);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [massUpdateOpen, setMassUpdateOpen] = useState(false);
+  const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const deleteRecords = useDeleteRecords(config.module);
 
   const moduleQuery = useModule(config.module);
@@ -155,25 +166,32 @@ function ModuleListScreenLoaded({
     if (priorViewId.current === viewId) return;
     priorViewId.current = viewId;
     setAppliedCriteria(undefined);
+    setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
     setSelectedIds([]);
     setAcceptedListSnapshot(null);
   }, [viewId]);
 
+  /** Panel criteria and the header's first-letter choice restrict the list together (Interim). */
+  const listCriteria = useMemo(
+    () => combineCriteriaAnd([appliedCriteria, firstLetterCriteria(config.linkField, letter)]),
+    [appliedCriteria, config.linkField, letter],
+  );
+
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
-    if (!appliedCriteria) return base;
-    return { ...base, filters: appliedCriteria };
-  }, [appliedCriteria, columnApiNames, eligibleSortFields, searchState, viewId]);
+    if (!listCriteria) return base;
+    return { ...base, filters: listCriteria };
+  }, [columnApiNames, eligibleSortFields, listCriteria, searchState, viewId]);
 
   const countQuery = useMemo(
     () => ({
       viewId,
-      ...(appliedCriteria ? { filters: appliedCriteria } : {}),
+      ...(listCriteria ? { filters: listCriteria } : {}),
     }),
-    [appliedCriteria, viewId],
+    [listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -237,6 +255,26 @@ function ModuleListScreenLoaded({
       .filter((field): field is FieldDefinition => field !== undefined);
   }, [columnApiNames, moduleQuery.data?.fields]);
 
+  const massUpdateFields = useMemo(
+    () => (moduleQuery.data ? massUpdateFieldsInLayoutOrder(moduleQuery.data) : []),
+    [moduleQuery.data],
+  );
+
+  const ownerField = useMemo(
+    () => moduleQuery.data?.fields.find((field) => field.dataType === "ownerlookup") ?? null,
+    [moduleQuery.data?.fields],
+  );
+
+  const ownerOptions = useMemo(
+    () =>
+      (users.data ?? []).map((member) => ({
+        id: member.userId,
+        name: member.name,
+        email: member.email,
+      })),
+    [users.data],
+  );
+
   const listBasePath = useMemo(() => {
     if (routeViewId) return config.paths.customList(orgSlug, config.module, routeViewId);
     return config.paths.defaultList(orgSlug, config.module);
@@ -257,15 +295,6 @@ function ModuleListScreenLoaded({
       page: pageData.page,
       perPage: pageData.perPage,
       recordIds: pageData.records.map((record) => record.id),
-      listQuery: {
-        viewId: listQuery.viewId,
-        page: listQuery.page,
-        perPage: listQuery.perPage,
-        sort: listQuery.sort,
-        filters: listQuery.filters,
-        search: listQuery.search,
-        fields: listQuery.fields,
-      },
     });
   }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
 
@@ -303,6 +332,7 @@ function ModuleListScreenLoaded({
       field: row.itemId,
       operatorId: row.operatorId,
       value: row.value,
+      daysUnit: row.daysUnit,
     }));
     setFilterApplyError(null);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
@@ -315,6 +345,18 @@ function ModuleListScreenLoaded({
   function clearPanelFilters() {
     setAppliedCriteria(undefined);
     setFilterApplyError(null);
+    setSelectedIds([]);
+    if (searchState.page !== LIST_PAGE_DEFAULT) {
+      navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
+    }
+  }
+
+  /**
+   * The header's letter choice is a criterion of its own; the panel keeps what it applied.
+   * A new choice starts on page 1 and drops row selection, like applying a panel filter.
+   */
+  function applyLetter(letterChoice: string | null) {
+    setLetter(letterChoice);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -352,7 +394,7 @@ function ModuleListScreenLoaded({
   const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
   const countSettled = count.isSuccess && !count.isFetching;
   const awaitingFilteredPair =
-    appliedCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
+    listCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
   const useAcceptedSnapshot =
     acceptedListSnapshot !== null && (hasFilterValidationError || awaitingFilteredPair);
 
@@ -425,6 +467,18 @@ function ModuleListScreenLoaded({
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onDelete={openDeleteDialog}
+          onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
+          actions={
+            ownerField
+              ? [
+                  {
+                    id: "change-owner",
+                    label: "Change Owner",
+                    onAction: () => setChangeOwnerOpen(true),
+                  },
+                ]
+              : []
+          }
         />
       ) : (
         <ListToolbar
@@ -446,6 +500,28 @@ function ModuleListScreenLoaded({
           }}
         />
       )}
+      {massUpdateOpen && massUpdateFields.length > 0 ? (
+        <MassUpdateDialog
+          isOpen
+          onOpenChange={setMassUpdateOpen}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          fields={massUpdateFields}
+          users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
+      {changeOwnerOpen && ownerField ? (
+        <ChangeOwnerDialog
+          isOpen
+          onOpenChange={setChangeOwnerOpen}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          ownerField={ownerField}
+          users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
       {deleteOpen ? (
         <ConfirmDialog
           isOpen
@@ -488,6 +564,7 @@ function ModuleListScreenLoaded({
               const allowed = new Set(records.map((record) => record.id));
               setSelectedIds([...ids].filter((id) => allowed.has(id)));
             }}
+            alphabet={{ value: letter, onChange: applyLetter }}
             wrapText={wrapText}
             emptyMessage={emptyMessage}
             settings={

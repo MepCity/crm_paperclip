@@ -3,12 +3,14 @@ import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { pickFreePort } from "@crm/db/ports";
+import { registerSignalShutdown, stopApplicationChild } from "@crm/db/signal-shutdown";
 import {
   createTemplateDatabase,
   createWorkerDatabase,
   startTestPostgres,
   type TestPostgres,
 } from "@crm/db/testing";
+import { runCleanupSteps } from "./e2e-cleanup";
 import { acquireE2eLock, releaseE2eLock } from "./e2e-lock";
 
 const execFileAsync = promisify(execFile);
@@ -115,27 +117,34 @@ async function stopListenersOnPort(port: number): Promise<void> {
 }
 
 async function cleanupAfterRun(): Promise<void> {
-  if (playwrightStageStarted && activePort !== undefined) {
-    await stopListenersOnPort(activePort);
-    activePort = undefined;
-  }
-  if (postgres) {
-    await postgres.stop();
-    postgres = undefined;
-  }
-  if (lockHeld) {
-    await releaseE2eLock();
-    lockHeld = false;
-  }
+  if (parentWatch) clearInterval(parentWatch);
+  await runCleanupSteps([
+    async () => {
+      if (playwrightStageStarted && activePort !== undefined) {
+        await stopListenersOnPort(activePort);
+        activePort = undefined;
+      }
+    },
+    async () => {
+      if (postgres) {
+        await postgres.stop();
+        postgres = undefined;
+      }
+    },
+    async () => {
+      if (lockHeld) {
+        await releaseE2eLock();
+        lockHeld = false;
+      }
+    },
+  ]);
 }
 
 async function shutdown(exitCode: number): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   interruptedExitCode = exitCode;
-  interrupted = true;
-  current?.kill("SIGTERM");
-  await cleanupAfterRun();
+  await stop();
   process.exit(exitCode);
 }
 
@@ -151,11 +160,11 @@ function run(command: string, args: string[], env: NodeJS.ProcessEnv): Promise<n
   });
 }
 
-for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.on(signal, () => {
-    void shutdown(signal === "SIGINT" ? 130 : 143);
-  });
-}
+const stop = registerSignalShutdown(async () => {
+  interrupted = true;
+  await stopApplicationChild(current);
+  await cleanupAfterRun();
+});
 
 let parentWatch: ReturnType<typeof setInterval> | undefined;
 
@@ -203,37 +212,18 @@ async function main(): Promise<number> {
       E2E_PORT: String(port),
     };
 
-    try {
-      console.log("e2e: building the production bundle");
-      const buildCode = await run("next", ["build"], env);
-      if (interrupted) return interruptedExitCode;
-      if (buildCode !== 0) return 1;
-      console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
-      playwrightStageStarted = true;
-      const playwrightArgs = ["test", ...process.argv.slice(2)];
-      const code = await run("playwright", playwrightArgs, env);
-      if (interrupted) return interruptedExitCode;
-      return code;
-    } finally {
-      if (lockHeld) {
-        await releaseE2eLock();
-        lockHeld = false;
-      }
-    }
+    console.log("e2e: building the production bundle");
+    const buildCode = await run("next", ["build"], env);
+    if (interrupted) return interruptedExitCode;
+    if (buildCode !== 0) return 1;
+    console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
+    playwrightStageStarted = true;
+    const playwrightArgs = ["test", ...process.argv.slice(2)];
+    const code = await run("playwright", playwrightArgs, env);
+    if (interrupted) return interruptedExitCode;
+    return code;
   } finally {
-    if (parentWatch) clearInterval(parentWatch);
-    if (playwrightStageStarted && activePort !== undefined) {
-      try {
-        await stopListenersOnPort(activePort);
-      } catch {
-        console.log("e2e: port cleanup skipped (unexpected error)");
-      }
-      activePort = undefined;
-    }
-    if (postgres) {
-      await postgres.stop();
-      postgres = undefined;
-    }
+    await stop();
   }
 }
 
@@ -241,6 +231,6 @@ main().then(
   (code) => process.exit(code),
   (error) => {
     console.error(error);
-    void cleanupAfterRun().finally(() => process.exit(1));
+    void stop().finally(() => process.exit(1));
   },
 );

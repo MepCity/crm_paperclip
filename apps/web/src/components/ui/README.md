@@ -347,15 +347,11 @@ what the "no colour constants" rule forbids.
 | `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
 | `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
 | `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
-| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
-| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
 | `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
-| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
 | `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
 | `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
 | `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
-| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
-| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `3px` | record-detail.md › Details field pencil › antialiased ink top 1.5 px above label cap and ink bottom on the baseline; the margin lands on the icon box, whose ink starts ~0.9 px inside it, so the box offset carries 1.5 px more than the spec's ink figure | derived from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -382,7 +378,7 @@ what the "no colour constants" rule forbids.
 | `--size-form-caret-inset-end` | `12px` | record-detail.md › Lead Information rows › caret inset from outer right | from spec |
 | `--size-form-input-end` | `32px` | record-detail.md › Composite inputs › owner/currency end section width | from spec |
 | `--size-form-input-end-icon` | `16px` | record-detail.md › Composite inputs › end-section icon size | from spec |
-| `--size-form-currency-prefix-inset` | `12px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
+| `--size-form-currency-prefix-inset` | `11.5px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
 | `--size-form-currency-divider-gap` | `9.5px` | record-detail.md › Composite inputs › currency divider after prefix text | from spec |
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
@@ -401,6 +397,33 @@ what the "no colour constants" rule forbids.
 | `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
 | `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
 | `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
+| `--size-unsaved-dialog-stay-width` | `91px` | record-detail.md › Unsaved changes modal › Secondary action | from spec |
+| `--size-unsaved-dialog-leave-width` | `130.5px` | record-detail.md › Unsaved changes modal › Destructive action | from spec |
+| `--color-unsaved-dialog-stay-border` | `#d6d8e8` | record-detail.md › Unsaved changes modal › Secondary action › border | from spec |
+| `--color-unsaved-dialog-stay-start` | `#ffffff` | record-detail.md › Unsaved changes modal › Secondary action › gradient start | from spec |
+| `--color-unsaved-dialog-stay-end` | `#f1f0f7` | record-detail.md › Unsaved changes modal › Secondary action › gradient end | from spec |
+| `--color-unsaved-dialog-stay-text` | `#313949` | record-detail.md › Unsaved changes modal › Secondary action › label ink | from spec |
+| `--color-unsaved-dialog-leave-start` | `#ff4657` | record-detail.md › Unsaved changes modal › Destructive action › gradient start | from spec |
+| `--color-unsaved-dialog-leave-end` | `#e33041` | record-detail.md › Unsaved changes modal › Destructive action › gradient end | from spec |
+| `--color-unsaved-dialog-leave-text` | `#ffffff` | record-detail.md › Unsaved changes modal › Destructive action › label ink | from spec |
+| `--size-list-mass-update-button-width` | `113px` | list-views.md › Visual layout › Selection toolbar › Mass Update button | from spec |
+| `--size-mass-update-dialog-width` | `484px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
+| `--size-mass-update-dialog-height` | `207px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
+| `--size-mass-update-dialog-padding-inline` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › field selector inset | from spec |
+| `--size-mass-update-dialog-title-padding-inline-start` | `32.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title | from spec |
+| `--size-mass-update-dialog-title-line-height` | `18.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title block | from spec |
+| `--size-mass-update-dialog-padding-block-start` | `29.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title position | from spec |
+| `--size-mass-update-dialog-padding-block-end` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › bottom inset | from spec |
+| `--size-mass-update-dialog-title-fields-gap` | `32px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title to field row | from spec |
+| `--size-mass-update-dialog-fields-actions-gap` | `30px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › inputs to buttons | from spec |
+| `--size-mass-update-field-selector-width` | `122px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › field selector | from spec |
+| `--size-mass-update-value-width` | `285px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › value placeholder | from spec |
+| `--size-mass-update-field-gap` | `15px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › horizontal gap | from spec |
+| `--size-mass-update-cancel-width` | `74px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › Cancel button | from spec |
+| `--size-mass-update-update-width` | `76px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › Update button | from spec |
+| `--size-mass-update-actions-gap` | `11.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › button gap | from spec |
+| `--color-mass-update-value-disabled-fill` | `#f5f6f8` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › disabled value fill | from spec |
+| `--color-mass-update-value-border` | `#d9dce2` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › value border | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
@@ -423,6 +446,11 @@ what the "no colour constants" rule forbids.
 | `--size-popover-sort-field-dropdown-height` | `268px` | list-views.md › Sort By field dropdown › "380 × 268 px popover" | from spec |
 | `--size-popover-sort-field-dropdown-list-offset` | `46px` | list-views.md › Sort By field dropdown › panel "y 222–490" and "y 268–488" band above the list (268 − 222) | from spec |
 | `--size-popover-sort-field-dropdown-list-height` | `220px` | list-views.md › Sort By field dropdown › "scrollable list body 378 × 220 px" (the 378 px width is the panel minus both 1 px borders, so it is not a token) | from spec |
+| `--size-popover-alphabet-width` | `59px` | list-views.md › All alphabet dropdown › "Outer popover box approx 59 px wide" | from spec |
+| `--size-popover-alphabet-height` | `412px` | list-views.md › All alphabet dropdown › "412 px visible height" | from spec |
+| `--size-popover-alphabet-inset` | `6px` | list-views.md › All alphabet dropdown › "approx 6 px horizontal padding around option rows" | from spec |
+| `--size-popover-alphabet-row-width` | `45px` | list-views.md › All alphabet dropdown › "27 item rows 45 px wide and 23 px high" | from spec |
+| `--size-popover-alphabet-row-height` | `23px` | list-views.md › All alphabet dropdown › "27 item rows 45 px wide and 23 px high" | from spec |
 | `--size-detail-timeline-width` | `906px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "x 552–1458" | from spec |
 | `--size-detail-timeline-subtab-row-height` | `38.5px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › "subtab row is 38.5 px high including its 1 px bottom line" | from spec |
 | `--size-detail-timeline-subtab-inset` | `30px` | record-detail.md › Layout › Visual layout › Timeline › White timeline surface › active underline spans x 582–642; tab box starts x 30 relative to surface | from spec |
@@ -597,6 +625,9 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
 | `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-title-separator-gap` | `6px` | record-detail.md › Record header › hyphen and company ink gaps | from spec |
+| `--size-record-header-end` | `24px` | record-detail.md › Record header › Next chevron centred 35.5 px from header right edge | from spec |
+| `--radius-record-menu-row` | `5px` | record-detail.md › More Options menu › Rows and groups › highlighted row corners | from spec |
 | `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
 | `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
 | `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
@@ -845,6 +876,41 @@ value); the default keeps the shared record-control appearance. Rows are the cal
 filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
 Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list
 sizes come from the Sort By field dropdown tokens.
+
+## Alphabet filter primitive
+
+`AlphabetFilter({ label, value, onChange, className })` (`alphabet-filter.tsx`) is the
+single-choice alphabetical filter: a text control that shows the current choice — `All` while
+`value` is null, otherwise the letter — and opens a scrollable list of 27 options, `All` first
+and then A to Z, in that order. Choosing reports the letter, or null for `All`, and closes the
+list; Escape and an outside click close it without reporting. It loads no data and filters
+nothing itself: the caller owns the choice.
+
+`list-views.md` → Layout → Visual layout → **All alphabet dropdown** gives the panel geometry:
+the 59 × 412 px outer box (`--size-popover-alphabet-width`/`-height`), the approx 6 px padding
+around the rows (`--size-popover-alphabet-inset`), the 45 × 23 px rows
+(`--size-popover-alphabet-row-width`/`-height`) and the scroll — 27 rows do not fit the visible
+height. Border, surface and shadow come from the shared popover chrome, so the panel uses
+`--color-border` (`#CED0E1`), `--color-surface` and the existing soft shadow. The
+selected/hovered row fill is `--color-surface-selected`, selected text `--color-primary`,
+unselected text `--color-text`; the selected row carries no marker glyph, only `aria-selected`.
+
+**Interim** (not observed, not measured):
+
+- The closed control. It is the shared listbox trigger pattern with existing tokens only: the
+  Table column header text role (`--text-md`, `--font-weight-normal`, `--color-text-strong`),
+  `--size-list-filter-row-padding` inline padding, `--color-surface-hover`/`-pressed` fills and
+  an inset `--color-focus-ring` edge (the header cell clips its content). No width or height
+  token is invented for it.
+- Row ink position inside the 45 px row and the row corner radius are not measured: the text is
+  left-aligned on the row edge and the rows are square, matching the neighbouring value lists.
+- Row type has no row in `typography.md` → List and detail text roles. Nearest neighbour is the
+  list-value role already used for the operator and value lists (Status stage value,
+  `--text-sm` + `--font-weight-normal`); recorded as a deviation.
+
+`/dev/ui` does not demo it on its own; its consumers are the record table header
+(`components/records/list/record-table.tsx`) and the Leads list page, and
+`e2e/leads-list.spec.ts` measures the panel.
 
 ## Record detail extensions
 

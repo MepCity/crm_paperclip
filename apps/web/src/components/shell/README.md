@@ -4,9 +4,17 @@ The organization layout authorizes membership and reads the user and organizatio
 list on the server. It passes only display data to `AppShell`.
 
 Each page (including loading and error fallbacks) renders exactly one
-`<PageTitle title="Settings" />`. It registers the toolbar `h1` and updates the
-browser title on hydration and client navigation. Pages remain server components;
-the marker alone is a client component. Do not duplicate the title in content.
+`<PageTitle title={shellPageTitle.settings} />`. It registers the toolbar `h1`.
+Matching `export const metadata = shellPageMetadata(...)` on each `page.tsx` (and
+organization `not-found.tsx`) keeps the browser title correct on client
+navigations; `PageTitle` still sets `document.title` after paint for loading and
+error fallbacks that cannot export metadata. Pages remain server components; the
+marker alone is a client component. Do not duplicate the title in content.
+
+`not-found-message.tsx` is the one body sentence every in-shell not-found screen shows: the
+organization route fallback, the module list fallback and the record fallback. Each screen keeps
+its own wrapper, `PageTitle` and controls, and renders `<NotFoundMessage />` for the copy instead
+of retyping it.
 
 For our settings screens, add `<PageHeader description="…" actions={…} />` above
 the content. Both slots are optional. Module screens follow their own toolbar spec.

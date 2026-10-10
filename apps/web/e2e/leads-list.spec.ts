@@ -5,6 +5,11 @@ import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType } from "./support/typography";
 
+/** Decorative owner avatar in RecordChoice rows (aria-hidden); known open question on img-alt. */
+const OWNER_OPTION_AVATAR_A11Y_EXCLUDE = [
+  ".record-owner-row > span[aria-hidden].rounded-full",
+] as const;
+
 type ElementBox = NonNullable<
   Awaited<ReturnType<import("@playwright/test").Locator["boundingBox"]>>
 >;
@@ -60,6 +65,29 @@ function expectRange(value: number, min: number, max: number) {
 
 function px(value: string) {
   return Number.parseFloat(value);
+}
+
+async function listColumnIndex(
+  listPage: import("@playwright/test").Locator,
+  headerLabel: string,
+): Promise<number> {
+  const labels = listPage.locator('th[data-part="column"] [data-part="header-label"]');
+  const count = await labels.count();
+  for (let index = 0; index < count; index += 1) {
+    if ((await labels.nth(index).innerText()) === headerLabel) return index;
+  }
+  throw new Error(`Column not found: ${headerLabel}`);
+}
+
+async function rowColumnValue(
+  row: import("@playwright/test").Locator,
+  columnIndex: number,
+): Promise<string> {
+  return row
+    .locator("td[data-part=column]")
+    .nth(columnIndex)
+    .locator("[data-part=value]")
+    .innerText();
 }
 
 async function tokenLength(page: import("@playwright/test").Page, token: string) {
@@ -213,19 +241,47 @@ async function sizeToken(page: import("@playwright/test").Page, token: string): 
 }
 
 async function companyColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
-  const companyIndex = await page
-    .locator("thead [data-part=column]")
-    .evaluateAll((nodes) =>
-      nodes.findIndex((node) => node.textContent?.trim().includes("Company")),
-    );
-  if (companyIndex < 0) throw new Error("Company column not found.");
-  const rows = page.locator("tbody tr");
-  const rowCount = await rows.count();
-  const texts: string[] = [];
-  for (let i = 0; i < rowCount; i++) {
-    texts.push(await rows.nth(i).locator("[data-part=column]").nth(companyIndex).innerText());
+  return page.locator("table").evaluate((table) => {
+    const headers = Array.from(table.querySelectorAll("thead [data-part=column]"));
+    const index = headers.findIndex((node) => node.textContent?.trim().includes("Company"));
+    if (index < 0) throw new Error("Company column not found.");
+    return Array.from(table.querySelectorAll("tbody tr")).map((row) => {
+      const cell = row.querySelectorAll("[data-part=column]")[index] as HTMLElement | undefined;
+      return cell ? cell.innerText : "";
+    });
+  });
+}
+
+function isAscending(texts: readonly string[]): boolean {
+  const normalized = texts.map((text) => text.trim().toLowerCase());
+  for (let i = 1; i < normalized.length; i++) {
+    if ((normalized[i - 1] ?? "") > (normalized[i] ?? "")) return false;
   }
-  return texts;
+  return true;
+}
+
+/** Rows keep showing the previous data until the response renders; the 5 s default is tight here. */
+const RENDER_TIMEOUT_MS = 15_000;
+
+/**
+ * The `bulk` response for the request an address change triggers. Settle it before reading rows:
+ * the address changes while the previous page's rows are still on screen.
+ */
+function leadsBulkResponse(
+  page: import("@playwright/test").Page,
+  expectedParams: Readonly<Record<string, string>>,
+) {
+  return page.waitForResponse((response) => {
+    const request = parseCrmRequest(response.url(), response.request().method());
+    if (request?.method !== "POST" || !request.pathname.endsWith("/Leads/bulk")) return false;
+    return Object.entries(expectedParams).every(
+      ([name, value]) => request.searchParams.get(name) === value,
+    );
+  });
+}
+
+async function firstRowLinkText(page: import("@playwright/test").Page): Promise<string> {
+  return page.locator("table tbody tr").first().getByRole("link").first().innerText();
 }
 
 async function recordIdsInTable(page: import("@playwright/test").Page): Promise<string[]> {
@@ -243,6 +299,7 @@ async function recordIdsInTable(page: import("@playwright/test").Page): Promise<
 
 type UnfilteredLeadRow = {
   id: string;
+  Full_Name: string | null;
   Company: string | null;
   Lead_Source: string | null;
   Created_Time: string | null;
@@ -288,7 +345,9 @@ async function fetchUnfilteredLeadCatalog(
   const perPage = bulkParams.get("per_page") ?? "30";
   bulkParams.set("per_page", perPage);
   const existingFields = bulkParams.get("fields")?.split(",").filter(Boolean) ?? [];
-  const fields = [...new Set([...existingFields, "Company", "Lead_Source", "Created_Time"])];
+  const fields = [
+    ...new Set([...existingFields, "Full_Name", "Company", "Lead_Source", "Created_Time"]),
+  ];
   bulkParams.set("fields", fields.join(","));
   bulkParams.delete("page");
   return page.evaluate(
@@ -315,6 +374,7 @@ async function fetchUnfilteredLeadCatalog(
         const bulkJson = JSON.parse(text) as {
           data?: {
             id: string;
+            Full_Name?: string | null;
             Company?: string | null;
             Lead_Source?: string | null;
             Created_Time?: string | null;
@@ -324,6 +384,7 @@ async function fetchUnfilteredLeadCatalog(
         for (const row of bulkJson.data ?? []) {
           rows.push({
             id: row.id,
+            Full_Name: row.Full_Name ?? null,
             Company: row.Company ?? null,
             Lead_Source: row.Lead_Source ?? null,
             Created_Time: row.Created_Time ?? null,
@@ -377,6 +438,40 @@ async function selectPicklistValues(
   await page.keyboard.press("Escape");
 }
 
+const ALPHABET_CONTROL = "Filter by first letter";
+
+function alphabetControl(page: import("@playwright/test").Page) {
+  return page.getByRole("button", { name: ALPHABET_CONTROL });
+}
+
+/** Index of the data column that carries the alphabetical control, i.e. the link column. */
+async function alphabetColumnIndex(page: import("@playwright/test").Page): Promise<number> {
+  const index = await page
+    .locator("thead [data-part=column]")
+    .evaluateAll((nodes) =>
+      nodes.findIndex((node) => Boolean(node.querySelector("[data-part=alphabet]"))),
+    );
+  if (index < 0) throw new Error("No column header carries the alphabetical control.");
+  return index;
+}
+
+async function leadNameColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
+  const index = await alphabetColumnIndex(page);
+  const rows = page.locator("tbody tr");
+  const rowCount = await rows.count();
+  const texts: string[] = [];
+  for (let i = 0; i < rowCount; i++) {
+    texts.push((await rows.nth(i).locator("[data-part=column]").nth(index).innerText()).trim());
+  }
+  return texts;
+}
+
+async function pickLetter(page: import("@playwright/test").Page, letter: string) {
+  await alphabetControl(page).click();
+  await page.getByRole("option", { name: letter, exact: true }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+}
+
 test.describe("Leads list page", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1470, height: 835 });
@@ -398,28 +493,37 @@ test.describe("Leads list page", () => {
     const org = await createOrganization(page);
     await page.goto(`${moduleListDefaultPath(org.slug, LEADS_MODULE)}?per_page=10&page=1`);
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
-    const firstLink = page.locator("table tbody tr").first().getByRole("link").first();
-    const firstLinkOnPage1 = await firstLink.innerText();
+    const firstLinkOnPage1 = await firstRowLinkText(page);
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
+    const pageTwoBulk = leadsBulkResponse(page, { page: "2" });
     await next.click();
+    const pageTwoResponse = await pageTwoBulk;
+    expect(pageTwoResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const urlAfterNext = new URL(page.url());
     expect(urlAfterNext.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
     // The list keeps the previous page's rows on screen while the next page loads, so
     // the row count alone never proves the swap. Wait for the content, then read it.
-    await expect.poll(() => firstLink.innerText()).not.toBe(firstLinkOnPage1);
-    const firstLinkOnPage2 = await firstLink.innerText();
+    await expect
+      .poll(() => firstRowLinkText(page), { timeout: RENDER_TIMEOUT_MS })
+      .not.toBe(firstLinkOnPage1);
+    const firstLinkOnPage2 = await firstRowLinkText(page);
     expect(firstLinkOnPage2).not.toBe(firstLinkOnPage1);
+    const pageOneBulk = leadsBulkResponse(page, { page: "1" });
     await page.getByLabel("Previous").click();
+    const pageOneResponse = await pageOneBulk;
+    expect(pageOneResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
     const urlAfterPrevious = new URL(page.url());
     expect(urlAfterPrevious.searchParams.get("per_page")).toBe("10");
     await expect(page.locator("table tbody tr")).toHaveCount(10);
-    await expect.poll(() => firstLink.innerText()).toBe(firstLinkOnPage1);
-    const firstLinkBack = await firstLink.innerText();
+    await expect
+      .poll(() => firstRowLinkText(page), { timeout: RENDER_TIMEOUT_MS })
+      .toBe(firstLinkOnPage1);
+    const firstLinkBack = await firstRowLinkText(page);
     expect(firstLinkBack).toBe(firstLinkOnPage1);
   });
 
@@ -429,32 +533,27 @@ test.describe("Leads list page", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     const beforeSort = await companyColumnTexts(page);
-    const bulkUrls: string[] = [];
-    page.on("request", (request) => {
-      const parsed = parseCrmRequest(request.url(), request.method());
-      if (parsed?.method === "POST" && parsed.pathname.endsWith("/Leads/bulk")) {
-        bulkUrls.push(request.url());
-      }
-    });
     await page.getByRole("button", { name: "Sort", exact: true }).click();
     const sortBy = page.getByRole("button", { name: /Sort By/ });
     await sortBy.click();
     await page.getByRole("textbox", { name: "Search fields" }).fill("Company");
     await page.getByRole("option", { name: "Company", exact: true }).click();
+    const sortedBulk = leadsBulkResponse(page, { sort_by: "Company", sort_order: "asc" });
     await page.getByRole("button", { name: "Apply" }).click();
+    const sortedResponse = await sortedBulk;
+    expect(sortedResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_by")).toBe("Company");
     await expect.poll(() => new URL(page.url()).searchParams.get("sort_order")).toBe("asc");
-    const afterSort = await companyColumnTexts(page);
-    const normalized = afterSort.map((text) => text.trim().toLowerCase());
-    for (let i = 1; i < normalized.length; i++) {
-      const previous = normalized[i - 1] ?? "";
-      const current = normalized[i] ?? "";
-      expect(previous <= current).toBe(true);
-    }
-    expect(afterSort.join("|")).not.toBe(beforeSort.join("|"));
-    const lastBulk = bulkUrls.at(-1);
-    if (!lastBulk) throw new Error("Expected a bulk request after sort.");
-    const bulkParams = new URL(lastBulk).searchParams;
+    await expect
+      .poll(
+        async () => {
+          const afterSort = await companyColumnTexts(page);
+          return isAscending(afterSort) && afterSort.join("|") !== beforeSort.join("|");
+        },
+        { timeout: RENDER_TIMEOUT_MS },
+      )
+      .toBe(true);
+    const bulkParams = new URL(sortedResponse.url()).searchParams;
     expect(bulkParams.get("sort_by")).toBe("Company");
     expect(bulkParams.get("sort_order")).toBe("asc");
     // The applied field stays marked when the list is opened again.
@@ -859,16 +958,9 @@ test.describe("Leads list page", () => {
     const next = page.getByLabel("Next");
     await expect(next).toBeEnabled();
     // Navigation updates the URL before the asynchronous bulk request completes.
-    const pageTwoResponse = page.waitForResponse((response) => {
-      const request = parseCrmRequest(response.url(), response.request().method());
-      return (
-        request?.method === "POST" &&
-        request.pathname.endsWith("/Leads/bulk") &&
-        request.searchParams.get("page") === "2"
-      );
-    });
+    const pageTwoBulk = leadsBulkResponse(page, { page: "2" });
     await next.click();
-    const bulkResponse = await pageTwoResponse;
+    const bulkResponse = await pageTwoBulk;
     expect(bulkResponse.ok()).toBe(true);
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBe("2");
     const page2Request = parseCrmRequest(bulkResponse.url(), bulkResponse.request().method());
@@ -1044,6 +1136,150 @@ test.describe("Leads list page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("alphabetical filter keeps the rows that start with the chosen letter", async ({ page }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    const bulkSearchParams = await bulkSearchParamsPromise;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expect(alphabetControl(page)).toHaveText("All");
+    const baselineIds = await recordIdsInTable(page);
+    const initialTotal = Number(await page.locator("[data-part=total-value]").innerText());
+    const perPage = Number(bulkSearchParams.get("per_page") ?? "30");
+    const catalog = await fetchUnfilteredLeadCatalog(page, org.slug, bulkSearchParams);
+
+    let lastBulkBody: unknown;
+    let lastCountBody: unknown;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) lastBulkBody = request.postDataJSON();
+      if (parsed.pathname.endsWith("/Leads/actions/count")) lastCountBody = request.postDataJSON();
+    });
+
+    const startsWith = (letter: string) => (row: UnfilteredLeadRow) =>
+      (row.Full_Name ?? "").toLowerCase().startsWith(letter.toLowerCase());
+    const letterExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("L"));
+    expect(letterExpectations.total).toBeGreaterThan(0);
+    expect(letterExpectations.total).toBeLessThan(initialTotal);
+
+    const letterResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "L");
+    const [letterBulk, letterCount] = await letterResponses;
+    expect(letterBulk.ok()).toBe(true);
+    expect(letterCount.ok()).toBe(true);
+    await expectFilterResultsInDom(page, letterExpectations);
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        filters: {
+          field: { api_name: "Full_Name" },
+          comparator: "starts_with",
+          value: "L",
+        },
+      }),
+    );
+    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(await alphabetControl(page).innerText()).toBe("L");
+    const names = await leadNameColumnTexts(page);
+    expect(names.length).toBeGreaterThan(0);
+    for (const name of names) expect(name.startsWith("L")).toBe(true);
+
+    const otherExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("S"));
+    expect(otherExpectations.total).toBeGreaterThan(0);
+    const otherResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "S");
+    await otherResponses;
+    await expectFilterResultsInDom(page, otherExpectations);
+    const otherNames = await leadNameColumnTexts(page);
+    for (const name of otherNames) expect(name.startsWith("S")).toBe(true);
+    // Two different letters answer disjoint record sets on the first page.
+    const otherIds = await recordIdsInTable(page);
+    expect(otherIds.filter((id) => letterExpectations.ids.includes(id))).toEqual([]);
+
+    const emptyExpectations = firstPageFilterExpectations(catalog, perPage, startsWith("Z"));
+    expect(emptyExpectations).toEqual({ ids: [], total: 0 });
+    const emptyResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "Z");
+    await emptyResponses;
+    await expect(page.getByText("No Leads found.")).toBeVisible();
+    await expectFilterResultsInDom(page, emptyExpectations);
+
+    const allResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "All");
+    await allResponses;
+    await expect(alphabetControl(page)).toHaveText("All");
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(String(initialTotal));
+    await expectNoA11yViolations(page);
+  });
+
+  test("alphabetical dropdown matches its measured panel at 1470×835", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const boxWidth = await sizeToken(page, "--size-popover-alphabet-width");
+    const boxHeight = await sizeToken(page, "--size-popover-alphabet-height");
+    const rowWidth = await sizeToken(page, "--size-popover-alphabet-row-width");
+    const rowHeight = await sizeToken(page, "--size-popover-alphabet-row-height");
+    const rowInset = await sizeToken(page, "--size-popover-alphabet-inset");
+    const border = await tokenColor(page, "--color-border");
+    const surface = await tokenColor(page, "--color-surface");
+    const fill = await tokenColor(page, "--color-surface-selected");
+    const selectedInk = await tokenColor(page, "--color-primary");
+    const rowInk = await tokenColor(page, "--color-text");
+    const headerHeight = await sizeToken(page, "--size-list-header-height");
+    const columnWidth = await sizeToken(page, "--size-list-column-width");
+
+    const headerCell = page
+      .locator("thead [data-part=column]")
+      .nth(await alphabetColumnIndex(page));
+    const headerBox = requireBox(await headerCell.boundingBox(), "link column header");
+    expectEdge(headerBox.height, headerHeight);
+    expectEdge(headerBox.width, columnWidth);
+
+    await alphabetControl(page).click();
+    const panel = page.locator(".alphabet-panel");
+    await expect(panel).toBeVisible();
+    const panelBox = requireBox(await panel.boundingBox(), "alphabet panel");
+    expectEdge(panelBox.width, boxWidth);
+    expectEdge(panelBox.height, boxHeight);
+    await expect(panel).toHaveCSS("border-top-width", "1px");
+    await expect(panel).toHaveCSS("border-left-color", border);
+    await expect(panel).toHaveCSS("border-top-color", border);
+    await expect(panel).toHaveCSS("background-color", surface);
+
+    const rows = page.getByRole("option");
+    await expect(rows).toHaveCount(27);
+    const allRow = rows.nth(0);
+    const letterRow = rows.nth(1);
+    expect((await allRow.innerText()).trim()).toBe("All");
+    expect((await letterRow.innerText()).trim()).toBe("A");
+    const allBox = requireBox(await allRow.boundingBox(), "alphabet row");
+    expectEdge(allBox.width, rowWidth);
+    expectEdge(allBox.height, rowHeight);
+    // The measured box puts approx 6 px of padding between its edge and the rows.
+    expectEdge(allBox.x - panelBox.x, 1 + rowInset);
+
+    // Selected row: blue text on the pale fill, with no marker glyph.
+    await expect(allRow).toHaveCSS("color", selectedInk);
+    await expect(allRow).toHaveCSS("background-color", fill);
+    await expect(allRow.locator("svg, img, [aria-hidden]")).toHaveCount(0);
+    // Another row keeps the body ink until it is hovered, and no row draws a marker glyph.
+    await expect(letterRow).toHaveCSS("color", rowInk);
+    await expect(letterRow).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await letterRow.hover();
+    await expect(letterRow).toHaveCSS("background-color", fill);
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expectNoA11yViolations(page);
+  });
+
   test("selection bar and delete confirm match visual layout at 1470×835", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -1205,6 +1441,251 @@ test.describe("Leads list page", () => {
     expectEdge(footerBox.y + footerBox.height, 793);
     expect(Math.abs(footerBox.height - 33)).toBeLessThanOrEqual(1);
 
+    const pageBox = requireBox(await listPage.boundingBox(), "list page");
+    expectEdge(pageBox.y + pageBox.height, 807);
+    const cardBottomGap = pageBox.y + pageBox.height - (cardBox.y + cardBox.height);
+    expectEdge(cardBottomGap, 13);
+    const cardBottomGapToken = px(
+      await listPage.evaluate((element) =>
+        getComputedStyle(element).getPropertyValue("--list-card-bottom-gap"),
+      ),
+    );
+    expectEdge(cardBottomGap, cardBottomGapToken);
+
     expect(Math.abs(1470 - (cardBox.x + cardBox.width) - 16)).toBeLessThanOrEqual(1);
+  });
+
+  test("mass update and change owner flows update selected rows", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    const listPage = page.locator(".module-list-page");
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const leadSourceIndex = await listColumnIndex(listPage, "Lead Source");
+    const ownerIndex = await listColumnIndex(listPage, "Lead Owner");
+    const dataRows = listPage.locator("[data-part=row]");
+    const firstRow = dataRows.nth(0);
+    const secondRow = dataRows.nth(1);
+    const rows = page.getByRole("checkbox", { name: /Select / });
+    await rows.nth(1).check({ force: true });
+    await rows.nth(2).check({ force: true });
+    await page.getByRole("button", { name: "Mass Update" }).click();
+    const massDialog = page.getByRole("dialog", { name: "Mass Update" });
+    await expect(massDialog).toBeVisible();
+    await massDialog.getByRole("button", { name: "Field" }).click();
+    await page.getByRole("option", { name: "Lead Source" }).click();
+    await massDialog.getByRole("button", { name: "Lead Source" }).click();
+    await page.getByRole("option", { name: "Advertisement" }).click();
+    await expectNoA11yViolations(page, {
+      include: ["[data-mass-update-dialog]"],
+      exclude: [...OWNER_OPTION_AVATAR_A11Y_EXCLUDE],
+    });
+    await massDialog.getByRole("button", { name: "Update" }).click();
+    await expect(massDialog).toBeHidden();
+    await expect(listPage.locator("[data-selection-bar]")).toBeHidden();
+    expect(await rowColumnValue(firstRow, leadSourceIndex)).toBe("Advertisement");
+    expect(await rowColumnValue(secondRow, leadSourceIndex)).toBe("Advertisement");
+    await rows.nth(1).check({ force: true });
+    await rows.nth(2).check({ force: true });
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Change Owner" }).click();
+    const ownerDialog = page.locator("[data-change-owner-dialog]");
+    await expect(ownerDialog).toBeVisible();
+    await ownerDialog.getByRole("button", { name: "Lead Owner" }).click();
+    const ownerOptions = page.getByRole("option");
+    await expect(ownerOptions.first()).toBeVisible();
+    const ownerOptionCount = await ownerOptions.count();
+    const ownerOption = ownerOptions.nth(ownerOptionCount > 1 ? 1 : 0);
+    const newOwnerName = (await ownerOption.innerText()).split("\n")[0]?.trim() ?? "";
+    await ownerOption.click();
+    await page.keyboard.press("Escape");
+    await expectNoA11yViolations(page, {
+      include: ["[data-change-owner-dialog]"],
+      exclude: [...OWNER_OPTION_AVATAR_A11Y_EXCLUDE],
+    });
+    await ownerDialog.getByRole("button", { name: "Change Owner" }).click();
+    await expect(ownerDialog).toBeHidden();
+    expect(await rowColumnValue(firstRow, ownerIndex)).toBe(newOwnerName);
+    expect(await rowColumnValue(secondRow, ownerIndex)).toBe(newOwnerName);
+    await page.keyboard.press("Escape");
+    await expect(listPage.locator("[data-selection-bar]")).toBeHidden();
+  });
+
+  test("mass update cancel leaves data and selection unchanged", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    const listPage = page.locator(".module-list-page");
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const leadSourceIndex = await listColumnIndex(listPage, "Lead Source");
+    const dataRows = listPage.locator("[data-part=row]");
+    const firstRow = dataRows.nth(0);
+    const secondRow = dataRows.nth(1);
+    const beforeFirst = await rowColumnValue(firstRow, leadSourceIndex);
+    const beforeSecond = await rowColumnValue(secondRow, leadSourceIndex);
+    const rows = page.getByRole("checkbox", { name: /Select / });
+    await rows.nth(1).check({ force: true });
+    await rows.nth(2).check({ force: true });
+    await expect(listPage.locator("[data-selection-bar]")).toBeVisible();
+    await page.getByRole("button", { name: "Mass Update" }).click();
+    const massDialog = page.getByRole("dialog", { name: "Mass Update" });
+    await massDialog.getByRole("button", { name: "Field" }).click();
+    await page.getByRole("option", { name: "Lead Source" }).click();
+    await massDialog.getByRole("button", { name: "Lead Source" }).click();
+    await page.getByRole("option", { name: "Advertisement" }).click();
+    await massDialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(massDialog).toBeHidden();
+    await expect(listPage.locator("[data-selection-bar]")).toBeVisible();
+    expect(await rowColumnValue(firstRow, leadSourceIndex)).toBe(beforeFirst);
+    expect(await rowColumnValue(secondRow, leadSourceIndex)).toBe(beforeSecond);
+  });
+
+  test("mass update field validation grows the dialog and keeps actions inside", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    await page
+      .getByRole("checkbox", { name: /Select / })
+      .nth(1)
+      .check({ force: true });
+    await page.getByRole("button", { name: "Mass Update" }).click();
+    const massDialog = page.getByRole("dialog", { name: "Mass Update" });
+    const massPanel = page.locator(".mass-update-modal-panel");
+    await massDialog.getByRole("button", { name: "Field" }).click();
+    await page.getByRole("option", { name: "Company" }).click();
+    await massDialog.getByRole("button", { name: "Update" }).click();
+    await expect(massDialog.getByText("Company cannot be empty.")).toBeVisible();
+    const panelBox = requireBox(await massPanel.boundingBox(), "mass update panel");
+    const baseHeight = px(await tokenLength(page, "--size-mass-update-dialog-height"));
+    expect(panelBox.height).toBeGreaterThan(baseHeight);
+    const cancel = massPanel.getByRole("button", { name: "Cancel" });
+    const update = massPanel.getByRole("button", { name: "Update" });
+    const cancelBox = requireBox(await cancel.boundingBox(), "cancel");
+    const updateBox = requireBox(await update.boundingBox(), "update");
+    const padBottom = px(await tokenLength(page, "--size-mass-update-dialog-padding-block-end"));
+    const updateBottomGap = panelBox.y + panelBox.height - (updateBox.y + updateBox.height);
+    const cancelBottomGap = panelBox.y + panelBox.height - (cancelBox.y + cancelBox.height);
+    expect(updateBottomGap).toBeGreaterThanOrEqual(padBottom - 1);
+    expect(cancelBottomGap).toBeGreaterThanOrEqual(padBottom - 1);
+    expect(updateBox.y + updateBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    expect(cancelBox.y + cancelBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    const errorBox = requireBox(
+      await massDialog.getByText("Company cannot be empty.").boundingBox(),
+      "field error",
+    );
+    expect(errorBox.y + errorBox.height).toBeLessThan(cancelBox.y);
+  });
+
+  test("bulk dialog visual layout at 1470×835", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    const listPage = page.locator(".module-list-page");
+    await page
+      .getByRole("checkbox", { name: /Select / })
+      .nth(1)
+      .check({ force: true });
+    const massUpdateButton = listPage.getByRole("button", { name: "Mass Update" });
+    const massBtnBox = requireBox(await massUpdateButton.boundingBox(), "Mass Update");
+    const massBtnHeight = px(await tokenLength(page, "--size-button-ellipsis-height"));
+    const massBtnWidth = px(await tokenLength(page, "--size-list-mass-update-button-width"));
+    expectEdge(massBtnBox.height, massBtnHeight);
+    expectEdge(massBtnBox.width, massBtnWidth);
+    await massUpdateButton.click();
+    const massPanel = page.locator(".mass-update-modal-panel");
+    await expect(massPanel).toBeVisible();
+    const panelBox = requireBox(await massPanel.boundingBox(), "mass update panel");
+    expectEdge(panelBox.y, 0);
+    expectEdge(panelBox.width, px(await tokenLength(page, "--size-mass-update-dialog-width")));
+    expectEdge(panelBox.height, px(await tokenLength(page, "--size-mass-update-dialog-height")));
+    const title = massPanel.getByRole("heading", { name: "Mass Update" });
+    const fieldTrigger = massPanel.getByRole("button", { name: "Field" });
+    const placeholder = massPanel.locator("[data-part=value-placeholder]");
+    const cancel = massPanel.getByRole("button", { name: "Cancel" });
+    const update = massPanel.getByRole("button", { name: "Update" });
+    const titleBox = requireBox(await title.boundingBox(), "mass title");
+    const fieldBox = requireBox(await fieldTrigger.boundingBox(), "field selector");
+    const placeholderBox = requireBox(await placeholder.boundingBox(), "value placeholder");
+    const cancelBox = requireBox(await cancel.boundingBox(), "cancel");
+    const updateBox = requireBox(await update.boundingBox(), "update");
+    const padInline = px(await tokenLength(page, "--size-mass-update-dialog-padding-inline"));
+    const titlePadInline = px(
+      await tokenLength(page, "--size-mass-update-dialog-title-padding-inline-start"),
+    );
+    const padTop = px(await tokenLength(page, "--size-mass-update-dialog-padding-block-start"));
+    const padBottom = px(await tokenLength(page, "--size-mass-update-dialog-padding-block-end"));
+    const titleFieldsGap = px(
+      await tokenLength(page, "--size-mass-update-dialog-title-fields-gap"),
+    );
+    const fieldsActionsGap = px(
+      await tokenLength(page, "--size-mass-update-dialog-fields-actions-gap"),
+    );
+    const fieldGap = px(await tokenLength(page, "--size-mass-update-field-gap"));
+    const fieldWidth = px(await tokenLength(page, "--size-mass-update-field-selector-width"));
+    const valueWidth = px(await tokenLength(page, "--size-mass-update-value-width"));
+    const cancelWidth = px(await tokenLength(page, "--size-mass-update-cancel-width"));
+    const updateWidth = px(await tokenLength(page, "--size-mass-update-update-width"));
+    const actionsGap = px(await tokenLength(page, "--size-mass-update-actions-gap"));
+    const inputHeight = px(await tokenLength(page, "--size-form-input-height"));
+    const buttonHeight = px(await tokenLength(page, "--size-button-ellipsis-height"));
+    const actionCornerRadius = px(await tokenLength(page, "--radius-create-menu"));
+    expectEdge(titleBox.x - panelBox.x, titlePadInline);
+    expectEdge(titleBox.y - panelBox.y, padTop);
+    expectEdge(fieldBox.y - (titleBox.y + titleBox.height), titleFieldsGap);
+    expectEdge(fieldBox.x - panelBox.x, padInline);
+    expectEdge(fieldBox.width, fieldWidth);
+    expectEdge(fieldBox.height, inputHeight);
+    expectEdge(placeholderBox.x - (fieldBox.x + fieldBox.width), fieldGap);
+    expectEdge(placeholderBox.width, valueWidth);
+    expectEdge(placeholderBox.height, inputHeight);
+    expectEdge(panelBox.x + panelBox.width - (placeholderBox.x + placeholderBox.width), padInline);
+    expectEdge(cancelBox.y - (fieldBox.y + fieldBox.height), fieldsActionsGap);
+    expectEdge(cancelBox.width, cancelWidth);
+    expectEdge(updateBox.width, updateWidth);
+    expectEdge(cancelBox.height, buttonHeight);
+    expectEdge(updateBox.height, buttonHeight);
+    expectEdge(updateBox.x - (cancelBox.x + cancelBox.width), actionsGap);
+    expectEdge(panelBox.x + panelBox.width - (updateBox.x + updateBox.width), padInline);
+    expectEdge(panelBox.y + panelBox.height - (updateBox.y + updateBox.height), padBottom);
+    await expect(cancel).toHaveCSS("border-radius", `${actionCornerRadius}px`);
+    await expect(update).toHaveCSS("border-radius", `${actionCornerRadius}px`);
+    await cancel.click();
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Change Owner" }).click();
+    const ownerDialog = page.locator("[data-change-owner-dialog]");
+    const ownerPanel = ownerDialog.locator("xpath=..");
+    const ownerPanelBox = requireBox(await ownerPanel.boundingBox(), "change owner panel");
+    expectEdge(ownerPanelBox.width, px(await tokenLength(page, "--size-dialog-width")));
+    const cornerRadius = px(await tokenLength(page, "--radius-create-menu"));
+    await expect(ownerPanel).toHaveCSS("border-radius", `${cornerRadius}px`);
+    const ownerTitle = ownerDialog.getByRole("heading", { name: "Change Owner" });
+    const ownerTitleBox = requireBox(await ownerTitle.boundingBox(), "change owner title");
+    const paddingTop = px(await tokenLength(page, "--size-confirm-dialog-padding-block-start"));
+    const paddingInline = px(await tokenLength(page, "--size-confirm-dialog-padding-inline"));
+    const paddingBottom = px(await tokenLength(page, "--size-confirm-dialog-padding-block-end"));
+    expectEdge(ownerTitleBox.y - ownerPanelBox.y, paddingTop);
+    expectEdge(ownerTitleBox.x - ownerPanelBox.x, paddingInline);
+    const ownerCancel = ownerDialog.getByRole("button", { name: "Cancel" });
+    const ownerConfirm = ownerDialog.getByRole("button", { name: "Change Owner" });
+    const ownerCancelBox = requireBox(await ownerCancel.boundingBox(), "owner cancel");
+    const ownerConfirmBox = requireBox(await ownerConfirm.boundingBox(), "owner confirm");
+    expectEdge(ownerCancelBox.height, buttonHeight);
+    expectEdge(ownerConfirmBox.height, buttonHeight);
+    expectEdge(
+      ownerConfirmBox.x - (ownerCancelBox.x + ownerCancelBox.width),
+      px(await tokenLength(page, "--size-confirm-dialog-actions-gap")),
+    );
+    expectEdge(
+      ownerPanelBox.y + ownerPanelBox.height - (ownerConfirmBox.y + ownerConfirmBox.height),
+      paddingBottom,
+    );
+    await expect(ownerCancel).toHaveCSS("border-radius", `${cornerRadius}px`);
+    await expect(ownerConfirm).toHaveCSS("border-radius", `${cornerRadius}px`);
   });
 });
