@@ -283,6 +283,40 @@ async function selectPicklistValues(
   await page.keyboard.press("Escape");
 }
 
+const ALPHABET_CONTROL = "Filter by first letter";
+
+function alphabetControl(page: import("@playwright/test").Page) {
+  return page.getByRole("button", { name: ALPHABET_CONTROL });
+}
+
+/** Index of the data column that carries the alphabetical control, i.e. the link column. */
+async function alphabetColumnIndex(page: import("@playwright/test").Page): Promise<number> {
+  const index = await page
+    .locator("thead [data-part=column]")
+    .evaluateAll((nodes) =>
+      nodes.findIndex((node) => Boolean(node.querySelector("[data-part=alphabet]"))),
+    );
+  if (index < 0) throw new Error("No column header carries the alphabetical control.");
+  return index;
+}
+
+async function leadNameColumnTexts(page: import("@playwright/test").Page): Promise<string[]> {
+  const index = await alphabetColumnIndex(page);
+  const rows = page.locator("tbody tr");
+  const rowCount = await rows.count();
+  const texts: string[] = [];
+  for (let i = 0; i < rowCount; i++) {
+    texts.push((await rows.nth(i).locator("[data-part=column]").nth(index).innerText()).trim());
+  }
+  return texts;
+}
+
+async function pickLetter(page: import("@playwright/test").Page, letter: string) {
+  await alphabetControl(page).click();
+  await page.getByRole("option", { name: letter, exact: true }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+}
+
 test.describe("Leads list page", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1470, height: 835 });
@@ -924,6 +958,138 @@ test.describe("Leads list page", () => {
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+    await expectNoA11yViolations(page);
+  });
+
+  test("alphabetical filter keeps the rows that start with the chosen letter", async ({ page }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expect(alphabetControl(page)).toHaveText("All");
+    const initialTotal = Number(await page.locator("[data-part=total-value]").innerText());
+    const beforeIds = await recordIdsInTable(page);
+
+    let lastBulkBody: unknown;
+    let lastCountBody: unknown;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) lastBulkBody = request.postDataJSON();
+      if (parsed.pathname.endsWith("/Leads/actions/count")) lastCountBody = request.postDataJSON();
+    });
+
+    const letterResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "L");
+    const [letterBulk, letterCount] = await letterResponses;
+    await expectFilterResultsMatchResponses(page, letterBulk, letterCount);
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        filters: {
+          field: { api_name: "Full_Name" },
+          comparator: "starts_with",
+          value: "L",
+        },
+      }),
+    );
+    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(await alphabetControl(page).innerText()).toBe("L");
+    const names = await leadNameColumnTexts(page);
+    expect(names.length).toBeGreaterThan(0);
+    for (const name of names) expect(name.startsWith("L")).toBe(true);
+    const letterTotal = Number(await page.locator("[data-part=total-value]").innerText());
+    expect(letterTotal).toBeLessThan(initialTotal);
+    const letterIds = await recordIdsInTable(page);
+
+    const otherResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "S");
+    await otherResponses;
+    const otherNames = await leadNameColumnTexts(page);
+    expect(otherNames.length).toBeGreaterThan(0);
+    for (const name of otherNames) expect(name.startsWith("S")).toBe(true);
+    // Two different letters answer disjoint record sets on the first page.
+    const otherIds = await recordIdsInTable(page);
+    expect(otherIds.filter((id) => letterIds.includes(id))).toEqual([]);
+
+    const emptyResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "Z");
+    await emptyResponses;
+    await expect(page.getByText("No Leads found.")).toBeVisible();
+    await expect(page.locator("[data-part=total-value]")).toHaveText("0");
+    await expect.poll(async () => recordIdsInTable(page)).toEqual([]);
+
+    const allResponses = waitForFilteredListResponses(page);
+    await pickLetter(page, "All");
+    await allResponses;
+    await expect(alphabetControl(page)).toHaveText("All");
+    await expect(page.locator("[data-part=total-value]")).toHaveText(String(initialTotal));
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(beforeIds);
+    await expectNoA11yViolations(page);
+  });
+
+  test("alphabetical dropdown matches its measured panel at 1470×835", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    const boxWidth = await sizeToken(page, "--size-popover-alphabet-width");
+    const boxHeight = await sizeToken(page, "--size-popover-alphabet-height");
+    const rowWidth = await sizeToken(page, "--size-popover-alphabet-row-width");
+    const rowHeight = await sizeToken(page, "--size-popover-alphabet-row-height");
+    const rowInset = await sizeToken(page, "--size-popover-alphabet-inset");
+    const border = await tokenColor(page, "--color-border");
+    const surface = await tokenColor(page, "--color-surface");
+    const fill = await tokenColor(page, "--color-surface-selected");
+    const selectedInk = await tokenColor(page, "--color-primary");
+    const rowInk = await tokenColor(page, "--color-text");
+    const headerHeight = await sizeToken(page, "--size-list-header-height");
+    const columnWidth = await sizeToken(page, "--size-list-column-width");
+
+    const headerCell = page
+      .locator("thead [data-part=column]")
+      .nth(await alphabetColumnIndex(page));
+    const headerBox = requireBox(await headerCell.boundingBox(), "link column header");
+    expectEdge(headerBox.height, headerHeight);
+    expectEdge(headerBox.width, columnWidth);
+
+    await alphabetControl(page).click();
+    const panel = page.locator(".alphabet-panel");
+    await expect(panel).toBeVisible();
+    const panelBox = requireBox(await panel.boundingBox(), "alphabet panel");
+    expectEdge(panelBox.width, boxWidth);
+    expectEdge(panelBox.height, boxHeight);
+    await expect(panel).toHaveCSS("border-top-width", "1px");
+    await expect(panel).toHaveCSS("border-left-color", border);
+    await expect(panel).toHaveCSS("border-top-color", border);
+    await expect(panel).toHaveCSS("background-color", surface);
+
+    const rows = page.getByRole("option");
+    await expect(rows).toHaveCount(27);
+    const allRow = rows.nth(0);
+    const letterRow = rows.nth(1);
+    expect((await allRow.innerText()).trim()).toBe("All");
+    expect((await letterRow.innerText()).trim()).toBe("A");
+    const allBox = requireBox(await allRow.boundingBox(), "alphabet row");
+    expectEdge(allBox.width, rowWidth);
+    expectEdge(allBox.height, rowHeight);
+    // The measured box puts approx 6 px of padding between its edge and the rows.
+    expectEdge(allBox.x - panelBox.x, 1 + rowInset);
+
+    // Selected row: blue text on the pale fill, with no marker glyph.
+    await expect(allRow).toHaveCSS("color", selectedInk);
+    await expect(allRow).toHaveCSS("background-color", fill);
+    await expect(allRow.locator("svg, img, [aria-hidden]")).toHaveCount(0);
+    // Another row keeps the body ink until it is hovered, and no row draws a marker glyph.
+    await expect(letterRow).toHaveCSS("color", rowInk);
+    await expect(letterRow).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await letterRow.hover();
+    await expect(letterRow).toHaveCSS("background-color", fill);
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("listbox")).toHaveCount(0);
     await expectNoA11yViolations(page);
   });
 
