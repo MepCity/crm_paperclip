@@ -113,7 +113,6 @@ describe("LeadRecordScreen", () => {
       page: 1,
       perPage: 30,
       recordIds: page.records.map((row) => row.id),
-      listQuery: { viewId: view.id, page: 1, perPage: 30 },
     });
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
@@ -132,6 +131,29 @@ describe("LeadRecordScreen", () => {
     expect(screen.getByLabelText("Business card")).toBeTruthy();
     expect(screen.getByText("Lead Name")).toBeTruthy();
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("does not fetch view summaries when list context is present", async () => {
+    const service = createService();
+    const listViewSummaries = vi.spyOn(service, "listViewSummaries");
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected list rows.");
+    writeRecordListContext(ctx.orgSlug, {
+      module: "Leads",
+      viewId: view.id,
+      listHref: paths.defaultList(ctx.orgSlug, "Leads"),
+      page: 1,
+      perPage: 30,
+      recordIds: page.records.map((row) => row.id),
+    });
+    listViewSummaries.mockClear();
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+    expect(listViewSummaries).not.toHaveBeenCalled();
   });
 
   it("shows the status ribbon and updates Lead_Status from the stage menu", async () => {
@@ -161,7 +183,7 @@ describe("LeadRecordScreen", () => {
     expect(updateSpy).not.toHaveBeenCalled();
   });
 
-  it("keeps the new Lead_Status visible while the record refetch is in flight", async () => {
+  it("shows the new Lead_Status on ribbon, business card, and details without refetching the record", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
@@ -172,42 +194,18 @@ describe("LeadRecordScreen", () => {
     const current = record.fields.Lead_Status;
     if (typeof current !== "string") throw new Error("Expected string status.");
     const nextStatus = current === "Contacted" ? "Pre-Qualified" : "Contacted";
-
-    const pendingGet: { release: (() => void) | null } = { release: null };
-    let blockNextGet = false;
-    let deferredRefetchDone = false;
-    const getRecord = service.get.bind(service);
-    vi.spyOn(service, "get").mockImplementation(async (module, id) => {
-      const data = await getRecord(module, id);
-      if (blockNextGet) {
-        blockNextGet = false;
-        await new Promise<void>((resolve) => {
-          pendingGet.release = resolve;
-        });
-        deferredRefetchDone = true;
-      }
-      return data;
-    });
-
+    const getSpy = vi.spyOn(service, "get");
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
-
-    blockNextGet = true;
+    const getCallsAfterLoad = getSpy.mock.calls.length;
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Choose lead status" }));
     await user.click(screen.getByRole("menuitemradio", { name: nextStatus }));
-
     await waitFor(() => expectLeadStatusEverywhere(nextStatus));
-    if (!pendingGet.release) throw new Error("Expected record refetch to be blocked.");
-    expectLeadStatusEverywhere(nextStatus);
-
-    if (!pendingGet.release) throw new Error("Expected record refetch to be blocked.");
-    pendingGet.release();
-    await waitFor(() => expect(deferredRefetchDone).toBe(true));
-    await waitFor(() => expectLeadStatusEverywhere(nextStatus));
+    expect(getSpy.mock.calls.length).toBe(getCallsAfterLoad);
   });
 
-  it("keeps the latest Lead_Status when a stale refetch resolves after reverting the stage", async () => {
+  it("ends on the latest Lead_Status after A then B then A without extra record reads", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
@@ -218,39 +216,20 @@ describe("LeadRecordScreen", () => {
     const originalStatus = record.fields.Lead_Status;
     if (typeof originalStatus !== "string") throw new Error("Expected string status.");
     const interimStatus = originalStatus === "Contacted" ? "Pre-Qualified" : "Contacted";
-
-    const staleRelease: { run: (() => void) | null } = { run: null };
-    let deferStaleSnapshot = false;
-    const getRecord = service.get.bind(service);
-    vi.spyOn(service, "get").mockImplementation(async (module, id) => {
-      const data = await getRecord(module, id);
-      if (deferStaleSnapshot) {
-        deferStaleSnapshot = false;
-        const snapshot = data;
-        await new Promise<void>((resolve) => {
-          staleRelease.run = () => resolve();
-        });
-        return snapshot;
-      }
-      return data;
-    });
-
+    const updateSpy = vi.spyOn(service, "update");
+    const getSpy = vi.spyOn(service, "get");
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
-
+    const getCallsAfterLoad = getSpy.mock.calls.length;
     const user = userEvent.setup();
-    deferStaleSnapshot = true;
     await user.click(screen.getByRole("button", { name: "Choose lead status" }));
     await user.click(screen.getByRole("menuitemradio", { name: interimStatus }));
     await waitFor(() => expectLeadStatusEverywhere(interimStatus));
-    if (!staleRelease.run) throw new Error("Expected stale refetch to be deferred.");
-
     await user.click(screen.getByRole("button", { name: "Choose lead status" }));
     await user.click(screen.getByRole("menuitemradio", { name: originalStatus }));
     await waitFor(() => expectLeadStatusEverywhere(originalStatus));
-
-    staleRelease.run();
-    await waitFor(() => expectLeadStatusEverywhere(originalStatus));
+    expect(updateSpy).toHaveBeenCalledTimes(2);
+    expect(getSpy.mock.calls.length).toBe(getCallsAfterLoad);
   });
 
   it("reverts the ribbon and shows an error when the update fails", async () => {

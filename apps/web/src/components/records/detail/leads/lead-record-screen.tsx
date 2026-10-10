@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@crm/core/errors";
 import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
@@ -14,6 +14,7 @@ import { useModule, useRecord, useRecordList, useUsers, useViews } from "@/lib/a
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
+import { resolveLeadsDetailBackHref } from "@/lib/records/leads-detail-back-href";
 import {
   buildLeadsBusinessCardFields,
   buildLeadsDetailSections,
@@ -74,15 +75,13 @@ export function LeadRecordScreen({
 }: LeadRecordScreenProps) {
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
-  const [awaitingServerValue, setAwaitingServerValue] = useState<string | null | undefined>(
-    undefined,
-  );
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const listContext = useLeadsListContext(orgSlug);
+  const viewsQueryEnabled = listContext === null;
   const moduleQuery = useModule(LEADS_MODULE);
   const recordQuery = useRecord(LEADS_MODULE, recordId);
   const usersQuery = useUsers();
-  const viewsQuery = useViews(LEADS_MODULE);
+  const viewsQuery = useViews(LEADS_MODULE, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -114,21 +113,11 @@ export function LeadRecordScreen({
     ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
     : undefined;
 
-  useEffect(() => {
-    if (awaitingServerValue === undefined) return;
-    if (serverLeadStatus === undefined) return;
-    if (recordQuery.isFetching) return;
-    if (serverLeadStatus !== awaitingServerValue) return;
-    if (statusOverride !== undefined && statusOverride !== awaitingServerValue) return;
-    setAwaitingServerValue(undefined);
-    setStatusOverride(undefined);
-  }, [awaitingServerValue, recordQuery.isFetching, serverLeadStatus, statusOverride]);
-
   const loading =
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
     usersQuery.isLoading ||
-    viewsQuery.isLoading ||
+    (viewsQueryEnabled && viewsQuery.isLoading) ||
     (!listContext && fallbackListQuery !== null && fallbackList.isLoading && !fallbackList.data);
 
   if (loading) return <LeadRecordLoadingShell />;
@@ -139,7 +128,7 @@ export function LeadRecordScreen({
   }
   if (moduleQuery.isError) throw moduleQuery.error;
   if (usersQuery.isError) throw usersQuery.error;
-  if (viewsQuery.isError) throw viewsQuery.error;
+  if (viewsQueryEnabled && viewsQuery.isError) throw viewsQuery.error;
   if (!listContext && fallbackListQuery && fallbackList.isError) throw fallbackList.error;
 
   const module = moduleQuery.data;
@@ -148,11 +137,10 @@ export function LeadRecordScreen({
 
   const orderedIds =
     listContext?.recordIds ?? fallbackList.data?.records.map((row) => row.id) ?? [];
-  const backHref =
-    listContext?.listHref ??
-    (fallbackViewId
-      ? paths.defaultList(orgSlug, LEADS_MODULE)
-      : paths.defaultList(orgSlug, LEADS_MODULE));
+  const backHref = resolveLeadsDetailBackHref(
+    listContext,
+    paths.defaultList(orgSlug, LEADS_MODULE),
+  );
 
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 
@@ -177,7 +165,6 @@ export function LeadRecordScreen({
           field={statusField}
           value={displayStatus}
           onValueChange={setStatusOverride}
-          onWriteSuccess={setAwaitingServerValue}
         />
       ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
