@@ -1,13 +1,21 @@
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import type { ClientRecordService } from "@/lib/api/client/http-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
-import { writeRecordListContext } from "@/lib/records/record-list-context";
+import { recordListContextKey, writeRecordListContext } from "@/lib/records/record-list-context";
 import { type LeadRecordPaths, LeadRecordScreen } from "./lead-record-screen";
+
+const navigation = vi.hoisted(() => ({
+  push: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => navigation,
+}));
 
 const ctx = {
   orgId: "lead-screen-org",
@@ -92,6 +100,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   sessionStorage.clear();
+  navigation.push.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -252,6 +261,133 @@ describe("LeadRecordScreen", () => {
       expect(screen.getByRole("alert").textContent).toBe("Unable to update lead status."),
     );
     expect(screen.getAllByText(current).length).toBeGreaterThan(0);
+  });
+
+  it("deletes the record from More Options and returns to the list context href", async () => {
+    const deleteCtx = {
+      ...ctx,
+      orgId: "lead-screen-delete-org",
+      orgSlug: "lead-screen-delete-org",
+    };
+    const deletePaths: LeadRecordPaths = {
+      defaultList: (orgSlug, module) => `/crm/${orgSlug}/tab/${module}/list`,
+      record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
+      edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
+    };
+    const records = createFixtureRecordService(deleteCtx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: deleteCtx.userId, name: "Screen User", email: "screen@example.test" },
+      ],
+    });
+    const deleteSpy = vi.spyOn(service, "delete");
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected a list row.");
+    const listHref = `${deletePaths.defaultList(deleteCtx.orgSlug, "Leads")}?page=2`;
+    writeRecordListContext(deleteCtx.orgSlug, {
+      module: "Leads",
+      viewId: view.id,
+      listHref,
+      page: 2,
+      perPage: 30,
+      recordIds: page.records.map((row) => row.id),
+    });
+    function DeleteWrapper({ children }: { children: ReactNode }) {
+      return (
+        <ApiProvider orgSlug={deleteCtx.orgSlug} service={service}>
+          {children}
+        </ApiProvider>
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <div>
+        <LeadRecordScreen
+          orgSlug={deleteCtx.orgSlug}
+          recordId={record.id}
+          paths={deletePaths}
+          now={new Date("2026-06-01T12:00:00Z")}
+        />
+      </div>,
+      { wrapper: DeleteWrapper },
+    );
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+    const more = screen.getByRole("button", { name: "More Options" });
+    await user.click(more);
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Delete" })).toBeTruthy());
+    await user.keyboard("{ArrowDown}{Enter}");
+    const dialog = await waitFor(() => screen.getByRole("alertdialog"));
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(deleteSpy).toHaveBeenCalledWith("Leads", [record.id]);
+    });
+    await waitFor(() => {
+      expect(navigation.push).toHaveBeenCalledWith(listHref);
+    });
+    const raw = sessionStorage.getItem(recordListContextKey(deleteCtx.orgSlug, "Leads"));
+    expect(raw).toBeTruthy();
+    const parsed = JSON.parse(raw ?? "") as { recordIds: string[] };
+    expect(parsed.recordIds).not.toContain(record.id);
+  });
+
+  it("keeps the delete dialog open when delete fails", async () => {
+    const deleteCtx = {
+      ...ctx,
+      orgId: "lead-screen-delete-fail-org",
+      orgSlug: "lead-screen-delete-fail-org",
+    };
+    const deletePaths: LeadRecordPaths = {
+      defaultList: (orgSlug, module) => `/crm/${orgSlug}/tab/${module}/list`,
+      record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
+      edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
+    };
+    const records = createFixtureRecordService(deleteCtx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [
+        { userId: deleteCtx.userId, name: "Screen User", email: "screen@example.test" },
+      ],
+    });
+    vi.spyOn(service, "delete").mockRejectedValueOnce(new Error("Server error"));
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected a list row.");
+    function DeleteWrapper({ children }: { children: ReactNode }) {
+      return (
+        <ApiProvider orgSlug={deleteCtx.orgSlug} service={service}>
+          {children}
+        </ApiProvider>
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <div>
+        <LeadRecordScreen
+          orgSlug={deleteCtx.orgSlug}
+          recordId={record.id}
+          paths={deletePaths}
+          now={new Date("2026-06-01T12:00:00Z")}
+        />
+      </div>,
+      { wrapper: DeleteWrapper },
+    );
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+    const more = screen.getByRole("button", { name: "More Options" });
+    await user.click(more);
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Delete" })).toBeTruthy());
+    await user.keyboard("{ArrowDown}{Enter}");
+    const dialog = await waitFor(() => screen.getByRole("alertdialog"));
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alertdialog")).toBeTruthy();
+      expect(within(dialog).getByText("Server error")).toBeTruthy();
+    });
   });
 
   it("shows not found for a missing record", async () => {
