@@ -59,6 +59,19 @@ function sameValue(left: FieldValue, right: FieldValue): boolean {
   );
 }
 
+export function formValuesEqual(
+  fields: readonly FieldDefinition[],
+  left: RecordInput,
+  right: RecordInput,
+): boolean {
+  return fields.every((field) =>
+    sameValue(
+      normalizeFormValue(field, left[field.apiName]),
+      normalizeFormValue(field, right[field.apiName]),
+    ),
+  );
+}
+
 export function formPayload(
   fields: readonly FieldDefinition[],
   values: RecordInput,
