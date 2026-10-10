@@ -49,9 +49,9 @@ const expectations = {
       ["not_equal", "is not", "users"],
       ["is_empty", "is empty", "none"],
       ["is_not_empty", "is not empty", "none"],
-      ["belongs_to_role", "belongs to Role", "choices"],
-      ["not_belongs_to_role", "does not belong to Role", "choices"],
-      ["belongs_to_group", "belongs to Group", "choices"],
+      ["belongs_to_role", "belongs to Role", "role_search"],
+      ["not_belongs_to_role", "does not belong to Role", "role_search"],
+      ["belongs_to_group", "belongs to Group", "role_search"],
     ],
   },
   datetime: {
@@ -88,6 +88,23 @@ const expectations = {
       ["is_not_empty", "is not empty", "none"],
     ],
   },
+  tag: {
+    defaultOperator: "equal",
+    operators: [
+      ["equal", "is", "tag"],
+      ["not_equal", "is not", "tag"],
+      ["is_empty", "is empty", "none"],
+      ["is_not_empty", "is not empty", "none"],
+    ],
+  },
+  multilookup: {
+    defaultOperator: "equal",
+    operators: text.map((row) => (row[2] === "text" ? [row[0], row[1], "connected_to"] : row)),
+  },
+  compound_address: {
+    defaultOperator: "is_nearby",
+    operators: [["is_nearby", "is nearby", "address_nearby"]],
+  },
 };
 for (const [type, expected] of Object.entries(expectations)) {
   test(`${type}: exact order, labels, IDs, default and value control`, () => {
@@ -112,6 +129,9 @@ test("unobserved field types have no editor catalog", () => {
     "boolean",
     "ownerlookup",
     "datetime",
+    "tag",
+    "multilookup",
+    "compound_address",
     "integer",
   ]);
 });

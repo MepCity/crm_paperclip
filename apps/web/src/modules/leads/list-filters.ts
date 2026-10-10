@@ -43,7 +43,16 @@ function disabledItems(labels: readonly string[], prefix: string) {
   }));
 }
 
-function filterFieldType(dataType: FieldDataType): FilterFieldType | null {
+function filterFieldTypeForLabel(label: string): FilterFieldType | null {
+  if (label === "Tag") return "tag";
+  if (label === "Address") return "compound_address";
+  if (label === "Connected To") return "multilookup";
+  return null;
+}
+
+function filterFieldType(label: string, dataType: FieldDataType): FilterFieldType | null {
+  const byLabel = filterFieldTypeForLabel(label);
+  if (byLabel) return byLabel;
   if (disabledDataTypes.has(dataType)) return null;
   if (dataType in filterOperators) return dataType as FilterFieldType;
   return null;
@@ -51,10 +60,11 @@ function filterFieldType(dataType: FieldDataType): FilterFieldType | null {
 
 function editorForField(
   field: FieldDefinition,
+  label: string,
   users: readonly { userId: string; name: string; email?: string }[],
   currencyCode: string,
 ): FilterEditorDefinition | undefined {
-  const fieldType = filterFieldType(field.dataType);
+  const fieldType = filterFieldType(label, field.dataType);
   if (!fieldType) return undefined;
   const editor: FilterEditorDefinition = { fieldType };
   if (fieldType === "picklist" && field.picklist) {
@@ -94,14 +104,11 @@ export function buildLeadsFilterGroups(input: BuildLeadsFilterGroupsInput): read
   }
 
   const fieldItems = leadsFieldFilterLabels.map((label, index) => {
-    if (label === "Tag") {
-      return { id: `field-${index}`, label, disabled: true };
-    }
     const field = resolveField(label);
     if (!field) {
       return { id: `field-${index}`, label, disabled: true };
     }
-    const editor = editorForField(field, input.users, input.currencyCode);
+    const editor = editorForField(field, label, input.users, input.currencyCode);
     if (!editor) {
       return { id: `field-${index}`, label, disabled: true };
     }

@@ -206,8 +206,11 @@ any service port. IDs are stable. Option values are option IDs, never display la
 | integer | Same ten numeric operators as currency | equal | number or [number, number], no prefix |
 | currency | = → equal; != → not_equal; < → less_than; <= → less_equal; > → greater_than; >= → greater_equal; between → between; not between → not_between; is empty → is_empty; is not empty → is_not_empty | equal | number or [number, number], optional currency code prefix |
 | boolean | is → equal | equal | boolean, Selected / Not Selected |
-| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the picklist-style control and block Apply until option sources and criteria exist |
+| ownerlookup | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty; belongs to Role / does not belong to Role / belongs to Group (observed labels) | equal | string[], searchable users, Click to Select Users.; role/group rows use the 141 × 25 px search cap (placeholder None) with empty option source and block Apply until criteria exist |
 | datetime | Full operator list and screen order match `list-views.md` › Filter operators by field type (`datetime` / Created Time), including Previous/Next, On/before/after, between/not between, fiscal presets and empty operators | age in | days unit only for age/due (weeks/months observed in UI); date and date-range editors block Apply until the criteria contract ships |
+| tag | is → equal; is not → not_equal; is empty → is_empty; is not empty → is_not_empty | equal | multi-select button, empty tag source; Apply blocked until criteria exist |
+| multilookup | Same eight text operators as `text` with connected_to value control | equal | text input plus module dropdown (default Contacts); Apply blocked until criteria exist |
+| compound_address | is nearby → is_nearby | is_nearby | Choose Location input and radius dropdown; Apply blocked until criteria exist |
 
 Empty operators always have no value control and emit null. Checking starts a
 fresh default draft. Changing the operator discards the old value. Unchecking,
@@ -258,9 +261,9 @@ select two rows. Only synthetic data appears in demos and tests.
 ### Not drawn
 
 - Email is blocked / is not blocked: email module (M10).
-- Address, Connected To and Tag field filters: observed in spec, pending dedicated
-  field-type editors, option sources and criteria contract. System-defined and
-  related-module editors: their respective modules.
+- Tag, Connected To and Address option sources and Apply criteria: editors drawn;
+  Apply stays disabled until the Platform contract lands (MEP-255). System-defined
+  and related-module editors: their respective modules.
 - Fiscal period presets (Current/Previous/Next FY/FQ): operator list and zero-control
   rows are drawn; Apply stays disabled until fiscal settings and criteria exist.
 - Date Previous / Next / On / before / after / between / not between: value editors

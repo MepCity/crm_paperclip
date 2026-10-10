@@ -5,6 +5,9 @@ import { expectType } from "./support/typography";
 
 const near = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(0.5);
+/** Intrinsic operator trigger widths share one padding rule; Chromium may read ~36.92px for is. */
+const nearOperatorWidth = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
 /** Popover gap below anchor: sub-pixel layout may differ from spec row by up to 1px. */
 const nearPopoverGap = (actual: number, expected: number) =>
   expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
@@ -63,7 +66,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   const s = await panel.getByRole("textbox", { name: "Search field filter choices" }).boundingBox();
   if (!b || !o || !v || !s) throw new Error("Missing filter geometry");
   // Filter operator dropdown: the observed text "contains" selector is 79px wide.
-  near(o.width, 79);
+  nearOperatorWidth(o.width, 79);
   // Coordinate differences in the same four spec rows: 354→377, 527→535, 559→566, right edge 521.
   near(o.x - b.x, 23);
   near(o.y - (b.y + b.height), 8);
@@ -120,7 +123,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   await page.keyboard.press("Enter");
   const equality = await operator.boundingBox();
   if (!equality) throw new Error("Missing equality selector");
-  near(equality.width, 36);
+  nearOperatorWidth(equality.width, 36);
   await page.keyboard.press("Tab");
   await expect(value).toBeFocused();
   await page.keyboard.press("Escape");
@@ -272,4 +275,69 @@ test("observed value lists and currency range use measured dimensions", async ({
     near(box.width, 100);
     near(box.height, 25);
   }
+});
+
+test("observed operator value editors cover date, range, days unit, role search and blocked fields", async ({
+  page,
+}) => {
+  await page.goto("/dev/ui");
+  const panel = page
+    .getByRole("region", { name: "filter editors", exact: true })
+    .getByRole("region", { name: "Field filter editors", exact: true });
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "On", exact: true }).click();
+  const singleDate = panel.getByRole("textbox", { name: "Sample datetime value" }).locator("..");
+  const singleBox = await singleDate.boundingBox();
+  if (!singleBox) throw new Error("Missing single date");
+  near(singleBox.height, 24);
+
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "between", exact: true }).click();
+  const from = panel.getByRole("textbox", { name: "Sample datetime from date" }).locator("..");
+  const to = panel.getByRole("textbox", { name: "Sample datetime to date" }).locator("..");
+  const fromBox = await from.boundingBox();
+  const toBox = await to.boundingBox();
+  if (!fromBox || !toBox) throw new Error("Missing date range");
+  near(fromBox.width, 100);
+  near(fromBox.height, 24);
+  near(toBox.width, 100);
+  near(toBox.height, 24);
+  near(toBox.y - (fromBox.y + fromBox.height), 3);
+  await expect(panel.locator(".filter-date-range-separator")).toHaveText("-");
+
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "age in", exact: true }).click();
+  const unit = panel.getByRole("button", { name: /Sample datetime unit$/ });
+  const unitBox = await unit.boundingBox();
+  if (!unitBox) throw new Error("Missing unit");
+  near(unitBox.width, 80);
+  near(unitBox.height, 24);
+
+  await panel.getByText("Sample ownerlookup", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample ownerlookup operator$/ }).click();
+  await page.getByRole("option", { name: "belongs to Role", exact: true }).click();
+  const role = panel.locator(".filter-role-group");
+  const roleBox = await role.boundingBox();
+  if (!roleBox) throw new Error("Missing role search");
+  near(roleBox.width, 141);
+  near(roleBox.height, 25);
+  await expect(panel.getByRole("textbox", { name: /role or group search/ })).toHaveAttribute(
+    "placeholder",
+    "None",
+  );
+
+  await panel.getByText("Sample compound_address", { exact: true }).click();
+  await expect(
+    panel.getByRole("textbox", { name: "Sample compound_address location" }),
+  ).toHaveAttribute("placeholder", "Choose Location");
+  await panel.getByText("Sample multilookup", { exact: true }).click();
+  await expect(panel.getByRole("button", { name: /Sample multilookup module$/ })).toContainText(
+    "Contacts",
+  );
+  await panel.getByText("Sample tag", { exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
 });

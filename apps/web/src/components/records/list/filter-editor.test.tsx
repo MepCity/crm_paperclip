@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import type { AppliedFilter, FilterFieldType } from "@/lib/records/filter-operators";
+import { filterOperators, operatorsWithoutCriteriaSupport } from "@/lib/records/filter-operators";
 import { render } from "@/test/render";
 import { isFilterComplete } from "./filter-editor";
 import { type FilterGroup, FilterPanel } from "./filter-panel";
@@ -365,4 +366,41 @@ test("Not Selected emits false and trimming happens before Apply", async () => {
     { itemId: "text", operatorId: "contains", value: "sample" },
     { itemId: "boolean", operatorId: "equal", value: false },
   ]);
+});
+
+test("operators without criteria support keep Apply incomplete", () => {
+  for (const operatorId of operatorsWithoutCriteriaSupport) {
+    const fieldType = (Object.keys(filterOperators) as FilterFieldType[]).find((type) =>
+      filterOperators[type].operators.some((operator) => operator.id === operatorId),
+    );
+    if (!fieldType) continue;
+    expect(
+      isFilterComplete(
+        { fieldType },
+        { operatorId, value: operatorId.includes("empty") ? null : "sample", daysUnit: "days" },
+      ),
+    ).toBe(false);
+  }
+});
+
+test("weeks and months on day operators keep Apply disabled; unit change keeps the number", async () => {
+  const user = userEvent.setup();
+  render(<Panel initial={["datetime"]} />);
+  const valueInput = screen.getByRole("textbox", { name: "datetime value" });
+  await user.type(valueInput, "3");
+  await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
+  await user.click(screen.getByRole("option", { name: "weeks" }));
+  expect(apply().disabled).toBe(true);
+  expect((valueInput as HTMLInputElement).value).toBe("3");
+  await user.click(screen.getByRole("button", { name: /datetime unit$/ }));
+  await user.click(screen.getByRole("option", { name: "days" }));
+  expect(apply().disabled).toBe(false);
+});
+
+test("role and group operators use search control without user options", async () => {
+  const user = userEvent.setup();
+  render(<Panel initial={["ownerlookup"]} />);
+  await operator(user, "ownerlookup", "belongs to Role");
+  expect(screen.getByRole("textbox", { name: /ownerlookup role or group search/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "ownerlookup value" })).toBeNull();
 });

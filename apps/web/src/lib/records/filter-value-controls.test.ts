@@ -20,8 +20,12 @@ const valueControlByOperator: {
   { fieldType: "currency", operatorLabel: "between", control: "range" },
   { fieldType: "currency", operatorLabel: "is empty", control: "none" },
   { fieldType: "picklist", operatorLabel: "is empty", control: "none" },
-  { fieldType: "ownerlookup", operatorLabel: "belongs to Role", control: "choices" },
-  { fieldType: "ownerlookup", operatorLabel: "belongs to Group", control: "choices" },
+  { fieldType: "ownerlookup", operatorLabel: "belongs to Role", control: "role_search" },
+  { fieldType: "ownerlookup", operatorLabel: "belongs to Group", control: "role_search" },
+  { fieldType: "datetime", operatorLabel: "after", control: "date" },
+  { fieldType: "compound_address", operatorLabel: "is nearby", control: "address_nearby" },
+  { fieldType: "multilookup", operatorLabel: "contains", control: "connected_to" },
+  { fieldType: "tag", operatorLabel: "is", control: "tag" },
   { fieldType: "ownerlookup", operatorLabel: "is empty", control: "none" },
 ];
 

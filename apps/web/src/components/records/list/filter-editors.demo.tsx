@@ -14,6 +14,9 @@ const fieldTypes: FilterFieldType[] = [
   "datetime",
   "website",
   "integer",
+  "tag",
+  "multilookup",
+  "compound_address",
 ];
 const groups: FilterGroup[] = [
   {
@@ -35,10 +38,12 @@ const groups: FilterGroup[] = [
                   label: `Choice ${index + 1}`,
                 })),
               ]
-            : [
-                { id: "one", label: "Sample One", detail: "one@example.test", currentUser: true },
-                { id: "two", label: "Sample Two", detail: "two@example.test" },
-              ],
+            : fieldType === "tag" || fieldType === "multilookup" || fieldType === "compound_address"
+              ? []
+              : [
+                  { id: "one", label: "Sample One", detail: "one@example.test", currentUser: true },
+                  { id: "two", label: "Sample Two", detail: "two@example.test" },
+                ],
       },
     })),
   },

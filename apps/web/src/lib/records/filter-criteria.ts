@@ -61,6 +61,7 @@ function criterionValue(operatorId: FilterOperatorId, value: AppliedFilterValue)
     case "belongs_to_role":
     case "not_belongs_to_role":
     case "belongs_to_group":
+    case "is_nearby":
       throw new Error(`Operator ${operatorId} is not mapped to criteria yet`);
     case "equal":
     case "not_equal":
@@ -142,6 +143,7 @@ function comparatorForOperator(operatorId: FilterOperatorId): Comparator {
     case "belongs_to_role":
     case "not_belongs_to_role":
     case "belongs_to_group":
+    case "is_nearby":
       throw new Error(`Operator ${operatorId} is not mapped to criteria yet`);
     default: {
       const _exhaustive: never = operatorId;

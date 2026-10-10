@@ -27,10 +27,6 @@
 .filter-operator-control[data-focus-visible] {
   outline: 2px solid var(--color-focus-ring);
 }
-/* list-views.md › Visual layout: shortest observed operator (is) is 36px wide. */
-.filter-operator-control[data-value="equal"] {
-  width: var(--size-filter-control-min-width);
-}
 .filter-operator-popover {
   width: var(--size-filter-operator-list-width);
   max-height: var(--size-filter-operator-list-height);
@@ -106,7 +102,8 @@
   color: var(--color-text-placeholder);
 }
 
-/* Operator widths follow text advance plus one shared chevron/padding rule. */
+/* Operator widths follow text advance plus one shared chevron/padding rule.
+   Measured in Chromium on the filter editors demo: contains ≈79px, is ≈36.92px. */
 .filter-value > .filter-number-range {
   display: flex;
   flex-direction: column;
@@ -196,4 +193,73 @@
 
 .filter-user-header > .filter-select {
   flex-shrink: 0;
+}
+
+.filter-editor[data-field-type="datetime"] .filter-date-range {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--size-filter-date-range-gap);
+  width: var(--size-filter-range-width);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range .record-input-frame {
+  width: 100%;
+  height: var(--size-filter-control-height);
+}
+.filter-editor[data-field-type="datetime"] .filter-date-range-separator {
+  position: absolute;
+  top: calc(var(--size-filter-control-height) + var(--size-filter-date-range-gap) / 2);
+  left: 50%;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.filter-editor[data-field-type="datetime"]
+  .filter-days-control
+  > .filter-select
+  .filter-operator-control {
+  width: var(--size-filter-date-unit-width);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group {
+  width: var(--size-filter-role-group-width);
+  height: var(--size-filter-role-group-height);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-filter-control);
+  background: var(--color-surface);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group .record-input-frame {
+  height: var(--size-filter-role-group-search-height);
+}
+.filter-editor[data-field-type="ownerlookup"] .filter-role-group .record-control {
+  height: var(--size-filter-role-group-search-height);
+  width: var(--size-filter-role-group-search-width);
+  padding-inline: 0;
+  border: none;
+}
+.filter-editor[data-field-type="multilookup"] .filter-connected-to {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  min-width: 0;
+}
+.filter-editor[data-field-type="compound_address"] .filter-address-nearby {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-filter-editor-value-gap);
+  width: var(--size-filter-address-width);
+}
+.filter-editor[data-field-type="compound_address"] .filter-address-nearby .record-input-frame {
+  height: var(--size-filter-address-location-height);
+}
+.filter-editor[data-field-type="compound_address"]
+  .filter-address-nearby
+  > .filter-select
+  .filter-operator-control {
+  width: 100%;
+  min-height: var(--size-filter-address-radius-height);
+  height: auto;
 }

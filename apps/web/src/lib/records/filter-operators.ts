@@ -5,10 +5,14 @@ export type FilterValueControl =
   | "range"
   | "choices"
   | "users"
+  | "role_search"
   | "state"
   | "days"
   | "date"
   | "date_range"
+  | "connected_to"
+  | "address_nearby"
+  | "tag"
   | "none";
 
 export type FilterOperatorId =
@@ -53,7 +57,8 @@ export type FilterOperatorId =
   | "next_fq"
   | "belongs_to_role"
   | "not_belongs_to_role"
-  | "belongs_to_group";
+  | "belongs_to_group"
+  | "is_nearby";
 
 /** Operators with observed editors that are not yet mapped to port criteria (MEP-222 / Platform contract). */
 export const operatorsWithoutCriteriaSupport = new Set<FilterOperatorId>([
@@ -71,6 +76,7 @@ export const operatorsWithoutCriteriaSupport = new Set<FilterOperatorId>([
   "belongs_to_role",
   "not_belongs_to_role",
   "belongs_to_group",
+  "is_nearby",
 ]);
 
 export interface FilterOperator {
@@ -131,9 +137,9 @@ const catalog = {
       { id: "equal", label: "is", control: "users" },
       { id: "not_equal", label: "is not", control: "users" },
       ...empty,
-      { id: "belongs_to_role", label: "belongs to Role", control: "choices" },
-      { id: "not_belongs_to_role", label: "does not belong to Role", control: "choices" },
-      { id: "belongs_to_group", label: "belongs to Group", control: "choices" },
+      { id: "belongs_to_role", label: "belongs to Role", control: "role_search" },
+      { id: "not_belongs_to_role", label: "does not belong to Role", control: "role_search" },
+      { id: "belongs_to_group", label: "belongs to Group", control: "role_search" },
     ],
     defaultOperator: "equal",
   },
@@ -170,10 +176,36 @@ const catalog = {
     ],
     defaultOperator: "age_in",
   },
+  tag: {
+    operators: [
+      { id: "equal", label: "is", control: "tag" },
+      { id: "not_equal", label: "is not", control: "tag" },
+      ...empty,
+    ],
+    defaultOperator: "equal",
+  },
+  multilookup: {
+    operators: text.map((operator) =>
+      operator.control === "text" ? { ...operator, control: "connected_to" as const } : operator,
+    ),
+    defaultOperator: "equal",
+  },
+  compound_address: {
+    operators: [{ id: "is_nearby", label: "is nearby", control: "address_nearby" }],
+    defaultOperator: "is_nearby",
+  },
 } as const satisfies Record<string, FilterOperatorDefinition>;
 export const numericFilterOperators: FilterOperatorDefinition = catalog.currency;
 export const filterOperators = { ...catalog, integer: numericFilterOperators };
 export type FilterFieldType = keyof typeof filterOperators;
+
+/** Field types with observed editors but no Apply criteria contract yet. */
+export const filterFieldTypesWithApplyBlocked = new Set<FilterFieldType>([
+  "tag",
+  "multilookup",
+  "compound_address",
+]);
+
 export type AppliedFilterValue =
   | string
   | number

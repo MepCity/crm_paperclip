@@ -59,11 +59,16 @@ describe("buildLeadsFilterGroups", () => {
       currencyCode: "TRY",
     });
     const items = groups.find((group) => group.id === "fields")?.items ?? [];
-    expect(items.find((item) => item.label === "Tag")?.disabled).toBe(true);
+    expect(items.find((item) => item.label === "Tag")?.editor?.fieldType).toBe("tag");
     expect(items.find((item) => item.label === "Website")?.editor?.fieldType).toBe("website");
     expect(items.find((item) => item.label === "No. of Employees")?.editor?.fieldType).toBe(
       "integer",
     );
-    expect(items.find((item) => item.label === "Connected To")?.disabled).toBe(true);
+    expect(items.find((item) => item.label === "Connected To")?.editor?.fieldType).toBe(
+      "multilookup",
+    );
+    expect(items.find((item) => item.label === "Address")?.editor?.fieldType).toBe(
+      "compound_address",
+    );
   });
 });

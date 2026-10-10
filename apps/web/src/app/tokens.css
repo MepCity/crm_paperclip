@@ -234,6 +234,15 @@
   --size-filter-editor-inset: 23px;
   --size-filter-editor-top-gap: 8px;
   --size-filter-editor-value-gap: 7px;
+  --size-filter-date-range-gap: 3px;
+  --size-filter-date-unit-width: 80px;
+  --size-filter-role-group-width: 141px;
+  --size-filter-role-group-height: 25px;
+  --size-filter-role-group-search-width: 112px;
+  --size-filter-role-group-search-height: 16px;
+  --size-filter-address-width: 144px;
+  --size-filter-address-location-height: 25px;
+  --size-filter-address-radius-height: 54px;
   --size-filter-control-height: 24px;
   --size-filter-operator-gap: 5.5px;
   --size-filter-range-width: 100px;
