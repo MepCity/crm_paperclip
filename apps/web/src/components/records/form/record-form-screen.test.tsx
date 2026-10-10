@@ -121,7 +121,7 @@ test("field validation remains on form, shows messages and focuses the first vis
     new ValidationError({ Last_Name: ["Last name required"], Company: ["Company required"] }),
   );
   await ready();
-  const user = userEvent.setup();
+  const user = await required();
   await user.click(screen.getByRole("button", { name: "Save" }));
   await screen.findByText("Company required");
   expect(screen.getByText("Last name required")).toBeTruthy();
@@ -177,6 +177,45 @@ test("Cancel returns to supplied origin and never writes", async () => {
   await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
   expect(navigate).toHaveBeenCalledWith("origin");
   expect(create).not.toHaveBeenCalled();
+});
+
+test("client validation blocks save, shows required messages and focuses Company", async () => {
+  const { service, navigate } = harness();
+  const create = vi.spyOn(service, "create");
+  await ready();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Company cannot be empty.");
+  expect(screen.getByText("Last Name cannot be empty.")).toBeTruthy();
+  await waitFor(() =>
+    expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Company" })),
+  );
+  expect(create).not.toHaveBeenCalled();
+  expect(navigate).not.toHaveBeenCalled();
+});
+
+test("dirty cancel opens unsaved dialog and Stay Here keeps the form", async () => {
+  const { navigate } = harness();
+  await ready();
+  const user = userEvent.setup();
+  await user.type(screen.getByRole("textbox", { name: "Company" }), "Draft");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(
+    screen.getByRole("alertdialog", { name: "You have not saved your changes." }),
+  ).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Stay Here" }));
+  expect(screen.getByRole("heading", { name: "Create Lead" })).toBeTruthy();
+  expect(navigate).not.toHaveBeenCalled();
+});
+
+test("Yes, Leave Page navigates to cancel origin", async () => {
+  const { navigate } = harness();
+  await ready();
+  const user = userEvent.setup();
+  await user.type(screen.getByRole("textbox", { name: "Company" }), "Draft");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Yes, Leave Page" }));
+  expect(navigate).toHaveBeenCalledWith("origin");
 });
 
 test("owner dropdown selection uses opaque user IDs in the create payload", async () => {
@@ -258,7 +297,8 @@ test.each([
     const { service } = harness();
     vi.spyOn(service, "create").mockRejectedValue(new ValidationError({ [field]: [message] }));
     await ready();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Save" }));
+    const user = await required();
+    await user.click(screen.getByRole("button", { name: "Save" }));
     await screen.findByText(message);
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole(role, { name: label })),

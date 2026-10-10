@@ -3,6 +3,7 @@
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
 import { type ReactNode, useState } from "react";
+import { AlphabetFilter } from "@/components/ui/alphabet-filter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
@@ -24,6 +25,11 @@ export interface RecordTableProps {
   sortableFields: ReadonlySet<string>;
   /** Called with the order picked in that menu. The page owns the applied sort. */
   onSortChange: (sort: SortSpec) => void;
+  /**
+   * Alphabetical filter of the link column header. Drawn only when it is supplied:
+   * `value` is the chosen letter, or null for `All`.
+   */
+  alphabet?: { value: string | null; onChange: (letter: string | null) => void };
   /** When set, cell text wraps and the row grows. Otherwise the cell truncates. */
   wrapText: boolean;
   emptyMessage: string;
@@ -80,6 +86,7 @@ export function RecordTable({
   onSelectedIdsChange,
   sortableFields,
   onSortChange,
+  alphabet,
   wrapText,
   emptyMessage,
   settings,
@@ -171,6 +178,14 @@ export function RecordTable({
                     <span data-part="header-label" className="min-w-0 truncate">
                       {field.label}
                     </span>
+                    {field.apiName === linkField && alphabet ? (
+                      <AlphabetFilter
+                        label="Filter by first letter"
+                        value={alphabet.value}
+                        onChange={alphabet.onChange}
+                        className="shrink-0"
+                      />
+                    ) : null}
                   </div>
                   {sortableFields.has(field.apiName) ? (
                     <ColumnOptionsMenu

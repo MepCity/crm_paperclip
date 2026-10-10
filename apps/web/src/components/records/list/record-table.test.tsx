@@ -1,5 +1,5 @@
 import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -51,6 +51,7 @@ function Harness({
   emptyMessage = "No records found.",
   wrapText = false,
   settings,
+  alphabet,
   footer,
   sortableFields = new Set(columns.map((field) => field.apiName)),
   onSortChange = () => {},
@@ -59,6 +60,7 @@ function Harness({
   emptyMessage?: string;
   wrapText?: boolean;
   settings?: RecordTableProps["settings"];
+  alphabet?: RecordTableProps["alphabet"];
   footer?: Partial<RecordTableProps["footer"]>;
   sortableFields?: ReadonlySet<string>;
   onSortChange?: (sort: SortSpec) => void;
@@ -74,6 +76,7 @@ function Harness({
       onSelectedIdsChange={setSelectedIds}
       sortableFields={sortableFields}
       onSortChange={onSortChange}
+      alphabet={alphabet}
       wrapText={wrapText}
       emptyMessage={emptyMessage}
       settings={settings}
@@ -90,6 +93,10 @@ function Harness({
       }}
     />
   );
+}
+
+function control() {
+  return screen.getByRole("button", { name: "Filter by first letter" });
 }
 
 test("exposes the table, column headers and row links", () => {
@@ -263,4 +270,61 @@ test("Escape closes the menu and returns focus to the trigger", async () => {
   expect(screen.queryByRole("menuitem")).toBeNull();
   expect(onSortChange).not.toHaveBeenCalled();
   await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+test("no alphabetical control without the alphabet prop", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  expect(screen.queryByRole("button", { name: "Filter by first letter" })).toBeNull();
+});
+
+test("the alphabetical control sits in the link column header and keeps its name", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: null, onChange: vi.fn() }}
+    />,
+  );
+  const headers = screen.getAllByRole("columnheader");
+  const withControl = headers.filter((header) =>
+    within(header).queryByRole("button", { name: "Filter by first letter" }),
+  );
+  expect(withControl).toHaveLength(1);
+  expect(withControl[0]?.getAttribute("aria-label")).toBe("Name");
+  expect(control().textContent).toBe("All");
+});
+
+test("the alphabetical control shows the chosen letter", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: "R", onChange: vi.fn() }}
+    />,
+  );
+  expect(control().textContent).toBe("R");
+});
+
+test("picking a letter in the list reports it, All reports null, and the list closes", async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  render(
+    <Harness records={[record("rec-001", "Lead 001")]} alphabet={{ value: null, onChange }} />,
+  );
+  await user.click(control());
+  const list = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  expect(within(list).getAllByRole("option")).toHaveLength(27);
+  await user.click(within(list).getByRole("option", { name: "B" }));
+  expect(onChange).toHaveBeenCalledWith("B");
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  await user.click(control());
+  const reopened = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  await user.click(within(reopened).getByRole("option", { name: "All" }));
+  expect(onChange).toHaveBeenLastCalledWith(null);
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
+
+test("the empty view keeps the alphabetical control in its header", () => {
+  render(<Harness records={[]} alphabet={{ value: "C", onChange: vi.fn() }} />);
+  expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(control().textContent).toBe("C");
 });
