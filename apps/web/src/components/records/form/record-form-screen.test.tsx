@@ -13,7 +13,10 @@ import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
 import { SelectUserDialog } from "./select-user-dialog";
 
 let counter = 0;
-function harness(record?: RecordData, options: Partial<RecordFormConfig> = {}) {
+function harness(
+  record?: RecordData,
+  options: Partial<RecordFormConfig> & { formMode?: "edit" | "clone" } = {},
+) {
   const ctx = {
     orgId: `form-screen-${++counter}`,
     orgSlug: "form-screen",
@@ -31,23 +34,30 @@ function harness(record?: RecordData, options: Partial<RecordFormConfig> = {}) {
     ],
   });
   const navigate = vi.fn();
+  const { formMode, ...configOptions } = options;
   const config: RecordFormConfig = {
     module: "Leads",
     rules: leadsFormRules,
     paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
     navigate,
-    ...options,
+    ...configOptions,
   };
   if (record) vi.spyOn(service, "get").mockResolvedValue(record);
+  const mode = formMode ?? (record ? "edit" : "create");
   render(
     <ApiProvider orgSlug={ctx.orgSlug} service={service}>
-      <RecordFormScreen config={config} currentUserId={ctx.userId} recordId={record?.id} />
+      <RecordFormScreen
+        config={config}
+        currentUserId={ctx.userId}
+        recordId={mode === "edit" ? record?.id : undefined}
+        cloneSourceId={mode === "clone" ? record?.id : undefined}
+      />
     </ApiProvider>,
   );
   return { service, fixture, navigate };
 }
-async function ready() {
-  await screen.findByRole("heading", { name: /^(Create|Edit) Lead$/ });
+async function ready(title = /^(Create|Edit|Clone) Lead$/) {
+  await screen.findByRole("heading", { name: title });
 }
 async function required() {
   const user = userEvent.setup();
@@ -350,6 +360,76 @@ test("Clear All clears writable address subfields without clearing identity", as
   expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
     "Retained company",
   );
+});
+
+test("clone shows title, copied fields and enabled action strip", async () => {
+  const record = {
+    id: "source-lead",
+    fields: {
+      Company: "Clone Co",
+      Last_Name: "Source Name",
+      [names.owner]: "other-user",
+    },
+  };
+  harness(record, { formMode: "clone" });
+  await ready(/^Clone Lead$/);
+  expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
+    "Clone Co",
+  );
+  expect((screen.getByRole("textbox", { name: "Last Name" }) as HTMLInputElement).value).toBe(
+    "Source Name",
+  );
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  const saveAndNew = screen.getByRole("button", { name: "Save and New" });
+  const save = screen.getByRole("button", { name: "Save" });
+  for (const button of [cancel, saveAndNew, save])
+    expect((button as HTMLButtonElement).disabled).toBe(false);
+  const actions = document.querySelector("[data-record-form-actions]");
+  expect(Array.from(actions?.children ?? [])).toEqual([cancel, saveAndNew, save]);
+});
+
+test("clone Save creates with edited values", async () => {
+  const record = {
+    id: "source-lead",
+    fields: {
+      Company: "Clone Co",
+      Last_Name: "Source Name",
+      [names.owner]: "form-author",
+    },
+  };
+  const { service, navigate } = harness(record, { formMode: "clone" });
+  const create = vi.spyOn(service, "create");
+  await ready(/^Clone Lead$/);
+  const user = userEvent.setup();
+  const lastName = screen.getByRole("textbox", { name: "Last Name" });
+  await user.clear(lastName);
+  await user.click(lastName);
+  await user.paste("Cloned Name");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith(expect.stringMatching(/^detail:/)));
+  expect(create).toHaveBeenCalledTimes(1);
+  expect(create.mock.calls[0]?.[1]).toMatchObject({
+    Company: "Clone Co",
+    Last_Name: "Cloned Name",
+  });
+});
+
+test("clone Save and New creates then navigates to empty create", async () => {
+  const record = {
+    id: "source-lead",
+    fields: {
+      Company: "Clone Co",
+      Last_Name: "Source Name",
+      [names.owner]: "form-author",
+    },
+  };
+  const { service, navigate } = harness(record, { formMode: "clone" });
+  vi.spyOn(service, "create");
+  await ready(/^Clone Lead$/);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Save and New" }));
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith("create"));
+  expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe("");
+  expect(service.create).toHaveBeenCalledTimes(1);
 });
 
 test.each([undefined, { id: "saved-currency", fields: { [names.revenue]: 125 } }])(
