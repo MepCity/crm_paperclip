@@ -1,4 +1,4 @@
-import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
+import type { ModuleApiName, RecordId } from "@crm/core/records";
 
 /** List navigation context written by the list page and read on record detail (session lifetime). */
 export type RecordListContext = {
@@ -8,10 +8,6 @@ export type RecordListContext = {
   page: number;
   perPage: number;
   recordIds: readonly RecordId[];
-  listQuery: Pick<
-    ListQuery,
-    "viewId" | "page" | "perPage" | "sort" | "filters" | "search" | "fields"
-  >;
 };
 
 const STORAGE_PREFIX = "mep:record-list-context:";

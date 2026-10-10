@@ -1,7 +1,7 @@
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import type { ClientRecordService } from "@/lib/api/client/http-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
@@ -73,7 +73,6 @@ describe("LeadRecordScreen", () => {
       page: 1,
       perPage: 30,
       recordIds: page.records.map((row) => row.id),
-      listQuery: { viewId: view.id, page: 1, perPage: 30 },
     });
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
@@ -92,6 +91,29 @@ describe("LeadRecordScreen", () => {
     expect(screen.getByLabelText("Business card")).toBeTruthy();
     expect(screen.getByText("Lead Name")).toBeTruthy();
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("does not fetch view summaries when list context is present", async () => {
+    const service = createService();
+    const listViewSummaries = vi.spyOn(service, "listViewSummaries");
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected list rows.");
+    writeRecordListContext(ctx.orgSlug, {
+      module: "Leads",
+      viewId: view.id,
+      listHref: paths.defaultList(ctx.orgSlug, "Leads"),
+      page: 1,
+      perPage: 30,
+      recordIds: page.records.map((row) => row.id),
+    });
+    listViewSummaries.mockClear();
+    renderScreen(service, record.id);
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
+    expect(listViewSummaries).not.toHaveBeenCalled();
   });
 
   it("shows not found for a missing record", async () => {
