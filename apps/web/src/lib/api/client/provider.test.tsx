@@ -1,9 +1,11 @@
 import type { ListQuery, RecordData } from "@crm/core/records";
+import { useQueryClient } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useRecord, useRecordList } from "./hooks";
 import type { ClientRecordService } from "./http-record-service";
-import { ApiProvider } from "./provider";
+import { ApiProvider, useOrgSlug } from "./provider";
+import { apiKeys } from "./query-keys";
 
 function createMockService(record: RecordData): ClientRecordService {
   return {
@@ -34,8 +36,11 @@ function createMockService(record: RecordData): ClientRecordService {
 }
 
 function Consumer({ id, query }: { id: string; query: ListQuery }) {
+  const queryClient = useQueryClient();
+  const orgSlug = useOrgSlug();
   const record = useRecord("Leads", id);
   const list = useRecordList("Leads", query);
+  const cachedRecord = queryClient.getQueryData<RecordData>(apiKeys.record(orgSlug, "Leads", id));
 
   return (
     <div>
@@ -45,6 +50,7 @@ function Consumer({ id, query }: { id: string; query: ListQuery }) {
       <div data-testid="list-companies">
         {list.data?.records.map((r) => String(r.fields.Company)).join(",") ?? "empty"}
       </div>
+      <div data-testid="client-has-record">{cachedRecord ? "yes" : "no"}</div>
     </div>
   );
 }
@@ -80,6 +86,7 @@ describe("ApiProvider organization cache isolation", () => {
     await waitFor(() => {
       expect(screen.getByTestId("record-company").textContent).toBe("Company Alpha");
       expect(screen.getByTestId("list-companies").textContent).toBe("Company Alpha");
+      expect(screen.getByTestId("client-has-record").textContent).toBe("yes");
     });
     expect(serviceA.get).toHaveBeenCalledTimes(1);
     expect(serviceA.list).toHaveBeenCalledTimes(1);
@@ -100,6 +107,7 @@ describe("ApiProvider organization cache isolation", () => {
     await waitFor(() => {
       expect(screen.getByTestId("record-company").textContent).toBe("Company Beta");
       expect(screen.getByTestId("list-companies").textContent).toBe("Company Beta");
+      expect(screen.getByTestId("client-has-record").textContent).toBe("yes");
     });
     expect(serviceB.get).toHaveBeenCalledWith("Leads", "lead-1");
     expect(serviceB.list).toHaveBeenCalledWith("Leads", query);

@@ -37,6 +37,22 @@ export type ApiProviderProps = {
   children: ReactNode;
 };
 
+function ApiProviderSubtree({
+  orgSlug,
+  service,
+  children,
+}: {
+  orgSlug: string;
+  service: ClientRecordService;
+  children: ReactNode;
+}) {
+  return (
+    <OrgSlugContext.Provider value={orgSlug}>
+      <ServiceContext.Provider value={service}>{children}</ServiceContext.Provider>
+    </OrgSlugContext.Provider>
+  );
+}
+
 export function ApiProvider({ orgSlug, service, children }: ApiProviderProps) {
   const [clientState, setClientState] = useState(() => ({
     orgSlug,
@@ -45,7 +61,6 @@ export function ApiProvider({ orgSlug, service, children }: ApiProviderProps) {
 
   let activeQueryClient = clientState.queryClient;
   if (clientState.orgSlug !== orgSlug) {
-    clientState.queryClient.clear();
     activeQueryClient = createQueryClient();
     setClientState({
       orgSlug,
@@ -59,9 +74,9 @@ export function ApiProvider({ orgSlug, service, children }: ApiProviderProps) {
   );
   return (
     <QueryClientProvider client={activeQueryClient}>
-      <OrgSlugContext.Provider value={orgSlug}>
-        <ServiceContext.Provider value={resolved}>{children}</ServiceContext.Provider>
-      </OrgSlugContext.Provider>
+      <ApiProviderSubtree key={orgSlug} orgSlug={orgSlug} service={resolved}>
+        {children}
+      </ApiProviderSubtree>
     </QueryClientProvider>
   );
 }
