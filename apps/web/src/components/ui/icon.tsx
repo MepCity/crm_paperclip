@@ -357,6 +357,7 @@ export const Icons = {
   recordFormCaret: RecordFormCaret,
   recordChevron: RecordChevron,
   recordCheck: RecordCheck,
+  inlineCheck: InlineCheck,
   recordPanelCheck: RecordPanelCheck,
   recordPanelSearch: FilterSearch,
   recordInfo: RecordInfo,
@@ -519,6 +520,23 @@ function TimelineGenericIcon(props: SVGProps<SVGSVGElement>) {
     <ListGlyph {...props}>
       <circle cx="12" cy="12" r="4" />
     </ListGlyph>
+  );
+}
+
+/** Original detail-inline check, sized to the measured option/checkmark role. */
+function InlineCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 12 9"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.75"
+      {...props}
+    >
+      <path d="m0.5 5.5 3.5 3 7.5-8" />
+    </svg>
   );
 }
 

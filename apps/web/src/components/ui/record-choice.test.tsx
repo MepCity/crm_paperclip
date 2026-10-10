@@ -1,4 +1,4 @@
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -85,4 +85,45 @@ test("isolated open example and disabled state respect controlled selection", as
   );
   expect(screen.queryByRole("listbox")).toBeNull();
   expect((screen.getByRole("button", { name: "Choice" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+test.each([false, true])("choice keeps one selected marker with inline=%s", (inline) => {
+  render(
+    <RecordChoice
+      label="Choice"
+      value="a"
+      onChange={() => {}}
+      options={options}
+      defaultOpen
+      inline={inline}
+    />,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  const empty = screen.getByRole("option", { name: "-None-" });
+  expect(selected.getAttribute("aria-selected")).toBe("true");
+  expect(selected.querySelectorAll("svg")).toHaveLength(1);
+  expect(empty.querySelectorAll("svg")).toHaveLength(0);
+  expect(selected.querySelector(".record-inline-choice-check") !== null).toBe(inline);
+  expect(selected.querySelector(".record-choice-check") !== null).toBe(!inline);
+  expect(empty.querySelector(".record-inline-choice-check") !== null).toBe(inline);
+});
+
+test("inline list stays open when focused selection scrolls its ancestor", async () => {
+  render(
+    <RecordChoice
+      label="Choice"
+      value="a"
+      onChange={() => {}}
+      options={options}
+      defaultOpen
+      inline
+    />,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  selected.focus();
+  fireEvent.scroll(window);
+  expect(screen.getByRole("listbox", { name: "Choice choices" })).toBeTruthy();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("option", { name: "-None-" }));
+  expect(screen.queryByRole("listbox")).toBeNull();
 });

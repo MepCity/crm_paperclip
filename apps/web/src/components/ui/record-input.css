@@ -285,7 +285,9 @@
 .record-choice-row[data-hovered]:not([data-selected]) {
   background: transparent;
 }
-.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel):not(
+    .record-inline-choice-panel
+  )
   .record-choice-row[data-selected]::before {
   content: "";
   position: absolute;
@@ -298,7 +300,9 @@
   background: var(--color-surface-selected);
   transform: translateY(-50%);
 }
-.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel):not(
+    .record-inline-choice-panel
+  )
   .record-choice-row[data-selected] {
   background: transparent;
   font-weight: var(--font-weight-semibold);

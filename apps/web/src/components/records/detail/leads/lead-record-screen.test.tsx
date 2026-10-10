@@ -415,3 +415,63 @@ describe("LeadRecordScreen", () => {
     );
   });
 });
+
+it("inline save writes one field and reloads audit values", async () => {
+  const service = createService();
+  const views = await service.listViews("Leads");
+  const page = await service.list("Leads", {
+    viewId: views.find((v) => v.isDefault)?.id ?? views[0]?.id ?? "missing",
+    page: 1,
+    perPage: 30,
+  });
+  const record = page.records[0];
+  if (!record) throw new Error("Missing fixture record.");
+  const update = vi.spyOn(service, "update");
+  const get = vi.spyOn(service, "get");
+  renderScreen(service, record.id);
+  const details = await screen.findByRole("region", { name: "Details card" });
+  const user = userEvent.setup();
+  await user.click(within(details).getByRole("button", { name: "Edit Company" }));
+  const input = screen.getByRole("textbox", { name: "Company" });
+  await user.clear(input);
+  await user.type(input, "Inline Company");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Save" })).toBeNull());
+  expect(update).toHaveBeenCalledWith("Leads", record.id, { Company: "Inline Company" });
+  expect(get.mock.calls.length).toBeGreaterThanOrEqual(2);
+  expect(within(details).getByRole("button", { name: "Edit Company value" }).textContent).toBe(
+    "Inline Company",
+  );
+  const audit = details.querySelector('[data-detail-field="Modified_By"]');
+  expect(audit?.textContent).toContain("Screen User");
+});
+
+it("inline server field error keeps draft and leaves the record unchanged", async () => {
+  const service = createService();
+  const views = await service.listViews("Leads");
+  const page = await service.list("Leads", {
+    viewId: views[0]?.id ?? "missing",
+    page: 1,
+    perPage: 30,
+  });
+  const record = page.records[0];
+  if (!record) throw new Error("Missing fixture record.");
+  const { ValidationError } = await import("@crm/core/errors");
+  vi.spyOn(service, "update").mockRejectedValue(
+    new ValidationError({ Company: ["Company rejected."] }),
+  );
+  renderScreen(service, record.id);
+  const details = await screen.findByRole("region", { name: "Details card" });
+  const user = userEvent.setup();
+  await user.click(within(details).getByRole("button", { name: "Edit Company" }));
+  await user.type(screen.getByRole("textbox", { name: "Company" }), " draft");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Company rejected.")).toBeTruthy();
+  expect(details.querySelector('[data-detail-field="Company"]')?.textContent).toContain(
+    "Company rejected.",
+  );
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(within(details).getByRole("button", { name: "Edit Company value" }).textContent).toBe(
+    record.fields.Company,
+  );
+});
