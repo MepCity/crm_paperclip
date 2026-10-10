@@ -13,6 +13,8 @@ const expectedIcons = [
   "recordCheck",
   "inlineCheck",
   "recordInfo",
+  "recordPanelCheck",
+  "recordPanelSearch",
   "recordPortrait",
   "thumbDown",
   "statusCheck",

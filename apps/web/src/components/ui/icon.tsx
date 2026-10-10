@@ -291,6 +291,24 @@ function RecordCheck(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** Dropdown panel row checkmark; record-detail.md › Dropdown panel geometry. */
+function RecordPanelCheck(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 11.5 8.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <path d="m0.6 4.2 2.9 2.6 7.5-7.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 function RecordInfo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -338,6 +356,8 @@ export const Icons = {
   recordChevron: RecordChevron,
   recordCheck: RecordCheck,
   inlineCheck: InlineCheck,
+  recordPanelCheck: RecordPanelCheck,
+  recordPanelSearch: FilterSearch,
   recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
   thumbDown: ThumbDown,

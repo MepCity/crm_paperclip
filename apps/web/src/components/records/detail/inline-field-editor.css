@@ -84,6 +84,18 @@
   padding-inline: var(--space-2);
   gap: var(--size-detail-inline-check-gap);
 }
+.record-inline-choice-panel .record-choice-row[data-selected] {
+  font-weight: var(--font-weight-semibold);
+}
+/* Keep the inline highlight independent of standard form panel pseudo fills. */
+.record-choice-panel.record-inline-choice-panel .record-choice-row[data-selected],
+.record-choice-panel.record-inline-choice-panel .record-choice-row[data-focused],
+.record-choice-panel.record-inline-choice-panel .record-choice-row[data-hovered] {
+  background: var(--color-surface-selected);
+}
+.record-choice-panel.record-inline-choice-panel .record-choice-list .record-choice-row::before {
+  content: none;
+}
 .record-inline-choice-check {
   width: var(--size-detail-inline-check-size);
   flex: none;

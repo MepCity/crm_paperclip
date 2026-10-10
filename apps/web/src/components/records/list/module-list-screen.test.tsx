@@ -1155,4 +1155,11 @@ describe("ModuleListScreen", () => {
       "truncate",
     );
   });
+
+  it("shows the configured linkFieldLabel in the table column header", async () => {
+    screenWithFixture();
+    await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
+    expect(screen.getByRole("columnheader", { name: "Lead Name" })).toBeTruthy();
+    expect(screen.queryByRole("columnheader", { name: "Full Name" })).toBeNull();
+  });
 });

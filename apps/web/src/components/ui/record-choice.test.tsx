@@ -86,3 +86,24 @@ test("isolated open example and disabled state respect controlled selection", as
   expect(screen.queryByRole("listbox")).toBeNull();
   expect((screen.getByRole("button", { name: "Choice" }) as HTMLButtonElement).disabled).toBe(true);
 });
+
+test.each([false, true])("choice keeps one selected marker with inline=%s", (inline) => {
+  render(
+    <RecordChoice
+      label="Choice"
+      value="a"
+      onChange={() => {}}
+      options={options}
+      defaultOpen
+      inline={inline}
+    />,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  const empty = screen.getByRole("option", { name: "-None-" });
+  expect(selected.getAttribute("aria-selected")).toBe("true");
+  expect(selected.querySelectorAll("svg")).toHaveLength(1);
+  expect(empty.querySelectorAll("svg")).toHaveLength(0);
+  expect(selected.querySelector(".record-inline-choice-check") !== null).toBe(inline);
+  expect(selected.querySelector(".record-choice-check") !== null).toBe(!inline);
+  expect(empty.querySelector(".record-inline-choice-check") !== null).toBe(inline);
+});
