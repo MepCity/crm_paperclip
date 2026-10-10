@@ -3,6 +3,7 @@ import {
   expectWithin1,
   firstLineSolidCapTop,
   pageRasterInk,
+  pageRasterInkShared,
   svgRasterInkBoxes,
   textSolidInkBand,
   textSolidInkLeft,
@@ -281,7 +282,16 @@ test.describe("record detail cards visual layout", () => {
     await expect(pencil).toHaveCSS("opacity", "1");
     await expect(pencil).toBeVisible();
     const ratingLabel = ratingRow.getByText("Rating", { exact: true });
-    const pencilInk = await svgRasterInkBoxes(pencil);
+    // One crop for both targets: the pencil-to-label offset must not depend on where the row
+    // sits relative to the page scroll, only on the row's own layout.
+    const ratingInk = await pageRasterInkShared(ratingRow, {
+      pencil: { locator: pencil, icon: true },
+      label: { locator: ratingLabel },
+    });
+    const pencilInk = {
+      solid: ratingInk.pencil?.solid.box ?? null,
+      antialiased: ratingInk.pencil?.antialiased.box ?? null,
+    };
     expect(pencilInk.solid).not.toBeNull();
     expect(pencilInk.antialiased).not.toBeNull();
     if (pencilInk.solid) {
@@ -303,7 +313,12 @@ test.describe("record detail cards visual layout", () => {
       );
       expectWithin1(pencilInk.solid.left - pencilInk.antialiased.left, 0.5);
     }
-    const ratingLabelCap = (await textSolidInkBand(ratingLabel)).top;
+    // Both edges use the same ink criterion: the spec quotes the pencil's "total ink with
+    // anti-aliasing" top against the visible top of the 'R' cap, so the label edge must be the
+    // first row that carries ink, not the first row of exact foreground colour. A solid-vs-antialiased
+    // pair rounds its two edges in opposite directions, which costs a whole CSS pixel and eats the
+    // ±1 px gate as soon as the page moves the row off the device-pixel grid (MEP-269).
+    const ratingLabelCap = ratingInk.label?.antialiased.box?.top ?? 0;
     expect(
       Math.abs(
         (pencilInk.antialiased?.top ?? 0) - (ratingLabelCap - DETAILS_PENCIL_ABOVE_LABEL_CAP),
