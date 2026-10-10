@@ -158,13 +158,13 @@ what the "no colour constants" rule forbids.
 | `--color-form-field-group-border` | `#797883` | MEP-172 interim › create/edit form Address field group border | from spec |
 | `--font-sans` | `"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif` | typography.md › Recommendation › Adopted Figtree; board selection (MEP-66, 2026-10-04) | from spec |
 | `--font-mono` | system stack | No monospaced text in the app shell spec | not yet measured |
-| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label; Weight classes › Regular | from spec |
+| `--font-weight-normal` | `400` | app-shell.md › Type summary › "regular" (Rail fixed link, Rail child link, Rail Search placeholder, Top-bar search placeholder, Menu item, Utility label); list-views.md › Text roles › "ordinary cells about 14 px regular"; typography.md › List and detail text roles › Table column header, Table cell value, Footer fixed label, Create form field label, Sort dialog heading, List menu item; Weight classes › Regular | from spec |
 | `--font-weight-semibold` | `510` | typography.md › Variable-weight stem check › `wght` 510, stem 1.69 CSS px; Recommendation › shell semibold roles; List and detail text roles › List toolbar Filter / Sort, List primary button; Weight classes › Semibold | from spec |
 | `--font-weight-bold` | `650` | typography.md › List and detail text roles › List view tab; Weight classes › Bold headings (640–660) | from spec |
 | `--text-2xs` | `0.53125rem` (8.5px) | typography.md › Recommendation › Utility label › 8.5px / 400 | from spec |
 | `--text-xs` | `0.71875rem` (11.5px) | typography.md › Recommendation › Help utility label › 11.5px / 510 | from spec |
-| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400; List and detail text roles › List view tab (13.5px) | from spec |
-| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px; List and detail text roles › List toolbar Filter / Sort, List primary button, Table column header, Table cell value, Footer fixed label, Create form field label (14.5px; toolbar 14px maps to this token by CTO decision) | from spec |
+| `--text-sm` | `0.84375rem` (13.5px) | typography.md › Recommendation › Top-bar search placeholder › 13.5px / 400; List and detail text roles › List view tab, Sort dialog field selector value, order selector option, footer buttons (13.5px) | from spec |
+| `--text-md` | `0.90625rem` (14.5px) | typography.md › Recommendation › Rail fixed / active / child link, Group heading, Rail Search placeholder, Menu item › 14.5px; List and detail text roles › List toolbar Filter / Sort, List primary button, Sort dialog heading, List menu item, Table column header, Table cell value, Footer fixed label, Create form field label (14.5px; measured 14px roles map to this token by CTO decision) | from spec |
 | `--text-base` | `1rem` (16px, provisional) | typography.md › Recommendation › Product selector, Teamspace selector › 16px (provisional); generic selector text could not be measured | from spec |
 | `--text-lg` | `0.96875rem` (15.5px) | typography.md › List and detail text roles › Size classes › 15.5px | from spec |
 | `--text-xl` | `1.15625rem` (18.5px) | typography.md › Recommendation › Page title › 18.5px / 510 | from spec |
@@ -310,13 +310,30 @@ what the "no colour constants" rule forbids.
 | `--size-detail-details-label-width` | `129px` | record-detail.md › Details card › left-column labels end x 701 with card x 552 and 20 px inset | from spec |
 | `--size-detail-details-label-value-gap` | `36.5px` | record-detail.md › Details card › left values start x 737.5, labels end x 701 | from spec |
 | `--size-detail-details-row-pitch` | `44px` | record-detail.md › Details card › "44 px average pitch for single-line rows" | from spec |
+| `--size-detail-details-wrapped-row-pitch` | `60px` | record-detail.md › Details value wrapping › two-line value line 1 to next row label | from spec |
 | `--size-detail-column-width` | `433.5px` | record-detail.md › Details card › right-column labels end x 1134.5, left labels end x 701 | from spec |
 | `--size-detail-business-min-height` | `287px` | record-detail.md › Business card › y 265–552 | from spec |
 | `--size-detail-business-padding-block-start` | `42.75px` | record-detail.md › Business card › first label text top y 311.5 with card y 265 | from spec |
 | `--size-detail-business-padding-block-end` | `21.75px` | record-detail.md › Business card › card height 287 px with five 44.5 px rows | from spec |
 | `--size-detail-details-toggle-padding-block` | `12.75px` | record-detail.md › Details card › divider y 608 with card y 564.5 | from spec |
-| `--size-detail-details-sections-margin-top` | `39px` | record-detail.md › Details card › first left label text top y 681.5 (interim total; first label 117 px from spec) | interim |
-| `--size-detail-section-title-margin-block` | `16px 8px` | record-detail.md › Details card › section heading band above first field row | interim |
+| `--size-detail-details-sections-margin-top` | `18.25px` | record-detail.md › Details divider & headings › divider bottom y 609 to first section heading cap y 631 (22 px to cap minus 3.75 px cap inset) | from spec |
+| `--size-detail-section-title-margin-block` | `0 32.5px` | record-detail.md › Details divider & headings › section heading baseline y 641.5 to first field label text top y 681.5 (40 px) minus 7.5 px line-box trim | derived from spec |
+| `--size-detail-inter-section-gap` | `26px` | record-detail.md › Details divider & headings › Twitter label cap to Address heading cap (70 px) minus row remainder | derived from spec |
+| `--size-detail-audit-line-pitch` | `18.5px` | record-detail.md › Details Created By / Modified By › cap-to-cap line pitch | from spec |
+| `--size-detail-multiline-line-pitch` | `15.5px` | record-detail.md › Details value wrapping › wrapped Lead Name cap-to-cap pitch | from spec |
+| `--size-detail-wrapped-link-line-pitch` | `19.5px` | record-detail.md › Details value wrapping › wrapped Website cap-to-cap pitch | from spec |
+| `--size-detail-cap-height` | `10.5px` | typography.md › List and detail text roles › cap height for text-md | from spec |
+| `--size-detail-card-width-rail-hidden` | `1126px` | record-detail.md › Hidden-rail layout › cards span x 332–1458 | from spec |
+| `--size-detail-column-width-rail-hidden` | `543px` | record-detail.md › Hidden-rail layout › two-column content inside 1126 px card | derived from spec |
+| `--size-detail-rail-hidden-value-width` | `273px` | record-detail.md › Inline editor › value box width on Rating row | from spec |
+| `--size-detail-field-pencil-inset-from-card-end` | `113px` | record-detail.md › Details field pencil › 113 px inside card right edge | from spec |
+| `--size-detail-field-pencil-ink-left-rail-hidden` | `1000.5px` | record-detail.md › Details field pencil › rail-hidden solid ink left vs card x 332 | from spec |
+| `--size-detail-field-pencil-rail-hidden-translate-x` | `10.5px` | record-detail.md › Inline editor › value box width (273 px); legacy nudge constant, not applied in view-mode | derived from spec |
+| `--size-detail-description-label-width` | `73px` | record-detail.md › Details full-width rows › Description label width | from spec |
+| `--size-detail-description-label-extend` | `39px` | record-detail.md › Details full-width rows › Description label extends 39.5px past the standard boundary; 39px fits local font raster within ±1px | derived from spec |
+| `--size-detail-field-pencil-size` | `11.5px` | record-detail.md › Details field pencil › solid ink box | from spec |
+| `--size-detail-field-pencil-aa-size` | `12.5px` | record-detail.md › Details field pencil › total antialiased ink width | from spec |
+| `--size-detail-field-pencil-above-label-cap` | `1.5px` | record-detail.md › Details field pencil › pencil top 1.5 px above label cap | from spec |
 | `--size-list-view-name-width` | `600px` | list-views.md › View edit form › "name input spans roughly 600 px" | from spec |
 | `--size-list-column-lane-width` | `280px` | list-views.md › View edit form › "selected-column lane about 280 px wide" | from spec |
 | `--size-button-split-width` | `137.5px` | list-views.md › Create and action buttons › "Split Create Lead 137.5 × 33 px" | from spec |
@@ -784,7 +801,7 @@ menus**. `Popover.hideTitle` keeps an accessible title without a visible heading
 
 ## Searchable select primitive
 
-`SearchableSelect({ label, valueText, options, optionKey, optionText, selectedKey, onSelect,
+`SearchableSelect({ label, variant, valueText, options, optionKey, optionText, selectedKey, onSelect,
 searchLabel, panelTitle, children })` is a single-choice selector whose option panel carries a
 search field above the list. It loads no data, never sorts the options it is given, and filters
 them by `optionText` case-insensitively; with no match the list is empty and no message is drawn.
@@ -792,7 +809,10 @@ Choosing an option reports it and closes the panel. Every opening starts with an
 field. `offset` places the panel against the trigger (a negative value overlaps the trigger's
 border), `searchClassName` classes the band that holds the search field, and
 `TextField.size="fill"` makes the input span that band instead of the filter search width token.
-Rows are the caller's `SelectItem`s, so the shared option appearance stays in one place. Its
+`variant` is the trigger's text role and matches `Select`'s: `sort` marks the trigger with
+`record-control-sort` (typography.md › List and detail text roles › Sort dialog field selector
+value); the default keeps the shared record-control appearance. Rows are the caller's
+`SelectItem`s, so the shared option appearance stays in one place. Its
 `/dev/ui` gallery is the searchable-select region; the component tests cover order preservation,
 filtering, the empty list, the choice, the reset and the marked row. The first consumer is the
 Sort By field dropdown (`components/records/list/sort-popover.tsx`), whose panel, band and list

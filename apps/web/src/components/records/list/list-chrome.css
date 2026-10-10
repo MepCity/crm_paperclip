@@ -34,6 +34,11 @@
   padding-block: 0;
 }
 
+.record-sort-fields .record-control-sort {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+}
+
 /* React Aria renders the field label as a span, not a native label. */
 .record-sort-fields span.text-md:not(.sr-only) {
   position: absolute;
@@ -86,10 +91,10 @@
   color: var(--color-text);
 }
 
-/* The shared list item bolds a selected row; this list keeps the regular weight of the
-   neighbouring searchable option list (filter-control.css › .filter-operator-option).
-   React Aria writes data-selected only on the selected row, so presence is the selection. */
+/* The shared sort row has no fill for the selected option; list-views.md › Sort By field
+   dropdown measures one, the same value as the hover fill. React Aria writes data-selected
+   only on the selected row, so presence is the selection. Text size and weight come from
+   SelectItem's sort role. */
 .record-sort-field-list [data-selected]:not([data-selected="false"]) {
   background-color: var(--color-surface-selected);
-  font-weight: var(--font-weight-normal);
 }

@@ -17,6 +17,8 @@ type AxeTarget = AxeViolations[number]["nodes"][number]["target"];
 export type A11yCheckOptions = {
   /** Selectors left out of the scan. Every call site must comment why. */
   exclude?: readonly string[];
+  /** When set, only these roots are scanned (faster on large gallery pages). */
+  include?: readonly string[];
 };
 
 function formatTarget(target: AxeTarget): string {
@@ -71,6 +73,9 @@ export async function expectNoA11yViolations(
 ): Promise<void> {
   await settleFiniteAnimations(page);
   const builder = new AxeBuilder({ page }).withTags(WCAG_21_A_AND_AA);
+  for (const selector of options?.include ?? []) {
+    builder.include(selector);
+  }
   for (const selector of options?.exclude ?? []) {
     builder.exclude(selector);
   }

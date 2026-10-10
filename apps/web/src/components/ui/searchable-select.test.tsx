@@ -32,14 +32,17 @@ function Picker({
   selectedId = "none",
   onSelect = vi.fn(),
   hideLabel = false,
+  variant = "default",
 }: {
   selectedId?: string;
   onSelect?: (option: Choice) => void;
   hideLabel?: boolean;
+  variant?: "default" | "sort";
 }) {
   return (
     <SearchableSelect
       label="Fruit"
+      variant={variant}
       hideLabel={hideLabel}
       panelTitle="Fruit panel"
       searchLabel="Search fruits"
@@ -130,4 +133,17 @@ test("hideLabel keeps the accessible name and removes the visible label", async 
   render(<Picker hideLabel />);
   expect(screen.getByText("Fruit").className).toContain("sr-only");
   expect(screen.getByRole("button", { name: /Fruit/ }).textContent).toContain("None");
+});
+
+test("the sort variant marks the trigger with the sort text role, the default does not", () => {
+  render(<Picker variant="sort" />);
+  const trigger = screen.getByRole("button", { name: /Fruit/ });
+  // list-chrome.css only reaches the measured size and weight through this class.
+  expect(trigger.className).toContain("record-control-sort");
+  expect(trigger.className).toContain("record-control");
+  cleanup();
+  render(<Picker />);
+  expect(screen.getByRole("button", { name: /Fruit/ }).className).not.toContain(
+    "record-control-sort",
+  );
 });

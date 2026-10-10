@@ -308,12 +308,11 @@ select two rows. Only synthetic data appears in demos and tests.
   left-aligned with the selector and overlaps its bottom border by 1 px
   (`SORT_FIELD_DROPDOWN_OFFSET`: panel top y 222, selector bottom y 223). The search band is
   `--size-popover-sort-field-dropdown-list-offset` (panel y 222 → list y 268 = 46 px, minus the
-  panel border in `list-chrome.css`), so the list body starts on the measured edge. The spec
-  gives no font size or weight for the option rows, so they keep the shared list item role
-  (`--text-sm`, regular) — the same pair as the neighbouring searchable option list in
-  `filter-control.css` › `.filter-operator-option`.
-  The shared item bolds a selected row; this list overrides that back to regular because the
-  spec only measures a selection fill.
+  panel border in `list-chrome.css`), so the list body starts on the measured edge. The
+  trigger and the option rows carry the Sort dialog text role (`variant="sort"`:
+  `--text-sm`, `--font-weight-normal`) from `typography.md` › List and detail text roles;
+  that role has no bold selected row, so the only row override left is the measured
+  selection fill.
 - `SplitButton({ label, onPress?, href?, items? })` lives in `components/ui`. `href`
   renders a primary link; otherwise `onPress` runs from a button. Nonempty `MenuAction[]`
   adds the separator and separately labelled More button. With no items, neither is drawn.
@@ -361,14 +360,20 @@ mapping in MEP-126, supersedes the earlier list-spec type estimates:
 | List view tab | `--text-sm` | `--font-weight-bold` |
 | List toolbar Filter / Sort | `--text-md` | `--font-weight-semibold` |
 | List primary button (button or link) | `--text-md` | `--font-weight-semibold` |
+| Sort dialog heading (`Sort By` label) | `--text-md` | `--font-weight-normal` |
+| Sort dialog field selector value | `--text-sm` | `--font-weight-normal` |
+| Sort dialog order selector option | `--text-sm` | `--font-weight-normal` |
+| Sort dialog footer button (Cancel / Apply) | `--text-sm` | `--font-weight-semibold` |
+| List menu item (More / Actions) | `--text-md` | `--font-weight-normal` |
 | Table column header | `--text-md` | `--font-weight-normal` |
 | Table cell value | `--text-md` | `--font-weight-normal` |
 | Footer fixed label | `--text-md` | `--font-weight-normal` |
 
 Footer counts and range endpoints stay at `--font-weight-semibold`. All colours
-are retained. Toolbar labels map the measured 14px to the existing 14.5px token;
-no separate 14px size is introduced. The Sort popover action buttons retain their
-existing size until their screen typography task.
+are retained. Toolbar labels, Sort dialog heading, disabled list menu items, and
+table settings labels map measured 14px to the existing 14.5px `--text-md`
+token; no separate 14px size is introduced. Sort disabled Apply maps measured
+weight 620 to `--font-weight-semibold` (510).
 
 ## Module list page (Leads)
 
@@ -389,6 +394,38 @@ count queries without changing the URL.
 the dialog offer the same set: `lib/records/sort-fields.ts` resolves the
 module's ordered `sortFieldLabels` against field metadata by label, and
 `Lead Name` resolves to the config's `linkField`.
+
+### Filter apply (Leads)
+
+`lib/records/filter-criteria.ts` maps `{ field, operatorId, value }` rows to port
+`Criteria`. `modules/leads/list-filters.ts` builds panel groups from module metadata;
+`modules/leads/leads-list-client.tsx` supplies the built groups once module fields
+and users are loaded. Labels keep the spec order; `Lead Name` maps to the page
+`linkField` (`Full_Name`); picklist options use stored values; owner rows use
+`useUsers`; currency rows use `LEADS_LIST_CURRENCY_CODE` from `list-config.ts`.
+`ModuleListScreen` wires Apply and Clear to `useRecordList` and `useRecordCount`.
+
+| Panel `operatorId` | Criterion (comparator + value) |
+| --- | --- |
+| equal | `equal` + string, string[], boolean, or number |
+| not_equal | `not_equal` + string, string[], or number |
+| contains / not_contains / starts_with / ends_with | same comparator + string |
+| is_empty / is_not_empty | same comparator + `null` |
+| less_than / less_equal / greater_than / greater_equal | same comparator + number |
+| between / not_between | same comparator + `[lower, upper]` |
+| age_in / due_in | `less_equal` + `{ token: "AGEINDAYS" \| "DUEINDAYS", offset: N }` |
+| today | `equal` + `{ token: "TODAY" }` |
+| tomorrow / yesterday / till_yesterday / starting_tomorrow / this_week / previous_week / this_month / previous_month / this_year / previous_year / next_year | `equal` + `{ token: "PERIOD", name: "<UTC period>" }` |
+
+Apply writes criteria to `useRecordList` and `useRecordCount`, resets row selection,
+and returns to page 1 when needed. Clear removes criteria. Changing the open view
+clears applied criteria and panel selection. `ValidationError` on `filters` shows the
+server message above the panel actions; the table keeps the previous page via
+`keepPreviousData`.
+
+Disabled filter rows (deviations): `textarea`, `website`, `integer`, `lookup`,
+`multi_module_lookup`, `double`, `bigint`, `profileimage`, and `Tag`; system-defined
+and related-module groups stay disabled.
 
 ### Interim
 
@@ -415,7 +452,10 @@ module's ordered `sortFieldLabels` against field metadata by label, and
 - While the field list is open, React Aria hides the rest of the Sort dialog from
   assistive technology (nested overlay). Escape closes the list first, back to the
   dialog and then to the page.
-- Filter panel rows are drawn disabled; checking them does not filter records.
+- Multiple field filters combine with `AND`; filters are not stored in the address
+  and clear on full page reload; no toolbar indicator after apply; empty results use
+  the table empty state; validation errors appear above Apply/Clear; the panel stays
+  open with rows checked after apply.
 - Split Create arrow, Actions menu, view selector, View Settings, and activity
   ribbon are not drawn on the page.
 

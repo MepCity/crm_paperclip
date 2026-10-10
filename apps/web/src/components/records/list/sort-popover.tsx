@@ -73,6 +73,7 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
             onChange={(apiName) => setField(apiName ?? "")}
           />
           <Select
+            variant="sort"
             label="Order"
             hideLabel
             items={[
@@ -82,7 +83,11 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
             value={order}
             onChange={(key) => setOrder(key === "desc" ? "desc" : "asc")}
           >
-            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+            {(item) => (
+              <SelectItem variant="sort" id={item.id}>
+                {item.label}
+              </SelectItem>
+            )}
           </Select>
         </div>
         <div className="record-sort-actions">
@@ -123,6 +128,7 @@ function SortByFieldSelect({
   const selectedLabel = options.find((option) => option.key === selectedKey)?.label ?? "None";
   return (
     <SearchableSelect
+      variant="sort"
       label="Sort By"
       panelTitle="Sort By fields"
       searchLabel="Search fields"
@@ -138,7 +144,11 @@ function SortByFieldSelect({
       searchClassName="record-sort-field-search px-1.5"
       listClassName="record-sort-field-list h-(--size-popover-sort-field-dropdown-list-height) overflow-y-auto"
     >
-      {(option) => <SelectItem id={option.key}>{option.label}</SelectItem>}
+      {(option) => (
+        <SelectItem variant="sort" id={option.key}>
+          {option.label}
+        </SelectItem>
+      )}
     </SearchableSelect>
   );
 }

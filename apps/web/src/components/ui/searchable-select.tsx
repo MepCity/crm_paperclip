@@ -18,6 +18,8 @@ function firstKey(keys: Selection): string | null {
 
 export interface SearchableSelectProps<T extends object> {
   label: string;
+  /** Typography role of the trigger, matching `Select`'s variants. */
+  variant?: "default" | "sort";
   /** Keeps the accessible name and removes the label from the visual layout. */
   hideLabel?: boolean;
   /** Text the trigger shows for the current selection. */
@@ -57,6 +59,7 @@ export interface SearchableSelectProps<T extends object> {
  */
 export function SearchableSelect<T extends object>({
   label,
+  variant = "default",
   hideLabel = false,
   valueText,
   options,
@@ -112,7 +115,10 @@ export function SearchableSelect<T extends object>({
         <Button
           aria-labelledby={`${labelId} ${valueId}`}
           className={
-            triggerClassName ?? "record-control flex items-center justify-between text-left"
+            triggerClassName ??
+            (variant === "sort"
+              ? "record-control record-control-sort flex items-center justify-between text-left"
+              : "record-control flex items-center justify-between text-left")
           }
         >
           <span id={valueId} className="truncate">

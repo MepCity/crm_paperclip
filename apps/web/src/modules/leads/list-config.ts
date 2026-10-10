@@ -9,6 +9,9 @@ import { leadsFilterGroups } from "./list-filters";
 
 export const LEADS_MODULE: ModuleApiName = "Leads";
 
+/** ISO 4217 code for currency filter rows; list cells use the same interim default. */
+export const LEADS_LIST_CURRENCY_CODE = "TRY";
+
 /** Sort By field labels, in the screen order recorded in list-views.md › Sorting. */
 export const LEADS_SORT_FIELD_LABELS = [
   "Address - City",
