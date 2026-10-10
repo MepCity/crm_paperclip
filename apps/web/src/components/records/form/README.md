@@ -160,9 +160,10 @@ the actual dialog belongs to MEP-139.
   remains visible when filtering.
 - Owner search uses a case-insensitive substring of name or email.
 - Owner secondary typography is unmeasurable. Use its primary value's adjacent
-  role, `--text-md` / `--font-weight-normal`. Unmeasured row/avatar geometry uses
-  the existing spacing scale, 32px avatar and minimum 48px row. Selected owner
-  names use the nearest selected picklist role (`--font-weight-semibold`).
+  role, `--text-md` / `--font-weight-normal`. Owner panel row pitch, avatar size,
+  search height and in-panel offsets are measured in `record-detail.md` › Dropdown
+  panel (Owner dropdown) and wired through `tokens.css`. Selected owner names use
+  the nearest selected picklist role (`--font-weight-semibold`).
 - Currency value inset after the measured divider was not captured; it uses
   `--space-3` like other framed inputs.
 
@@ -189,11 +190,14 @@ surrounding trigger.
   publish the organization currency. Company stays a text field (suggestions unseen).
 - Own user silhouette and shared icon components replace reference assets. No
   reference logo, image, icon or font files are added. Font advances may differ.
-- Dropdown border, option geometry and panel heights are measured. Unmeasured
-  horizontal padding, owner row gaps, icon sizes and disabled appearance use the
-  existing scale. Panel placement adapts to the available viewport; standard
-  panels open above when below cannot fit. Shadow blur remains unmeasurable
-  and is omitted. No separate 14px or 15px typography token is introduced.
+- Dropdown panel corners, check placement, option text inset, standard selected
+  fill, search field geometry, country row pitch, owner avatar rows and focus
+  glow are measured (`record-detail.md` › Dropdown panel; MEP-175). Keyboard-
+  focused and hovered unselected rows reuse the standard inset fill (`Interim`).
+  Panel drop shadow and the gap between the trigger and its panel stay
+  unmeasured. Panel placement adapts to the viewport; standard panels open
+  above when below cannot fit. Disabled appearance uses the shared primitive.
+  No separate 14px or 15px typography token is introduced.
 
 ## Record form screen (MEP-145)
 

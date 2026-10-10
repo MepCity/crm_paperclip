@@ -147,9 +147,17 @@
   width: 100%;
   padding: 0;
 }
+.record-choice-shell[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
 .record-choice-shell:has(:focus) {
   border-color: var(--color-focus-ring);
   box-shadow: var(--shadow-form-focus-glow);
+}
+.record-choice-shell[data-required]:has(:focus) {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
 }
 .record-choice-shell[data-invalid] {
   border-color: var(--color-danger);
@@ -249,9 +257,22 @@
   background: transparent;
   font-weight: var(--font-weight-semibold);
 }
-.record-search-panel .record-choice-row[data-focused]:not([data-selected]),
-.record-owner-panel .record-choice-row[data-focused]:not([data-selected]) {
+.record-choice-row[data-focused]:not([data-selected])::before,
+.record-choice-row[data-hovered]:not([data-selected])::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  right: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  height: var(--size-form-panel-selected-fill-height);
+  border-radius: var(--radius-form-control);
   background: var(--color-surface-selected);
+  transform: translateY(-50%);
+}
+.record-choice-row[data-focused]:not([data-selected]),
+.record-choice-row[data-hovered]:not([data-selected]) {
+  background: transparent;
 }
 .record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
   .record-choice-row[data-selected]::before {
@@ -270,10 +291,6 @@
   .record-choice-row[data-selected] {
   background: transparent;
   font-weight: var(--font-weight-semibold);
-}
-.record-choice-panel:not(.record-search-panel):not(.record-owner-panel)
-  .record-choice-row[data-focused]:not([data-selected]) {
-  background: var(--color-surface-selected);
 }
 .record-choice-check {
   position: absolute;
