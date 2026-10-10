@@ -240,3 +240,55 @@ The one-line synthetic Address → Description transition and final 44px row
 height are local regression contracts. The inline-editor capture's card bottom
 is not treated as a measured view-mode target. Left/right view-mode wrapping
 widths and Description value start/right edge remain unmeasured as listed above.
+
+## Inline field editing (MEP-166)
+
+`InlineEditProvider` coordinates a single active row across both overview cards.
+`DetailFieldRow` replaces the value with `InlineFieldEditor`, which uses the same
+`FieldInput`, `formPayload` and `validateRecordForm` as the record form. The screen
+writes through `useUpdateRecord`, then refetches the record for audit information.
+Read-only, system, unsupported and non-edit-view fields have no edit affordance.
+Leads exclusions live in `lib/records/leads-inline-edit.ts`.
+
+Save/Cancel have accessible names, original inline glyphs and 21px circles. The
+Rating list opens immediately, with 32px option rows and a selected checkmark.
+All measured geometry and colors use tokens. `/dev/ui` → `inline-field-editor`
+shows text, picklist and numeric controls, closed/open/error/saving examples.
+
+### Interim
+
+- Save commits only a changed field, closes on success and refreshes the record;
+  an unchanged value closes without sending a request.
+- Cancel and Escape discard the draft without a request. Enter saves single-line
+  field inputs; textarea Enter remains a newline and list/search Enter remains
+  option interaction. Numeric input is committed before saving.
+- Validation, server field errors and non-field failures remain beneath the form
+  input, using its red border/error style; the editor remains open.
+- Opening another pencil cancels the previous draft; only one row is active.
+- All field types other than the observed Rating list use their form input.
+  Composite Address and Lead Name cannot be edited inline.
+- Inline picklist uses a nonmodal overlay so Save/Cancel and another pencil remain
+  reachable. Existing keyboard focus styles and shadow tokens supply unmeasured
+  focus/halo/drop-shadow details; their raster profiles are not parity claims.
+- Placeholder/list and editor text use the nearest Business/details field value
+  typography role (`--text-md`, normal); selected option uses the existing form
+  selected-option semibold token, as required by this task. Reference ink widths
+  differ with our adopted font and original glyphs.
+
+### Deviations
+
+- `Mandatory fields form` is omitted: layout-rule mandatory collection belongs to
+  customization (M11). No inert control is drawn.
+- Save circle is 21px per task; measured reference fill is approximately 20px.
+- Exact glyph raster bounds and halo decay cannot be asserted from CSS geometry;
+  original glyph drawings and existing shared shadow tokens are used.
+
+### Verification
+
+`inline-field-editor.test.tsx` covers each supported input, Save/Cancel/Escape/
+Enter, unchanged writes, shared validation, server errors, pending-save guards,
+and a single editor. `lead-record-screen.test.tsx` exercises fixture updates,
+field-only payloads, record refetch and Modified By. `e2e/inline-field-editor.spec.ts`
+checks Rating persistence, Company validation, keyboard cancellation, accessibility,
+console errors and measured editor/list/action geometry at 1470×835. Optional
+synthetic screenshots/measurements go to `INLINE_EDITOR_ARTIFACT_DIR`.

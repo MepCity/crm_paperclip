@@ -1,3 +1,4 @@
+import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
 import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
@@ -48,6 +49,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "inline-field-editor": InlineFieldEditorDemo,
   "field-input": FieldInputDemo,
   "record-detail": RecordDetailDemo,
   "status-ribbon": StatusRibbonDemo,

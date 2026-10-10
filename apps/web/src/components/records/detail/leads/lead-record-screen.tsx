@@ -18,6 +18,7 @@ import {
   useModule,
   useRecord,
   useRecordList,
+  useUpdateRecord,
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
@@ -29,6 +30,7 @@ import {
   buildLeadsBusinessCardFields,
   buildLeadsDetailSections,
 } from "@/lib/records/leads-detail-sections";
+import { isLeadInlineEditable } from "@/lib/records/leads-inline-edit";
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
 import {
@@ -44,6 +46,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { InlineEditProvider } from "../inline-edit-context";
 import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
@@ -95,6 +98,7 @@ export function LeadRecordScreen({
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const updateRecord = useUpdateRecord(LEADS_MODULE);
   const deleteRecords = useDeleteRecords(LEADS_MODULE);
   const listContext = useLeadsListContext(orgSlug);
   const viewsQueryEnabled = listContext === null;
@@ -209,8 +213,27 @@ export function LeadRecordScreen({
         />
       ) : null}
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
-      <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-      <DetailsCard sections={detailSections} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+      <InlineEditProvider
+        key={recordId}
+        eligible={isLeadInlineEditable}
+        users={(usersQuery.data ?? []).map((user) => ({
+          id: user.userId,
+          name: user.name,
+          email: user.email,
+        }))}
+        save={async (input) => {
+          await updateRecord.mutateAsync({ id: recordId, input });
+          await recordQuery.refetch();
+        }}
+      >
+        <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+        <DetailsCard
+          sections={detailSections}
+          ownerNames={ownerNames}
+          format={DEFAULT_FORMAT}
+          railLayout={railVisible ? "shown" : "hidden"}
+        />
+      </InlineEditProvider>
     </>
   );
 

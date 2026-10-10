@@ -1,0 +1,104 @@
+.detail-inline-editor {
+  display: flex;
+  align-items: flex-start;
+  margin-left: calc(-1 * var(--size-detail-inline-value-inset));
+  margin-top: calc((var(--size-list-line-height) - var(--size-form-input-height)) / 2);
+}
+.detail-inline-control {
+  width: var(--size-detail-inline-width);
+  flex: none;
+}
+.detail-inline-control .record-control {
+  box-shadow: none;
+}
+.detail-inline-control .record-control:focus,
+.detail-inline-control .record-control:has(:focus),
+.detail-inline-control .record-control[data-focus-visible] {
+  box-shadow: 0 0 var(--size-detail-inline-halo) var(--color-primary-subtle);
+}
+.detail-inline-control .record-choice-trigger:not([data-invalid]):has([data-open]) {
+  border-color: var(--color-focus-ring);
+}
+.detail-inline-control .record-choice-trigger:has(.record-form-caret) > span:first-child {
+  color: var(--color-text);
+}
+.detail-inline-control .record-choice-trigger:has([id$="-value"]):has([data-open]) {
+  box-shadow: 0 0 var(--size-detail-inline-halo) var(--color-primary-subtle);
+}
+.detail-inline-actions {
+  display: flex;
+  gap: var(--size-detail-inline-action-gap);
+  margin-left: var(--size-detail-inline-action-inset);
+  margin-top: calc((var(--size-form-input-height) - var(--size-detail-inline-action-size)) / 2);
+}
+.detail-inline-save,
+.detail-inline-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--size-detail-inline-action-size);
+  height: var(--size-detail-inline-action-size);
+  border-radius: var(--radius-full);
+  padding: 0;
+}
+.detail-inline-save {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 0;
+}
+.detail-inline-cancel {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-text);
+}
+.detail-inline-actions svg {
+  width: var(--size-detail-inline-action-icon);
+  height: var(--size-detail-inline-action-icon);
+}
+.detail-inline-actions button:disabled {
+  opacity: 0.5;
+}
+.detail-inline-actions button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+.detail-inline-value-button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.record-inline-choice-panel {
+  border-radius: 0 0 var(--radius-form-control) var(--radius-form-control);
+  box-shadow: var(--shadow-md);
+}
+.record-inline-choice-panel .record-choice-list {
+  padding: var(--size-detail-inline-list-padding);
+}
+.record-inline-choice-panel .record-choice-row {
+  height: var(--size-detail-inline-option-height);
+  border-radius: var(--radius-form-control);
+  padding-inline: var(--space-2);
+  gap: var(--size-detail-inline-check-gap);
+}
+.record-inline-choice-check {
+  width: var(--size-detail-inline-check-size);
+  flex: none;
+}
+.record-inline-choice-check svg {
+  width: 100%;
+  height: var(--size-detail-inline-check-size);
+}
+.detail-inline-control .record-choice-trigger[data-inline-empty] > span:first-child {
+  color: var(--color-text-placeholder);
+}
+.detail-details-row[data-detail-wrapped="true"]:not([data-detail-wrapped-link="true"])
+  .detail-inline-value-button
+  > .detail-field-value,
+.detail-details-row-full[data-detail-wrapped="true"]:not([data-detail-wrapped-link="true"])
+  .detail-inline-value-button
+  > .detail-field-value {
+  line-height: var(--size-detail-multiline-line-pitch);
+}
