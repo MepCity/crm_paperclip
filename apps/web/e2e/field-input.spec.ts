@@ -88,6 +88,24 @@ async function pseudoBeforeStyles(locator: Locator) {
   });
 }
 
+async function expectInsetUnselectedHighlight(row: Locator, panel: Locator) {
+  const panelBox = await bounds(panel);
+  const fill = await pseudoBeforeStyles(row);
+  expect(fill.backgroundColor).toBe("rgb(240, 244, 252)");
+  expect(fill.borderRadius).toBe("5px");
+  expectPixels(fill.box.x - panelBox.x, 7);
+  expectPixels(panelBox.x + panelBox.width - (fill.box.x + fill.box.width), 7);
+  expectPixels(fill.box.height, 32);
+}
+
+async function expectNoInsetHighlight(row: Locator) {
+  const hasHighlight = await row.evaluate((element) => {
+    const before = getComputedStyle(element, "::before");
+    return before.content !== "none" && before.content !== "normal";
+  });
+  expect(hasHighlight).toBe(false);
+}
+
 function verticalCenterOffset(
   container: { y: number; height: number },
   inner: { y: number; height: number },
@@ -354,22 +372,31 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   expectPixels(fillBox.height, 32);
   await expect(selectedNone).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expectType(page, selectedNone, "--text-md", "--font-weight-semibold");
-  // Interim: keyboard-focused unselected row uses the same inset fill geometry.
+  // Interim: keyboard-focused and hovered unselected rows use inset fill geometry.
   await page.keyboard.press("ArrowDown");
   await expect(unselected).toHaveAttribute("data-focused", "true");
-  const focusFill = await pseudoBeforeStyles(unselected);
-  expect(focusFill.backgroundColor).toBe("rgb(240, 244, 252)");
-  expect(focusFill.borderRadius).toBe("5px");
-  expectPixels(focusFill.box.x - panelBox.x, 7);
-  expectPixels(fillBox.height, 32);
+  await expectInsetUnselectedHighlight(unselected, panel);
+  await page.keyboard.press("ArrowUp");
+  await unselected.hover();
+  await expect(unselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(unselected, panel);
   expect(await page.getByRole("dialog").getByRole("textbox").count()).toBe(0);
+  expect((await panel.boundingBox())?.width).toBeCloseTo(
+    (await standard.boundingBox())?.width ?? 0,
+    0,
+  );
   await page.keyboard.press("Escape");
+  await expect(standard).toBeFocused();
   const country = demo.getByRole("button", { name: "Country empty", exact: true });
   await hydrate(country);
   await country.click();
   panel = page.locator(".record-choice-panel");
   await expect(panel).toHaveCSS("border-radius", "5px");
+  // record-detail.md › Country panel: 270 px high; search auto-focus and focus edge #5464F2.
+  await expect(panel).toHaveCSS("height", "270px");
   const search = page.getByRole("textbox", { name: "Search", exact: true });
+  await expect(search).toBeFocused();
+  await expect(search).toHaveCSS("border-color", "rgb(84, 100, 242)");
   // e: Search input inset 11 px from panel sides, 12 px from panel top.
   expectPixels(await outerLeftInset(panel, search), 11);
   expectPixels(await outerRightInset(panel, search), 11);
@@ -400,10 +427,14 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   await expect(countryCheck).toHaveCSS("width", "11.5px");
   await expect(countryCheck).toHaveCSS("height", "8.5px");
   await expect(countryCheck).toHaveCSS("color", "rgb(49, 57, 73)");
+  const countrySelectedRowBox = await bounds(countrySelected);
+  const countryCheckBox = await bounds(countryCheck);
+  expectPixels(verticalCenterOffset(countrySelectedRowBox, countryCheckBox), 0);
   const countryUnselected = page.getByRole("option", { name: "Alpha" });
   expectPixels(await outerLeftInset(panel, countryUnselected.locator(".min-w-0").first()), 32.5);
   expectPixels(await outerLeftInset(panel, countrySelected.locator(".min-w-0").first()), 32.5);
   await expect(countrySelected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expectNoInsetHighlight(countrySelected);
   // i: First row starts 7.5 px below search bottom; 32 px pitch.
   const searchBottom = (await bounds(search)).y + (await bounds(search)).height;
   const firstRowTop = (await bounds(countrySelected)).y;
@@ -411,6 +442,14 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   const second = await page.getByRole("option", { name: "Alpha" }).boundingBox();
   const first = await countrySelected.boundingBox();
   expect((second?.y ?? 0) - (first?.y ?? 0)).toBe(32);
+  await search.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(countryUnselected).toHaveAttribute("data-focused", "true");
+  await expectInsetUnselectedHighlight(countryUnselected, panel);
+  await search.focus();
+  await countryUnselected.hover();
+  await expect(countryUnselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(countryUnselected, panel);
   await search.fill("ALP");
   await expect(page.getByRole("option")).toHaveCount(2);
   await page.keyboard.press("Escape");
@@ -419,7 +458,11 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   await owner.click();
   panel = page.locator(".record-choice-panel");
   await expect(panel).toHaveCSS("border-radius", "5px");
+  // record-detail.md › Owner dropdown: 179 px panel, 1 px CED0E1 edge; search auto-focus.
+  await expect(panel).toHaveCSS("height", "179px");
+  await expect(panel).toHaveCSS("border-color", "rgb(206, 208, 225)");
   const ownerSearch = page.getByRole("textbox", { name: "Search Users" });
+  await expect(ownerSearch).toBeFocused();
   // e: Owner search inset 11 px from panel sides, 12 px from panel top.
   expectPixels(await outerLeftInset(panel, ownerSearch), 11);
   expectPixels(await outerRightInset(panel, ownerSearch), 11);
@@ -456,6 +499,7 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
     "--font-weight-semibold",
   );
   await expect(selected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expectNoInsetHighlight(selected);
   const ownerCheck = selected.locator(".record-choice-check");
   expectPixels(await outerLeftInset(panel, ownerCheck), 16);
   await expect(ownerCheck).toHaveCSS("width", "11.5px");
@@ -489,6 +533,15 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   const lastAvatar = await bounds(avatars.last());
   const ownerPanelBox = await bounds(panel);
   expectPixels(ownerPanelBox.y + ownerPanelBox.height - (lastAvatar.y + lastAvatar.height), 13);
+  const ownerUnselected = page.getByRole("option", { name: /Robin Example/ });
+  await ownerSearch.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(ownerUnselected).toHaveAttribute("data-focused", "true");
+  await expectInsetUnselectedHighlight(ownerUnselected, panel);
+  await ownerSearch.focus();
+  await ownerUnselected.hover();
+  await expect(ownerUnselected).toHaveAttribute("data-hovered", "true");
+  await expectInsetUnselectedHighlight(ownerUnselected, panel);
   await page.keyboard.press("Escape");
   const requiredOwner = demo.getByRole("button", { name: "ownerlookup required", exact: true });
   await hydrate(requiredOwner);
