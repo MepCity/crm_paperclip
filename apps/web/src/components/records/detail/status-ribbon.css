@@ -8,6 +8,10 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
+.status-ribbon[data-disabled] {
+  pointer-events: none;
+  opacity: 0.72;
+}
 .status-ribbon-lane {
   min-width: 0;
   flex: 1;
