@@ -37,12 +37,11 @@ The record service port (MEP-68) is independent of storage, so this decision doe
 
 ### 2. Paths
 
-- Organization home currency: `GET /crm/v2.2/org/currencies` (Interim).
-
 - A route handler's path is the observed path, version segment included: `/crm/v2.2/Leads/bulk` is served by `app/crm/v2.2/[module]/bulk/route.ts`. The version is a label, not a compatibility promise. An endpoint we need but never observed takes the version of the nearest observed endpoint of the same resource.
 - The module segment is the module API name. Handlers are generic over it (ADR 0001 §5.1 and §5.6); no handler is written for one module.
 - Pages move from `/o/[orgSlug]/…` to `/crm/[orgSlug]/…`. The rest of a page path follows the reference: `tab/<Module>/list`, `tab/<Module>/custom-view/<viewId>/list`, `tab/<Module>/create`, `tab/<Module>/<recordId>`. Organization slugs of the form `v<digits>` or `v<digits>.<digits>` are reserved.
 - The older `.do` bootstrap endpoints are not reproduced (deviation 1).
+- Organization home currency: `GET /crm/v2.2/org/currencies` (Interim).
 
 ### 3. Organization and authentication
 
@@ -90,6 +89,13 @@ leaf/group body on `bulk` and `actions/count`; `field` carries `api_name` and
 - Existing `less_equal` also accepts a numeric value and the new day-offset
   token string `${DUEINDAYS}+N`. N is a nonnegative integer; the due window is
   strictly after now and inclusive at now + N complete days (N=0 is empty).
+  Interim week/month spellings `${AGEINWEEKS}+N`, `${AGEINMONTHS}+N`,
+  `${DUEINWEEKS}+N`, `${DUEINMONTHS}+N` share the port `unit` field on
+  `AGEINDAYS` / `DUEINDAYS`.
+- Interim relative windows use `equal` with `${PREVIOUS.DAYS|WEEKS|MONTHS}+N` or
+  `${NEXT.DAYS|WEEKS|MONTHS}+N` (count is a positive integer).
+- Interim calendar-day filters use strict `YYYY-MM-DD` strings for `equal`,
+  `less_than`, `greater_than`, `between`, and `not_between` on datetime fields.
 - Named periods use `equal` and one token family: `${PERIOD.TOMORROW}`,
   `${PERIOD.YESTERDAY}`, `${PERIOD.TILL_YESTERDAY}`,
   `${PERIOD.STARTING_TOMORROW}`, `${PERIOD.THIS_WEEK}`,

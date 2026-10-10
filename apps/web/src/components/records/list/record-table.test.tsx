@@ -168,6 +168,21 @@ test("empty state keeps the header and footer, drops the badge and checkboxes, a
   expect(scroller?.getAttribute("aria-label")).toBe("Records");
 });
 
+test("link cells take the cell's wrap mode instead of forcing their own", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText={false} />);
+  const truncated = document.querySelector("[data-part=row] [data-part=value]");
+  expect(truncated?.className).toContain("truncate");
+  const link = truncated?.querySelector("a");
+  expect(link?.className).not.toContain("whitespace-normal");
+  expect(link?.className).not.toContain("inline-block");
+  cleanup();
+
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText />);
+  const wrapped = document.querySelector("[data-part=row] [data-part=value]");
+  expect(wrapped?.className).toContain("whitespace-normal");
+  expect(wrapped?.querySelector("a")?.className).toContain("break-words");
+});
+
 test("renders the settings slot and keeps selection off the rest of the page", async () => {
   const user = userEvent.setup();
   render(<Harness records={[record("rec-001", "Lead 001")]} settings={<span>Columns</span>} />);

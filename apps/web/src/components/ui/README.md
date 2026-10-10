@@ -381,7 +381,7 @@ what the "no colour constants" rule forbids.
 | `--size-form-caret-inset-end` | `12px` | record-detail.md › Lead Information rows › caret inset from outer right | from spec |
 | `--size-form-input-end` | `32px` | record-detail.md › Composite inputs › owner/currency end section width | from spec |
 | `--size-form-input-end-icon` | `16px` | record-detail.md › Composite inputs › end-section icon size | from spec |
-| `--size-form-currency-prefix-inset` | `12px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
+| `--size-form-currency-prefix-inset` | `11.5px` | record-detail.md › Composite inputs › currency prefix inset | from spec |
 | `--size-form-currency-divider-gap` | `9.5px` | record-detail.md › Composite inputs › currency divider after prefix text | from spec |
 | `--size-form-currency-divider-height` | `20px` | record-detail.md › Composite inputs › currency divider height | from spec |
 | `--size-form-currency-divider-top` | `7px` | record-detail.md › Composite inputs › currency divider vertical offset | from spec |
@@ -511,9 +511,9 @@ what the "no colour constants" rule forbids.
 | `--size-form-card-inset` | `12px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "section title starts x 344" with card at x 332 | from spec |
 | `--size-form-first-title-center` | `30px` | MEP-172 interim › first section title row center relative to card top | from spec |
 | `--size-form-first-content-top` | `63px` | MEP-172 interim › first section content (Lead Image portrait) below card top | from spec |
-| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy section gap (Leads page Description section only) | from spec |
+| `--size-form-section-gap` | `55.5px` | MEP-172 interim › legacy/unused (superseded by section-title-center-above/below; not referenced in layout CSS) | from spec |
 | `--size-form-section-title-center-above` | `61px` | MEP-172 / MEP-174 › section title center below previous section content | from spec |
-| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top above section title center | from spec |
+| `--size-form-section-title-center-below` | `33px` | MEP-172 / MEP-174 › section content top 33px below section title center | from spec |
 | `--size-form-portrait` | `48px` | record-detail.md › Layout › Visual layout › Create/edit form › Form surface and Lead Image › "48 px diameter" | from spec |
 | `--size-form-label-column-left` | `172px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 516" with section at x 344 | from spec |
 | `--size-form-label-column-right` | `221.5px` | record-detail.md › Layout › Visual layout › Create/edit form › Lead Information rows › "Labels end at x 1094.5" in the right column | from spec |
@@ -537,6 +537,7 @@ what the "no colour constants" rule forbids.
 | `--size-form-field-group-legend-inset` | `10px` | MEP-172 / MEP-174 › Address legend background box inset from group left | from spec |
 | `--size-form-field-group-legend-padding-start` | `8.5px` | MEP-172 / MEP-174 › legend text inset inside background box | from spec |
 | `--size-form-field-group-legend-padding-end` | `12.5px` | MEP-172 / MEP-174 › legend gap before top border resumes | from spec |
+| `--size-form-field-group-legend-baseline-offset` | `3px` | MEP-174 / MEP-237 › legend `translateY` offset for baseline 8px below frame top | from spec |
 | `--size-form-input-full-width` | `639px` | MEP-172 / MEP-174 › Description row control width (aligned with left inputs) | from spec |
 | `--size-form-description-height` | `34px` | MEP-172 / MEP-174 › Description textarea initial height in layout demo | from spec |
 | `--size-form-address-footer-bottom` | `15px` | record-detail.md › Address frame › coordinates bottom to frame bottom 52.5 px minus row gap 20 px and label line 17.5 px | from spec |
@@ -814,9 +815,14 @@ Button primary and secondary variants use the measured vertical gradients from t
 **Create and action buttons** row of `list-views.md`, retaining existing hover/pressed
 fills. A disabled primary button uses the flat `--color-primary-disabled` fill at full
 opacity, with the same white label, instead of a faded copy of the enabled gradient. `toolbar`, `listToolbar`, `splitPrimary`, `splitArrow`, `actions`, `listFilter` and `listIcon` sizes consume the existing
-`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`) consumes
+`--size-button-*` values in the source table. `Menu.width` (`create`/`actions`/`settings`) consumes
 `--size-popover-import-width`/`--size-popover-actions-width` from **Create More / Actions
-menus**. `Popover.hideTitle` keeps an accessible title without a visible heading;
+menus** and `--size-popover-settings-width` from the **View Settings popover** row.
+`Menu.shouldCloseOnInteractOutside` is forwarded to the popover so a nested submenu that
+portals outside its parent does not dismiss it. `SubmenuTrigger` (React Aria's) and
+`Submenu` compose that nested layer: the trigger's first child is the row and its second is
+the submenu popover, which takes its placement from the trigger and sizes to its rows — the
+spec measures the parent popover only. `Popover.hideTitle` keeps an accessible title without a visible heading;
 `contentClassName` permits the fixed compact Sort layout. No token value is duplicated.
 
 
