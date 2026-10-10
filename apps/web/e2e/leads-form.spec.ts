@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
+import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "../src/components/records/form/form-save-error";
 import { operationPath, operations } from "../src/lib/api/wire/operations";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
 import { expectWithin1, textCapLeft, textSolidInkBand } from "./support/geometry";
 import { createOrganization } from "./support/org";
-import { expect, test } from "./support/test";
+import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType, tokenValue } from "./support/typography";
 
 function px(value: string) {
@@ -176,6 +177,47 @@ test("Save and New clears the form and leaves a saved record in the list", async
   await expect(page.getByRole("link", { name: "Form Lead New", exact: true })).toBeVisible();
 });
 
+test("blocked save keeps the form, values and error banner below the strip", async ({
+  page,
+  pageErrors,
+}) => {
+  await openCreate(page);
+  await fillRequired(page, "Net");
+  let blocked = true;
+  await page.route("**/crm/v2.2/Leads", async (route) => {
+    if (route.request().method() === "POST" && blocked) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const banner = page.locator("[data-record-form-error-banner]");
+  await expect(banner).toHaveText(FORM_SAVE_GENERIC_ERROR_MESSAGE);
+  await expect(page.getByRole("textbox", { name: "Company", exact: true })).toHaveValue(
+    "Form Company Net",
+  );
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
+  const strip = await page.locator("[data-record-form-strip]").boundingBox();
+  const bannerBox = await banner.boundingBox();
+  if (!strip || !bannerBox) throw new Error("Missing strip or banner");
+  expectWithin1(bannerBox.y, strip.y + strip.height);
+  await expect(banner).toHaveCSS("color", await tokenValue(page, "color", "--color-form-required"));
+  // ADR 0003 §8: measured reference error ink #ff5d5a on white remains below AA.
+  await expectNoA11yViolations(page, {
+    exclude: [
+      "#record-form-Salutation-value.record-prefix-empty",
+      ".record-form-clear-address > span",
+      "[data-record-form-error-banner]",
+    ],
+  });
+  const next = pageErrors.filter((error) => !error.includes("net::ERR_FAILED"));
+  pageErrors.splice(0, pageErrors.length, ...next);
+  blocked = false;
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("[data-record-header]")).toContainText("Form Lead Net");
+});
+
 test("client validation keeps the form open, shows messages and focuses Company", async ({
   page,
 }) => {
@@ -193,6 +235,17 @@ test("client validation keeps the form open, shows messages and focuses Company"
   await expect(company).toBeFocused();
   await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
   await expect(saveRequest).rejects.toThrow();
+});
+
+test("server field errors keep the form open and focus Company", async ({ page, pageErrors }) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Validation Lead");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const company = page.getByRole("textbox", { name: "Company", exact: true });
+  await expect(company).toHaveAttribute("aria-invalid", "true");
+  await expect(company).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Create Lead" })).toBeVisible();
+  ignoreFailedResponses(pageErrors, [400]);
 });
 
 test("invalid email shows a format message without saving", async ({ page }) => {
