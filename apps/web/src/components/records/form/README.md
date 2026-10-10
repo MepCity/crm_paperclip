@@ -166,6 +166,27 @@ the actual dialog belongs to MEP-139.
   the nearest selected picklist role (`--font-weight-semibold`).
 - Currency value inset after the measured divider was not captured; it uses
   `--space-3` like other framed inputs.
+- Disabled input (MEP-234): `record-detail.md` › Disabled input is `Not observed`, so the
+  dimming stays our own choice — one `opacity: 0.5` layer on the wrapper and the value
+  text at the same strength in a framed input, the owner field and a bare textarea.
+  Never two stacked layers (that rendered the framed value text at 0.25).
+- Portrait (MEP-234): `record-detail.md` › Portrait icon, form and header says **different
+  silhouette** — the form shows a gray vector placeholder, the record header shows an
+  uploaded photograph whose head/body bounds are `Not observed`. The two drawings stay
+  separate: `recordPortraitSilhouette` takes the measured form bounds, `recordPortrait`
+  stays the header's own placeholder in its 48 px container.
+
+### Measured form rows (MEP-234)
+
+- Email Opt Out checkbox: the 15 × 15 px box sits `--size-form-checkbox-inset-start`
+  (5 px) inside the input column and `--size-form-checkbox-inset-top` (10 px) below the
+  row top, which leaves 9 px to the row bottom and puts the box 42 px after the label.
+- Form text baselines: inside the 34 px row the label and the value ink tops both start 12 px
+  below the input's top edge. `--size-form-label-baseline-offset` paints the label text 1 px
+  lower (a wrapped label must keep the measured row height, so the offset is never padding on
+  the label box) and `--size-form-control-text-padding-top` puts the same 1 px on the interior
+  text of framed inputs, picklists, owner fields and the Salutation prefix. Inputs keep their
+  measured boxes; only the text moves.
 
 ### Empty selection contrast (MEP-157)
 
