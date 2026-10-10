@@ -30,12 +30,12 @@ import {
 } from "@/lib/records/leads-detail-sections";
 import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
 import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
-import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
 import {
   buildLeadsRecordMoreMenuGroups,
   LEADS_DELETE_CONFIRM_MESSAGE,
   LEADS_DELETE_CONFIRM_TITLE,
 } from "@/lib/records/leads-record-more-options";
+import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
 import {
   type RecordListContext,
   readRecordListContext,

@@ -432,7 +432,9 @@ test.describe("Lead record detail page", () => {
     await expectNoA11yViolations(page);
   });
 
-  test("More Options delete menu row matches visual layout at 1470×835", async ({ page }, testInfo) => {
+  test("More Options delete menu row matches visual layout at 1470×835", async ({
+    page,
+  }, testInfo) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openFirstLeadFromList(page, org.slug);
