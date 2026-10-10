@@ -401,6 +401,24 @@ what the "no colour constants" rule forbids.
 | `--size-confirm-dialog-title-gap` | `18.5px` | record-detail.md › Unsaved changes modal › title to body gap | from spec |
 | `--size-confirm-dialog-message-actions-gap` | `30.5px` | record-detail.md › Unsaved changes modal › body to actions gap | from spec |
 | `--size-confirm-dialog-actions-gap` | `10.5px` | record-detail.md › Unsaved changes modal › button gap | from spec |
+| `--size-list-mass-update-button-width` | `113px` | list-views.md › Visual layout › Selection toolbar › Mass Update button | from spec |
+| `--size-mass-update-dialog-width` | `484px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
+| `--size-mass-update-dialog-height` | `207px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal container | from spec |
+| `--size-mass-update-dialog-padding-inline` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › field selector inset | from spec |
+| `--size-mass-update-dialog-title-padding-inline-start` | `32.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title | from spec |
+| `--size-mass-update-dialog-title-line-height` | `18.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › modal title block | from spec |
+| `--size-mass-update-dialog-padding-block-start` | `29.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title position | from spec |
+| `--size-mass-update-dialog-padding-block-end` | `31px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › bottom inset | from spec |
+| `--size-mass-update-dialog-title-fields-gap` | `32px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › title to field row | from spec |
+| `--size-mass-update-dialog-fields-actions-gap` | `30px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › inputs to buttons | from spec |
+| `--size-mass-update-field-selector-width` | `122px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › field selector | from spec |
+| `--size-mass-update-value-width` | `285px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › value placeholder | from spec |
+| `--size-mass-update-field-gap` | `15px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › horizontal gap | from spec |
+| `--size-mass-update-cancel-width` | `74px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › Cancel button | from spec |
+| `--size-mass-update-update-width` | `76px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › Update button | from spec |
+| `--size-mass-update-actions-gap` | `11.5px` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › button gap | from spec |
+| `--color-mass-update-value-disabled-fill` | `#f5f6f8` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › disabled value fill | from spec |
+| `--color-mass-update-value-border` | `#d9dce2` | leads-write-behaviour.md › Visual Layout of Mass Update Modal › value border | from spec |
 | `--size-popover-view-width` | `128px` | list-views.md › View options popover › "About 128 px wide" | from spec |
 | `--size-popover-import-width` | `180px` | list-views.md › Create More / Actions menus › "Import menu about 180 px wide" | from spec |
 | `--size-popover-actions-width` | `200px` | list-views.md › Create More / Actions menus › "Actions menu about 200 px wide" | from spec |
@@ -598,6 +616,9 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-portrait` | `48px` | record-detail.md › Record header › 48 × 48 portrait | from spec |
 | `--size-record-back-region` | `52px` | record-detail.md › Record header › 372 − 320 portrait offset | from spec |
 | `--size-record-title-gap` | `15px` | record-detail.md › Record header › 435 − 420 title gap | from spec |
+| `--size-record-title-separator-gap` | `6px` | record-detail.md › Record header › hyphen and company ink gaps | from spec |
+| `--size-record-header-end` | `24px` | record-detail.md › Record header › Next chevron centred 35.5 px from header right edge | from spec |
+| `--radius-record-menu-row` | `5px` | record-detail.md › More Options menu › Rows and groups › highlighted row corners | from spec |
 | `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
 | `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
 | `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |

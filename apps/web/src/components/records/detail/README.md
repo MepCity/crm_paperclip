@@ -14,6 +14,7 @@ and page placement live in MEP-144.
 | Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order |
 | Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
 | Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
+| Status ribbon | `leads/lead-status-ribbon-section.tsx` with `lib/records/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
 
 The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
 `requireOrgContext` and renders `LeadsDetailClient` (`modules/leads/leads-detail-client.tsx`).
@@ -42,6 +43,11 @@ Shared formatting with list `CellValue` lives in `../field-format.ts`.
 
 ## Interim
 
+- Lead status ribbon (MEP-167): stage changes apply immediately with no confirmation or toast;
+  failed writes revert the ribbon and show form-style error text beneath it; only the current-stage
+  and terminal menus change `Lead_Status` (other chevrons are not clickable); rejected-stage groups
+  (`Junk`, `Not Qualified`) are fixed in `leads-status-ribbon.ts` because metadata does not expose
+  `record_category_value` on the client.
 - `Hide Details` collapsed state and `Show Details` label are implemented locally;
   persistence was not observed in reference captures and is not stored.
 - `Last Update` label position on the page is not measured here (MEP-144).
@@ -121,8 +127,10 @@ menu present/absent, and all four arrow availability combinations.
 
 - The portrait and icon glyphs use our own code; no reference image, icon, logo or font
   asset is added. Figtree remains the shared typeface; glyph advances can differ.
-- Title weight is unmeasured; it uses `--font-weight-normal` provisionally. Secondary
-  command and related-row weights are unmeasured and retain regular weight. The primary
+- The title name uses `--text-2xl` / `--font-weight-bold`; an optional subtitle (company)
+  uses `--text-md` / `--font-weight-normal`, separated by a hyphen with
+  `--size-record-title-separator-gap`. Secondary command and related-row weights are
+  unmeasured and retain regular weight. The primary
   command uses `--font-weight-semibold` per the CTO's 520–620 class. Rail heading uses
   `--font-weight-bold`. Tabs use `--text-lg`, selected semibold/inactive regular.
 - The title size uses `--text-2xl` (the adopted 20.5px end of 20.5–21px). The CTO maps

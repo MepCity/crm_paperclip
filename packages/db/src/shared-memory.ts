@@ -1,5 +1,7 @@
 import { execFile } from "node:child_process";
+import { userInfo } from "node:os";
 import { promisify } from "node:util";
+import { parseIpcTable, type Segment, selectOrphans } from "./sysv-ipc";
 
 const execFileAsync = promisify(execFile);
 
@@ -10,37 +12,17 @@ const execFileAsync = promisify(execFile);
  * killed instead of stopped leaves one ID behind. When the table is full, `shmget` fails with
  * ENOSPC and no new cluster can be initialised on the machine — by any project.
  */
-export type SysVSharedMemoryRow = {
-  id: number;
-  attachedProcesses: number;
-  creatorPid: number;
-  bytes: number;
-};
+export type SysVSharedMemoryRow = Segment;
 
 /** Size of the placeholder segment a PostgreSQL server asks the kernel for. */
 export const POSTGRES_MARKER_BYTES = 56;
 
-/** Reads the `ID`, `SEGSZ`, `NATTCH` and `CPID` columns of `ipcs -m -a` (macOS layout). */
-export function parseSysVSharedMemoryTable(output: string): SysVSharedMemoryRow[] {
-  const rows: SysVSharedMemoryRow[] = [];
-  for (const line of output.split("\n")) {
-    const columns = line.trim().split(/\s+/);
-    if (columns[0] !== "m") continue;
-    const id = Number(columns[1]);
-    const bytes = Number(columns[9]);
-    const attachedProcesses = Number(columns[8]);
-    const creatorPid = Number(columns[10]);
-    if (
-      !Number.isInteger(id) ||
-      !Number.isInteger(attachedProcesses) ||
-      !Number.isInteger(creatorPid) ||
-      !Number.isInteger(bytes)
-    ) {
-      continue;
-    }
-    rows.push({ id, attachedProcesses, creatorPid, bytes });
-  }
-  return rows;
+/** Reads the complete Darwin shared memory table, failing closed on invalid output. */
+export function parseSysVSharedMemoryTable(
+  output: string,
+  now = Date.now(),
+): SysVSharedMemoryRow[] {
+  return parseIpcTable(output, now).rows;
 }
 
 /**
@@ -51,7 +33,7 @@ export function staleSysVSegments(
   rows: readonly SysVSharedMemoryRow[],
   isPidAlive: (pid: number) => boolean,
 ): SysVSharedMemoryRow[] {
-  return rows.filter((row) => row.attachedProcesses === 0 && !isPidAlive(row.creatorPid));
+  return rows.filter((row) => row.nattch === 0 && !isPidAlive(row.cpid));
 }
 
 /**
@@ -63,7 +45,7 @@ export function stalePostgresMarkers(
   rows: readonly SysVSharedMemoryRow[],
   isPidAlive: (pid: number) => boolean,
 ): SysVSharedMemoryRow[] {
-  return staleSysVSegments(rows, isPidAlive).filter((row) => row.bytes === POSTGRES_MARKER_BYTES);
+  return staleSysVSegments(rows, isPidAlive).filter((row) => row.size === POSTGRES_MARKER_BYTES);
 }
 
 /** The FATAL line PostgreSQL prints when the kernel refuses to give it a shared memory ID. */
@@ -89,9 +71,17 @@ export async function readSysVSharedMemoryTable(): Promise<SysVSharedMemoryRow[]
 export function describeSysVSharedMemory(
   rows: readonly SysVSharedMemoryRow[],
   isPidAlive: (pid: number) => boolean,
+  options: { owner?: string; now?: number } = {},
 ): string | null {
   if (rows.length === 0) return null;
-  const stale = staleSysVSegments(rows, isPidAlive);
+  const stale = selectOrphans(
+    { rows: [...rows] },
+    {
+      owner: options.owner ?? userInfo().username,
+      now: options.now ?? Date.now(),
+      deadPids: new Set(rows.filter((row) => !isPidAlive(row.cpid)).map((row) => row.cpid)),
+    },
+  ).filter((decision) => decision.selected);
   return [
     `System V shared memory: ${rows.length} kernel IDs in use, ${stale.length} stale`,
     "(nothing attached, creator PID gone — left behind by servers that were killed instead of",

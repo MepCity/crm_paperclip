@@ -5,7 +5,8 @@ import { type ReactNode, useEffect, useState } from "react";
 /**
  * Every token declared in `app/tokens.css`, grouped the same way. The gallery resolves the
  * authored value with `getComputedStyle` so no value is repeated as a literal here.
- * tokens.test registry (no 3px width bar — skews /dev/ui ink E2E): "--size-form-field-group-legend-baseline-offset"
+ * MEP-174 / MEP-237 Address legend baseline offset — tokens.test registry (no 3px width bar —
+ * skews /dev/ui ink E2E): "--size-form-field-group-legend-baseline-offset"
  */
 const COLOUR_GROUPS = [
   {
@@ -271,6 +272,9 @@ const SIZE_GROUPS = [
       "--size-record-portrait",
       "--size-record-back-region",
       "--size-record-title-gap",
+      "--size-record-title-separator-gap",
+      "--size-record-header-end",
+      "--radius-record-menu-row",
       "--size-record-rail-width",
       "--size-record-rail-heading-height",
       "--size-record-rail-text-inset",
@@ -579,6 +583,24 @@ const SIZE_GROUPS = [
       "--size-confirm-dialog-title-gap",
       "--size-confirm-dialog-message-actions-gap",
       "--size-confirm-dialog-actions-gap",
+      "--size-list-mass-update-button-width",
+      "--size-mass-update-dialog-width",
+      "--size-mass-update-dialog-height",
+      "--size-mass-update-dialog-padding-inline",
+      "--size-mass-update-dialog-title-padding-inline-start",
+      "--size-mass-update-dialog-title-line-height",
+      "--size-mass-update-dialog-padding-block-start",
+      "--size-mass-update-dialog-padding-block-end",
+      "--size-mass-update-dialog-title-fields-gap",
+      "--size-mass-update-dialog-fields-actions-gap",
+      "--size-mass-update-field-selector-width",
+      "--size-mass-update-value-width",
+      "--size-mass-update-field-gap",
+      "--size-mass-update-cancel-width",
+      "--size-mass-update-update-width",
+      "--size-mass-update-actions-gap",
+      "--color-mass-update-value-disabled-fill",
+      "--color-mass-update-value-border",
     ],
   },
   {

@@ -22,9 +22,7 @@ export function MenuGroup({ children }: { children: ReactNode }) {
 }
 
 export function MenuDivider() {
-  return (
-    <Separator className="my-(--size-record-menu-inset) -mx-(--size-record-menu-inset-inline) h-px bg-border" />
-  );
+  return <Separator className="my-(--size-record-menu-inset) h-px w-full bg-border" />;
 }
 
 export function MenuButton(props: ButtonProps) {
@@ -46,7 +44,7 @@ export function MenuItem<T extends object>({
       className={composeRenderProps(
         className,
         (extra) =>
-          `cursor-default outline-none data-disabled:opacity-50 ${appearance === "record" ? "flex items-center h-(--size-menu-item-height) px-(--size-record-menu-text-inset) text-md font-normal" : appearance === "measured" ? "flex items-center gap-(--size-menu-label-gap) min-h-(--size-menu-item-height) rounded-md px-(--size-menu-inset) text-md font-normal" : "rounded-sm px-3 py-2 text-md font-normal"} ` +
+          `cursor-default outline-none data-disabled:opacity-50 ${appearance === "record" ? "flex items-center h-(--size-menu-item-height) rounded-(--radius-record-menu-row) px-(--size-record-menu-text-inset) text-md font-normal" : appearance === "measured" ? "flex items-center gap-(--size-menu-label-gap) min-h-(--size-menu-item-height) rounded-md px-(--size-menu-inset) text-md font-normal" : "rounded-sm px-3 py-2 text-md font-normal"} ` +
           `data-focused:bg-surface-hover data-hovered:bg-surface-hover ` +
           `data-focus-visible:ring-2 data-focus-visible:ring-inset data-focus-visible:ring-focus-ring ` +
           `${variant === "danger" ? "text-danger" : "text-text"} ${extra ?? ""}`,
@@ -121,6 +119,7 @@ export function Menu<T extends object>({
   return (
     <Popover
       placement={placement ?? "bottom end"}
+      offset={appearance === "record" ? 0 : undefined}
       className={menuPopoverClass(widthClass, appearance)}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >

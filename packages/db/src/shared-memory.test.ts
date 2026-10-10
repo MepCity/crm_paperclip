@@ -18,7 +18,6 @@ m 92405762 0x04258363 --rw-------    tester    wheel    tester    wheel      0  
 m 13172739 0x03cd4334 --rw-------    tester    wheel    tester    wheel      0     56  26255  26255  1:14:47  1:18:36  1:14:47
 m 21495835 0x052507ca --rw-------    tester    wheel    tester    wheel      3     56  96102  96102  3:08:21  3:16:04  3:08:21
 m 777001 0x0777abcd --rw-------    tester    wheel    tester    wheel      0   4096  88888  88888  4:00:00 no-entry  4:00:00
-s   40960 0x00000000 --rw-------    tester    wheel    tester    wheel      0     56   1000   1000  1:00:00  1:00:00  1:00:00
 `;
 
 const EXHAUSTION = [
@@ -29,11 +28,19 @@ const EXHAUSTION = [
 ].join("\n");
 
 // 1477, 57055 and 96102 are still running; 47406, 26255 and 88888 died.
+const now = new Date(2026, 9, 10, 23, 30).getTime();
 const isPidAlive = (pid: number) => [1477, 57055, 96102, 1000].includes(pid);
 
 describe("parseSysVSharedMemoryTable", () => {
   it("reads the id, size, attach count and creator pid of every shared memory row", () => {
-    expect(parseSysVSharedMemoryTable(IPCS_OUTPUT)).toEqual([
+    expect(
+      parseSysVSharedMemoryTable(IPCS_OUTPUT, now).map(({ id, nattch, cpid, size }) => ({
+        id,
+        attachedProcesses: nattch,
+        creatorPid: cpid,
+        bytes: size,
+      })),
+    ).toEqual([
       { id: 65536, attachedProcesses: 1, creatorPid: 1477, bytes: 8 },
       { id: 131073, attachedProcesses: 19, creatorPid: 57055, bytes: 56 },
       { id: 92405762, attachedProcesses: 0, creatorPid: 47406, bytes: 56 },
@@ -41,6 +48,11 @@ describe("parseSysVSharedMemoryTable", () => {
       { id: 21495835, attachedProcesses: 3, creatorPid: 96102, bytes: 56 },
       { id: 777001, attachedProcesses: 0, creatorPid: 88888, bytes: 4096 },
     ]);
+  });
+
+  it("rejects the entire table when a header or any row is malformed", () => {
+    expect(parseSysVSharedMemoryTable(IPCS_OUTPUT.replace("SEGSZ", "UNKNOWN"), now)).toEqual([]);
+    expect(parseSysVSharedMemoryTable(`${IPCS_OUTPUT}m broken\n`, now)).toEqual([]);
   });
 
   it("returns nothing for a header-only or empty report", () => {
@@ -51,28 +63,32 @@ describe("parseSysVSharedMemoryTable", () => {
 
 describe("staleSysVSegments", () => {
   it("keeps only the segments nothing is attached to and whose creator is gone", () => {
-    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT);
+    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT, now);
     expect(staleSysVSegments(rows, isPidAlive).map((row) => row.id)).toEqual([
       92405762, 13172739, 777001,
     ]);
   });
 
   it("keeps an unattached segment while its creator is still alive", () => {
-    const rows = [{ id: 7, attachedProcesses: 0, creatorPid: 1477, bytes: 56 }];
+    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT, now)
+      .filter((row) => row.cpid === 1477)
+      .map((row) => ({ ...row, nattch: 0 }));
     expect(staleSysVSegments(rows, isPidAlive)).toEqual([]);
   });
 });
 
 describe("stalePostgresMarkers", () => {
   it("keeps the stale segments that are the size a PostgreSQL server asks for", () => {
-    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT);
+    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT, now);
     expect(stalePostgresMarkers(rows, isPidAlive).map((row) => row.id)).toEqual([
       92405762, 13172739,
     ]);
   });
 
   it("leaves a live server's segment alone even when nothing is attached to it", () => {
-    const rows = [{ id: 7, attachedProcesses: 0, creatorPid: 96102, bytes: 56 }];
+    const rows = parseSysVSharedMemoryTable(IPCS_OUTPUT, now)
+      .filter((row) => row.cpid === 96102)
+      .map((row) => ({ ...row, nattch: 0 }));
     expect(stalePostgresMarkers(rows, isPidAlive)).toEqual([]);
   });
 });
@@ -92,9 +108,12 @@ describe("isSharedMemoryExhaustion", () => {
 describe("describeSysVSharedMemory", () => {
   it("reports how many ids are in use and how many are stale", () => {
     const line =
-      describeSysVSharedMemory(parseSysVSharedMemoryTable(IPCS_OUTPUT), isPidAlive) ?? "";
+      describeSysVSharedMemory(parseSysVSharedMemoryTable(IPCS_OUTPUT, now), isPidAlive, {
+        owner: "tester",
+        now,
+      }) ?? "";
     expect(line).toContain("6 kernel IDs in use");
-    expect(line).toContain("3 stale");
+    expect(line).toContain("2 stale");
     expect(line).toContain("pnpm ipc:sweep");
     expect(line).toContain("dry run");
     expect(line).toContain("removes nothing");
