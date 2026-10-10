@@ -29,6 +29,7 @@ const expectedIcons = [
   "hideMenu",
   "showMenu",
   "plus",
+  "productCaretDown",
   "settings",
   "users",
   "spinner",

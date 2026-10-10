@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  Triangle,
   Users,
   X,
 } from "lucide-react";
@@ -38,6 +39,23 @@ function FilterChevronDown(props: SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 8 4.5" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
       <path d="M0 0h8L4 4.5Z" />
     </svg>
+  );
+}
+
+/** Rail/product selector caret; app-shell.md › Rail/product selector (10 × 5 ink). */
+function ProductCaretDown(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, style, ...rest } = props;
+  return (
+    <Triangle
+      fill="currentColor"
+      strokeWidth={0}
+      viewBox="3 4 20 17"
+      preserveAspectRatio="none"
+      overflow="hidden"
+      style={{ transform: "rotate(180deg)", ...style }}
+      {...filterIconRoleProps(props)}
+      {...rest}
+    />
   );
 }
 
@@ -325,6 +343,7 @@ export const Icons = {
   thumbDown: ThumbDown,
   statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
+  productCaretDown: ProductCaretDown,
   filterChevronRight: FilterChevronRight,
   filterSearch: FilterSearch,
   createRecordPlus: CreateRecordPlus,
