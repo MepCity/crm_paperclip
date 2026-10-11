@@ -134,3 +134,40 @@ test("textarea values preserve line breaks", () => {
   expect(screen.getByText(/Line one/)).toBeTruthy();
   expect(screen.getByText(/Line two/)).toBeTruthy();
 });
+
+test("lookup field links to registered target module detail page", () => {
+  show(field("Parent_Lead", "lookup", { lookup: { module: "Leads" } }), {
+    module: "Leads",
+    id: "lead-123",
+    name: "Jane Doe",
+  });
+  const link = screen.getByRole("link", { name: "Jane Doe" });
+  expect(link.getAttribute("href")).toBe("/tab/Leads/lead-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field attaches laterModule to unregistered target link", () => {
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
+    module: "Accounts",
+    id: "acc-123",
+    name: "Acme Corp",
+  });
+  const link = screen.getByRole("link", { name: "Acme Corp" });
+  expect(link.tagName).toBe("SPAN");
+  expect(link.hasAttribute("href")).toBe(false);
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+  expect(link.getAttribute("data-later-module")).toBe("M3");
+});
+
+test("empty lookup field renders an em dash", () => {
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), null);
+  expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
+
+  cleanup();
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
+    module: "Accounts",
+    id: "acc-123",
+    name: "   ",
+  });
+  expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
+});

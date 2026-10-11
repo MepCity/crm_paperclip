@@ -5,6 +5,8 @@ import { createContext, type ReactNode, useContext, useMemo, useState } from "re
 import { shouldRetryQuery } from "./fetch";
 import { type ClientRecordService, createHttpRecordService } from "./http-record-service";
 
+export type { ClientRecordService };
+
 const ServiceContext = createContext<ClientRecordService | null>(null);
 const OrgSlugContext = createContext<string | null>(null);
 
@@ -14,10 +16,18 @@ export function useClientRecordService(): ClientRecordService {
   return service;
 }
 
+export function useOptionalClientRecordService(): ClientRecordService | null {
+  return useContext(ServiceContext);
+}
+
 export function useOrgSlug(): string {
   const orgSlug = useContext(OrgSlugContext);
   if (!orgSlug) throw new Error("Wrap the screen in ApiProvider.");
   return orgSlug;
+}
+
+export function useOptionalOrgSlug(): string | null {
+  return useContext(OrgSlugContext);
 }
 
 function createQueryClient(): QueryClient {

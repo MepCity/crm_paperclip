@@ -79,3 +79,42 @@ test("date fields await their dedicated form UI just like datetime fields", () =
   for (const type of ["date", "datetime"] as const)
     expect(validateRecordForm([field("Day", "Day", type, true)], {}, (f) => f.label)).toEqual({});
 });
+
+test("required lookup fields require a populated reference", () => {
+  const fields = [field("Account_Name", "Account Name", "lookup", true)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(validateRecordForm(fields, { Account_Name: null }, (f) => f.label)).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "", name: "" } },
+      (f) => f.label,
+    ),
+  ).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "acc-1", name: "Acme" } },
+      (f) => f.label,
+    ),
+  ).toEqual({});
+});
+
+test("optional lookup fields accept null or populated references", () => {
+  const fields = [field("Account_Name", "Account Name", "lookup", false)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
+  expect(validateRecordForm(fields, { Account_Name: null }, (f) => f.label)).toEqual({});
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "acc-1", name: "Acme" } },
+      (f) => f.label,
+    ),
+  ).toEqual({});
+});

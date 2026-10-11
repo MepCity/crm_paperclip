@@ -108,6 +108,7 @@ const catalog = {
   email: { operators: text, defaultOperator: "equal" },
   phone: { operators: text, defaultOperator: "equal" },
   website: { operators: text, defaultOperator: "contains" },
+  lookup: { operators: text, defaultOperator: "contains" },
   picklist: { operators: choices("choices"), defaultOperator: "equal" },
   currency: {
     operators: [

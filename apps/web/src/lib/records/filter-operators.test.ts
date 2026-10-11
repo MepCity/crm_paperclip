@@ -17,6 +17,7 @@ const expectations = {
   email: { defaultOperator: "equal", operators: text },
   phone: { defaultOperator: "equal", operators: text },
   website: { defaultOperator: "contains", operators: text },
+  lookup: { defaultOperator: "contains", operators: text },
   picklist: {
     defaultOperator: "equal",
     operators: [
@@ -124,6 +125,7 @@ test("unobserved field types have no editor catalog", () => {
     "email",
     "phone",
     "website",
+    "lookup",
     "picklist",
     "currency",
     "boolean",
