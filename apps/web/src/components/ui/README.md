@@ -16,6 +16,36 @@ This directory contains the headless-first design system components, built on `r
 - **Do not introduce heavy styling libraries** (e.g., styled-components, emotion). Tailwind + variables is enough.
 - **Do not import from `@crm/core` in client components**, except for types or `@crm/core/errors`.
 
+## Later-module controls
+
+Starting from Module 2, controls visible on the reference screen whose function belongs to a later module (indicated by the `Module` column in the screen spec control inventory) are rendered in their reference location and look, but do nothing when interacted with.
+
+### The `laterModule` prop
+
+Controls support an optional prop:
+```tsx
+laterModule?: ModuleKey // "M3" … "M15" | "P2" | "P3"
+```
+Supported on: `Button`, `SplitButton` (each half independently via `laterModule` / `moreLaterModule`), `Link`, `MenuItem` (and `MenuAction`), and `Tab`.
+
+### Observed behaviour
+
+1. **Appearance identical to active state:** No `opacity-50`, no `cursor-not-allowed`. Color, size, typography, and icons remain identical to the active control. Hover and pressed visual states may match active controls.
+2. **Click, Enter, and Space do nothing:** `onPress`, `onAction`, and `onSelectionChange` are never called; `href` navigation does not take place (URL does not change); menus, popovers, and dialogs do not open; tab selection does not change; no toast or message appears.
+3. **Menu stays open:** When a later-module menu item is clicked, the menu remains open. Standard dismissal mechanisms (Escape and clicking outside) continue to close the menu.
+4. **No description text:** No `title` attribute and no `Tooltip` are added.
+5. **Accessible state:** The element carries `aria-disabled="true"` and `data-later-module="<key>"`. It can receive keyboard focus and renders the visible focus ring.
+6. **No-op when omitted:** When `laterModule` is not passed, component rendering and behavior remain completely unchanged.
+
+### When to use
+
+Use `laterModule` whenever a control is visible in the reference CRM screen capture and the control inventory's `Module` column assigns its capability to a module subsequent to the current screen's module.
+
+### Difference from `isDisabled`
+
+- `isDisabled` conveys that a feature of the current module is temporarily unavailable or inapplicable in the current context. It visually disables the control (`opacity-50`, `cursor-not-allowed`), skips keyboard focus in menus/tabs, and removes interactivity.
+- `laterModule` represents a control whose feature belongs to a future module. It retains the fully active visual appearance and keyboard focusability with `aria-disabled="true"`, but silently ignores activation attempts (without messages or tooltips).
+
 ## Filter panel primitives
 
 `Disclosure` supplies a clipped, fully labelled keyboard-accessible heading with a

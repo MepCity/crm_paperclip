@@ -1,5 +1,7 @@
 "use client";
 
+import type { Ref } from "react";
+import { useCallback, useRef } from "react";
 import {
   Tab as AriaTab,
   TabList as AriaTabList,
@@ -11,6 +13,7 @@ import {
   type TabProps,
   type TabsProps,
 } from "react-aria-components";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 const tabListClass = "flex border-b border-border";
 
@@ -31,14 +34,117 @@ export function Tabs({ className, ...props }: TabsProps) {
   );
 }
 
+function isTabDisabled(tab?: HTMLElement) {
+  if (!tab) return true;
+  return (
+    tab.hasAttribute("data-disabled") ||
+    (tab.getAttribute("aria-disabled") === "true" && !tab.hasAttribute("data-later-module")) ||
+    tab.hasAttribute("disabled")
+  );
+}
+
 export function TabList<T extends object>({
   className,
   appearance = "default",
+  ref: forwardedRef,
   ...props
-}: TabListProps<T> & { appearance?: "default" | "record" }) {
+}: TabListProps<T> & {
+  appearance?: "default" | "record";
+  ref?: Ref<HTMLDivElement>;
+}) {
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  const setRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+
+      if (node) {
+        const handleKeyDownCapture = (e: KeyboardEvent) => {
+          if (
+            e.key !== "ArrowRight" &&
+            e.key !== "ArrowLeft" &&
+            e.key !== "Home" &&
+            e.key !== "End"
+          ) {
+            return;
+          }
+
+          const tabs = Array.from(node.querySelectorAll<HTMLElement>('[role="tab"]'));
+          if (tabs.length === 0) return;
+
+          const currentTab = tabs.find(
+            (tab) => tab === document.activeElement || tab.contains(document.activeElement),
+          );
+          if (!currentTab) return;
+
+          const currentIndex = tabs.indexOf(currentTab);
+          const isRtl = node.closest('[dir="rtl"]') !== null || document.dir === "rtl";
+          let targetIndex = -1;
+
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const isForward = isRtl ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+            const step = isForward ? 1 : -1;
+            const len = tabs.length;
+            for (let i = 1; i <= len; i++) {
+              const candidate = (currentIndex + step * i + len * len) % len;
+              if (!isTabDisabled(tabs[candidate])) {
+                targetIndex = candidate;
+                break;
+              }
+            }
+          } else if (e.key === "Home") {
+            for (let i = 0; i < tabs.length; i++) {
+              if (!isTabDisabled(tabs[i])) {
+                targetIndex = i;
+                break;
+              }
+            }
+          } else if (e.key === "End") {
+            for (let i = tabs.length - 1; i >= 0; i--) {
+              if (!isTabDisabled(tabs[i])) {
+                targetIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (targetIndex === -1) return;
+
+          const targetTab = tabs[targetIndex];
+          if (targetTab?.hasAttribute("data-later-module")) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            if (targetIndex !== currentIndex) {
+              targetTab.focus();
+            }
+          }
+        };
+
+        node.addEventListener("keydown", handleKeyDownCapture, { capture: true });
+        cleanupRef.current = () => {
+          node.removeEventListener("keydown", handleKeyDownCapture, { capture: true });
+        };
+      }
+
+      if (forwardedRef) {
+        if (typeof forwardedRef === "function") {
+          forwardedRef(node);
+        } else if (typeof forwardedRef === "object" && "current" in forwardedRef) {
+          (forwardedRef as { current: HTMLDivElement | null }).current = node;
+        }
+      }
+    },
+    [forwardedRef],
+  );
+
   return (
     <AriaTabList
       {...props}
+      ref={setRef}
       className={composeRenderProps(
         className,
         (extra) =>
@@ -51,11 +157,21 @@ export function TabList<T extends object>({
 export function Tab({
   className,
   appearance = "default",
+  laterModule,
+  ref: forwardedRef,
   ...props
-}: TabProps & { appearance?: "default" | "record" }) {
+}: TabProps & {
+  appearance?: "default" | "record";
+  laterModule?: ModuleKey;
+  ref?: Ref<HTMLElement>;
+}) {
+  const laterRef = useLaterModule(laterModule, forwardedRef);
+
   return (
     <AriaTab
       {...props}
+      {...(laterModule ? laterModuleProps(laterModule) : {})}
+      ref={laterRef}
       className={composeRenderProps(
         className,
         (extra) =>

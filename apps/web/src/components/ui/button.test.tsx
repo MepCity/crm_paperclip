@@ -89,3 +89,40 @@ for (const variant of ["rail", "railIcon", "icon", "avatar"] as const) {
     expect(presses).toBe(1);
   });
 }
+
+test("Button with laterModule renders active appearance, retains focus, and ignores click, Enter and Space", async () => {
+  const user = userEvent.setup();
+  let presses = 0;
+  render(
+    <Button laterModule="M3" onPress={() => presses++}>
+      Later Action
+    </Button>,
+  );
+
+  const button = screen.getByRole("button", { name: "Later Action" }) as HTMLButtonElement;
+  expect(button.getAttribute("aria-disabled")).toBe("true");
+  expect(button.getAttribute("data-later-module")).toBe("M3");
+  expect(button.hasAttribute("title")).toBe(false);
+  expect(button.disabled).toBe(false);
+  expect(button.hasAttribute("data-disabled")).toBe(false);
+  expect(button.classList.contains("opacity-50")).toBe(false);
+  expect(button.classList.contains("cursor-not-allowed")).toBe(false);
+
+  await user.click(button);
+  expect(presses).toBe(0);
+
+  button.focus();
+  expect(document.activeElement).toBe(button);
+  await user.keyboard("{Enter}");
+  expect(presses).toBe(0);
+  await user.keyboard(" ");
+  expect(presses).toBe(0);
+  await user.keyboard("{ArrowDown}");
+  expect(presses).toBe(0);
+  await user.keyboard("{ArrowUp}");
+  expect(presses).toBe(0);
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(presses).toBe(0);
+  await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+  expect(presses).toBe(0);
+});

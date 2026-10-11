@@ -12,6 +12,9 @@ export default function MenuDemo() {
         </MenuButton>
         <Menu onAction={(key) => setAction(`Selected: ${key}`)}>
           <MenuItem id="edit">Edit</MenuItem>
+          <MenuItem id="later" laterModule="M3">
+            Later module
+          </MenuItem>
           <MenuItem id="delete" variant="danger">
             Delete
           </MenuItem>

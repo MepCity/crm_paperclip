@@ -14,9 +14,20 @@ the module's research found, assigned to the module that delivers it.
   `docs/adr/0004-request-shape.md`).
 - **Everything visible is listed.** The end goal is the whole reference
   system, so a capability we do not use today still gets a row and a module.
-- **Later rows are not drawn early.** A control whose function belongs to a
-  later module is left out until that module ships; we do not render inert
-  controls. Every such row is reported as a known gap at the module gate.
+- **Later rows are not drawn early — Leads screens only.** On the screens
+  built in Module 1, a control whose function belongs to a later module is
+  left out until that module ships. Every such row is reported as a known
+  gap at the module gate. These screens are brought in line with the next
+  rule in the end-of-project batch, not before.
+- **From Module 2 on, later-module controls are drawn but do nothing**
+  (board decision of 2026-10-11). A control that is visible on the
+  reference screen and whose function belongs to a later module (the
+  `Module` column of the screen's control inventory) is drawn in its
+  reference place and look, and nothing happens when it is clicked: no
+  action, no navigation, no menu, no message and no tooltip. It is built
+  with the shared `laterModule` state of the UI primitives. Leaving such a
+  control out is a defect; its missing function is not, and is reported as
+  a known gap at the module gate.
 - **Open research** marks a behaviour the specs record as unobserved. Under
   the read-only rule it can only come from the reference CRM's public
   documentation. A row with open research is built to the spec as far as the

@@ -8,8 +8,10 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 import { buttonSizes, buttonStyles } from "./button-styles";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 import { Spinner } from "./spinner";
 
+export type { ModuleKey };
 export { buttonSizes, buttonStyles };
 
 /** Drops live-region nodes left by react-aria pending announcements whose target unmounted. */
@@ -51,6 +53,7 @@ export interface ButtonProps extends AriaButtonProps {
   ref?: Ref<HTMLButtonElement>;
   variant?: keyof typeof buttonStyles;
   size?: keyof typeof buttonSizes;
+  laterModule?: ModuleKey;
 }
 
 export function Button({
@@ -59,8 +62,12 @@ export function Button({
   className,
   children,
   isPending,
+  laterModule,
+  ref: forwardedRef,
+  onPress,
   ...props
 }: ButtonProps) {
+  const laterRef = useLaterModule(laterModule, forwardedRef, { blockMenuArrows: true });
   const wasPendingRef = useRef(isPending ?? false);
   if (isPending) wasPendingRef.current = true;
 
@@ -79,6 +86,9 @@ export function Button({
   return (
     <AriaButton
       {...props}
+      {...(laterModule ? laterModuleProps(laterModule) : {})}
+      ref={laterRef}
+      onPress={laterModule ? undefined : onPress}
       isPending={isPending}
       className={composeRenderProps(
         className,
