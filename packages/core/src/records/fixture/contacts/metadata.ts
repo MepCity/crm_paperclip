@@ -182,7 +182,7 @@ export const contactsMetadata: ModuleMetadata = {
       dataType: "email",
       required: false,
       readOnly: false,
-      unique: false,
+      unique: true,
       maxLength: 100,
     },
     {

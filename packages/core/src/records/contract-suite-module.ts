@@ -223,8 +223,8 @@ export const contactsRecordServiceContractModule: RecordServiceContractModuleDef
     tenantOther: "Other Title",
   },
   sortFields: ["Last_Name", "Title"],
-  duplicatePermittedField: "Email",
-  expectedUniqueFields: [],
+  duplicatePermittedField: "Phone",
+  expectedUniqueFields: ["Email"],
   typeValidationCases: [
     ["Last_Name", 3],
     ["Date_of_Birth", "not-a-date"],

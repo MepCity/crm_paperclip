@@ -4,6 +4,7 @@ import type { Criteria, FieldDefinition, FieldValue, RecordData } from "../contr
 import { leadsMetadata } from "./metadata";
 import { matches, sortRecords, validateCriteria } from "./query";
 import { resolveRecordReferences } from "./references";
+import { leadsManagedFields } from "./registry";
 import { acceptsFieldValue, validateInput } from "./validation";
 
 const field = (dataType: FieldDefinition["dataType"]): FieldDefinition => ({
@@ -34,7 +35,9 @@ describe("calendar date contract", () => {
     "2026-01-01T00:00:00Z",
   ])("rejects %s", (value) => {
     expect(acceptsFieldValue(field("date"), value)).toBe(false);
-    expect(() => validateInput({ Value: value }, false, [field("date")])).toThrow(ValidationError);
+    expect(() => validateInput({ Value: value }, false, [field("date")], new Set())).toThrow(
+      ValidationError,
+    );
   });
   it("sorts by calendar day and leaves empties last", () => {
     const fields = new Map([["Value", field("date")]]);
@@ -200,6 +203,8 @@ describe("Leads conversion lookups", () => {
           validateInput(
             { Last_Name: "Example", Company: "Example Company", [apiName]: value },
             partial,
+            leadsMetadata.fields,
+            leadsManagedFields,
           ),
         ).toThrow(ValidationError);
     },

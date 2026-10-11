@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { NotFoundError, ValidationError } from "../errors";
+import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import type {
   Criteria,
   CriteriaToken,
@@ -1154,6 +1154,80 @@ describe("interim fixture policies (not reference parity)", () => {
   });
 });
 
+const contactsExportFieldFlags = [
+  { apiName: "Mailing_Latitude", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Longitude", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Latitude", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Longitude", required: false, readOnly: false, unique: false },
+  { apiName: "Owner", required: false, readOnly: false, unique: false },
+  { apiName: "Lead_Source", required: false, readOnly: false, unique: false },
+  { apiName: "First_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Last_Name", required: true, readOnly: false, unique: false },
+  { apiName: "Account_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Vendor_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Email", required: false, readOnly: false, unique: true },
+  { apiName: "Title", required: false, readOnly: false, unique: false },
+  { apiName: "Department", required: false, readOnly: false, unique: false },
+  { apiName: "Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Home_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Fax", required: false, readOnly: false, unique: false },
+  { apiName: "Mobile", required: false, readOnly: false, unique: false },
+  { apiName: "Date_of_Birth", required: false, readOnly: false, unique: false },
+  { apiName: "Assistant", required: false, readOnly: false, unique: false },
+  { apiName: "Asst_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Created_By", required: false, readOnly: false, unique: false },
+  { apiName: "Modified_By", required: false, readOnly: false, unique: false },
+  { apiName: "Created_Time", required: false, readOnly: false, unique: false },
+  { apiName: "Modified_Time", required: false, readOnly: false, unique: false },
+  { apiName: "Full_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Description", required: false, readOnly: false, unique: false },
+  { apiName: "Email_Opt_Out", required: false, readOnly: false, unique: false },
+  { apiName: "Skype_ID", required: false, readOnly: false, unique: false },
+  { apiName: "Salutation", required: false, readOnly: false, unique: false },
+  { apiName: "Secondary_Email", required: false, readOnly: false, unique: false },
+  { apiName: "Last_Activity_Time", required: false, readOnly: true, unique: false },
+  { apiName: "Twitter", required: false, readOnly: false, unique: false },
+  { apiName: "Tag", required: false, readOnly: false, unique: false },
+  { apiName: "Record_Image", required: false, readOnly: false, unique: false },
+  { apiName: "Reporting_To", required: false, readOnly: false, unique: false },
+  { apiName: "Unsubscribed_Mode", required: false, readOnly: true, unique: false },
+  { apiName: "Unsubscribed_Time", required: false, readOnly: true, unique: false },
+  { apiName: "id", required: false, readOnly: true, unique: false },
+  { apiName: "Change_Log_Time__s", required: false, readOnly: true, unique: false },
+  { apiName: "Locked__s", required: false, readOnly: true, unique: false },
+  { apiName: "Last_Enriched_Time__s", required: false, readOnly: true, unique: false },
+  { apiName: "Enrich_Status__s", required: false, readOnly: true, unique: false },
+  { apiName: "Mailing_Address", required: false, readOnly: true, unique: false },
+  { apiName: "Mailing_Country", required: false, readOnly: false, unique: false },
+  {
+    apiName: "Mailing_Flat_House_No_Building_Apartment_Name",
+    required: false,
+    readOnly: false,
+    unique: false,
+  },
+  { apiName: "Mailing_Street", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_City", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_State", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Zip", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Coordinates", required: false, readOnly: true, unique: false },
+  { apiName: "Other_Address", required: false, readOnly: true, unique: false },
+  { apiName: "Other_Country", required: false, readOnly: false, unique: false },
+  {
+    apiName: "Other_Flat_House_No_Building_Apartment_Name",
+    required: false,
+    readOnly: false,
+    unique: false,
+  },
+  { apiName: "Other_Street", required: false, readOnly: false, unique: false },
+  { apiName: "Other_City", required: false, readOnly: false, unique: false },
+  { apiName: "Other_State", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Zip", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Coordinates", required: false, readOnly: true, unique: false },
+  { apiName: "nearby_distance__s", required: false, readOnly: true, unique: false },
+  { apiName: "Connected_To__s", required: false, readOnly: false, unique: false },
+] as const;
+
 describe("Contacts fixture", () => {
   it("requires Last Name on create", async () => {
     const service = make();
@@ -1258,6 +1332,14 @@ describe("Contacts fixture", () => {
       expectedFieldInventory,
     );
     expect(
+      metadata.fields.map((field) => ({
+        apiName: field.apiName,
+        required: field.required,
+        readOnly: field.readOnly,
+        unique: field.unique,
+      })),
+    ).toEqual(contactsExportFieldFlags);
+    expect(
       metadata.fields
         .filter((field) => field.lookup)
         .map((field) => [field.apiName, field.lookup?.module]),
@@ -1315,5 +1397,36 @@ describe("Contacts fixture", () => {
       ["Enriched", "Enriched"],
       ["Data not found", "Data not found"],
     ]);
+  });
+  it("rejects duplicate Email case-insensitively and permits null or other orgs", async () => {
+    const orgId = randomUUID();
+    const service = createFixtureRecordService({
+      orgId,
+      orgSlug: "contacts-unique",
+      orgName: "Contacts Unique Org",
+      userId: "member",
+      role: "admin",
+    });
+    const email = `${randomUUID()}@example.org`;
+    await service.create("Contacts", { Last_Name: "First", Email: email });
+    await expect(
+      service.create("Contacts", { Last_Name: "Second", Email: email.toUpperCase() }),
+    ).rejects.toThrow(ConflictError);
+    const third = await service.create("Contacts", { Last_Name: "Third", Email: null });
+    const fourth = await service.create("Contacts", { Last_Name: "Fourth", Email: null });
+    expect(third.id).not.toBe(fourth.id);
+    await expect(service.update("Contacts", third.id, { Email: email })).rejects.toThrow(
+      ConflictError,
+    );
+    const otherOrg = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-unique-other",
+      orgName: "Contacts Unique Other Org",
+      userId: "member",
+      role: "admin",
+    });
+    await expect(
+      otherOrg.create("Contacts", { Last_Name: "Other", Email: email }),
+    ).resolves.toBeDefined();
   });
 });

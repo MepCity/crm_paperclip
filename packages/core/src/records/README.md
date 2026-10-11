@@ -162,8 +162,11 @@ unobserved decimal-place validation rule is added.
 
 Unknown modules, views and records raise `NotFoundError`. Validation raises
 `ValidationError` with field API names (query failures use page/perPage/sort/filters).
-A future uniqueness violation must use the existing `ConflictError`. This Leads
-fixture has no unique fields and permits duplicate Email on create and update.
+A uniqueness violation uses `ConflictError`. The Leads fixture has no unique fields
+and permits duplicate Email on create and update. Contacts publishes `Email` as
+unique (case-insensitive); create, update and mass update reject another record in
+the same organization with the same email, while null or empty email does not
+collide and other organizations remain isolated.
 Returned metadata, views, records and nested values are detached copies; write
 inputs are copied before storage. Bulk delete validates every ID before deleting. `delete`, `massUpdate` and
 `changeOwner` require 1–500 IDs. `massUpdate` accepts exactly one writable field
@@ -298,15 +301,18 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
   fourth contains a forbidden product name and cannot enter this repository.
   Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.
+  Contacts publishes the fourth Unsubscribed_Mode stored value under neutral
+  wording (`reference CRM campaigns`) so the picklist inventory stays complete.
 - Mailing Labels selects five columns absent from Leads field metadata:
   `Old_Street`, `Old_City`, `Old_State`, `Old_Country`, `Old_Zip_Code`. They are
   not published. The captured table shows Salutation, Lead Name and Company
   (`research/specs/list-views.md` › Fields absent from the Leads field metadata).
+  The Contacts Mailing Labels view omits the same five legacy address columns
+  because they are absent from the Contacts field export.
 - The reference's storage of the -None- placeholder is unverified. Published lists
   include it, but the fixture represents empty picklists with null.
-- Uniqueness enforcement and rejection tests await the first scope with a unique
-  field. Leads has unique=false on every field; no hidden module or unreachable
-  uniqueness branch is introduced.
+- Leads has unique=false on every field. Contacts Email uniqueness is enforced in
+  the fixture and covered by the contract suite and module tests.
 
 ## Open points for ADR 0002
 
@@ -321,8 +327,8 @@ not evidence of reference CRM behavior and must not determine screen parity.
 - Replace interim search, date-token, unknown-field and tie-break policies when
   researched. Applied panel filter requests/results and sortable menu entries remain open. Saved
   view criteria and the recorded default sort are no longer open.
-- Add metadata-driven uniqueness enforcement using ConflictError and a genuine
-  rejection contract test with the first authorized unique-field scope.
+- Extend metadata-driven uniqueness beyond Contacts Email when later modules publish
+  additional unique fields.
 
 ## Deliberately excluded
 
@@ -348,8 +354,8 @@ empty checks, ID sorting and text-operator restrictions remain unchanged.
 For single-module lookups with registered target modules the fixture validates existence in the bound
 organization on create, update and mass update, and derives the read name from the target record,
 ignoring caller names. On get, list and count, a registered-module reference whose target no longer
-exists is returned as `null` instead of raising an error. Its private module definition identifies
-the display-name field (Leads and Contacts: `Full_Name`); public `ModuleMetadata` does not change.
+exists is returned as `null` instead of raising an error. Each fixture module bundle declares `displayNameField` (Leads and Contacts:
+`Full_Name`); public `ModuleMetadata` does not change.
 Accounts and Vendors are not registered yet: references are stored and returned as supplied, including
 their optional name; target existence is not validated (completed in Module 3). Single-module lookup sorting
 and text filters use `name`; a missing name behaves as empty. The wire codec

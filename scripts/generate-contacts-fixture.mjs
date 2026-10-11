@@ -66,6 +66,10 @@ function picklistOptions(field) {
   });
 }
 
+function exportUniqueFlag(field) {
+  return field.unique?.casesensitive != null;
+}
+
 function fieldDefinition(field) {
   const dataType = mapDataType(field);
   const required = Boolean(field.system_mandatory);
@@ -88,7 +92,7 @@ function fieldDefinition(field) {
     `      dataType: ${escapeString(dataType)},`,
     `      required: ${required},`,
     `      readOnly: ${readOnly},`,
-    `      unique: false,`,
+    `      unique: ${exportUniqueFlag(field)},`,
   ];
   if (field.length) lines.push(`      maxLength: ${field.length},`);
   if (dataType === "lookup" && field.lookup?.module?.api_name) {

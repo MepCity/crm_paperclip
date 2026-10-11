@@ -9,6 +9,7 @@ import { leadsViews } from "./views";
 export interface FixtureModuleBundle {
   metadata: ModuleMetadata;
   views: readonly ListView[];
+  displayNameField: string;
   generateSeed: (now: Date) => RecordData[];
   fullName: (fields: Readonly<Record<string, FieldValue>>) => string;
   managedFields: ReadonlySet<string>;
@@ -17,7 +18,7 @@ export interface FixtureModuleBundle {
   createDefaults: (stamp: string) => Record<string, FieldValue>;
 }
 
-const leadsManaged = new Set([
+export const leadsManagedFields = new Set([
   "Full_Name",
   "Created_By",
   "Modified_By",
@@ -43,9 +44,10 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   Leads: {
     metadata: leadsMetadata,
     views: leadsViews,
+    displayNameField: "Full_Name",
     generateSeed: (now) => generateFixtureLeads(68, now),
     fullName: leadsFullName,
-    managedFields: leadsManaged,
+    managedFields: leadsManagedFields,
     searchFields: ["Full_Name", "Company", "Email", "Phone"],
     initialNextId: 200000000000000000n,
     createDefaults: (stamp) => ({
@@ -58,6 +60,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   Contacts: {
     metadata: contactsMetadata,
     views: contactsViews,
+    displayNameField: "Full_Name",
     generateSeed: (now) => generateFixtureContacts(68, now),
     fullName: contactsFullName,
     managedFields: contactsManaged,

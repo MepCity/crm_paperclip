@@ -4,6 +4,7 @@ import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } fr
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
 interface ModuleStore {
@@ -105,24 +106,18 @@ export function createFixtureRecordService(
   state.memberIds.add(ctx.userId);
 
   const referenceModules = (): Map<string, FixtureReferenceModule> => {
-    const contactsStore = state.modules.get("Contacts");
-    const leadsStore = state.modules.get("Leads");
-    return new Map([
-      [
-        "Leads",
+    const entries: [string, FixtureReferenceModule][] = [];
+    for (const [name, bundle] of Object.entries(fixtureModules)) {
+      const moduleState = state.modules.get(name);
+      entries.push([
+        name,
         {
-          displayNameField: "Full_Name",
-          getRecord: (id: string) => leadsStore?.records.get(id),
+          displayNameField: bundle.displayNameField,
+          getRecord: (id: string) => moduleState?.records.get(id),
         },
-      ],
-      [
-        "Contacts",
-        {
-          displayNameField: "Full_Name",
-          getRecord: (id: string) => contactsStore?.records.get(id),
-        },
-      ],
-    ]);
+      ]);
+    }
+    return new Map(entries);
   };
 
   const moduleExists = (module: string) => {
@@ -190,11 +185,13 @@ export function createFixtureRecordService(
       throw new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit");
   };
   const writeBatch = (module: string, ids: readonly string[], input: RecordInput) => {
+    // Resolve every target after asynchronous membership checks, before any write.
     const bundle = bundleFor(module);
     const records = ids.map((id) => recordFor(module, id));
     for (const record of records) assertWritable(record);
     const stamp = clock().toISOString();
     const moduleState = moduleStore(module);
+    const overrides = new Map<string, Record<string, FieldValue>>();
     const updates = records.map((record) => {
       const fields: Record<string, FieldValue> = {
         ...record.fields,
@@ -202,9 +199,14 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: stamp,
       };
-      fields.Full_Name = bundle.fullName(fields);
+      fields[bundle.displayNameField] = bundle.fullName(fields);
+      overrides.set(record.id, fields);
       return { id: record.id, fields };
     });
+    assertUniqueFieldValues(
+      bundle.metadata.fields,
+      projectRecordsWithOverrides(moduleState.records, overrides),
+    );
     for (const record of updates) moduleState.records.set(record.id, record);
   };
 
@@ -285,8 +287,12 @@ export function createFixtureRecordService(
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
-      fields.Full_Name = bundle.fullName(fields);
+      fields[bundle.displayNameField] = bundle.fullName(fields);
       const record = { id, fields };
+      assertUniqueFieldValues(
+        bundle.metadata.fields,
+        projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+      );
       moduleState.records.set(id, record);
       return copy(resolveRead(module, record));
     },
@@ -298,6 +304,7 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      // Membership resolution may yield; preserve intervening partial writes/deletes.
       const record = recordFor(module, id);
       assertWritable(record);
       const fields: Record<string, FieldValue> = {
@@ -306,9 +313,14 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: clock().toISOString(),
       };
-      fields.Full_Name = bundle.fullName(fields);
+      fields[bundle.displayNameField] = bundle.fullName(fields);
       const updated = { id, fields };
-      moduleStore(module).records.set(id, updated);
+      const moduleState = moduleStore(module);
+      assertUniqueFieldValues(
+        bundle.metadata.fields,
+        projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+      );
+      moduleState.records.set(id, updated);
       return copy(resolveRead(module, updated));
     },
     async massUpdate(module, ids, input) {
@@ -329,11 +341,13 @@ export function createFixtureRecordService(
       writeBatch(module, targets, normalized);
     },
     async changeOwner(module, ids, ownerId) {
-      moduleExists(module);
+      const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
-      await validateOwner({ Owner: ownerId });
-      writeBatch(module, targets, { Owner: ownerId });
+      const input = { Owner: ownerId };
+      validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
+      await validateOwner(input);
+      writeBatch(module, targets, input);
     },
     async delete(module, ids) {
       moduleExists(module);

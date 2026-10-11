@@ -1,10 +1,6 @@
 import { type FieldErrors, ValidationError } from "../../errors";
 import type { FieldDefinition, FieldValue, RecordInput } from "../contract";
-import { leadsMetadata } from "./metadata";
 
-import { fixtureModules } from "./registry";
-
-const defaultManaged = fixtureModules.Leads?.managedFields ?? new Set<string>();
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
   if (typeof value === "object" && value !== null) return value.id.length;
@@ -62,8 +58,8 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
 export function validateInput(
   input: RecordInput,
   partial: boolean,
-  fields = leadsMetadata.fields,
-  managed: ReadonlySet<string> = defaultManaged,
+  fields: readonly FieldDefinition[],
+  managed: ReadonlySet<string>,
 ): void {
   const errors: FieldErrors = Object.create(null);
   let mandatory = false;
