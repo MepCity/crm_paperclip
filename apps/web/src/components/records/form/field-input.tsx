@@ -64,12 +64,16 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
  * and the model cannot be the same string. What is typed stays visible, including a day that does
  * not exist: the shape is mapped to `YYYY-MM-DD` and `form-validation` rejects the impossible day,
  * instead of the input silently dropping it.
+ *
+ * Only a model write that did not come from this input replaces the entry. An incomplete day has
+ * no model value at all, so treating the echo of our own write as an outside write would clear the
+ * text the moment somebody deletes a character from a date that is already filled in.
  */
 function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
-  const [model, setModel] = useState(value);
+  const [written, setWritten] = useState(value);
   const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
-  if (model !== value) {
-    setModel(value);
+  if (written !== value) {
+    setWritten(value);
     setEntry(calendarShapeToDisplayDate(value));
   }
   return (
@@ -79,8 +83,11 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
       value={entry}
       placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
       onChange={(next) => {
+        const shape = displayDateToCalendarShape(next);
+        // The empty model comes back as "" (`FieldInput` reads a non-string value as empty).
+        setWritten(shape ?? "");
         setEntry(next);
-        onModelChange(displayDateToCalendarShape(next));
+        onModelChange(shape);
       }}
     />
   );
