@@ -188,9 +188,10 @@ describeRecordServiceContract(
 );
 ```
 
-For another module, add a `RecordServiceContractModuleDefinition` beside the Leads
-one (API name, labels, field API names, sample input and optional scenario blocks)
-and pass it as the third argument. The suite body stays module-neutral.
+For another module, add a `RecordServiceContractModuleDefinition` (API name, labels,
+`buildMinimalValidInput`, `systemFields`, `filterMarker`, sort fields and any
+`optional` scenario blocks your adapter supports) beside the Leads one and pass it
+as the third argument. The suite body stays module-neutral.
 
 The suite invokes only public methods. Each test gets a fresh synthetic organization;
 an adapter harness must provision that organization and bound user, and clean up its

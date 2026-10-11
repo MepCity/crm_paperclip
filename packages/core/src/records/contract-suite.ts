@@ -15,7 +15,6 @@ import type {
   RecordService,
 } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
-import { minimalContractInput } from "./contract-suite-module";
 
 type ContractFactory = (
   ctx: OrgContext,
@@ -61,23 +60,33 @@ export function describeRecordServiceContract(
       singularLabel: moduleSingularLabel,
       pluralLabel: modulePluralLabel,
       expectedFieldCount,
-      fields: fieldNames,
-      sampleCompany,
-      updatedCompany,
-      tenantOtherCompany,
+      buildMinimalValidInput,
+      systemFields: sys,
+      filterMarker,
       sortFields,
       duplicatePermittedField,
       linkedModule,
       typeValidationCases,
-      panelTextFields,
-      panelNumberFields,
-      panelEmptyCheckFields,
       optional: moduleOptional,
     } = moduleDef;
+    const markerField = filterMarker.field;
+    const markerSample = filterMarker.sample;
+    const markerUpdated = filterMarker.updated;
+    const markerTenantOther = filterMarker.tenantOther;
     const categoryView = moduleOptional?.categoryView;
     const picklistPanel = moduleOptional?.picklistPanel;
     const statusCategoryTokens = moduleOptional?.statusCategoryTokens;
-    const massUpdateInvalidPicklistValue = moduleOptional?.massUpdateInvalidPicklistValue;
+    const massUpdateInvalidPicklist = moduleOptional?.massUpdateInvalidPicklist;
+    const panelFilters = moduleOptional?.panelFilters;
+    const sortWithNumeric = moduleOptional?.sortWithNumeric;
+    const connectedField = moduleOptional?.connectedLookup?.field;
+    const massUpdateClearablePhone = moduleOptional?.massUpdateClearablePhone;
+    const massUpdateInvalidNumeric = moduleOptional?.massUpdateInvalidNumeric;
+    const lengthValidationField = moduleOptional?.lengthValidationField ?? markerField;
+    const filterValidationPicklist = moduleOptional?.filterValidationPicklist;
+    const filterValidationBoolean = moduleOptional?.filterValidationBoolean;
+    const isolateField = sortWithNumeric?.isolateField ?? duplicatePermittedField;
+    const numericSortField = sortWithNumeric?.numericField;
 
     let service: RecordService;
     let ctx: OrgContext;
@@ -93,7 +102,7 @@ export function describeRecordServiceContract(
       if (!view) throw new Error("A default view is required.");
       defaultView = view;
     });
-    const input = (extra: RecordInput = {}): RecordInput => minimalContractInput(moduleDef, extra);
+    const input = (extra: RecordInput = {}): RecordInput => buildMinimalValidInput(extra);
     const forView = (view: ListView, extra: RecordInput = {}): RecordInput =>
       input({ ...(view.criteria ? criterionInput(view.criteria, metadata) : {}), ...extra });
     const validation = async (promise: Promise<unknown>, field: string) => {
@@ -165,12 +174,12 @@ export function describeRecordServiceContract(
       };
       const projected = await service.list(moduleApiName, {
         ...query,
-        fields: [fieldNames.company],
+        fields: [markerField],
       });
       expect(projected.records).toEqual([
         {
           id: created.id,
-          fields: { id: created.id, [fieldNames.company]: created.fields[fieldNames.company] },
+          fields: { id: created.id, [markerField]: created.fields[markerField] },
         },
       ]);
       expect((await service.list(moduleApiName, { ...query, fields: [] })).records).toEqual([
@@ -182,7 +191,7 @@ export function describeRecordServiceContract(
         "fields",
       );
       const fields = projected.records[0]?.fields as Record<string, FieldValue>;
-      fields[fieldNames.company] = "Changed";
+      fields[markerField] = "Changed";
       expect(await service.get(moduleApiName, created.id)).toEqual(created);
     });
     // The HTTP harness performs hundreds of JSON write/read round trips per size.
@@ -193,7 +202,7 @@ export function describeRecordServiceContract(
           page: 1,
           perPage,
           filters: {
-            field: fieldNames.company,
+            field: markerField,
             comparator: "equal" as const,
             value: `Page-${randomUUID()}`,
           },
@@ -201,7 +210,7 @@ export function describeRecordServiceContract(
         for (let index = 0; index < 211; index++) {
           await service.create(
             moduleApiName,
-            forView(defaultView, { [fieldNames.company]: query.filters.value }),
+            forView(defaultView, { [markerField]: query.filters.value }),
           );
         }
         const count = await service.count(moduleApiName, query);
@@ -230,11 +239,11 @@ export function describeRecordServiceContract(
         });
       }, 15_000);
     }
-    it("finds created records by case-insensitive Company search and counts an empty result", async () => {
+    it("finds created records by case-insensitive search and counts an empty result", async () => {
       const marker = `Search-${randomUUID()}`;
       const record = await service.create(
         moduleApiName,
-        forView(defaultView, { [fieldNames.company]: marker }),
+        forView(defaultView, { [markerField]: marker }),
       );
       const query = { viewId: defaultView.id, search: marker.toUpperCase(), page: 1, perPage: 10 };
       expect((await service.list(moduleApiName, query)).records.map((row) => row.id)).toContain(
@@ -247,7 +256,8 @@ export function describeRecordServiceContract(
     });
     for (const field of sortFields as readonly [string, string])
       for (const order of ["asc", "desc"] as const) {
-        it(`sorts own nonempty ${field} values ${order}`, async () => {
+        it.skipIf(!sortWithNumeric)(`sorts own nonempty ${field} values ${order}`, async () => {
+          if (!numericSortField) throw new Error("Numeric sort scenario is required.");
           const marker = `Sort-${randomUUID()}`;
           const records: RecordData[] = [];
           for (const [text, number] of [
@@ -259,16 +269,16 @@ export function describeRecordServiceContract(
               await service.create(
                 moduleApiName,
                 forView(defaultView, {
-                  [fieldNames.company]: `${marker}-${text}`,
-                  [fieldNames.email]: `${marker}@example.org`,
-                  [fieldNames.noOfEmployees]: number,
+                  [markerField]: `${marker}-${text}`,
+                  [isolateField]: `${marker}@example.org`,
+                  [numericSortField]: number,
                 }),
               ),
             );
           const query = {
             viewId: defaultView.id,
             filters: {
-              field: fieldNames.email,
+              field: isolateField,
               comparator: "equal" as const,
               value: `${marker}@example.org`,
             },
@@ -298,22 +308,22 @@ export function describeRecordServiceContract(
         const included = await service.create(
           moduleApiName,
           input({
-            [fieldNames.leadStatus]: viewScenario.includedStatus,
-            [fieldNames.company]: marker,
+            [viewScenario.picklistField]: viewScenario.includedStatus,
+            [markerField]: marker,
           }),
         );
         await service.create(
           moduleApiName,
           input({
-            [fieldNames.leadStatus]: viewScenario.siblingStatus,
-            [fieldNames.company]: `${marker}-other`,
+            [viewScenario.picklistField]: viewScenario.siblingStatus,
+            [markerField]: `${marker}-other`,
           }),
         );
         const excluded = await service.create(
           moduleApiName,
           input({
-            [fieldNames.leadStatus]: viewScenario.excludedStatus,
-            [fieldNames.company]: marker,
+            [viewScenario.picklistField]: viewScenario.excludedStatus,
+            [markerField]: marker,
           }),
         );
         const query = {
@@ -321,7 +331,7 @@ export function describeRecordServiceContract(
           page: 1,
           perPage: 100,
           search: marker,
-          filters: { field: fieldNames.company, comparator: "equal" as const, value: marker },
+          filters: { field: markerField, comparator: "equal" as const, value: marker },
         };
         const result = await service.list(moduleApiName, query);
         expect(result.records.map((record) => record.id)).toEqual([included.id]);
@@ -340,7 +350,7 @@ export function describeRecordServiceContract(
         service.create("Unknown", input()),
         service.update("Unknown", "missing", {}),
         service.delete("Unknown", []),
-        service.massUpdate("Unknown", ["missing"], { [fieldNames.company]: "Example" }),
+        service.massUpdate("Unknown", ["missing"], { [markerField]: "Example" }),
         service.changeOwner("Unknown", ["missing"], ctx.userId),
       ])
         await expect(request).rejects.toBeInstanceOf(NotFoundError);
@@ -367,13 +377,17 @@ export function describeRecordServiceContract(
           service.create(moduleApiName, input({ [field.apiName]: null })),
           field.apiName,
         );
-      const company = metadata.fields.find((field) => field.apiName === fieldNames.company);
+      const lengthFieldMeta = metadata.fields.find(
+        (field) => field.apiName === lengthValidationField,
+      );
       await validation(
         service.create(
           moduleApiName,
-          input({ [fieldNames.company]: "x".repeat((company?.maxLength ?? 0) + 1) }),
+          input({
+            [lengthValidationField]: "x".repeat((lengthFieldMeta?.maxLength ?? 0) + 1),
+          }),
         ),
-        fieldNames.company,
+        lengthValidationField,
       );
       for (const field of metadata.fields.filter((field) => field.picklist && !field.readOnly))
         await validation(
@@ -403,95 +417,83 @@ export function describeRecordServiceContract(
     it("uses context for system fields, preserves omitted fields, and shares state within an org", async () => {
       const created = await service.create(
         moduleApiName,
-        input({ [fieldNames.email]: "contract@example.org" }),
+        input({ [isolateField]: "contract@example.org" }),
       );
       expect(created.fields).toMatchObject({
-        [fieldNames.owner]: ctx.userId,
-        [fieldNames.createdBy]: ctx.userId,
-        [fieldNames.modifiedBy]: ctx.userId,
+        [sys.owner]: ctx.userId,
+        [sys.createdBy]: ctx.userId,
+        [sys.modifiedBy]: ctx.userId,
       });
-      expect(Number.isFinite(Date.parse(String(created.fields[fieldNames.createdTime])))).toBe(
-        true,
-      );
+      expect(Number.isFinite(Date.parse(String(created.fields[sys.createdTime])))).toBe(true);
       const nextUser = await makeService({ ...ctx, userId: "second-user" });
       const updated = await nextUser.update(moduleApiName, created.id, {
-        [fieldNames.company]: updatedCompany,
+        [markerField]: markerUpdated,
       });
       expect(updated.fields).toMatchObject({
-        [fieldNames.company]: updatedCompany,
-        [fieldNames.email]: "contract@example.org",
-        [fieldNames.owner]: ctx.userId,
-        [fieldNames.createdBy]: ctx.userId,
-        [fieldNames.modifiedBy]: "second-user",
-        [fieldNames.createdTime]: created.fields[fieldNames.createdTime],
+        [markerField]: markerUpdated,
+        [isolateField]: "contract@example.org",
+        [sys.owner]: ctx.userId,
+        [sys.createdBy]: ctx.userId,
+        [sys.modifiedBy]: "second-user",
+        [sys.createdTime]: created.fields[sys.createdTime],
       });
-      expect(Date.parse(String(updated.fields.Modified_Time))).toBeGreaterThanOrEqual(
-        Date.parse(String(created.fields.Modified_Time)),
+      expect(Date.parse(String(updated.fields[sys.modifiedTime]))).toBeGreaterThanOrEqual(
+        Date.parse(String(created.fields[sys.modifiedTime])),
       );
       expect(await service.get(moduleApiName, created.id)).toEqual(updated);
       await validation(
-        service.update(moduleApiName, created.id, { [fieldNames.company]: null }),
-        fieldNames.company,
+        service.update(moduleApiName, created.id, { [markerField]: null }),
+        markerField,
       );
       expect(await service.get(moduleApiName, created.id)).toEqual(updated);
     });
     it("creates and updates Owner using organization members, with a context default", async () => {
       const secondMember = await makeService({ ...ctx, userId: "second-member" });
       await secondMember.getModule(moduleApiName);
-      const created = await service.create(
-        moduleApiName,
-        input({ [fieldNames.owner]: "second-member" }),
-      );
-      expect(created.fields[fieldNames.owner]).toBe("second-member");
-      expect(created.fields[fieldNames.createdBy]).toBe(ctx.userId);
+      const created = await service.create(moduleApiName, input({ [sys.owner]: "second-member" }));
+      expect(created.fields[sys.owner]).toBe("second-member");
+      expect(created.fields[sys.createdBy]).toBe(ctx.userId);
       const updated = await service.update(moduleApiName, created.id, {
-        [fieldNames.owner]: ctx.userId,
+        [sys.owner]: ctx.userId,
       });
-      expect(updated.fields[fieldNames.owner]).toBe(ctx.userId);
-      expect(updated.fields[fieldNames.createdBy]).toBe(ctx.userId);
-      expect(updated.fields[fieldNames.modifiedBy]).toBe(ctx.userId);
-      expect((await service.create(moduleApiName, input())).fields[fieldNames.owner]).toBe(
-        ctx.userId,
-      );
+      expect(updated.fields[sys.owner]).toBe(ctx.userId);
+      expect(updated.fields[sys.createdBy]).toBe(ctx.userId);
+      expect(updated.fields[sys.modifiedBy]).toBe(ctx.userId);
+      expect((await service.create(moduleApiName, input())).fields[sys.owner]).toBe(ctx.userId);
       const foreign = await makeService({ ...context(), userId: "foreign-member" });
       // A known user in another organization must not qualify for this one.
-      await foreign.create(moduleApiName, input({ [fieldNames.owner]: "foreign-member" }));
+      await foreign.create(moduleApiName, input({ [sys.owner]: "foreign-member" }));
       await validation(
-        service.create(moduleApiName, input({ [fieldNames.owner]: "foreign-member" })),
-        fieldNames.owner,
+        service.create(moduleApiName, input({ [sys.owner]: "foreign-member" })),
+        sys.owner,
       );
       await validation(
-        service.update(moduleApiName, created.id, { [fieldNames.owner]: "foreign-member" }),
-        fieldNames.owner,
+        service.update(moduleApiName, created.id, { [sys.owner]: "foreign-member" }),
+        sys.owner,
       );
       for (const Owner of [null, "", 3, { module: linkedModule.apiName, id: "second-member" }]) {
+        await validation(service.create(moduleApiName, input({ [sys.owner]: Owner })), sys.owner);
         await validation(
-          service.create(moduleApiName, input({ [fieldNames.owner]: Owner })),
-          fieldNames.owner,
-        );
-        await validation(
-          service.update(moduleApiName, created.id, { [fieldNames.owner]: Owner }),
-          fieldNames.owner,
+          service.update(moduleApiName, created.id, { [sys.owner]: Owner }),
+          sys.owner,
         );
       }
       expect(await service.get(moduleApiName, created.id)).toEqual(updated);
-      for (const name of [fieldNames.createdBy, fieldNames.modifiedBy])
+      for (const name of [sys.createdBy, sys.modifiedBy])
         await validation(service.update(moduleApiName, created.id, { [name]: ctx.userId }), name);
     });
     it("mass updates one eligible field and applies ordinary update validation", async () => {
       const first = await service.create(moduleApiName, input());
       const second = await service.create(moduleApiName, input());
       const ids = [second.id, first.id];
-      await service.massUpdate(moduleApiName, ids, { [fieldNames.company]: "Mass Updated" });
+      await service.massUpdate(moduleApiName, ids, { [markerField]: "Mass Updated" });
       for (const id of ids)
-        expect((await service.get(moduleApiName, id)).fields[fieldNames.company]).toBe(
-          "Mass Updated",
-        );
+        expect((await service.get(moduleApiName, id)).fields[markerField]).toBe("Mass Updated");
       await validation(service.massUpdate(moduleApiName, ids, {}), "data");
       await validation(
         service.massUpdate(moduleApiName, ids, {
-          [fieldNames.company]: "Example",
-          [fieldNames.phone]: "123",
+          [markerField]: "Example",
+          ...(massUpdateClearablePhone ? { [massUpdateClearablePhone]: "123" } : {}),
         }),
         "data",
       );
@@ -506,26 +508,29 @@ export function describeRecordServiceContract(
       );
       for (const value of [null, "", " ", 42, "x".repeat(201)])
         await validation(
-          service.massUpdate(moduleApiName, ids, { [fieldNames.company]: value }),
-          fieldNames.company,
+          service.massUpdate(moduleApiName, ids, { [markerField]: value }),
+          markerField,
         );
-      if (massUpdateInvalidPicklistValue)
+      if (massUpdateInvalidPicklist)
         await validation(
           service.massUpdate(moduleApiName, ids, {
-            [fieldNames.leadStatus]: massUpdateInvalidPicklistValue,
+            [massUpdateInvalidPicklist.field]: massUpdateInvalidPicklist.value,
           }),
-          fieldNames.leadStatus,
+          massUpdateInvalidPicklist.field,
         );
-      await validation(
-        service.massUpdate(moduleApiName, ids, { [fieldNames.noOfEmployees]: 1.5 }),
-        fieldNames.noOfEmployees,
-      );
-      await service.massUpdate(moduleApiName, ids, { [fieldNames.phone]: "" });
-      for (const id of ids)
-        expect((await service.get(moduleApiName, id)).fields[fieldNames.phone]).toBeNull();
-      expect((await service.get(moduleApiName, first.id)).fields[fieldNames.company]).toBe(
-        "Mass Updated",
-      );
+      if (massUpdateInvalidNumeric)
+        await validation(
+          service.massUpdate(moduleApiName, ids, { [massUpdateInvalidNumeric]: 1.5 }),
+          massUpdateInvalidNumeric,
+        );
+      if (massUpdateClearablePhone) {
+        await service.massUpdate(moduleApiName, ids, { [massUpdateClearablePhone]: "" });
+        for (const id of ids)
+          expect(
+            (await service.get(moduleApiName, id)).fields[massUpdateClearablePhone],
+          ).toBeNull();
+      }
+      expect((await service.get(moduleApiName, first.id)).fields[markerField]).toBe("Mass Updated");
     });
 
     it("changes ownership only to an active organization member", async () => {
@@ -535,18 +540,16 @@ export function describeRecordServiceContract(
       await service.changeOwner(moduleApiName, [first.id, second.id], "batch-owner");
       for (const id of [first.id, second.id]) {
         const record = await service.get(moduleApiName, id);
-        expect(record.fields[fieldNames.owner]).toBe("batch-owner");
-        expect(record.fields[fieldNames.modifiedBy]).toBe(ctx.userId);
-        expect(record.fields[fieldNames.createdBy]).toBe(ctx.userId);
+        expect(record.fields[sys.owner]).toBe("batch-owner");
+        expect(record.fields[sys.modifiedBy]).toBe(ctx.userId);
+        expect(record.fields[sys.createdBy]).toBe(ctx.userId);
       }
       for (const owner of ["unknown-user", ""])
         await validation(
           service.changeOwner(moduleApiName, [first.id, second.id], owner),
-          fieldNames.owner,
+          sys.owner,
         );
-      expect((await service.get(moduleApiName, first.id)).fields[fieldNames.owner]).toBe(
-        "batch-owner",
-      );
+      expect((await service.get(moduleApiName, first.id)).fields[sys.owner]).toBe("batch-owner");
     });
 
     it("validates all batch targets before changing any record", async () => {
@@ -557,8 +560,7 @@ export function describeRecordServiceContract(
       for (const missing of ["missing", foreignRecord.id]) {
         const ids = [first.id, missing];
         for (const run of [
-          () =>
-            service.massUpdate(moduleApiName, ids, { [fieldNames.company]: "Must Not Persist" }),
+          () => service.massUpdate(moduleApiName, ids, { [markerField]: "Must Not Persist" }),
           () => service.changeOwner(moduleApiName, ids, ctx.userId),
           () => service.delete(moduleApiName, ids),
         ]) {
@@ -573,7 +575,7 @@ export function describeRecordServiceContract(
       const record = await service.create(moduleApiName, input());
       for (const ids of [[], Array.from({ length: 501 }, () => record.id)]) {
         await validation(
-          service.massUpdate(moduleApiName, ids, { [fieldNames.company]: "Rejected" }),
+          service.massUpdate(moduleApiName, ids, { [markerField]: "Rejected" }),
           "ids",
         );
         await validation(service.changeOwner(moduleApiName, ids, ctx.userId), "ids");
@@ -584,11 +586,11 @@ export function describeRecordServiceContract(
         Array.from({ length: 500 }, () => service.create(moduleApiName, input())),
       );
       const ids = records.map((row) => row.id);
-      await service.massUpdate(moduleApiName, ids, { [fieldNames.company]: "Boundary" });
+      await service.massUpdate(moduleApiName, ids, { [markerField]: "Boundary" });
       await service.changeOwner(moduleApiName, ids, ctx.userId);
-      expect(
-        (await service.get(moduleApiName, ids[499] as string)).fields[fieldNames.company],
-      ).toBe("Boundary");
+      expect((await service.get(moduleApiName, ids[499] as string)).fields[markerField]).toBe(
+        "Boundary",
+      );
       await service.delete(moduleApiName, ids);
       await expect(service.get(moduleApiName, ids[0] as string)).rejects.toBeInstanceOf(
         NotFoundError,
@@ -608,93 +610,94 @@ export function describeRecordServiceContract(
       const query = { viewId: defaultView.id, search: marker, page: 1, perPage: 10 };
       const created = await service.create(
         moduleApiName,
-        forView(defaultView, { [fieldNames.company]: marker }),
+        forView(defaultView, { [markerField]: marker }),
       );
       expect(await other.count(moduleApiName, query)).toBe(0);
       expect((await other.list(moduleApiName, query)).records).toEqual([]);
       await expect(other.get(moduleApiName, created.id)).rejects.toBeInstanceOf(NotFoundError);
       await expect(
-        other.update(moduleApiName, created.id, { [fieldNames.company]: tenantOtherCompany }),
+        other.update(moduleApiName, created.id, { [markerField]: markerTenantOther }),
       ).rejects.toBeInstanceOf(NotFoundError);
       await expect(other.delete(moduleApiName, [created.id])).rejects.toBeInstanceOf(NotFoundError);
       expect(await service.get(moduleApiName, created.id)).toEqual(created);
     });
-    it("detaches metadata, views, records, nested values and mutation inputs", async () => {
-      const reference = { module: linkedModule.apiName, id: linkedModule.syntheticContactId };
-      const created = await service.create(
-        moduleApiName,
-        input({ [fieldNames.connectedTo]: reference }),
-      );
-      reference.id = "changed-input";
-      (created.fields as Record<string, FieldValue>)[fieldNames.company] = "changed-return";
-      (created.fields[fieldNames.connectedTo] as { id: string }).id = "changed-reference";
-      const reread = await service.get(moduleApiName, created.id);
-      expect(reread.fields[fieldNames.company]).toBe(sampleCompany);
-      expect(reread.fields[fieldNames.connectedTo]).toEqual({
-        module: linkedModule.apiName,
-        id: linkedModule.syntheticContactId,
-      });
-      (reread.fields as Record<string, FieldValue>)[fieldNames.company] = "changed-get";
-      const page = await service.list(moduleApiName, {
-        viewId: defaultView.id,
-        page: 1,
-        perPage: 10,
-      });
-      const row = page.records[0];
-      if (!row) throw new Error("Expected records.");
-      const original = await service.get(moduleApiName, row.id);
-      (row.fields as Record<string, FieldValue>)[fieldNames.company] = "changed-list";
-      expect(await service.get(moduleApiName, row.id)).toEqual(original);
-      const definition = metadata.fields[0];
-      if (!definition) throw new Error("Expected fields.");
-      const originalModule = await service.getModule(moduleApiName);
-      definition.views.view = !definition.views.view;
-      const column = metadata.layout[0]?.columns[0];
-      if (!column) throw new Error("Expected a layout column.");
-      (column as string[]).push("changed-placement");
-      (metadata.businessCardFields as string[]).push("changed-card");
-      expect(await service.getModule(moduleApiName)).toEqual(originalModule);
-      definition.label = "changed-metadata";
-      (defaultView.columns as string[]).push("changed-columns");
-      expect((await service.getModule(moduleApiName)).fields[0]?.label).not.toBe(
-        "changed-metadata",
-      );
-      expect((await service.getView(moduleApiName, defaultView.id)).columns).not.toContain(
-        "changed-columns",
-      );
-      const source = views.find((view) => view.criteria);
-      if (!source) throw new Error("Expected a criteria-bearing view.");
-      const originalView = await service.getView(moduleApiName, source.id);
-      const detachedView = await service.getView(moduleApiName, source.id);
-      if (detachedView.criteria && "field" in detachedView.criteria)
-        detachedView.criteria.value = "changed-criteria";
-      expect(await service.getView(moduleApiName, source.id)).toEqual(originalView);
-      const picklist = metadata.fields.find((field) => field.picklist)?.picklist;
-      const option = picklist?.[0];
-      if (!option) throw new Error("Expected picklist options.");
-      option.storedValue = "changed-picklist";
-      expect(
-        (await service.getModule(moduleApiName)).fields
-          .flatMap((field) => field.picklist ?? [])
-          .map((option) => option.storedValue),
-      ).not.toContain("changed-picklist");
-      const updateInput = {
-        [fieldNames.connectedTo]: {
+    it.skipIf(!connectedField)(
+      "detaches metadata, views, records, nested values and mutation inputs",
+      async () => {
+        if (!connectedField) throw new Error("Connected lookup scenario is required.");
+        const reference = { module: linkedModule.apiName, id: linkedModule.syntheticContactId };
+        const created = await service.create(moduleApiName, input({ [connectedField]: reference }));
+        reference.id = "changed-input";
+        (created.fields as Record<string, FieldValue>)[markerField] = "changed-return";
+        (created.fields[connectedField] as { id: string }).id = "changed-reference";
+        const reread = await service.get(moduleApiName, created.id);
+        expect(reread.fields[markerField]).toBe(markerSample);
+        expect(reread.fields[connectedField]).toEqual({
           module: linkedModule.apiName,
-          id: linkedModule.updatedContactId,
-        },
-      };
-      const updated = await service.update(moduleApiName, created.id, updateInput);
-      (updateInput[fieldNames.connectedTo] as { id: string }).id = "changed-update-input";
-      (updated.fields as Record<string, FieldValue>)[fieldNames.company] = "changed-update-return";
-      expect((await service.get(moduleApiName, created.id)).fields).toMatchObject({
-        [fieldNames.company]: sampleCompany,
-        [fieldNames.connectedTo]: {
-          module: linkedModule.apiName,
-          id: linkedModule.updatedContactId,
-        },
-      });
-    });
+          id: linkedModule.syntheticContactId,
+        });
+        (reread.fields as Record<string, FieldValue>)[markerField] = "changed-get";
+        const page = await service.list(moduleApiName, {
+          viewId: defaultView.id,
+          page: 1,
+          perPage: 10,
+        });
+        const row = page.records[0];
+        if (!row) throw new Error("Expected records.");
+        const original = await service.get(moduleApiName, row.id);
+        (row.fields as Record<string, FieldValue>)[markerField] = "changed-list";
+        expect(await service.get(moduleApiName, row.id)).toEqual(original);
+        const definition = metadata.fields[0];
+        if (!definition) throw new Error("Expected fields.");
+        const originalModule = await service.getModule(moduleApiName);
+        definition.views.view = !definition.views.view;
+        const column = metadata.layout[0]?.columns[0];
+        if (!column) throw new Error("Expected a layout column.");
+        (column as string[]).push("changed-placement");
+        (metadata.businessCardFields as string[]).push("changed-card");
+        expect(await service.getModule(moduleApiName)).toEqual(originalModule);
+        definition.label = "changed-metadata";
+        (defaultView.columns as string[]).push("changed-columns");
+        expect((await service.getModule(moduleApiName)).fields[0]?.label).not.toBe(
+          "changed-metadata",
+        );
+        expect((await service.getView(moduleApiName, defaultView.id)).columns).not.toContain(
+          "changed-columns",
+        );
+        const source = views.find((view) => view.criteria);
+        if (!source) throw new Error("Expected a criteria-bearing view.");
+        const originalView = await service.getView(moduleApiName, source.id);
+        const detachedView = await service.getView(moduleApiName, source.id);
+        if (detachedView.criteria && "field" in detachedView.criteria)
+          detachedView.criteria.value = "changed-criteria";
+        expect(await service.getView(moduleApiName, source.id)).toEqual(originalView);
+        const picklist = metadata.fields.find((field) => field.picklist)?.picklist;
+        const option = picklist?.[0];
+        if (!option) throw new Error("Expected picklist options.");
+        option.storedValue = "changed-picklist";
+        expect(
+          (await service.getModule(moduleApiName)).fields
+            .flatMap((field) => field.picklist ?? [])
+            .map((option) => option.storedValue),
+        ).not.toContain("changed-picklist");
+        const updateInput = {
+          [connectedField]: {
+            module: linkedModule.apiName,
+            id: linkedModule.updatedContactId,
+          },
+        };
+        const updated = await service.update(moduleApiName, created.id, updateInput);
+        (updateInput[connectedField] as { id: string }).id = "changed-update-input";
+        (updated.fields as Record<string, FieldValue>)[markerField] = "changed-update-return";
+        expect((await service.get(moduleApiName, created.id)).fields).toMatchObject({
+          [markerField]: markerSample,
+          [connectedField]: {
+            module: linkedModule.apiName,
+            id: linkedModule.updatedContactId,
+          },
+        });
+      },
+    );
     it("orders an unsorted list by id descending and echoes an explicit sort", async () => {
       const created = await service.create(moduleApiName, forView(defaultView));
       const page = await service.list(moduleApiName, {
@@ -708,9 +711,9 @@ export function describeRecordServiceContract(
         viewId: defaultView.id,
         page: 1,
         perPage: 10,
-        sort: { field: fieldNames.company, order: "asc" },
+        sort: { field: markerField, order: "asc" },
       });
-      expect(sorted.sort).toEqual({ field: fieldNames.company, order: "asc" });
+      expect(sorted.sort).toEqual({ field: markerField, order: "asc" });
     });
     const panelCases: {
       label: string;
@@ -719,99 +722,101 @@ export function describeRecordServiceContract(
       value: CriteriaValue;
       indexes: number[];
     }[] = [];
-    for (const field of panelTextFields) {
-      for (const [label, comparator, value, indexes] of [
-        ["is", "equal", "ALPHABETA", [0]],
-        ["isn't", "not_equal", "ALPHABETA", [1, 2, 3]],
-        ["contains", "contains", "PHAB", [0]],
-        ["doesn't contain", "not_contains", "PHAB", [1, 2, 3]],
-        ["starts with", "starts_with", "ALPHA", [0]],
-        ["ends with", "ends_with", "BETA", [0]],
-      ] as const)
-        panelCases.push({
-          label: `${field} ${label}`,
-          field,
-          comparator,
-          value,
-          indexes: [...indexes],
-        });
-    }
-    for (const field of panelNumberFields) {
-      for (const [label, comparator, value, indexes] of [
-        ["=", "equal", 20, [1]],
-        ["!=", "not_equal", 20, [0, 2, 3]],
-        ["<", "less_than", 20, [0]],
-        ["<=", "less_equal", 20, [0, 1]],
-        [">", "greater_than", 20, [3]],
-        [">=", "greater_equal", 20, [1, 3]],
-        ["between", "between", [10, 20], [0, 1]],
-        ["not between", "not_between", [10, 20], [3]],
-      ] as const)
-        panelCases.push({
-          label: `${field} ${label}`,
-          field,
-          comparator,
-          value,
-          indexes: [...indexes],
-        });
-    }
-    if (picklistPanel) {
+    if (panelFilters) {
+      for (const field of panelFilters.textFields) {
+        for (const [label, comparator, value, indexes] of [
+          ["is", "equal", "ALPHABETA", [0]],
+          ["isn't", "not_equal", "ALPHABETA", [1, 2, 3]],
+          ["contains", "contains", "PHAB", [0]],
+          ["doesn't contain", "not_contains", "PHAB", [1, 2, 3]],
+          ["starts with", "starts_with", "ALPHA", [0]],
+          ["ends with", "ends_with", "BETA", [0]],
+        ] as const)
+          panelCases.push({
+            label: `${field} ${label}`,
+            field,
+            comparator,
+            value,
+            indexes: [...indexes],
+          });
+      }
+      for (const field of panelFilters.numberFields) {
+        for (const [label, comparator, value, indexes] of [
+          ["=", "equal", 20, [1]],
+          ["!=", "not_equal", 20, [0, 2, 3]],
+          ["<", "less_than", 20, [0]],
+          ["<=", "less_equal", 20, [0, 1]],
+          [">", "greater_than", 20, [3]],
+          [">=", "greater_equal", 20, [1, 3]],
+          ["between", "between", [10, 20], [0, 1]],
+          ["not between", "not_between", [10, 20], [3]],
+        ] as const)
+          panelCases.push({
+            label: `${field} ${label}`,
+            field,
+            comparator,
+            value,
+            indexes: [...indexes],
+          });
+      }
+      if (picklistPanel) {
+        panelCases.push(
+          {
+            label: "picklist is",
+            field: picklistPanel.picklistField,
+            comparator: "equal",
+            value: [...picklistPanel.membershipValues],
+            indexes: [0, 3],
+          },
+          {
+            label: "picklist is not",
+            field: picklistPanel.picklistField,
+            comparator: "not_equal",
+            value: [...picklistPanel.membershipValues],
+            indexes: [1, 2],
+          },
+        );
+      }
       panelCases.push(
         {
-          label: "picklist is",
-          field: fieldNames.leadStatus,
+          label: "boolean is true",
+          field: panelFilters.booleanField,
           comparator: "equal",
-          value: [...picklistPanel.membershipValues],
+          value: true,
           indexes: [0, 3],
         },
         {
-          label: "picklist is not",
-          field: fieldNames.leadStatus,
+          label: "boolean is false",
+          field: panelFilters.booleanField,
+          comparator: "equal",
+          value: false,
+          indexes: [1],
+        },
+        {
+          label: "owner is",
+          field: sys.owner,
+          comparator: "equal",
+          value: ["contract-user"],
+          indexes: [0, 2, 3],
+        },
+        {
+          label: "owner is not",
+          field: sys.owner,
           comparator: "not_equal",
-          value: [...picklistPanel.membershipValues],
-          indexes: [1, 2],
+          value: ["contract-user"],
+          indexes: [1],
         },
       );
+      for (const field of panelFilters.emptyCheckFields)
+        for (const comparator of ["is_empty", "is_not_empty"] as const)
+          panelCases.push({
+            label: `${field} ${comparator}`,
+            field,
+            comparator,
+            value: null,
+            indexes: comparator === "is_empty" ? [2] : [0, 1, 3],
+          });
     }
-    panelCases.push(
-      {
-        label: "boolean is true",
-        field: fieldNames.emailOptOut,
-        comparator: "equal",
-        value: true,
-        indexes: [0, 3],
-      },
-      {
-        label: "boolean is false",
-        field: fieldNames.emailOptOut,
-        comparator: "equal",
-        value: false,
-        indexes: [1],
-      },
-      {
-        label: "owner is",
-        field: fieldNames.owner,
-        comparator: "equal",
-        value: ["contract-user"],
-        indexes: [0, 2, 3],
-      },
-      {
-        label: "owner is not",
-        field: fieldNames.owner,
-        comparator: "not_equal",
-        value: ["contract-user"],
-        indexes: [1],
-      },
-    );
-    for (const field of panelEmptyCheckFields)
-      for (const comparator of ["is_empty", "is_not_empty"] as const)
-        panelCases.push({
-          label: `${field} ${comparator}`,
-          field,
-          comparator,
-          value: null,
-          indexes: comparator === "is_empty" ? [2] : [0, 1, 3],
-        });
 
     const assertPanelSet = async (
       adapter: RecordService,
@@ -826,12 +831,12 @@ export function describeRecordServiceContract(
         filters: {
           groupOperator: "and" as const,
           group: [
-            { field: fieldNames.company, comparator: "equal" as const, value: marker },
+            { field: markerField, comparator: "equal" as const, value: marker },
             {
               groupOperator: "and" as const,
               group: [
                 filters,
-                { field: fieldNames.company, comparator: "is_not_empty" as const, value: null },
+                { field: markerField, comparator: "is_not_empty" as const, value: null },
               ],
             },
           ],
@@ -841,35 +846,26 @@ export function describeRecordServiceContract(
       expect(result.records.map((record) => record.id).sort()).toEqual([...expected].sort());
       expect(await adapter.count(moduleApiName, query)).toBe(expected.length);
     };
-    it.each(panelCases)(
+    it.skipIf(!panelFilters).each(panelCases)(
       "panel $label: exact set and count with nested and",
       async ({ field, comparator, value, indexes }) => {
+        if (!panelFilters) throw new Error("Panel filter scenario is required.");
         const marker = `Panel-${randomUUID()}`;
         const other = await makeService({ ...ctx, userId: "panel-other" });
         const records: RecordData[] = [];
+        const textSeed = ["AlphaBeta", "Gamma", null, "Delta"];
+        const numberSeed = [10, 20, null, 30];
+        const booleanSeed = [true, false, null, true];
         for (const index of [0, 1, 2, 3]) {
           const adapter = index === 1 ? other : service;
-          records.push(
-            await adapter.create(
-              moduleApiName,
-              input({
-                [fieldNames.company]: marker,
-                [fieldNames.firstName]: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
-                [fieldNames.email]: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
-                [fieldNames.phone]: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
-                [fieldNames.website]: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
-                [fieldNames.description]: ["AlphaBeta", "Gamma", null, "Delta"][index] ?? null,
-                [fieldNames.annualRevenue]: [10, 20, null, 30][index] ?? null,
-                [fieldNames.noOfEmployees]: [10, 20, null, 30][index] ?? null,
-                [fieldNames.latitude]: [10, 20, null, 30][index] ?? null,
-                [fieldNames.emailOptOut]: [true, false, null, true][index] ?? null,
-                [fieldNames.leadStatus]:
-                  picklistPanel?.rowStatuses[index] ??
-                  ([null, null, null, null] as const)[index] ??
-                  null,
-              }),
-            ),
-          );
+          const seedInput: Record<string, FieldValue> = { [markerField]: marker };
+          for (const seedField of panelFilters.seedTextFields)
+            seedInput[seedField] = textSeed[index] ?? null;
+          for (const seedField of panelFilters.seedNumberFields)
+            seedInput[seedField] = numberSeed[index] ?? null;
+          seedInput[panelFilters.booleanField] = booleanSeed[index] ?? null;
+          seedInput[panelFilters.picklistField] = panelFilters.picklistRowStatuses[index] ?? null;
+          records.push(await adapter.create(moduleApiName, input(seedInput)));
         }
         await assertPanelSet(
           service,
@@ -956,21 +952,19 @@ export function describeRecordServiceContract(
           Date.parse(end),
         ]) {
           now = new Date(timestamp);
-          records.push(
-            await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })),
-          );
+          records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
         }
         now = new Date("2026-01-05T12:00:00.000Z");
         await assertPanelSet(
           adapter,
           marker,
-          { field: fieldNames.createdTime, comparator: "equal", value: token },
+          { field: sys.createdTime, comparator: "equal", value: token },
           [records[1]?.id as string, records[2]?.id as string],
         );
         await assertPanelSet(
           adapter,
           marker,
-          { field: fieldNames.lastActivityTime, comparator: "equal", value: token },
+          { field: sys.lastActivityTime, comparator: "equal", value: token },
           [],
         );
       },
@@ -989,7 +983,7 @@ export function describeRecordServiceContract(
         "2027-01-01T00:00:00.000Z",
       ]) {
         now = new Date(timestamp);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = new Date("2026-01-05T12:00:00.000Z");
       for (const [name, indexes] of [
@@ -999,7 +993,7 @@ export function describeRecordServiceContract(
         await assertPanelSet(
           adapter,
           marker,
-          { field: fieldNames.createdTime, comparator: "equal", value: { token: "PERIOD", name } },
+          { field: sys.createdTime, comparator: "equal", value: { token: "PERIOD", name } },
           indexes.map((index) => records[index]?.id as string),
         );
     });
@@ -1018,7 +1012,7 @@ export function describeRecordServiceContract(
         86_400_000 + 1,
       ]) {
         now = new Date(base + offset);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = new Date(base);
       for (const [token, offset, indexes] of [
@@ -1030,7 +1024,7 @@ export function describeRecordServiceContract(
         await assertPanelSet(
           adapter,
           marker,
-          { field: fieldNames.createdTime, comparator: "less_equal", value: { token, offset } },
+          { field: sys.createdTime, comparator: "less_equal", value: { token, offset } },
           indexes.map((index) => records[index]?.id as string),
         );
       for (const token of ["AGEINDAYS", "DUEINDAYS"] as const)
@@ -1038,7 +1032,7 @@ export function describeRecordServiceContract(
           adapter,
           marker,
           {
-            field: fieldNames.lastActivityTime,
+            field: sys.lastActivityTime,
             comparator: "less_equal",
             value: { token, offset: 1 },
           },
@@ -1047,25 +1041,25 @@ export function describeRecordServiceContract(
       await assertPanelSet(
         adapter,
         marker,
-        { field: fieldNames.lastActivityTime, comparator: "is_empty", value: null },
+        { field: sys.lastActivityTime, comparator: "is_empty", value: null },
         records.map((record) => record.id),
       );
       await assertPanelSet(
         adapter,
         marker,
-        { field: fieldNames.createdTime, comparator: "is_not_empty", value: null },
+        { field: sys.createdTime, comparator: "is_not_empty", value: null },
         records.map((record) => record.id),
       );
       await assertPanelSet(
         adapter,
         marker,
-        { field: fieldNames.owner, comparator: "is_empty", value: null },
+        { field: sys.owner, comparator: "is_empty", value: null },
         [],
       );
       await assertPanelSet(
         adapter,
         marker,
-        { field: fieldNames.owner, comparator: "is_not_empty", value: null },
+        { field: sys.owner, comparator: "is_not_empty", value: null },
         records.map((record) => record.id),
       );
     });
@@ -1091,17 +1085,14 @@ export function describeRecordServiceContract(
       const records: RecordData[] = [];
       for (const timestamp of stamps) {
         now = new Date(timestamp);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = queryAt;
       const withCount = async (filters: Criteria, expected: string[]) => {
         await assertPanelSet(adapter, marker, filters, expected);
         const wrapped = {
           groupOperator: "and" as const,
-          group: [
-            { field: fieldNames.company, comparator: "equal" as const, value: marker },
-            filters,
-          ],
+          group: [{ field: markerField, comparator: "equal" as const, value: marker }, filters],
         };
         expect(
           await adapter.count(moduleApiName, { viewId: defaultView.id, filters: wrapped }),
@@ -1144,8 +1135,8 @@ export function describeRecordServiceContract(
             filters: {
               groupOperator: "and",
               group: [
-                { field: fieldNames.company, comparator: "equal", value: marker },
-                { field: fieldNames.createdTime, comparator: "equal", value: relative },
+                { field: markerField, comparator: "equal", value: marker },
+                { field: sys.createdTime, comparator: "equal", value: relative },
               ],
             },
           })
@@ -1158,20 +1149,20 @@ export function describeRecordServiceContract(
             filters: {
               groupOperator: "and",
               group: [
-                { field: fieldNames.company, comparator: "equal", value: marker },
-                { field: fieldNames.createdTime, comparator: "equal", value: period },
+                { field: markerField, comparator: "equal", value: marker },
+                { field: sys.createdTime, comparator: "equal", value: period },
               ],
             },
           })
         ).records.map((record) => record.id);
         expect(relativeIds.sort()).toEqual(periodIds.sort());
       }
-      await withCount({ field: fieldNames.createdTime, comparator: "equal", value: "2026-01-05" }, [
+      await withCount({ field: sys.createdTime, comparator: "equal", value: "2026-01-05" }, [
         records[4]?.id as string,
         records[5]?.id as string,
       ]);
       await withCount(
-        { field: fieldNames.createdTime, comparator: "less_than", value: "2026-01-05" },
+        { field: sys.createdTime, comparator: "less_than", value: "2026-01-05" },
         stamps
           .map((stamp, index) =>
             Date.parse(stamp) < Date.parse("2026-01-05T00:00:00.000Z") ? index : -1,
@@ -1179,18 +1170,15 @@ export function describeRecordServiceContract(
           .filter((index) => index >= 0)
           .map((index) => records[index]?.id as string),
       );
-      await withCount(
-        { field: fieldNames.createdTime, comparator: "greater_than", value: "2026-01-05" },
-        [
-          records[6]?.id as string,
-          records[7]?.id as string,
-          records[8]?.id as string,
-          records[9]?.id as string,
-        ],
-      );
+      await withCount({ field: sys.createdTime, comparator: "greater_than", value: "2026-01-05" }, [
+        records[6]?.id as string,
+        records[7]?.id as string,
+        records[8]?.id as string,
+        records[9]?.id as string,
+      ]);
       await withCount(
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "between",
           value: ["2026-01-04", "2026-01-05"],
         },
@@ -1203,7 +1191,7 @@ export function describeRecordServiceContract(
       );
       await withCount(
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "not_between",
           value: ["2026-01-04", "2026-01-05"],
         },
@@ -1218,12 +1206,12 @@ export function describeRecordServiceContract(
           records[11]?.id as string,
         ],
       );
-      await withCount({ field: fieldNames.createdTime, comparator: "equal", value: "2024-02-29" }, [
+      await withCount({ field: sys.createdTime, comparator: "equal", value: "2024-02-29" }, [
         records[10]?.id as string,
       ]);
       await withCount(
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 2, unit: "days" },
         },
@@ -1240,7 +1228,7 @@ export function describeRecordServiceContract(
       );
       await withCount(
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "DUEINDAYS", offset: 1, unit: "weeks" },
         },
@@ -1256,7 +1244,7 @@ export function describeRecordServiceContract(
       ]) {
         now = new Date(timestamp);
         monthRecords.push(
-          await adapter.create(moduleApiName, input({ [fieldNames.company]: monthMarker })),
+          await adapter.create(moduleApiName, input({ [markerField]: monthMarker })),
         );
       }
       now = new Date("2026-03-31T12:00:00.000Z");
@@ -1264,27 +1252,29 @@ export function describeRecordServiceContract(
         adapter,
         monthMarker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 1, unit: "months" },
         },
         [monthRecords[1]?.id as string],
       );
-      await assertPanelSet(
-        adapter,
-        marker,
-        { field: fieldNames.connectedTo, comparator: "is_empty", value: null },
-        records.map((record) => record.id),
-      );
-      await validation(
-        service.list(moduleApiName, {
-          viewId: defaultView.id,
-          page: 1,
-          perPage: 10,
-          filters: { field: fieldNames.connectedTo, comparator: "equal", value: "x" },
-        }),
-        "filters",
-      );
+      if (connectedField) {
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: connectedField, comparator: "is_empty", value: null },
+          records.map((record) => record.id),
+        );
+        await validation(
+          service.list(moduleApiName, {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 10,
+            filters: { field: connectedField, comparator: "equal", value: "x" },
+          }),
+          "filters",
+        );
+      }
     });
     it("panel age in N weeks: same window as N×7 days", async () => {
       const queryAt = new Date("2026-01-05T12:00:00.000Z");
@@ -1295,7 +1285,7 @@ export function describeRecordServiceContract(
       const records: RecordData[] = [];
       for (const timestamp of stamps) {
         now = new Date(timestamp);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = queryAt;
       const expectedIds = [records[1]?.id as string];
@@ -1303,7 +1293,7 @@ export function describeRecordServiceContract(
         adapter,
         marker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 1, unit: "weeks" },
         },
@@ -1313,7 +1303,7 @@ export function describeRecordServiceContract(
         adapter,
         marker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 7 },
         },
@@ -1322,9 +1312,9 @@ export function describeRecordServiceContract(
       const wrapped = {
         groupOperator: "and" as const,
         group: [
-          { field: fieldNames.company, comparator: "equal" as const, value: marker },
+          { field: markerField, comparator: "equal" as const, value: marker },
           {
-            field: fieldNames.createdTime,
+            field: sys.createdTime,
             comparator: "less_equal" as const,
             value: { token: "AGEINDAYS" as const, offset: 1, unit: "weeks" as const },
           },
@@ -1343,14 +1333,14 @@ export function describeRecordServiceContract(
       const records: RecordData[] = [];
       for (const timestamp of stamps) {
         now = new Date(timestamp);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = queryAt;
       await assertPanelSet(
         adapter,
         marker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 1, unit: "months" },
         },
@@ -1370,14 +1360,14 @@ export function describeRecordServiceContract(
       const records: RecordData[] = [];
       for (const timestamp of stamps) {
         now = new Date(timestamp);
-        records.push(await adapter.create(moduleApiName, input({ [fieldNames.company]: marker })));
+        records.push(await adapter.create(moduleApiName, input({ [markerField]: marker })));
       }
       now = queryAt;
       await assertPanelSet(
         adapter,
         marker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "DUEINDAYS", offset: 1, unit: "months" },
         },
@@ -1387,7 +1377,7 @@ export function describeRecordServiceContract(
         adapter,
         marker,
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "DUEINDAYS", offset: 0, unit: "months" },
         },
@@ -1406,10 +1396,7 @@ export function describeRecordServiceContract(
         const byStamp = new Map<string, string>();
         for (const timestamp of [...boundaryStamps.inside, ...boundaryStamps.outside]) {
           now = new Date(timestamp);
-          const record = await adapter.create(
-            moduleApiName,
-            input({ [fieldNames.company]: marker }),
-          );
+          const record = await adapter.create(moduleApiName, input({ [markerField]: marker }));
           byStamp.set(timestamp, record.id);
         }
         now = queryAt;
@@ -1417,14 +1404,14 @@ export function describeRecordServiceContract(
         await assertPanelSet(
           adapter,
           marker,
-          { field: fieldNames.createdTime, comparator: "equal", value: relative },
+          { field: sys.createdTime, comparator: "equal", value: relative },
           expectedInside,
         );
         const wrapped = {
           groupOperator: "and" as const,
           group: [
-            { field: fieldNames.company, comparator: "equal" as const, value: marker },
-            { field: fieldNames.createdTime, comparator: "equal" as const, value: relative },
+            { field: markerField, comparator: "equal" as const, value: marker },
+            { field: sys.createdTime, comparator: "equal" as const, value: relative },
           ],
         };
         expect(
@@ -1472,82 +1459,87 @@ export function describeRecordServiceContract(
         },
       );
     });
-    it("panel multi_module_lookup is_not_empty and extra datetime filter rejections", async () => {
-      const adapter = await makeService(ctx);
-      const marker = `Lookup-empty-${randomUUID()}`;
-      const empty = await adapter.create(moduleApiName, input({ [fieldNames.company]: marker }));
-      const linked = await adapter.create(
-        moduleApiName,
-        input({
-          [fieldNames.company]: marker,
-          [fieldNames.connectedTo]: {
-            module: linkedModule.apiName,
-            id: linkedModule.contractLinkedContactId,
+    it.skipIf(!connectedField)(
+      "panel multi_module_lookup is_not_empty and extra datetime filter rejections",
+      async () => {
+        if (!connectedField) throw new Error("Connected lookup scenario is required.");
+        const adapter = await makeService(ctx);
+        const marker = `Lookup-empty-${randomUUID()}`;
+        const empty = await adapter.create(moduleApiName, input({ [markerField]: marker }));
+        const linked = await adapter.create(
+          moduleApiName,
+          input({
+            [markerField]: marker,
+            [connectedField]: {
+              module: linkedModule.apiName,
+              id: linkedModule.contractLinkedContactId,
+            },
+          }),
+        );
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: connectedField, comparator: "is_not_empty", value: null },
+          [linked.id],
+        );
+        await assertPanelSet(
+          adapter,
+          marker,
+          { field: connectedField, comparator: "is_empty", value: null },
+          [empty.id],
+        );
+        const extraInvalid = [
+          { field: sys.createdTime, comparator: "between", value: ["2026-01-05"] },
+          {
+            field: sys.createdTime,
+            comparator: "between",
+            value: ["2026-01-04", "2026-01-05", "2026-01-06"],
           },
-        }),
-      );
-      await assertPanelSet(
-        adapter,
-        marker,
-        { field: fieldNames.connectedTo, comparator: "is_not_empty", value: null },
-        [linked.id],
-      );
-      await assertPanelSet(
-        adapter,
-        marker,
-        { field: fieldNames.connectedTo, comparator: "is_empty", value: null },
-        [empty.id],
-      );
-      const extraInvalid = [
-        { field: fieldNames.createdTime, comparator: "between", value: ["2026-01-05"] },
-        {
-          field: fieldNames.createdTime,
-          comparator: "between",
-          value: ["2026-01-04", "2026-01-05", "2026-01-06"],
-        },
-        { field: fieldNames.createdTime, comparator: "less_than", value: { token: "TODAY" } },
-        {
-          field: fieldNames.createdTime,
-          comparator: "greater_than",
-          value: "2026-01-05T12:00:00.000Z",
-        },
-        {
-          field: fieldNames.createdTime,
-          comparator: "equal",
-          value: { token: "RELATIVE", direction: "previous", count: 1.5, unit: "days" },
-        },
-        {
-          field: fieldNames.createdTime,
-          comparator: "less_equal",
-          value: { token: "RELATIVE", direction: "next", count: 1, unit: "days" },
-        },
-        {
-          field: fieldNames.company,
-          comparator: "equal",
-          value: { token: "RELATIVE", direction: "previous", count: 1, unit: "days" },
-        },
-      ] as unknown as Criteria[];
-      for (const filters of extraInvalid) {
-        const query = { viewId: defaultView.id, page: 1, perPage: 10, filters };
-        await validation(adapter.list(moduleApiName, query), "filters");
-        await validation(adapter.count(moduleApiName, query), "filters");
-      }
-    });
+          { field: sys.createdTime, comparator: "less_than", value: { token: "TODAY" } },
+          {
+            field: sys.createdTime,
+            comparator: "greater_than",
+            value: "2026-01-05T12:00:00.000Z",
+          },
+          {
+            field: sys.createdTime,
+            comparator: "equal",
+            value: { token: "RELATIVE", direction: "previous", count: 1.5, unit: "days" },
+          },
+          {
+            field: sys.createdTime,
+            comparator: "less_equal",
+            value: { token: "RELATIVE", direction: "next", count: 1, unit: "days" },
+          },
+          {
+            field: markerField,
+            comparator: "equal",
+            value: { token: "RELATIVE", direction: "previous", count: 1, unit: "days" },
+          },
+        ] as unknown as Criteria[];
+        for (const filters of extraInvalid) {
+          const query = { viewId: defaultView.id, page: 1, perPage: 10, filters };
+          await validation(adapter.list(moduleApiName, query), "filters");
+          await validation(adapter.count(moduleApiName, query), "filters");
+        }
+      },
+    );
     it("panel rejects invalid field / comparator / value combinations on list and count", async () => {
+      const betweenFields = [
+        markerField,
+        ...(filterValidationPicklist ? [filterValidationPicklist] : []),
+        ...(filterValidationBoolean ? [filterValidationBoolean] : []),
+        sys.owner,
+        sys.createdTime,
+      ];
       const invalidCriteria = [
-        { field: fieldNames.company, comparator: "unknown", value: "x" },
-        ...[
-          fieldNames.company,
-          fieldNames.leadStatus,
-          fieldNames.emailOptOut,
-          fieldNames.owner,
-          fieldNames.createdTime,
-        ].map((field) => ({
+        { field: markerField, comparator: "unknown", value: "x" },
+        ...betweenFields.map((field) => ({
           field,
           comparator: "between",
           value: [1, 2],
         })),
-        ...panelNumberFields.flatMap((field) => [
+        ...(panelFilters?.numberFields ?? []).flatMap((field) => [
           { field, comparator: "equal", value: "10" },
           { field, comparator: "less_equal", value: null },
           ...[[20, 10], [10], [10, 20, 30], [10, "20"], [null, 20]].map((value) => ({
@@ -1557,57 +1549,75 @@ export function describeRecordServiceContract(
           })),
           { field, comparator: "contains", value: "10" },
         ]),
-        { field: fieldNames.noOfEmployees, comparator: "equal", value: 1.5 },
-        { field: fieldNames.emailOptOut, comparator: "equal", value: "true" },
-        { field: fieldNames.emailOptOut, comparator: "not_equal", value: true },
-        { field: fieldNames.company, comparator: "equal", value: ["x"] },
-        { field: fieldNames.company, comparator: "is_empty", value: "" },
-        { field: fieldNames.annualRevenue, comparator: "not_between", value: [20, 10] },
+        ...(massUpdateInvalidNumeric
+          ? [{ field: massUpdateInvalidNumeric, comparator: "equal", value: 1.5 }]
+          : []),
+        ...(filterValidationBoolean
+          ? [
+              { field: filterValidationBoolean, comparator: "equal", value: "true" },
+              { field: filterValidationBoolean, comparator: "not_equal", value: true },
+            ]
+          : []),
+        { field: markerField, comparator: "equal", value: ["x"] },
+        { field: markerField, comparator: "is_empty", value: "" },
+        ...(panelFilters?.numberFields[0]
+          ? [
+              {
+                field: panelFilters.numberFields[0],
+                comparator: "not_between",
+                value: [20, 10],
+              },
+            ]
+          : []),
+        ...(filterValidationPicklist
+          ? [
+              {
+                field: filterValidationPicklist,
+                comparator: "equal",
+                value: { token: "CATEGORY", offset: 1 },
+              },
+              { field: filterValidationPicklist, comparator: "equal", value: [] },
+            ]
+          : []),
+        { field: sys.createdTime, comparator: "less_than", value: { token: "TODAY" } },
+        { field: sys.owner, comparator: "not_equal", value: "contract-user" },
+        { field: sys.owner, comparator: "equal", value: [true] },
         {
-          field: fieldNames.leadStatus,
-          comparator: "equal",
-          value: { token: "CATEGORY", offset: 1 },
-        },
-        { field: fieldNames.createdTime, comparator: "less_than", value: { token: "TODAY" } },
-        { field: fieldNames.owner, comparator: "not_equal", value: "contract-user" },
-        { field: fieldNames.leadStatus, comparator: "equal", value: [] },
-        { field: fieldNames.owner, comparator: "equal", value: [true] },
-        {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "equal",
           value: { token: "PERIOD", name: "CURRENT_FY" },
         },
-        { field: fieldNames.company, comparator: "equal", value: { token: "UNKNOWN" } },
+        { field: markerField, comparator: "equal", value: { token: "UNKNOWN" } },
         ...["AGEINDAYS", "DUEINDAYS"].flatMap((token) =>
           [-1, 1.5, "1"].map((offset) => ({
-            field: fieldNames.createdTime,
+            field: sys.createdTime,
             comparator: "less_equal",
             value: { token, offset },
           })),
         ),
-        { field: fieldNames.createdTime, comparator: "equal", value: "2026-02-30" },
-        { field: fieldNames.createdTime, comparator: "equal", value: "2026-01-05T00:00:00.000Z" },
+        { field: sys.createdTime, comparator: "equal", value: "2026-02-30" },
+        { field: sys.createdTime, comparator: "equal", value: "2026-01-05T00:00:00.000Z" },
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "between",
           value: ["2026-01-05", "2026-01-04"],
         },
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "equal",
           value: { token: "RELATIVE", direction: "previous", count: 0, unit: "days" },
         },
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "equal",
           value: { token: "RELATIVE", direction: "sideways", count: 1, unit: "days" },
         },
         {
-          field: fieldNames.createdTime,
+          field: sys.createdTime,
           comparator: "less_equal",
           value: { token: "AGEINDAYS", offset: 1, unit: "years" },
         },
-        { field: fieldNames.connectedTo, comparator: "contains", value: "x" },
+        ...(connectedField ? [{ field: connectedField, comparator: "contains", value: "x" }] : []),
       ] as unknown as Criteria[];
       for (const filters of invalidCriteria) {
         const query = { viewId: defaultView.id, page: 1, perPage: 10, filters };
@@ -1627,27 +1637,27 @@ export function describeRecordServiceContract(
         const outside = await timedService.create(
           moduleApiName,
           input({
-            [fieldNames.company]: marker,
-            [fieldNames.leadStatus]: tokens.junkStatus,
-            [fieldNames.firstName]: "Alpha",
+            [markerField]: marker,
+            [tokens.picklistField]: tokens.junkStatus,
+            [tokens.textField]: "Alpha",
           }),
         );
         now = new Date("2026-05-15T00:00:00.000Z");
         const inside = await timedService.create(
           moduleApiName,
           input({
-            [fieldNames.company]: marker,
-            [fieldNames.leadStatus]: tokens.contactedStatus,
-            [fieldNames.firstName]: null,
+            [markerField]: marker,
+            [tokens.picklistField]: tokens.contactedStatus,
+            [tokens.textField]: null,
           }),
         );
         now = new Date("2026-06-15T00:30:00.000Z");
         const today = await timedService.create(
           moduleApiName,
           input({
-            [fieldNames.company]: marker,
-            [fieldNames.leadStatus]: tokens.notQualifiedStatus,
-            [fieldNames.firstName]: "Later",
+            [markerField]: marker,
+            [tokens.picklistField]: tokens.notQualifiedStatus,
+            [tokens.textField]: "Later",
           }),
         );
         const ids = async (filters: Criteria) =>
@@ -1658,60 +1668,60 @@ export function describeRecordServiceContract(
               perPage: 20,
               filters: {
                 groupOperator: "and",
-                group: [{ field: fieldNames.company, comparator: "equal", value: marker }, filters],
+                group: [{ field: markerField, comparator: "equal", value: marker }, filters],
               },
             })
           ).records.map((record) => record.id);
         expect(
           await ids({
-            field: fieldNames.createdTime,
+            field: sys.createdTime,
             comparator: "equal",
             value: { token: "TODAY" },
           }),
         ).toEqual([today.id]);
         expect(
           await ids({
-            field: fieldNames.createdTime,
+            field: sys.createdTime,
             comparator: "less_equal",
             value: { token: "AGEINDAYS", offset: 31 },
           }),
         ).toEqual([today.id, inside.id]);
         expect(
           await ids({
-            field: fieldNames.owner,
+            field: sys.owner,
             comparator: "equal",
             value: { token: "CURRENTUSER" },
           }),
         ).toEqual([today.id, inside.id, outside.id]);
-        expect(
-          await ids({ field: fieldNames.owner, comparator: "equal", value: "someone-else" }),
-        ).toEqual([]);
+        expect(await ids({ field: sys.owner, comparator: "equal", value: "someone-else" })).toEqual(
+          [],
+        );
         expect(
           await ids({
-            field: fieldNames.leadStatus,
+            field: tokens.picklistField,
             comparator: "equal",
             value: { token: "CATEGORY", name: tokens.junkCategoryName },
           }),
         ).toEqual([outside.id]);
         expect(
           await ids({
-            field: fieldNames.leadStatus,
+            field: tokens.picklistField,
             comparator: "equal",
             value: { token: "CATEGORY", name: tokens.openCategoryName },
           }),
         ).toEqual([inside.id]);
         expect(
-          await ids({ field: fieldNames.firstName, comparator: "contains", value: "alp" }),
+          await ids({ field: tokens.textField, comparator: "contains", value: "alp" }),
         ).toEqual([outside.id]);
         expect(
-          await ids({ field: fieldNames.firstName, comparator: "not_contains", value: "alp" }),
+          await ids({ field: tokens.textField, comparator: "not_contains", value: "alp" }),
         ).toEqual([today.id, inside.id]);
-        expect(
-          await ids({ field: fieldNames.firstName, comparator: "equal", value: null }),
-        ).toEqual([inside.id]);
+        expect(await ids({ field: tokens.textField, comparator: "equal", value: null })).toEqual([
+          inside.id,
+        ]);
         expect(
           await ids({
-            field: fieldNames.lastActivityTime,
+            field: sys.lastActivityTime,
             comparator: "less_equal",
             value: { token: "AGEINDAYS", offset: 31 },
           }),
@@ -1721,7 +1731,7 @@ export function describeRecordServiceContract(
             groupOperator: "or",
             group: [
               {
-                field: fieldNames.leadStatus,
+                field: tokens.picklistField,
                 comparator: "equal",
                 value: { token: "CATEGORY", name: tokens.junkCategoryName },
               },
@@ -1729,11 +1739,11 @@ export function describeRecordServiceContract(
                 groupOperator: "and",
                 group: [
                   {
-                    field: fieldNames.leadStatus,
+                    field: tokens.picklistField,
                     comparator: "equal",
                     value: { token: "CATEGORY", name: tokens.openCategoryName },
                   },
-                  { field: fieldNames.firstName, comparator: "not_contains", value: "z" },
+                  { field: tokens.textField, comparator: "not_contains", value: "z" },
                 ],
               },
             ],
@@ -1741,21 +1751,29 @@ export function describeRecordServiceContract(
         ).toEqual([inside.id, outside.id]);
         const query = { viewId: defaultView.id, page: 1, perPage: 10 };
         for (const filters of [
-          { field: fieldNames.company, comparator: "between" as Comparator, value: marker },
+          { field: markerField, comparator: "between" as Comparator, value: marker },
           { field: "Missing", comparator: "equal" as const, value: null },
-          { field: fieldNames.emailOptOut, comparator: "contains" as const, value: "true" },
+          ...(filterValidationBoolean
+            ? [
+                {
+                  field: filterValidationBoolean,
+                  comparator: "contains" as const,
+                  value: "true",
+                },
+              ]
+            : []),
           {
-            field: fieldNames.company,
+            field: markerField,
             comparator: "less_equal" as const,
             value: { token: "AGEINDAYS" as const, offset: 1 },
           },
           {
-            field: fieldNames.createdTime,
+            field: sys.createdTime,
             comparator: "less_equal" as const,
             value: "2026-06-15T00:00:00.000Z",
           },
           {
-            field: fieldNames.company,
+            field: markerField,
             comparator: "equal" as const,
             value: { token: "TODAY" as const },
           },
