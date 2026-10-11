@@ -372,6 +372,12 @@ function ModuleListScreenLoaded({
     }
   }
 
+  function handleFilterClear() {
+    if (appliedCriteria === undefined) {
+      clearPanelFilters();
+    }
+  }
+
   /**
    * The header's letter choice is a criterion of its own; the panel keeps what it applied.
    * A new choice starts on page 1 and drops row selection, like applying a panel filter.
@@ -579,7 +585,7 @@ function ModuleListScreenLoaded({
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
             onApply={applyPanelFilters}
-            onClear={clearPanelFilters}
+            onClear={handleFilterClear}
           />
         ) : null}
         <div className="module-list-table-host">
