@@ -179,8 +179,21 @@ Import `describeRecordServiceContract` from `@crm/core/records/contract-suite` i
 test file and provide a factory accepting `OrgContext` (synchronous or asynchronous):
 
 ```ts
-describeRecordServiceContract("adapter", (ctx) => createRecordService(ctx));
+import { leadsRecordServiceContractModule } from "@crm/core/records/contract-suite-module";
+
+describeRecordServiceContract(
+  "adapter",
+  (ctx) => createRecordService(ctx),
+  leadsRecordServiceContractModule,
+);
 ```
+
+For another module, add a `RecordServiceContractModuleDefinition` (API name, labels,
+`buildMinimalValidInput`, `systemFields`, `filterMarker`, sort fields,
+`expectedUniqueFields` when uniqueness should be asserted, and any `optional`
+scenario blocks your adapter supports) beside the Leads one and pass it as the
+third argument. Connected-module sample IDs live only under `optional.connectedLookup`;
+the suite body stays module-neutral.
 
 The suite invokes only public methods. Each test gets a fresh synthetic organization;
 an adapter harness must provision that organization and bound user, and clean up its
