@@ -28,7 +28,7 @@ export const LEADS_DETAIL_FIELD_LABELS: Readonly<Record<string, string>> = {
 };
 
 /** @deprecated Use `COMPOSITE_ADDRESS_DISPLAY_SUFFIXES` from `composite-address`. */
-export { COMPOSITE_ADDRESS_DISPLAY_SUFFIXES as LEADS_ADDRESS_COMPOSITE_FIELD_ORDER } from "./composite-address";
+export { COMPOSITE_ADDRESS_DISPLAY_SUFFIXES as LEADS_ADDRESS_COMPOSITE_FIELD_ORDER } from "@/lib/records/composite-address";
 
 /** Layout sections omitted from the Overview tab body. */
 export const LEADS_OVERVIEW_SKIPPED_SECTIONS: ReadonlySet<string> = new Set([

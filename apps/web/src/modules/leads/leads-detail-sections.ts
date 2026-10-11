@@ -1,7 +1,7 @@
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
-import { buildCompositeAddressDetailFields } from "./composite-address-detail";
+import { buildCompositeAddressDetailFields } from "@/lib/records/composite-address-detail";
 import {
   LEADS_DETAIL_FIELD_API_NAMES,
   LEADS_DETAIL_FIELD_LABELS,
