@@ -26,7 +26,7 @@ Controls support an optional prop:
 ```tsx
 laterModule?: ModuleKey // "M3" … "M15" | "P2" | "P3"
 ```
-Supported on: `Button`, `SplitButton` (each half independently via `laterModule` / `moreLaterModule`), `Link`, `MenuItem` (and `MenuAction`), and `Tab`.
+Supported on: `Button`, `Checkbox`, `SplitButton` (each half independently via `laterModule` / `moreLaterModule`), `Link`, `MenuItem` (and `MenuAction`), and `Tab`.
 
 ### Observed behaviour
 

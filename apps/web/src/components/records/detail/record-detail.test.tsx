@@ -199,3 +199,47 @@ test("empty rail has heading only; scroll control appears and returns to top", a
   expect(scroller.scrollTo).toHaveBeenCalledWith({ top: 0 });
   expect(screen.queryByRole("button", { name: "Scroll To Top" })).toBeNull();
 });
+
+test("later-module header menu actions keep the menu open without dispatching", async () => {
+  const user = userEvent.setup();
+  const action = vi.fn();
+  render(
+    <RecordHeader
+      {...base}
+      menuGroups={[
+        {
+          id: "later",
+          items: [{ id: "mail", label: "Send Mail", laterModule: "M11", onAction: action }],
+        },
+      ]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "More Options" }));
+  const item = screen.getByRole("menuitem", { name: "Send Mail" });
+  expect(item.getAttribute("aria-disabled")).toBe("true");
+  expect(item.getAttribute("data-later-module")).toBe("M11");
+  await user.click(item);
+  item.focus();
+  await user.keyboard("{Enter} ");
+  expect(action).not.toHaveBeenCalled();
+  expect(screen.getByRole("menu")).toBeTruthy();
+  expect(item.hasAttribute("title")).toBe(false);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menu")).toBeNull();
+});
+
+test("later-module account subtitle is a focusable inert link", async () => {
+  const user = userEvent.setup();
+  const location = window.location.href;
+  render(<RecordHeader {...base} subtitleLaterModule="M3" />);
+  const link = screen.getByRole("link", { name: "Example Company" });
+  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+  expect(link.hasAttribute("href")).toBe(false);
+  expect(link.hasAttribute("title")).toBe(false);
+  await user.click(link);
+  link.focus();
+  await user.keyboard("{Enter} ");
+  expect(document.activeElement).toBe(link);
+  expect(window.location.href).toBe(location);
+});
