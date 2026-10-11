@@ -25,11 +25,7 @@ export function assertUniqueFieldValues(
       if (key === null) continue;
       const existing = seen.get(key);
       if (existing && existing !== record.id)
-        throw new ConflictError(
-          field.apiName === "Email"
-            ? "That email is already in use."
-            : "That value is already in use.",
-        );
+        throw new ConflictError(`${field.label} is already in use.`);
       seen.set(key, record.id);
     }
   }
