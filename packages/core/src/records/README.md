@@ -184,12 +184,27 @@ Import `describeRecordServiceContract` from `@crm/core/records/contract-suite` i
 test file and provide a factory accepting `OrgContext` (synchronous or asynchronous):
 
 ```ts
-describeRecordServiceContract("adapter", (ctx) => createRecordService(ctx));
+import { leadsRecordServiceContractModule } from "@crm/core/records/contract-suite-module";
+
+describeRecordServiceContract(
+  "adapter",
+  (ctx) => createRecordService(ctx),
+  leadsRecordServiceContractModule,
+);
 ```
 
-The suite invokes only public methods. The adapter harness must provision at least
-one locked synthetic lead, discoverable through a Locked__s filter; callers cannot
-set that system-managed flag. Each test gets a fresh synthetic organization;
+For another module, add a `RecordServiceContractModuleDefinition` (API name, labels,
+`buildMinimalValidInput`, `systemFields`, `filterMarker`, sort fields,
+`expectedUniqueFields` when uniqueness should be asserted, and any `optional`
+scenario blocks your adapter supports) beside the Leads one and pass it as the
+third argument. Connected-module sample IDs live only under `optional.connectedLookup`;
+the suite body stays module-neutral.
+
+The suite invokes only public methods. When `optional.lockedRecords` is defined,
+the adapter harness must provision at least one locked synthetic record discoverable
+through an equality filter on its configured `field`; callers cannot set that
+system-managed flag. Missing locked records fail the scenario explicitly. Without
+that definition, locked-record scenarios are not registered. Each test gets a fresh synthetic organization;
 an adapter harness must provision that organization and bound user, and clean up its
 test state. Pagination tests create their own matching records and discover views
 through `listViews`; they require no fixture IDs or default insertion order. Tests

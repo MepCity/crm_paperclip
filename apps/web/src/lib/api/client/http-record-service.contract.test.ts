@@ -1,5 +1,6 @@
 import type { OrgContext } from "@crm/core/records";
 import { describeRecordServiceContract } from "@crm/core/records/contract-suite";
+import { leadsRecordServiceContractModule } from "@crm/core/records/contract-suite-module";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
 import type { Operation, OperationDeps } from "@/lib/api/wire/operations";
@@ -90,10 +91,14 @@ function operationDeps(ctx: OrgContext, options?: { now?: () => Date }): Operati
   };
 }
 
-describeRecordServiceContract("http", (ctx: OrgContext, options) => {
-  const deps = operationDeps(ctx, options);
-  return createHttpRecordService({
-    orgSlug: ctx.orgSlug,
-    fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
-  });
-});
+describeRecordServiceContract(
+  "http",
+  (ctx: OrgContext, options) => {
+    const deps = operationDeps(ctx, options);
+    return createHttpRecordService({
+      orgSlug: ctx.orgSlug,
+      fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
+    });
+  },
+  leadsRecordServiceContractModule,
+);
