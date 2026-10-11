@@ -121,9 +121,9 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("data-later-module")).toBe(
       "M10",
     );
-    expect(
-      screen.getByRole("tab", { name: "Scheduled" }).getAttribute("data-later-module"),
-    ).toBe("M10");
+    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("data-later-module")).toBe(
+      "M10",
+    );
 
     // D-87, D-88 Social links (M15)
     const twitterLink = screen.getByRole("link", { name: "Associate Twitter" });
