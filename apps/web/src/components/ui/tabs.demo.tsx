@@ -8,6 +8,9 @@ export default function TabsDemo() {
       <TabList aria-label="Record">
         <Tab id="overview">Overview</Tab>
         <Tab id="details">Details</Tab>
+        <Tab id="later" laterModule="M3">
+          Later module
+        </Tab>
         <Tab id="activity">Activity</Tab>
         <Tab id="closed" isDisabled>
           Closed
@@ -15,6 +18,7 @@ export default function TabsDemo() {
       </TabList>
       <TabPanel id="overview">Overview panel</TabPanel>
       <TabPanel id="details">Details panel</TabPanel>
+      <TabPanel id="later">Later panel</TabPanel>
       <TabPanel id="activity">Activity panel</TabPanel>
       <TabPanel id="closed">Closed panel</TabPanel>
     </Tabs>

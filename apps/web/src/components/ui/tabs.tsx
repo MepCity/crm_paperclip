@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import {
   Tab as AriaTab,
   TabList as AriaTabList,
@@ -11,6 +12,7 @@ import {
   type TabProps,
   type TabsProps,
 } from "react-aria-components";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 const tabListClass = "flex border-b border-border";
 
@@ -51,11 +53,21 @@ export function TabList<T extends object>({
 export function Tab({
   className,
   appearance = "default",
+  laterModule,
+  ref: forwardedRef,
   ...props
-}: TabProps & { appearance?: "default" | "record" }) {
+}: TabProps & {
+  appearance?: "default" | "record";
+  laterModule?: ModuleKey;
+  ref?: Ref<HTMLElement>;
+}) {
+  const laterRef = useLaterModule(laterModule, forwardedRef);
+
   return (
     <AriaTab
       {...props}
+      {...(laterModule ? laterModuleProps(laterModule) : {})}
+      ref={laterRef}
       className={composeRenderProps(
         className,
         (extra) =>

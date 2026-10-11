@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactNode, Ref } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -14,6 +14,7 @@ import {
   SubmenuTrigger,
 } from "react-aria-components";
 import { Button, type ButtonProps } from "./button";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 export { MenuTrigger, SubmenuTrigger };
 
@@ -33,14 +34,24 @@ export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
   className,
+  laterModule,
+  ref: forwardedRef,
+  onAction,
   ...props
 }: MenuItemProps<T> & {
   variant?: "default" | "danger";
   appearance?: "default" | "measured" | "record";
+  laterModule?: ModuleKey;
+  ref?: Ref<HTMLDivElement>;
 }) {
+  const laterRef = useLaterModule(laterModule, forwardedRef);
+
   return (
     <AriaMenuItem
       {...props}
+      {...(laterModule ? laterModuleProps(laterModule) : {})}
+      ref={laterRef}
+      onAction={laterModule ? undefined : onAction}
       className={composeRenderProps(
         className,
         (extra) =>
@@ -58,6 +69,7 @@ export interface MenuAction {
   label: string;
   onAction: () => void;
   isDisabled?: boolean;
+  laterModule?: ModuleKey;
 }
 
 const measuredMenuClass = "p-(--size-menu-inset) outline-none";

@@ -112,3 +112,60 @@ test("Measured menu displays a header and communicates single selection", async 
     screen.getByRole("menuitemradio", { name: "Other organization" }).getAttribute("aria-checked"),
   ).toBe("false");
 });
+
+test("MenuItem with laterModule renders active appearance, retains focus, stays open on click, and ignores actions", async () => {
+  const user = userEvent.setup();
+  const chosen: string[] = [];
+  render(
+    <div>
+      <div data-testid="outside">Outside</div>
+      <MenuTrigger>
+        <MenuButton>Options</MenuButton>
+        <Menu onAction={(key) => chosen.push(String(key))}>
+          <MenuItem id="edit">Edit</MenuItem>
+          <MenuItem id="later" laterModule="M3">
+            Later Action
+          </MenuItem>
+        </Menu>
+      </MenuTrigger>
+    </div>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  const laterItem = screen.getByRole("menuitem", { name: "Later Action" });
+  expect(laterItem.getAttribute("aria-disabled")).toBe("true");
+  expect(laterItem.getAttribute("data-later-module")).toBe("M3");
+  expect(laterItem.hasAttribute("title")).toBe(false);
+  expect(laterItem.hasAttribute("data-disabled")).toBe(false);
+  expect(laterItem.classList.contains("opacity-50")).toBe(false);
+  expect(laterItem.classList.contains("cursor-not-allowed")).toBe(false);
+
+  // Mouse click keeps menu open and does not call onAction
+  await user.click(laterItem);
+  expect(chosen).toEqual([]);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // Keyboard focus can reach the item, Enter & Space do not close or trigger onAction
+  laterItem.focus();
+  expect(document.activeElement).toBe(laterItem);
+  await user.keyboard("{Enter}");
+  expect(chosen).toEqual([]);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  await user.keyboard(" ");
+  expect(chosen).toEqual([]);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // Escape closes menu
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menu")).toBeNull();
+
+  // Outside click closes menu
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+  await user.click(screen.getByTestId("outside"));
+  expect(screen.queryByRole("menu")).toBeNull();
+});
