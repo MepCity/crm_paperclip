@@ -496,10 +496,11 @@ export function describeRecordServiceContract(
       for (const id of ids)
         expect((await service.get(moduleApiName, id)).fields[markerField]).toBe("Mass Updated");
       await validation(service.massUpdate(moduleApiName, ids, {}), "data");
+      const massUpdateSecondFieldKey = massUpdateClearablePhone ?? "Second_Mass_Update_Field";
       await validation(
         service.massUpdate(moduleApiName, ids, {
           [markerField]: "Example",
-          ...(massUpdateClearablePhone ? { [massUpdateClearablePhone]: "123" } : {}),
+          [massUpdateSecondFieldKey]: "123",
         }),
         "data",
       );
@@ -512,7 +513,11 @@ export function describeRecordServiceContract(
         service.massUpdate(moduleApiName, ids, { Unknown_Field: "Example" }),
         "Unknown_Field",
       );
-      for (const value of [null, "", " ", 42, "x".repeat(201)])
+      const markerFieldMeta = metadata.fields.find((field) => field.apiName === markerField);
+      const massUpdateInvalidValues: FieldValue[] = [null, "", " ", 42];
+      if (markerFieldMeta?.maxLength != null)
+        massUpdateInvalidValues.push("x".repeat(markerFieldMeta.maxLength + 1));
+      for (const value of massUpdateInvalidValues)
         await validation(
           service.massUpdate(moduleApiName, ids, { [markerField]: value }),
           markerField,
