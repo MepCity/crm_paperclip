@@ -8,7 +8,7 @@ import {
 import type { FieldDefinition, FieldValue, ModuleRecordReference } from "@crm/core/records";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { moduleRecordPath } from "@/lib/crm-paths";
-import { resolveModuleLaterKey, resolveModuleScreen } from "@/modules/registry";
+import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 
 export const EMPTY_FIELD_DISPLAY = "—";
 
@@ -60,7 +60,7 @@ export function formatFieldValue(
     const ref = value as ModuleRecordReference;
     const name = ref.name?.trim() ?? "";
     const targetModule = ref.module || field.lookup?.module || "";
-    const registered = resolveModuleScreen(targetModule);
+    const registered = resolveModuleScreenByApiName(targetModule);
     if (registered) {
       const href =
         options?.href ??

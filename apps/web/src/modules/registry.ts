@@ -32,19 +32,22 @@ export function resolveModuleLaterKey(moduleApiName: string): ModuleKey {
 export const moduleScreens: readonly ModuleScreenDefinition[] = [leadsScreenDefinition];
 
 export function resolveModuleScreen(
-  tabOrApiName: string,
+  tab: string,
   definitions: readonly ModuleScreenDefinition[] = moduleScreens,
 ): ModuleScreenDefinition | undefined {
-  return definitions.find(
-    (definition) => definition.tab === tabOrApiName || definition.apiName === tabOrApiName,
-  );
+  return definitions.find((definition) => definition.tab === tab);
+}
+
+export function resolveModuleScreenByApiName(
+  apiName: string,
+  definitions: readonly ModuleScreenDefinition[] = moduleScreens,
+): ModuleScreenDefinition | undefined {
+  return definitions.find((definition) => definition.apiName === apiName);
 }
 
 export function isModuleRegistered(
   moduleApiName: string,
   definitions: readonly ModuleScreenDefinition[] = moduleScreens,
 ): boolean {
-  return definitions.some(
-    (definition) => definition.tab === moduleApiName || definition.apiName === moduleApiName,
-  );
+  return definitions.some((definition) => definition.apiName === moduleApiName);
 }

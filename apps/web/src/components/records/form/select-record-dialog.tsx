@@ -20,7 +20,7 @@ import {
   type ClientRecordService,
   useOptionalClientRecordService,
 } from "@/lib/api/client/provider";
-import { resolveModuleScreen } from "@/modules/registry";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
 import "./select-record-dialog.css";
 
 export interface SelectRecordDialogProps {
@@ -75,7 +75,7 @@ export function SelectRecordDialog({
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const screenDef = resolveModuleScreen(module);
+  const screenDef = resolveModuleScreenByApiName(module);
   const singularLabel = screenDef?.singularLabel ?? metadata?.singularLabel ?? module;
   const pluralLabel = screenDef?.pluralLabel ?? metadata?.pluralLabel ?? module;
   const dialogTitle = title ?? `Choose ${singularLabel}`;
