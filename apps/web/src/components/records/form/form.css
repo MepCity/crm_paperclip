@@ -216,6 +216,38 @@
   grid-column: 3;
 }
 
+.record-form-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.record-form-section__header-end {
+  flex-shrink: 0;
+}
+
+.record-form-copy-address {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-form-clear-address);
+  font-size: var(--text-md);
+  line-height: var(--size-form-label-line-height);
+  cursor: pointer;
+}
+
+.record-form-copy-address:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.record-form-address-groups--dual {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
 .record-form-field-group {
   position: relative;
   box-sizing: border-box;
@@ -229,6 +261,12 @@
     0 0;
   border: 1px solid var(--color-form-field-group-border);
   border-radius: var(--radius-form-field-group);
+}
+
+.record-form-address-groups--dual .record-form-field-group {
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 
 .record-form-page .record-form-field-group {

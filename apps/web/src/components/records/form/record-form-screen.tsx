@@ -11,14 +11,21 @@ import {
   useUpdateRecord,
   useUsers,
 } from "@/lib/api/client/hooks";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 import { buildCloneInput } from "./build-clone-input";
-import { CoordinatesInput, PrefixInput } from "./composite-inputs";
-import { FieldGroup } from "./field-group";
+import {
+  AddressFieldGroups,
+  CoordinatesInput,
+  CopyAddressMenu,
+  PrefixInput,
+} from "./composite-inputs";
 import { FieldInput, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
 import {
+  type AddressFormRule,
   addressLabel,
+  addressRulesList,
   buildFormModel,
   type FormMode,
   type FormRules,
@@ -39,6 +46,37 @@ import { RecordFormShell } from "./record-form-shell";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
 type FormIntent = "create" | "edit" | "clone";
+
+function orderedAddressSubfieldApiNames(
+  parentApiName: string,
+  rule: AddressFormRule,
+  sectionFieldNames: ReadonlySet<string>,
+): string[] {
+  const ordered =
+    rule.subfields ??
+    addressSubfieldApiNames(parentApiName).filter((apiName) => apiName !== rule.coordinates);
+  return ordered.filter((apiName) => sectionFieldNames.has(apiName));
+}
+
+function addressParentForField(
+  field: FieldDefinition,
+  rules: readonly AddressFormRule[],
+  parents: readonly FieldDefinition[],
+): FieldDefinition | undefined {
+  for (const parent of parents) {
+    const rule = rules.find((item) => item.field === parent.apiName);
+    if (!rule || field.apiName === parent.apiName || field.apiName === rule.coordinates) continue;
+    const subfields = rule.subfields ?? addressSubfieldApiNames(parent.apiName);
+    if (
+      subfields.includes(field.apiName) ||
+      field.apiName === rule.latitude ||
+      field.apiName === rule.longitude
+    ) {
+      return parent;
+    }
+  }
+  return undefined;
+}
 
 function RecordNotFound() {
   return (
@@ -146,21 +184,23 @@ function LoadedRecordForm({
         : `Create ${metadata.singularLabel}`;
   const labelsByField = useMemo(() => {
     const labels = new Map<string, string>();
+    const fieldByName = new Map(fields.map((field) => [field.apiName, field]));
+    const addressRules = addressRulesList(config.rules);
     for (const section of sections) {
-      const addressParent =
-        config.rules.address &&
-        section.columns.flat().find((field) => field.apiName === config.rules.address?.field);
-      for (const field of section.columns.flat()) {
-        labels.set(
-          field.apiName,
-          addressParent && field.apiName !== addressParent.apiName
-            ? addressLabel(field, addressParent)
-            : field.label,
-        );
+      const sectionFields = section.columns.flat();
+      const parents = addressRules
+        .map((rule) => fieldByName.get(rule.field))
+        .filter((parent): parent is FieldDefinition => {
+          if (!parent) return false;
+          return sectionFields.some((field) => field.apiName === parent.apiName);
+        });
+      for (const field of sectionFields) {
+        const parent = addressParentForField(field, addressRules, parents);
+        labels.set(field.apiName, parent ? addressLabel(field, parent) : field.label);
       }
     }
     return labels;
-  }, [sections, config.rules]);
+  }, [sections, config.rules, fields]);
 
   useEffect(() => {
     if (saving || !errorFocusPending.current || Object.keys(errors).length === 0) return;
@@ -171,8 +211,9 @@ function LoadedRecordForm({
         const fieldName = row.dataset.formField ?? "";
         const prefixName =
           config.rules.prefix?.field === fieldName ? config.rules.prefix.prefix : undefined;
-        const longitudeName =
-          config.rules.address?.latitude === fieldName ? config.rules.address.longitude : undefined;
+        const longitudeName = addressRulesList(config.rules).find(
+          (rule) => rule.latitude === fieldName,
+        )?.longitude;
         const compositeError =
           prefixName && errors[prefixName]
             ? prefixName
@@ -203,9 +244,13 @@ function LoadedRecordForm({
   }, [errors, saving, config.rules]);
 
   /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
-  const dependentClears: Readonly<Record<string, readonly string[]>> = config.rules.country
-    ? { [config.rules.country.field]: [config.rules.country.state] }
-    : {};
+  const dependentClears: Readonly<Record<string, readonly string[]>> = useMemo(() => {
+    const map: Record<string, readonly string[]> = {};
+    for (const rule of addressRulesList(config.rules)) {
+      map[rule.country] = [rule.state];
+    }
+    return map;
+  }, [config.rules]);
 
   function change(name: string, value: FieldValue) {
     const field = byName.get(name);
@@ -284,16 +329,18 @@ function LoadedRecordForm({
 
   function row(field: FieldDefinition, column: FormRowColumn, parent?: FieldDefinition): ReactNode {
     const rules = config.rules;
+    const addressRules = addressRulesList(rules);
     if (rules.omitted?.includes(field.apiName) || field.apiName === rules.prefix?.prefix)
       return null;
     const label = parent ? addressLabel(field, parent) : field.label;
     const id = `record-form-${field.apiName}`;
     if (field.dataType === "profileimage")
       return <FieldInput key={field.apiName} field={field} value={null} onChange={() => {}} />;
-    if (field.apiName === rules.address?.longitude) return null;
+    if (addressRules.some((rule) => rule.longitude === field.apiName)) return null;
     let input: ReactNode;
-    if (field.apiName === rules.address?.latitude) {
-      const address = rules.address;
+    const latitudeRule = addressRules.find((rule) => rule.latitude === field.apiName);
+    if (latitudeRule) {
+      const address = latitudeRule;
       const longitude = byName.get(address.longitude);
       const coordinates = metadata.fields.find((item) => item.apiName === address.coordinates);
       input = (
@@ -368,8 +415,10 @@ function LoadedRecordForm({
         />
       );
     } else {
-      const emptyCountry = rules.country && !values[rules.country.field];
-      const isState = field.apiName === rules.country?.state;
+      const stateRule = addressRules.find((rule) => rule.state === field.apiName);
+      const countryRule = addressRules.find((rule) => rule.country === field.apiName);
+      const emptyCountry = stateRule && !values[stateRule.country];
+      const isState = Boolean(stateRule);
       input = (
         <FieldInput
           id={id}
@@ -388,7 +437,7 @@ function LoadedRecordForm({
                 }
               : undefined
           }
-          searchable={field.apiName === rules.country?.field || isState}
+          searchable={Boolean(countryRule && field.apiName === countryRule.country) || isState}
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
@@ -440,39 +489,99 @@ function LoadedRecordForm({
         }}
       >
         {sections.map((section) => {
-          const address =
-            config.rules.address &&
-            section.columns.flat().find((field) => field.apiName === config.rules.address?.field);
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );
+          const sectionFields = columns.flat();
+          const sectionFieldNames = new Set(sectionFields.map((field) => field.apiName));
+          const addressRules = addressRulesList(config.rules);
+          const groupsInSection = addressRules.flatMap((rule) => {
+            const parent = byName.get(rule.field);
+            if (!parent || !sectionFieldNames.has(parent.apiName)) return [];
+            const subfieldApiNames = orderedAddressSubfieldApiNames(
+              parent.apiName,
+              rule,
+              sectionFieldNames,
+            );
+            return [{ parent, rule, subfieldApiNames }];
+          });
+          if (groupsInSection.length > 0) {
+            const copyGroups = groupsInSection.map((group) => ({
+              id: group.parent.apiName,
+              label: group.parent.label,
+              subfieldApiNames: group.subfieldApiNames,
+            }));
+            return (
+              <FormSection
+                key={section.label}
+                title={section.label}
+                layout="single"
+                headerEnd={
+                  groupsInSection.length === 2 ? (
+                    <CopyAddressMenu
+                      groups={copyGroups}
+                      disabled={saving}
+                      onCopy={(fromId, toId) => {
+                        const from = copyGroups.find((group) => group.id === fromId);
+                        const to = copyGroups.find((group) => group.id === toId);
+                        if (!from || !to) return;
+                        const writes: Record<string, FieldValue> = {};
+                        for (let index = 0; index < from.subfieldApiNames.length; index++) {
+                          const source = from.subfieldApiNames[index];
+                          const target = to.subfieldApiNames[index];
+                          if (!source || !target) continue;
+                          const targetField = byName.get(target);
+                          if (targetField?.readOnly) continue;
+                          writes[target] = values[source] ?? null;
+                        }
+                        if (Object.keys(writes).length === 0) return;
+                        setValues((previous) => ({ ...previous, ...writes }));
+                        setErrors((previous) => {
+                          const next = { ...previous };
+                          for (const key of Object.keys(writes)) delete next[key];
+                          return next;
+                        });
+                      }}
+                    />
+                  ) : undefined
+                }
+              >
+                <AddressFieldGroups
+                  groups={groupsInSection.map((group) => ({
+                    parent: group.parent,
+                    subfieldApiNames: group.subfieldApiNames,
+                  }))}
+                  disabled={saving}
+                  renderGroupFields={(parent) => {
+                    const group = groupsInSection.find(
+                      (item) => item.parent.apiName === parent.apiName,
+                    );
+                    if (!group) return null;
+                    const fieldsByApiName = new Map(
+                      sectionFields.map((field) => [field.apiName, field]),
+                    );
+                    return group.subfieldApiNames.map((apiName) => {
+                      const field = fieldsByApiName.get(apiName);
+                      return field ? row(field, "left", parent) : null;
+                    });
+                  }}
+                  onClearGroup={(apiNames) => {
+                    for (const apiName of apiNames) {
+                      const field = byName.get(apiName);
+                      if (field && !field.readOnly) change(apiName, null);
+                    }
+                  }}
+                />
+              </FormSection>
+            );
+          }
           return (
             <FormSection
               key={section.label}
               title={section.label}
               layout={columns.length === 1 ? "single" : "two-column"}
             >
-              {address ? (
-                <FieldGroup name={address.label}>
-                  {columns
-                    .flat()
-                    .filter((field) => field.apiName !== address.apiName)
-                    .map((field) => row(field, "left", address))}
-                  <button
-                    type="button"
-                    className="record-form-clear-address"
-                    disabled={saving}
-                    onClick={() => {
-                      for (const field of columns.flat()) {
-                        if (field.apiName !== address.apiName && !field.readOnly)
-                          change(field.apiName, null);
-                      }
-                    }}
-                  >
-                    <span>{RECORD_FORM_COPY.clearAll}</span>
-                  </button>
-                </FieldGroup>
-              ) : columns.length === 1 ? (
+              {columns.length === 1 ? (
                 columns[0]?.map((field) => row(field, "full"))
               ) : (
                 <FormGrid

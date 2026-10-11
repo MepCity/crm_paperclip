@@ -1,9 +1,19 @@
+import type { FieldDefinition } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
+import { TextField } from "@/components/ui/text-field";
 import { render } from "@/test/render";
-import { CoordinatesInput, PrefixInput, TextPrefixInput } from "./composite-inputs";
+import {
+  AddressFieldGroups,
+  CoordinatesInput,
+  CopyAddressMenu,
+  PrefixInput,
+  TextPrefixInput,
+} from "./composite-inputs";
 import { FormRow } from "./form-row";
+import { FormSection } from "./form-section";
 
 afterEach(cleanup);
 test("prefix selector remains independent of text, including null and disabled", async () => {
@@ -104,4 +114,122 @@ test("coordinates associate the form row label with the first input", async () =
   expect(document.activeElement).toBe(first);
   expect(first.id).toBe("location-coordinates");
   expect(screen.getByRole("textbox", { name: "Longitude" })).not.toBe(first);
+});
+
+function addressParent(apiName: string, label: string): FieldDefinition {
+  return {
+    apiName,
+    label,
+    dataType: "textarea",
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+}
+
+test("single address group renders one bordered fieldset without copy control", () => {
+  const parent = addressParent("Address", "Address");
+  render(
+    <AddressFieldGroups
+      groups={[{ parent, subfieldApiNames: ["Country", "Street"] }]}
+      renderGroupFields={() => <TextField label="Country" hideLabel />}
+      onClearGroup={() => {}}
+    />,
+  );
+  expect(screen.getByRole("group", { name: "Address" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Copy Address" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Clear All" })).toBeTruthy();
+});
+
+test("dual address groups support copy in both directions and per-group clear", async () => {
+  const user = userEvent.setup();
+  const mailing = addressParent("Mailing_Address", "Mailing Address");
+  const other = addressParent("Other_Address", "Other Address");
+  const mailingFields = ["Mailing_City", "Mailing_Street"] as const;
+  const otherFields = ["Other_City", "Other_Street"] as const;
+
+  function Harness() {
+    const [values, setValues] = useState<Record<string, string>>({
+      Mailing_City: "Toronto",
+      Mailing_Street: "1 King St",
+      Other_City: "",
+      Other_Street: "",
+    });
+    const copyGroups = [
+      { id: mailing.apiName, label: mailing.label, subfieldApiNames: mailingFields },
+      { id: other.apiName, label: other.label, subfieldApiNames: otherFields },
+    ];
+    return (
+      <FormSection
+        title="Address Information"
+        headerEnd={
+          <CopyAddressMenu
+            groups={copyGroups}
+            onCopy={(fromId, toId) => {
+              const from = copyGroups.find((group) => group.id === fromId);
+              const to = copyGroups.find((group) => group.id === toId);
+              if (!from || !to) return;
+              setValues((previous) => {
+                const next = { ...previous };
+                for (let index = 0; index < from.subfieldApiNames.length; index++) {
+                  const source = from.subfieldApiNames[index];
+                  const target = to.subfieldApiNames[index];
+                  if (source && target) next[target] = previous[source] ?? "";
+                }
+                return next;
+              });
+            }}
+          />
+        }
+      >
+        <AddressFieldGroups
+          groups={[
+            { parent: mailing, subfieldApiNames: mailingFields },
+            { parent: other, subfieldApiNames: otherFields },
+          ]}
+          renderGroupFields={(parent) =>
+            (parent.apiName === mailing.apiName ? mailingFields : otherFields).map((apiName) => (
+              <TextField
+                key={apiName}
+                label={apiName}
+                hideLabel
+                value={values[apiName] ?? ""}
+                onChange={(next) => setValues((previous) => ({ ...previous, [apiName]: next }))}
+              />
+            ))
+          }
+          onClearGroup={(apiNames) => {
+            setValues((previous) => {
+              const next = { ...previous };
+              for (const apiName of apiNames) next[apiName] = "";
+              return next;
+            });
+          }}
+        />
+      </FormSection>
+    );
+  }
+
+  render(<Harness />);
+  expect(screen.getByRole("button", { name: "Copy Address" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Copy Address" }));
+  await user.click(screen.getByRole("menuitem", { name: "Mailing Address → Other Address" }));
+  expect((screen.getByRole("textbox", { name: "Other_City" }) as HTMLInputElement).value).toBe(
+    "Toronto",
+  );
+  await user.click(screen.getByRole("button", { name: "Copy Address" }));
+  await user.click(screen.getByRole("menuitem", { name: "Other Address → Mailing Address" }));
+  expect((screen.getByRole("textbox", { name: "Mailing_Street" }) as HTMLInputElement).value).toBe(
+    "1 King St",
+  );
+  const clearButtons = screen.getAllByRole("button", { name: "Clear All" });
+  await user.click(clearButtons[0]!);
+  expect((screen.getByRole("textbox", { name: "Mailing_City" }) as HTMLInputElement).value).toBe(
+    "",
+  );
+  expect((screen.getByRole("textbox", { name: "Other_City" }) as HTMLInputElement).value).toBe(
+    "Toronto",
+  );
 });

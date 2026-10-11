@@ -1,7 +1,7 @@
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
-import { formatLeadsCompositeAddress } from "./leads-address";
+import { buildCompositeAddressDetailFields } from "./composite-address-detail";
 import {
   LEADS_DETAIL_FIELD_API_NAMES,
   LEADS_DETAIL_FIELD_LABELS,
@@ -79,31 +79,14 @@ function buildAddressSection(
   module: ModuleMetadata,
   record: RecordData,
 ): DetailSection {
-  const addressField = module.fields.find(
-    (field) => field.apiName === LEADS_DETAIL_FIELD_API_NAMES.Address,
-  );
-  const composite = formatLeadsCompositeAddress(record.fields);
-  const field =
-    addressField ??
-    ({
-      apiName: LEADS_DETAIL_FIELD_API_NAMES.Address,
-      label: "Address",
-      dataType: "textarea",
-      required: false,
-      readOnly: false,
-      unique: false,
-      massUpdate: false,
-      views: { view: true, create: true, edit: true, quickCreate: false },
-    } satisfies FieldDefinition);
   return {
     title: section.label,
-    fields: [
-      {
-        column: "full",
-        field: withDetailLabel(field),
-        value: composite.length > 0 ? composite : null,
-      },
-    ],
+    fields: buildCompositeAddressDetailFields(
+      [{ parentApiName: LEADS_DETAIL_FIELD_API_NAMES.Address }],
+      module.fields,
+      record,
+      withDetailLabel,
+    ),
   };
 }
 

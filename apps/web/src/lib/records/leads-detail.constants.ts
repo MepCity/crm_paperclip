@@ -27,18 +27,8 @@ export const LEADS_DETAIL_FIELD_LABELS: Readonly<Record<string, string>> = {
   [LEADS_DETAIL_FIELD_API_NAMES.Full_Name]: "Lead Name",
 };
 
-/**
- * Address sub-fields in form order for the composite Address detail row.
- * Reference composite formatting was not observed; non-empty parts join with ", ".
- */
-export const LEADS_ADDRESS_COMPOSITE_FIELD_ORDER: readonly string[] = [
-  "Country",
-  "Flat_House_No_Building_Apartment_Name",
-  "Street",
-  "City",
-  "State",
-  "Zip_Code",
-];
+/** @deprecated Use `COMPOSITE_ADDRESS_DISPLAY_SUFFIXES` from `composite-address`. */
+export { COMPOSITE_ADDRESS_DISPLAY_SUFFIXES as LEADS_ADDRESS_COMPOSITE_FIELD_ORDER } from "./composite-address";
 
 /** Layout sections omitted from the Overview tab body. */
 export const LEADS_OVERVIEW_SKIPPED_SECTIONS: ReadonlySet<string> = new Set([
