@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nProvider } from "react-aria-components";
 import { afterEach, expect, test, vi } from "vitest";
 import { Menu, MenuButton, MenuItem, MenuTrigger, Submenu, SubmenuTrigger } from "./menu";
 
@@ -354,4 +355,165 @@ test("SubmenuTrigger with normal MenuItem opens on hover and ArrowRight", async 
   await user.hover(normalSubItem);
   await new Promise((resolve) => setTimeout(resolve, 300));
   expect(screen.getByRole("menu", { name: "Normal Submenu" })).toBeTruthy();
+});
+
+test("MenuItem with laterModule inside an open submenu allows ArrowLeft to return to parent menu", async () => {
+  const user = userEvent.setup();
+  const laterAction = vi.fn();
+  const normalAction = vi.fn();
+  render(
+    <MenuTrigger>
+      <MenuButton>Options</MenuButton>
+      <Menu>
+        <SubmenuTrigger>
+          <MenuItem id="parent-sub">Nested Submenu</MenuItem>
+          <Submenu ariaLabel="Nested Submenu">
+            <MenuItem id="later-child" laterModule="M3" onAction={laterAction}>
+              Later Child
+            </MenuItem>
+            <MenuItem id="normal-child" onAction={normalAction}>
+              Normal Child
+            </MenuItem>
+          </Submenu>
+        </SubmenuTrigger>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  const parentSub = screen.getByRole("menuitem", { name: "Nested Submenu" });
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(parentSub);
+
+  // Open the submenu via ArrowRight
+  await user.keyboard("{ArrowRight}");
+  expect(screen.getByRole("menu", { name: "Nested Submenu" })).toBeTruthy();
+
+  const laterChild = screen.getByRole("menuitem", { name: "Later Child" });
+  expect(document.activeElement).toBe(laterChild);
+
+  // Vertical arrows navigate between child rows
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Normal Child" }));
+
+  await user.keyboard("{ArrowUp}");
+  expect(document.activeElement).toBe(laterChild);
+
+  // Click / Enter on laterChild do not trigger action and keep submenu open
+  await user.click(laterChild);
+  expect(laterAction).not.toHaveBeenCalled();
+  expect(screen.getByRole("menu", { name: "Nested Submenu" })).toBeTruthy();
+
+  await user.keyboard("{Enter}");
+  expect(laterAction).not.toHaveBeenCalled();
+  expect(screen.getByRole("menu", { name: "Nested Submenu" })).toBeTruthy();
+
+  // ArrowLeft on laterChild closes submenu and returns focus to parentSub trigger
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.queryByRole("menu", { name: "Nested Submenu" })).toBeNull();
+  expect(document.activeElement).toBe(parentSub);
+  expect(parentSub.getAttribute("aria-expanded")).toBe("false");
+});
+
+test("Normal submenu opens via ArrowRight even when cursor is hovered on sibling laterModule submenu item", async () => {
+  const user = userEvent.setup();
+  render(
+    <MenuTrigger>
+      <MenuButton>Options</MenuButton>
+      <Menu>
+        <SubmenuTrigger>
+          <MenuItem id="later-sub" laterModule="M3">
+            Later Submenu
+          </MenuItem>
+          <Submenu ariaLabel="Later Submenu">
+            <MenuItem id="later-child">Later Child</MenuItem>
+          </Submenu>
+        </SubmenuTrigger>
+        <SubmenuTrigger>
+          <MenuItem id="normal-sub">Normal Submenu</MenuItem>
+          <Submenu ariaLabel="Normal Submenu">
+            <MenuItem id="normal-child">Normal Child</MenuItem>
+          </Submenu>
+        </SubmenuTrigger>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  const laterSubItem = screen.getByRole("menuitem", { name: "Later Submenu" });
+  const normalSubItem = screen.getByRole("menuitem", { name: "Normal Submenu" });
+
+  // Hover over laterSubItem so it gets data-hovered
+  await user.hover(laterSubItem);
+  expect(
+    laterSubItem.hasAttribute("data-hovered") ||
+      laterSubItem.getAttribute("data-hovered") === "true",
+  ).toBe(true);
+
+  // Focus moves to normalSubItem while laterSubItem remains hovered
+  normalSubItem.focus();
+  expect(document.activeElement).toBe(normalSubItem);
+  expect(
+    laterSubItem.hasAttribute("data-hovered") ||
+      laterSubItem.getAttribute("data-hovered") === "true",
+  ).toBe(true);
+
+  // Press ArrowRight on normalSubItem - normal submenu MUST open
+  await user.keyboard("{ArrowRight}");
+  expect(screen.getByRole("menu", { name: "Normal Submenu" })).toBeTruthy();
+  expect(normalSubItem.getAttribute("aria-expanded")).toBe("true");
+});
+
+test("In RTL menu, laterModule submenu trigger does not open on ArrowLeft, but normal submenu opens", async () => {
+  const user = userEvent.setup();
+  render(
+    <I18nProvider locale="ar-AE">
+      <MenuTrigger>
+        <MenuButton>Options</MenuButton>
+        <Menu>
+          <SubmenuTrigger>
+            <MenuItem id="later-sub-rtl" laterModule="M3">
+              Later Submenu RTL
+            </MenuItem>
+            <Submenu ariaLabel="Later Submenu RTL">
+              <MenuItem id="later-child-rtl">Later Child</MenuItem>
+            </Submenu>
+          </SubmenuTrigger>
+          <SubmenuTrigger>
+            <MenuItem id="normal-sub-rtl">Normal Submenu RTL</MenuItem>
+            <Submenu ariaLabel="Normal Submenu RTL">
+              <MenuItem id="normal-child-rtl">Normal Child</MenuItem>
+            </Submenu>
+          </SubmenuTrigger>
+        </Menu>
+      </MenuTrigger>
+    </I18nProvider>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+
+  const laterSubItem = screen.getByRole("menuitem", { name: "Later Submenu RTL" });
+  const normalSubItem = screen.getByRole("menuitem", { name: "Normal Submenu RTL" });
+
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(laterSubItem);
+
+  // In RTL, ArrowLeft would open normal submenu, but laterSubItem must NOT open
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.queryByRole("menu", { name: "Later Submenu RTL" })).toBeNull();
+
+  // Navigate to normalSubItem
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(normalSubItem);
+
+  // In RTL, ArrowLeft opens normalSubItem
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.getByRole("menu", { name: "Normal Submenu RTL" })).toBeTruthy();
 });

@@ -49,16 +49,53 @@ const BLOCKED_EVENT_TYPES = [
   "keyup",
 ] as const;
 
+function isRtlDirection(el: Element): boolean {
+  const dirAttr = el.closest("[dir]")?.getAttribute("dir");
+  if (dirAttr) {
+    return dirAttr.toLowerCase() === "rtl";
+  }
+  if (typeof document !== "undefined") {
+    if (document.dir?.toLowerCase() === "rtl") return true;
+    if (document.documentElement.getAttribute("dir")?.toLowerCase() === "rtl") return true;
+    if (document.body?.getAttribute("dir")?.toLowerCase() === "rtl") return true;
+  }
+  if (typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
+    try {
+      if (window.getComputedStyle(el).direction === "rtl") return true;
+    } catch {}
+  }
+  return false;
+}
+
+function isSubmenuTriggerElement(element: Element | null): boolean {
+  if (!element) return false;
+  return (
+    element.hasAttribute("data-has-submenu") ||
+    element.getAttribute("aria-haspopup") === "menu" ||
+    element.getAttribute("aria-haspopup") === "true" ||
+    element.hasAttribute("aria-expanded")
+  );
+}
+
 function blockLaterModuleEvent(e: Event, blockMenuArrows = false, blockSubmenuArrows = false) {
   if (e instanceof KeyboardEvent) {
     const isVerticalArrow = e.key === "ArrowDown" || e.key === "ArrowUp";
-    const isHorizontalArrow = e.key === "ArrowRight" || e.key === "ArrowLeft";
+    let isOpeningSubmenuArrow = false;
+
+    if (blockSubmenuArrows && e.currentTarget instanceof HTMLElement) {
+      if (isSubmenuTriggerElement(e.currentTarget)) {
+        const isRtl = isRtlDirection(e.currentTarget);
+        const openKey = isRtl ? "ArrowLeft" : "ArrowRight";
+        isOpeningSubmenuArrow = e.key === openKey;
+      }
+    }
+
     if (
       e.key === "Enter" ||
       e.key === " " ||
       e.key === "Spacebar" ||
       (blockMenuArrows && isVerticalArrow) ||
-      (blockSubmenuArrows && isHorizontalArrow)
+      isOpeningSubmenuArrow
     ) {
       e.preventDefault();
       e.stopPropagation();

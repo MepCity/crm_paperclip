@@ -8,7 +8,6 @@ import {
   composeRenderProps,
   type MenuItemProps,
   MenuSection,
-  MenuStateContext,
   MenuTrigger,
   Popover,
   RootMenuTriggerStateContext,
@@ -37,18 +36,6 @@ interface RootMenuTriggerStateWithBlockedKeys {
   __laterModuleBlockedKeys?: Set<string>;
 }
 
-interface MenuStateWithCollection {
-  collection?: {
-    getItem: (key: unknown) =>
-      | {
-          firstChildKey?: unknown;
-          props?: { laterModule?: ModuleKey };
-        }
-      | null
-      | undefined;
-  };
-}
-
 export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
@@ -66,47 +53,52 @@ export function MenuItem<T extends object>({
   const rootMenuTriggerState = useContext(
     RootMenuTriggerStateContext,
   ) as RootMenuTriggerStateWithBlockedKeys | null;
-  const menuState = useContext(MenuStateContext) as MenuStateWithCollection | null;
 
   if (laterModule && rootMenuTriggerState) {
     if (!rootMenuTriggerState.__laterModuleBlockedKeys) {
       rootMenuTriggerState.__laterModuleBlockedKeys = new Set<string>();
-      const origOpenSubmenu = rootMenuTriggerState.openSubmenu?.bind(rootMenuTriggerState);
-      if (origOpenSubmenu) {
-        rootMenuTriggerState.openSubmenu = (triggerKey: string, level: number) => {
-          const keyStr = String(triggerKey);
-          let isBlocked = Boolean(rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr));
-
-          if (!isBlocked && menuState?.collection) {
-            const triggerNode = menuState.collection.getItem(triggerKey);
-            const childKey = triggerNode?.firstChildKey ?? triggerKey;
-            const childItem = menuState.collection.getItem(childKey);
-            if (childItem?.props?.laterModule) {
-              isBlocked = true;
-            }
-          }
-
-          if (
-            !isBlocked &&
-            typeof document !== "undefined" &&
-            (document.querySelector(`[data-key="${keyStr}"][data-later-module]`) !== null ||
-              document.querySelector(`[id="${keyStr}"][data-later-module]`) !== null ||
-              document.querySelector("[data-later-module][data-hovered]") !== null ||
-              document.querySelector("[data-later-module]:hover") !== null ||
-              Boolean(document.activeElement?.hasAttribute("data-later-module")))
-          ) {
-            isBlocked = true;
-          }
-
-          if (isBlocked) {
-            return;
-          }
-          return origOpenSubmenu(triggerKey, level);
-        };
-      }
     }
     if (props.id != null) {
       rootMenuTriggerState.__laterModuleBlockedKeys.add(String(props.id));
+    }
+    const origOpenSubmenu = rootMenuTriggerState.openSubmenu?.bind(rootMenuTriggerState);
+    if (
+      origOpenSubmenu &&
+      !rootMenuTriggerState.openSubmenu?.name?.includes("blockedOpenSubmenu")
+    ) {
+      const blockedOpenSubmenu = (triggerKey: string, level: number) => {
+        const keyStr = String(triggerKey);
+        if (rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr)) {
+          return;
+        }
+
+        if (typeof document !== "undefined") {
+          const activeEl = document.activeElement;
+          const isActionOnNormalItem = Boolean(
+            activeEl &&
+              activeEl.getAttribute("role") === "menuitem" &&
+              !activeEl.hasAttribute("data-later-module"),
+          );
+
+          if (isActionOnNormalItem) {
+            return origOpenSubmenu(triggerKey, level);
+          }
+
+          if (activeEl?.hasAttribute("data-later-module")) {
+            return;
+          }
+
+          const hoveredLater =
+            document.querySelector("[data-later-module][data-hovered]") ??
+            document.querySelector("[data-later-module]:hover");
+          if (hoveredLater) {
+            return;
+          }
+        }
+
+        return origOpenSubmenu(triggerKey, level);
+      };
+      rootMenuTriggerState.openSubmenu = blockedOpenSubmenu;
     }
   }
 
