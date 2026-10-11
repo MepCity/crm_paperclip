@@ -6,7 +6,7 @@ Locate records across modules; Module 2 owns the shared search capability (assig
 
 ## Control inventory
 
-`seen` describes screenshots; `documented` describes public help images, never a live query. Shell IDs are first registered here because app-shell.md has no SH registry. Neutral descriptions replace branded controls and record values. Repeated row controls have indexed IDs; data is omitted.
+`seen` describes screenshots; `documented` describes public help images, never a live query. Shell IDs preserve the original search delivery registry because app-shell.md has no SH registry. Contacts later registered overlapping SH numbers; the explicit crosswalk in duplicates.md disambiguates them without renumbering prior evidence. Neutral descriptions replace branded controls and record values. Repeated row controls have indexed IDs; data is omitted.
 
 ### Control inventory — m2s-home-base
 
@@ -58,6 +58,7 @@ Locate records across modules; Module 2 owns the shared search capability (assig
 | SH-44 | Shell | Recent Items | icon button | bottom strip, right, sixth | not observed | seen (m2s-home-base) | ? |
 | SH-45 | Shell | Accessibility | icon button | bottom strip, right, seventh | not observed | seen (m2s-home-base) | ? |
 | SH-46 | Shell | Help | icon button | bottom strip, right, eighth | not observed | seen (m2s-home-base) | ? |
+| SH-50 | Shell | Trash bin icon | icon button | bottom strip, far right, after Help | not observed | seen (m2s-home-base) | ? |
 | S-01 | Home | Play icon | button | introductory area, video | not observed | seen (m2s-home-base) | M14 |
 | S-02 | Home | Book Now | link | introductory area, bottom | not observed | seen (m2s-home-base) | M14 |
 | S-03 | Home | Invite your team | button | setup checklist, first | not observed | seen (m2s-home-base) | M14 |
@@ -120,6 +121,7 @@ The dimmed background retains all IDs in the base table at the same positions. I
 | SH-44 | Shell | Recent Items | icon button | bottom strip, right, sixth | not observed | seen (m2s-search-open) | ? |
 | SH-45 | Shell | Accessibility | icon button | bottom strip, right, seventh | not observed | seen (m2s-search-open) | ? |
 | SH-46 | Shell | Help | icon button | bottom strip, right, eighth | not observed | seen (m2s-search-open) | ? |
+| SH-50 | Shell | Trash bin icon | icon button | bottom strip, far right, after Help | not observed | seen (m2s-search-open) | ? |
 | S-01 | Home | Play icon | button | introductory area, video | not observed | seen (m2s-search-open) | M14 |
 | S-02 | Home | Book Now | link | introductory area, bottom | not observed | seen (m2s-search-open) | M14 |
 | S-03 | Home | Invite your team | button | setup checklist, first | not observed | seen (m2s-search-open) | M14 |
@@ -129,9 +131,6 @@ The dimmed background retains all IDs in the base table at the same positions. I
 | S-07 | Home | Integration | button | setup checklist, fifth | not observed | seen (m2s-search-open) | M14 |
 | S-08 | Home | Invite users | button | setup detail, lower right | not observed | seen (m2s-search-open) | M14 |
 | S-09 | Home | Skip | button | content, upper right | not observed | seen (m2s-search-open) | M14 |
-
-| # | Region | Control | Type | Position | What it does | Source | Module |
-| --- | --- | --- | --- | --- | --- | --- | --- |
 | S-10 | Search layer | All Modules | select | query row, left | opens module list | seen (m2s-search-open) | M2 |
 | S-11 | Search layer | Query field | input | query row, right | not observed | seen (m2s-search-open) | M2 |
 | S-12.1 | Search History | Record link (value omitted) | link | history, row 1 | destination not opened | seen (m2s-search-open) | M2 |
@@ -149,13 +148,12 @@ The dimmed background retains all IDs in the base table at the same positions. I
 | S-12.13 | Search History | Record link (value omitted) | link | history, row 13 | destination not opened | seen (m2s-search-open) | M2 |
 | S-12.14 | Search History | Record link (value omitted) | link | history, row 14 | destination not opened | seen (m2s-search-open) | M2 |
 | S-12.15 | Search History | Record link (value omitted) | link | history, row 15 | destination not opened | seen (m2s-search-open) | M2 |
-| S-12.16 | Search History | Record link (value omitted) | link | history, row 16 (partially visible) | destination not opened | seen (m2s-search-open) | M2 |
 
-Noninteractive text: Search History and Press # for specific search; the magnifier belongs to the query field, not a separate observed button (m2s-search-open). Rows below the clipped layer are excluded.
+Noninteractive text: Search History and Press # for specific search; the magnifier belongs to the query field, not a separate observed button (m2s-search-open). Rows below the clipped layer are excluded. S-12.16 is reserved but not counted: its DOM target is below the last fully visible history row and has no identifiable painted link.
 
 ### Control inventory — m2s-search-modules
 
-Background controls retain the base IDs; search input and visible history links retain S-11 and S-12.1–S-12.16. All Modules retains S-10. The following table accounts for the additional dropdown controls; the history remains visible to its right (m2s-search-modules).
+Background controls retain the base IDs; search input and visible history links retain S-11 and S-12.1–S-12.15. All Modules retains S-10. The following table accounts for the additional dropdown controls; the history remains visible to its right (m2s-search-modules).
 
 | # | Region | Control | Type | Position | What it does | Source | Module |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -205,6 +203,7 @@ Background controls retain the base IDs; search input and visible history links 
 | SH-44 | Shell | Recent Items | icon button | bottom strip, right, sixth | not observed | seen (m2s-search-modules) | ? |
 | SH-45 | Shell | Accessibility | icon button | bottom strip, right, seventh | not observed | seen (m2s-search-modules) | ? |
 | SH-46 | Shell | Help | icon button | bottom strip, right, eighth | not observed | seen (m2s-search-modules) | ? |
+| SH-50 | Shell | Trash bin icon | icon button | bottom strip, far right, after Help | not observed | seen (m2s-search-modules) | ? |
 | S-01 | Home | Play icon | button | introductory area, video | not observed | seen (m2s-search-modules) | M14 |
 | S-02 | Home | Book Now | link | introductory area, bottom | not observed | seen (m2s-search-modules) | M14 |
 | S-03 | Home | Invite your team | button | setup checklist, first | not observed | seen (m2s-search-modules) | M14 |
@@ -231,7 +230,6 @@ Background controls retain the base IDs; search input and visible history links 
 | S-12.13 | Search History | Record link (value omitted) | link | history, row 13 | destination not opened | seen (m2s-search-modules) | M2 |
 | S-12.14 | Search History | Record link (value omitted) | link | history, row 14 | destination not opened | seen (m2s-search-modules) | M2 |
 | S-12.15 | Search History | Record link (value omitted) | link | history, row 15 | destination not opened | seen (m2s-search-modules) | M2 |
-| S-12.16 | Search History | Record link (value omitted) | link | history, row 16 (partially visible) | destination not opened | seen (m2s-search-modules) | M2 |
 | # | Region | Control | Type | Position | What it does | Source | Module |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | S-13 | Module menu | Search Modules | input | menu, top | not observed | seen (m2s-search-modules) | M2 |
@@ -247,16 +245,35 @@ The selected All Modules row includes a check mark; it is one item, not an addit
 
 ### Control inventory — m2s-home-after
 
-The screenshot shows the top rail product control, Hide Menu, Home, teamspace row and search, top bar, Home setup controls, and bottom strip. Pinned rows below Home and module folder labels were not painted in this screenshot, although controls.json retains their boxes. This is an incomplete render, not evidence that navigation was removed (m2s-home-after).
+The final screenshot shows the same complete rail and Home controls as the base screenshot; the search layer is closed (m2s-home-after).
 
 | # | Region | Control | Type | Position | What it does | Source | Module |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SH-01 | Shell | Product selector | select | rail, top, left | not observed | seen (m2s-home-after) | ? |
 | SH-02 | Shell | Hide Menu | icon button | rail, top, right | not observed | seen (m2s-home-after) | M1 |
 | SH-03 | Shell | Home | link | rail, pinned group, 1 | not observed | seen (m2s-home-after) | M14 |
+| SH-04 | Shell | Workqueue | link | rail, pinned group, 2 | not observed | seen (m2s-home-after) | M14 |
+| SH-05 | Shell | Reports | link | rail, pinned group, 3 | not observed | seen (m2s-home-after) | M13 |
+| SH-06 | Shell | Analytics | link | rail, pinned group, 4 | not observed | seen (m2s-home-after) | M13 |
+| SH-07 | Shell | Agents | link | rail, pinned group, 5 | not observed | seen (m2s-home-after) | P3 |
+| SH-08 | Shell | MCP Server | link | rail, pinned group, 6 | not observed | seen (m2s-home-after) | P3 |
 | SH-09 | Shell | CRM Teamspace | button | rail, below pinned group, left | not observed | seen (m2s-home-after) | M11 |
 | SH-10 | Shell | More Actions | icon button | rail, teamspace row, right | not observed | seen (m2s-home-after) | M11 |
 | SH-11 | Shell | Search | input | rail, below teamspace | not observed | seen (m2s-home-after) | M11 |
+| SH-12 | Shell | Sales | button | rail, first folder | not observed | seen (m2s-home-after) | M11 |
+| SH-13 | Shell | Leads | link | rail, Sales, 1 | not observed | seen (m2s-home-after) | M1 |
+| SH-14 | Shell | Contacts | link | rail, Sales, 2 | not observed | seen (m2s-home-after) | M2 |
+| SH-15 | Shell | Accounts | link | rail, Sales, 3 | not observed | seen (m2s-home-after) | M3 |
+| SH-16 | Shell | Deals | link | rail, Sales, 4 | not observed | seen (m2s-home-after) | M4 |
+| SH-17 | Shell | Documents | link | rail, Sales, 5 | not observed | seen (m2s-home-after) | M9 |
+| SH-18 | Shell | Campaigns | link | rail, Sales, 6 | not observed | seen (m2s-home-after) | M7 |
+| SH-19 | Shell | Activities | button | rail, second folder | not observed | seen (m2s-home-after) | M11 |
+| SH-20 | Shell | Tasks | link | rail, Activities, 1 | not observed | seen (m2s-home-after) | M5 |
+| SH-21 | Shell | Meetings | link | rail, Activities, 2 | not observed | seen (m2s-home-after) | M5 |
+| SH-22 | Shell | Calls | link | rail, Activities, 3 | not observed | seen (m2s-home-after) | M5 |
+| SH-23 | Shell | Integrations | button | rail, third folder | not observed | seen (m2s-home-after) | M11 |
+| SH-24 | Shell | Visits | link | rail, Integrations, first | not observed | seen (m2s-home-after) | M15 |
+| SH-25 | Shell | Price Books | link | rail, bottom visible row | not observed | seen (m2s-home-after) | P2 |
 | SH-26 | Shell | Right resize handle | icon button | rail, right boundary | not observed | seen (m2s-home-after) | M1 |
 | SH-27 | Shell | Search records | button | top bar, right group, first | opens search layer | seen (m2s-home-after) | M2 |
 | SH-28 | Shell | Plus icon | icon button | top bar, right group, 2 | not observed | seen (m2s-home-after) | M1 |
@@ -278,6 +295,7 @@ The screenshot shows the top rail product control, Hide Menu, Home, teamspace ro
 | SH-44 | Shell | Recent Items | icon button | bottom strip, right, sixth | not observed | seen (m2s-home-after) | ? |
 | SH-45 | Shell | Accessibility | icon button | bottom strip, right, seventh | not observed | seen (m2s-home-after) | ? |
 | SH-46 | Shell | Help | icon button | bottom strip, right, eighth | not observed | seen (m2s-home-after) | ? |
+| SH-50 | Shell | Trash bin icon | icon button | bottom strip, far right, after Help | not observed | seen (m2s-home-after) | ? |
 | S-01 | Home | Play icon | button | introductory area, video | not observed | seen (m2s-home-after) | M14 |
 | S-02 | Home | Book Now | link | introductory area, bottom | not observed | seen (m2s-home-after) | M14 |
 | S-03 | Home | Invite your team | button | setup checklist, first | not observed | seen (m2s-home-after) | M14 |
@@ -291,9 +309,6 @@ The screenshot shows the top rail product control, Hide Menu, Home, teamspace ro
 ### Documented controls — D1
 
 Images: D1-image-5 (primary results), D1-image-12 (name search), D1-image-16 (advanced results and columns panel). These are illustrations; their defaults are not asserted for the current session. Native scrollbars are scrolling affordances, not separately labelled buttons.
-
-| # | Region | Control | Type | Position | What it does | Source | Module |
-| --- | --- | --- | --- | --- | --- | --- | --- |
 | S-14 | Documented search | Record Name token | badge | query field, before keyword | restricts name matching | documented (D1) | M2 |
 | S-15 | Documented search | Result record link | link | primary results, under module heading | opens record | documented (D1) | M2 |
 | S-16 | Documented search | Envelope icon | icon button | primary result, right, first | email action | documented (D1) | M10 |
@@ -366,9 +381,6 @@ Images: D1-image-5 (primary results), D1-image-12 (name search), D1-image-16 (ad
 ### Documented controls — D1: advanced filter and lower results
 
 D1-image-7, D1-image-14 and D1-image-17 show the result cards, expanded filter panel and lower Notes card. Reused card controls retain their earlier IDs; source images have no shell rail.
-
-| # | Region | Control | Type | Position | What it does | Source | Module |
-| --- | --- | --- | --- | --- | --- | --- | --- |
 | S-30 | Advanced filter | Search | input | module panel, top | find module | documented (D1) | M2 |
 | S-31.1 | Advanced filter | Contacts | checkbox | module panel, row 1 | choose module | documented (D1) | M2 |
 | S-31.2 | Advanced filter | Accounts | checkbox | module panel, row 2 | choose module | documented (D1) | M2 |
@@ -447,30 +459,26 @@ D1-image-7, D1-image-14 and D1-image-17 show the result cards, expanded filter p
 
 ## Shell controls missing from app-shell.md
 
-- Right resize handle (SH-26), Motivator (SH-41), Sticky Notes (SH-42), and document/check icon (SH-39) are visible in the base screenshot but not individually accounted for in the earlier shell spec.
+- Right resize handle (SH-26), Motivator (SH-41), Sticky Notes (SH-42), and document/check icon (SH-39) and far-right trash bin (SH-50) are visible in the base screenshot but not individually accounted for in the earlier shell spec.
 - The current bottom-left cluster has My Pins, Chats and Contacts; Channels/Threads are absent in these Home captures but appear in list-actions. Keep their separate IDs in duplicates.md.
 
 ## Unobserved control states
-
-| # | Region | Control | Type | Position | What it does | Source | Module |
-| --- | --- | --- | --- | --- | --- | --- | --- |
 | S-47 | Search results | Hover-only row actions in current session | icon button | result row, end | not observed | not observed | ? |
 
 ## Open questions
 
 1. Not observed without a query/history write: wildcard characters, exact/partial matching, case/diacritic handling, short-query validation copy, debounce, result caps, page size, empty and failed search states, history creation/order/limit/clearing, keyboard navigation and dismiss behaviour. D1 does not specify these precisely.
 2. Not observed: additional advanced operators beyond the illustrated is condition, current default columns/sort, persistent column selection behaviour, loading state, unavailable-record navigation, result hover actions in this session, or query retention after returning from a record. No query was submitted.
-3. Shell ownership `?`: product selector, notifications, marketplace, profile/applications, pins/chat contacts, document/check utility, announcements, motivator, sticky notes, recent items, accessibility and help. Cross-application search and current-session hover actions (S-47) also lack an assigned module.
+3. Shell ownership `?`: product selector, notifications, marketplace, profile/applications, pins/chat contacts, document/check utility, announcements, motivator, sticky notes, recent items, accessibility, help and trash bin. Cross-application search and current-session hover actions (S-47) also lack an assigned module.
 4. D1 documents an assistant query shortcut and cross-application search, but current enabled state and neutral replacement labels remain unresolved; branded UI copy must not enter our repository.
-5. The final Home screenshot has incomplete rail text rendering. Do not interpret its missing painted labels as a saved preference change; metadata and the visible menu boundary remain unchanged.
 
 ## Capture reconciliation
 
 | Capture | controls.json entries | Distinct inventory IDs | Mapped entries | Excluded entries |
 | --- | --- | --- | --- | --- |
-| m2s-home-base | 145 | 55 | 83 | 62 |
-| m2s-search-open | 191 | 73 | 119 | 72 |
-| m2s-search-modules | 211 | 81 | 127 | 84 |
-| m2s-home-after | 145 | 36 | 48 | 97 |
+| m2s-home-base | 145 | 56 | 83 | 62 |
+| m2s-search-open | 191 | 73 | 117 | 74 |
+| m2s-search-modules | 211 | 81 | 125 | 86 |
+| m2s-home-after | 145 | 56 | 83 | 62 |
 
-Every entry is mapped or excluded by its array index in the local research note control-reconciliation.json. Multiple DOM wrappers map to one control ID. Exclusions distinguish invisible/zero-size elements, clipped/offscreen options and history rows, unpainted final-rail elements, noninteractive containers and duplicate decoration. The four screenshot images were inspected independently; the magnifier and selected-option check are decoration, not extra controls.
+Every entry is mapped or excluded by its array index in the local research note control-reconciliation.json. Multiple DOM wrappers map to one control ID. Exclusions distinguish invisible/zero-size elements, clipped/offscreen options and history rows, noninteractive containers and duplicate decoration. The four screenshot images were inspected independently; the magnifier and selected-option check are decoration, not extra controls.
