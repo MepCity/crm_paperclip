@@ -83,7 +83,6 @@ describe("apiFetch", () => {
     );
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads/missing")).rejects.toBeInstanceOf(
       NotFoundError,
-      RecordLockedError,
     );
 
     const conflict = new ConflictError("Duplicate.");
