@@ -107,8 +107,10 @@ neither HTTP payloads nor physical storage.
 ## Current delivery status
 
 The port, fixture adapter, reusable contract suite and application selection point
-are implemented. The fixture publishes all 56 Leads fields and 14 configured views.
-It generates 250 deterministic synthetic records using a fixed seed and a clock.
+are implemented. The fixture publishes all 56 Leads fields and 14 configured views,
+plus all 61 Contacts fields and 10 configured views. Each module keeps its own
+in-memory record set. It generates 250 deterministic synthetic records per module
+using a fixed seed and a clock.
 `createFixtureRecordService(context, options?)` takes an optional `now: () => Date`
 (default: the system clock) for seed times, create/update timestamps and date tokens.
 Organization
@@ -344,10 +346,12 @@ uses the same reference shape and permits `name`; its existing reference-presenc
 empty checks, ID sorting and text-operator restrictions remain unchanged.
 
 For single-module lookups with registered target modules the fixture validates existence in the bound
-organization and derives the read name from the target record, ignoring caller
-names. Its private module definition identifies the display-name field (Leads:
-`Full_Name`); public `ModuleMetadata` does not change. Unregistered targets are
-stored and returned as supplied, including their optional name. Single-module lookup sorting
+organization on create, update and mass update, and derives the read name from the target record,
+ignoring caller names. On get, list and count, a registered-module reference whose target no longer
+exists is returned as `null` instead of raising an error. Its private module definition identifies
+the display-name field (Leads and Contacts: `Full_Name`); public `ModuleMetadata` does not change.
+Accounts and Vendors are not registered yet: references are stored and returned as supplied, including
+their optional name; target existence is not validated (completed in Module 3). Single-module lookup sorting
 and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.

@@ -136,10 +136,17 @@ describe("named lookup contract", () => {
       name: "Target Name",
     });
     expect(input.fields.Value).toEqual({ module: "Leads", id: "local", name: "Forged" });
-    for (const id of ["missing", "foreign"])
+    for (const id of ["missing", "foreign"]) {
+      expect(
+        resolveRecordReferences(row({ module: "Leads", id }), [field("lookup")], modules).fields
+          .Value,
+      ).toBeNull();
       expect(() =>
-        resolveRecordReferences(row({ module: "Leads", id }), [field("lookup")], modules),
+        resolveRecordReferences(row({ module: "Leads", id }), [field("lookup")], modules, {
+          requireRegisteredTargets: true,
+        }),
       ).toThrow(ValidationError);
+    }
     expect(() =>
       resolveRecordReferences(row({ module: "Accounts", id: "local" }), [field("lookup")], modules),
     ).toThrow(ValidationError);

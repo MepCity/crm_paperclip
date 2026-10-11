@@ -504,10 +504,14 @@ export function matches(
   }
 }
 
-export function matchesSearch(record: RecordData, search?: string): boolean {
+export function matchesSearch(
+  record: RecordData,
+  search?: string,
+  fields: readonly string[] = ["Full_Name", "Company", "Email", "Phone"],
+): boolean {
   const needle = search?.trim().toLowerCase();
   if (!needle) return true;
-  return ["Full_Name", "Company", "Email", "Phone"].some((field) => {
+  return fields.some((field) => {
     const value = record.fields[field];
     return typeof value === "string" && value.toLowerCase().includes(needle);
   });

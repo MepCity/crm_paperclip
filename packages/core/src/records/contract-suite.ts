@@ -506,11 +506,13 @@ export function describeRecordServiceContract(
         Date.parse(String(created.fields[sys.modifiedTime])),
       );
       expect(await service.get(moduleApiName, created.id)).toEqual(updated);
-      await validation(
-        service.update(moduleApiName, created.id, { [markerField]: null }),
-        markerField,
-      );
-      expect(await service.get(moduleApiName, created.id)).toEqual(updated);
+      if (metadata.fields.find((field) => field.apiName === markerField)?.required) {
+        await validation(
+          service.update(moduleApiName, created.id, { [markerField]: null }),
+          markerField,
+        );
+        expect(await service.get(moduleApiName, created.id)).toEqual(updated);
+      }
     });
     it("creates and updates Owner using organization members, with a context default", async () => {
       const secondMember = await makeService({ ...ctx, userId: "second-member" });
@@ -575,7 +577,9 @@ export function describeRecordServiceContract(
         "Unknown_Field",
       );
       const markerFieldMeta = metadata.fields.find((field) => field.apiName === markerField);
-      const massUpdateInvalidValues: FieldValue[] = [null, "", " ", 42];
+      const massUpdateInvalidValues: FieldValue[] = markerFieldMeta?.required
+        ? [null, "", " ", 42]
+        : [42];
       if (markerFieldMeta?.maxLength != null)
         massUpdateInvalidValues.push("x".repeat(markerFieldMeta.maxLength + 1));
       for (const value of massUpdateInvalidValues)

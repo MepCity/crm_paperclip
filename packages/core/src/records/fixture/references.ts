@@ -13,6 +13,7 @@ export function resolveRecordReferences(
   record: RecordData,
   fields: readonly FieldDefinition[],
   modules: ReadonlyMap<string, FixtureReferenceModule>,
+  options?: { requireRegisteredTargets?: boolean },
 ): RecordData {
   const resolved = { ...record.fields };
   for (const field of fields) {
@@ -24,10 +25,15 @@ export function resolveRecordReferences(
     const targetModule = modules.get(value.module);
     if (!targetModule) continue;
     const target = targetModule.getRecord(value.id);
-    if (!target)
-      throw new ValidationError({
-        [field.apiName]: ["Referenced record does not exist in this organization."],
-      });
+    if (!target) {
+      if (options?.requireRegisteredTargets) {
+        throw new ValidationError({
+          [field.apiName]: ["Referenced record does not exist in this organization."],
+        });
+      }
+      resolved[field.apiName] = null;
+      continue;
+    }
     const name = target.fields[targetModule.displayNameField];
     resolved[field.apiName] = {
       module: value.module,

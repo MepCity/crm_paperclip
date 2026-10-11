@@ -11,7 +11,10 @@ import type {
   RecordInput,
 } from "./contract";
 import { describeRecordServiceContract } from "./contract-suite";
-import { leadsRecordServiceContractModule } from "./contract-suite-module";
+import {
+  contactsRecordServiceContractModule,
+  leadsRecordServiceContractModule,
+} from "./contract-suite-module";
 import { createFixtureRecordService } from "./fixture";
 import { sortRecords } from "./fixture/query";
 import { generateFixtureLeads } from "./fixture/seed";
@@ -33,6 +36,11 @@ describeRecordServiceContract(
   "fixture",
   createFixtureRecordService,
   leadsRecordServiceContractModule,
+);
+describeRecordServiceContract(
+  "fixture",
+  createFixtureRecordService,
+  contactsRecordServiceContractModule,
 );
 
 describe("Leads surface metadata", () => {
@@ -1143,5 +1151,57 @@ describe("interim fixture policies (not reference parity)", () => {
     expect(byId(members.get("unread-leads") ?? [])).toEqual(byId(everyone));
     expect(created.length).toBeGreaterThan(0);
     expect(byId(members.get("converted-leads") ?? [])).not.toEqual(byId(everyone));
+  });
+});
+
+describe("Contacts fixture", () => {
+  it("requires Last Name on create", async () => {
+    const service = make();
+    await expect(service.create("Contacts", { First_Name: "Only" })).rejects.toThrow(
+      ValidationError,
+    );
+  });
+  it("validates Reporting_To against an existing contact on write", async () => {
+    const service = make();
+    await expect(
+      service.create("Contacts", {
+        Last_Name: "Child",
+        Reporting_To: { module: "Contacts", id: "missing-contact" },
+      }),
+    ).rejects.toThrow(ValidationError);
+  });
+  it("returns null Reporting_To after the target contact is deleted", async () => {
+    const service = make();
+    const manager = await service.create("Contacts", { Last_Name: "Manager" });
+    const report = await service.create("Contacts", {
+      Last_Name: "Report",
+      Reporting_To: { module: "Contacts", id: manager.id },
+    });
+    expect(report.fields.Reporting_To).toMatchObject({ id: manager.id, name: expect.any(String) });
+    await service.delete("Contacts", [manager.id]);
+    expect((await service.get("Contacts", report.id)).fields.Reporting_To).toBeNull();
+    const listed = (
+      await service.list("Contacts", { viewId: "all-contacts", page: 1, perPage: 100 })
+    ).records.find((row) => row.id === report.id);
+    expect(listed?.fields.Reporting_To).toBeNull();
+  });
+  it("lists all ten contacts views", async () => {
+    expect(await make().listViews("Contacts")).toHaveLength(10);
+  });
+  it("matches the exported field inventory", async () => {
+    const metadata = await make().getModule("Contacts");
+    expect(metadata.fields).toHaveLength(61);
+    expect(metadata.fields.find((field) => field.apiName === "Date_of_Birth")?.dataType).toBe(
+      "date",
+    );
+    expect(
+      metadata.fields
+        .filter((field) => field.lookup)
+        .map((field) => [field.apiName, field.lookup?.module]),
+    ).toEqual([
+      ["Account_Name", "Accounts"],
+      ["Vendor_Name", "Vendors"],
+      ["Reporting_To", "Contacts"],
+    ]);
   });
 });
