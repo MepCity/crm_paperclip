@@ -113,7 +113,7 @@ SH and L numbers reuse the approved Contacts list inventory. Shell controls are 
 | SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2d-list-base) | M1 |
 | SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2d-list-base) | ? |
 | SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2d-list-base) | ? |
-| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2d-list-base) | ? |
+| SH-46 | Utility strip | Stacked cards icon | icon button | far right, after Help | not observed | seen (m2d-list-base) | ? |
 
 The Contact record link (L-42) was used for the following detail capture; opening that one record is observed in m2d-detail-main. No record text is reproduced.
 
@@ -318,7 +318,7 @@ Item ordinals are one-based positions in the local controls.json array, not sele
 | SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2d-list-after) | M1 |
 | SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2d-list-after) | ? |
 | SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2d-list-after) | ? |
-| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2d-list-after) | ? |
+| SH-46 | Utility strip | Stacked cards icon | icon button | far right, after Help | not observed | seen (m2d-list-after) | ? |
 
 #### Reconciliation — m2d-list-after
 
@@ -473,7 +473,7 @@ Item ordinals are one-based positions in the local controls.json array, not sele
 | SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2d-detail-main) | M1 |
 | SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2d-detail-main) | ? |
 | SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2d-detail-main) | ? |
-| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2d-detail-main) | ? |
+| SH-46 | Utility strip | Stacked cards icon | icon button | far right, after Help | not observed | seen (m2d-detail-main) | ? |
 | D-01 | Header | Back | icon button | leftmost | not observed | seen (m2d-detail-main) | M2 |
 | D-02 | Header | Portrait placeholder | icon button | after Back | not observed | seen (m2d-detail-main) | M6 |
 | D-03 | Header | Account record link | link | identity line, after contact identity | not observed | seen (m2d-detail-main) | M3 |
@@ -516,7 +516,7 @@ Item ordinals are one-based positions in the local controls.json array, not sele
 | D-40 | Details card | Email address link | link | Contact Information, left column, Email value | not observed | seen (m2d-detail-main) | M10 |
 | D-41 | Details card | Phone call icon | icon button | Contact Information, left column, after Phone value | not observed | seen (m2d-detail-main) | M5 |
 
-D-37 and D-41 are screenshot-only call controls; SH-46 is the screenshot-only utility trash icon. Plain field labels and values are not separate controls. Contact Owner is plain text in this capture; no owner-picker behaviour is inferred. The portrait is an upload affordance whose opening and hover state remain unobserved.
+D-37 and D-41 are screenshot-only call controls; SH-46 is the screenshot-only utility stacked-cards icon. Plain field labels and values are not separate controls. Contact Owner is plain text in this capture; no owner-picker behaviour is inferred. The portrait is an upload affordance whose opening and hover state remain unobserved.
 
 #### Reconciliation — m2d-detail-main
 
@@ -613,7 +613,7 @@ D-37 and D-41 are screenshot-only call controls; SH-46 is the screenshot-only ut
 
 ### Shell controls missing from app-shell.md
 
-Reuse the gaps recorded in contacts.md: the Motivator shortcut, Sticky Notes, far-right trash bin and unresolved document-with-clock utility icon. No additional shell control was visible here. The Contacts utility shortcut and Contacts module link remain separate controls. Unknown shell ownership (`?`) remains an open question inherited from contacts.md.
+Reuse the gaps recorded in contacts.md: the Motivator shortcut, Sticky Notes, far-right stacked-cards icon and unresolved document-with-clock utility icon. No additional shell control was visible here. The Contacts utility shortcut and Contacts module link remain separate controls. Unknown shell ownership (`?`) remains an open question inherited from contacts.md.
 
 ## Differences from Leads record detail
 
@@ -678,7 +678,7 @@ The rail establishes the following order. Every card is included as an unobserve
 
 All three screenshot.png files were opened as images and scanned across the whole frame. List total and selection state are unchanged before/after. The record selector was sourced from the base controls.json and checked offline for a single match. No alternate selector or forbidden open override was used.
 
-The required safety comparison detected new non-GET paths on the detail capture. The task-thread stop comment records neutral paths and blocking/status evidence. Later menu captures were not attempted; only the required after capture followed. No evidence establishes that a record or preference changed. This partial spec must not open the implementation gate.
+The required safety comparison detected new non-GET paths on the detail capture: `POST /crm/<org>/EntityCustomization.do` returned 200, and `POST /crm/v4/Contacts/<record>/actions/get_related_records_count` was blocked. The detail capture also contains `POST /crm/v2.2/Contacts/bulk` for a related-record query, which returned 204. This bulk path exists in the base capture for list loading (200), but the related-record query is additional detail-opening evidence; a path-only comparison does not distinguish those uses. No query values, record identifiers or payload contents are reproduced here. These status codes do not establish whether data changed. Later menu captures were not attempted; only the required after capture followed. No evidence establishes that a record or preference changed. This partial spec must not open the implementation gate.
 
 ## Open questions
 
