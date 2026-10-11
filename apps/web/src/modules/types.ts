@@ -20,6 +20,56 @@ import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import type { Icon } from "@/components/ui/icon";
 
+import type { ModuleKey } from "@/components/ui/later-module";
+
+export type RelatedListControlType = "button" | "split-button" | "select" | "icon-button";
+
+export interface RelatedListControlDefinition {
+  id: string;
+  label: string;
+  type: RelatedListControlType;
+  moduleKey?: ModuleKey | "M2";
+  icon?: Icon;
+  options?: readonly { id: string; label: string; onAction?: () => void }[];
+  onAction?: () => void;
+}
+
+export interface RelatedListActivityColumnDefinition {
+  id: string;
+  title: string;
+  count: number;
+  emptyText: string;
+}
+
+export interface RelatedListDefinition {
+  id: string;
+  title: string;
+  moduleKey: ModuleKey | "M2";
+  order: number;
+  targetId: string;
+  countBadge?: number | string;
+  railAction?: {
+    id: string;
+    label: string;
+    moduleKey?: ModuleKey | "M2";
+    onAction?: () => void;
+  };
+  upperControls?: readonly RelatedListControlDefinition[];
+  emptyStateText?: string;
+  loadingText?: string;
+  activityColumns?: readonly RelatedListActivityColumnDefinition[];
+  subtabs?: readonly { id: string; label: string }[];
+  socialLinks?: readonly { id: string; label: string; moduleKey?: ModuleKey | "M2" }[];
+  socialGuidance?: string;
+  introductoryText?: string;
+  bodyAction?: {
+    id: string;
+    label: string;
+    moduleKey?: ModuleKey | "M2";
+    onAction?: () => void;
+  };
+}
+
 export interface StatusRibbonSectionProps {
   module: ModuleApiName;
   recordId: string;
@@ -67,5 +117,6 @@ export interface ModuleScreenDefinition {
       events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
     };
+    relatedLists?: readonly RelatedListDefinition[];
   };
 }

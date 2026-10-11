@@ -2,9 +2,11 @@
 
 import type { FieldDefinition } from "@crm/core/records";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { contactsRelatedLists } from "@/modules/contacts/contacts-related-lists";
 import { BusinessCard } from "./business-card";
 import { DetailsCard } from "./details-card";
 import { LastUpdateLabel } from "./last-update-label";
+import { RelatedCardsContainer } from "./related-cards-container";
 
 const ownerNames = { "user-1": "Alex Morgan", "user-2": "Sam Rivera" };
 
@@ -225,6 +227,17 @@ export default function RecordDetailCardsDemo() {
               ]}
             />
           </div>
+        </div>
+      </section>
+
+      <section
+        aria-label="Contacts related list cards"
+        data-contacts-cards-demo
+        className="space-y-4"
+      >
+        <h2 className="text-xl font-bold text-text-strong">Contacts Related Lists</h2>
+        <div className="detail-demo-frame">
+          <RelatedCardsContainer relatedLists={contactsRelatedLists} />
         </div>
       </section>
     </div>

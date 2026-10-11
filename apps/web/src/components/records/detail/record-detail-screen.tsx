@@ -13,7 +13,10 @@ import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Icons } from "@/components/ui/icon";
+import { Link } from "@/components/ui/link";
 import {
   useDeleteRecords,
   useModule,
@@ -34,6 +37,7 @@ import {
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import { InlineEditProvider } from "./inline-edit-context";
+import { RelatedCardsContainer } from "./related-cards-container";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
@@ -141,6 +145,28 @@ export function RecordDetailScreen({
     [usersQuery.data],
   );
 
+  const relatedLists = rules.relatedLists ?? [];
+  const hasRelatedLists = relatedLists.length > 0;
+  const relatedEntries = useMemo(() => {
+    return relatedLists.map((item) => ({
+      id: item.id,
+      label: item.title,
+      targetId: item.targetId,
+      countBadge: item.countBadge,
+      moduleKey: item.moduleKey,
+      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      railAction: item.railAction
+        ? {
+            id: item.railAction.id,
+            label: item.railAction.label,
+            moduleKey: item.railAction.moduleKey,
+            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            onAction: item.railAction.onAction,
+          }
+        : undefined,
+    }));
+  }, [relatedLists]);
+
   const loading =
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
@@ -238,6 +264,9 @@ export function RecordDetailScreen({
           format={DEFAULT_FORMAT}
           railLayout={railVisible ? "shown" : "hidden"}
         />
+        {rules.relatedLists && rules.relatedLists.length > 0 ? (
+          <RelatedCardsContainer relatedLists={rules.relatedLists} />
+        ) : null}
       </InlineEditProvider>
     </>
   );
@@ -268,6 +297,31 @@ export function RecordDetailScreen({
       />
     </TimelineSurface>
   );
+
+  const relatedRailHeaderAction = hasRelatedLists ? (
+    <Button
+      variant="icon"
+      size="compact"
+      aria-label="Organize Contacts Details"
+      laterModule="M11"
+      className="size-6 text-text-muted hover:text-text"
+    >
+      <Icons.list aria-hidden className="size-4" />
+    </Button>
+  ) : undefined;
+
+  const relatedRailFooter = hasRelatedLists ? (
+    <div className="pt-2 border-t border-border mt-2">
+      <Link
+        href="#add-related-list"
+        variant="body"
+        laterModule="M11"
+        className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
+      >
+        Add Related List
+      </Link>
+    </div>
+  ) : undefined;
 
   return (
     <>
@@ -312,7 +366,9 @@ export function RecordDetailScreen({
           />
         }
         relatedListLabel="Related List"
-        relatedEntries={[]}
+        relatedEntries={relatedEntries}
+        relatedRailHeaderAction={relatedRailHeaderAction}
+        relatedRailFooter={relatedRailFooter}
         tabsLabel="Record detail"
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}

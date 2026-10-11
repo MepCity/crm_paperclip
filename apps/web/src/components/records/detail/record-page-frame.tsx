@@ -3,6 +3,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 
@@ -10,6 +11,16 @@ export interface RelatedListEntry {
   id: string;
   label: string;
   targetId: string;
+  countBadge?: number | string;
+  moduleKey?: ModuleKey | "M2";
+  laterModule?: ModuleKey;
+  railAction?: {
+    id: string;
+    label: string;
+    moduleKey?: ModuleKey | "M2";
+    laterModule?: ModuleKey;
+    onAction?: () => void;
+  };
 }
 export interface RecordPageTab {
   id: string;
@@ -29,6 +40,8 @@ export interface RecordPageFrameProps {
   relatedRailVisible?: boolean;
   railControl?: ReactNode;
   scrollTopLabel: string;
+  relatedRailHeaderAction?: ReactNode;
+  relatedRailFooter?: ReactNode;
 }
 
 export function RecordPageFrame({
@@ -44,6 +57,8 @@ export function RecordPageFrame({
   relatedRailVisible = true,
   railControl,
   scrollTopLabel,
+  relatedRailHeaderAction,
+  relatedRailFooter,
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -69,25 +84,53 @@ export function RecordPageFrame({
             data-record-rail
             className="shrink-0 w-(--size-record-rail-width) overflow-y-auto bg-surface px-3"
           >
-            <h2 className="flex items-center h-(--size-record-rail-heading-height) pl-(--size-record-rail-text-inset) text-lg font-bold text-text-strong">
-              {relatedListLabel}
-            </h2>
+            <div className="flex items-center justify-between h-(--size-record-rail-heading-height) pl-(--size-record-rail-text-inset) pr-1">
+              <h2 className="text-lg font-bold text-text-strong">{relatedListLabel}</h2>
+              {relatedRailHeaderAction}
+            </div>
             <div className="flex flex-col gap-(--size-rail-nested-row-gap)">
               {relatedEntries.map((entry) => (
-                <Link
+                <div
                   key={entry.id}
-                  href={`#${entry.targetId}`}
-                  variant="body"
-                  aria-current={selectedRelatedId === entry.id ? "page" : undefined}
-                  onPress={() => selectRelated(entry)}
-                  onClick={(event) => event.preventDefault()}
-                  className={`flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal ${selectedRelatedId === entry.id ? "bg-(--color-surface-active)" : ""}`}
+                  className={`flex items-center justify-between h-(--size-menu-item-height) px-(--size-record-rail-text-inset) rounded-(--radius-md) ${
+                    selectedRelatedId === entry.id ? "bg-(--color-surface-active)" : ""
+                  }`}
                 >
-                  <span className="truncate" title={entry.label}>
-                    {entry.label}
-                  </span>
-                </Link>
+                  <Link
+                    href={`#${entry.targetId}`}
+                    variant="body"
+                    aria-current={selectedRelatedId === entry.id ? "page" : undefined}
+                    laterModule={entry.laterModule}
+                    onPress={() => selectRelated(entry)}
+                    onClick={(event) => event.preventDefault()}
+                    className="flex flex-1 min-w-0 items-center text-md font-normal text-text truncate"
+                  >
+                    <span className="truncate" title={entry.label}>
+                      {entry.label}
+                    </span>
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-1.5 ml-1">
+                    {entry.countBadge !== undefined && (
+                      <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
+                        {entry.countBadge}
+                      </span>
+                    )}
+                    {entry.railAction && (
+                      <Button
+                        variant="icon"
+                        size="compact"
+                        aria-label={entry.railAction.label}
+                        laterModule={entry.railAction.laterModule}
+                        onPress={entry.railAction.onAction}
+                        className="shrink-0 size-5 text-text-muted hover:text-text"
+                      >
+                        <Icons.plus aria-hidden className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
+              {relatedRailFooter}
             </div>
           </nav>
         ) : null}
