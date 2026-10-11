@@ -186,6 +186,7 @@ Public documentation sources relied upon are referenced throughout this document
 - **Not Documented**:
   - Form input styling and behavior for specific selected field types (e.g. picklist dropdowns, date pickers, multi-select checkboxes) within the popup.
   - Result confirmation message or toast text upon completion (unobservable without write).
+  - Whether mass update with an empty value clears the field in the reference CRM was not observed; in our implementation empty values are rejected and bulk clearing is not supported.
 
 ### A5: Mass Transfer / Ownership Transfer Flow
 - **Status**: `Documented [D1]`; entry point observed `[w2d-change-owner]`; dialog unobserved due to safety intercept `[w2e-change-owner]`
@@ -432,7 +433,7 @@ The following functional behaviors, presentation details, and UI feedback mechan
 - **A1**: Delete confirmation modal window title, prompt body text, confirmation button labels, post-deletion redirection target page, and success toast notification message.
 - **A2**: Post-click destinations and UI feedback for `Save`, `Save and New`, and `Cancel` on the clone form; whether persisted clone data matches Clone API (`D4`) field exclusions (including image/file handling after save). Clone form title, Create-matching layout, and enabled `Cancel` → `Save and New` → `Save` at open are observed in `w2f-clone-form` (documented under A2 and `record-detail.md` › **Clone form**).
 - **A3**: Multi-page selection counter format and "Select all records in this view" presentation when more than 10 records exist. (Note: single-record selection counter `"1 Record Selected."` and selection toolbar styling are now observed; plural/multi-record counter format remains unobserved).
-- **A4**: Post-update confirmation notification text and subsequent field-type-specific editor widgets within Mass Update popup (initial modal dimensions 484 × 207 px, title `Mass Update`, `Select a field` dropdown, and `Update` button observed in `w2e-mass-update`).
+- **A4**: Post-update confirmation notification text and subsequent field-type-specific editor widgets within Mass Update popup (initial modal dimensions 484 × 207 px, title `Mass Update`, `Select a field` dropdown, and `Update` button observed in `w2e-mass-update`); whether mass update with an empty value clears the field in the reference CRM was not observed; in our implementation empty values are rejected and bulk clearing is not supported.
 - **A5**: Web UI Change Owner modal vs full-page dialog presentation styling, user selector control, checkbox labels/styling for associated related records, and result toast message (in `w2e-change-owner`, `Change Owner` click passed the allow-open guard, but triggered client `POST /crm/v9/settings/profiles/actions/get_assigned` which was blocked by the capture proxy, preventing dialog rendering and triggering the Rule 5 halt).
 - **A6**: Mass delete confirmation modal title, warning text, button labels, and result notification message.
 - **A7**: All post-action UI feedback for `Save` and `Save and New` (redirect target, toast notification text, form reset behavior).
