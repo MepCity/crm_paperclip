@@ -1,4 +1,4 @@
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -212,6 +212,11 @@ test("keyboard opens operators, selects with arrows and tabs from checkbox to ed
   expect(document.activeElement).toBe(screen.getByRole("button", { name: /text operator$/ }));
   await user.keyboard("{ArrowDown}{Home}{Enter}");
   expect(screen.getByRole("button", { name: /text operator$/ }).textContent).toContain("is");
+  // React Aria gives the trigger focus back after the listbox closes; a tab that starts before
+  // that lands on document.body and wraps to the panel search instead of the value editor.
+  await waitFor(() =>
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: /text operator$/ })),
+  );
   await user.tab();
   expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "text value" }));
 });
