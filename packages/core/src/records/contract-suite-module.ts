@@ -43,6 +43,13 @@ export type RecordServiceContractConnectedLookupScenario = {
 
 /** Scenarios that only apply when a module publishes the expected metadata shape. */
 export type RecordServiceContractOptionalScenarios = {
+  /** Writable date field published by the module. */
+  date?: { field: string };
+  singleModuleLookup?: {
+    field: string;
+    reference: { module: string; id: string; name?: string };
+    expectedName?: string;
+  };
   /** Harness-provisioned locked records discoverable by this boolean field. */
   lockedRecords?: { field: string };
   categoryView?: {

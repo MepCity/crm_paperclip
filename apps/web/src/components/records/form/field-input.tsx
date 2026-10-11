@@ -227,6 +227,7 @@ export function FieldInput({
       );
     case "lookup":
     case "multi_module_lookup":
+    case "date":
     case "datetime":
     case "bigint":
       return null;

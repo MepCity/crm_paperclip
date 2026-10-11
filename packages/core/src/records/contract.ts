@@ -4,7 +4,7 @@ export type ModuleApiName = string;
 /** Opaque; callers never parse or construct record identifiers. */
 export type RecordId = string;
 
-/** Only data types listed in the Leads field specification. */
+/** Data types supported by the module record contract. */
 export type FieldDataType =
   | "text"
   | "textarea"
@@ -15,6 +15,7 @@ export type FieldDataType =
   | "integer"
   | "currency"
   | "boolean"
+  | "date"
   | "datetime"
   | "double"
   | "bigint"
@@ -27,12 +28,13 @@ export type FieldDataType =
 export type ModuleRecordReference = {
   module: ModuleApiName;
   id: RecordId;
+  name?: string;
 };
 
 /**
- * Text-like values, timestamps, images, long integers and single-module references
- * use strings. Integer, decimal and currency values use finite numbers. Checkbox
- * values use booleans; connected-module references include their module. Null is
+ * Text-like values, calendar dates (YYYY-MM-DD), timestamps, images, long integers
+ * and owner IDs use strings. Numeric values use finite numbers; checkboxes use
+ * booleans. Lookup references include their module, ID and optional display name. Null is
  * an empty field. This domain representation is independent of transport/storage.
  */
 export type FieldValue = string | number | boolean | ModuleRecordReference | null;

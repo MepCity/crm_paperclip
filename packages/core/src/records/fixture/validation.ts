@@ -28,6 +28,12 @@ function valueLength(value: FieldValue): number | undefined {
     ? 1 - decimalPosition + integer.length + fraction.length
     : Math.max(decimalPosition, integer.length + fraction.length);
 }
+export function isValidDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): boolean {
   if (value === null) return true;
   switch (field.dataType) {
@@ -38,6 +44,8 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
       return typeof value === "number" && Number.isFinite(value);
     case "boolean":
       return typeof value === "boolean";
+    case "date":
+      return typeof value === "string" && isValidDateOnly(value);
     case "datetime":
       return (
         typeof value === "string" &&
@@ -46,25 +54,31 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
       );
     case "bigint":
       return typeof value === "string" && /^-?\d+$/.test(value);
+    case "lookup":
     case "multi_module_lookup":
       return (
         typeof value === "object" &&
         typeof value.id === "string" &&
         typeof value.module === "string" &&
-        Object.keys(value).every((key) => key === "id" || key === "module")
+        (field.dataType !== "lookup" || value.module === field.lookup?.module) &&
+        (value.name === undefined || typeof value.name === "string") &&
+        Object.keys(value).every((key) => key === "id" || key === "module" || key === "name")
       );
     default:
       return typeof value === "string";
   }
 }
-export function validateInput(input: RecordInput, partial: boolean): void {
+export function validateInput(
+  input: RecordInput,
+  partial: boolean,
+  fields = leadsMetadata.fields,
+): void {
   const errors: FieldErrors = Object.create(null);
   let mandatory = false;
   for (const name of Object.keys(input)) {
-    if (!leadsMetadata.fields.some((field) => field.apiName === name))
-      errors[name] = ["Unknown field."];
+    if (!fields.some((field) => field.apiName === name)) errors[name] = ["Unknown field."];
   }
-  for (const field of leadsMetadata.fields) {
+  for (const field of fields) {
     const present = Object.hasOwn(input, field.apiName);
     const value = input[field.apiName];
     if (present && (field.readOnly || managed.has(field.apiName))) {

@@ -330,3 +330,25 @@ other bulk actions, import/export and non-Leads modules are outside this deliver
 The database package and route tree remain unchanged. No dependencies are added.
 
 `getHomeCurrency(): Promise<CurrencyDefinition>` returns the organization home currency (ISO code, configured symbol, name and prefix flag); no locale-derived symbol.
+
+## Calendar dates and record references
+
+`date` values are real calendar days formatted as `YYYY-MM-DD`, without a timezone.
+Invalid dates raise `ValidationError`. Sorting follows calendar order. Date filters
+accept the same operators and tokens as datetime filters, evaluated at day precision
+using the existing UTC calendar rules.
+
+Every `lookup` value is `{ module, id, name? }`; `module` must match the field's
+`lookup.module`. `ownerlookup` remains a user ID string. `multi_module_lookup`
+uses the same reference shape and permits `name`; its existing reference-presence
+empty checks, ID sorting and text-operator restrictions remain unchanged.
+
+For single-module lookups with registered target modules the fixture validates existence in the bound
+organization and derives the read name from the target record, ignoring caller
+names. Its private module definition identifies the display-name field (Leads:
+`Full_Name`); public `ModuleMetadata` does not change. Unregistered targets are
+stored and returned as supplied, including their optional name. Single-module lookup sorting
+and text filters use `name`; a missing name behaves as empty. The wire codec
+represents single-module lookups as `{ id, name? }` and restores the module from
+field metadata. Dates remain strings; metadata publishes `data_type: "date"`.
+The three Leads conversion lookups remain read-only.

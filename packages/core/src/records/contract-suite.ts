@@ -111,6 +111,67 @@ export function describeRecordServiceContract(
       await expect(promise).rejects.toBeInstanceOf(ValidationError);
       await expect(promise).rejects.toMatchObject({ fieldErrors: { [field]: expect.any(Array) } });
     };
+    if (moduleOptional?.date) {
+      const dateField = moduleOptional.date.field;
+      it("validates, reads, sorts and filters a calendar date", async () => {
+        expect(metadata.fields.find((f) => f.apiName === dateField)?.dataType).toBe("date");
+        const marker = `Date-${randomUUID()}`;
+        const a = await service.create(
+          moduleApiName,
+          forView(defaultView, { [markerField]: marker, [dateField]: "2024-02-29" }),
+        );
+        const b = await service.create(
+          moduleApiName,
+          forView(defaultView, { [markerField]: marker, [dateField]: "2026-03-01" }),
+        );
+        expect((await service.get(moduleApiName, a.id)).fields[dateField]).toBe("2024-02-29");
+        await validation(
+          service.update(moduleApiName, a.id, { [dateField]: "2026-02-30" }),
+          dateField,
+        );
+        const result = await service.list(moduleApiName, {
+          viewId: defaultView.id,
+          page: 1,
+          perPage: 100,
+          sort: { field: dateField, order: "asc" },
+          filters: {
+            groupOperator: "and",
+            group: [
+              { field: markerField, comparator: "equal", value: marker },
+              { field: dateField, comparator: "between", value: ["2024-02-29", "2026-03-01"] },
+            ],
+          },
+        });
+        expect(result.records.map((r) => r.id)).toEqual([a.id, b.id]);
+      });
+    }
+    if (moduleOptional?.singleModuleLookup) {
+      const scenario = moduleOptional.singleModuleLookup;
+      it("round-trips a named single-module lookup and rejects mismatched modules", async () => {
+        expect(metadata.fields.find((f) => f.apiName === scenario.field)?.dataType).toBe("lookup");
+        const created = await service.create(
+          moduleApiName,
+          input({ [scenario.field]: scenario.reference }),
+        );
+        const expected = {
+          ...scenario.reference,
+          ...(scenario.expectedName === undefined ? {} : { name: scenario.expectedName }),
+        };
+        expect((await service.get(moduleApiName, created.id)).fields[scenario.field]).toEqual(
+          expected,
+        );
+        await validation(
+          service.update(moduleApiName, created.id, {
+            [scenario.field]: { ...scenario.reference, module: "InvalidModule" },
+          }),
+          scenario.field,
+        );
+        await validation(
+          service.update(moduleApiName, created.id, { [scenario.field]: scenario.reference.id }),
+          scenario.field,
+        );
+      });
+    }
     it("publishes the four home currency fields without exposing mutable state", async () => {
       const currency = await service.getHomeCurrency();
       expect(Object.keys(currency).sort()).toEqual(["isoCode", "name", "prefixSymbol", "symbol"]);

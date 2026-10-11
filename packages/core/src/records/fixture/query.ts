@@ -11,7 +11,7 @@ import type {
 } from "../contract";
 import { leadsMetadata } from "./metadata";
 import { categoryStoredValues } from "./picklists";
-import { acceptsFieldValue } from "./validation";
+import { acceptsFieldValue, isValidDateOnly } from "./validation";
 
 const DAY_MS = 86_400_000;
 const COMPARATORS = new Set<Comparator>([
@@ -44,26 +44,12 @@ const PERIODS = new Set([
   "PREVIOUS_YEAR",
   "NEXT_YEAR",
 ]);
-const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website"]);
+const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website", "lookup"]);
 const CRITERIA_UNITS = new Set(["days", "weeks", "months"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
-function isValidDateOnly(value: string): boolean {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
-  const year = Number(match[1]);
-  const month = Number(match[2]) - 1;
-  const day = Number(match[3]);
-  const parsed = Date.UTC(year, month, day);
-  const check = new Date(parsed);
-  return (
-    check.getUTCFullYear() === year && check.getUTCMonth() === month && check.getUTCDate() === day
-  );
-}
-
 function dateOnlyStart(value: string): number {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) as RegExpExecArray;
-  return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Date.parse(`${value}T00:00:00.000Z`);
 }
 
 function addCalendarMonths(instant: Date, months: number): number {
@@ -213,7 +199,7 @@ function comparatorFits(
   if (["contains", "not_contains", "starts_with", "ends_with"].includes(comparator))
     return TEXT_TYPES.has(field.dataType) && typeof value === "string";
   if (field.dataType === "multi_module_lookup") return false;
-  if (field.dataType === "datetime") {
+  if (["date", "datetime"].includes(field.dataType)) {
     if (comparator === "less_equal") {
       return isCriteriaToken(value) && isAgeOrDueToken(value);
     }
@@ -280,14 +266,17 @@ function comparatorFits(
   );
 }
 
-export function validateCriteria(criteria: Criteria): void {
+export function validateCriteria(
+  criteria: Criteria,
+  fields: ReadonlyMap<string, FieldDefinition> = fieldByName,
+): void {
   if ("group" in criteria) {
     if (criteria.groupOperator !== "and" && criteria.groupOperator !== "or")
       throw new ValidationError({ filters: ["Unknown group operator."] });
-    for (const child of criteria.group) validateCriteria(child);
+    for (const child of criteria.group) validateCriteria(child, fields);
     return;
   }
-  const field = fieldByName.get(criteria.field);
+  const field = fields.get(criteria.field);
   if (
     !field ||
     !COMPARATORS.has(criteria.comparator) ||
@@ -340,6 +329,7 @@ function matchesEqual(
   value: FieldValue,
   expected: CriteriaValue,
   runtime: CriteriaRuntime,
+  fields: ReadonlyMap<string, FieldDefinition>,
 ): boolean {
   if (isValueList(expected)) return expected.some((option) => equalValues(value, option));
   if (isCriteriaToken(expected)) {
@@ -358,8 +348,8 @@ function matchesEqual(
       return categoryStoredValues(field, expected.name).some((stored) => value === stored);
     return false;
   }
-  const fieldDef = fieldByName.get(field);
-  if (fieldDef?.dataType === "datetime" && typeof expected === "string") {
+  const fieldDef = fields.get(field);
+  if (["date", "datetime"].includes(fieldDef?.dataType ?? "") && typeof expected === "string") {
     const parsed = typeof value === "string" ? Date.parse(value) : NaN;
     if (!Number.isFinite(parsed)) return false;
     const start = dateOnlyStart(expected);
@@ -404,20 +394,42 @@ function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: Criteri
   return parsed >= subtractCalendarMonths(runtime.now, expected.offset);
 }
 
-export function matches(record: RecordData, criteria: Criteria, runtime: CriteriaRuntime): boolean {
+export function matches(
+  record: RecordData,
+  criteria: Criteria,
+  runtime: CriteriaRuntime,
+  fields: ReadonlyMap<string, FieldDefinition> = fieldByName,
+): boolean {
   if ("group" in criteria) {
     return criteria.groupOperator === "and"
-      ? criteria.group.every((child) => matches(record, child, runtime))
-      : criteria.group.some((child) => matches(record, child, runtime));
+      ? criteria.group.every((child) => matches(record, child, runtime, fields))
+      : criteria.group.some((child) => matches(record, child, runtime, fields));
   }
   // A leaf on a field absent from module metadata is published but does not constrain.
-  if (!fieldByName.has(criteria.field)) return true;
-  const value = record.fields[criteria.field] ?? null;
+  if (!fields.has(criteria.field)) return true;
+  const raw = record.fields[criteria.field] ?? null;
+  const value =
+    fields.get(criteria.field)?.dataType === "lookup" && typeof raw === "object" && raw !== null
+      ? (raw.name ?? null)
+      : raw;
+  const dayRuntime =
+    fields.get(criteria.field)?.dataType === "date"
+      ? {
+          ...runtime,
+          now: new Date(
+            Date.UTC(
+              runtime.now.getUTCFullYear(),
+              runtime.now.getUTCMonth(),
+              runtime.now.getUTCDate(),
+            ),
+          ),
+        }
+      : runtime;
   switch (criteria.comparator) {
     case "equal":
-      return matchesEqual(criteria.field, value, criteria.value, runtime);
+      return matchesEqual(criteria.field, value, criteria.value, dayRuntime, fields);
     case "not_equal":
-      return !matchesEqual(criteria.field, value, criteria.value, runtime);
+      return !matchesEqual(criteria.field, value, criteria.value, dayRuntime, fields);
     case "is_empty":
       return value === null || value === "";
     case "is_not_empty":
@@ -432,8 +444,11 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
           : value.toLowerCase().endsWith(criteria.value.toLowerCase()))
       );
     case "less_than": {
-      const fieldDef = fieldByName.get(criteria.field);
-      if (fieldDef?.dataType === "datetime" && typeof criteria.value === "string") {
+      const fieldDef = fields.get(criteria.field);
+      if (
+        ["date", "datetime"].includes(fieldDef?.dataType ?? "") &&
+        typeof criteria.value === "string"
+      ) {
         const parsed = typeof value === "string" ? Date.parse(value) : NaN;
         if (!Number.isFinite(parsed)) return false;
         return parsed < dateOnlyStart(criteria.value);
@@ -443,8 +458,11 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
       );
     }
     case "greater_than": {
-      const fieldDef = fieldByName.get(criteria.field);
-      if (fieldDef?.dataType === "datetime" && typeof criteria.value === "string") {
+      const fieldDef = fields.get(criteria.field);
+      if (
+        ["date", "datetime"].includes(fieldDef?.dataType ?? "") &&
+        typeof criteria.value === "string"
+      ) {
         const parsed = typeof value === "string" ? Date.parse(value) : NaN;
         if (!Number.isFinite(parsed)) return false;
         return parsed >= dateOnlyStart(criteria.value) + DAY_MS;
@@ -459,8 +477,8 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
       );
     case "between":
     case "not_between": {
-      const fieldDef = fieldByName.get(criteria.field);
-      if (fieldDef?.dataType === "datetime" && isValueList(criteria.value)) {
+      const fieldDef = fields.get(criteria.field);
+      if (["date", "datetime"].includes(fieldDef?.dataType ?? "") && isValueList(criteria.value)) {
         const parsed = typeof value === "string" ? Date.parse(value) : NaN;
         if (!Number.isFinite(parsed)) return false;
         const low = dateOnlyStart(criteria.value[0] as string);
@@ -480,7 +498,7 @@ export function matches(record: RecordData, criteria: Criteria, runtime: Criteri
     case "less_equal":
       return typeof criteria.value === "number"
         ? typeof value === "number" && value <= criteria.value
-        : matchesAge(value, criteria.value, runtime);
+        : matchesAge(value, criteria.value, dayRuntime);
     default:
       return false;
   }
@@ -501,7 +519,11 @@ function compareDecimal(left: string, right: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function sortRecords(records: RecordData[], sort: SortSpec): RecordData[] {
+export function sortRecords(
+  records: RecordData[],
+  sort: SortSpec,
+  fields: ReadonlyMap<string, FieldDefinition> = fieldByName,
+): RecordData[] {
   if (sort.order !== "asc" && sort.order !== "desc")
     throw new ValidationError({ sort: ["Unknown sort field or order."] });
   const direction = sort.order === "asc" ? 1 : -1;
@@ -510,14 +532,18 @@ export function sortRecords(records: RecordData[], sort: SortSpec): RecordData[]
     copy.sort((a, b) => compareDecimal(a.id, b.id) * direction);
     return copy;
   }
-  const field = fieldByName.get(sort.field);
+  const field = fields.get(sort.field);
   if (!field) throw new ValidationError({ sort: ["Unknown sort field or order."] });
   // Ties keep the default id-descending order. Array.sort is stable.
   copy.sort((a, b) => compareDecimal(b.id, a.id));
   const normalize = (value: FieldValue): string | number | boolean | null => {
     if (value === null || value === "") return null;
-    if (typeof value === "object") return value.id.toLowerCase();
-    if (field.dataType === "datetime" && typeof value === "string") return Date.parse(value);
+    if (typeof value === "object")
+      return field.dataType === "lookup"
+        ? value.name?.toLowerCase() || null
+        : value.id.toLowerCase();
+    if (["date", "datetime"].includes(field.dataType) && typeof value === "string")
+      return Date.parse(value);
     return typeof value === "string" ? value.toLowerCase() : value;
   };
   copy.sort((a, b) => {

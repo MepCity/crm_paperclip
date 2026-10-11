@@ -3,6 +3,7 @@ import type { OrgContext } from "../../tenancy/types";
 import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
 import { leadsMetadata } from "./metadata";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { resolveRecordReferences } from "./references";
 import { fullName, generateFixtureLeads } from "./seed";
 import { validateInput } from "./validation";
 import { leadsViews } from "./views";
@@ -23,7 +24,7 @@ const stringFields = new Set(
   leadsMetadata.fields
     .filter(
       (field) =>
-        !["integer", "currency", "double", "boolean", "multi_module_lookup"].includes(
+        !["integer", "currency", "double", "boolean", "lookup", "multi_module_lookup"].includes(
           field.dataType,
         ),
     )
@@ -76,6 +77,12 @@ export function createFixtureRecordService(
   }
   const state = store;
   state.memberIds.add(ctx.userId);
+  const referenceModules = new Map([
+    ["Leads", { displayNameField: "Full_Name", getRecord: (id: string) => state.records.get(id) }],
+  ]);
+  const resolve = (record: RecordData) =>
+    resolveRecordReferences(record, leadsMetadata.fields, referenceModules);
+  const validateReferences = (input: RecordInput) => resolve({ id: "", fields: input });
   const validateOwner = async (input: RecordInput) => {
     if (!Object.hasOwn(input, "Owner")) return;
     const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
@@ -109,12 +116,14 @@ export function createFixtureRecordService(
     const view = viewFor(module, query.viewId);
     if (query.filters) validateCriteria(query.filters);
     const runtime = { userId: ctx.userId, now: clock() };
-    return [...state.records.values()].filter(
-      (record) =>
-        (!view.criteria || matches(record, view.criteria, runtime)) &&
-        (!query.filters || matches(record, query.filters, runtime)) &&
-        matchesSearch(record, query.search),
-    );
+    return [...state.records.values()]
+      .map(resolve)
+      .filter(
+        (record) =>
+          (!view.criteria || matches(record, view.criteria, runtime)) &&
+          (!query.filters || matches(record, query.filters, runtime)) &&
+          matchesSearch(record, query.search),
+      );
   };
   const validateIds = (ids: readonly string[]) => {
     if (ids.length < 1 || ids.length > 500)
@@ -191,12 +200,13 @@ export function createFixtureRecordService(
       return matching(module, query).length;
     },
     async get(module, id) {
-      return copy(recordFor(module, id));
+      return copy(resolve(recordFor(module, id)));
     },
     async create(module, input) {
       moduleExists(module);
       const normalized = normalizeInput(input);
       validateInput(normalized, false);
+      validateReferences(normalized);
       await validateOwner(normalized);
       const id = String(state.nextId++);
       const fields: Record<string, FieldValue> = Object.fromEntries(
@@ -216,12 +226,13 @@ export function createFixtureRecordService(
       fields.Full_Name = fullName(fields);
       const record = { id, fields };
       state.records.set(id, record);
-      return copy(record);
+      return copy(resolve(record));
     },
     async update(module, id, input) {
       recordFor(module, id);
       const normalized = normalizeInput(input);
       validateInput(normalized, true);
+      validateReferences(normalized);
       await validateOwner(normalized);
       // Membership resolution may yield; preserve intervening partial writes/deletes.
       const record = recordFor(module, id);
@@ -235,7 +246,7 @@ export function createFixtureRecordService(
       fields.Full_Name = fullName(fields);
       const updated = { id, fields };
       state.records.set(id, updated);
-      return copy(updated);
+      return copy(resolve(updated));
     },
     async massUpdate(module, ids, input) {
       moduleExists(module);
@@ -249,6 +260,7 @@ export function createFixtureRecordService(
       if (!field?.massUpdate)
         throw new ValidationError({ [name]: ["This field cannot be mass updated."] });
       validateInput(normalized, true);
+      validateReferences(normalized);
       await validateOwner(normalized);
       writeBatch(module, targets, normalized);
     },
