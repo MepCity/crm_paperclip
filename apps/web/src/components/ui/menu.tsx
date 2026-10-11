@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps, ReactNode, Ref } from "react";
+import { type ComponentProps, type ReactNode, type Ref, useContext } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -8,8 +8,10 @@ import {
   composeRenderProps,
   type MenuItemProps,
   MenuSection,
+  MenuStateContext,
   MenuTrigger,
   Popover,
+  RootMenuTriggerStateContext,
   Separator,
   SubmenuTrigger,
 } from "react-aria-components";
@@ -30,6 +32,23 @@ export function MenuButton(props: ButtonProps) {
   return <Button variant="secondary" {...props} />;
 }
 
+interface RootMenuTriggerStateWithBlockedKeys {
+  openSubmenu?: (triggerKey: string, level: number) => void;
+  __laterModuleBlockedKeys?: Set<string>;
+}
+
+interface MenuStateWithCollection {
+  collection?: {
+    getItem: (key: unknown) =>
+      | {
+          firstChildKey?: unknown;
+          props?: { laterModule?: ModuleKey };
+        }
+      | null
+      | undefined;
+  };
+}
+
 export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
@@ -44,7 +63,56 @@ export function MenuItem<T extends object>({
   laterModule?: ModuleKey;
   ref?: Ref<HTMLDivElement>;
 }) {
-  const laterRef = useLaterModule(laterModule, forwardedRef);
+  const rootMenuTriggerState = useContext(
+    RootMenuTriggerStateContext,
+  ) as RootMenuTriggerStateWithBlockedKeys | null;
+  const menuState = useContext(MenuStateContext) as MenuStateWithCollection | null;
+
+  if (laterModule && rootMenuTriggerState) {
+    if (!rootMenuTriggerState.__laterModuleBlockedKeys) {
+      rootMenuTriggerState.__laterModuleBlockedKeys = new Set<string>();
+      const origOpenSubmenu = rootMenuTriggerState.openSubmenu?.bind(rootMenuTriggerState);
+      if (origOpenSubmenu) {
+        rootMenuTriggerState.openSubmenu = (triggerKey: string, level: number) => {
+          const keyStr = String(triggerKey);
+          let isBlocked = Boolean(rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr));
+
+          if (!isBlocked && menuState?.collection) {
+            const triggerNode = menuState.collection.getItem(triggerKey);
+            const childKey = triggerNode?.firstChildKey ?? triggerKey;
+            const childItem = menuState.collection.getItem(childKey);
+            if (childItem?.props?.laterModule) {
+              isBlocked = true;
+            }
+          }
+
+          if (
+            !isBlocked &&
+            typeof document !== "undefined" &&
+            (document.querySelector(`[data-key="${keyStr}"][data-later-module]`) !== null ||
+              document.querySelector(`[id="${keyStr}"][data-later-module]`) !== null ||
+              document.querySelector("[data-later-module][data-hovered]") !== null ||
+              document.querySelector("[data-later-module]:hover") !== null ||
+              Boolean(document.activeElement?.hasAttribute("data-later-module")))
+          ) {
+            isBlocked = true;
+          }
+
+          if (isBlocked) {
+            return;
+          }
+          return origOpenSubmenu(triggerKey, level);
+        };
+      }
+    }
+    if (props.id != null) {
+      rootMenuTriggerState.__laterModuleBlockedKeys.add(String(props.id));
+    }
+  }
+
+  const laterRef = useLaterModule(laterModule, forwardedRef, {
+    blockSubmenuArrows: true,
+  });
 
   return (
     <AriaMenuItem
@@ -52,6 +120,7 @@ export function MenuItem<T extends object>({
       {...(laterModule ? laterModuleProps(laterModule) : {})}
       ref={laterRef}
       onAction={laterModule ? undefined : onAction}
+      onHoverChange={laterModule ? () => {} : props.onHoverChange}
       className={composeRenderProps(
         className,
         (extra) =>

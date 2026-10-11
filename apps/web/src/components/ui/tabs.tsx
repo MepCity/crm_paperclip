@@ -34,6 +34,15 @@ export function Tabs({ className, ...props }: TabsProps) {
   );
 }
 
+function isTabDisabled(tab?: HTMLElement) {
+  if (!tab) return true;
+  return (
+    tab.hasAttribute("data-disabled") ||
+    (tab.getAttribute("aria-disabled") === "true" && !tab.hasAttribute("data-later-module")) ||
+    tab.hasAttribute("disabled")
+  );
+}
+
 export function TabList<T extends object>({
   className,
   appearance = "default",
@@ -72,26 +81,46 @@ export function TabList<T extends object>({
           if (!currentTab) return;
 
           const currentIndex = tabs.indexOf(currentTab);
+          const isRtl = node.closest('[dir="rtl"]') !== null || document.dir === "rtl";
           let targetIndex = -1;
 
-          if (e.key === "ArrowRight") {
-            targetIndex = (currentIndex + 1) % tabs.length;
-          } else if (e.key === "ArrowLeft") {
-            targetIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const isForward = isRtl ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+            const step = isForward ? 1 : -1;
+            const len = tabs.length;
+            for (let i = 1; i <= len; i++) {
+              const candidate = (currentIndex + step * i + len * len) % len;
+              if (!isTabDisabled(tabs[candidate])) {
+                targetIndex = candidate;
+                break;
+              }
+            }
           } else if (e.key === "Home") {
-            targetIndex = 0;
+            for (let i = 0; i < tabs.length; i++) {
+              if (!isTabDisabled(tabs[i])) {
+                targetIndex = i;
+                break;
+              }
+            }
           } else if (e.key === "End") {
-            targetIndex = tabs.length - 1;
+            for (let i = tabs.length - 1; i >= 0; i--) {
+              if (!isTabDisabled(tabs[i])) {
+                targetIndex = i;
+                break;
+              }
+            }
           }
 
-          if (targetIndex === -1 || targetIndex === currentIndex) return;
+          if (targetIndex === -1) return;
 
           const targetTab = tabs[targetIndex];
           if (targetTab?.hasAttribute("data-later-module")) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            targetTab.focus();
+            if (targetIndex !== currentIndex) {
+              targetTab.focus();
+            }
           }
         };
 

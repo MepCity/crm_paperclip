@@ -199,6 +199,15 @@ test("Tabs End and Home keys focus laterModule tabs at start/end without selecti
   expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
   expect(screen.queryByRole("tabpanel", { name: "Last (Later)" })).toBeNull();
 
+  // Repeated End key while already focused on laterModule tab does not select it
+  await user.keyboard("{End}");
+  expect(document.activeElement).toBe(lastTab);
+  expect(lastTab.getAttribute("aria-selected")).toBe("false");
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+  expect(selectionChange).not.toHaveBeenCalled();
+  expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
+  expect(screen.queryByRole("tabpanel", { name: "Last (Later)" })).toBeNull();
+
   // Home key focuses first tab (laterModule) without selecting it
   await user.keyboard("{Home}");
   expect(document.activeElement).toBe(firstTab);
@@ -207,6 +216,108 @@ test("Tabs End and Home keys focus laterModule tabs at start/end without selecti
   expect(selectionChange).not.toHaveBeenCalled();
   expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
   expect(screen.queryByRole("tabpanel", { name: "First (Later)" })).toBeNull();
+
+  // Repeated Home key while already focused on laterModule tab does not select it
+  await user.keyboard("{Home}");
+  expect(document.activeElement).toBe(firstTab);
+  expect(firstTab.getAttribute("aria-selected")).toBe("false");
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+  expect(selectionChange).not.toHaveBeenCalled();
+  expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
+  expect(screen.queryByRole("tabpanel", { name: "First (Later)" })).toBeNull();
+});
+
+test("Tabs arrow keys skip isDisabled tab and focus laterModule tab without selecting it", async () => {
+  const user = userEvent.setup();
+  const selectionChange = vi.fn();
+  render(
+    <Tabs defaultSelectedKey="middle" onSelectionChange={selectionChange}>
+      <TabList aria-label="Record">
+        <Tab id="middle">Middle</Tab>
+        <Tab id="skip" isDisabled>
+          Skip
+        </Tab>
+        <Tab id="last" laterModule="M4">
+          Last (Later)
+        </Tab>
+      </TabList>
+      <TabPanel id="middle">Middle panel</TabPanel>
+      <TabPanel id="skip">Skip panel</TabPanel>
+      <TabPanel id="last">Last panel</TabPanel>
+    </Tabs>,
+  );
+
+  const middleTab = screen.getByRole("tab", { name: "Middle" });
+  const lastTab = screen.getByRole("tab", { name: "Last (Later)" });
+
+  middleTab.focus();
+  expect(document.activeElement).toBe(middleTab);
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+
+  // ArrowRight skips disabled tab and focuses Last (laterModule) without selecting it
+  await user.keyboard("{ArrowRight}");
+  expect(document.activeElement).toBe(lastTab);
+  expect(lastTab.getAttribute("aria-selected")).toBe("false");
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+  expect(selectionChange).not.toHaveBeenCalled();
+  expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
+  expect(screen.queryByRole("tabpanel", { name: "Last (Later)" })).toBeNull();
+
+  // End while already focused on Last (laterModule) does not select it
+  await user.keyboard("{End}");
+  expect(document.activeElement).toBe(lastTab);
+  expect(lastTab.getAttribute("aria-selected")).toBe("false");
+  expect(selectionChange).not.toHaveBeenCalled();
+
+  // ArrowLeft from Last skips Skip (isDisabled) and selects Middle (normal tab)
+  await user.keyboard("{ArrowLeft}");
+  expect(document.activeElement).toBe(middleTab);
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+  expect(selectionChange).toHaveBeenCalledWith("middle");
+  expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
+});
+
+test("Tabs ArrowLeft skips isDisabled tab and focuses preceding laterModule tab without selecting it", async () => {
+  const user = userEvent.setup();
+  const selectionChange = vi.fn();
+  render(
+    <Tabs defaultSelectedKey="middle" onSelectionChange={selectionChange}>
+      <TabList aria-label="Record">
+        <Tab id="first" laterModule="M3">
+          First (Later)
+        </Tab>
+        <Tab id="skip" isDisabled>
+          Skip
+        </Tab>
+        <Tab id="middle">Middle</Tab>
+      </TabList>
+      <TabPanel id="first">First panel</TabPanel>
+      <TabPanel id="skip">Skip panel</TabPanel>
+      <TabPanel id="middle">Middle panel</TabPanel>
+    </Tabs>,
+  );
+
+  const firstTab = screen.getByRole("tab", { name: "First (Later)" });
+  const middleTab = screen.getByRole("tab", { name: "Middle" });
+
+  middleTab.focus();
+  expect(document.activeElement).toBe(middleTab);
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+
+  // ArrowLeft skips Skip (isDisabled) and focuses First (laterModule) without selecting it
+  await user.keyboard("{ArrowLeft}");
+  expect(document.activeElement).toBe(firstTab);
+  expect(firstTab.getAttribute("aria-selected")).toBe("false");
+  expect(middleTab.getAttribute("aria-selected")).toBe("true");
+  expect(selectionChange).not.toHaveBeenCalled();
+  expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
+  expect(screen.queryByRole("tabpanel", { name: "First (Later)" })).toBeNull();
+
+  // Home while already on First (laterModule) does not select it
+  await user.keyboard("{Home}");
+  expect(document.activeElement).toBe(firstTab);
+  expect(firstTab.getAttribute("aria-selected")).toBe("false");
+  expect(selectionChange).not.toHaveBeenCalled();
 });
 
 test("Tabs ArrowDown and ArrowUp do not move focus or change selection in horizontal tablist with laterModule tabs", async () => {

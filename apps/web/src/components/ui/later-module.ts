@@ -31,6 +31,12 @@ export interface UseLaterModuleOptions {
    * arrow keys can navigate between rows.
    */
   blockMenuArrows?: boolean;
+  /**
+   * Whether to block ArrowRight / ArrowLeft shortcuts used by submenu triggers.
+   * MenuItems with laterModule block them so submenus do not open, while vertical
+   * arrows can still navigate between menu rows.
+   */
+  blockSubmenuArrows?: boolean;
 }
 
 const BLOCKED_EVENT_TYPES = [
@@ -43,14 +49,16 @@ const BLOCKED_EVENT_TYPES = [
   "keyup",
 ] as const;
 
-function blockLaterModuleEvent(e: Event, blockMenuArrows = false) {
+function blockLaterModuleEvent(e: Event, blockMenuArrows = false, blockSubmenuArrows = false) {
   if (e instanceof KeyboardEvent) {
-    const isArrow = e.key === "ArrowDown" || e.key === "ArrowUp";
+    const isVerticalArrow = e.key === "ArrowDown" || e.key === "ArrowUp";
+    const isHorizontalArrow = e.key === "ArrowRight" || e.key === "ArrowLeft";
     if (
       e.key === "Enter" ||
       e.key === " " ||
       e.key === "Spacebar" ||
-      (blockMenuArrows && isArrow)
+      (blockMenuArrows && isVerticalArrow) ||
+      (blockSubmenuArrows && isHorizontalArrow)
     ) {
       e.preventDefault();
       e.stopPropagation();
@@ -108,9 +116,13 @@ export function useLaterModule<E extends HTMLElement = HTMLElement>(
         node.setAttribute("aria-disabled", "true");
         node.setAttribute("data-later-module", laterModule);
 
-        const shouldBlockArrows = Boolean(options?.blockMenuArrows) || node.tagName === "BUTTON";
+        const shouldBlockMenuArrows =
+          Boolean(options?.blockMenuArrows) || node.tagName === "BUTTON";
+        const shouldBlockSubmenuArrows =
+          Boolean(options?.blockSubmenuArrows) || node.getAttribute("role") === "menuitem";
 
-        const listener = (e: Event) => blockLaterModuleEvent(e, shouldBlockArrows);
+        const listener = (e: Event) =>
+          blockLaterModuleEvent(e, shouldBlockMenuArrows, shouldBlockSubmenuArrows);
 
         for (const eventType of BLOCKED_EVENT_TYPES) {
           node.addEventListener(eventType, listener, { capture: true });
@@ -131,6 +143,6 @@ export function useLaterModule<E extends HTMLElement = HTMLElement>(
         }
       }
     },
-    [laterModule, forwardedRef, options?.blockMenuArrows],
+    [laterModule, forwardedRef, options?.blockMenuArrows, options?.blockSubmenuArrows],
   );
 }

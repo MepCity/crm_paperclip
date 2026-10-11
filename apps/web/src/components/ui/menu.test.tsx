@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test } from "vitest";
-import { Menu, MenuButton, MenuItem, MenuTrigger } from "./menu";
+import { afterEach, expect, test, vi } from "vitest";
+import { Menu, MenuButton, MenuItem, MenuTrigger, Submenu, SubmenuTrigger } from "./menu";
 
 function renderMenu(onAction?: (key: string) => void, withDisabled = false) {
   render(
@@ -242,4 +242,116 @@ test("MenuItem with laterModule does not block arrow keys for navigating between
   await user.keyboard("{ArrowUp}");
   expect(document.activeElement).toBe(laterItem);
   expect(screen.getByRole("menu")).toBeTruthy();
+});
+
+test("SubmenuTrigger with laterModule MenuItem does not open on ArrowRight, ArrowLeft, hover, click, Enter or Space", async () => {
+  const user = userEvent.setup();
+  const subAction = vi.fn();
+  render(
+    <MenuTrigger>
+      <MenuButton>Options</MenuButton>
+      <Menu>
+        <MenuItem id="first">First</MenuItem>
+        <SubmenuTrigger>
+          <MenuItem id="later-sub" laterModule="M3">
+            Later Submenu
+          </MenuItem>
+          <Submenu ariaLabel="Later Submenu">
+            <MenuItem id="child" onAction={subAction}>
+              Child
+            </MenuItem>
+          </Submenu>
+        </SubmenuTrigger>
+        <MenuItem id="last">Last</MenuItem>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  const firstItem = screen.getByRole("menuitem", { name: "First" });
+  const laterSubItem = screen.getByRole("menuitem", { name: "Later Submenu" });
+  const lastItem = screen.getByRole("menuitem", { name: "Last" });
+
+  // 1. ArrowDown navigates to laterSubItem
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(firstItem);
+
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(laterSubItem);
+
+  // 2. ArrowRight (LTR) does not open submenu
+  await user.keyboard("{ArrowRight}");
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(document.activeElement).toBe(laterSubItem);
+
+  // 3. ArrowLeft does not open submenu
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(document.activeElement).toBe(laterSubItem);
+
+  // 4. Click does not open submenu
+  await user.click(laterSubItem);
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // 5. Enter & Space do not open submenu
+  await user.keyboard("{Enter}");
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  await user.keyboard(" ");
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // 6. Hover appearance is retained, but submenu does not open after delay
+  await user.hover(laterSubItem);
+  expect(
+    laterSubItem.hasAttribute("data-hovered") ||
+      laterSubItem.classList.contains("data-hovered:bg-surface-hover") ||
+      laterSubItem.getAttribute("data-hovered") === "true",
+  ).toBe(true);
+
+  // Wait past default submenu open delay (200ms)
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // 7. ArrowDown and ArrowUp continue to navigate between parent menu rows
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(lastItem);
+
+  await user.keyboard("{ArrowUp}");
+  expect(document.activeElement).toBe(laterSubItem);
+
+  expect(subAction).not.toHaveBeenCalled();
+});
+
+test("SubmenuTrigger with normal MenuItem opens on hover and ArrowRight", async () => {
+  const user = userEvent.setup();
+  render(
+    <MenuTrigger>
+      <MenuButton>Options</MenuButton>
+      <Menu>
+        <MenuItem id="first">First</MenuItem>
+        <SubmenuTrigger>
+          <MenuItem id="normal-sub">Normal Submenu</MenuItem>
+          <Submenu ariaLabel="Normal Submenu">
+            <MenuItem id="child">Child</MenuItem>
+          </Submenu>
+        </SubmenuTrigger>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  const normalSubItem = screen.getByRole("menuitem", { name: "Normal Submenu" });
+  await user.hover(normalSubItem);
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(screen.getByRole("menu", { name: "Normal Submenu" })).toBeTruthy();
 });
