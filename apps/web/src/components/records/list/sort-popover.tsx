@@ -14,7 +14,7 @@ const NONE_KEY = "sort-none";
 
 /**
  * Gap between the toolbar control and the Sort dialog. list-views.md › Sort popover measures
- * the outer box at y 138; the toolbar row the control sits in ends at y 132 (Create Lead y 99–132).
+ * the outer box at y 138; the toolbar row the control sits in ends at y 132 (Create record y 99–132).
  */
 const SORT_ANCHOR_OFFSET = 6;
 

@@ -1,6 +1,6 @@
 import { type FormatOptions, formatRelativeTime } from "@crm/core/format";
 import type { RecordData } from "@crm/core/records";
-import { LEADS_DETAIL_FIELD_API_NAMES } from "@/lib/records/leads-detail.constants";
+import { LEADS_DETAIL_FIELD_API_NAMES } from "@/modules/leads/leads-detail.constants";
 
 export function formatLeadsLastUpdateLabel(
   record: RecordData,

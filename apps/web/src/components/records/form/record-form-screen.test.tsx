@@ -7,9 +7,9 @@ import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { UnexpectedApiError } from "@/lib/api/wire/errors";
+import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import { render } from "@/test/render";
 import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
-import { leadsFormRules, leadsFormFields as names } from "./leads-form-rules";
 import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
 
 import { SelectUserDialog } from "./select-user-dialog";

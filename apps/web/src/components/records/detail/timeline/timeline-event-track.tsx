@@ -3,7 +3,7 @@ import { Icons } from "@/components/ui/icon";
 import type { TimelineEvent, TimelineEventKind } from "./types";
 
 function EventKindIcon({ kind }: { kind: TimelineEventKind }) {
-  if (kind === "lead_image_upload" || kind === "image_upload") {
+  if (kind === "image_upload") {
     return <Icons.timelinePencil className="h-4 w-4" aria-hidden="true" data-kind-icon="pencil" />;
   }
   return <Icons.timelineGeneric className="h-4 w-4" aria-hidden="true" data-kind-icon="generic" />;

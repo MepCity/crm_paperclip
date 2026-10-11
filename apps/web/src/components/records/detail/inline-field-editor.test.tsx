@@ -4,7 +4,7 @@ import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
-import { isLeadInlineEditable } from "@/lib/records/leads-inline-edit";
+import { isLeadInlineEditable } from "@/modules/leads/leads-inline-edit";
 import { render } from "@/test/render";
 import { DetailFieldRow } from "./detail-field-row";
 import { InlineEditProvider } from "./inline-edit-context";

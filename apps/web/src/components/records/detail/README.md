@@ -11,14 +11,14 @@ and page placement live in MEP-144.
 | Screen | `leads/lead-record-screen.tsx` — `LeadRecordScreen` with `orgSlug`, `recordId`, `paths`, optional `now` for the age label |
 | Paths | Caller supplies `defaultList`, `record`, and `edit` builders (same pattern as the list screen `config.paths`) |
 | List context | `lib/records/record-list-context.ts` — session storage for back URL and in-page previous/next; the list page writes, detail reads |
-| More Options (Leads) | `lib/records/leads-record-more-options.ts` — full spec-ordered inventory (`LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS`); `buildLeadsRecordMoreMenuGroups` renders only handler-backed items (MEP-163: `Delete`; MEP-164: `Clone`). Unimplemented labels: `LEADS_RECORD_MORE_OPTIONS_DEVIATIONS`. |
-| Leads-only rules | `lib/records/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order, same-page neighbor scope |
-| Back href | `lib/records/leads-detail-back-href.ts` — list context href or default list path |
-| Section builders | `lib/records/leads-detail-sections.ts`, `lib/records/leads-address.ts` |
-| Status ribbon | `leads/lead-status-ribbon-section.tsx` with `lib/records/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
+| More Options (Leads) | `modules/leads/leads-record-more-options.ts` — full spec-ordered inventory (`LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS`); `buildLeadsRecordMoreMenuGroups` renders only handler-backed items (MEP-163: `Delete`; MEP-164: `Clone`). Unimplemented labels: `LEADS_RECORD_MORE_OPTIONS_DEVIATIONS`. |
+| Leads-only rules | `modules/leads/leads-detail.constants.ts` (Interim): field API names, section labels, `Lead Name` label, composite address order, same-page neighbor scope |
+| Back href | `modules/leads/leads-detail-back-href.ts` — list context href or default list path |
+| Section builders | `modules/leads/leads-detail-sections.ts`, `modules/leads/leads-address.ts` |
+| Status ribbon | `modules/leads/lead-status-ribbon-section.tsx` with `modules/leads/leads-status-ribbon.ts` (`Lead_Status` picklist stages, interim terminal groups, immediate update via `useUpdateRecord`) |
 
-The route `app/crm/[orgSlug]/tab/Leads/[recordId]/page.tsx` calls
-`requireOrgContext` and renders `LeadsDetailClient` (`modules/leads/leads-detail-client.tsx`).
+The route `app/crm/[orgSlug]/tab/[moduleTab]/[recordId]/page.tsx` calls
+`requireOrgContext` and renders `ModuleRouteClient`, which resolves the screen definition and uses the shared detail screen.
 `ApiProvider` comes from `app/crm/[orgSlug]/tab/layout.tsx`. Edit uses
 `moduleRecordEditPath` from `lib/crm-paths.ts`.
 
@@ -249,7 +249,7 @@ widths and Description value start/right edge remain unmeasured as listed above.
 `FieldInput`, `formPayload` and `validateRecordForm` as the record form. The screen
 writes through `useUpdateRecord`, then refetches the record for audit information.
 Read-only, system, unsupported and non-edit-view fields have no edit affordance.
-Leads exclusions live in `lib/records/leads-inline-edit.ts`.
+Leads exclusions live in `modules/leads/leads-inline-edit.ts`.
 
 Save/Cancel have accessible names, original inline glyphs and 21px circles. The
 Rating list opens immediately, with 32px option rows and a selected checkmark.
