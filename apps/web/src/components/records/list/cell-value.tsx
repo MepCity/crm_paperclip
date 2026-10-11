@@ -20,13 +20,13 @@ export interface CellValueProps {
    * resolve users; the caller supplies the map. An unknown id is shown as text.
    */
   ownerNames?: Readonly<Record<string, string>>;
-  /** Locale and time zone for datetime cells. */
+  /** Locale and time zone for date and datetime cells. */
   format: FormatOptions;
 }
 
 /**
  * Read-only cell text for the field types that appear as columns in the list
- * views: text, email, phone, picklist, ownerlookup and datetime.
+ * views: text, email, phone, picklist, ownerlookup, date and datetime.
  */
 export function CellValue({
   field,

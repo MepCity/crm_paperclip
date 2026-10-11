@@ -45,6 +45,7 @@ const field = (apiName: string, dataType: FieldDataType): FieldDefinition => ({
   massUpdate: false,
   unique: false,
   views: { view: true, create: false, edit: true, quickCreate: false },
+  ...(dataType === "lookup" ? { lookup: { module: "Accounts" } } : {}),
 });
 const values = {
   text: "Example",
@@ -56,10 +57,11 @@ const values = {
   integer: 12,
   currency: 25.5,
   boolean: false,
+  date: "2026-02-28",
   datetime: "2026-01-01T00:00:00.000Z",
   double: 0.125,
   bigint: "99999999999999999999",
-  lookup: "lookup-id",
+  lookup: { module: "Accounts", id: "lookup-id" },
   ownerlookup: "member-id",
   profileimage: "image-reference",
   multi_module_lookup: { module: "Contacts", id: "related-id" },
@@ -460,7 +462,12 @@ describe("wire codec", () => {
     },
   );
   it("encodes owner and lookup write inputs as IDs without display properties", () => {
-    expect(encodeInput({ ownerlookup: "member-id", lookup: "lookup-id" }, metadata)).toEqual({
+    expect(
+      encodeInput(
+        { ownerlookup: "member-id", lookup: { module: "Accounts", id: "lookup-id" } },
+        metadata,
+      ),
+    ).toEqual({
       ownerlookup: { id: "member-id" },
       lookup: { id: "lookup-id" },
     });
@@ -505,7 +512,10 @@ describe("wire codec", () => {
   it("uses the observed owner keys and does not fabricate unresolved names", () => {
     expect(
       encodeRecord(
-        { id: "row-id", fields: { ownerlookup: "member-id", lookup: "lookup-id" } },
+        {
+          id: "row-id",
+          fields: { ownerlookup: "member-id", lookup: { module: "Accounts", id: "lookup-id" } },
+        },
         metadata,
         members,
       ),
@@ -709,5 +719,31 @@ describe("currency codec", () => {
     { ...wire, prefix_symbol: "true" },
   ])("rejects malformed or unknown fields: %j", (value) => {
     expect(() => decodeCurrency(value)).toThrow(ValidationError);
+  });
+});
+
+describe("named reference wire contract", () => {
+  it("round-trips named lookup and connected references", () => {
+    const input = {
+      lookup: { module: "Accounts", id: "account", name: "Account Name" },
+      multi_module_lookup: { module: "Contacts", id: "contact", name: "Contact Name" },
+    };
+    const wire = encodeInput(input, metadata);
+    expect(wire.lookup).toEqual({ id: "account", name: "Account Name" });
+    expect(decodeInput(json(wire), metadata)).toEqual(input);
+  });
+  it("rejects wrong lookup modules, strings and non-string names", () => {
+    expect(() => encodeInput({ lookup: { module: "Contacts", id: "contact" } }, metadata)).toThrow(
+      ValidationError,
+    );
+    expect(() => encodeInput({ lookup: "account" }, metadata)).toThrow(ValidationError);
+    expect(() => decodeInput({ lookup: { id: "account", name: 42 } }, metadata)).toThrow(
+      ValidationError,
+    );
+  });
+  it("publishes and round-trips date metadata", () => {
+    const definition = field("Birthday", "date");
+    expect(encodeField(definition).data_type).toBe("date");
+    expect(decodeField(encodeField(definition))).toEqual(definition);
   });
 });
