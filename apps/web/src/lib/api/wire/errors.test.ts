@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   isAppError,
   NotFoundError,
+  RecordLockedError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
@@ -27,6 +28,7 @@ describe("encodeError / decodeError", () => {
     ["unauthenticated", new UnauthenticatedError("Sign in again.")],
     ["forbidden", new ForbiddenError("You cannot change this record.")],
     ["not_found", new NotFoundError("That view does not exist.")],
+    ["record_locked", new RecordLockedError()],
     ["conflict", new ConflictError("That record was changed.")],
     ["validation", new ValidationError(fieldErrors, "Check the highlighted fields.")],
   ] as const)("round-trips %s through JSON", (_label, error) => {
@@ -38,9 +40,14 @@ describe("encodeError / decodeError", () => {
     expect(isAppError(decoded)).toBe(true);
     expect(decoded.message).toBe(error.message);
     expect(encoded.status).toBe(
-      { unauthenticated: 401, forbidden: 403, not_found: 404, conflict: 400, validation: 400 }[
-        error.code
-      ],
+      {
+        unauthenticated: 401,
+        forbidden: 403,
+        not_found: 404,
+        conflict: 400,
+        validation: 400,
+        record_locked: 400,
+      }[error.code],
     );
     expect(encoded.body.status).toBe("error");
     expect(Object.keys(encoded.body).sort()).toEqual(["code", "details", "message", "status"]);
@@ -63,6 +70,7 @@ describe("encodeError / decodeError", () => {
       "LIMIT_EXCEEDED",
     ],
     [new ConflictError("Duplicate."), 400, "DUPLICATE_DATA"],
+    [new RecordLockedError(), 400, "RECORD_LOCKED"],
     [new ForbiddenError(), 403, "NO_PERMISSION"],
     [new UnauthenticatedError(), 401, "AUTHENTICATION_FAILURE"],
     [new NotFoundError(), 404, "not_found"],

@@ -6,6 +6,7 @@ import {
   ForbiddenError,
   isAppError,
   NotFoundError,
+  RecordLockedError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
@@ -16,6 +17,7 @@ const STATUS_BY_CODE = {
   forbidden: 403,
   not_found: 404,
   conflict: 400,
+  record_locked: 400,
 } as const satisfies Record<ErrorCode, number>;
 
 /** Wire-only code. It is not a member of `ErrorCode`. */
@@ -32,6 +34,7 @@ const WIRE_CODES = {
   forbidden: "NO_PERMISSION",
   not_found: "not_found",
   conflict: "DUPLICATE_DATA",
+  record_locked: "RECORD_LOCKED",
   validation: "INVALID_DATA",
 } as const;
 export type WireErrorCode =
@@ -137,6 +140,8 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
       return new NotFoundError(parsed.message);
     case "conflict":
       return new ConflictError(parsed.message);
+    case "record_locked":
+      return new RecordLockedError(parsed.message);
     case "validation": {
       const fieldErrors = readFieldErrors(parsed.details);
       if (!fieldErrors) return new UnexpectedApiError(status);

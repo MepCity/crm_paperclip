@@ -189,6 +189,11 @@ export interface CurrencyDefinition {
   prefixSymbol: boolean;
 }
 
+/**
+ * update, massUpdate, changeOwner and delete reject Locked__s === true with
+ * RecordLockedError. Batch operations validate all targets before writing;
+ * a locked target leaves every target unchanged.
+ */
 export interface RecordService {
   getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;

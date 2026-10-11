@@ -360,6 +360,38 @@ describe("operation routes", () => {
       expect((await call(op, a, { orgHeader: b.org.slug })).status).toBe(404);
     },
   );
+  it("rejects locked targets with RECORD_LOCKED on every write route", async () => {
+    const service = getRecordService(a.ctx);
+    const locked = (
+      await service.list("Leads", {
+        viewId: "all-leads",
+        page: 1,
+        perPage: 10,
+        filters: { field: "Locked__s", comparator: "equal", value: true },
+      })
+    ).records[0];
+    if (!locked) throw new Error("Expected a locked seed lead.");
+    const unlocked = await service.create("Leads", { Last_Name: "Unlocked" });
+    const ids = [unlocked.id, locked.id];
+    for (const [op, body] of [
+      [operations.update, { data: [{ Company: "Rejected" }] }],
+      [operations.delete, undefined],
+      [operations.massUpdate, { ids, data: [{ Company: "Rejected" }] }],
+      [operations.changeOwner, { ids, owner: { id: a.ctx.userId } }],
+      [operations.massDelete, { ids }],
+    ] as const) {
+      const response = await call(op, a, { recordId: locked.id, body });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        code: "RECORD_LOCKED",
+        status: "error",
+        details: {},
+      });
+      expect(await service.get("Leads", locked.id)).toEqual(locked);
+      expect(await service.get("Leads", unlocked.id)).toEqual(unlocked);
+    }
+  });
+
   it("serves ordered action results and rejects removed owners and foreign batch targets atomically", async () => {
     const service = getRecordService(a.ctx);
     const first = await service.create("Leads", { Company: "Action Example", Last_Name: "First" });

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
-import { NotFoundError, ValidationError } from "../errors";
+import { NotFoundError, RecordLockedError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import type {
   Comparator,
@@ -431,6 +431,40 @@ export function describeRecordServiceContract(name: string, makeService: Contrac
         await validation(service.changeOwner("Leads", [first.id, second.id], owner), "Owner");
       expect((await service.get("Leads", first.id)).fields.Owner).toBe("batch-owner");
     });
+
+    it.each(["update", "massUpdate", "changeOwner", "delete"] as const)(
+      "rejects %s on locked records without changing any target",
+      async (operation) => {
+        const locked = (
+          await service.list("Leads", {
+            viewId: defaultView.id,
+            page: 1,
+            perPage: 10,
+            filters: { field: "Locked__s", comparator: "equal", value: true },
+          })
+        ).records[0];
+        if (!locked) throw new Error("The contract harness must provision a locked lead.");
+        const unlocked = await service.create("Leads", input());
+        await makeService({ ...ctx, userId: "lock-test-owner" });
+        const run = (ids: string[]) => {
+          switch (operation) {
+            case "update":
+              return service.update("Leads", locked.id, { Company: "Rejected" });
+            case "massUpdate":
+              return service.massUpdate("Leads", ids, { Company: "Rejected" });
+            case "changeOwner":
+              return service.changeOwner("Leads", ids, "lock-test-owner");
+            case "delete":
+              return service.delete("Leads", ids);
+          }
+        };
+        for (const ids of [[locked.id], [unlocked.id, locked.id], [locked.id, unlocked.id]]) {
+          await expect(run(ids)).rejects.toBeInstanceOf(RecordLockedError);
+          expect(await service.get("Leads", locked.id)).toEqual(locked);
+          expect(await service.get("Leads", unlocked.id)).toEqual(unlocked);
+        }
+      },
+    );
 
     it("validates all batch targets before changing any record", async () => {
       const first = await service.create("Leads", input());
