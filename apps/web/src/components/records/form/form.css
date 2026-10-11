@@ -234,25 +234,13 @@
   flex-shrink: 0;
 }
 
-.record-form-copy-address {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-form-clear-address);
-  font-size: var(--text-md);
-  line-height: var(--size-form-label-line-height);
-  cursor: pointer;
-}
-
-.record-form-copy-address:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
 .record-form-address-groups--dual {
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--record-form-content-width);
 }
 
 .record-form-field-group {
@@ -271,9 +259,13 @@
 }
 
 .record-form-address-groups--dual .record-form-field-group {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   width: auto;
+}
+
+.record-form-address-groups--dual .record-form-field-group .record-form-row__control > * {
+  max-width: 100%;
 }
 
 .record-form-page .record-form-field-group {
@@ -342,4 +334,14 @@
   grid-template-columns:
     var(--size-form-label-column-left) var(--size-form-label-gap)
     var(--size-form-input-group-width);
+}
+
+.record-form-address-groups--dual .record-form-field-group .record-form-row--left {
+  grid-template-columns:
+    var(--size-form-label-column-left) var(--size-form-label-gap)
+    minmax(0, 1fr);
+}
+
+.record-form-address-groups--dual .record-form-field-group .record-form-coordinates {
+  max-width: 100%;
 }

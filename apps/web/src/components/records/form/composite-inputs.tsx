@@ -162,7 +162,7 @@ export function CopyAddressMenu({ groups, disabled, onCopy }: CopyAddressMenuPro
   );
   return (
     <MenuTrigger>
-      <Button variant="ghost" className="record-form-copy-address" isDisabled={disabled}>
+      <Button variant="recordSecondary" size="record" isDisabled={disabled}>
         {RECORD_FORM_COPY.copyAddress}
       </Button>
       <Menu
