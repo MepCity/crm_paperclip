@@ -342,7 +342,7 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | L-02.9 | View menu | Recently Modified Contacts | menu item | popup, row 9 | not observed | seen (m2-list-view-selector) | M2 |
 | L-02.10 | View menu | Unread Contacts | menu item | popup, row 10 | not observed | seen (m2-list-view-selector) | M2 |
 | L-02.11 | View menu | Unsubscribed Contacts | menu item | popup, row 11 | not observed | seen (m2-list-view-selector) | M2 |
-| L-02.12 | View menu | Show custom views as Dropdown | toggle | popup, row 12 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.12 | View menu | Show custom views as Dropdown | button | popup, row 12 | not observed | seen (m2-list-view-selector) | M2 |
 | L-02.13 | View menu | New Custom View | menu item | popup, row 13 | not observed | seen (m2-list-view-selector) | M11 |
 | L-02.14 | View menu | Manage Custom View | menu item | popup, row 14 | not observed | seen (m2-list-view-selector) | M11 |
 | L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-view-selector) | M2 |
@@ -771,7 +771,7 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | L-14.9 | Actions menu | Add to Campaigns | menu item | popup, row 9 | not observed | seen (m2-list-actions) | M7 |
 | L-14.10 | Actions menu | Create Client Script | menu item | popup, row 10 | not observed | seen (m2-list-actions) | M11 |
 | L-14.11 | Actions menu | Export Contacts | menu item | popup, row 11 | not observed | seen (m2-list-actions) | M6 |
-| L-14.12 | Actions menu | Spreadsheet view | menu item | popup, row 12 | not observed | seen (m2-list-actions) | ? |
+| L-14.12 | Actions menu | Sheet view | menu item | popup, row 12 | not observed | seen (m2-list-actions) | ? |
 | L-14.13 | Actions menu | Print View | menu item | popup, row 13 | not observed | seen (m2-list-actions) | M2 |
 | L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-actions) | M2 |
 | L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-actions) | M2 |
@@ -974,10 +974,10 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-sort) | M2 |
 | L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-sort) | M2 |
 | L-04 | Toolbar | Sort | button | left group, second | Opens Sort By with field and direction selectors | seen (m2-list-sort) | M2 |
-| L-04.1 | Sort popup | None | select | popup, row 1 | not observed | seen (m2-list-sort) | M2 |
-| L-04.2 | Sort popup | Ascending | select | popup, row 2 | not observed | seen (m2-list-sort) | M2 |
-| L-04.3 | Sort popup | Cancel | button | popup, row 3 | not observed | seen (m2-list-sort) | M2 |
-| L-04.4 | Sort popup | Apply | button | popup, row 4 | not observed | seen (m2-list-sort) | M2 |
+| L-04.1 | Sort popup | None | select | popup, first row, left | not observed | seen (m2-list-sort) | M2 |
+| L-04.2 | Sort popup | Ascending | select | popup, first row, right | not observed | seen (m2-list-sort) | M2 |
+| L-04.3 | Sort popup | Cancel | button | popup, second row, left | not observed | seen (m2-list-sort) | M2 |
+| L-04.4 | Sort popup | Apply | button | popup, second row, right | not observed | seen (m2-list-sort) | M2 |
 | L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-sort) | M2 |
 | L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-sort) | M2 |
 | L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-sort) | M2 |
@@ -1215,25 +1215,25 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-column-menu) | M11 |
 | L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-column-menu) | M2 |
 | L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-column-menu) | M2 |
-| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.1 | View menu | All | menu item | popup, row 1 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.2 | View menu | A | menu item | popup, row 2 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.3 | View menu | B | menu item | popup, row 3 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.4 | View menu | C | menu item | popup, row 4 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.5 | View menu | D | menu item | popup, row 5 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.6 | View menu | E | menu item | popup, row 6 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.7 | View menu | F | menu item | popup, row 7 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.8 | View menu | G | menu item | popup, row 8 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.9 | View menu | H | menu item | popup, row 9 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.10 | View menu | I | menu item | popup, row 10 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.11 | View menu | J | menu item | popup, row 11 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.12 | View menu | K | menu item | popup, row 12 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.13 | View menu | L | menu item | popup, row 13 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.14 | View menu | M | menu item | popup, row 14 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.15 | View menu | N | menu item | popup, row 15 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.16 | View menu | O | menu item | popup, row 16 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.17 | View menu | P | menu item | popup, row 17 | not observed | seen (m2-list-column-menu) | M2 |
-| L-36.18 | View menu | Q | menu item | popup, row 18 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | Opens the Contact Name alphabet dropdown | seen (m2-list-column-menu) | M2 |
+| L-36.1 | Contact Name alphabet menu | All | menu item | popup, row 1 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.2 | Contact Name alphabet menu | A | menu item | popup, row 2 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.3 | Contact Name alphabet menu | B | menu item | popup, row 3 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.4 | Contact Name alphabet menu | C | menu item | popup, row 4 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.5 | Contact Name alphabet menu | D | menu item | popup, row 5 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.6 | Contact Name alphabet menu | E | menu item | popup, row 6 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.7 | Contact Name alphabet menu | F | menu item | popup, row 7 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.8 | Contact Name alphabet menu | G | menu item | popup, row 8 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.9 | Contact Name alphabet menu | H | menu item | popup, row 9 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.10 | Contact Name alphabet menu | I | menu item | popup, row 10 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.11 | Contact Name alphabet menu | J | menu item | popup, row 11 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.12 | Contact Name alphabet menu | K | menu item | popup, row 12 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.13 | Contact Name alphabet menu | L | menu item | popup, row 13 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.14 | Contact Name alphabet menu | M | menu item | popup, row 14 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.15 | Contact Name alphabet menu | N | menu item | popup, row 15 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.16 | Contact Name alphabet menu | O | menu item | popup, row 16 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.17 | Contact Name alphabet menu | P | menu item | popup, row 17 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.18 | Contact Name alphabet menu | Q | menu item | popup, row 18 | not observed | seen (m2-list-column-menu) | M2 |
 | L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-column-menu) | M3 |
 | L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-column-menu) | M2 |
 | L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-column-menu) | M2 |
@@ -6110,7 +6110,7 @@ The create arrow was skipped by the capture tool's dangerous-attribute guard; it
 | Sliders icon | L-33 | M11 | visible only; behaviour not observed |
 | Select all checkbox | L-34 | M2 | visible only; behaviour not observed |
 | Contact Name | L-35 | M2 | visible only; behaviour not observed |
-| All with down arrow | L-36 | M2 | visible only; behaviour not observed |
+| All with down arrow | L-36 | M2 | opens the Contact Name alphabet dropdown; no option selected |
 | Account Name | L-37 | M3 | visible only; behaviour not observed |
 | Email | L-38 | M2 | visible only; behaviour not observed |
 | Phone (partly clipped) | L-39 | M2 | visible only; behaviour not observed |
@@ -6131,7 +6131,7 @@ The create arrow was skipped by the capture tool's dangerous-attribute guard; it
 | Mass email | L-14.6 | M10 | visible menu entry only |
 | Campaign membership | L-14.9 | M7 | visible menu entry only |
 | Client scripts | L-14.10 | M11 | visible menu entry only |
-| Spreadsheet entry | L-14.12 | ? | visible in screenshot only; module ownership unresolved |
+| Sheet view entry | L-14.12 | ? | visible in screenshot only; module ownership unresolved |
 | Print entry | L-14.13 | M2 | visible in screenshot only; submenu not opened |
 | Sort popup | L-04.1–L-04.4 | M2 | selectors and buttons seen; no sorting applied |
 | Alphabet dropdown | L-36.1–L-36.18 | M2 | All and A–Q painted; no option selected |
