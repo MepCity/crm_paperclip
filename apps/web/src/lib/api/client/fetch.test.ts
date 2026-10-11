@@ -1,6 +1,7 @@
 import {
   ConflictError,
   NotFoundError,
+  RecordLockedError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
@@ -82,6 +83,7 @@ describe("apiFetch", () => {
     );
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads/missing")).rejects.toBeInstanceOf(
       NotFoundError,
+      RecordLockedError,
     );
 
     const conflict = new ConflictError("Duplicate.");
@@ -96,6 +98,31 @@ describe("apiFetch", () => {
       ),
     );
     await expect(apiFetch(orgSlug, "/crm/v2.2/Leads")).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("decodes RECORD_LOCKED through the general application error path", async () => {
+    const message = "Cannot update record that is not approved yet";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              code: "RECORD_LOCKED",
+              details: {},
+              message,
+              status: "error",
+            }),
+            { status: 400 },
+          ),
+      ),
+    );
+    const request = apiFetch(orgSlug, "/crm/v2.2/Leads/locked", {
+      method: "PUT",
+      body: { data: [{ Company: "Rejected" }] },
+    });
+    await expect(request).rejects.toBeInstanceOf(RecordLockedError);
+    await expect(request).rejects.toMatchObject({ code: "record_locked", message });
   });
 
   it("throws UnexpectedApiError for non-JSON error bodies", async () => {
