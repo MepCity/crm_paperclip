@@ -44,7 +44,19 @@ export interface ModuleScreenDefinition {
     linkField: string;
     currencyCode: string;
   }) => readonly FilterGroup[];
-  form: { rules: FormRules };
+  form: {
+    rules: FormRules;
+    /** Screen fallback only when layout columns are missing; never overrides metadata. */
+    fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
+    addressGroups?: readonly {
+      field: string;
+      country: string;
+      state: string;
+      latitude: string;
+      longitude: string;
+      coordinates: string;
+    }[];
+  };
   detail: {
     header: (record: RecordData) => { title: string; subtitle?: string };
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];

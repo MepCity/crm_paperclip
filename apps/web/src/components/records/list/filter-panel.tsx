@@ -6,6 +6,7 @@ import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclosure } from "@/components/ui/disclosure";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { TextField } from "@/components/ui/text-field";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import {
@@ -20,7 +21,13 @@ import {
 export interface FilterGroup {
   id: string;
   label: string;
-  items: { id: string; label: string; disabled?: boolean; editor?: FilterEditorDefinition }[];
+  items: {
+    id: string;
+    label: string;
+    disabled?: boolean;
+    editor?: FilterEditorDefinition;
+    laterModule?: ModuleKey;
+  }[];
 }
 
 export interface FilterPanelProps {

@@ -21,7 +21,7 @@ export type RecordCommand = {
 } & ({ href: string; onPress?: never } | { href?: never; onPress: () => void });
 export interface RecordMenuGroup {
   id: string;
-  items: readonly MenuAction[];
+  items: readonly (Omit<MenuAction, "onAction"> & { onAction?: () => void })[];
 }
 export interface RecordHeaderProps {
   title: string;
