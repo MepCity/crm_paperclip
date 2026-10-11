@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { RecordListContext } from "@/lib/records/record-list-context";
 import {
   buildListHrefWithSearchState,
   listHrefSearchParamKeys,
   resolveLeadsDetailBackHref,
 } from "./leads-detail-back-href";
-import type { RecordListContext } from "./record-list-context";
 
 describe("leads detail back href", () => {
   it("preserves list search param order (page before per_page)", () => {

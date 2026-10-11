@@ -25,27 +25,6 @@ import {
 } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
-import { LEADS_MODULE } from "@/lib/records/leads-detail.constants";
-import { resolveLeadsDetailBackHref } from "@/lib/records/leads-detail-back-href";
-import {
-  buildLeadsBusinessCardFields,
-  buildLeadsDetailSections,
-} from "@/lib/records/leads-detail-sections";
-import { isLeadInlineEditable } from "@/lib/records/leads-inline-edit";
-import { formatLeadsLastUpdateLabel } from "@/lib/records/leads-last-update";
-import { leadsRecordHeaderIdentity } from "@/lib/records/leads-record-header";
-import {
-  buildLeadsRecordMoreMenuGroups,
-  LEADS_DELETE_CONFIRM_MESSAGE,
-  LEADS_DELETE_CONFIRM_TITLE,
-} from "@/lib/records/leads-record-more-options";
-import { readLeadStatusValue } from "@/lib/records/leads-status-ribbon";
-import {
-  LEADS_TIMELINE_EMPTY_EVENTS,
-  LEADS_TIMELINE_MODULE_OPTIONS,
-  LEADS_TIMELINE_SOURCE_OPTIONS,
-  LEADS_TIMELINE_SUBTABS,
-} from "@/lib/records/leads-timeline";
 import {
   type RecordListContext,
   readRecordListContext,
@@ -53,29 +32,33 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
-import { InlineEditProvider } from "../inline-edit-context";
-import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
+import type { ModuleScreenDefinition } from "@/modules/types";
+import { InlineEditProvider } from "./inline-edit-context";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
-export type LeadRecordPaths = {
+export type RecordDetailPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   edit: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   clone: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
 };
 
-export type LeadRecordScreenProps = {
+export type RecordDetailScreenProps = {
   orgSlug: string;
   recordId: RecordId;
-  paths: LeadRecordPaths;
+  paths: RecordDetailPaths;
+  definition: ModuleScreenDefinition;
   now?: Date;
 };
 
-function useLeadsListContext(orgSlug: string): RecordListContext | null {
+function useModuleListContext(
+  orgSlug: string,
+  moduleApiName: ModuleApiName,
+): RecordListContext | null {
   return useSyncExternalStore(
-    (listener) => subscribeRecordListContext(orgSlug, LEADS_MODULE, listener),
-    () => readRecordListContext(orgSlug, LEADS_MODULE),
+    (listener) => subscribeRecordListContext(orgSlug, moduleApiName, listener),
+    () => readRecordListContext(orgSlug, moduleApiName),
     () => null,
   );
 }
@@ -88,32 +71,40 @@ function RecordNotFound() {
   );
 }
 
-function LeadRecordLoadingShell() {
+function RecordLoadingShell({ definition }: { definition: ModuleScreenDefinition }) {
   return (
-    <div className="flex h-full min-h-0 flex-col" data-lead-record-loading aria-hidden="true" />
+    <div
+      className="flex h-full min-h-0 flex-col"
+      {...definition.detail.loadingAttributes}
+      aria-hidden="true"
+    />
   );
 }
 
-export function LeadRecordScreen({
+export function RecordDetailScreen({
   orgSlug,
   recordId,
   paths,
+  definition,
   now = new Date(),
-}: LeadRecordScreenProps) {
+}: RecordDetailScreenProps) {
+  const moduleApiName = definition.apiName;
+  const rules = definition.detail;
+  const StatusSection = rules.statusRibbon?.component;
   const router = useRouter();
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const updateRecord = useUpdateRecord(LEADS_MODULE);
-  const deleteRecords = useDeleteRecords(LEADS_MODULE);
-  const listContext = useLeadsListContext(orgSlug);
+  const updateRecord = useUpdateRecord(moduleApiName);
+  const deleteRecords = useDeleteRecords(moduleApiName);
+  const listContext = useModuleListContext(orgSlug, moduleApiName);
   const viewsQueryEnabled = listContext === null;
-  const moduleQuery = useModule(LEADS_MODULE);
-  const recordQuery = useRecord(LEADS_MODULE, recordId);
+  const moduleQuery = useModule(moduleApiName);
+  const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
-  const viewsQuery = useViews(LEADS_MODULE, { enabled: viewsQueryEnabled });
+  const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -126,7 +117,7 @@ export function LeadRecordScreen({
   }, [fallbackViewId, listContext]);
 
   const fallbackList = useRecordList(
-    LEADS_MODULE,
+    moduleApiName,
     fallbackListQuery ?? {
       viewId: fallbackViewId ?? "pending",
       page: 1,
@@ -150,10 +141,6 @@ export function LeadRecordScreen({
     [usersQuery.data],
   );
 
-  const serverLeadStatus = recordQuery.data
-    ? readLeadStatusValue(recordQuery.data.fields.Lead_Status)
-    : undefined;
-
   const loading =
     moduleQuery.isLoading ||
     recordQuery.isLoading ||
@@ -161,7 +148,7 @@ export function LeadRecordScreen({
     (viewsQueryEnabled && viewsQuery.isLoading) ||
     (!listContext && fallbackListQuery !== null && fallbackList.isLoading && !fallbackList.data);
 
-  if (loading) return <LeadRecordLoadingShell />;
+  if (loading) return <RecordLoadingShell definition={definition} />;
 
   if (recordQuery.isError) {
     if (recordQuery.error instanceof NotFoundError) return <RecordNotFound />;
@@ -174,28 +161,25 @@ export function LeadRecordScreen({
 
   const module = moduleQuery.data;
   const record = recordQuery.data;
-  if (!module || !record) return <LeadRecordLoadingShell />;
+  if (!module || !record) return <RecordLoadingShell definition={definition} />;
 
   const orderedIds =
     listContext?.recordIds ?? fallbackList.data?.records.map((row) => row.id) ?? [];
-  const backHref = resolveLeadsDetailBackHref(
-    listContext,
-    paths.defaultList(orgSlug, LEADS_MODULE),
-  );
+  const backHref = listContext?.listHref ?? paths.defaultList(orgSlug, definition.tab);
 
   const { previousId, nextId } = recordNeighborsOnPage(orderedIds, recordId);
 
-  const statusField = module.fields.find((field) => field.apiName === "Lead_Status");
-  const serverStatus = serverLeadStatus ?? readLeadStatusValue(record.fields.Lead_Status);
+  const statusField = module.fields.find((field) => field.apiName === rules.statusRibbon?.field);
+  const serverStatus =
+    rules.statusRibbon?.readValue(record.fields[rules.statusRibbon.field]) ?? null;
   const displayStatus = statusOverride !== undefined ? statusOverride : serverStatus;
-  const displayRecord = {
-    ...record,
-    fields: { ...record.fields, Lead_Status: displayStatus },
-  };
-  const { title, subtitle } = leadsRecordHeaderIdentity(record);
-  const lastUpdate = formatLeadsLastUpdateLabel(record, now, DEFAULT_FORMAT);
-  const businessFields = buildLeadsBusinessCardFields(module, displayRecord);
-  const detailSections = buildLeadsDetailSections(module, displayRecord);
+  const displayRecord = rules.statusRibbon
+    ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
+    : record;
+  const { title, subtitle } = rules.header(record);
+  const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
+  const businessFields = rules.businessCard(module, displayRecord);
+  const detailSections = rules.sections(module, displayRecord);
 
   function openDeleteDialog() {
     setDeleteError(null);
@@ -206,7 +190,7 @@ export function LeadRecordScreen({
     setDeleteError(null);
     try {
       await deleteRecords.mutateAsync([recordId]);
-      removeRecordFromListContext(orgSlug, LEADS_MODULE, recordId);
+      removeRecordFromListContext(orgSlug, moduleApiName, recordId);
       setDeleteOpen(false);
       router.push(backHref);
     } catch (error) {
@@ -216,18 +200,18 @@ export function LeadRecordScreen({
     }
   }
 
-  const moreMenuGroups = buildLeadsRecordMoreMenuGroups({
-    onClone: () => router.push(paths.clone(orgSlug, LEADS_MODULE, recordId)),
+  const moreMenuGroups = rules.moreOptions({
+    onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
   });
 
-  // Overview order is the spec's: the `Last Update` age label, then the Lead Status ribbon.
+  // Module rules supply the optional status ribbon after the update label.
   const overview = (
     <>
       {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
-      {statusField ? (
-        <LeadStatusRibbonSection
-          module={LEADS_MODULE}
+      {statusField && StatusSection ? (
+        <StatusSection
+          module={moduleApiName}
           recordId={recordId}
           field={statusField}
           value={displayStatus}
@@ -236,7 +220,7 @@ export function LeadRecordScreen({
       ) : null}
       <InlineEditProvider
         key={recordId}
-        eligible={isLeadInlineEditable}
+        eligible={rules.inlineEditable}
         users={(usersQuery.data ?? []).map((user) => ({
           id: user.userId,
           name: user.name,
@@ -259,23 +243,26 @@ export function LeadRecordScreen({
   );
 
   const timeline = (
-    <TimelineSurface subtabs={LEADS_TIMELINE_SUBTABS} activeSubtabId="history">
+    <TimelineSurface subtabs={rules.timeline.subtabs} activeSubtabId="history">
       <TimelineHistory
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={LEADS_TIMELINE_EMPTY_EVENTS}
+        events={rules.timeline.events.map((event) => ({
+          ...event,
+          kind: rules.timeline.normalizeEventKind(event.kind),
+        }))}
         format={DEFAULT_FORMAT}
         initialFilterExpanded={false}
         modulesLabel="Modules"
         modulesAllLabel="All Modules"
-        moduleOptions={LEADS_TIMELINE_MODULE_OPTIONS}
+        moduleOptions={rules.timeline.modules}
         usersLabel="Users"
         usersAllLabel="All Users"
         userOptions={timelineUserOptions}
         timeLabel="Time"
         sourcesLabel="Sources"
         sourcesAllLabel="All Sources"
-        sourceOptions={LEADS_TIMELINE_SOURCE_OPTIONS}
+        sourceOptions={rules.timeline.sources}
         applyLabel="Apply Filter"
         onApply={() => {}}
       />
@@ -290,8 +277,8 @@ export function LeadRecordScreen({
           onOpenChange={(open) => {
             if (!open && !deleteRecords.isPending) setDeleteOpen(false);
           }}
-          title={LEADS_DELETE_CONFIRM_TITLE}
-          message={LEADS_DELETE_CONFIRM_MESSAGE}
+          title={rules.deleteTitle}
+          message={rules.deleteMessage}
           confirmLabel="Delete"
           cancelLabel="Cancel"
           tone="danger"
@@ -311,15 +298,17 @@ export function LeadRecordScreen({
                 id: "edit",
                 label: "Edit",
                 variant: "secondary",
-                href: paths.edit(orgSlug, LEADS_MODULE, recordId),
+                href: paths.edit(orgSlug, definition.tab, recordId),
               },
             ]}
             menuGroups={moreMenuGroups}
             moreLabel="More Options"
             previousLabel="Previous Record"
             nextLabel="Next Record"
-            previousHref={previousId ? paths.record(orgSlug, LEADS_MODULE, previousId) : undefined}
-            nextHref={nextId ? paths.record(orgSlug, LEADS_MODULE, nextId) : undefined}
+            previousHref={
+              previousId ? paths.record(orgSlug, definition.tab, previousId) : undefined
+            }
+            nextHref={nextId ? paths.record(orgSlug, definition.tab, nextId) : undefined}
           />
         }
         relatedListLabel="Related List"

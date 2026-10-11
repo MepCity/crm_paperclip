@@ -547,7 +547,7 @@ module's ordered `sortFieldLabels` against field metadata by label, and
 
 `lib/records/filter-criteria.ts` maps `{ field, operatorId, value }` rows to port
 `Criteria`. `modules/leads/list-filters.ts` builds panel groups from module metadata;
-`modules/leads/leads-list-client.tsx` supplies the built groups once module fields
+`modules/module-list-client.tsx` supplies the built groups once module fields
 and users are loaded. Labels keep the spec order; `Lead Name` maps to the page
 `linkField` (`Full_Name`); picklist options use stored values; owner rows use
 `useUsers`; currency rows use `LEADS_LIST_CURRENCY_CODE` from `list-config.ts`.

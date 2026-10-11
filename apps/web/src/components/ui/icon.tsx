@@ -176,7 +176,7 @@ function AvatarPerson(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Filled portrait silhouette clipped inside the Lead Image ring.
+/** Filled portrait silhouette clipped inside the record image ring.
  * record-detail.md › Portrait icon, form and header: 16 × 15.5 px head, body joined at
  * 31 px and 16 px wide there, 34 px wide at 37.5 px, merging with the ring below it. */
 function RecordPortraitSilhouette(props: SVGProps<SVGSVGElement>) {

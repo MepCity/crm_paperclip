@@ -1,4 +1,4 @@
-import type { FormRules } from "./form-model";
+import type { FormRules } from "@/components/records/form/form-model";
 
 /** Interim Leads composites; no module-specific field names belong in the screen. */
 export const leadsFormFields = {
