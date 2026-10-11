@@ -1,3 +1,4 @@
+import { Icons } from "@/components/ui/icon";
 import type { RelatedListDefinition } from "../types";
 
 export interface ContactsRelatedListHandlers {
@@ -104,12 +105,14 @@ export function createContactsRelatedLists(
           label: "Customize",
           type: "icon-button",
           moduleKey: "M11",
+          icon: Icons.tablePlus,
         },
         {
           id: "expand-open",
           label: "Expand",
           type: "icon-button",
           moduleKey: "M5",
+          icon: Icons.diagonalExpand,
         },
       ],
       activityColumns: [
@@ -118,12 +121,14 @@ export function createContactsRelatedLists(
           title: "Open Tasks",
           count: 0,
           emptyText: "No records found",
+          icon: Icons.check,
         },
         {
           id: "open-meetings",
           title: "Open Meetings",
           count: 0,
           emptyText: "No records found",
+          icon: Icons.calendar,
         },
       ],
     },
@@ -146,12 +151,14 @@ export function createContactsRelatedLists(
           label: "Customize",
           type: "icon-button",
           moduleKey: "M11",
+          icon: Icons.tablePlus,
         },
         {
           id: "expand-closed",
           label: "Expand",
           type: "icon-button",
           moduleKey: "M5",
+          icon: Icons.diagonalExpand,
         },
       ],
       activityColumns: [
@@ -160,12 +167,14 @@ export function createContactsRelatedLists(
           title: "Closed Tasks",
           count: 0,
           emptyText: "No records found",
+          icon: Icons.check,
         },
         {
           id: "closed-meetings",
           title: "Closed Meetings",
           count: 0,
           emptyText: "No records found",
+          icon: Icons.calendar,
         },
       ],
     },
@@ -381,6 +390,7 @@ export function createContactsRelatedLists(
           label: "Hierarchy View",
           type: "button",
           moduleKey: "M2",
+          position: "after-title",
           onAction: handlers.onHierarchyView,
         },
         {

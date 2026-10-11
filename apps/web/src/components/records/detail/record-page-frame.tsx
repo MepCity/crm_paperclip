@@ -62,6 +62,12 @@ export function RecordPageFrame({
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [uncontrolledSelectedId, setUncontrolledSelectedId] = useState<string | undefined>(
+    selectedRelatedId ?? relatedEntries[0]?.id,
+  );
+  const activeSelectedId =
+    selectedRelatedId !== undefined ? selectedRelatedId : uncontrolledSelectedId;
+
   function selectRelated(entry: RelatedListEntry) {
     const scroller = scrollRef.current;
     // Find only within this frame; data targets never become a CSS selector.
@@ -71,6 +77,7 @@ export function RecordPageFrame({
     if (scroller && target)
       scroller.scrollTop +=
         target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    setUncontrolledSelectedId(entry.id);
     onRelatedSelectionChange?.(entry.id);
   }
   return (
@@ -89,47 +96,50 @@ export function RecordPageFrame({
               {relatedRailHeaderAction}
             </div>
             <div className="flex flex-col gap-(--size-rail-nested-row-gap)">
-              {relatedEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`flex items-center justify-between h-(--size-menu-item-height) px-(--size-record-rail-text-inset) rounded-(--radius-md) ${
-                    selectedRelatedId === entry.id ? "bg-(--color-surface-active)" : ""
-                  }`}
-                >
-                  <Link
-                    href={`#${entry.targetId}`}
-                    variant="body"
-                    aria-current={selectedRelatedId === entry.id ? "page" : undefined}
-                    laterModule={entry.laterModule}
-                    onPress={() => selectRelated(entry)}
-                    onClick={(event) => event.preventDefault()}
-                    className="flex flex-1 min-w-0 items-center text-md font-normal text-text truncate"
+              {relatedEntries.map((entry) => {
+                const isSelected = activeSelectedId === entry.id;
+                return (
+                  <div
+                    key={entry.id}
+                    className={`flex items-center justify-between h-(--size-menu-item-height) px-(--size-record-rail-text-inset) rounded-(--radius-md) ${
+                      isSelected ? "bg-(--color-surface-active)" : ""
+                    }`}
                   >
-                    <span className="truncate" title={entry.label}>
-                      {entry.label}
-                    </span>
-                  </Link>
-                  <div className="flex shrink-0 items-center gap-1.5 ml-1">
-                    {entry.countBadge !== undefined && (
-                      <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
-                        {entry.countBadge}
+                    <Link
+                      href={`#${entry.targetId}`}
+                      variant="body"
+                      aria-current={isSelected ? "page" : undefined}
+                      laterModule={entry.laterModule}
+                      onPress={() => selectRelated(entry)}
+                      onClick={(event) => event.preventDefault()}
+                      className="flex flex-1 min-w-0 items-center text-md font-normal text-text truncate"
+                    >
+                      <span className="truncate" title={entry.label}>
+                        {entry.label}
                       </span>
-                    )}
-                    {entry.railAction && (
-                      <Button
-                        variant="icon"
-                        size="compact"
-                        aria-label={entry.railAction.label}
-                        laterModule={entry.railAction.laterModule}
-                        onPress={entry.railAction.onAction}
-                        className="shrink-0 size-5 text-text-muted hover:text-text"
-                      >
-                        <Icons.plus aria-hidden className="size-3.5" />
-                      </Button>
-                    )}
+                    </Link>
+                    <div className="flex shrink-0 items-center gap-1.5 ml-1">
+                      {entry.countBadge !== undefined && (
+                        <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
+                          {entry.countBadge}
+                        </span>
+                      )}
+                      {entry.railAction && isSelected && (
+                        <Button
+                          variant="icon"
+                          size="compact"
+                          aria-label={entry.railAction.label}
+                          laterModule={entry.railAction.laterModule}
+                          onPress={entry.railAction.onAction}
+                          className="shrink-0 size-5 text-text-muted hover:text-text"
+                        >
+                          <Icons.plus aria-hidden className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {relatedRailFooter}
             </div>
           </nav>

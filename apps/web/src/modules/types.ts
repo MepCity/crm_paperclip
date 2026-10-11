@@ -29,7 +29,8 @@ export interface RelatedListControlDefinition {
   label: string;
   type: RelatedListControlType;
   moduleKey?: ModuleKey | "M2";
-  icon?: Icon;
+  icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
+  position?: "right" | "after-title";
   options?: readonly { id: string; label: string; onAction?: () => void }[];
   onAction?: () => void;
 }
@@ -39,6 +40,7 @@ export interface RelatedListActivityColumnDefinition {
   title: string;
   count: number;
   emptyText: string;
+  icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
 }
 
 export interface RelatedListDefinition {

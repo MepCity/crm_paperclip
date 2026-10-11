@@ -125,18 +125,29 @@ describe("RelatedCardsContainer with Contacts card set", () => {
       "M10",
     );
 
-    // D-87, D-88 Social links (M15)
+    // D-87, D-88 Social links (M15) in two-panel layout
     const twitterLink = screen.getByRole("link", { name: "Associate Twitter" });
     expect(twitterLink.getAttribute("data-later-module")).toBe("M15");
     const facebookLink = screen.getByRole("link", { name: "Associate Facebook" });
     expect(facebookLink.getAttribute("data-later-module")).toBe("M15");
+    const socialSection = screen.getByRole("region", { name: "Social" });
+    expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
+
+    // Notes card (M6): Recent Last selector button and active-styled Add a note textarea
+    const notesSection = screen.getByRole("region", { name: "Notes" });
+    const recentLastBtn = within(notesSection).getByRole("button", { name: "Recent Last" });
+    expect(recentLastBtn.getAttribute("data-later-module")).toBe("M6");
+    const notesTextarea = within(notesSection).getByRole("textbox", { name: "Add a note" });
+    expect(notesTextarea.hasAttribute("disabled")).toBe(false);
+    expect(notesTextarea.getAttribute("data-later-module")).toBe("M6");
+    expect(notesTextarea.getAttribute("aria-disabled")).toBe("true");
 
     // D-92 Voice of the Customer Enable feature (P3)
     const enableFeatureBtn = screen.getByRole("button", { name: "Enable feature" });
     expect(enableFeatureBtn.getAttribute("data-later-module")).toBe("P3");
   });
 
-  it("renders Reporting Contacts upper controls without laterModule and fires handlers", async () => {
+  it("renders Reporting Contacts upper controls with Hierarchy View after title and New on right", async () => {
     const user = userEvent.setup();
     const onHierarchyView = vi.fn();
     const onNew = vi.fn();
@@ -149,7 +160,14 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     render(<RelatedCardsContainer relatedLists={listsWithHandlers} />);
 
     const reportingSection = screen.getByRole("region", { name: "Reporting Contacts" });
+    const titleEl = within(reportingSection).getByRole("heading", { name: "Reporting Contacts" });
     const hierarchyBtn = within(reportingSection).getByRole("button", { name: "Hierarchy View" });
+    const newButton = within(reportingSection).getByRole("button", { name: "New" });
+
+    // D-90 is after title: in the same container as the heading
+    expect(titleEl.parentElement?.contains(hierarchyBtn)).toBe(true);
+    // D-91 is in the right group: NOT in the heading container
+    expect(titleEl.parentElement?.contains(newButton)).toBe(false);
 
     // Both are active M2 controls: no data-later-module attribute
     expect(hierarchyBtn.hasAttribute("data-later-module")).toBe(false);
@@ -158,7 +176,6 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     await user.click(hierarchyBtn);
     expect(onHierarchyView).toHaveBeenCalledTimes(1);
 
-    const newButton = within(reportingSection).getByRole("button", { name: "New" });
     expect(newButton.hasAttribute("data-later-module")).toBe(false);
     await user.click(newButton);
     expect(onNew).toHaveBeenCalledTimes(1);
@@ -182,7 +199,7 @@ describe("RelatedCardsContainer with Contacts card set", () => {
 });
 
 describe("RecordPageFrame with Contacts rail", () => {
-  it("renders 19 rail entries, badges, plus actions, and handles rail navigation", async () => {
+  it("renders 19 rail entries, badges, selection-dependent plus actions, and handles rail navigation", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const onAddReporting = vi.fn();
@@ -249,19 +266,33 @@ describe("RecordPageFrame with Contacts rail", () => {
       }
     }
 
-    // Verify plus button on Reporting Contacts row (M2) calls handler
+    // Notes is initially selected, so Notes has plus button (D-53, M6)
+    const notesLink = within(rail).getByRole("link", { name: "Notes" });
+    const notesRow = notesLink.closest("div[class*='flex items-center']");
+    const notesAddBtn = notesRow?.querySelector("button");
+    expect(notesAddBtn).not.toBeNull();
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+
+    // Reporting Contacts is NOT initially selected, so its plus button is not rendered
     const reportingLink = within(rail).getByRole("link", { name: "Reporting Contacts" });
     const reportingRow = reportingLink.closest("div[class*='flex items-center']");
+    expect(reportingRow?.querySelector("button")).toBeNull();
+
+    // Select Reporting Contacts by clicking its link
+    await user.click(reportingLink);
+    expect(onSelect).toHaveBeenCalledWith("reporting-contacts");
+
+    // Now Reporting Contacts is selected, so its plus button (D-89, M2) appears and fires onAction
     const reportingAddBtn = reportingRow?.querySelector("button");
+    expect(reportingAddBtn).not.toBeNull();
     expect(reportingAddBtn?.hasAttribute("data-later-module")).toBe(false);
     if (reportingAddBtn) {
       await user.click(reportingAddBtn);
       expect(onAddReporting).toHaveBeenCalledTimes(1);
     }
 
-    // Verify active M2 rail link (Reporting Contacts) triggers onRelatedSelectionChange
-    await user.click(reportingLink);
-    expect(onSelect).toHaveBeenCalledWith("reporting-contacts");
+    // Notes is now no longer selected, so its plus button is gone
+    expect(notesRow?.querySelector("button")).toBeNull();
 
     // Verify laterModule rail link does NOT trigger onRelatedSelectionChange
     onSelect.mockClear();

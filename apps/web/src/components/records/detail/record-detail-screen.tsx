@@ -99,6 +99,9 @@ export function RecordDetailScreen({
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
   const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const [selectedRelatedId, setSelectedRelatedId] = useState<string | undefined>(
+    rules.relatedLists?.[0]?.id,
+  );
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const updateRecord = useUpdateRecord(moduleApiName);
@@ -367,6 +370,8 @@ export function RecordDetailScreen({
         }
         relatedListLabel="Related List"
         relatedEntries={relatedEntries}
+        selectedRelatedId={selectedRelatedId}
+        onRelatedSelectionChange={setSelectedRelatedId}
         relatedRailHeaderAction={relatedRailHeaderAction}
         relatedRailFooter={relatedRailFooter}
         tabsLabel="Record detail"
