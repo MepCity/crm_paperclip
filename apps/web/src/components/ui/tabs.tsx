@@ -57,8 +57,6 @@ export function TabList<T extends object>({
           if (
             e.key !== "ArrowRight" &&
             e.key !== "ArrowLeft" &&
-            e.key !== "ArrowDown" &&
-            e.key !== "ArrowUp" &&
             e.key !== "Home" &&
             e.key !== "End"
           ) {
@@ -76,9 +74,9 @@ export function TabList<T extends object>({
           const currentIndex = tabs.indexOf(currentTab);
           let targetIndex = -1;
 
-          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+          if (e.key === "ArrowRight") {
             targetIndex = (currentIndex + 1) % tabs.length;
-          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          } else if (e.key === "ArrowLeft") {
             targetIndex = (currentIndex - 1 + tabs.length) % tabs.length;
           } else if (e.key === "Home") {
             targetIndex = 0;

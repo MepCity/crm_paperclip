@@ -208,3 +208,62 @@ test("Tabs End and Home keys focus laterModule tabs at start/end without selecti
   expect(screen.getByRole("tabpanel", { name: "Middle" })).toBeTruthy();
   expect(screen.queryByRole("tabpanel", { name: "First (Later)" })).toBeNull();
 });
+
+test("Tabs ArrowDown and ArrowUp do not move focus or change selection in horizontal tablist with laterModule tabs", async () => {
+  const user = userEvent.setup();
+  const selectionChange = vi.fn();
+  render(
+    <Tabs defaultSelectedKey="overview" onSelectionChange={selectionChange}>
+      <TabList aria-label="Record">
+        <Tab id="overview">Overview</Tab>
+        <Tab id="details" laterModule="M3">
+          Details
+        </Tab>
+        <Tab id="activity">Activity</Tab>
+      </TabList>
+      <TabPanel id="overview">Overview panel</TabPanel>
+      <TabPanel id="details">Details panel</TabPanel>
+      <TabPanel id="activity">Activity panel</TabPanel>
+    </Tabs>,
+  );
+
+  const overviewTab = screen.getByRole("tab", { name: "Overview" });
+  const detailsTab = screen.getByRole("tab", { name: "Details" });
+
+  await user.tab();
+  expect(document.activeElement).toBe(overviewTab);
+  expect(overviewTab.getAttribute("aria-selected")).toBe("true");
+
+  // ArrowDown does not move focus to laterModule tab and does not trigger selection
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(overviewTab);
+  expect(overviewTab.getAttribute("aria-selected")).toBe("true");
+  expect(detailsTab.getAttribute("aria-selected")).toBe("false");
+  expect(selectionChange).not.toHaveBeenCalled();
+
+  // ArrowUp does not move focus or trigger selection
+  await user.keyboard("{ArrowUp}");
+  expect(document.activeElement).toBe(overviewTab);
+  expect(overviewTab.getAttribute("aria-selected")).toBe("true");
+  expect(detailsTab.getAttribute("aria-selected")).toBe("false");
+  expect(selectionChange).not.toHaveBeenCalled();
+
+  // Panel remains overview
+  expect(screen.getByRole("tabpanel", { name: "Overview" })).toBeTruthy();
+  expect(screen.queryByRole("tabpanel", { name: "Details" })).toBeNull();
+
+  // Moving focus to laterModule tab via ArrowRight
+  await user.keyboard("{ArrowRight}");
+  expect(document.activeElement).toBe(detailsTab);
+  expect(detailsTab.getAttribute("aria-selected")).toBe("false");
+  expect(selectionChange).not.toHaveBeenCalled();
+
+  // From laterModule tab, ArrowDown and ArrowUp do not move focus or change selection
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(detailsTab);
+  expect(selectionChange).not.toHaveBeenCalled();
+
+  await user.keyboard("{ArrowUp}");
+  expect(document.activeElement).toBe(detailsTab);
+  expect(selectionChange).not.toHaveBeenCalled();
+});
