@@ -19,6 +19,7 @@ import type { FormRules } from "@/components/records/form/form-model";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import type { Icon } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 
 export interface StatusRibbonSectionProps {
   module: ModuleApiName;
@@ -44,9 +45,25 @@ export interface ModuleScreenDefinition {
     linkField: string;
     currencyCode: string;
   }) => readonly FilterGroup[];
-  form: { rules: FormRules };
+  form: {
+    rules: FormRules;
+    /** Screen fallback only when layout columns are missing; never overrides metadata. */
+    fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
+    addressGroups?: readonly {
+      field: string;
+      country: string;
+      state: string;
+      latitude: string;
+      longitude: string;
+      coordinates: string;
+    }[];
+  };
   detail: {
-    header: (record: RecordData) => { title: string; subtitle?: string };
+    header: (record: RecordData) => {
+      title: string;
+      subtitle?: string;
+      subtitleLaterModule?: ModuleKey;
+    };
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;

@@ -176,7 +176,7 @@ export function RecordDetailScreen({
   const displayRecord = rules.statusRibbon
     ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
     : record;
-  const { title, subtitle } = rules.header(record);
+  const { title, subtitle, subtitleLaterModule } = rules.header(record);
   const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);
@@ -292,6 +292,7 @@ export function RecordDetailScreen({
           <RecordHeader
             title={title}
             subtitle={subtitle}
+            subtitleLaterModule={subtitleLaterModule}
             back={{ label: "Back", href: backHref }}
             commands={[
               {
