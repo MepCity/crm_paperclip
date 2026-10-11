@@ -1,12 +1,18 @@
 "use client";
 
 import type { FieldDefinition, FieldValue, PicklistOption } from "@crm/core/records";
+import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextArea } from "@/components/ui/text-area";
-import { TextField } from "@/components/ui/text-field";
+import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import {
+  calendarShapeToDisplayDate,
+  DATE_MASK_PLACEHOLDER,
+  displayDateToCalendarShape,
+} from "@/lib/records/calendar-date";
 
 export interface OwnerOption {
   id: string;
@@ -45,6 +51,39 @@ export function picklistChoices(options: readonly PicklistOption[], value: strin
   if (value !== null && !choices.some((option) => option.value === value))
     choices.push({ value, label: value });
   return choices;
+}
+
+type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
+  /** The contract value: `YYYY-MM-DD`, or empty when the field has no day. */
+  value: string;
+  onModelChange: (value: FieldValue) => void;
+};
+
+/**
+ * A `date` field is typed as `DD.MM.YYYY` while the form model carries `YYYY-MM-DD`, so the entry
+ * and the model cannot be the same string. What is typed stays visible, including a day that does
+ * not exist: the shape is mapped to `YYYY-MM-DD` and `form-validation` rejects the impossible day,
+ * instead of the input silently dropping it.
+ */
+function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
+  const [model, setModel] = useState(value);
+  const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
+  if (model !== value) {
+    setModel(value);
+    setEntry(calendarShapeToDisplayDate(value));
+  }
+  return (
+    <TextField
+      {...textField}
+      type="text"
+      value={entry}
+      placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
+      onChange={(next) => {
+        setEntry(next);
+        onModelChange(displayDateToCalendarShape(next));
+      }}
+    />
+  );
 }
 
 export function FieldInput({
@@ -119,6 +158,10 @@ export function FieldInput({
           maxLength={field.maxLength}
           onChange={(next) => onChange(next === "" ? null : next)}
         />
+      );
+    case "date":
+      return (
+        <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
     case "integer":
     case "double":
@@ -227,7 +270,6 @@ export function FieldInput({
       );
     case "lookup":
     case "multi_module_lookup":
-    case "date":
     case "datetime":
     case "bigint":
       return null;
