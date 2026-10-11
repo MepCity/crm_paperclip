@@ -371,7 +371,10 @@ describe("operation routes", () => {
       })
     ).records[0];
     if (!locked) throw new Error("Expected a locked seed lead.");
-    const unlocked = await service.create("Leads", { Last_Name: "Unlocked" });
+    const unlocked = await service.create("Leads", {
+      Last_Name: "Unlocked",
+      Company: "Synthetic Company",
+    });
     const ids = [unlocked.id, locked.id];
     for (const [op, body] of [
       [operations.update, { data: [{ Company: "Rejected" }] }],
