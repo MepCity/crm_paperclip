@@ -2,10 +2,12 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { formatFieldValue } from "../field-format";
 
 export interface CellValueProps {
+  laterModule?: ModuleKey;
   field: FieldDefinition;
   value: FieldValue;
   /**
@@ -26,12 +28,25 @@ export interface CellValueProps {
  * Read-only cell text for the field types that appear as columns in the list
  * views: text, email, phone, picklist, ownerlookup and datetime.
  */
-export function CellValue({ field, value, href, ownerNames = {}, format }: CellValueProps) {
+export function CellValue({
+  field,
+  value,
+  href,
+  ownerNames = {},
+  format,
+  laterModule,
+}: CellValueProps) {
   const rendered = formatFieldValue(field, value, ownerNames, format, { href });
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {
     return (
-      <Link href={rendered.link.href} variant="body" prefetch={false} className="break-words">
+      <Link
+        laterModule={laterModule}
+        href={rendered.link.href}
+        variant="body"
+        prefetch={false}
+        className="break-words"
+      >
         {rendered.link.text}
       </Link>
     );

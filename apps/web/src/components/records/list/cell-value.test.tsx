@@ -168,3 +168,17 @@ test("types outside the list columns stay plain text", () => {
   );
   expect(screen.getByText("acc-1").closest("a")).toBeNull();
 });
+
+test("future email controls retain their text and cannot navigate", () => {
+  render(
+    <CellValue
+      field={field("email")}
+      value="synthetic@example.test"
+      format={DEFAULT_FORMAT}
+      laterModule="M10"
+    />,
+  );
+  const link = screen.getByRole("link", { name: "synthetic@example.test" });
+  expect(link.getAttribute("data-later-module")).toBe("M10");
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+});

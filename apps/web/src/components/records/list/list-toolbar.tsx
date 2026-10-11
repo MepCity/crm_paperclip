@@ -71,10 +71,12 @@ export function ListToolbar({
             <Menu
               width="actions"
               items={actions}
-              onAction={(key) => actions.find((item) => item.id === key)?.onAction()}
+              onAction={(key) =>
+                actions.find((item) => item.id === key && !item.laterModule)?.onAction()
+              }
             >
               {(item) => (
-                <MenuItem id={item.id} isDisabled={item.isDisabled}>
+                <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
                   {item.label}
                 </MenuItem>
               )}

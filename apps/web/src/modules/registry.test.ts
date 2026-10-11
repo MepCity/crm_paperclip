@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { leadsScreenDefinition } from "./leads/definition";
 import { moduleScreens, resolveModuleScreen } from "./registry";
 
-test("only the shipped module is registered", () => {
-  expect(moduleScreens.map((definition) => definition.tab)).toEqual(["Leads"]);
+test("the shipped modules is registered", () => {
+  expect(moduleScreens.map((definition) => definition.tab)).toEqual(["Leads", "Contacts"]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });

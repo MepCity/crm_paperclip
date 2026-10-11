@@ -74,6 +74,11 @@ export interface ModuleListScreenConfig {
   sortFieldLabels: readonly string[];
   linkFieldLabel: string;
   paths: ModuleListPaths;
+  /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
+  inventory?: {
+    actions: readonly Omit<MenuAction, "onAction">[];
+    createItems: readonly MenuAction[];
+  };
 }
 
 export interface ModuleListScreenProps {
@@ -148,6 +153,7 @@ function ModuleListScreenLoaded({
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const deleteRecords = useDeleteRecords(config.module);
 
+  const viewsQuery = useViews(config.module);
   const moduleQuery = useModule(config.module);
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
@@ -252,9 +258,24 @@ function ModuleListScreenLoaded({
   const columns = useMemo((): FieldDefinition[] => {
     const byName = new Map((moduleQuery.data?.fields ?? []).map((field) => [field.apiName, field]));
     return columnApiNames
-      .map((apiName) => byName.get(apiName))
+      .map(
+        (apiName) =>
+          byName.get(apiName) ??
+          (config.inventory
+            ? {
+                apiName,
+                label: apiName,
+                dataType: "text" as const,
+                required: false,
+                readOnly: true,
+                unique: false,
+                massUpdate: false,
+                views: { view: true, create: false, edit: false, quickCreate: false },
+              }
+            : undefined),
+      )
       .filter((field): field is FieldDefinition => field !== undefined);
-  }, [columnApiNames, moduleQuery.data?.fields]);
+  }, [columnApiNames, config.inventory, moduleQuery.data?.fields]);
 
   const massUpdateFields = useMemo(
     () => (moduleQuery.data ? massUpdateFieldsInLayoutOrder(moduleQuery.data) : []),
@@ -465,6 +486,14 @@ function ModuleListScreenLoaded({
     }
   }
 
+  function selectPageForMassAction(action: string) {
+    if (!["mass-transfer", "mass-update", "mass-delete"].includes(action)) return;
+    setSelectedIds(records.map((record) => record.id));
+    if (action === "mass-transfer") setChangeOwnerOpen(true);
+    if (action === "mass-update") setMassUpdateOpen(true);
+    if (action === "mass-delete") openDeleteDialog();
+  }
+
   const deleteTitle =
     pageSelectedIds.length === 1
       ? `Delete ${config.singularLabel}`
@@ -507,9 +536,14 @@ function ModuleListScreenLoaded({
 
   return (
     <div className="module-list-page">
-      <ViewTabStrip viewName={view.name} />
+      <ViewTabStrip
+        viewName={view.name}
+        views={config.inventory ? viewsQuery.data : undefined}
+        onViewChange={(id) => router.push(config.paths.customList(orgSlug, config.module, id))}
+      />
       {selectionActive ? (
         <SelectionBar
+          laterInventory={Boolean(config.inventory)}
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
@@ -529,9 +563,15 @@ function ModuleListScreenLoaded({
               sortOrder: next.order,
             });
           }}
+          actions={config.inventory?.actions.map((item) => ({
+            ...item,
+            onAction: () => selectPageForMassAction(item.id),
+          }))}
           create={{
             label: config.createLabel,
             href: config.paths.create(orgSlug, config.module),
+            items: config.inventory?.createItems,
+            moreLaterModule: config.inventory ? "M6" : undefined,
           }}
         />
       )}
@@ -590,6 +630,7 @@ function ModuleListScreenLoaded({
         ) : null}
         <div className="module-list-table-host">
           <RecordTable
+            laterInventory={Boolean(config.inventory)}
             columns={columns}
             records={records}
             linkField={config.linkField}
@@ -607,6 +648,7 @@ function ModuleListScreenLoaded({
             emptyMessage={emptyMessage}
             settings={
               <ViewSettingsMenu
+                laterModule={config.inventory ? "M11" : undefined}
                 perPage={searchState.perPage}
                 onPerPageChange={changePerPage}
                 wrapText={wrapText}

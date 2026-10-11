@@ -164,6 +164,31 @@ Specs (being written): `contacts.md`, `contacts-record-detail.md`,
 `contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
 are added from their capability tables when the specs are approved.
 
+### Contacts list — implementation in progress (MEP-319)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-14 | Registered beneath Leads; list, create and detail routes resolve the Contacts definition | Registry, shell and route tests |
+| L-01–L-14, L-02.1–L-02.14 | Service views; shared sort/presentation/refresh; create split button and ordered Actions menu | Component tests; Contacts e2e added, awaiting service merge |
+| L-15–L-32 | Metadata-driven filter panel, with later-module checkbox assignments | Shared panel tests; field-filter e2e added |
+| L-33–L-40, L-42–L-53; L-04.1–L-04.4; L-36.1–L-36.18 | Shared table, alphabet, row selection, pagination and detail link; row controls and email later-module handling | Shared table tests; e2e added |
+| L-41 | Pending CTO clarification: the record contract has no call-activity/date source; no synthetic activity data is invented | Pending issue interaction |
+
+Later-module controls: create arrow M6; view customization M11; Activities M5,
+Campaigns M7, Latest Email Status M10, Cadences P3, Account Name filter M3;
+View Settings M11; email M10, notes M6, row pulse P3. Actions preserve the
+reference order; Manage Tags/Export M6, Mass Email M10, campaigns M7,
+client script M11 and the unresolved Sheet view P3 remain inert.
+
+Interim shared Leads rules: selection toolbar, page-size implementation,
+unobserved create-menu items, filter operators, empty state and additional
+header options. Drafts, Approve Contacts, Deduplicate Contacts, Print View,
+Show custom views as Dropdown and row ellipsis have no handler, following the
+existing shared screen boundary or the explicit delivery scope. Account cells
+remain plain text until the lookup display task is merged. Unknown saved-view
+columns have a read-only text rendering fallback; service-provided column lists
+remain authoritative.
+
 ### Assigned to Module 2 at the Module 1 gate
 
 | Capability | Spec section |

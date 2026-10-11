@@ -74,6 +74,26 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
   filterTitle: "Filter Contacts by",
   filterGroups: contactsFilterGroups,
   sortFieldLabels: CONTACTS_SORT_FIELD_LABELS,
+  inventory: {
+    createItems: [
+      { id: "import", label: "Import Contacts", laterModule: "M6", onAction: () => {} },
+    ],
+    actions: [
+      { id: "mass-transfer", label: "Mass Transfer" },
+      { id: "mass-delete", label: "Mass Delete" },
+      { id: "mass-update", label: "Mass Update" },
+      { id: "tags", label: "Manage Tags", laterModule: "M6" },
+      { id: "drafts", label: "Drafts" },
+      { id: "mass-email", label: "Mass Email", laterModule: "M10" },
+      { id: "approve", label: "Approve Contacts" },
+      { id: "deduplicate", label: "Deduplicate Contacts" },
+      { id: "campaigns", label: "Add to Campaigns", laterModule: "M7" },
+      { id: "client-script", label: "Create Client Script", laterModule: "M11" },
+      { id: "export", label: "Export Contacts", laterModule: "M6" },
+      { id: "sheet", label: "Sheet view", laterModule: "P3" },
+      { id: "print", label: "Print View" },
+    ],
+  },
   paths: {
     defaultList: moduleListDefaultPath,
     customList: moduleListCustomPath,

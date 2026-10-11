@@ -1,4 +1,5 @@
 import {
+  Activity,
   AlertCircle,
   AlertTriangle,
   Building2,
@@ -15,8 +16,10 @@ import {
   Loader2,
   LogOut,
   type LucideIcon,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Phone,
   Plus,
   Settings,
   Triangle,
@@ -395,6 +398,9 @@ function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
 export type Icon = LucideIcon;
 
 export const Icons = {
+  activity: Activity,
+  messageSquare: MessageSquare,
+  phone: Phone,
   recordUser: RecordUser,
   avatarPerson: AvatarPerson,
   recordPortraitSilhouette: RecordPortraitSilhouette,
