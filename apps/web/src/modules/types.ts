@@ -21,8 +21,6 @@ import type { ModuleListScreenConfig } from "@/components/records/list/module-li
 import type { Icon } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 
-import type { ModuleKey } from "@/components/ui/later-module";
-
 export type RelatedListControlType = "button" | "split-button" | "select" | "icon-button";
 
 export interface RelatedListControlDefinition {
