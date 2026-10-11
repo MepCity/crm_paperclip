@@ -164,15 +164,15 @@ Specs (being written): `contacts.md`, `contacts-record-detail.md`,
 `contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
 are added from their capability tables when the specs are approved.
 
-### Contacts list — implementation in progress (MEP-319)
+### Contacts list — implemented; QA pending (MEP-319)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
 | SH-14 | Registered beneath Leads; list, create and detail routes resolve the Contacts definition | Registry, shell and route tests |
-| L-01–L-14, L-02.1–L-02.14 | Service views; shared sort/presentation/refresh; create split button and ordered Actions menu | Component tests; Contacts e2e added, awaiting service merge |
-| L-15–L-32 | Metadata-driven filter panel, with later-module checkbox assignments | Shared panel tests; field-filter e2e added |
-| L-33–L-40, L-42–L-53; L-04.1–L-04.4; L-36.1–L-36.18 | Shared table, alphabet, row selection, pagination and detail link; row controls and email later-module handling | Shared table tests; e2e added |
-| L-41 | Pending CTO clarification: the record contract has no call-activity/date source; no synthetic activity data is invented | Pending issue interaction |
+| L-01–L-14, L-02.1–L-02.14 | Service views; shared sort/presentation/refresh; create split button and ordered Actions menu | Component tests; Contacts e2e passed on merged service |
+| L-15–L-32 | Metadata-driven filter panel, with later-module checkbox assignments | Shared panel tests; field-filter e2e passed |
+| L-33–L-40, L-42–L-53; L-04.1–L-04.4; L-36.1–L-36.18 | Shared table, alphabet, row selection, pagination and detail link; row controls and email later-module handling | Shared table tests; Contacts and unchanged Leads e2e passed |
+| L-41 | M5: rendered when activity data arrives; no badge is drawn now. Contact Name aligns with rows without activity. | CTO decision; activity-summary contract deferred to M5 |
 
 Later-module controls: create arrow M6; view customization M11; Activities M5,
 Campaigns M7, Latest Email Status M10, Cadences P3, Account Name filter M3;
