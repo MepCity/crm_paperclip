@@ -351,6 +351,192 @@ describe("ModuleListScreen", () => {
     expectRowSelectUnchecked(selectedName);
   });
 
+  it("clears applied filter from list and count queries when the last checkbox is unchecked", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const baselineIds = await fixturePageRecordIds(records, listSpy);
+    const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
+    const companyCheckbox = screen.getByRole("checkbox", { name: "Company" });
+    await user.click(companyCheckbox);
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+        field: "Company",
+        comparator: "contains",
+        value: "Example",
+      });
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(
+        listSpy.mock.calls.at(-1)?.[1]?.filters,
+      );
+    });
+    await user.click(rowSelectCheckboxForRecordName(selectedName));
+    await waitFor(() => {
+      expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
+      expect(screen.getByText("1 Record Selected.")).toBeTruthy();
+    });
+    await user.click(companyCheckbox);
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(screen.queryByText("1 Record Selected.")).toBeNull();
+      expect(recordIdsInDomTable()).toEqual(baselineIds);
+    });
+    expectRowSelectUnchecked(selectedName);
+  });
+
+  it("resets to page 1 when the last checkbox is unchecked with an applied filter while on page 2", async () => {
+    navigation.params = new URLSearchParams();
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />,
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const companyCheckbox = screen.getByRole("checkbox", { name: "Company" });
+    await user.click(companyCheckbox);
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    // Simulate navigating to page 2 while the filter is applied
+    navigation.params = new URLSearchParams("page=2");
+    navigation.push.mockClear();
+    rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />);
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(2);
+    });
+    // Uncheck the last checkbox
+    await user.click(companyCheckbox);
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    expect(navigation.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("resets to page 1 and clears filters with exactly one push when Clear is pressed with an applied filter on page 2", async () => {
+    navigation.params = new URLSearchParams();
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />,
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const companyCheckbox = screen.getByRole("checkbox", { name: "Company" });
+    await user.click(companyCheckbox);
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    // Simulate navigating to page 2 while the filter is applied
+    navigation.params = new URLSearchParams("page=2");
+    navigation.push.mockClear();
+    rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />);
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(2);
+    });
+    // Click Clear
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toBeUndefined();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
+    });
+    expect(navigation.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps applied criteria when one of multiple selected checkboxes is unchecked", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const countSpy = vi.spyOn(records, "count");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+    });
+    const companyCheckbox = screen.getByRole("checkbox", { name: "Company" });
+    const emailCheckbox = screen.getByRole("checkbox", { name: "Email" });
+    await user.click(companyCheckbox);
+    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(emailCheckbox);
+    await user.type(screen.getByRole("textbox", { name: "Email value" }), "test@example.com");
+    await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+    await waitFor(() => {
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toBeTruthy();
+    });
+    const appliedBefore = listSpy.mock.calls.at(-1)?.[1]?.filters;
+    // Uncheck only Email; Company remains checked
+    await user.click(emailCheckbox);
+    // Applied criteria must remain unchanged
+    expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(appliedBefore);
+    expect(countSpy.mock.calls.at(-1)?.[1]?.filters).toEqual(appliedBefore);
+  });
+
+  it("does not change page when unchecking a checkbox that was not applied", async () => {
+    navigation.params = new URLSearchParams("page=2");
+    navigation.push.mockClear();
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} viewId="all-leads" />, {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
+      expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(2);
+    });
+    const companyCheckbox = screen.getByRole("checkbox", { name: "Company" });
+    await user.click(companyCheckbox);
+    // Uncheck without applying
+    await user.click(companyCheckbox);
+    expect(navigation.push).not.toHaveBeenCalled();
+    expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(2);
+  });
+
   it("resets applied filter, selection, and panel draft when the view changes", async () => {
     navigation.params = new URLSearchParams("page=2&per_page=10&sort_by=Company&sort_order=asc");
     const records = createFixtureRecordService(ctx);
@@ -623,7 +809,7 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(listSpy.mock.calls.at(-1)?.[1]?.page).toBe(1);
     });
-    expect(navigation.push).toHaveBeenCalled();
+    expect(navigation.push).toHaveBeenCalledTimes(1);
   });
 
   it("writes session list context for record detail navigation", async () => {

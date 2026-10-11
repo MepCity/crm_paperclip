@@ -24,6 +24,13 @@ the module's research found, assigned to the module that delivers it.
 - **Module assignment** follows the order in `AGENTS.md`. The assignments
   were made by the CTO on 2026-10-05 from the capability table in
   `research/specs/leads.md`; the board may move any row.
+- **From Module 2 on** (board decisions of 2026-10-09 and 2026-10-11):
+  behaviour stays one-to-one; the look is "same by eye", built from the
+  Module 1 components and tokens; requests need not resemble the reference.
+  Every screen spec carries a numbered inventory of every visible control,
+  and **Done** means QA ticked that inventory beside the reference
+  screenshot and found the same behaviour. A missing or misplaced control
+  is a defect.
 
 | Key | Module |
 | --- | --- |
@@ -112,13 +119,13 @@ flows, from the public documentation), with `request-shapes.md` and
 
 ### Rows without a module
 
-The module order does not name these. The proposal is the CTO's; the board
-decides.
+The module order does not name these. The board approved the assignments
+below on 2026-10-11 (Module 1 gate). The three rows marked Unresolved stay
+open; the board is asked again when the related module starts. The two rows
+assigned to M2 moved to "Module 2 — Contacts".
 
-| Capability | Proposal | Spec section |
+| Capability | Decision | Spec section |
 | --- | --- | --- |
-| Global search across modules | M2, the first point with two modules | `app-shell.md` › Actions |
-| Find and Merge Duplicates; Deduplicate Leads | M2, together with Contacts | `leads.md` › Actions |
 | Record Share and the sharing rules behind it | M11 | `leads.md` › Module 1 capability and dependency table |
 | Print Preview and Print View | M6 | `leads.md` › Actions |
 | Notifications in the top bar | M12 | `app-shell.md` › Actions |
@@ -137,3 +144,18 @@ decides.
    built and what is missing.
 3. Every row of the two tables above is reported as a known gap with its
    module.
+4. The board accepted the gate on 2026-10-11. Known visual differences of
+   Module 1 are fixed in one batch at the end of the project, not now.
+
+## Module 2 — Contacts
+
+Specs (being written): `contacts.md`, `contacts-record-detail.md`,
+`contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
+are added from their capability tables when the specs are approved.
+
+### Assigned to Module 2 at the Module 1 gate
+
+| Capability | Spec section |
+| --- | --- |
+| Global search across modules | `app-shell.md` › Actions; `global-search.md` |
+| Find and Merge Duplicates; Deduplicate, for Leads and Contacts | `leads.md` › Actions; `duplicates.md` |
