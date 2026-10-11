@@ -103,6 +103,41 @@ function choices(control: "choices" | "users"): readonly FilterOperator[] {
     ...empty,
   ];
 }
+/**
+ * list-views.md › `datetime` operators, observed. A `date` field takes the same set: the port
+ * contract evaluates both at day precision with the same relative tokens
+ * (`packages/core/src/records/README.md` › Calendar dates and record references).
+ */
+const calendarOperators: readonly FilterOperator[] = [
+  { id: "age_in", label: "age in", control: "days" },
+  { id: "due_in", label: "due in", control: "days" },
+  { id: "previous", label: "Previous", control: "days" },
+  { id: "next", label: "Next", control: "days" },
+  { id: "on", label: "On", control: "date" },
+  { id: "before", label: "before", control: "date" },
+  { id: "not_between", label: "not between", control: "date_range" },
+  { id: "after", label: "after", control: "date" },
+  { id: "between", label: "between", control: "date_range" },
+  { id: "today", label: "Today", control: "none" },
+  { id: "tomorrow", label: "Tomorrow", control: "none" },
+  { id: "till_yesterday", label: "Till Yesterday", control: "none" },
+  { id: "starting_tomorrow", label: "Starting tomorrow", control: "none" },
+  { id: "yesterday", label: "Yesterday", control: "none" },
+  { id: "this_week", label: "This Week", control: "none" },
+  { id: "this_month", label: "This Month", control: "none" },
+  { id: "previous_week", label: "Previous Week", control: "none" },
+  { id: "previous_month", label: "Previous Month", control: "none" },
+  { id: "this_year", label: "This Year", control: "none" },
+  { id: "current_fy", label: "Current FY", control: "none" },
+  { id: "current_fq", label: "Current FQ", control: "none" },
+  { id: "previous_year", label: "Previous Year", control: "none" },
+  { id: "previous_fy", label: "Previous FY", control: "none" },
+  { id: "previous_fq", label: "Previous FQ", control: "none" },
+  { id: "next_year", label: "Next Year", control: "none" },
+  { id: "next_fy", label: "Next FY", control: "none" },
+  { id: "next_fq", label: "Next FQ", control: "none" },
+  ...empty,
+];
 const catalog = {
   text: { operators: text, defaultOperator: "contains" },
   email: { operators: text, defaultOperator: "equal" },
@@ -139,39 +174,8 @@ const catalog = {
     ],
     defaultOperator: "equal",
   },
-  datetime: {
-    operators: [
-      { id: "age_in", label: "age in", control: "days" },
-      { id: "due_in", label: "due in", control: "days" },
-      { id: "previous", label: "Previous", control: "days" },
-      { id: "next", label: "Next", control: "days" },
-      { id: "on", label: "On", control: "date" },
-      { id: "before", label: "before", control: "date" },
-      { id: "not_between", label: "not between", control: "date_range" },
-      { id: "after", label: "after", control: "date" },
-      { id: "between", label: "between", control: "date_range" },
-      { id: "today", label: "Today", control: "none" },
-      { id: "tomorrow", label: "Tomorrow", control: "none" },
-      { id: "till_yesterday", label: "Till Yesterday", control: "none" },
-      { id: "starting_tomorrow", label: "Starting tomorrow", control: "none" },
-      { id: "yesterday", label: "Yesterday", control: "none" },
-      { id: "this_week", label: "This Week", control: "none" },
-      { id: "this_month", label: "This Month", control: "none" },
-      { id: "previous_week", label: "Previous Week", control: "none" },
-      { id: "previous_month", label: "Previous Month", control: "none" },
-      { id: "this_year", label: "This Year", control: "none" },
-      { id: "current_fy", label: "Current FY", control: "none" },
-      { id: "current_fq", label: "Current FQ", control: "none" },
-      { id: "previous_year", label: "Previous Year", control: "none" },
-      { id: "previous_fy", label: "Previous FY", control: "none" },
-      { id: "previous_fq", label: "Previous FQ", control: "none" },
-      { id: "next_year", label: "Next Year", control: "none" },
-      { id: "next_fy", label: "Next FY", control: "none" },
-      { id: "next_fq", label: "Next FQ", control: "none" },
-      ...empty,
-    ],
-    defaultOperator: "age_in",
-  },
+  date: { operators: calendarOperators, defaultOperator: "age_in" },
+  datetime: { operators: calendarOperators, defaultOperator: "age_in" },
   tag: {
     operators: [
       { id: "equal", label: "is", control: "tag" },

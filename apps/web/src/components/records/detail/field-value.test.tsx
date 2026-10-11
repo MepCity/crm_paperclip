@@ -1,4 +1,4 @@
-import { formatRecordAuditDateTime } from "@crm/core/format";
+import { formatDate, formatRecordAuditDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
@@ -70,6 +70,11 @@ test("email and website values use links", () => {
   show(field("Website", "website"), "example.org");
   const site = screen.getByRole("link", { name: "example.org" });
   expect(site.getAttribute("href")).toBe("https://example.org");
+});
+
+test("date shows the formatted calendar day in a detail row", () => {
+  show(field("Date_of_Birth", "date"), "2026-02-15");
+  expect(screen.getByText(formatDate("2026-02-15", DEFAULT_FORMAT))).toBeTruthy();
 });
 
 test("Created_By renders user and audit timestamp on two lines", () => {

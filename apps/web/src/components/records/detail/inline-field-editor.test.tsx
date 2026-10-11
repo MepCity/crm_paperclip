@@ -49,6 +49,7 @@ test.each([
   "phone",
   "website",
   "textarea",
+  "date",
   "integer",
   "double",
   "currency",
@@ -107,6 +108,24 @@ test("required and email validation use form messages and leave the editor open"
   await email.user.click(screen.getByRole("button", { name: "Save" }));
   expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
   expect(email.save).not.toHaveBeenCalled();
+});
+
+test("date is edited through the mask and saves the contract day", async () => {
+  const { user, save, complete } = setup("date", "2026-02-15");
+  const input = screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement;
+  expect(input.value).toBe("15.02.2026");
+  await user.clear(input);
+  await user.type(input, "29.02.2024{Enter}");
+  await waitFor(() => expect(save).toHaveBeenCalledWith({ Company: "2024-02-29" }));
+  expect(complete).toHaveBeenCalledOnce();
+});
+
+test("an impossible day stays open with the format message in inline edit", async () => {
+  const { user, save } = setup("date", null);
+  await user.type(screen.getByRole("textbox", { name: "Company" }), "30.02.2026");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
+  expect(save).not.toHaveBeenCalled();
 });
 
 test.each([new ValidationError({ Company: ["Rejected field."] }), new Error("Update failed.")])(

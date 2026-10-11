@@ -1,19 +1,6 @@
 import { type FieldErrors, ValidationError } from "../../errors";
 import type { FieldDefinition, FieldValue, RecordInput } from "../contract";
-import { leadsMetadata } from "./metadata";
 
-// These fields are supplied by the bound context or computed by this adapter.
-const managed = new Set([
-  "Full_Name",
-  "Created_By",
-  "Modified_By",
-  "Created_Time",
-  "Modified_Time",
-  "Last_Activity_Time",
-  "Converted_Date_Time",
-  "Lead_Conversion_Time",
-  "Lead_Status_Modified_Time",
-]);
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
   if (typeof value === "object" && value !== null) return value.id.length;
@@ -71,7 +58,8 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
 export function validateInput(
   input: RecordInput,
   partial: boolean,
-  fields = leadsMetadata.fields,
+  fields: readonly FieldDefinition[],
+  managed: ReadonlySet<string>,
 ): void {
   const errors: FieldErrors = Object.create(null);
   let mandatory = false;

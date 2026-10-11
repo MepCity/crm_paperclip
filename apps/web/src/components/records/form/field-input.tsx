@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   FieldDefinition,
   FieldValue,
@@ -12,8 +14,13 @@ import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextArea } from "@/components/ui/text-area";
-import { TextField } from "@/components/ui/text-field";
+import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import type { ClientRecordService } from "@/lib/api/client/provider";
+import {
+  calendarShapeToDisplayDate,
+  DATE_MASK_PLACEHOLDER,
+  displayDateToCalendarShape,
+} from "@/lib/records/calendar-date";
 import { isModuleRegistered, resolveModuleLaterKey } from "@/modules/registry";
 import { SelectRecordDialog } from "./select-record-dialog";
 
@@ -55,6 +62,46 @@ export function picklistChoices(options: readonly PicklistOption[], value: strin
   if (value !== null && !choices.some((option) => option.value === value))
     choices.push({ value, label: value });
   return choices;
+}
+
+type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
+  /** The contract value: `YYYY-MM-DD`, or empty when the field has no day. */
+  value: string;
+  onModelChange: (value: FieldValue) => void;
+};
+
+/**
+ * A `date` field is typed as `DD.MM.YYYY` while the form model carries `YYYY-MM-DD`, so the entry
+ * and the model cannot be the same string. What is typed stays visible, including a day that does
+ * not exist: the shape is mapped to `YYYY-MM-DD` and `form-validation` rejects the impossible day,
+ * instead of the input silently dropping it.
+ *
+ * Only a model write that did not come from this input replaces the entry. An incomplete day has
+ * no model value at all, so treating the echo of our own write as an outside write would clear the
+ * text the moment somebody deletes a character from a date that is already filled in.
+ */
+function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
+  const [written, setWritten] = useState(value);
+  const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
+  if (written !== value) {
+    setWritten(value);
+    setEntry(calendarShapeToDisplayDate(value));
+  }
+  return (
+    <TextField
+      {...textField}
+      type="text"
+      value={entry}
+      placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
+      onChange={(next) => {
+        const shape = displayDateToCalendarShape(next);
+        // The empty model comes back as "" (`FieldInput` reads a non-string value as empty).
+        setWritten(shape ?? "");
+        setEntry(next);
+        onModelChange(shape);
+      }}
+    />
+  );
 }
 
 export function FieldInput({
@@ -142,6 +189,10 @@ export function FieldInput({
           maxLength={field.maxLength}
           onChange={(next) => onChange(next === "" ? null : next)}
         />
+      );
+    case "date":
+      return (
+        <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
     case "integer":
     case "double":
@@ -260,8 +311,6 @@ export function FieldInput({
             onChange={(next) => {
               if (next === "") {
                 onChange(null);
-              } else if (reference) {
-                onChange({ ...reference, name: next });
               }
             }}
             endAction={
@@ -304,7 +353,6 @@ export function FieldInput({
       );
     }
     case "multi_module_lookup":
-    case "date":
     case "datetime":
     case "bigint":
       return null;

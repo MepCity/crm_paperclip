@@ -1,6 +1,7 @@
 import {
   type FormatOptions,
   formatCurrency,
+  formatDate,
   formatDateTime,
   formatNumber,
   formatRecordAuditDateTime,
@@ -123,6 +124,10 @@ function valueText(
 
   if (field.dataType === "ownerlookup" && typeof value === "string") {
     return ownerNames[value] ?? value;
+  }
+
+  if (field.dataType === "date" && typeof value === "string") {
+    return formatDate(value, format);
   }
 
   if (field.dataType === "datetime" && typeof value === "string") {

@@ -1,4 +1,5 @@
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import { isCalendarDate } from "@/lib/records/calendar-date";
 import { normalizeFormValue, textValue } from "./form-model";
 
 export function validationEmptyMessage(label: string): string {
@@ -26,7 +27,6 @@ function skippedField(field: FieldDefinition): boolean {
     field.readOnly ||
     field.dataType === "profileimage" ||
     field.dataType === "multi_module_lookup" ||
-    field.dataType === "date" ||
     field.dataType === "datetime" ||
     field.dataType === "bigint"
   );
@@ -45,6 +45,13 @@ function validateField(
   if (field.dataType === "email") {
     const text = textValue(value);
     if (text && !isEmailFormatValid(text)) return validationFormatMessage(label);
+  }
+
+  // The form input keeps the typed shape, so a day that never happened (`2026-02-30`)
+  // reaches the model and is reported here rather than dropped.
+  if (field.dataType === "date") {
+    if (typeof normalized !== "string" || !isCalendarDate(normalized))
+      return validationFormatMessage(label);
   }
 
   if (field.dataType === "integer") {

@@ -1,4 +1,4 @@
-import { formatDateTime } from "@crm/core/format";
+import { formatDate, formatDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
@@ -120,6 +120,12 @@ test("datetime uses the shared formatter", () => {
   show("datetime", value);
   expect(screen.getByText(formatDateTime(value, DEFAULT_FORMAT))).toBeTruthy();
   expect(screen.queryByText(value)).toBeNull();
+});
+
+test("date uses the shared formatter and shows no clock", () => {
+  show("date", "2026-02-15");
+  expect(screen.getByText(formatDate("2026-02-15", DEFAULT_FORMAT))).toBeTruthy();
+  expect(screen.queryByText("2026-02-15")).toBeNull();
 });
 
 test("integer, boolean, currency and Created_By match shared field formatting", () => {

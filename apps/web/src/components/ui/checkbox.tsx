@@ -8,6 +8,7 @@ import {
   Text,
 } from "react-aria-components";
 import { Icons } from "./icon";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 /** A checked box submits this value with `name`; an unchecked box submits nothing. */
 const FORM_VALUE = "true";
@@ -52,6 +53,7 @@ function boxBorder(isSelected: boolean, isInvalid: boolean): BoxBorder {
 
 export interface CheckboxProps extends Omit<AriaCheckboxFieldProps, "children" | "value"> {
   label: string;
+  laterModule?: ModuleKey;
   /** Keeps the accessible name and removes the label from the visual layout. */
   hideLabel?: boolean;
   description?: string;
@@ -71,16 +73,29 @@ export function Checkbox({
   align = "center",
   variant = "default",
   labelClassName,
+  laterModule,
+  inputRef,
+  onChange,
   ...props
 }: CheckboxProps) {
+  const laterInputRef = useLaterModule(laterModule, inputRef);
+  const laterLabelRef = useLaterModule<HTMLLabelElement>(laterModule);
   const wraps = align === "first-line";
   return (
     <AriaCheckboxField
       {...props}
+      {...laterModuleProps(laterModule)}
+      inputRef={laterInputRef}
+      isReadOnly={laterModule ? true : props.isReadOnly}
+      onChange={laterModule ? undefined : onChange}
       value={FORM_VALUE}
       className={wraps ? styles.fieldWrap : styles.field}
     >
-      <CheckboxButton className={wraps ? styles.buttonFirstLine : styles.button}>
+      <CheckboxButton
+        ref={laterLabelRef}
+        {...laterModuleProps(laterModule)}
+        className={wraps ? styles.buttonFirstLine : styles.button}
+      >
         {({ isSelected, isInvalid }) => (
           <>
             <span

@@ -137,3 +137,31 @@ test("search matches case-insensitive label substrings, hides nonmatching groups
     (screen.getByRole("checkbox", { name: "Recent samples" }) as HTMLInputElement).checked,
   ).toBe(true);
 });
+
+test("later-module filter rows cannot change selection or open an editor", async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(
+    <FilterPanel
+      {...props}
+      groups={[
+        {
+          id: "later",
+          label: "Filter By Fields",
+          items: [{ id: "account", label: "Account Name", laterModule: "M3" }],
+        },
+      ]}
+      onSelectionChange={onSelectionChange}
+    />,
+  );
+  const checkbox = screen.getByRole("checkbox", { name: "Account Name" }) as HTMLInputElement;
+  expect(checkbox.getAttribute("aria-disabled")).toBe("true");
+  expect(checkbox.getAttribute("data-later-module")).toBe("M3");
+  expect(checkbox.disabled).toBe(false);
+  await user.click(screen.getByText("Account Name"));
+  await user.click(checkbox);
+  checkbox.focus();
+  await user.keyboard("{Enter} ");
+  expect(checkbox.checked).toBe(false);
+  expect(onSelectionChange).not.toHaveBeenCalled();
+});

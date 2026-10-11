@@ -196,3 +196,50 @@ export const leadsRecordServiceContractModule: RecordServiceContractModuleDefini
     filterValidationBoolean: "Email_Opt_Out",
   },
 };
+
+const contactsSystemFields: RecordServiceContractSystemFields = {
+  owner: "Owner",
+  createdBy: "Created_By",
+  modifiedBy: "Modified_By",
+  createdTime: "Created_Time",
+  modifiedTime: "Modified_Time",
+  lastActivityTime: "Last_Activity_Time",
+};
+
+export const contactsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Contacts",
+  singularLabel: "Contact",
+  pluralLabel: "Contacts",
+  expectedFieldCount: 61,
+  buildMinimalValidInput: (extra = {}) => ({
+    Last_Name: "Contract Contact",
+    ...extra,
+  }),
+  systemFields: contactsSystemFields,
+  filterMarker: {
+    field: "Title",
+    sample: "Contract Title",
+    updated: "Updated Title",
+    tenantOther: "Other Title",
+  },
+  sortFields: ["Last_Name", "Title"],
+  duplicatePermittedField: "Phone",
+  expectedUniqueFields: ["Email"],
+  typeValidationCases: [
+    ["Last_Name", 3],
+    ["Date_of_Birth", "not-a-date"],
+    ["Email_Opt_Out", "false"],
+    ["Account_Name", "account"],
+  ],
+  optional: {
+    date: { field: "Date_of_Birth" },
+    lockedRecords: { field: "Locked__s" },
+    massUpdateClearablePhone: "Phone",
+    lengthValidationField: "Last_Name",
+    singleModuleLookup: {
+      field: "Reporting_To",
+      reference: { module: "Contacts", id: "300000000000000000" },
+      expectedName: "Sample 001 Contact 001",
+    },
+  },
+};

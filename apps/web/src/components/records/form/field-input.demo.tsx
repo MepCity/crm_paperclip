@@ -20,6 +20,7 @@ const types: FieldDataType[] = [
   "phone",
   "website",
   "textarea",
+  "date",
   "integer",
   "double",
   "currency",
@@ -50,6 +51,8 @@ function example(type: FieldDataType): FieldValue {
       return "https://example.test";
     case "phone":
       return "+1 555 0100";
+    case "date":
+      return "2026-02-15";
     default:
       return "Example";
   }
