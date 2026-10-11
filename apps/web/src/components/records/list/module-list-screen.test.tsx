@@ -3,7 +3,7 @@ import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { resetPreferenceStoreForTests } from "@/lib/preferences";
@@ -140,6 +140,13 @@ async function leadsConfigWithFilters(service: ReturnType<typeof createFixtureRe
     }),
   };
 }
+
+let fixtureOrgSequence = 0;
+
+beforeEach(() => {
+  // Mutating scenarios must not shift the seeded rows seen by later tests.
+  ctx.orgId = `list-screen-${++fixtureOrgSequence}`;
+});
 
 afterEach(() => {
   cleanup();
@@ -958,9 +965,56 @@ describe("ModuleListScreen", () => {
     expect(screen.getByText("1 Record Selected.")).toBeTruthy();
   });
 
+  it("keeps mixed selection and records unchanged when a locked record rejects delete", async () => {
+    navigation.params = new URLSearchParams("per_page=10");
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+      wrapper: wrapper(service),
+    });
+    await screen.findByRole("table", { name: "Records" });
+    const pageIds = await fixturePageRecordIds(records, listSpy);
+    const pageRecords = await Promise.all(pageIds.map((id) => records.get("Leads", id)));
+    const locked = pageRecords.find((record) => record.fields.Locked__s === true);
+    const unlocked = pageRecords.find((record) => record.fields.Locked__s !== true);
+    if (!locked || !unlocked) throw new Error("Expected locked and writable rows.");
+    const checkboxes = [unlocked, locked].map(
+      (record) =>
+        rowSelectCheckboxForRecordName(String(record.fields.Full_Name)) as HTMLInputElement,
+    );
+    for (const checkbox of checkboxes) await user.click(checkbox);
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe(
+        "cannot delete record that is not approved yet",
+      );
+    });
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    expect(screen.getByText("2 Records Selected.")).toBeTruthy();
+    for (const record of [unlocked, locked]) {
+      expect(await records.get("Leads", record.id)).toEqual(record);
+    }
+    for (const checkbox of checkboxes) expect(checkbox.checked).toBe(true);
+  });
+
   it("navigates to the previous page when every row on the page is deleted", async () => {
     navigation.params = new URLSearchParams("page=2&per_page=10");
     const records = createFixtureRecordService(ctx);
+    // Newly created rows sort before the seed and are writable. Both pages
+    // contain only these rows, so this exercises successful page deletion.
+    for (let index = 0; index < 20; index++) {
+      await records.create("Leads", { Last_Name: `Pagination ${index}`, Company: "Example" });
+    }
+    const listSpy = vi.spyOn(records, "list");
+    const deleteSpy = vi.spyOn(records, "delete");
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
@@ -971,6 +1025,11 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(screen.getByRole("table", { name: "Records" })).toBeTruthy();
     });
+    const pageIds = await fixturePageRecordIds(records, listSpy);
+    expect(pageIds).toHaveLength(10);
+    for (const id of pageIds) {
+      expect((await records.get("Leads", id)).fields.Locked__s).not.toBe(true);
+    }
     await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
     await user.click(screen.getByRole("button", { name: "Actions" }));
     await user.click(screen.getByRole("menuitem", { name: "Delete" }));
@@ -979,6 +1038,10 @@ describe("ModuleListScreen", () => {
     await waitFor(() => {
       expect(navigation.push).toHaveBeenCalled();
     });
+    expect(deleteSpy).toHaveBeenCalledWith("Leads", pageIds);
+    for (const id of pageIds) {
+      await expect(records.get("Leads", id)).rejects.toBeInstanceOf(NotFoundError);
+    }
     const lastHref = navigation.push.mock.calls.at(-1)?.[0] as string;
     expect(lastHref).toContain("page=1");
   });

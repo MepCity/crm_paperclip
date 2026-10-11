@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "../../errors";
+import { NotFoundError, RecordLockedError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
 import { leadsMetadata } from "./metadata";
@@ -97,6 +97,14 @@ export function createFixtureRecordService(
     if (!record) throw new NotFoundError("Record not found.");
     return record;
   };
+  const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
+    if (record.fields.Locked__s === true)
+      throw new RecordLockedError(
+        operation === "delete"
+          ? "cannot delete record that is not approved yet"
+          : "Cannot update record that is not approved yet",
+      );
+  };
   const matching = (module: string, query: Pick<ListQuery, "viewId" | "filters" | "search">) => {
     const view = viewFor(module, query.viewId);
     if (query.filters) validateCriteria(query.filters);
@@ -115,6 +123,7 @@ export function createFixtureRecordService(
   const writeBatch = (module: string, ids: readonly string[], input: RecordInput) => {
     // Resolve every target after asynchronous membership checks, before any write.
     const records = ids.map((id) => recordFor(module, id));
+    for (const record of records) assertWritable(record);
     const stamp = clock().toISOString();
     const updates = records.map((record) => {
       const fields: Record<string, FieldValue> = {
@@ -216,6 +225,7 @@ export function createFixtureRecordService(
       await validateOwner(normalized);
       // Membership resolution may yield; preserve intervening partial writes/deletes.
       const record = recordFor(module, id);
+      assertWritable(record);
       const fields: Record<string, FieldValue> = {
         ...record.fields,
         ...normalized,
@@ -254,7 +264,8 @@ export function createFixtureRecordService(
     async delete(module, ids) {
       moduleExists(module);
       validateIds(ids);
-      for (const id of ids) recordFor(module, id);
+      const records = ids.map((id) => recordFor(module, id));
+      for (const record of records) assertWritable(record, "delete");
       for (const id of ids) state.records.delete(id);
     },
   };

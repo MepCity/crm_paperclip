@@ -43,6 +43,8 @@ export type RecordServiceContractConnectedLookupScenario = {
 
 /** Scenarios that only apply when a module publishes the expected metadata shape. */
 export type RecordServiceContractOptionalScenarios = {
+  /** Harness-provisioned locked records discoverable by this boolean field. */
+  lockedRecords?: { field: string };
   categoryView?: {
     picklistField: string;
     categoryTokenName: string;
@@ -133,6 +135,7 @@ export const leadsRecordServiceContractModule: RecordServiceContractModuleDefini
     ["Connected_To__s", 3],
   ],
   optional: {
+    lockedRecords: { field: "Locked__s" },
     categoryView: {
       picklistField: "Lead_Status",
       categoryTokenName: "Junk",

@@ -168,7 +168,12 @@ inputs are copied before storage. Bulk delete validates every ID before deleting
 whose massUpdate flag is true, with the same value/required/length/type/picklist
 validation as update. `changeOwner` accepts an active organization member ID;
 removed/unknown/foreign owners fail under Owner. All three batch writes are atomic:
-unknown/foreign IDs fail with NotFoundError before any write. This atomicity remains
+unknown/foreign IDs fail with NotFoundError before any write.
+`update`, `massUpdate`, `changeOwner` and `delete` reject records whose `Locked__s`
+is true with `RecordLockedError` (wire `RECORD_LOCKED`, HTTP 400). A locked target
+in a batch leaves every record unchanged, including modification fields.
+Update and ownership changes use the spec's update error message; delete uses
+its delete message. Ownership-specific wording remains unobserved. This atomicity remains
 Interim until per-record failure behavior is documented (ADR 0004 §5).
 ValidationError has an optional internal reason (`invalid`, `mandatory`, `limit`)
 to distinguish error wire codes without inspecting translated message text.
@@ -195,7 +200,11 @@ scenario blocks your adapter supports) beside the Leads one and pass it as the
 third argument. Connected-module sample IDs live only under `optional.connectedLookup`;
 the suite body stays module-neutral.
 
-The suite invokes only public methods. Each test gets a fresh synthetic organization;
+The suite invokes only public methods. When `optional.lockedRecords` is defined,
+the adapter harness must provision at least one locked synthetic record discoverable
+through an equality filter on its configured `field`; callers cannot set that
+system-managed flag. Missing locked records fail the scenario explicitly. Without
+that definition, locked-record scenarios are not registered. Each test gets a fresh synthetic organization;
 an adapter harness must provision that organization and bound user, and clean up its
 test state. Pagination tests create their own matching records and discover views
 through `listViews`; they require no fixture IDs or default insertion order. Tests

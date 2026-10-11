@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
-import { NotFoundError, ValidationError } from "../errors";
+import { NotFoundError, RecordLockedError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import type {
   Comparator,
@@ -562,6 +562,47 @@ export function describeRecordServiceContract(
         );
       expect((await service.get(moduleApiName, first.id)).fields[sys.owner]).toBe("batch-owner");
     });
+
+    if (moduleOptional?.lockedRecords) {
+      const lockedField = moduleOptional.lockedRecords.field;
+      it.each(["update", "massUpdate", "changeOwner", "delete"] as const)(
+        "rejects %s on locked records without changing any target",
+        async (operation) => {
+          const locked = (
+            await service.list(moduleApiName, {
+              viewId: defaultView.id,
+              page: 1,
+              perPage: 10,
+              filters: { field: lockedField, comparator: "equal", value: true },
+            })
+          ).records[0];
+          if (!locked) throw new Error("The contract harness must provision a locked record.");
+          const unlocked = await service.create(moduleApiName, input());
+          await makeService({ ...ctx, userId: "lock-test-owner" });
+          const run = (ids: string[]) => {
+            switch (operation) {
+              case "update":
+                return service.update(moduleApiName, locked.id, { [markerField]: markerUpdated });
+              case "massUpdate":
+                return service.massUpdate(moduleApiName, ids, { [markerField]: markerUpdated });
+              case "changeOwner":
+                return service.changeOwner(moduleApiName, ids, "lock-test-owner");
+              case "delete":
+                return service.delete(moduleApiName, ids);
+            }
+          };
+          const targetSets =
+            operation === "update"
+              ? [[locked.id]]
+              : [[locked.id], [unlocked.id, locked.id], [locked.id, unlocked.id]];
+          for (const ids of targetSets) {
+            await expect(run(ids)).rejects.toBeInstanceOf(RecordLockedError);
+            expect(await service.get(moduleApiName, locked.id)).toEqual(locked);
+            expect(await service.get(moduleApiName, unlocked.id)).toEqual(unlocked);
+          }
+        },
+      );
+    }
 
     it("validates all batch targets before changing any record", async () => {
       const first = await service.create(moduleApiName, input());

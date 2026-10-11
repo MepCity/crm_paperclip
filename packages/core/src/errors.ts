@@ -1,6 +1,12 @@
 import type { z } from "zod";
 
-export type ErrorCode = "unauthenticated" | "forbidden" | "not_found" | "conflict" | "validation";
+export type ErrorCode =
+  | "unauthenticated"
+  | "forbidden"
+  | "not_found"
+  | "conflict"
+  | "validation"
+  | "record_locked";
 
 /** Messages per input field, keyed by the field's name in the service input. */
 export type FieldErrors = Record<string, string[]>;
@@ -52,6 +58,14 @@ export class ConflictError extends AppError {
 
   constructor(message: string) {
     super("conflict", message);
+  }
+}
+
+export class RecordLockedError extends AppError {
+  override name = "RecordLockedError";
+
+  constructor(message = "Cannot update record that is not approved yet") {
+    super("record_locked", message);
   }
 }
 
