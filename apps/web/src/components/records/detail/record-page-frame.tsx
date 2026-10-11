@@ -44,6 +44,81 @@ export interface RecordPageFrameProps {
   relatedRailFooter?: ReactNode;
 }
 
+export function getActiveRelatedEntryId(
+  scroller: HTMLElement,
+  entries: readonly RelatedListEntry[],
+  currentSelectedId?: string,
+): string | undefined {
+  if (entries.length === 0) return undefined;
+
+  const scrollerRect = scroller.getBoundingClientRect();
+  const hasRealGeometry = scrollerRect.height > 0;
+  const OFFSET = 36;
+
+  const idMap = new Map<string, HTMLElement>();
+  for (const node of scroller.querySelectorAll<HTMLElement>("[id]")) {
+    if (node.id) idMap.set(node.id, node);
+  }
+
+  const items: Array<{ id: string; top: number; bottom: number }> = [];
+
+  for (const entry of entries) {
+    const target = idMap.get(entry.targetId);
+    if (!target) continue;
+
+    if (hasRealGeometry) {
+      const rect = target.getBoundingClientRect();
+      items.push({
+        id: entry.id,
+        top: rect.top - scrollerRect.top,
+        bottom: rect.bottom - scrollerRect.top,
+      });
+    } else {
+      const top = target.offsetTop - scroller.scrollTop;
+      const height = target.offsetHeight || 100;
+      items.push({
+        id: entry.id,
+        top,
+        bottom: top + height,
+      });
+    }
+  }
+
+  const firstItem = items[0];
+  if (!firstItem) return currentSelectedId ?? entries[0]?.id;
+
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i];
+    if (item && item.top <= OFFSET && item.bottom > 0) {
+      return item.id;
+    }
+  }
+
+  if (firstItem.top > OFFSET) {
+    return firstItem.id;
+  }
+
+  const lastItem = items[items.length - 1];
+  if (
+    lastItem &&
+    scroller.scrollTop > 0 &&
+    scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 2
+  ) {
+    return lastItem.id;
+  }
+
+  let closestId = firstItem.id;
+  let minDiff = Infinity;
+  for (const item of items) {
+    const diff = Math.abs(item.top - OFFSET);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestId = item.id;
+    }
+  }
+  return closestId;
+}
+
 export function RecordPageFrame({
   header,
   relatedListLabel,
@@ -68,15 +143,32 @@ export function RecordPageFrame({
   const activeSelectedId =
     selectedRelatedId !== undefined ? selectedRelatedId : uncontrolledSelectedId;
 
+  function handleScroll(event: React.UIEvent<HTMLDivElement>) {
+    const scroller = event.currentTarget;
+    setScrolled(scroller.scrollTop > 0);
+    if (relatedEntries.length > 0) {
+      const activeId = getActiveRelatedEntryId(scroller, relatedEntries, activeSelectedId);
+      if (activeId && activeId !== activeSelectedId) {
+        setUncontrolledSelectedId(activeId);
+        onRelatedSelectionChange?.(activeId);
+      }
+    }
+  }
+
   function selectRelated(entry: RelatedListEntry) {
     const scroller = scrollRef.current;
     // Find only within this frame; data targets never become a CSS selector.
     const target = Array.from(scroller?.querySelectorAll<HTMLElement>("[id]") ?? []).find(
       (node) => node.id === entry.targetId,
     );
-    if (scroller && target)
-      scroller.scrollTop +=
-        target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    if (scroller && target) {
+      const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      if (delta !== 0) {
+        scroller.scrollTop += delta;
+      } else if (target.offsetTop !== undefined) {
+        scroller.scrollTop = target.offsetTop;
+      }
+    }
     setUncontrolledSelectedId(entry.id);
     onRelatedSelectionChange?.(entry.id);
   }
@@ -171,7 +263,7 @@ export function RecordPageFrame({
           <div
             ref={scrollRef}
             data-record-scroller
-            onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 0)}
+            onScroll={handleScroll}
             className="flex-1 min-h-0 overflow-y-auto px-3 pb-3"
           >
             {tabs.map((tab) => (
@@ -193,7 +285,14 @@ export function RecordPageFrame({
           size="compact"
           aria-label={scrollTopLabel}
           onPress={() => {
-            scrollRef.current?.scrollTo({ top: 0 });
+            if (scrollRef.current) {
+              scrollRef.current.scrollTo({ top: 0 });
+              const first = relatedEntries[0];
+              if (first) {
+                setUncontrolledSelectedId(first.id);
+                onRelatedSelectionChange?.(first.id);
+              }
+            }
             setScrolled(false);
           }}
           className="absolute right-(--size-record-scroll-offset) bottom-(--size-record-scroll-offset) size-(--size-record-scroll-top) rounded-full! border border-panel-border bg-surface! shadow-md"

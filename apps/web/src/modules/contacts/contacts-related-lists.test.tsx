@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
@@ -299,5 +299,140 @@ describe("RecordPageFrame with Contacts rail", () => {
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
     await user.click(dealsLink);
     expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("tracks the visible card when scrolling and displays the corresponding plus action", () => {
+    const onSelect = vi.fn();
+    const onAddReporting = vi.fn();
+
+    const entries = contactsRelatedLists.map((item) => ({
+      id: item.id,
+      label: item.title,
+      targetId: item.targetId,
+      countBadge: item.countBadge,
+      moduleKey: item.moduleKey,
+      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      railAction: item.railAction
+        ? {
+            id: item.railAction.id,
+            label: item.railAction.label,
+            moduleKey: item.railAction.moduleKey,
+            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            onAction: item.id === "reporting-contacts" ? onAddReporting : undefined,
+          }
+        : undefined,
+    }));
+
+    const { container } = render(
+      <RecordPageFrame
+        header={<div>Header</div>}
+        relatedListLabel="Related List"
+        relatedEntries={entries}
+        onRelatedSelectionChange={onSelect}
+        tabsLabel="Tabs"
+        selectedTabId="overview"
+        onTabChange={() => {}}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <div>
+                {contactsRelatedLists.map((c) => (
+                  <div key={c.id} id={c.targetId} style={{ height: "200px" }}>
+                    {c.title}
+                  </div>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+      />,
+    );
+
+    const rail = screen.getByRole("navigation", { name: "Related List" });
+    const scroller = container.querySelector<HTMLElement>("[data-record-scroller]");
+    expect(scroller).not.toBeNull();
+    if (!scroller) throw new Error("Expected scroller");
+    const activeScroller: HTMLElement = scroller;
+
+    function scrollToCard(targetId: string) {
+      vi.spyOn(activeScroller, "getBoundingClientRect").mockReturnValue({
+        top: 0,
+        bottom: 800,
+        left: 0,
+        right: 1000,
+        width: 1000,
+        height: 800,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+
+      const targetIndex = contactsRelatedLists.findIndex((i) => i.targetId === targetId);
+      contactsRelatedLists.forEach((item, index) => {
+        const el = container.querySelector<HTMLElement>(`#${item.targetId}`);
+        if (!el) return;
+        const diff = index - targetIndex;
+        const top = diff === 0 ? 10 : diff < 0 ? -500 * Math.abs(diff) : 500 * diff;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          top,
+          bottom: top + 200,
+          left: 0,
+          right: 1000,
+          width: 1000,
+          height: 200,
+          x: 0,
+          y: top,
+          toJSON: () => {},
+        });
+      });
+
+      fireEvent.scroll(activeScroller);
+    }
+
+    // 1. Scroll to Cases -> D-72 appears with laterModule M8
+    scrollToCard("related-list-cases");
+    expect(onSelect).toHaveBeenCalledWith("cases");
+    const casesRow = within(rail)
+      .getByRole("link", { name: "Cases" })
+      .closest("div[class*='flex items-center']");
+    const casesAddBtn = casesRow?.querySelector("button");
+    expect(casesAddBtn).not.toBeNull();
+    expect(casesAddBtn?.getAttribute("data-later-module")).toBe("M8");
+
+    // Notes row now has no button
+    const notesRow = within(rail)
+      .getByRole("link", { name: "Notes" })
+      .closest("div[class*='flex items-center']");
+    expect(notesRow?.querySelector("button")).toBeNull();
+
+    // 2. Scroll to Invoices -> D-83 appears with laterModule P2
+    scrollToCard("related-list-invoices");
+    expect(onSelect).toHaveBeenCalledWith("invoices");
+    const invoicesRow = within(rail)
+      .getByRole("link", { name: "Invoices" })
+      .closest("div[class*='flex items-center']");
+    const invoicesAddBtn = invoicesRow?.querySelector("button");
+    expect(invoicesAddBtn).not.toBeNull();
+    expect(invoicesAddBtn?.getAttribute("data-later-module")).toBe("P2");
+    expect(casesRow?.querySelector("button")).toBeNull();
+
+    // 3. Scroll to Closed Activities -> Closed Activities is selected, no plus button
+    scrollToCard("related-list-closed-activities");
+    expect(onSelect).toHaveBeenCalledWith("closed-activities");
+    const closedRow = within(rail)
+      .getByRole("link", { name: "Closed Activities" })
+      .closest("div[class*='flex items-center']");
+    expect(closedRow?.querySelector("button")).toBeNull();
+    expect(invoicesRow?.querySelector("button")).toBeNull();
+
+    // 4. Scroll to Notes -> D-53 appears with laterModule M6
+    scrollToCard("related-list-notes");
+    expect(onSelect).toHaveBeenCalledWith("notes");
+    const notesAddBtn = notesRow?.querySelector("button");
+    expect(notesAddBtn).not.toBeNull();
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
   });
 });
