@@ -24,6 +24,15 @@ export interface LaterModuleProp {
   laterModule?: ModuleKey;
 }
 
+export interface UseLaterModuleOptions {
+  /**
+   * Whether to block ArrowDown / ArrowUp shortcuts used by menu and popover triggers.
+   * Buttons with laterModule block them so menus do not open. MenuItems allow them so
+   * arrow keys can navigate between rows.
+   */
+  blockMenuArrows?: boolean;
+}
+
 const BLOCKED_EVENT_TYPES = [
   "pointerdown",
   "pointerup",
@@ -34,9 +43,15 @@ const BLOCKED_EVENT_TYPES = [
   "keyup",
 ] as const;
 
-function blockLaterModuleEvent(e: Event) {
+function blockLaterModuleEvent(e: Event, blockMenuArrows = false) {
   if (e instanceof KeyboardEvent) {
-    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+    const isArrow = e.key === "ArrowDown" || e.key === "ArrowUp";
+    if (
+      e.key === "Enter" ||
+      e.key === " " ||
+      e.key === "Spacebar" ||
+      (blockMenuArrows && isArrow)
+    ) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -78,6 +93,7 @@ export function laterModuleProps(laterModule?: ModuleKey) {
 export function useLaterModule<E extends HTMLElement = HTMLElement>(
   laterModule?: ModuleKey,
   forwardedRef?: Ref<E>,
+  options?: UseLaterModuleOptions,
 ) {
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -92,13 +108,17 @@ export function useLaterModule<E extends HTMLElement = HTMLElement>(
         node.setAttribute("aria-disabled", "true");
         node.setAttribute("data-later-module", laterModule);
 
+        const shouldBlockArrows = Boolean(options?.blockMenuArrows) || node.tagName === "BUTTON";
+
+        const listener = (e: Event) => blockLaterModuleEvent(e, shouldBlockArrows);
+
         for (const eventType of BLOCKED_EVENT_TYPES) {
-          node.addEventListener(eventType, blockLaterModuleEvent, { capture: true });
+          node.addEventListener(eventType, listener, { capture: true });
         }
 
         cleanupRef.current = () => {
           for (const eventType of BLOCKED_EVENT_TYPES) {
-            node.removeEventListener(eventType, blockLaterModuleEvent, { capture: true });
+            node.removeEventListener(eventType, listener, { capture: true });
           }
         };
       }
@@ -111,6 +131,6 @@ export function useLaterModule<E extends HTMLElement = HTMLElement>(
         }
       }
     },
-    [laterModule, forwardedRef],
+    [laterModule, forwardedRef, options?.blockMenuArrows],
   );
 }

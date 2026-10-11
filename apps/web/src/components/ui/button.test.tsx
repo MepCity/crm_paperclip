@@ -117,4 +117,12 @@ test("Button with laterModule renders active appearance, retains focus, and igno
   expect(presses).toBe(0);
   await user.keyboard(" ");
   expect(presses).toBe(0);
+  await user.keyboard("{ArrowDown}");
+  expect(presses).toBe(0);
+  await user.keyboard("{ArrowUp}");
+  expect(presses).toBe(0);
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(presses).toBe(0);
+  await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+  expect(presses).toBe(0);
 });

@@ -169,3 +169,77 @@ test("MenuItem with laterModule renders active appearance, retains focus, stays 
   await user.click(screen.getByTestId("outside"));
   expect(screen.queryByRole("menu")).toBeNull();
 });
+
+test("MenuTrigger with laterModule button does not open on ArrowDown or ArrowUp", async () => {
+  const user = userEvent.setup();
+  render(
+    <MenuTrigger>
+      <MenuButton laterModule="M4">Options</MenuButton>
+      <Menu>
+        <MenuItem id="one">One</MenuItem>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  trigger.focus();
+  expect(document.activeElement).toBe(trigger);
+
+  await user.keyboard("{ArrowDown}");
+  expect(screen.queryByRole("menu")).toBeNull();
+
+  await user.keyboard("{ArrowUp}");
+  expect(screen.queryByRole("menu")).toBeNull();
+
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(screen.queryByRole("menu")).toBeNull();
+
+  await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+  expect(screen.queryByRole("menu")).toBeNull();
+});
+
+test("MenuItem with laterModule does not block arrow keys for navigating between menu rows", async () => {
+  const user = userEvent.setup();
+  const chosen: string[] = [];
+  render(
+    <MenuTrigger>
+      <MenuButton>Options</MenuButton>
+      <Menu onAction={(key) => chosen.push(String(key))}>
+        <MenuItem id="edit">Edit</MenuItem>
+        <MenuItem id="later" laterModule="M3">
+          Later Item
+        </MenuItem>
+        <MenuItem id="delete">Delete</MenuItem>
+      </Menu>
+    </MenuTrigger>,
+  );
+
+  const trigger = screen.getByRole("button", { name: "Options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // Navigate to first item
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Edit" }));
+
+  // Navigate to laterModule item
+  await user.keyboard("{ArrowDown}");
+  const laterItem = screen.getByRole("menuitem", { name: "Later Item" });
+  expect(document.activeElement).toBe(laterItem);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // Enter on laterModule item does not trigger action and keeps menu open
+  await user.keyboard("{Enter}");
+  expect(chosen).toEqual([]);
+  expect(screen.getByRole("menu")).toBeTruthy();
+
+  // ArrowDown past laterModule item navigates to Delete
+  await user.keyboard("{ArrowDown}");
+  const deleteItem = screen.getByRole("menuitem", { name: "Delete" });
+  expect(document.activeElement).toBe(deleteItem);
+
+  // ArrowUp navigates back to laterModule item
+  await user.keyboard("{ArrowUp}");
+  expect(document.activeElement).toBe(laterItem);
+  expect(screen.getByRole("menu")).toBeTruthy();
+});

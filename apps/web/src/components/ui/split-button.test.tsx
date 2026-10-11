@@ -114,6 +114,14 @@ test("SplitButton supports laterModule on More half while primary half works", a
   expect(screen.queryByRole("menu")).toBeNull();
   await user.keyboard(" ");
   expect(screen.queryByRole("menu")).toBeNull();
+  await user.keyboard("{ArrowDown}");
+  expect(screen.queryByRole("menu")).toBeNull();
+  await user.keyboard("{ArrowUp}");
+  expect(screen.queryByRole("menu")).toBeNull();
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(screen.queryByRole("menu")).toBeNull();
+  await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+  expect(screen.queryByRole("menu")).toBeNull();
 });
 
 test("SplitButton with link primary part supports laterModule", async () => {

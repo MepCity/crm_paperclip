@@ -1,6 +1,7 @@
 "use client";
 
 import type { Ref } from "react";
+import { useCallback, useRef } from "react";
 import {
   Tab as AriaTab,
   TabList as AriaTabList,
@@ -36,11 +37,87 @@ export function Tabs({ className, ...props }: TabsProps) {
 export function TabList<T extends object>({
   className,
   appearance = "default",
+  ref: forwardedRef,
   ...props
-}: TabListProps<T> & { appearance?: "default" | "record" }) {
+}: TabListProps<T> & {
+  appearance?: "default" | "record";
+  ref?: Ref<HTMLDivElement>;
+}) {
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  const setRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+
+      if (node) {
+        const handleKeyDownCapture = (e: KeyboardEvent) => {
+          if (
+            e.key !== "ArrowRight" &&
+            e.key !== "ArrowLeft" &&
+            e.key !== "ArrowDown" &&
+            e.key !== "ArrowUp" &&
+            e.key !== "Home" &&
+            e.key !== "End"
+          ) {
+            return;
+          }
+
+          const tabs = Array.from(node.querySelectorAll<HTMLElement>('[role="tab"]'));
+          if (tabs.length === 0) return;
+
+          const currentTab = tabs.find(
+            (tab) => tab === document.activeElement || tab.contains(document.activeElement),
+          );
+          if (!currentTab) return;
+
+          const currentIndex = tabs.indexOf(currentTab);
+          let targetIndex = -1;
+
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+            targetIndex = (currentIndex + 1) % tabs.length;
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+            targetIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+          } else if (e.key === "Home") {
+            targetIndex = 0;
+          } else if (e.key === "End") {
+            targetIndex = tabs.length - 1;
+          }
+
+          if (targetIndex === -1 || targetIndex === currentIndex) return;
+
+          const targetTab = tabs[targetIndex];
+          if (targetTab?.hasAttribute("data-later-module")) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            targetTab.focus();
+          }
+        };
+
+        node.addEventListener("keydown", handleKeyDownCapture, { capture: true });
+        cleanupRef.current = () => {
+          node.removeEventListener("keydown", handleKeyDownCapture, { capture: true });
+        };
+      }
+
+      if (forwardedRef) {
+        if (typeof forwardedRef === "function") {
+          forwardedRef(node);
+        } else if (typeof forwardedRef === "object" && "current" in forwardedRef) {
+          (forwardedRef as { current: HTMLDivElement | null }).current = node;
+        }
+      }
+    },
+    [forwardedRef],
+  );
+
   return (
     <AriaTabList
       {...props}
+      ref={setRef}
       className={composeRenderProps(
         className,
         (extra) =>

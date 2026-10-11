@@ -41,4 +41,43 @@ test("useLaterModule blocks events and retains keyboard focus", async () => {
 
   await user.keyboard(" ");
   expect(onClick).not.toHaveBeenCalled();
+
+  await user.keyboard("{ArrowDown}");
+  expect(onClick).not.toHaveBeenCalled();
+
+  await user.keyboard("{ArrowUp}");
+  expect(onClick).not.toHaveBeenCalled();
+});
+
+test("useLaterModule allows arrow keys on non-button elements while blocking Enter and Space", async () => {
+  const user = userEvent.setup();
+  const onKeyDown = vi.fn();
+
+  function TestRow({ laterModule }: { laterModule?: "M3" }) {
+    const ref = useLaterModule<HTMLDivElement>(laterModule);
+    return (
+      <div tabIndex={0} role="menuitem" ref={ref} onKeyDown={onKeyDown}>
+        Row
+      </div>
+    );
+  }
+
+  render(<TestRow laterModule="M3" />);
+  const row = screen.getByRole("menuitem", { name: "Row" });
+  row.focus();
+  expect(document.activeElement).toBe(row);
+
+  await user.keyboard("{ArrowDown}");
+  expect(onKeyDown).toHaveBeenCalledTimes(1);
+
+  await user.keyboard("{ArrowUp}");
+  expect(onKeyDown).toHaveBeenCalledTimes(2);
+
+  await user.keyboard("{Enter}");
+  // Enter is blocked so onKeyDown on element is not triggered
+  expect(onKeyDown).toHaveBeenCalledTimes(2);
+
+  await user.keyboard(" ");
+  // Space is blocked so onKeyDown on element is not triggered
+  expect(onKeyDown).toHaveBeenCalledTimes(2);
 });

@@ -67,7 +67,7 @@ export function Button({
   onPress,
   ...props
 }: ButtonProps) {
-  const laterRef = useLaterModule(laterModule, forwardedRef);
+  const laterRef = useLaterModule(laterModule, forwardedRef, { blockMenuArrows: true });
   const wasPendingRef = useRef(isPending ?? false);
   if (isPending) wasPendingRef.current = true;
 
