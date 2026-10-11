@@ -134,6 +134,90 @@ describe("MassUpdateDialog", () => {
     });
   });
 
+  it("does not call massUpdate and shows error when non-required text field is submitted empty", async () => {
+    const titleField = fields.find((field) => !field.required && field.dataType === "text");
+    if (!titleField) throw new Error("Expected non-required text field");
+    const records = createFixtureRecordService(ctx);
+    const massSpy = vi.spyOn(records, "massUpdate");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <MassUpdateDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a", "b"]}
+        fields={fields}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: titleField.label }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    expect(massSpy).not.toHaveBeenCalled();
+    expect(screen.getByText(`${titleField.label} cannot be empty.`)).toBeTruthy();
+  });
+
+  it("does not call massUpdate and shows error when picklist is submitted with -None-", async () => {
+    const records = createFixtureRecordService(ctx);
+    const massSpy = vi.spyOn(records, "massUpdate");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <MassUpdateDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a", "b"]}
+        fields={fields}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(screen.getByRole("button", { name: leadSource.label }));
+    await user.click(screen.getByRole("option", { name: "-None-" }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    expect(massSpy).not.toHaveBeenCalled();
+    expect(screen.getByText(`${leadSource.label} cannot be empty.`)).toBeTruthy();
+  });
+
+  it("calls massUpdate with false when boolean field is submitted untouched", async () => {
+    const booleanField = fields.find((field) => field.dataType === "boolean");
+    if (!booleanField) throw new Error("Expected boolean field");
+    const records = createFixtureRecordService(ctx);
+    const massSpy = vi.spyOn(records, "massUpdate");
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    const user = userEvent.setup();
+    render(
+      <MassUpdateDialog
+        isOpen
+        onOpenChange={() => {}}
+        module="Leads"
+        recordIds={["a", "b"]}
+        fields={fields}
+        onSuccess={() => {}}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await user.click(screen.getByRole("button", { name: "Field" }));
+    await user.click(screen.getByRole("option", { name: booleanField.label }));
+    await user.click(screen.getByRole("button", { name: "Update" }));
+    await waitFor(() => {
+      expect(massSpy).toHaveBeenCalledWith("Leads", ["a", "b"], {
+        [booleanField.apiName]: false,
+      });
+    });
+  });
+
   it("shows validation error from the server on the field input", async () => {
     const records = createFixtureRecordService(ctx);
     vi.spyOn(records, "massUpdate").mockRejectedValue(

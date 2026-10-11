@@ -26,6 +26,7 @@ function requiredEmptyMessage(field: FieldDefinition): string {
 }
 
 function isEmptyValue(field: FieldDefinition, value: FieldValue | undefined): boolean {
+  if (field.dataType === "boolean") return false;
   const normalized = normalizeFormValue(field, value);
   return normalized === null;
 }
@@ -89,13 +90,17 @@ export function MassUpdateDialog({
   async function submit() {
     if (!selectedField || busy) return;
     setGeneralError(null);
-    if (selectedField.required && isEmptyValue(selectedField, value)) {
+    if (isEmptyValue(selectedField, value)) {
       setFieldError(requiredEmptyMessage(selectedField));
       return;
     }
     setFieldError(null);
+    const resolvedValue =
+      selectedField.dataType === "boolean"
+        ? value === true
+        : normalizeFormValue(selectedField, value);
     const payload = {
-      [selectedField.apiName]: normalizeFormValue(selectedField, value),
+      [selectedField.apiName]: resolvedValue,
     };
     try {
       await massUpdate.mutateAsync({ ids: recordIds, input: payload });
