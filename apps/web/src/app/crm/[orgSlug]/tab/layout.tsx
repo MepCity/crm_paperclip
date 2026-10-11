@@ -9,5 +9,9 @@ export default async function CrmTabLayout({
   params: Promise<{ orgSlug: string }>;
 }) {
   const { orgSlug } = await params;
-  return <ApiProvider orgSlug={orgSlug}>{children}</ApiProvider>;
+  return (
+    <ApiProvider key={orgSlug} orgSlug={orgSlug}>
+      {children}
+    </ApiProvider>
+  );
 }
