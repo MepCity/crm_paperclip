@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, type Ref, useContext } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -10,10 +10,12 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  RootMenuTriggerStateContext,
   Separator,
   SubmenuTrigger,
 } from "react-aria-components";
 import { Button, type ButtonProps } from "./button";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 export { MenuTrigger, SubmenuTrigger };
 
@@ -29,18 +31,88 @@ export function MenuButton(props: ButtonProps) {
   return <Button variant="secondary" {...props} />;
 }
 
+interface RootMenuTriggerStateWithBlockedKeys {
+  openSubmenu?: (triggerKey: string, level: number) => void;
+  __laterModuleBlockedKeys?: Set<string>;
+}
+
 export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
   className,
+  laterModule,
+  ref: forwardedRef,
+  onAction,
   ...props
 }: MenuItemProps<T> & {
   variant?: "default" | "danger";
   appearance?: "default" | "measured" | "record";
+  laterModule?: ModuleKey;
+  ref?: Ref<HTMLDivElement>;
 }) {
+  const rootMenuTriggerState = useContext(
+    RootMenuTriggerStateContext,
+  ) as RootMenuTriggerStateWithBlockedKeys | null;
+
+  if (laterModule && rootMenuTriggerState) {
+    if (!rootMenuTriggerState.__laterModuleBlockedKeys) {
+      rootMenuTriggerState.__laterModuleBlockedKeys = new Set<string>();
+    }
+    if (props.id != null) {
+      rootMenuTriggerState.__laterModuleBlockedKeys.add(String(props.id));
+    }
+    const origOpenSubmenu = rootMenuTriggerState.openSubmenu?.bind(rootMenuTriggerState);
+    if (
+      origOpenSubmenu &&
+      !rootMenuTriggerState.openSubmenu?.name?.includes("blockedOpenSubmenu")
+    ) {
+      const blockedOpenSubmenu = (triggerKey: string, level: number) => {
+        const keyStr = String(triggerKey);
+        if (rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr)) {
+          return;
+        }
+
+        if (typeof document !== "undefined") {
+          const activeEl = document.activeElement;
+          const isActionOnNormalItem = Boolean(
+            activeEl &&
+              activeEl.getAttribute("role") === "menuitem" &&
+              !activeEl.hasAttribute("data-later-module"),
+          );
+
+          if (isActionOnNormalItem) {
+            return origOpenSubmenu(triggerKey, level);
+          }
+
+          if (activeEl?.hasAttribute("data-later-module")) {
+            return;
+          }
+
+          const hoveredLater =
+            document.querySelector("[data-later-module][data-hovered]") ??
+            document.querySelector("[data-later-module]:hover");
+          if (hoveredLater) {
+            return;
+          }
+        }
+
+        return origOpenSubmenu(triggerKey, level);
+      };
+      rootMenuTriggerState.openSubmenu = blockedOpenSubmenu;
+    }
+  }
+
+  const laterRef = useLaterModule(laterModule, forwardedRef, {
+    blockSubmenuArrows: true,
+  });
+
   return (
     <AriaMenuItem
       {...props}
+      {...(laterModule ? laterModuleProps(laterModule) : {})}
+      ref={laterRef}
+      onAction={laterModule ? undefined : onAction}
+      onHoverChange={laterModule ? () => {} : props.onHoverChange}
       className={composeRenderProps(
         className,
         (extra) =>
@@ -58,6 +130,7 @@ export interface MenuAction {
   label: string;
   onAction: () => void;
   isDisabled?: boolean;
+  laterModule?: ModuleKey;
 }
 
 const measuredMenuClass = "p-(--size-menu-inset) outline-none";

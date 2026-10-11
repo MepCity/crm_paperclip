@@ -20,6 +20,9 @@ export default function LinkDemo() {
       <Link href="#link1" variant="text">
         Text Link
       </Link>
+      <Link href="#later" variant="text" laterModule="M3">
+        Later module Link
+      </Link>
       <Link href="#link2" variant="primary">
         Button Link
       </Link>
