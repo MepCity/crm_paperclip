@@ -237,7 +237,7 @@ describe("record hooks", () => {
       Company: "Cache Co",
       Lead_Status: "Attempted to Contact",
     });
-    const recordKey = apiKeys.record("Leads", created.id);
+    const recordKey = apiKeys.record(ctx.orgSlug, "Leads", created.id);
     const pendingGet: { release: (() => void) | null } = { release: null };
     let blockNextGet = false;
     let staleGetFinished = false;

@@ -26,6 +26,7 @@ import {
   formPayload,
   formValuesEqual,
   initialFormValues,
+  normalizeFormValue,
   numberValue,
   textValue,
 } from "./form-model";
@@ -201,11 +202,21 @@ function LoadedRecordForm({
     return () => cancelAnimationFrame(frame);
   }, [errors, saving, config.rules]);
 
+  /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
+  const dependentClears: Readonly<Record<string, readonly string[]>> = config.rules.country
+    ? { [config.rules.country.field]: [config.rules.country.state] }
+    : {};
+
   function change(name: string, value: FieldValue) {
-    setValues((previous) => ({ ...previous, [name]: value }));
+    const field = byName.get(name);
+    const clears =
+      field && normalizeFormValue(field, value) === null ? (dependentClears[name] ?? []) : [];
+    const writes: Record<string, FieldValue> = { [name]: value };
+    for (const dependent of clears) writes[dependent] = null;
+    setValues((previous) => ({ ...previous, ...writes }));
     setErrors((previous) => {
       const next = { ...previous };
-      delete next[name];
+      for (const key of Object.keys(writes)) delete next[key];
       return next;
     });
   }
