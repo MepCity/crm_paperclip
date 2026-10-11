@@ -19,6 +19,7 @@ import type { FormRules } from "@/components/records/form/form-model";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import type { Icon } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 
 export interface StatusRibbonSectionProps {
   module: ModuleApiName;
@@ -58,7 +59,11 @@ export interface ModuleScreenDefinition {
     }[];
   };
   detail: {
-    header: (record: RecordData) => { title: string; subtitle?: string };
+    header: (record: RecordData) => {
+      title: string;
+      subtitle?: string;
+      subtitleLaterModule?: ModuleKey;
+    };
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;

@@ -129,6 +129,7 @@ export function FilterPanel({
                       label={item.label}
                       labelClassName="w-(--size-list-filter-label-width)"
                       isDisabled={item.disabled}
+                      laterModule={item.laterModule}
                       isSelected={selectedIds.includes(item.id)}
                       onChange={(selected) => {
                         setDrafts((current) => {

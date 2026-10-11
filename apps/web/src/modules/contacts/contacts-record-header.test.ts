@@ -27,5 +27,5 @@ test("reads a future lookup name without requiring a service type migration", ()
     contactsRecordHeaderIdentity(
       contactRecord({ Full_Name: "Sample Person", Account_Name: reference }),
     ),
-  ).toEqual({ title: "Sample Person", subtitle: "Sample Account" });
+  ).toEqual({ title: "Sample Person", subtitle: "Sample Account", subtitleLaterModule: "M3" });
 });

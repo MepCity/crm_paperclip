@@ -9,6 +9,7 @@ export function contactLookupName(value: unknown): string {
 export function contactsRecordHeaderIdentity(record: RecordData): {
   title: string;
   subtitle?: string;
+  subtitleLaterModule?: "M3";
 } {
   const text = (name: string) =>
     typeof record.fields[name] === "string" ? (record.fields[name] as string) : "";
@@ -17,5 +18,5 @@ export function contactsRecordHeaderIdentity(record: RecordData): {
   const salutation = text("Salutation");
   const title = [salutation === "-None-" ? "" : salutation, name].filter(Boolean).join(" ");
   const subtitle = contactLookupName(record.fields.Account_Name);
-  return subtitle ? { title, subtitle } : { title };
+  return subtitle ? { title, subtitle, subtitleLaterModule: "M3" } : { title };
 }

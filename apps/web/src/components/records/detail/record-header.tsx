@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import {
   Menu,
@@ -26,6 +27,7 @@ export interface RecordMenuGroup {
 export interface RecordHeaderProps {
   title: string;
   subtitle?: string;
+  subtitleLaterModule?: ModuleKey;
   back: { label: string } & (
     | { href: string; onPress?: never }
     | { href?: never; onPress: () => void }
@@ -42,6 +44,7 @@ export interface RecordHeaderProps {
 export function RecordHeader({
   title,
   subtitle,
+  subtitleLaterModule,
   back,
   commands = [],
   menuGroups = [],
@@ -96,7 +99,13 @@ export function RecordHeader({
             >
               -
             </span>
-            <span className="text-md font-normal">{subtitle}</span>
+            {subtitleLaterModule ? (
+              <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
+                {subtitle}
+              </Link>
+            ) : (
+              <span className="text-md font-normal">{subtitle}</span>
+            )}
           </>
         ) : null}
       </h1>
@@ -142,6 +151,7 @@ export function RecordHeader({
                         appearance="record"
                         onAction={item.onAction}
                         isDisabled={item.isDisabled}
+                        laterModule={item.laterModule}
                       >
                         {item.label}
                       </MenuItem>
