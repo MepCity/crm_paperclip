@@ -65,7 +65,7 @@ export function describeRecordServiceContract(
       filterMarker,
       sortFields,
       duplicatePermittedField,
-      linkedModule,
+      expectedUniqueFields,
       typeValidationCases,
       optional: moduleOptional,
     } = moduleDef;
@@ -79,7 +79,9 @@ export function describeRecordServiceContract(
     const massUpdateInvalidPicklist = moduleOptional?.massUpdateInvalidPicklist;
     const panelFilters = moduleOptional?.panelFilters;
     const sortWithNumeric = moduleOptional?.sortWithNumeric;
-    const connectedField = moduleOptional?.connectedLookup?.field;
+    const connectedLookup = moduleOptional?.connectedLookup;
+    const connectedField = connectedLookup?.field;
+    const ownerInvalidConnectedReference = moduleOptional?.ownerInvalidConnectedReference;
     const massUpdateClearablePhone = moduleOptional?.massUpdateClearablePhone;
     const massUpdateInvalidNumeric = moduleOptional?.massUpdateInvalidNumeric;
     const lengthValidationField = moduleOptional?.lengthValidationField ?? markerField;
@@ -134,7 +136,9 @@ export function describeRecordServiceContract(
         expect(typeof field.massUpdate).toBe("boolean");
         expect(Object.keys(field.views).sort()).toEqual(["create", "edit", "quickCreate", "view"]);
         for (const value of Object.values(field.views)) expect(typeof value).toBe("boolean");
-        expect(field.unique).toBe(false);
+        if (expectedUniqueFields !== undefined) {
+          expect(field.unique).toBe(expectedUniqueFields.includes(field.apiName));
+        }
         if (field.picklist)
           for (const option of field.picklist) {
             expect(typeof option.displayValue).toBe("string");
@@ -397,7 +401,7 @@ export function describeRecordServiceContract(
       for (const [field, value] of typeValidationCases)
         await validation(service.create(moduleApiName, input({ [field]: value })), field);
     });
-    it("accepts duplicate Email on creation and partial update", async () => {
+    it("accepts duplicate permitted field values on creation and partial update", async () => {
       const email = `${randomUUID()}@example.org`;
       const first = await service.create(
         moduleApiName,
@@ -471,7 +475,9 @@ export function describeRecordServiceContract(
         service.update(moduleApiName, created.id, { [sys.owner]: "foreign-member" }),
         sys.owner,
       );
-      for (const Owner of [null, "", 3, { module: linkedModule.apiName, id: "second-member" }]) {
+      const invalidOwners: FieldValue[] = [null, "", 3];
+      if (ownerInvalidConnectedReference) invalidOwners.push(ownerInvalidConnectedReference);
+      for (const Owner of invalidOwners) {
         await validation(service.create(moduleApiName, input({ [sys.owner]: Owner })), sys.owner);
         await validation(
           service.update(moduleApiName, created.id, { [sys.owner]: Owner }),
@@ -621,20 +627,24 @@ export function describeRecordServiceContract(
       await expect(other.delete(moduleApiName, [created.id])).rejects.toBeInstanceOf(NotFoundError);
       expect(await service.get(moduleApiName, created.id)).toEqual(created);
     });
-    it.skipIf(!connectedField)(
+    it.skipIf(!connectedLookup)(
       "detaches metadata, views, records, nested values and mutation inputs",
       async () => {
-        if (!connectedField) throw new Error("Connected lookup scenario is required.");
-        const reference = { module: linkedModule.apiName, id: linkedModule.syntheticContactId };
-        const created = await service.create(moduleApiName, input({ [connectedField]: reference }));
+        if (!connectedLookup) throw new Error("Connected lookup scenario is required.");
+        const lookupField = connectedLookup.field;
+        const reference = {
+          module: connectedLookup.linkedModuleApiName,
+          id: connectedLookup.syntheticReferenceId,
+        };
+        const created = await service.create(moduleApiName, input({ [lookupField]: reference }));
         reference.id = "changed-input";
         (created.fields as Record<string, FieldValue>)[markerField] = "changed-return";
-        (created.fields[connectedField] as { id: string }).id = "changed-reference";
+        (created.fields[lookupField] as { id: string }).id = "changed-reference";
         const reread = await service.get(moduleApiName, created.id);
         expect(reread.fields[markerField]).toBe(markerSample);
-        expect(reread.fields[connectedField]).toEqual({
-          module: linkedModule.apiName,
-          id: linkedModule.syntheticContactId,
+        expect(reread.fields[lookupField]).toEqual({
+          module: connectedLookup.linkedModuleApiName,
+          id: connectedLookup.syntheticReferenceId,
         });
         (reread.fields as Record<string, FieldValue>)[markerField] = "changed-get";
         const page = await service.list(moduleApiName, {
@@ -681,19 +691,19 @@ export function describeRecordServiceContract(
             .map((option) => option.storedValue),
         ).not.toContain("changed-picklist");
         const updateInput = {
-          [connectedField]: {
-            module: linkedModule.apiName,
-            id: linkedModule.updatedContactId,
+          [lookupField]: {
+            module: connectedLookup.linkedModuleApiName,
+            id: connectedLookup.updatedReferenceId,
           },
         };
         const updated = await service.update(moduleApiName, created.id, updateInput);
-        (updateInput[connectedField] as { id: string }).id = "changed-update-input";
+        (updateInput[lookupField] as { id: string }).id = "changed-update-input";
         (updated.fields as Record<string, FieldValue>)[markerField] = "changed-update-return";
         expect((await service.get(moduleApiName, created.id)).fields).toMatchObject({
           [markerField]: markerSample,
-          [connectedField]: {
-            module: linkedModule.apiName,
-            id: linkedModule.updatedContactId,
+          [lookupField]: {
+            module: connectedLookup.linkedModuleApiName,
+            id: connectedLookup.updatedReferenceId,
           },
         });
       },
@@ -1459,10 +1469,11 @@ export function describeRecordServiceContract(
         },
       );
     });
-    it.skipIf(!connectedField)(
+    it.skipIf(!connectedLookup)(
       "panel multi_module_lookup is_not_empty and extra datetime filter rejections",
       async () => {
-        if (!connectedField) throw new Error("Connected lookup scenario is required.");
+        if (!connectedLookup) throw new Error("Connected lookup scenario is required.");
+        const lookupField = connectedLookup.field;
         const adapter = await makeService(ctx);
         const marker = `Lookup-empty-${randomUUID()}`;
         const empty = await adapter.create(moduleApiName, input({ [markerField]: marker }));
@@ -1470,22 +1481,22 @@ export function describeRecordServiceContract(
           moduleApiName,
           input({
             [markerField]: marker,
-            [connectedField]: {
-              module: linkedModule.apiName,
-              id: linkedModule.contractLinkedContactId,
+            [lookupField]: {
+              module: connectedLookup.linkedModuleApiName,
+              id: connectedLookup.contractLinkedReferenceId,
             },
           }),
         );
         await assertPanelSet(
           adapter,
           marker,
-          { field: connectedField, comparator: "is_not_empty", value: null },
+          { field: lookupField, comparator: "is_not_empty", value: null },
           [linked.id],
         );
         await assertPanelSet(
           adapter,
           marker,
-          { field: connectedField, comparator: "is_empty", value: null },
+          { field: lookupField, comparator: "is_empty", value: null },
           [empty.id],
         );
         const extraInvalid = [

@@ -189,9 +189,11 @@ describeRecordServiceContract(
 ```
 
 For another module, add a `RecordServiceContractModuleDefinition` (API name, labels,
-`buildMinimalValidInput`, `systemFields`, `filterMarker`, sort fields and any
-`optional` scenario blocks your adapter supports) beside the Leads one and pass it
-as the third argument. The suite body stays module-neutral.
+`buildMinimalValidInput`, `systemFields`, `filterMarker`, sort fields,
+`expectedUniqueFields` when uniqueness should be asserted, and any `optional`
+scenario blocks your adapter supports) beside the Leads one and pass it as the
+third argument. Connected-module sample IDs live only under `optional.connectedLookup`;
+the suite body stays module-neutral.
 
 The suite invokes only public methods. Each test gets a fresh synthetic organization;
 an adapter harness must provision that organization and bound user, and clean up its

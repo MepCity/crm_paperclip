@@ -17,13 +17,6 @@ export type RecordServiceContractFilterMarker = {
   tenantOther: string;
 };
 
-export type RecordServiceContractLinkedModule = {
-  apiName: string;
-  syntheticContactId: string;
-  updatedContactId: string;
-  contractLinkedContactId: string;
-};
-
 export type RecordServiceContractPanelFiltersScenario = {
   textFields: readonly string[];
   numberFields: readonly string[];
@@ -42,6 +35,10 @@ export type RecordServiceContractSortWithNumericScenario = {
 
 export type RecordServiceContractConnectedLookupScenario = {
   field: string;
+  linkedModuleApiName: string;
+  syntheticReferenceId: string;
+  updatedReferenceId: string;
+  contractLinkedReferenceId: string;
 };
 
 /** Scenarios that only apply when a module publishes the expected metadata shape. */
@@ -74,6 +71,8 @@ export type RecordServiceContractOptionalScenarios = {
   panelFilters?: RecordServiceContractPanelFiltersScenario;
   sortWithNumeric?: RecordServiceContractSortWithNumericScenario;
   connectedLookup?: RecordServiceContractConnectedLookupScenario;
+  /** Invalid Owner payload shaped as a connected-module reference (module-specific). */
+  ownerInvalidConnectedReference?: { module: string; id: string };
   massUpdateClearablePhone?: string;
   massUpdateInvalidNumeric?: string;
   lengthValidationField?: string;
@@ -91,7 +90,8 @@ export type RecordServiceContractModuleDefinition = {
   filterMarker: RecordServiceContractFilterMarker;
   duplicatePermittedField: string;
   sortFields: readonly [string, string];
-  linkedModule: RecordServiceContractLinkedModule;
+  /** When set, each field's `unique` flag must match membership in this list. */
+  expectedUniqueFields?: readonly string[];
   typeValidationCases: readonly (readonly [string, FieldValue])[];
   optional?: RecordServiceContractOptionalScenarios;
 };
@@ -124,12 +124,7 @@ export const leadsRecordServiceContractModule: RecordServiceContractModuleDefini
   },
   sortFields: ["Company", "No_of_Employees"],
   duplicatePermittedField: "Email",
-  linkedModule: {
-    apiName: "Contacts",
-    syntheticContactId: "synthetic-contact",
-    updatedContactId: "updated-contact",
-    contractLinkedContactId: "contract-linked-contact",
-  },
+  expectedUniqueFields: [],
   typeValidationCases: [
     ["Company", 3],
     ["No_of_Employees", 1.5],
@@ -179,7 +174,12 @@ export const leadsRecordServiceContractModule: RecordServiceContractModuleDefini
     },
     connectedLookup: {
       field: "Connected_To__s",
+      linkedModuleApiName: "Contacts",
+      syntheticReferenceId: "synthetic-contact",
+      updatedReferenceId: "updated-contact",
+      contractLinkedReferenceId: "contract-linked-contact",
     },
+    ownerInvalidConnectedReference: { module: "Contacts", id: "second-member" },
     massUpdateClearablePhone: "Phone",
     massUpdateInvalidNumeric: "No_of_Employees",
     filterValidationPicklist: "Lead_Status",
