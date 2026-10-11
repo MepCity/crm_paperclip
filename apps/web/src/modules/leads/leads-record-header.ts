@@ -1,5 +1,5 @@
 import type { FieldValue, RecordData } from "@crm/core/records";
-import { LEADS_DETAIL_FIELD_API_NAMES } from "@/lib/records/leads-detail.constants";
+import { LEADS_DETAIL_FIELD_API_NAMES } from "@/modules/leads/leads-detail.constants";
 
 function textValue(fields: Readonly<Record<string, FieldValue>>, apiName: string): string {
   const value = fields[apiName];

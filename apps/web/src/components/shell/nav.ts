@@ -1,6 +1,6 @@
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
-import { LEADS_MODULE } from "@/modules/leads/list-config";
+import { moduleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
 export type NavLinkIconAccentToken = "--color-accent-blue";
@@ -73,16 +73,14 @@ export const shellNav: NavConfig = {
           id: "sales",
           label: "Sales",
           icon: Icons.folder,
-          links: [
-            {
-              id: "leads",
-              label: "Leads",
-              icon: Icons.building,
-              href: (slug) => moduleListDefaultPath(slug, LEADS_MODULE),
-              activePrefix: (slug) => moduleTabPath(slug, LEADS_MODULE),
-              match: "prefix",
-            },
-          ],
+          links: moduleScreens.map((definition) => ({
+            id: definition.navigation.id,
+            label: definition.pluralLabel,
+            icon: definition.navigation.icon,
+            href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
+            activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
+            match: "prefix" as const,
+          })),
         },
       ],
     },
@@ -117,9 +115,11 @@ export interface CreateRecordEntry {
   path: (orgSlug: string) => string;
 }
 
-export const createRecordsNav: readonly CreateRecordEntry[] = [
-  { id: "Leads", label: "Lead", path: (slug) => moduleCreatePath(slug, LEADS_MODULE) },
-];
+export const createRecordsNav: readonly CreateRecordEntry[] = moduleScreens.map((definition) => ({
+  id: definition.apiName,
+  label: definition.singularLabel,
+  path: (slug) => moduleCreatePath(slug, definition.tab),
+}));
 
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
   const href = link.href(orgSlug);

@@ -9,7 +9,7 @@ import {
   buildLeadStatusStages,
   buildLeadStatusTerminalGroups,
   LEADS_STATUS_RIBBON_LABELS,
-} from "@/lib/records/leads-status-ribbon";
+} from "@/modules/leads/leads-status-ribbon";
 
 export type LeadStatusRibbonSectionProps = {
   module: ModuleApiName;

@@ -32,7 +32,7 @@ const events: TimelineEvent[] = [
   {
     id: "e1",
     at: "2026-10-04T14:32:00.000Z",
-    kind: "lead_image_upload",
+    kind: "image_upload",
     title: "Lead Image uploaded",
     actorName: "Sample Owner",
   },

@@ -330,7 +330,7 @@ above Delete).
 
 ### Leads route adapter
 
-`modules/leads/leads-form-client.tsx` uses `lib/crm-paths.ts` for the create,
+`modules/module-form-client.tsx` uses `lib/crm-paths.ts` for the create,
 clone, record and list destinations. Server pages require organization membership
 and supply the session user ID. The existing list Create Lead and detail Edit
 links open these routes. Edit Cancel returns to that record; Create Cancel uses

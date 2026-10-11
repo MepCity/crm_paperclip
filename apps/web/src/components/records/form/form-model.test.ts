@@ -1,6 +1,7 @@
 import type { FieldDefinition, ModuleMetadata } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
+import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import {
   buildFormModel,
   formFields,
@@ -9,7 +10,6 @@ import {
   numberValue,
   textValue,
 } from "./form-model";
-import { leadsFormRules, leadsFormFields as names } from "./leads-form-rules";
 
 function field(apiName: string, options: Partial<FieldDefinition> = {}): FieldDefinition {
   return {
