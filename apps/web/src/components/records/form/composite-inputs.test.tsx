@@ -1,5 +1,5 @@
 import type { FieldDefinition } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -224,12 +224,37 @@ test("dual address groups support copy in both directions and per-group clear", 
   expect((screen.getByRole("textbox", { name: "Mailing_Street" }) as HTMLInputElement).value).toBe(
     "1 King St",
   );
-  const clearButtons = screen.getAllByRole("button", { name: "Clear All" });
-  await user.click(clearButtons[0]!);
+  const mailingGroup = screen.getByRole("group", { name: "Mailing Address" });
+  const mailingClear = within(mailingGroup).getByRole("button", { name: "Clear All" });
+  await user.click(mailingClear);
   expect((screen.getByRole("textbox", { name: "Mailing_City" }) as HTMLInputElement).value).toBe(
     "",
   );
   expect((screen.getByRole("textbox", { name: "Other_City" }) as HTMLInputElement).value).toBe(
     "Toronto",
   );
+});
+
+test("copy address menu renders only for exactly two groups", () => {
+  const group = { id: "a", label: "A", subfieldApiNames: ["A_Street"] as const };
+  const { rerender } = render(<CopyAddressMenu groups={[group]} onCopy={() => {}} />);
+  expect(screen.queryByRole("button", { name: "Copy Address" })).toBeNull();
+  rerender(
+    <CopyAddressMenu
+      groups={[group, { id: "b", label: "B", subfieldApiNames: ["B_Street"] }]}
+      onCopy={() => {}}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Copy Address" })).toBeTruthy();
+  rerender(
+    <CopyAddressMenu
+      groups={[
+        group,
+        { id: "b", label: "B", subfieldApiNames: ["B_Street"] },
+        { id: "c", label: "C", subfieldApiNames: ["C_Street"] },
+      ]}
+      onCopy={() => {}}
+    />,
+  );
+  expect(screen.queryByRole("button", { name: "Copy Address" })).toBeNull();
 });

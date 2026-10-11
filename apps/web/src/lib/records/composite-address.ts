@@ -23,7 +23,8 @@ export function addressFieldPrefix(parentApiName: string): string {
 
 export function addressSubfieldApiName(parentApiName: string, suffix: string): string {
   const prefix = addressFieldPrefix(parentApiName);
-  return prefix ? `${prefix}${suffix}` : suffix;
+  const part = suffix === "Zip_Code" && parentApiName !== "Address" ? "Zip" : suffix;
+  return prefix ? `${prefix}${part}` : part;
 }
 
 export function addressSubfieldApiNames(parentApiName: string): readonly string[] {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { addressSubfieldApiName, formatCompositeAddress } from "./composite-address";
+import {
+  addressSubfieldApiName,
+  addressSubfieldApiNames,
+  formatCompositeAddress,
+} from "./composite-address";
 
 describe("addressSubfieldApiName", () => {
   it("maps Leads Address parent to unprefixed sub-fields", () => {
@@ -9,7 +13,8 @@ describe("addressSubfieldApiName", () => {
 
   it("maps Contacts-style parents to prefixed sub-fields", () => {
     expect(addressSubfieldApiName("Mailing_Address", "Country")).toBe("Mailing_Country");
-    expect(addressSubfieldApiName("Other_Address", "Zip_Code")).toBe("Other_Zip_Code");
+    expect(addressSubfieldApiName("Other_Address", "Zip_Code")).toBe("Other_Zip");
+    expect(addressSubfieldApiNames("Mailing_Address")).toContain("Mailing_Zip");
   });
 });
 

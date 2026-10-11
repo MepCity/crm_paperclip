@@ -149,7 +149,7 @@ export interface CopyAddressMenuProps {
 }
 
 export function CopyAddressMenu({ groups, disabled, onCopy }: CopyAddressMenuProps) {
-  if (groups.length < 2) return null;
+  if (groups.length !== 2) return null;
   const items = groups.flatMap((from) =>
     groups
       .filter((to) => to.id !== from.id)
@@ -162,11 +162,7 @@ export function CopyAddressMenu({ groups, disabled, onCopy }: CopyAddressMenuPro
   );
   return (
     <MenuTrigger>
-      <Button
-        variant="ghost"
-        className="record-form-copy-address"
-        isDisabled={disabled}
-      >
+      <Button variant="ghost" className="record-form-copy-address" isDisabled={disabled}>
         {RECORD_FORM_COPY.copyAddress}
       </Button>
       <Menu

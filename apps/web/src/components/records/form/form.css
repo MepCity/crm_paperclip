@@ -115,6 +115,13 @@
   margin-bottom: calc(var(--size-form-section-title-center-below) - 0.5em);
 }
 
+.record-form-section:first-child:has(.record-form-section__header-end) .record-form-section__title {
+  position: static;
+  transform: none;
+  margin-top: calc(var(--size-form-section-title-center-above) - 0.5em);
+  margin-bottom: calc(var(--size-form-section-title-center-below) - 0.5em);
+}
+
 .record-form-portrait {
   width: var(--size-form-portrait);
   height: var(--size-form-portrait);
