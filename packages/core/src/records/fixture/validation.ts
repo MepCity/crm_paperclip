@@ -4,7 +4,7 @@ import { leadsMetadata } from "./metadata";
 
 import { fixtureModules } from "./registry";
 
-const defaultManaged = fixtureModules.Leads!.managedFields;
+const defaultManaged = fixtureModules.Leads?.managedFields ?? new Set<string>();
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
   if (typeof value === "object" && value !== null) return value.id.length;

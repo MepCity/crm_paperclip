@@ -988,26 +988,55 @@ export const contactsMetadata: ModuleMetadata = {
     },
   ],
   layout: [
-  {
-    "label": "Contact Image",
-    "columnCount": 1,
-    "columns": [
-      [
-        "Record_Image"
-      ]
-    ],
-    "fields": [
-      "Record_Image"
-    ]
-  },
-  {
-    "label": "Contact Information",
-    "columnCount": 2,
-    "columns": [
-      [
-        "Owner"
+    {
+      label: "Contact Image",
+      columnCount: 1,
+      columns: [["Record_Image"]],
+      fields: ["Record_Image"],
+    },
+    {
+      label: "Contact Information",
+      columnCount: 2,
+      columns: [
+        ["Owner"],
+        [
+          "Lead_Source",
+          "First_Name",
+          "Last_Name",
+          "Full_Name",
+          "Account_Name",
+          "Vendor_Name",
+          "Email",
+          "Title",
+          "Department",
+          "Phone",
+          "Home_Phone",
+          "Other_Phone",
+          "Fax",
+          "Mobile",
+          "Date_of_Birth",
+          "Tag",
+          "Assistant",
+          "Asst_Phone",
+          "Email_Opt_Out",
+          "Created_By",
+          "Skype_ID",
+          "Modified_By",
+          "Created_Time",
+          "Modified_Time",
+          "Salutation",
+          "Secondary_Email",
+          "Last_Activity_Time",
+          "Twitter",
+          "Reporting_To",
+          "Unsubscribed_Mode",
+          "Unsubscribed_Time",
+          "id",
+          "Connected_To__s",
+        ],
       ],
-      [
+      fields: [
+        "Owner",
         "Lead_Source",
         "First_Name",
         "Last_Name",
@@ -1040,51 +1069,39 @@ export const contactsMetadata: ModuleMetadata = {
         "Unsubscribed_Mode",
         "Unsubscribed_Time",
         "id",
-        "Connected_To__s"
-      ]
-    ],
-    "fields": [
-      "Owner",
-      "Lead_Source",
-      "First_Name",
-      "Last_Name",
-      "Full_Name",
-      "Account_Name",
-      "Vendor_Name",
-      "Email",
-      "Title",
-      "Department",
-      "Phone",
-      "Home_Phone",
-      "Other_Phone",
-      "Fax",
-      "Mobile",
-      "Date_of_Birth",
-      "Tag",
-      "Assistant",
-      "Asst_Phone",
-      "Email_Opt_Out",
-      "Created_By",
-      "Skype_ID",
-      "Modified_By",
-      "Created_Time",
-      "Modified_Time",
-      "Salutation",
-      "Secondary_Email",
-      "Last_Activity_Time",
-      "Twitter",
-      "Reporting_To",
-      "Unsubscribed_Mode",
-      "Unsubscribed_Time",
-      "id",
-      "Connected_To__s"
-    ]
-  },
-  {
-    "label": "Address Information",
-    "columnCount": 2,
-    "columns": [
-      [
+        "Connected_To__s",
+      ],
+    },
+    {
+      label: "Address Information",
+      columnCount: 2,
+      columns: [
+        [
+          "Mailing_Address",
+          "Mailing_City",
+          "Mailing_Coordinates",
+          "Mailing_Country",
+          "Mailing_Flat_House_No_Building_Apartment_Name",
+          "Mailing_Latitude",
+          "Mailing_Longitude",
+          "Mailing_State",
+          "Mailing_Street",
+          "Mailing_Zip",
+        ],
+        [
+          "Other_Address",
+          "Other_City",
+          "Other_Coordinates",
+          "Other_Country",
+          "Other_Flat_House_No_Building_Apartment_Name",
+          "Other_Latitude",
+          "Other_Longitude",
+          "Other_State",
+          "Other_Street",
+          "Other_Zip",
+        ],
+      ],
+      fields: [
         "Mailing_Address",
         "Mailing_City",
         "Mailing_Coordinates",
@@ -1094,9 +1111,7 @@ export const contactsMetadata: ModuleMetadata = {
         "Mailing_Longitude",
         "Mailing_State",
         "Mailing_Street",
-        "Mailing_Zip"
-      ],
-      [
+        "Mailing_Zip",
         "Other_Address",
         "Other_City",
         "Other_Coordinates",
@@ -1106,45 +1121,16 @@ export const contactsMetadata: ModuleMetadata = {
         "Other_Longitude",
         "Other_State",
         "Other_Street",
-        "Other_Zip"
-      ]
-    ],
-    "fields": [
-      "Mailing_Address",
-      "Mailing_City",
-      "Mailing_Coordinates",
-      "Mailing_Country",
-      "Mailing_Flat_House_No_Building_Apartment_Name",
-      "Mailing_Latitude",
-      "Mailing_Longitude",
-      "Mailing_State",
-      "Mailing_Street",
-      "Mailing_Zip",
-      "Other_Address",
-      "Other_City",
-      "Other_Coordinates",
-      "Other_Country",
-      "Other_Flat_House_No_Building_Apartment_Name",
-      "Other_Latitude",
-      "Other_Longitude",
-      "Other_State",
-      "Other_Street",
-      "Other_Zip"
-    ]
-  },
-  {
-    "label": "Description Information",
-    "columnCount": 1,
-    "columns": [
-      [
-        "Description"
-      ]
-    ],
-    "fields": [
-      "Description"
-    ]
-  }
-],
+        "Other_Zip",
+      ],
+    },
+    {
+      label: "Description Information",
+      columnCount: 1,
+      columns: [["Description"]],
+      fields: ["Description"],
+    },
+  ],
 };
 
 for (const field of contactsMetadata.fields) {

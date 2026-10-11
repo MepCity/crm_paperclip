@@ -527,9 +527,9 @@ describe("operation routes", () => {
       (await (await call(operations.record, a, { module: "Contacts", recordId: id })).json())
         .data[0].Last_Name,
     ).toBe("Updated Contact");
-    expect(
-      (await call(operations.delete, a, { module: "Contacts", recordId: id })).status,
-    ).toBe(200);
+    expect((await call(operations.delete, a, { module: "Contacts", recordId: id })).status).toBe(
+      200,
+    );
     expect((await call(operations.record, a, { module: "Contacts", recordId: id })).status).toBe(
       404,
     );

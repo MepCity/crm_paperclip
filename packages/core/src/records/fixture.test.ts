@@ -1188,11 +1188,74 @@ describe("Contacts fixture", () => {
   it("lists all ten contacts views", async () => {
     expect(await make().listViews("Contacts")).toHaveLength(10);
   });
-  it("matches the exported field inventory", async () => {
+  it("matches the exported field inventory and picklist values", async () => {
     const metadata = await make().getModule("Contacts");
     expect(metadata.fields).toHaveLength(61);
-    expect(metadata.fields.find((field) => field.apiName === "Date_of_Birth")?.dataType).toBe(
-      "date",
+    const expectedFieldInventory = [
+      ["Mailing_Latitude", "double"],
+      ["Mailing_Longitude", "double"],
+      ["Other_Latitude", "double"],
+      ["Other_Longitude", "double"],
+      ["Owner", "ownerlookup"],
+      ["Lead_Source", "picklist"],
+      ["First_Name", "text"],
+      ["Last_Name", "text"],
+      ["Account_Name", "lookup"],
+      ["Vendor_Name", "lookup"],
+      ["Email", "email"],
+      ["Title", "text"],
+      ["Department", "text"],
+      ["Phone", "phone"],
+      ["Home_Phone", "phone"],
+      ["Other_Phone", "phone"],
+      ["Fax", "text"],
+      ["Mobile", "phone"],
+      ["Date_of_Birth", "date"],
+      ["Assistant", "text"],
+      ["Asst_Phone", "phone"],
+      ["Created_By", "ownerlookup"],
+      ["Modified_By", "ownerlookup"],
+      ["Created_Time", "datetime"],
+      ["Modified_Time", "datetime"],
+      ["Full_Name", "text"],
+      ["Description", "textarea"],
+      ["Email_Opt_Out", "boolean"],
+      ["Skype_ID", "text"],
+      ["Salutation", "picklist"],
+      ["Secondary_Email", "email"],
+      ["Last_Activity_Time", "datetime"],
+      ["Twitter", "text"],
+      ["Tag", "text"],
+      ["Record_Image", "profileimage"],
+      ["Reporting_To", "lookup"],
+      ["Unsubscribed_Mode", "picklist"],
+      ["Unsubscribed_Time", "datetime"],
+      ["id", "bigint"],
+      ["Change_Log_Time__s", "datetime"],
+      ["Locked__s", "boolean"],
+      ["Last_Enriched_Time__s", "datetime"],
+      ["Enrich_Status__s", "picklist"],
+      ["Mailing_Address", "textarea"],
+      ["Mailing_Country", "picklist"],
+      ["Mailing_Flat_House_No_Building_Apartment_Name", "text"],
+      ["Mailing_Street", "text"],
+      ["Mailing_City", "text"],
+      ["Mailing_State", "picklist"],
+      ["Mailing_Zip", "text"],
+      ["Mailing_Coordinates", "textarea"],
+      ["Other_Address", "textarea"],
+      ["Other_Country", "picklist"],
+      ["Other_Flat_House_No_Building_Apartment_Name", "text"],
+      ["Other_Street", "text"],
+      ["Other_City", "text"],
+      ["Other_State", "picklist"],
+      ["Other_Zip", "text"],
+      ["Other_Coordinates", "textarea"],
+      ["nearby_distance__s", "double"],
+      ["Connected_To__s", "multi_module_lookup"],
+    ];
+    expect(metadata.fields.map((field) => [field.apiName, field.dataType])).toEqual(
+      expectedFieldInventory,
     );
     expect(
       metadata.fields
@@ -1202,6 +1265,55 @@ describe("Contacts fixture", () => {
       ["Account_Name", "Accounts"],
       ["Vendor_Name", "Vendors"],
       ["Reporting_To", "Contacts"],
+    ]);
+
+    const picklists = Object.fromEntries(
+      metadata.fields
+        .filter((field) => field.picklist)
+        .map((field) => [
+          field.apiName,
+          field.picklist?.map((opt) => [opt.displayValue, opt.storedValue]),
+        ]),
+    );
+    expect(picklists.Lead_Source).toEqual([
+      ["-None-", "-None-"],
+      ["Advertisement", "Advertisement"],
+      ["Cold Call", "Cold Call"],
+      ["Employee Referral", "Employee Referral"],
+      ["External Referral", "External Referral"],
+      ["Online Store", "OnlineStore"],
+      ["Partner", "Partner"],
+      ["X (Twitter)", "Twitter"],
+      ["Facebook", "Facebook"],
+      ["Public Relations", "Public Relations"],
+      ["Sales Email Alias", "Sales Mail Alias"],
+      ["Seminar Partner", "Seminar Partner"],
+      ["Internal Seminar", "Seminar-Internal"],
+      ["Trade Show", "Trade Show"],
+      ["Web Download", "Web Download"],
+      ["Web Research", "Web Research"],
+      ["Web Cases", "Web Cases"],
+      ["Web Mail", "Web Mail"],
+      ["Chat", "Chat"],
+    ]);
+    expect(picklists.Salutation).toEqual([
+      ["-None-", "-None-"],
+      ["Mr.", "Mr."],
+      ["Mrs.", "Mrs."],
+      ["Ms.", "Ms."],
+      ["Dr.", "Dr."],
+      ["Prof.", "Prof."],
+    ]);
+    expect(picklists.Unsubscribed_Mode).toEqual([
+      ["Consent form", "Consent form"],
+      ["Manual", "Manual"],
+      ["Unsubscribe link", "Unsubscribe link"],
+      ["reference CRM campaigns", "reference CRM campaigns"],
+    ]);
+    expect(picklists.Enrich_Status__s).toEqual([
+      ["Available", "Available"],
+      ["Enriched", "Enriched"],
+      ["Data not found", "Data not found"],
     ]);
   });
 });
