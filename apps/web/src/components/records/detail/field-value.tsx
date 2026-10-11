@@ -3,6 +3,7 @@
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { Link } from "@/components/ui/link";
+import { useOptionalOrgSlug } from "@/lib/api/client/provider";
 import { EMPTY_FIELD_DISPLAY, formatFieldValue, isFieldValueEmpty } from "../field-format";
 
 export interface FieldValueViewProps {
@@ -12,6 +13,7 @@ export interface FieldValueViewProps {
   format: FormatOptions;
   /** ISO timestamp paired with `Created_By` / `Modified_By`. */
   auditTimestamp?: string | null;
+  orgSlug?: string;
 }
 
 export function FieldValueView({
@@ -20,7 +22,11 @@ export function FieldValueView({
   ownerNames = {},
   format,
   auditTimestamp,
+  orgSlug,
 }: FieldValueViewProps) {
+  const contextOrgSlug = useOptionalOrgSlug();
+  const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
+
   if (isFieldValueEmpty(field, value)) {
     return <span className="detail-field-value">{EMPTY_FIELD_DISPLAY}</span>;
   }
@@ -29,6 +35,7 @@ export function FieldValueView({
     auditTimestamp,
     multiline: field.dataType === "textarea",
     linkWebsite: true,
+    orgSlug: effectiveOrgSlug,
   });
 
   if (rendered.kind === "empty") {
@@ -49,9 +56,10 @@ export function FieldValueView({
   if (rendered.kind === "link") {
     return (
       <Link
-        href={rendered.link.href}
+        href={rendered.link.href ?? "#"}
         variant="body"
         prefetch={false}
+        laterModule={rendered.link.laterModule}
         className="detail-field-value detail-field-value-link"
       >
         {rendered.link.text}

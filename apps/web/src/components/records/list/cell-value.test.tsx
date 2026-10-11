@@ -167,10 +167,45 @@ test("types outside the list columns stay plain text", () => {
 
   rerender(
     <CellValue
-      field={field("lookup")}
+      field={field("multi_module_lookup")}
       value={{ module: "Accounts", id: "acc-1" }}
       format={DEFAULT_FORMAT}
     />,
   );
   expect(screen.getByText("acc-1").closest("a")).toBeNull();
+});
+
+test("lookup field renders link in list cell (with laterModule for unregistered modules)", () => {
+  const { rerender } = render(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Leads" } })}
+      value={{ module: "Leads", id: "lead-1", name: "Lead One" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const registeredLink = screen.getByRole("link", { name: "Lead One" });
+  expect(registeredLink.getAttribute("href")).toBe("/tab/Leads/lead-1");
+  expect(registeredLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Accounts" } })}
+      value={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Acme Corp" });
+  expect(laterLink.tagName).toBe("SPAN");
+  expect(laterLink.hasAttribute("href")).toBe(false);
+  expect(laterLink.getAttribute("data-later-module")).toBe("M3");
+  expect(laterLink.getAttribute("aria-disabled")).toBe("true");
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Accounts" } })}
+      value={null}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  expect(screen.queryByRole("link")).toBeNull();
 });

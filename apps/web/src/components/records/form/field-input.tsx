@@ -1,18 +1,28 @@
 "use client";
 
-import type { FieldDefinition, FieldValue, PicklistOption } from "@crm/core/records";
+import type {
+  FieldDefinition,
+  FieldValue,
+  ModuleRecordReference,
+  PicklistOption,
+  RecordService,
+} from "@crm/core/records";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import type { ClientRecordService } from "@/lib/api/client/provider";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
   displayDateToCalendarShape,
 } from "@/lib/records/calendar-date";
+import { isModuleRegistered, resolveModuleLaterKey } from "@/modules/registry";
+import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
   id: string;
@@ -39,6 +49,7 @@ export interface FieldInputProps {
   id?: string;
   hideLabel?: boolean;
   inline?: boolean;
+  recordService?: RecordService | ClientRecordService;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -113,6 +124,7 @@ export function FieldInput({
   id,
   hideLabel,
   inline,
+  recordService,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -127,6 +139,18 @@ export function FieldInput({
     errorMessage,
     validationBehavior: "aria" as const,
   };
+  const isLookup = field.dataType === "lookup";
+  const targetModule = field.lookup?.module ?? "";
+  const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
+  const targetLaterModule =
+    isLookup && !isTargetRegistered ? resolveModuleLaterKey(targetModule) : undefined;
+  const lookupButtonRef = useLaterModule<HTMLButtonElement>(targetLaterModule);
+  const [lookupOpen, setLookupOpen] = useState(false);
+  const reference =
+    isLookup && typeof value === "object" && value !== null && "id" in value
+      ? (value as ModuleRecordReference)
+      : undefined;
+
   const text = typeof value === "string" ? value : "";
   const number = typeof value === "number" ? value : Number.NaN;
   switch (field.dataType) {
@@ -275,7 +299,59 @@ export function FieldInput({
           />
         </div>
       );
-    case "lookup":
+    case "lookup": {
+      const displayText = reference?.name ?? (typeof value === "string" ? value : "");
+      return (
+        <>
+          <TextField
+            {...common}
+            placeholder={placeholder}
+            value={displayText}
+            laterModule={targetLaterModule}
+            onChange={(next) => {
+              if (next === "") {
+                onChange(null);
+              }
+            }}
+            endAction={
+              <button
+                ref={lookupButtonRef}
+                type="button"
+                className="record-input-end"
+                aria-label={
+                  pickerLabel !== "Open owner picker" ? pickerLabel : `Open ${field.label} lookup`
+                }
+                disabled={common.isDisabled}
+                onClick={() => {
+                  if (isTargetRegistered) {
+                    setLookupOpen(true);
+                  }
+                }}
+                {...(targetLaterModule ? laterModuleProps(targetLaterModule) : {})}
+              >
+                <Icons.recordLookup
+                  module={targetModule}
+                  className="record-input-end-icon"
+                  aria-hidden
+                />
+              </button>
+            }
+          />
+          {lookupOpen && isTargetRegistered && (
+            <SelectRecordDialog
+              module={targetModule}
+              selectedId={reference?.id}
+              recordService={recordService}
+              onDone={(selected) => {
+                onChange(selected);
+                setLookupOpen(false);
+              }}
+              onCancel={() => setLookupOpen(false)}
+            />
+          )}
+        </>
+      );
+    }
     case "multi_module_lookup":
     case "datetime":
     case "bigint":

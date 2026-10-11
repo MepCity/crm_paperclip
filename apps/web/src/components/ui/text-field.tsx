@@ -12,6 +12,7 @@ import {
   Text,
 } from "react-aria-components";
 import { Icons } from "./icon";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
 export interface TextFieldProps extends AriaTextFieldProps {
   label: string;
@@ -27,6 +28,7 @@ export interface TextFieldProps extends AriaTextFieldProps {
   filterSearchWrapperClassName?: string;
   description?: string;
   errorMessage?: string | ((v: import("react-aria-components").ValidationResult) => string);
+  laterModule?: ModuleKey;
 }
 
 export function TextField({
@@ -41,8 +43,10 @@ export function TextField({
   filterSearchWrapperClassName,
   description,
   errorMessage,
+  laterModule,
   ...props
 }: TextFieldProps) {
+  const laterRef = useLaterModule<HTMLInputElement>(laterModule);
   return (
     <AriaTextField
       {...props}
@@ -84,7 +88,13 @@ export function TextField({
           data-invalid={props.isInvalid || undefined}
         >
           {prefix}
-          <Input placeholder={placeholder} className="record-control" />
+          <Input
+            ref={laterRef}
+            placeholder={placeholder}
+            className="record-control"
+            readOnly={Boolean(laterModule) || props.isReadOnly}
+            {...(laterModule ? laterModuleProps(laterModule) : {})}
+          />
           {suffix}
           {endAction}
         </div>

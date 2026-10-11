@@ -1,4 +1,4 @@
-import type { FieldDataType, FieldDefinition, FieldValue } from "@crm/core/records";
+import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
@@ -273,11 +273,171 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["lookup", "multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["multi_module_lookup", "datetime", "bigint"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
   }
+});
+
+test("lookup input with registered target displays value and opens selector dialog", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const mockService = {
+    getModule: vi.fn().mockResolvedValue({
+      apiName: "Leads",
+      singularLabel: "Lead",
+      pluralLabel: "Leads",
+      businessCardFields: [],
+      fields: [
+        {
+          apiName: "Full_Name",
+          label: "Lead Name",
+          dataType: "text",
+          required: true,
+          readOnly: false,
+          unique: false,
+          massUpdate: false,
+          views: { view: true, create: true, edit: true, quickCreate: false },
+        },
+      ],
+      layout: [],
+    }),
+    listViews: vi
+      .fn()
+      .mockResolvedValue([
+        { id: "all", name: "All Leads", isDefault: true, columns: ["Full_Name"] },
+      ]),
+    list: vi.fn().mockResolvedValue({
+      records: [
+        { id: "lead-1", fields: { Full_Name: "First Lead" } },
+        { id: "lead-2", fields: { Full_Name: "Second Lead" } },
+      ],
+      moreRecords: false,
+    }),
+    count: vi.fn().mockResolvedValue(2),
+  };
+
+  const lookupField: FieldDefinition = {
+    apiName: "Parent_Lead",
+    label: "Parent Lead",
+    dataType: "lookup",
+    lookup: { module: "Leads" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Leads", id: "lead-1", name: "First Lead" }}
+      onChange={change}
+      recordService={mockService as unknown as RecordService}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Parent Lead" }) as HTMLInputElement;
+  expect(input.value).toBe("First Lead");
+
+  // Non-empty typing does not mutate reference name (prevents desynchronizing id and name)
+  await user.type(input, " typing");
+  expect(change).not.toHaveBeenCalled();
+
+  // Clearing the input sets value to null
+  await user.clear(input);
+  expect(change).toHaveBeenCalledWith(null);
+
+  // Click lookup button opens SelectRecordDialog
+  const lookupBtn = screen.getByRole("button", { name: "Open Parent Lead lookup" });
+  await user.click(lookupBtn);
+
+  // Dialog appears with records
+  expect(await screen.findByRole("radio", { name: "Second Lead" })).toBeTruthy();
+
+  // Select second lead and click Done
+  await user.click(screen.getByRole("radio", { name: "Second Lead" }));
+  await user.click(screen.getByRole("button", { name: "Done" }));
+
+  expect(change).toHaveBeenCalledWith({
+    module: "Leads",
+    id: "lead-2",
+    name: "Second Lead",
+  });
+});
+
+test("lookup input non-empty typing does not mutate reference name, only clearing sets null", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const lookupField: FieldDefinition = {
+    apiName: "Parent_Lead",
+    label: "Parent Lead",
+    dataType: "lookup",
+    lookup: { module: "Leads" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Leads", id: "lead-1", name: "First Lead" }}
+      onChange={change}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Parent Lead" }) as HTMLInputElement;
+  await user.type(input, " Modified");
+  expect(change).not.toHaveBeenCalled();
+
+  await user.clear(input);
+  expect(change).toHaveBeenCalledWith(null);
+});
+
+test("lookup input with unregistered target renders with laterModule and blocks clicks", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const lookupField: FieldDefinition = {
+    apiName: "Account_Name",
+    label: "Account Name",
+    dataType: "lookup",
+    lookup: { module: "Accounts" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      onChange={change}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+  expect(input.value).toBe("Acme Corp");
+  expect(input.readOnly).toBe(true);
+  expect(input.getAttribute("data-later-module")).toBe("M3");
+  expect(input.getAttribute("aria-disabled")).toBe("true");
+
+  const btn = screen.getByRole("button", { name: "Open Account Name lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M3");
+  expect(btn.getAttribute("aria-disabled")).toBe("true");
+
+  // Clicking button does not open dialog
+  await user.click(btn);
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
 test("read-only metadata prevents editing", () => {
   render(<Controlled type="text" field={{ ...field("text"), readOnly: true }} />);
