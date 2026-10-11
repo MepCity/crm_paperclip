@@ -9,6 +9,10 @@ const valueControlByOperator: {
 }[] = [
   { fieldType: "text", operatorLabel: "is empty", control: "none" },
   { fieldType: "datetime", operatorLabel: "due in", control: "days" },
+  { fieldType: "date", operatorLabel: "due in", control: "days" },
+  { fieldType: "date", operatorLabel: "On", control: "date" },
+  { fieldType: "date", operatorLabel: "between", control: "date_range" },
+  { fieldType: "date", operatorLabel: "Today", control: "none" },
   { fieldType: "datetime", operatorLabel: "Previous", control: "days" },
   { fieldType: "datetime", operatorLabel: "Next", control: "days" },
   { fieldType: "datetime", operatorLabel: "On", control: "date" },
