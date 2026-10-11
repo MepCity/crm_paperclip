@@ -1,7 +1,7 @@
 # Contacts — list screen and module inventory
 
 
-Status: incomplete research; capture stop requires review. MEP-20 / Module 2. The two recorded screenshots were opened as images. Metadata tables are complete for the exported configuration; menu, operator and selection states remain unobserved. This document must not be treated as a completed parity baseline.
+Status: research submitted for inventory and metadata review. MEP-20 / Module 2. Captured screenshots were opened as images; unobservable or tool-blocked states are explicitly identified below.
 
 
 ## Purpose
@@ -16,7 +16,7 @@ The navigation rail is leftmost. The top bar spans the remaining width. Below it
 
 ## Control inventory
 
-SH numbers are introduced here for the first complete shell inventory; subsequent Contacts tasks must reuse them. Repeated record controls share an ID and never copy record text. `seen` establishes presence only: every unclicked control has `not observed` behaviour. All menu-state captures were stopped before any click.
+SH numbers are introduced here for the first complete shell inventory; subsequent Contacts tasks must reuse them. Repeated record controls share an ID and never copy record text. `seen` establishes presence only: every unclicked control has `not observed` behaviour. Only the authorized menu-opening controls were clicked. Menu items were never selected; persisted preferences and write actions were not exercised.
 
 
 ### Control inventory — m2-list-base
@@ -78,7 +78,7 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-base) | M2 |
 | L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-base) | M2 |
 | L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-base) | M2 |
-| L-10 | Toolbar | Split view icon | icon button | view group, sixth | not observed | seen (m2-list-base) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-base) | M2 |
 | L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-base) | M2 |
 | L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-base) | M2 |
 | L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-base) | M6 |
@@ -127,6 +127,54 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 
 | # | Region | Control | Type | Position | What it does | Source | Module |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-after) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-after) | M2 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-after) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-after) | M2 |
+| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-after) | M2 |
+| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-after) | M2 |
+| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-after) | M2 |
+| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-after) | M2 |
+| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-after) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-after) | M2 |
+| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-after) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-after) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-after) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-after) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-after) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-after) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-after) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-after) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-after) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-after) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-after) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-after) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-after) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-after) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-after) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-after) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-after) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-after) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-after) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-after) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-after) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-after) | M2 |
+| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-after) | M11 |
+| L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-after) | M2 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-after) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-after) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-after) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-after) | M2 |
+| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-after) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-after) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-after) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-after) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-after) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-after) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-after) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-after) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-after) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-after) | M2 |
 | SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-after) | ? |
 | SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-after) | M1 |
 | SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-after) | M14 |
@@ -173,57 +221,1200 @@ SH numbers are introduced here for the first complete shell inventory; subsequen
 | SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-after) | ? |
 | SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-after) | ? |
 | SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-after) | ? |
-| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-after) | M2 |
-| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-after) | M2 |
-| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-after) | M2 |
-| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-after) | M2 |
-| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-after) | M2 |
-| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-after) | M2 |
-| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-after) | M2 |
-| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-after) | M2 |
-| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-after) | M2 |
-| L-10 | Toolbar | Split view icon | icon button | view group, sixth | not observed | seen (m2-list-after) | M2 |
-| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-after) | M2 |
-| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-after) | M2 |
-| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-after) | M6 |
-| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-after) | M2 |
-| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-after) | M2 |
-| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-after) | M2 |
-| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-after) | M5 |
-| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-after) | M7 |
-| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-after) | M10 |
-| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-after) | M2 |
-| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-after) | M2 |
-| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-after) | M2 |
-| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-after) | M2 |
-| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-after) | M2 |
-| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-after) | P3 |
-| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-after) | M2 |
-| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-after) | M3 |
-| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-after) | M2 |
-| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-after) | M2 |
-| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-after) | M2 |
-| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-after) | M2 |
-| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-after) | M2 |
-| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-after) | M11 |
-| L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-after) | M2 |
-| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-after) | M2 |
-| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-after) | M2 |
-| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-after) | M3 |
-| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-after) | M2 |
-| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-after) | M2 |
-| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-after) | M2 |
-| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-after) | M5 |
-| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-after) | M2 |
-| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-after) | M3 |
-| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-after) | M10 |
-| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-after) | M2 |
-| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-after) | M2 |
-| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-after) | M2 |
-| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-after) | M2 |
+
+#### Reconciliation — m2-list-after
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 687 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 526, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 699 |
+| Excluded: record data or table structure | 290, 291, 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504, 507, 508, 509, 512, 513, 515, 517, 519, 522, 523, 524, 527, 528, 530, 532, 534 |
+| Excluded: target not painted in screenshot | 129 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-05 | 120 |
+| L-06 | 121 |
+| L-07 | 122 |
+| L-08 | 123 |
+| L-09 | 124 |
+| L-10 | 125 |
+| L-11 | 126 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-33 | 285 |
+| L-34 | 294 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-37 | 300 |
+| L-38 | 301 |
+| L-39 | 302 |
+| L-40 | 309, 310, 325, 326, 340, 341, 355, 356, 371, 372, 386, 387, 402, 403, 417, 418, 432, 433, 447, 448, 463, 464, 479, 480, 494, 495, 510, 511, 525 |
+| L-41 | 312, 358, 389, 405, 435, 450, 466, 497 |
+| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499, 514, 529 |
+| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501, 516, 531 |
+| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503, 518 |
+| L-48 | 668 |
+| L-49 | 669 |
+| L-50 | 670 |
+| L-51 | 671 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 688 |
+| SH-36 | 689 |
+| SH-37 | 690 |
+| SH-38 | 691 |
+| SH-39 | 692 |
+| SH-40 | 693 |
+| SH-41 | 694 |
+| SH-42 | 695 |
+| SH-43 | 696 |
+| SH-44 | 697 |
+| SH-45 | 698 |
 
 
-The row three dots, note bubble and pulse icon visible in the base capture are absent in the after screenshot; they are not counted in this state. Presence in the base screenshot is observed, but activation and hover causality are not.
+### Control inventory — m2-list-view-selector
+
+| # | Region | Control | Type | Position | What it does | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-view-selector) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | Opens the public-view list | seen (m2-list-view-selector) | M2 |
+| L-02.1 | View menu | Public Views | toggle | popup, row 1 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.2 | View menu | All Contacts | menu item | popup, row 2 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.3 | View menu | All Locked Contacts | menu item | popup, row 3 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.4 | View menu | Mailing Labels | menu item | popup, row 4 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.5 | View menu | My Contacts | menu item | popup, row 5 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.6 | View menu | New Last Week | menu item | popup, row 6 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.7 | View menu | New This Week | menu item | popup, row 7 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.8 | View menu | Recently Created Contacts | menu item | popup, row 8 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.9 | View menu | Recently Modified Contacts | menu item | popup, row 9 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.10 | View menu | Unread Contacts | menu item | popup, row 10 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.11 | View menu | Unsubscribed Contacts | menu item | popup, row 11 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.12 | View menu | Show custom views as Dropdown | toggle | popup, row 12 | not observed | seen (m2-list-view-selector) | M2 |
+| L-02.13 | View menu | New Custom View | menu item | popup, row 13 | not observed | seen (m2-list-view-selector) | M11 |
+| L-02.14 | View menu | Manage Custom View | menu item | popup, row 14 | not observed | seen (m2-list-view-selector) | M11 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-view-selector) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-view-selector) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-view-selector) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-view-selector) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-view-selector) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-view-selector) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-view-selector) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-view-selector) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-view-selector) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-view-selector) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-view-selector) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-view-selector) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-view-selector) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-view-selector) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-view-selector) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-view-selector) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-view-selector) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-view-selector) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-view-selector) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-view-selector) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-view-selector) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-view-selector) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-view-selector) | M2 |
+| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-view-selector) | M11 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-view-selector) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-view-selector) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-view-selector) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-view-selector) | M2 |
+| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-view-selector) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-view-selector) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-view-selector) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-view-selector) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-view-selector) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-view-selector) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-view-selector) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-view-selector) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-view-selector) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-view-selector) | M2 |
+| SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-view-selector) | ? |
+| SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-view-selector) | M1 |
+| SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-view-selector) | M14 |
+| SH-04 | Rail | Workqueue | link | pinned group, Workqueue | not observed | seen (m2-list-view-selector) | M14 |
+| SH-05 | Rail | Reports | link | pinned group, Reports | not observed | seen (m2-list-view-selector) | M13 |
+| SH-06 | Rail | Analytics | link | pinned group, Analytics | not observed | seen (m2-list-view-selector) | M13 |
+| SH-07 | Rail | Agents | link | pinned group, Agents | not observed | seen (m2-list-view-selector) | P3 |
+| SH-08 | Rail | MCP Server | link | pinned group, MCP Server | not observed | seen (m2-list-view-selector) | P3 |
+| SH-09 | Rail | Teamspace selector | select | teamspace header, left | not observed | seen (m2-list-view-selector) | M11 |
+| SH-10 | Rail | More Actions | icon button | teamspace header, right | not observed | seen (m2-list-view-selector) | M11 |
+| SH-11 | Rail | Search | input | below teamspace header | not observed | seen (m2-list-view-selector) | M1 |
+| SH-12 | Rail | Sales | toggle | first navigation group | not observed | seen (m2-list-view-selector) | M1 |
+| SH-13 | Rail | Leads | link | Sales group, Leads | not observed | seen (m2-list-view-selector) | M1 |
+| SH-14 | Rail | Contacts | link | Sales group, Contacts | not observed | seen (m2-list-view-selector) | M2 |
+| SH-15 | Rail | Accounts | link | Sales group, Accounts | not observed | seen (m2-list-view-selector) | M3 |
+| SH-16 | Rail | Deals | link | Sales group, Deals | not observed | seen (m2-list-view-selector) | M4 |
+| SH-17 | Rail | Documents | link | Sales group, Documents | not observed | seen (m2-list-view-selector) | M9 |
+| SH-18 | Rail | Campaigns | link | Sales group, Campaigns | not observed | seen (m2-list-view-selector) | M7 |
+| SH-19 | Rail | Activities | toggle | second navigation group | not observed | seen (m2-list-view-selector) | M5 |
+| SH-20 | Rail | Tasks | link | Activities group, Tasks | not observed | seen (m2-list-view-selector) | M5 |
+| SH-21 | Rail | Meetings | link | Activities group, Meetings | not observed | seen (m2-list-view-selector) | M5 |
+| SH-22 | Rail | Calls | link | Activities group, Calls | not observed | seen (m2-list-view-selector) | M5 |
+| SH-23 | Rail | Integrations | toggle | third navigation group | not observed | seen (m2-list-view-selector) | M15 |
+| SH-24 | Rail | Visits | link | Integrations group | not observed | seen (m2-list-view-selector) | M15 |
+| SH-25 | Rail | Price Books | link | bottom visible rail row | not observed | seen (m2-list-view-selector) | P2 |
+| SH-26 | Top bar | Search records | button | right group, first | not observed | seen (m2-list-view-selector) | ? |
+| SH-27 | Top bar | Plus icon | icon button | right group, after search | not observed | seen (m2-list-view-selector) | M1 |
+| SH-28 | Top bar | Assistant shortcut | icon button | right group, after plus | not observed | seen (m2-list-view-selector) | P3 |
+| SH-29 | Top bar | Notifications | icon button | right group, after assistant | not observed | seen (m2-list-view-selector) | ? |
+| SH-30 | Top bar | Calendar | icon button | right group, after notifications | not observed | seen (m2-list-view-selector) | M10 |
+| SH-31 | Top bar | Marketplace | icon button | right group, after calendar | not observed | seen (m2-list-view-selector) | ? |
+| SH-32 | Top bar | Setup | icon button | right group, after marketplace | not observed | seen (m2-list-view-selector) | M11 |
+| SH-33 | Top bar | Profile | icon button | right group, after setup | not observed | seen (m2-list-view-selector) | ? |
+| SH-34 | Top bar | Applications menu | icon button | right group, far right | not observed | seen (m2-list-view-selector) | ? |
+| SH-35 | Utility strip | My Pins | icon button | left group, first | not observed | seen (m2-list-view-selector) | ? |
+| SH-36 | Utility strip | Chats | icon button | left group, second | not observed | seen (m2-list-view-selector) | ? |
+| SH-37 | Utility strip | Contacts | icon button | left group, third | not observed | seen (m2-list-view-selector) | ? |
+| SH-38 | Utility strip | Document with small clock icon | icon button | right group, first | not observed | seen (m2-list-view-selector) | ? |
+| SH-39 | Utility strip | Announcements | icon button | right group, second | not observed | seen (m2-list-view-selector) | ? |
+| SH-40 | Utility strip | Chart with notification dot icon | icon button | right group, third | not observed | seen (m2-list-view-selector) | ? |
+| SH-41 | Utility strip | Square with corner arrow icon | icon button | right group, fourth | not observed | seen (m2-list-view-selector) | ? |
+| SH-42 | Utility strip | Activity Reminders | icon button | right group, fifth | not observed | seen (m2-list-view-selector) | M5 |
+| SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2-list-view-selector) | M1 |
+| SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-view-selector) | ? |
+| SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-view-selector) | ? |
+| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-view-selector) | ? |
+
+#### Reconciliation — m2-list-view-selector
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: covered by open popup | 120, 121, 122, 123, 124, 125, 126, 294, 309, 310, 312, 325, 326, 340, 341, 355, 356, 358, 371, 372, 386, 387, 389, 402, 403, 405, 417, 418 |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 688, 700, 701, 702, 704 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 526, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 719 |
+| Excluded: record data or table structure | 290, 291, 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504, 507, 508, 509, 512, 513, 515, 517, 519, 522, 523, 524, 527, 528, 530, 532, 534 |
+| Excluded: target not painted in screenshot | 129 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-02.1 | 703 |
+| L-02.2 | 705 |
+| L-02.3 | 706 |
+| L-02.4 | 707 |
+| L-02.5 | 708 |
+| L-02.6 | 709 |
+| L-02.7 | 710 |
+| L-02.8 | 711 |
+| L-02.9 | 712 |
+| L-02.10 | 713 |
+| L-02.11 | 714 |
+| L-02.12 | 715 |
+| L-02.13 | 716, 717 |
+| L-02.14 | 718, 720 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-33 | 285 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-37 | 300 |
+| L-38 | 301 |
+| L-39 | 302 |
+| L-40 | 432, 433, 447, 448, 463, 464, 479, 480, 494, 495, 510, 511, 525 |
+| L-41 | 435, 450, 466, 497 |
+| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499, 514, 529 |
+| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501, 516, 531 |
+| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503, 518 |
+| L-48 | 668 |
+| L-49 | 669 |
+| L-50 | 670 |
+| L-51 | 671 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 689 |
+| SH-36 | 690 |
+| SH-37 | 691 |
+| SH-38 | 692 |
+| SH-39 | 693 |
+| SH-40 | 694 |
+| SH-41 | 695 |
+| SH-42 | 696 |
+| SH-43 | 697 |
+| SH-44 | 698 |
+| SH-45 | 699 |
+
+
+### Control inventory — m2-list-create-menu
+
+| # | Region | Control | Type | Position | What it does | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-create-menu) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-create-menu) | M2 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-create-menu) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-create-menu) | M2 |
+| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-create-menu) | M2 |
+| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-create-menu) | M2 |
+| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-create-menu) | M2 |
+| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-create-menu) | M2 |
+| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-create-menu) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-create-menu) | M2 |
+| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-create-menu) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-create-menu) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-create-menu) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-create-menu) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-create-menu) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-create-menu) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-create-menu) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-create-menu) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-create-menu) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-create-menu) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-create-menu) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-create-menu) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-create-menu) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-create-menu) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-create-menu) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-create-menu) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-create-menu) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-create-menu) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-create-menu) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-create-menu) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-create-menu) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-create-menu) | M2 |
+| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-create-menu) | M11 |
+| L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-create-menu) | M2 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-create-menu) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-create-menu) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-create-menu) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-create-menu) | M2 |
+| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-create-menu) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-create-menu) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-create-menu) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-create-menu) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-create-menu) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-create-menu) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-create-menu) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-create-menu) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-create-menu) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-create-menu) | M2 |
+| SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-create-menu) | ? |
+| SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-create-menu) | M1 |
+| SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-create-menu) | M14 |
+| SH-04 | Rail | Workqueue | link | pinned group, Workqueue | not observed | seen (m2-list-create-menu) | M14 |
+| SH-05 | Rail | Reports | link | pinned group, Reports | not observed | seen (m2-list-create-menu) | M13 |
+| SH-06 | Rail | Analytics | link | pinned group, Analytics | not observed | seen (m2-list-create-menu) | M13 |
+| SH-07 | Rail | Agents | link | pinned group, Agents | not observed | seen (m2-list-create-menu) | P3 |
+| SH-08 | Rail | MCP Server | link | pinned group, MCP Server | not observed | seen (m2-list-create-menu) | P3 |
+| SH-09 | Rail | Teamspace selector | select | teamspace header, left | not observed | seen (m2-list-create-menu) | M11 |
+| SH-10 | Rail | More Actions | icon button | teamspace header, right | not observed | seen (m2-list-create-menu) | M11 |
+| SH-11 | Rail | Search | input | below teamspace header | not observed | seen (m2-list-create-menu) | M1 |
+| SH-12 | Rail | Sales | toggle | first navigation group | not observed | seen (m2-list-create-menu) | M1 |
+| SH-13 | Rail | Leads | link | Sales group, Leads | not observed | seen (m2-list-create-menu) | M1 |
+| SH-14 | Rail | Contacts | link | Sales group, Contacts | not observed | seen (m2-list-create-menu) | M2 |
+| SH-15 | Rail | Accounts | link | Sales group, Accounts | not observed | seen (m2-list-create-menu) | M3 |
+| SH-16 | Rail | Deals | link | Sales group, Deals | not observed | seen (m2-list-create-menu) | M4 |
+| SH-17 | Rail | Documents | link | Sales group, Documents | not observed | seen (m2-list-create-menu) | M9 |
+| SH-18 | Rail | Campaigns | link | Sales group, Campaigns | not observed | seen (m2-list-create-menu) | M7 |
+| SH-19 | Rail | Activities | toggle | second navigation group | not observed | seen (m2-list-create-menu) | M5 |
+| SH-20 | Rail | Tasks | link | Activities group, Tasks | not observed | seen (m2-list-create-menu) | M5 |
+| SH-21 | Rail | Meetings | link | Activities group, Meetings | not observed | seen (m2-list-create-menu) | M5 |
+| SH-22 | Rail | Calls | link | Activities group, Calls | not observed | seen (m2-list-create-menu) | M5 |
+| SH-23 | Rail | Integrations | toggle | third navigation group | not observed | seen (m2-list-create-menu) | M15 |
+| SH-24 | Rail | Visits | link | Integrations group | not observed | seen (m2-list-create-menu) | M15 |
+| SH-25 | Rail | Price Books | link | bottom visible rail row | not observed | seen (m2-list-create-menu) | P2 |
+| SH-26 | Top bar | Search records | button | right group, first | not observed | seen (m2-list-create-menu) | ? |
+| SH-27 | Top bar | Plus icon | icon button | right group, after search | not observed | seen (m2-list-create-menu) | M1 |
+| SH-28 | Top bar | Assistant shortcut | icon button | right group, after plus | not observed | seen (m2-list-create-menu) | P3 |
+| SH-29 | Top bar | Notifications | icon button | right group, after assistant | not observed | seen (m2-list-create-menu) | ? |
+| SH-30 | Top bar | Calendar | icon button | right group, after notifications | not observed | seen (m2-list-create-menu) | M10 |
+| SH-31 | Top bar | Marketplace | icon button | right group, after calendar | not observed | seen (m2-list-create-menu) | ? |
+| SH-32 | Top bar | Setup | icon button | right group, after marketplace | not observed | seen (m2-list-create-menu) | M11 |
+| SH-33 | Top bar | Profile | icon button | right group, after setup | not observed | seen (m2-list-create-menu) | ? |
+| SH-34 | Top bar | Applications menu | icon button | right group, far right | not observed | seen (m2-list-create-menu) | ? |
+| SH-35 | Utility strip | My Pins | icon button | left group, first | not observed | seen (m2-list-create-menu) | ? |
+| SH-36 | Utility strip | Chats | icon button | left group, second | not observed | seen (m2-list-create-menu) | ? |
+| SH-37 | Utility strip | Contacts | icon button | left group, third | not observed | seen (m2-list-create-menu) | ? |
+| SH-38 | Utility strip | Document with small clock icon | icon button | right group, first | not observed | seen (m2-list-create-menu) | ? |
+| SH-39 | Utility strip | Announcements | icon button | right group, second | not observed | seen (m2-list-create-menu) | ? |
+| SH-40 | Utility strip | Chart with notification dot icon | icon button | right group, third | not observed | seen (m2-list-create-menu) | ? |
+| SH-41 | Utility strip | Square with corner arrow icon | icon button | right group, fourth | not observed | seen (m2-list-create-menu) | ? |
+| SH-42 | Utility strip | Activity Reminders | icon button | right group, fifth | not observed | seen (m2-list-create-menu) | M5 |
+| SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2-list-create-menu) | M1 |
+| SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-create-menu) | ? |
+| SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-create-menu) | ? |
+| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-create-menu) | ? |
+
+#### Reconciliation — m2-list-create-menu
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 687 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 526, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 699 |
+| Excluded: record data or table structure | 290, 291, 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504, 507, 508, 509, 512, 513, 515, 517, 519, 522, 523, 524, 527, 528, 530, 532, 534 |
+| Excluded: target not painted in screenshot | 129 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-05 | 120 |
+| L-06 | 121 |
+| L-07 | 122 |
+| L-08 | 123 |
+| L-09 | 124 |
+| L-10 | 125 |
+| L-11 | 126 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-33 | 285 |
+| L-34 | 294 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-37 | 300 |
+| L-38 | 301 |
+| L-39 | 302 |
+| L-40 | 309, 310, 325, 326, 340, 341, 355, 356, 371, 372, 386, 387, 402, 403, 417, 418, 432, 433, 447, 448, 463, 464, 479, 480, 494, 495, 510, 511, 525 |
+| L-41 | 312, 358, 389, 405, 435, 450, 466, 497 |
+| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499, 514, 529 |
+| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501, 516, 531 |
+| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503, 518 |
+| L-48 | 668 |
+| L-49 | 669 |
+| L-50 | 670 |
+| L-51 | 671 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 688 |
+| SH-36 | 689 |
+| SH-37 | 690 |
+| SH-38 | 691 |
+| SH-39 | 692 |
+| SH-40 | 693 |
+| SH-41 | 694 |
+| SH-42 | 695 |
+| SH-43 | 696 |
+| SH-44 | 697 |
+| SH-45 | 698 |
+
+
+### Control inventory — m2-list-actions
+
+| # | Region | Control | Type | Position | What it does | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-actions) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-actions) | M2 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-actions) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-actions) | M2 |
+| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-actions) | M2 |
+| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-actions) | M2 |
+| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-actions) | M2 |
+| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-actions) | M2 |
+| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-actions) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-actions) | M2 |
+| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-actions) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-actions) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-actions) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | Opens the Actions menu | seen (m2-list-actions) | M2 |
+| L-14.1 | Actions menu | Mass Transfer | menu item | popup, row 1 | not observed | seen (m2-list-actions) | M2 |
+| L-14.2 | Actions menu | Mass Delete | menu item | popup, row 2 | not observed | seen (m2-list-actions) | M2 |
+| L-14.3 | Actions menu | Mass Update | menu item | popup, row 3 | not observed | seen (m2-list-actions) | M2 |
+| L-14.4 | Actions menu | Manage Tags | menu item | popup, row 4 | not observed | seen (m2-list-actions) | M6 |
+| L-14.5 | Actions menu | Drafts | menu item | popup, row 5 | not observed | seen (m2-list-actions) | M2 |
+| L-14.6 | Actions menu | Mass Email | menu item | popup, row 6 | not observed | seen (m2-list-actions) | M10 |
+| L-14.7 | Actions menu | Approve Contacts | menu item | popup, row 7 | not observed | seen (m2-list-actions) | M2 |
+| L-14.8 | Actions menu | Deduplicate Contacts | menu item | popup, row 8 | not observed | seen (m2-list-actions) | M2 |
+| L-14.9 | Actions menu | Add to Campaigns | menu item | popup, row 9 | not observed | seen (m2-list-actions) | M7 |
+| L-14.10 | Actions menu | Create Client Script | menu item | popup, row 10 | not observed | seen (m2-list-actions) | M11 |
+| L-14.11 | Actions menu | Export Contacts | menu item | popup, row 11 | not observed | seen (m2-list-actions) | M6 |
+| L-14.12 | Actions menu | Spreadsheet view | menu item | popup, row 12 | not observed | seen (m2-list-actions) | ? |
+| L-14.13 | Actions menu | Print View | menu item | popup, row 13 | not observed | seen (m2-list-actions) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-actions) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-actions) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-actions) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-actions) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-actions) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-actions) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-actions) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-actions) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-actions) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-actions) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-actions) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-actions) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-actions) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-actions) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-actions) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-actions) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-actions) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-actions) | M2 |
+| L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-actions) | M2 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-actions) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-actions) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-actions) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-actions) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-actions) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-actions) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-actions) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-actions) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-actions) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-actions) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-actions) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-actions) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-actions) | M2 |
+| L-52 | Toolbar | Circular arrow icon | icon button | after view group | not observed | seen (m2-list-actions) | M2 |
+| SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-actions) | ? |
+| SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-actions) | M1 |
+| SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-actions) | M14 |
+| SH-04 | Rail | Workqueue | link | pinned group, Workqueue | not observed | seen (m2-list-actions) | M14 |
+| SH-05 | Rail | Reports | link | pinned group, Reports | not observed | seen (m2-list-actions) | M13 |
+| SH-06 | Rail | Analytics | link | pinned group, Analytics | not observed | seen (m2-list-actions) | M13 |
+| SH-07 | Rail | Agents | link | pinned group, Agents | not observed | seen (m2-list-actions) | P3 |
+| SH-08 | Rail | MCP Server | link | pinned group, MCP Server | not observed | seen (m2-list-actions) | P3 |
+| SH-09 | Rail | Teamspace selector | select | teamspace header, left | not observed | seen (m2-list-actions) | M11 |
+| SH-10 | Rail | More Actions | icon button | teamspace header, right | not observed | seen (m2-list-actions) | M11 |
+| SH-11 | Rail | Search | input | below teamspace header | not observed | seen (m2-list-actions) | M1 |
+| SH-12 | Rail | Sales | toggle | first navigation group | not observed | seen (m2-list-actions) | M1 |
+| SH-13 | Rail | Leads | link | Sales group, Leads | not observed | seen (m2-list-actions) | M1 |
+| SH-14 | Rail | Contacts | link | Sales group, Contacts | not observed | seen (m2-list-actions) | M2 |
+| SH-15 | Rail | Accounts | link | Sales group, Accounts | not observed | seen (m2-list-actions) | M3 |
+| SH-16 | Rail | Deals | link | Sales group, Deals | not observed | seen (m2-list-actions) | M4 |
+| SH-17 | Rail | Documents | link | Sales group, Documents | not observed | seen (m2-list-actions) | M9 |
+| SH-18 | Rail | Campaigns | link | Sales group, Campaigns | not observed | seen (m2-list-actions) | M7 |
+| SH-19 | Rail | Activities | toggle | second navigation group | not observed | seen (m2-list-actions) | M5 |
+| SH-20 | Rail | Tasks | link | Activities group, Tasks | not observed | seen (m2-list-actions) | M5 |
+| SH-21 | Rail | Meetings | link | Activities group, Meetings | not observed | seen (m2-list-actions) | M5 |
+| SH-22 | Rail | Calls | link | Activities group, Calls | not observed | seen (m2-list-actions) | M5 |
+| SH-23 | Rail | Integrations | toggle | third navigation group | not observed | seen (m2-list-actions) | M15 |
+| SH-24 | Rail | Visits | link | Integrations group | not observed | seen (m2-list-actions) | M15 |
+| SH-25 | Rail | Price Books | link | bottom visible rail row | not observed | seen (m2-list-actions) | P2 |
+| SH-26 | Top bar | Search records | button | right group, first | not observed | seen (m2-list-actions) | ? |
+| SH-27 | Top bar | Plus icon | icon button | right group, after search | not observed | seen (m2-list-actions) | M1 |
+| SH-28 | Top bar | Assistant shortcut | icon button | right group, after plus | not observed | seen (m2-list-actions) | P3 |
+| SH-29 | Top bar | Notifications | icon button | right group, after assistant | not observed | seen (m2-list-actions) | ? |
+| SH-30 | Top bar | Calendar | icon button | right group, after notifications | not observed | seen (m2-list-actions) | M10 |
+| SH-31 | Top bar | Marketplace | icon button | right group, after calendar | not observed | seen (m2-list-actions) | ? |
+| SH-32 | Top bar | Setup | icon button | right group, after marketplace | not observed | seen (m2-list-actions) | M11 |
+| SH-33 | Top bar | Profile | icon button | right group, after setup | not observed | seen (m2-list-actions) | ? |
+| SH-34 | Top bar | Applications menu | icon button | right group, far right | not observed | seen (m2-list-actions) | ? |
+| SH-35 | Utility strip | My Pins | icon button | left group, first | not observed | seen (m2-list-actions) | ? |
+| SH-36 | Utility strip | Chats | icon button | left group, second | not observed | seen (m2-list-actions) | ? |
+| SH-37 | Utility strip | Contacts | icon button | left group, third | not observed | seen (m2-list-actions) | ? |
+| SH-38 | Utility strip | Document with small clock icon | icon button | right group, first | not observed | seen (m2-list-actions) | ? |
+| SH-39 | Utility strip | Announcements | icon button | right group, second | not observed | seen (m2-list-actions) | ? |
+| SH-40 | Utility strip | Chart with notification dot icon | icon button | right group, third | not observed | seen (m2-list-actions) | ? |
+| SH-41 | Utility strip | Square with corner arrow icon | icon button | right group, fourth | not observed | seen (m2-list-actions) | ? |
+| SH-42 | Utility strip | Activity Reminders | icon button | right group, fifth | not observed | seen (m2-list-actions) | M5 |
+| SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2-list-actions) | M1 |
+| SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-actions) | ? |
+| SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-actions) | ? |
+| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-actions) | ? |
+
+#### Reconciliation — m2-list-actions
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: covered by open popup | 285, 302 |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 706 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 526, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 689, 691, 693, 695, 696, 698, 700, 718 |
+| Excluded: record data or table structure | 290, 291, 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504, 507, 508, 509, 512, 513, 515, 517, 519, 522, 523, 524, 527, 528, 530, 532, 534 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-05 | 120 |
+| L-06 | 121 |
+| L-07 | 122 |
+| L-08 | 123 |
+| L-09 | 124 |
+| L-10 | 125 |
+| L-11 | 126 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-14.1 | 688 |
+| L-14.2 | 690 |
+| L-14.3 | 692 |
+| L-14.4 | 694 |
+| L-14.5 | 697 |
+| L-14.6 | 699 |
+| L-14.7 | 701 |
+| L-14.8 | 702 |
+| L-14.9 | 703 |
+| L-14.10 | 704 |
+| L-14.11 | 705 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-34 | 294 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-37 | 300 |
+| L-38 | 301 |
+| L-40 | 309, 310, 325, 326, 340, 341, 355, 356, 371, 372, 386, 387, 402, 403, 417, 418, 432, 433, 447, 448, 463, 464, 479, 480, 494, 495, 510, 511, 525 |
+| L-41 | 312, 358, 389, 405, 435, 450, 466, 497 |
+| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499, 514, 529 |
+| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501, 516, 531 |
+| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503, 518 |
+| L-48 | 668 |
+| L-49 | 669 |
+| L-50 | 670 |
+| L-51 | 671 |
+| L-52 | 129 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 707 |
+| SH-36 | 708 |
+| SH-37 | 709 |
+| SH-38 | 710 |
+| SH-39 | 711 |
+| SH-40 | 712 |
+| SH-41 | 713 |
+| SH-42 | 714 |
+| SH-43 | 715 |
+| SH-44 | 716 |
+| SH-45 | 717 |
+
+
+### Control inventory — m2-list-sort
+
+| # | Region | Control | Type | Position | What it does | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-sort) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-sort) | M2 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-sort) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | Opens Sort By with field and direction selectors | seen (m2-list-sort) | M2 |
+| L-04.1 | Sort popup | None | select | popup, row 1 | not observed | seen (m2-list-sort) | M2 |
+| L-04.2 | Sort popup | Ascending | select | popup, row 2 | not observed | seen (m2-list-sort) | M2 |
+| L-04.3 | Sort popup | Cancel | button | popup, row 3 | not observed | seen (m2-list-sort) | M2 |
+| L-04.4 | Sort popup | Apply | button | popup, row 4 | not observed | seen (m2-list-sort) | M2 |
+| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-sort) | M2 |
+| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-sort) | M2 |
+| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-sort) | M2 |
+| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-sort) | M2 |
+| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-sort) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-sort) | M2 |
+| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-sort) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-sort) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-sort) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-sort) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-sort) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-sort) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-sort) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-sort) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-sort) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-sort) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-sort) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-sort) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-sort) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-sort) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-sort) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-sort) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-sort) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-sort) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-sort) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-sort) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-sort) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-sort) | M2 |
+| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-sort) | M11 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-sort) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-sort) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-sort) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-sort) | M2 |
+| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-sort) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-sort) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-sort) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-sort) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-sort) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-sort) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-sort) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-sort) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-sort) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-sort) | M2 |
+| L-52 | Toolbar | Circular arrow icon | icon button | after view group | not observed | seen (m2-list-sort) | M2 |
+| SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-sort) | ? |
+| SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-sort) | M1 |
+| SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-sort) | M14 |
+| SH-04 | Rail | Workqueue | link | pinned group, Workqueue | not observed | seen (m2-list-sort) | M14 |
+| SH-05 | Rail | Reports | link | pinned group, Reports | not observed | seen (m2-list-sort) | M13 |
+| SH-06 | Rail | Analytics | link | pinned group, Analytics | not observed | seen (m2-list-sort) | M13 |
+| SH-07 | Rail | Agents | link | pinned group, Agents | not observed | seen (m2-list-sort) | P3 |
+| SH-08 | Rail | MCP Server | link | pinned group, MCP Server | not observed | seen (m2-list-sort) | P3 |
+| SH-09 | Rail | Teamspace selector | select | teamspace header, left | not observed | seen (m2-list-sort) | M11 |
+| SH-10 | Rail | More Actions | icon button | teamspace header, right | not observed | seen (m2-list-sort) | M11 |
+| SH-11 | Rail | Search | input | below teamspace header | not observed | seen (m2-list-sort) | M1 |
+| SH-12 | Rail | Sales | toggle | first navigation group | not observed | seen (m2-list-sort) | M1 |
+| SH-13 | Rail | Leads | link | Sales group, Leads | not observed | seen (m2-list-sort) | M1 |
+| SH-14 | Rail | Contacts | link | Sales group, Contacts | not observed | seen (m2-list-sort) | M2 |
+| SH-15 | Rail | Accounts | link | Sales group, Accounts | not observed | seen (m2-list-sort) | M3 |
+| SH-16 | Rail | Deals | link | Sales group, Deals | not observed | seen (m2-list-sort) | M4 |
+| SH-17 | Rail | Documents | link | Sales group, Documents | not observed | seen (m2-list-sort) | M9 |
+| SH-18 | Rail | Campaigns | link | Sales group, Campaigns | not observed | seen (m2-list-sort) | M7 |
+| SH-19 | Rail | Activities | toggle | second navigation group | not observed | seen (m2-list-sort) | M5 |
+| SH-20 | Rail | Tasks | link | Activities group, Tasks | not observed | seen (m2-list-sort) | M5 |
+| SH-21 | Rail | Meetings | link | Activities group, Meetings | not observed | seen (m2-list-sort) | M5 |
+| SH-22 | Rail | Calls | link | Activities group, Calls | not observed | seen (m2-list-sort) | M5 |
+| SH-23 | Rail | Integrations | toggle | third navigation group | not observed | seen (m2-list-sort) | M15 |
+| SH-24 | Rail | Visits | link | Integrations group | not observed | seen (m2-list-sort) | M15 |
+| SH-25 | Rail | Price Books | link | bottom visible rail row | not observed | seen (m2-list-sort) | P2 |
+| SH-26 | Top bar | Search records | button | right group, first | not observed | seen (m2-list-sort) | ? |
+| SH-27 | Top bar | Plus icon | icon button | right group, after search | not observed | seen (m2-list-sort) | M1 |
+| SH-28 | Top bar | Assistant shortcut | icon button | right group, after plus | not observed | seen (m2-list-sort) | P3 |
+| SH-29 | Top bar | Notifications | icon button | right group, after assistant | not observed | seen (m2-list-sort) | ? |
+| SH-30 | Top bar | Calendar | icon button | right group, after notifications | not observed | seen (m2-list-sort) | M10 |
+| SH-31 | Top bar | Marketplace | icon button | right group, after calendar | not observed | seen (m2-list-sort) | ? |
+| SH-32 | Top bar | Setup | icon button | right group, after marketplace | not observed | seen (m2-list-sort) | M11 |
+| SH-33 | Top bar | Profile | icon button | right group, after setup | not observed | seen (m2-list-sort) | ? |
+| SH-34 | Top bar | Applications menu | icon button | right group, far right | not observed | seen (m2-list-sort) | ? |
+| SH-35 | Utility strip | My Pins | icon button | left group, first | not observed | seen (m2-list-sort) | ? |
+| SH-36 | Utility strip | Chats | icon button | left group, second | not observed | seen (m2-list-sort) | ? |
+| SH-37 | Utility strip | Contacts | icon button | left group, third | not observed | seen (m2-list-sort) | ? |
+| SH-38 | Utility strip | Document with small clock icon | icon button | right group, first | not observed | seen (m2-list-sort) | ? |
+| SH-39 | Utility strip | Announcements | icon button | right group, second | not observed | seen (m2-list-sort) | ? |
+| SH-40 | Utility strip | Chart with notification dot icon | icon button | right group, third | not observed | seen (m2-list-sort) | ? |
+| SH-41 | Utility strip | Square with corner arrow icon | icon button | right group, fourth | not observed | seen (m2-list-sort) | ? |
+| SH-42 | Utility strip | Activity Reminders | icon button | right group, fifth | not observed | seen (m2-list-sort) | M5 |
+| SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2-list-sort) | M1 |
+| SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-sort) | ? |
+| SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-sort) | ? |
+| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-sort) | ? |
+
+#### Reconciliation — m2-list-sort
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: covered by open popup | 294, 309, 310, 312, 325, 326 |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 687 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 526, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 699 |
+| Excluded: record data or table structure | 290, 291, 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504, 507, 508, 509, 512, 513, 515, 517, 519, 522, 523, 524, 527, 528, 530, 532, 534 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-04.1 | 700, 701 |
+| L-04.2 | 702, 703 |
+| L-04.3 | 704, 705 |
+| L-04.4 | 706, 707 |
+| L-05 | 120 |
+| L-06 | 121 |
+| L-07 | 122 |
+| L-08 | 123 |
+| L-09 | 124 |
+| L-10 | 125 |
+| L-11 | 126 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-33 | 285 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-37 | 300 |
+| L-38 | 301 |
+| L-39 | 302 |
+| L-40 | 340, 341, 355, 356, 371, 372, 386, 387, 402, 403, 417, 418, 432, 433, 447, 448, 463, 464, 479, 480, 494, 495, 510, 511, 525 |
+| L-41 | 358, 389, 405, 435, 450, 466, 497 |
+| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499, 514, 529 |
+| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501, 516, 531 |
+| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503, 518 |
+| L-48 | 668 |
+| L-49 | 669 |
+| L-50 | 670 |
+| L-51 | 671 |
+| L-52 | 129 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 688 |
+| SH-36 | 689 |
+| SH-37 | 690 |
+| SH-38 | 691 |
+| SH-39 | 692 |
+| SH-40 | 693 |
+| SH-41 | 694 |
+| SH-42 | 695 |
+| SH-43 | 696 |
+| SH-44 | 697 |
+| SH-45 | 698 |
+
+
+### Control inventory — m2-list-column-menu
+
+| # | Region | Control | Type | Position | What it does | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L-01 | View strip | All Contacts | tab | left, first | not observed | seen (m2-list-column-menu) | M2 |
+| L-02 | View strip | Three dots icon | icon button | after current view tab | not observed | seen (m2-list-column-menu) | M2 |
+| L-03 | Toolbar | Filter | button | left group, first | not observed | seen (m2-list-column-menu) | M2 |
+| L-04 | Toolbar | Sort | button | left group, second | not observed | seen (m2-list-column-menu) | M2 |
+| L-05 | Toolbar | List view icon | icon button | view group, first | not observed | seen (m2-list-column-menu) | M2 |
+| L-06 | Toolbar | Kanban view icon | icon button | view group, second | not observed | seen (m2-list-column-menu) | M2 |
+| L-07 | Toolbar | Sheet view icon | icon button | view group, third | not observed | seen (m2-list-column-menu) | M2 |
+| L-08 | Toolbar | Chart view icon | icon button | view group, fourth | not observed | seen (m2-list-column-menu) | M2 |
+| L-09 | Toolbar | Timeline view icon | icon button | view group, fifth | not observed | seen (m2-list-column-menu) | M2 |
+| L-10 | Toolbar | Two horizontal bars icon | icon button | view group, sixth | not observed | seen (m2-list-column-menu) | M2 |
+| L-11 | Toolbar | Down chevron | icon button | view group, seventh | not observed | seen (m2-list-column-menu) | M2 |
+| L-12 | Toolbar | Create Contact | button | right group, first | not observed | seen (m2-list-column-menu) | M2 |
+| L-13 | Toolbar | Down arrow / More | icon button | right group, attached to Create Contact | not observed | seen (m2-list-column-menu) | M6 |
+| L-14 | Toolbar | Three dots / Actions | icon button | right group, far right | not observed | seen (m2-list-column-menu) | M2 |
+| L-15 | Filter panel | Search | input | below Filter Contacts by heading | not observed | seen (m2-list-column-menu) | M2 |
+| L-16 | Filter panel | System Defined Filters | toggle | first section heading | not observed | seen (m2-list-column-menu) | M2 |
+| L-17 | Filter panel | Activities | checkbox | system-defined section, Activities | not observed | seen (m2-list-column-menu) | M5 |
+| L-18 | Filter panel | Campaigns | checkbox | system-defined section, Campaigns | not observed | seen (m2-list-column-menu) | M7 |
+| L-19 | Filter panel | Latest Email Status | checkbox | system-defined section, Latest Email Status | not observed | seen (m2-list-column-menu) | M10 |
+| L-20 | Filter panel | Locked | checkbox | system-defined section, Locked | not observed | seen (m2-list-column-menu) | M2 |
+| L-21 | Filter panel | Record Action | checkbox | system-defined section, Record Action | not observed | seen (m2-list-column-menu) | M2 |
+| L-22 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | not observed | seen (m2-list-column-menu) | M2 |
+| L-23 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | not observed | seen (m2-list-column-menu) | M2 |
+| L-24 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | not observed | seen (m2-list-column-menu) | M2 |
+| L-25 | Filter panel | Cadences | checkbox | system-defined section, Cadences | not observed | seen (m2-list-column-menu) | P3 |
+| L-26 | Filter panel | Filter By Fields | toggle | second section heading | not observed | seen (m2-list-column-menu) | M2 |
+| L-27 | Filter panel | Account Name | checkbox | field section, Account Name | not observed | seen (m2-list-column-menu) | M3 |
+| L-28 | Filter panel | Assistant | checkbox | field section, Assistant | not observed | seen (m2-list-column-menu) | M2 |
+| L-29 | Filter panel | Asst Phone | checkbox | field section, Asst Phone | not observed | seen (m2-list-column-menu) | M2 |
+| L-30 | Filter panel | Connected To | checkbox | field section, Connected To | not observed | seen (m2-list-column-menu) | M2 |
+| L-31 | Filter panel | Contact Name | checkbox | field section, Contact Name | not observed | seen (m2-list-column-menu) | M2 |
+| L-32 | Filter panel | Contact Owner (partly clipped) | checkbox | field section, Contact Owner (partly clipped) | not observed | seen (m2-list-column-menu) | M2 |
+| L-33 | Table | Sliders icon | icon button | header, far right overlay | not observed | seen (m2-list-column-menu) | M11 |
+| L-34 | Table | Select all checkbox | checkbox | header, before activity column | not observed | seen (m2-list-column-menu) | M2 |
+| L-35 | Table | Contact Name | column header | first text column | not observed | seen (m2-list-column-menu) | M2 |
+| L-36 | Table | All with down arrow | select | within Contact Name header, right | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.1 | View menu | All | menu item | popup, row 1 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.2 | View menu | A | menu item | popup, row 2 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.3 | View menu | B | menu item | popup, row 3 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.4 | View menu | C | menu item | popup, row 4 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.5 | View menu | D | menu item | popup, row 5 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.6 | View menu | E | menu item | popup, row 6 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.7 | View menu | F | menu item | popup, row 7 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.8 | View menu | G | menu item | popup, row 8 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.9 | View menu | H | menu item | popup, row 9 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.10 | View menu | I | menu item | popup, row 10 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.11 | View menu | J | menu item | popup, row 11 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.12 | View menu | K | menu item | popup, row 12 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.13 | View menu | L | menu item | popup, row 13 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.14 | View menu | M | menu item | popup, row 14 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.15 | View menu | N | menu item | popup, row 15 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.16 | View menu | O | menu item | popup, row 16 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.17 | View menu | P | menu item | popup, row 17 | not observed | seen (m2-list-column-menu) | M2 |
+| L-36.18 | View menu | Q | menu item | popup, row 18 | not observed | seen (m2-list-column-menu) | M2 |
+| L-37 | Table | Account Name | column header | second text column | not observed | seen (m2-list-column-menu) | M3 |
+| L-38 | Table | Email | column header | third text column | not observed | seen (m2-list-column-menu) | M2 |
+| L-39 | Table | Phone (partly clipped) | column header | fourth text column, right edge | not observed | seen (m2-list-column-menu) | M2 |
+| L-40 | Table | Record selection checkbox | checkbox | each visible row, before activity column | not observed | seen (m2-list-column-menu) | M2 |
+| L-41 | Table | Call activity flag | badge | rows with activity, before Contact Name | not observed | seen (m2-list-column-menu) | M5 |
+| L-42 | Table | Contact record link | link | Contact Name cells | not observed | seen (m2-list-column-menu) | M2 |
+| L-43 | Table | Account record link | link | Account Name cells | not observed | seen (m2-list-column-menu) | M3 |
+| L-44 | Table | Email address link | link | Email cells | not observed | seen (m2-list-column-menu) | M10 |
+| L-48 | List footer | Total Records | badge | left | not observed | seen (m2-list-column-menu) | M2 |
+| L-49 | List footer | Displayed record range | badge | right group, between arrows | not observed | seen (m2-list-column-menu) | M2 |
+| L-50 | List footer | Previous | icon button | right group, before range | not observed | seen (m2-list-column-menu) | M2 |
+| L-51 | List footer | Next | icon button | right group, after range | not observed | seen (m2-list-column-menu) | M2 |
+| L-53 | Table | Three horizontal lines icon | icon button | Contact Name header, after All | not observed | seen (m2-list-column-menu) | M2 |
+| SH-01 | Rail | Product selector | select | header, left | not observed | seen (m2-list-column-menu) | ? |
+| SH-02 | Rail | Hide Menu | icon button | header, right | not observed | seen (m2-list-column-menu) | M1 |
+| SH-03 | Rail | Home | link | pinned group, Home | not observed | seen (m2-list-column-menu) | M14 |
+| SH-04 | Rail | Workqueue | link | pinned group, Workqueue | not observed | seen (m2-list-column-menu) | M14 |
+| SH-05 | Rail | Reports | link | pinned group, Reports | not observed | seen (m2-list-column-menu) | M13 |
+| SH-06 | Rail | Analytics | link | pinned group, Analytics | not observed | seen (m2-list-column-menu) | M13 |
+| SH-07 | Rail | Agents | link | pinned group, Agents | not observed | seen (m2-list-column-menu) | P3 |
+| SH-08 | Rail | MCP Server | link | pinned group, MCP Server | not observed | seen (m2-list-column-menu) | P3 |
+| SH-09 | Rail | Teamspace selector | select | teamspace header, left | not observed | seen (m2-list-column-menu) | M11 |
+| SH-10 | Rail | More Actions | icon button | teamspace header, right | not observed | seen (m2-list-column-menu) | M11 |
+| SH-11 | Rail | Search | input | below teamspace header | not observed | seen (m2-list-column-menu) | M1 |
+| SH-12 | Rail | Sales | toggle | first navigation group | not observed | seen (m2-list-column-menu) | M1 |
+| SH-13 | Rail | Leads | link | Sales group, Leads | not observed | seen (m2-list-column-menu) | M1 |
+| SH-14 | Rail | Contacts | link | Sales group, Contacts | not observed | seen (m2-list-column-menu) | M2 |
+| SH-15 | Rail | Accounts | link | Sales group, Accounts | not observed | seen (m2-list-column-menu) | M3 |
+| SH-16 | Rail | Deals | link | Sales group, Deals | not observed | seen (m2-list-column-menu) | M4 |
+| SH-17 | Rail | Documents | link | Sales group, Documents | not observed | seen (m2-list-column-menu) | M9 |
+| SH-18 | Rail | Campaigns | link | Sales group, Campaigns | not observed | seen (m2-list-column-menu) | M7 |
+| SH-19 | Rail | Activities | toggle | second navigation group | not observed | seen (m2-list-column-menu) | M5 |
+| SH-20 | Rail | Tasks | link | Activities group, Tasks | not observed | seen (m2-list-column-menu) | M5 |
+| SH-21 | Rail | Meetings | link | Activities group, Meetings | not observed | seen (m2-list-column-menu) | M5 |
+| SH-22 | Rail | Calls | link | Activities group, Calls | not observed | seen (m2-list-column-menu) | M5 |
+| SH-23 | Rail | Integrations | toggle | third navigation group | not observed | seen (m2-list-column-menu) | M15 |
+| SH-24 | Rail | Visits | link | Integrations group | not observed | seen (m2-list-column-menu) | M15 |
+| SH-25 | Rail | Price Books | link | bottom visible rail row | not observed | seen (m2-list-column-menu) | P2 |
+| SH-26 | Top bar | Search records | button | right group, first | not observed | seen (m2-list-column-menu) | ? |
+| SH-27 | Top bar | Plus icon | icon button | right group, after search | not observed | seen (m2-list-column-menu) | M1 |
+| SH-28 | Top bar | Assistant shortcut | icon button | right group, after plus | not observed | seen (m2-list-column-menu) | P3 |
+| SH-29 | Top bar | Notifications | icon button | right group, after assistant | not observed | seen (m2-list-column-menu) | ? |
+| SH-30 | Top bar | Calendar | icon button | right group, after notifications | not observed | seen (m2-list-column-menu) | M10 |
+| SH-31 | Top bar | Marketplace | icon button | right group, after calendar | not observed | seen (m2-list-column-menu) | ? |
+| SH-32 | Top bar | Setup | icon button | right group, after marketplace | not observed | seen (m2-list-column-menu) | M11 |
+| SH-33 | Top bar | Profile | icon button | right group, after setup | not observed | seen (m2-list-column-menu) | ? |
+| SH-34 | Top bar | Applications menu | icon button | right group, far right | not observed | seen (m2-list-column-menu) | ? |
+| SH-35 | Utility strip | My Pins | icon button | left group, first | not observed | seen (m2-list-column-menu) | ? |
+| SH-36 | Utility strip | Chats | icon button | left group, second | not observed | seen (m2-list-column-menu) | ? |
+| SH-37 | Utility strip | Contacts | icon button | left group, third | not observed | seen (m2-list-column-menu) | ? |
+| SH-38 | Utility strip | Document with small clock icon | icon button | right group, first | not observed | seen (m2-list-column-menu) | ? |
+| SH-39 | Utility strip | Announcements | icon button | right group, second | not observed | seen (m2-list-column-menu) | ? |
+| SH-40 | Utility strip | Chart with notification dot icon | icon button | right group, third | not observed | seen (m2-list-column-menu) | ? |
+| SH-41 | Utility strip | Square with corner arrow icon | icon button | right group, fourth | not observed | seen (m2-list-column-menu) | ? |
+| SH-42 | Utility strip | Activity Reminders | icon button | right group, fifth | not observed | seen (m2-list-column-menu) | M5 |
+| SH-43 | Utility strip | Recent Items | icon button | right group, sixth | not observed | seen (m2-list-column-menu) | M1 |
+| SH-44 | Utility strip | Accessibility | icon button | right group, seventh | not observed | seen (m2-list-column-menu) | ? |
+| SH-45 | Utility strip | Help | icon button | right group, eighth | not observed | seen (m2-list-column-menu) | ? |
+| SH-46 | Utility strip | Trash bin icon | icon button | far right, after Help | not observed | seen (m2-list-column-menu) | ? |
+
+#### Reconciliation — m2-list-column-menu
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| Excluded: clipped below dropdown viewport | 719, 720, 721, 722, 723, 724, 725, 726, 727 |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 35, 37, 51, 59, 62, 65, 66, 67, 68, 82, 83, 87, 111, 116, 119, 127, 128, 135, 137, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 173, 174, 283, 284, 288, 289, 292, 293, 295, 296, 688 |
+| Excluded: invisible or outside captured viewport | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 286, 287, 304, 305, 321, 322, 336, 337, 351, 352, 367, 368, 382, 383, 398, 399, 413, 414, 428, 429, 443, 444, 459, 460, 475, 476, 490, 491, 506, 507, 521, 522, 527, 534, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 700 |
+| Excluded: record data or table structure | 290, 291, 306, 307, 308, 309, 312, 314, 316, 318, 320, 323, 324, 325, 328, 329, 331, 333, 335, 338, 339, 340, 343, 344, 346, 348, 350, 353, 354, 355, 358, 360, 362, 364, 366, 369, 370, 371, 374, 375, 377, 379, 381, 384, 385, 386, 389, 391, 393, 395, 397, 400, 401, 402, 405, 407, 409, 411, 412, 415, 416, 417, 420, 421, 423, 425, 427, 430, 431, 432, 435, 437, 439, 441, 442, 445, 446, 447, 450, 452, 454, 456, 458, 461, 462, 463, 466, 468, 470, 472, 474, 477, 478, 479, 482, 483, 485, 487, 489, 492, 493, 494, 497, 499, 501, 503, 505, 508, 509, 510, 513, 514, 516, 518, 520, 523, 524, 525, 528, 529, 531, 533, 535 |
+| Excluded: target not painted in screenshot | 129 |
+| L-01 | 112 |
+| L-02 | 113, 114, 115 |
+| L-03 | 117 |
+| L-04 | 118 |
+| L-05 | 120 |
+| L-06 | 121 |
+| L-07 | 122 |
+| L-08 | 123 |
+| L-09 | 124 |
+| L-10 | 125 |
+| L-11 | 126 |
+| L-12 | 130 |
+| L-13 | 131, 132 |
+| L-14 | 133 |
+| L-15 | 136 |
+| L-16 | 139 |
+| L-17 | 141 |
+| L-18 | 143 |
+| L-19 | 145 |
+| L-20 | 147 |
+| L-21 | 149 |
+| L-22 | 151 |
+| L-23 | 153 |
+| L-24 | 155 |
+| L-25 | 157 |
+| L-26 | 159 |
+| L-27 | 161 |
+| L-28 | 163 |
+| L-29 | 165 |
+| L-30 | 167 |
+| L-31 | 169 |
+| L-32 | 171 |
+| L-33 | 285 |
+| L-34 | 294 |
+| L-35 | 297 |
+| L-36 | 298, 299 |
+| L-36.1 | 701 |
+| L-36.2 | 702 |
+| L-36.3 | 703 |
+| L-36.4 | 704 |
+| L-36.5 | 705 |
+| L-36.6 | 706 |
+| L-36.7 | 707 |
+| L-36.8 | 708 |
+| L-36.9 | 709 |
+| L-36.10 | 710 |
+| L-36.11 | 711 |
+| L-36.12 | 712 |
+| L-36.13 | 713 |
+| L-36.14 | 714 |
+| L-36.15 | 715 |
+| L-36.16 | 716 |
+| L-36.17 | 717 |
+| L-36.18 | 718 |
+| L-37 | 301 |
+| L-38 | 302 |
+| L-39 | 303 |
+| L-40 | 310, 311, 326, 327, 341, 342, 356, 357, 372, 373, 387, 388, 403, 404, 418, 419, 433, 434, 448, 449, 464, 465, 480, 481, 495, 496, 511, 512, 526 |
+| L-41 | 313, 359, 390, 406, 436, 451, 467, 498 |
+| L-42 | 315, 330, 345, 361, 376, 392, 408, 422, 438, 453, 469, 484, 500, 515, 530 |
+| L-43 | 317, 332, 347, 363, 378, 394, 410, 424, 440, 455, 471, 486, 502, 517, 532 |
+| L-44 | 319, 334, 349, 365, 380, 396, 426, 457, 473, 488, 504, 519 |
+| L-48 | 669 |
+| L-49 | 670 |
+| L-50 | 671 |
+| L-51 | 672 |
+| L-53 | 300 |
+| SH-01 | 2, 3, 4 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 689 |
+| SH-36 | 690 |
+| SH-37 | 691 |
+| SH-38 | 692 |
+| SH-39 | 693 |
+| SH-40 | 694 |
+| SH-41 | 695 |
+| SH-42 | 696 |
+| SH-43 | 697 |
+| SH-44 | 698 |
+| SH-45 | 699 |
 
 
 ### Shell controls missing from app-shell.md
@@ -344,112 +1535,6 @@ Item ordinals below are one-based positions in each local controls.json array. T
 | record row data or row wrapper | 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 418, 421, 423, 425, 427, 429, 432, 433, 434, 437, 439, 441, 443, 444, 447, 448, 449, 452, 454, 456, 458, 460, 463, 464, 465, 468, 470, 472, 474, 476, 479, 480, 481, 484, 485, 487, 489, 491, 494, 495, 496, 499, 501, 503, 505, 507 |
 | invisible: clipped below table body | 510, 511, 512, 513, 515, 516, 517, 518, 519, 520, 521, 522 |
 
-
-
-#### m2-list-after
-
-| Inventory number / exclusion reason | controls.json item ordinals |
-| --- | --- |
-| L-01 | 112 |
-| L-02 | 113, 114, 115, 116 |
-| L-03 | 117 |
-| L-04 | 118 |
-| L-05 | 120 |
-| L-06 | 121 |
-| L-07 | 122 |
-| L-08 | 123 |
-| L-09 | 124 |
-| L-10 | 125 |
-| L-11 | 126, 127 |
-| L-12 | 130 |
-| L-13 | 131, 132 |
-| L-14 | 133 |
-| L-15 | 136, 137 |
-| L-16 | 139 |
-| L-17 | 141, 142 |
-| L-18 | 143, 144 |
-| L-19 | 145, 146 |
-| L-20 | 147, 148 |
-| L-21 | 149, 150 |
-| L-22 | 151, 152 |
-| L-23 | 153, 154 |
-| L-24 | 155, 156 |
-| L-25 | 157, 158 |
-| L-26 | 159 |
-| L-27 | 161, 162 |
-| L-28 | 163, 164 |
-| L-29 | 165, 166 |
-| L-30 | 167, 168 |
-| L-31 | 169, 170 |
-| L-32 | 171, 172 |
-| L-33 | 285 |
-| L-34 | 294, 295 |
-| L-35 | 297 |
-| L-36 | 298, 299 |
-| L-37 | 300 |
-| L-38 | 301 |
-| L-39 | 302 |
-| L-40 | 309, 310, 325, 326, 340, 341, 355, 356, 371, 372, 386, 387, 402, 403, 417, 418, 432, 433, 447, 448, 463, 464, 479, 480, 494, 495 |
-| L-41 | 312, 358, 389, 405, 435, 450, 466, 497 |
-| L-42 | 314, 329, 344, 360, 375, 391, 407, 421, 437, 452, 468, 483, 499 |
-| L-43 | 316, 331, 346, 362, 377, 393, 409, 423, 439, 454, 470, 485, 501 |
-| L-44 | 318, 333, 348, 364, 379, 395, 425, 456, 472, 487, 503 |
-| L-48 | 668 |
-| L-49 | 669 |
-| L-50 | 670 |
-| L-51 | 671 |
-| SH-01 | 2, 3, 4 |
-| SH-02 | 10 |
-| SH-03 | 11, 13 |
-| SH-04 | 14, 16 |
-| SH-05 | 17, 19 |
-| SH-06 | 20, 22 |
-| SH-07 | 23, 25 |
-| SH-08 | 26, 28 |
-| SH-09 | 29, 30, 31 |
-| SH-10 | 33 |
-| SH-11 | 34, 35 |
-| SH-12 | 36 |
-| SH-13 | 38, 39 |
-| SH-14 | 40, 41 |
-| SH-15 | 42, 43 |
-| SH-16 | 44, 45 |
-| SH-17 | 46, 47 |
-| SH-18 | 48, 49 |
-| SH-19 | 50 |
-| SH-20 | 52, 53 |
-| SH-21 | 54, 55 |
-| SH-22 | 56, 57 |
-| SH-23 | 58 |
-| SH-24 | 60, 61 |
-| SH-25 | 63, 64 |
-| SH-26 | 85 |
-| SH-27 | 86 |
-| SH-28 | 88 |
-| SH-29 | 89 |
-| SH-30 | 90 |
-| SH-31 | 93 |
-| SH-32 | 96 |
-| SH-33 | 99, 100 |
-| SH-34 | 103, 104, 105, 106 |
-| SH-35 | 688 |
-| SH-36 | 689 |
-| SH-37 | 690 |
-| SH-38 | 691 |
-| SH-39 | 692 |
-| SH-40 | 693 |
-| SH-41 | 694 |
-| SH-42 | 695 |
-| SH-43 | 696 |
-| SH-44 | 697 |
-| SH-45 | 698 |
-| duplicate or structural wrapper (not a separate painted control) | 1, 37, 51, 59, 62, 65, 66, 67, 82, 83, 87, 111, 119, 135, 140, 160, 173, 174, 284, 288, 289, 290, 291, 292, 293, 296, 511, 522, 523, 524, 527, 528, 530, 532, 534, 687 |
-| invisible: zero-area element | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81, 84, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 134, 138, 281, 282, 286, 287, 659, 660, 661, 662, 663, 664, 665, 666, 667, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 699 |
-| invisible: outside viewport | 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 303, 304, 320, 321, 335, 336, 350, 351, 366, 367, 381, 382, 397, 398, 412, 413, 427, 428, 442, 443, 458, 459, 474, 475, 489, 490, 505, 506, 520, 521, 525, 526, 529, 531, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658 |
-| invisible: refresh footprint has no painted icon in screenshot | 128, 129 |
-| invisible: resize hotspot has no painted grip | 283 |
-| record row data or row wrapper | 305, 306, 307, 308, 311, 313, 315, 317, 319, 322, 323, 324, 327, 328, 330, 332, 334, 337, 338, 339, 342, 343, 345, 347, 349, 352, 353, 354, 357, 359, 361, 363, 365, 368, 369, 370, 373, 374, 376, 378, 380, 383, 384, 385, 388, 390, 392, 394, 396, 399, 400, 401, 404, 406, 408, 410, 411, 414, 415, 416, 419, 420, 422, 424, 426, 429, 430, 431, 434, 436, 438, 440, 441, 444, 445, 446, 449, 451, 453, 455, 457, 460, 461, 462, 465, 467, 469, 471, 473, 476, 477, 478, 481, 482, 484, 486, 488, 491, 492, 493, 496, 498, 500, 502, 504 |
-| invisible: clipped below table body | 507, 508, 509, 510, 512, 513, 514, 515, 516, 517, 518, 519 |
 
 
 
@@ -4935,7 +6020,9 @@ Source: per-field profiles in fields.json, cross-checked against the two profile
 
 The title and selected module are Contacts; the current default view tab is All Contacts. The toolbar uses Create Contact. The first text columns are Contact Name, Account Name, Email and a clipped Phone; Contact Owner is exported but outside the visible table width. The first text header contains an All selector. The already-open field filter begins Account Name, Assistant, Asst Phone, Connected To and Contact Name, with Contact Owner partially visible. System filters include Campaigns and Latest Email Status. Call-activity flags and three row controls are visible in the base capture. Contacts has Account Name / Reporting To / Vendor Name relations and two address composites; Leads conversion fields and Lead Status are absent.
 
-Actions menu contents, the adjacent create dropdown, available view choices, operator choices, sort popup, empty state and selected-record toolbar are not observed. Do not import Leads menu labels as observed Contacts controls.
+The public-view menu contains the ten exported stock views, a Public Views section control, Show custom views as Dropdown, New Custom View and Manage Custom View. None was activated. Actions contains Mass Transfer, Mass Delete, Mass Update, Manage Tags, Drafts, Mass Email, Approve Contacts, Deduplicate Contacts, Add to Campaigns, Create Client Script, Export Contacts, a spreadsheet-view entry (neutralized label), and Print View with a submenu arrow. Their activation is not observed. The Sort By popup shows None and Ascending selectors, Cancel and a disabled Apply button; no field or direction was chosen. The Contact Name All dropdown displays All followed by A–P and a partly clipped Q; subsequent entries in controls.json are below the popup viewport and are not counted as painted controls. A three-horizontal-lines control appears beside that header while the dropdown is open; its behaviour is not observed. The spreadsheet-view and Print View menu entries are screenshot-only additions: controls.json does not expose them.
+
+The create arrow was skipped by the capture tool's dangerous-attribute guard; its menu is not observed. Page size and a field operator selector are absent from the base screen. Revealing an operator would require a filter toggle, which this issue permits only for row selection; no filter was toggled. The populated-list empty state remains unobserved.
 
 
 ## Capability table
@@ -4997,7 +6084,7 @@ Actions menu contents, the adjacent create dropdown, available view choices, ope
 | Sheet view icon | L-07 | M2 | visible only; behaviour not observed |
 | Chart view icon | L-08 | M2 | visible only; behaviour not observed |
 | Timeline view icon | L-09 | M2 | visible only; behaviour not observed |
-| Split view icon | L-10 | M2 | visible only; behaviour not observed |
+| Two horizontal bars icon | L-10 | M2 | visible only; behaviour not observed |
 | Down chevron | L-11 | M2 | visible only; behaviour not observed |
 | Create Contact | L-12 | M2 | visible only; behaviour not observed |
 | Down arrow / More | L-13 | M6 | visible only; behaviour not observed |
@@ -5039,33 +6126,58 @@ Actions menu contents, the adjacent create dropdown, available view choices, ope
 | Displayed record range | L-49 | M2 | visible only; behaviour not observed |
 | Previous | L-50 | M2 | visible only; behaviour not observed |
 | Next | L-51 | M2 | visible only; behaviour not observed |
+| Actions and contact operations | L-14.1–L-14.3, L-14.5, L-14.7–L-14.8 | M2 | visible menu entries only; writes not exercised |
+| Tags and CSV export | L-14.4, L-14.11 | M6 | visible menu entries only |
+| Mass email | L-14.6 | M10 | visible menu entry only |
+| Campaign membership | L-14.9 | M7 | visible menu entry only |
+| Client scripts | L-14.10 | M11 | visible menu entry only |
+| Spreadsheet entry | L-14.12 | ? | visible in screenshot only; module ownership unresolved |
+| Print entry | L-14.13 | M2 | visible in screenshot only; submenu not opened |
+| Sort popup | L-04.1–L-04.4 | M2 | selectors and buttons seen; no sorting applied |
+| Alphabet dropdown | L-36.1–L-36.18 | M2 | All and A–Q painted; no option selected |
+| Header three-lines control | L-53 | M2 | visible while alphabet dropdown is open; activation not observed |
+| Circular arrow control | L-52 | M2 | painted in Actions/Sort screenshots; activation not observed |
 | Fields and Standard layout | — | M2 | exported metadata |
 | Account lookup | — | M3 | exported metadata |
 | Reporting To relation | — | M2 | exported metadata |
 | Vendor lookup | — | P2 | exported metadata |
-| Stored stock views | L-01, L-02 | M2 | metadata; dropdown not observed |
-| View customization | L-02 | M11 | not observed |
+| Stored stock views | L-01, L-02, L-02.1–L-02.11 | M2 | exported metadata and opened public-view menu |
+| View customization | L-02.12–L-02.14 | M11 | visible menu controls; activation not observed |
 | Related lists | — | per related-list table | metadata; detail task confirms UI |
 
 
 
 ## Capture refs
 
-| Slug | Clicks | Skipped | State |
+| Slug | Clicks requested | Skipped | State |
 | --- | --- | --- | --- |
 | m2-list-base | 0 | 0 | populated list; base screenshot includes row controls |
-| m2-list-after | 0 | 0 | same list and range; row controls absent |
+| m2-list-view-selector | 1 | 0 | public views menu; underlying toolbar/header controls partly covered |
+| m2-list-create-menu | 1 | 1 | arrow skipped by dangerous-attribute guard; base list remains |
+| m2-list-actions | 1 | 0 | Actions menu; two bottom entries visible only in screenshot |
+| m2-list-sort | 1 | 0 | Sort By popup; no values changed |
+| m2-list-column-menu | 1 | 0 | Contact Name alphabet dropdown; no letter selected |
+| m2-list-selected | — | — | original attempt and permitted same-command retry failed; no screenshot/meta produced |
+| m2-list-after | 0 | 0 | same total count, zero selections, same view/columns and range as base |
 
+All successful captures were checked against the original click-free base before the next capture. The bulk/count calls are baseline read operations, as clarified by UI Lead; they are not evidence of a write. No new non-GET path was observed in the successful menu captures or final after capture. Base and final after have the same total count and range, unchanged view/columns and zero selected rows. No raw screenshot or customer value is included in this repository.
 
-These are the only captured states. The view-selector, create-menu, actions, other toolbar/column/operator menus and selected-row capture were not attempted after the mandatory stop. Base and after have the same total record count and zero selected rows. No raw screenshot or customer value is included in this repository.
+### Unobserved controls and capture limitations
 
+| Control / state | Inventory reference | Reason |
+| --- | --- | --- |
+| Create Contact adjacent menu | L-13 | capture tool skipped the permitted opener; no alternate selector attempted |
+| Page-size chooser | L-49 | only the range badge is painted; no uniquely identified page-size control |
+| Filter operator chooser | L-27–L-32 | not painted; revealing it requires a toggle outside this issue's capture permissions |
+| Selection toolbar | L-40 | checkbox click timed out due to pointer interception; same command failed again after the required two-minute interval; capture skipped |
+| Additional header menu | L-53 | appeared after opening alphabet dropdown; unidentified action not activated |
+| View modes, panel collapse, column settings and saved preferences | L-03, L-05–L-11, L-16, L-26, L-33 | forbidden persistent preferences; visible controls counted without activation |
 
 ## Open questions
 
-1. Capture safety: the base and after contain successful POSTs on Contacts bulk/count paths. The issue stop rule was applied before clicks; a reviewer must establish whether these are read operations before any continuation. There is no evidence that records changed. This document records the stop without documenting request shapes.
-2. View selector, create dropdown, Actions, page-size, sort popup, first text-column menu, filter operator list and selection toolbar are not observed. The empty state is not observed because the list is populated.
-3. SH controls assigned `?` need a module decision: product selector, global search, notifications, marketplace, profile, application grid, utility Pins/Chats/Contacts, document-clock icon, announcements, Motivator, Sticky Notes, accessibility, Help and trash bin. The footer Contacts shortcut is not assumed to be the M2 module.
-4. The row pulse icon and CheckLists / combined or unassigned related lists have unresolved module ownership. Row-control activation and hover-only affordances beyond the base screenshot are not observed.
-5. Metadata provides no view sort values or layout column placement. Common_Status and Old_Mailing_* references have no field definitions in the current export.
-6. Country/state option filtering, defaults, write validation and success/error states are not observed. Form and record-detail research remain separate. The normalized unsubscribe option label needs a neutral implementation label.
-7. Grok QA should audit the two saved images and reconciliation; UI Lead must assess the stop and the remaining capture scope. Do not approve this incomplete document as a finished Contacts parity baseline.
+1. The create-arrow menu, field operator list, page-size chooser and selected-record toolbar remain unobserved for the limitations above. No labels are inferred from Leads. The empty state is not observed because the list is populated.
+2. SH controls assigned `?` need a module decision: product selector, global search, notifications, marketplace, profile, application grid, utility Pins/Chats/Contacts, document-clock icon, announcements, Motivator, Sticky Notes, accessibility, Help and trash bin. The footer Contacts shortcut is not assumed to be the M2 module.
+3. The row pulse icon, spreadsheet-view entry and CheckLists / combined or unassigned related lists have unresolved module ownership. Row-control activation and hover-only affordances beyond the recorded screenshots are not observed. The header three-lines icon's action is not established.
+4. Metadata provides no view sort values or layout column placement. Common_Status and Old_Mailing_* references have no field definitions in the current export.
+5. Country/state option filtering, defaults, write validation and success/error states are not observed. Form and record-detail research remain separate. The normalized unsubscribe option label needs a neutral implementation label.
+6. Grok QA verifies the saved screenshots and per-item reconciliation; UI Lead reviews metadata and decides how unobservable states affect the next research gate.
