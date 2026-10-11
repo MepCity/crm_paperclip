@@ -341,17 +341,8 @@ async function expectPlaceholder(page: Page, target: Locator) {
  * colour; a flat ring (zero blur, 2 px spread) is the failure this guards against.
  */
 async function expectSoftFocusHalo(target: Locator) {
-  const style = await target.evaluate((node) => {
-    const computed = getComputedStyle(node);
-    return {
-      borderColor: computed.borderTopColor,
-      borderWidth: computed.borderTopWidth,
-      boxShadow: computed.boxShadow,
-    };
-  });
-  expect(style.borderWidth, `focus edge width ${style.borderWidth}`).toBe("1px");
-  expect(style.borderColor, `focus edge colour ${style.borderColor}`).toBe("rgb(84, 100, 242)");
-  expect(style.boxShadow, `focus halo ${style.boxShadow}`).toBe(
-    "rgba(84, 100, 242, 0.35) 0px 0px 15px 0px",
-  );
+  // Focus styles transition after the popover opens; wait for their final values.
+  await expect(target).toHaveCSS("border-top-width", "1px");
+  await expect(target).toHaveCSS("border-top-color", "rgb(84, 100, 242)");
+  await expect(target).toHaveCSS("box-shadow", "rgba(84, 100, 242, 0.35) 0px 0px 15px 0px");
 }
