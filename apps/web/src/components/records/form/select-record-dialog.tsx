@@ -287,7 +287,7 @@ export function SelectRecordDialog({
                       <td className="select-user-td-radio">
                         <TableRadio value={record.id} aria-label={recordDisplayName} />
                       </td>
-                      <td className="select-user-td-name font-medium">{recordDisplayName}</td>
+                      <td className="select-user-td-name">{recordDisplayName}</td>
                       {otherCols.map((col) => (
                         <td key={col.key}>{formatCellText(record.fields[col.key])}</td>
                       ))}

@@ -67,6 +67,7 @@ const expectedIcons = [
   "ellipsis",
   "timelineGeneric",
   "timelinePencil",
+  "recordLookup",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {
