@@ -871,6 +871,10 @@ Measured pairs that stay below AA. Their values are kept exactly as measured and
 disabled. The board decided on 2026-10-04 that placeholder text and separator lines keep the
 measured look; ADR 0003 §8 records that exception and its limits.
 
+Board decision of 2026-10-11 (Module 1 gate): every pair in this table stays as measured, no
+value is changed now, and the board looks at the list again at the end of the project. A pair
+measured below AA in a later module is added to this table without a new decision.
+
 | Pair | Ratio | Where the reference uses it |
 | --- | --- | --- |
 | `--color-text-placeholder` `#8c91ab` on `--color-bg` `#eef1f9` | 2.75:1 | Top bar/global search › Footprint › "placeholder approx. 14 px regular, `#8C91AB` approx." |
