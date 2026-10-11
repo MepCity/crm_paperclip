@@ -195,7 +195,8 @@
   flex-shrink: 0;
 }
 
-.filter-editor[data-field-type="datetime"] .filter-date-range {
+.filter-editor[data-field-type="datetime"] .filter-date-range,
+.filter-editor[data-field-type="date"] .filter-date-range {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -203,20 +204,24 @@
   gap: var(--size-filter-date-range-gap);
   width: var(--size-filter-range-width);
 }
-.filter-editor[data-field-type="datetime"] .filter-date-range-from {
+.filter-editor[data-field-type="datetime"] .filter-date-range-from,
+.filter-editor[data-field-type="date"] .filter-date-range-from {
   position: relative;
   width: 100%;
   height: var(--size-filter-control-height);
 }
-.filter-editor[data-field-type="datetime"] .filter-date-range-from .record-input-frame {
+.filter-editor[data-field-type="datetime"] .filter-date-range-from .record-input-frame,
+.filter-editor[data-field-type="date"] .filter-date-range-from .record-input-frame {
   width: 100%;
   height: var(--size-filter-control-height);
 }
-.filter-editor[data-field-type="datetime"] .filter-date-range > .record-input-frame {
+.filter-editor[data-field-type="datetime"] .filter-date-range > .record-input-frame,
+.filter-editor[data-field-type="date"] .filter-date-range > .record-input-frame {
   width: 100%;
   height: var(--size-filter-control-height);
 }
-.filter-editor[data-field-type="datetime"] .filter-date-range-separator {
+.filter-editor[data-field-type="datetime"] .filter-date-range-separator,
+.filter-editor[data-field-type="date"] .filter-date-range-separator {
   position: absolute;
   left: calc(100% + 4px);
   top: 50%;
@@ -227,6 +232,10 @@
   pointer-events: none;
 }
 .filter-editor[data-field-type="datetime"]
+  .filter-days-control
+  > .filter-select
+  .filter-operator-control,
+.filter-editor[data-field-type="date"]
   .filter-days-control
   > .filter-select
   .filter-operator-control {

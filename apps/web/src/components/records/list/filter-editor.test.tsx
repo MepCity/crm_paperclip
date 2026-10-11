@@ -19,6 +19,7 @@ const types: FilterFieldType[] = [
   "currency",
   "boolean",
   "ownerlookup",
+  "date",
   "datetime",
   "website",
   "integer",
@@ -101,7 +102,12 @@ for (const field of types) {
     if (["text", "email", "phone", "website"].includes(field)) {
       value = "sample";
       await user.type(screen.getByRole("textbox", { name: `${field} value` }), value);
-    } else if (field === "currency" || field === "integer" || field === "datetime") {
+    } else if (
+      field === "currency" ||
+      field === "integer" ||
+      field === "date" ||
+      field === "datetime"
+    ) {
       value = field === "currency" ? 12.5 : field === "integer" ? 2 : 0;
       const input = screen.getByRole("textbox", { name: `${field} value` });
       await user.type(input, String(value));
@@ -121,11 +127,11 @@ for (const field of types) {
         operatorId:
           field === "text" || field === "website"
             ? "contains"
-            : field === "datetime"
+            : field === "date" || field === "datetime"
               ? "age_in"
               : "equal",
         value,
-        ...(field === "datetime" ? { daysUnit: "days" } : {}),
+        ...(field === "date" || field === "datetime" ? { daysUnit: "days" } : {}),
       },
     ]);
   });
@@ -413,6 +419,22 @@ test("previous requires a positive integer day count", async () => {
   await user.type(valueInput, "2");
   await user.tab();
   expect(apply().disabled).toBe(false);
+});
+
+test("date editors offer the datetime operators and apply a valid day", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  render(<Panel initial={["date"]} onApply={onApply} />);
+  await operator(user, "date", "On");
+  const valueInput = screen.getByRole("textbox", { name: "date value" }) as HTMLInputElement;
+  expect(valueInput.getAttribute("placeholder")).toBe("DD.MM.YYYY");
+  await user.type(valueInput, "31.02.2024");
+  expect(apply().disabled).toBe(true);
+  await user.clear(valueInput);
+  await user.type(valueInput, "29.02.2024");
+  expect(apply().disabled).toBe(false);
+  await user.click(apply());
+  expect(onApply).toHaveBeenCalledWith([{ itemId: "date", operatorId: "on", value: "29.02.2024" }]);
 });
 
 test("on date requires a valid DD.MM.YYYY value", async () => {

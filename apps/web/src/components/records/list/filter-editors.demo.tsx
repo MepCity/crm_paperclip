@@ -11,6 +11,7 @@ const fieldTypes: FilterFieldType[] = [
   "currency",
   "boolean",
   "ownerlookup",
+  "date",
   "datetime",
   "website",
   "integer",

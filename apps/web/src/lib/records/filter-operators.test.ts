@@ -118,6 +118,9 @@ for (const [type, expected] of Object.entries(expectations)) {
 test("integer reuses the observed numeric operators without a currency prefix", () => {
   expect(filterOperators.integer).toEqual(filterOperators.currency);
 });
+test("date takes the datetime operator set and default", () => {
+  expect(filterOperators.date).toEqual(filterOperators.datetime);
+});
 test("unobserved field types have no editor catalog", () => {
   expect(Object.keys(filterOperators)).toEqual([
     "text",
@@ -128,6 +131,7 @@ test("unobserved field types have no editor catalog", () => {
     "currency",
     "boolean",
     "ownerlookup",
+    "date",
     "datetime",
     "tag",
     "multilookup",
