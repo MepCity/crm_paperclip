@@ -27,6 +27,7 @@ function skippedField(field: FieldDefinition): boolean {
     field.dataType === "profileimage" ||
     field.dataType === "lookup" ||
     field.dataType === "multi_module_lookup" ||
+    field.dataType === "date" ||
     field.dataType === "datetime" ||
     field.dataType === "bigint"
   );

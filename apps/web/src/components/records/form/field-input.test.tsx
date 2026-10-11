@@ -202,7 +202,7 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["lookup", "multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["lookup", "multi_module_lookup", "date", "datetime", "bigint"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();

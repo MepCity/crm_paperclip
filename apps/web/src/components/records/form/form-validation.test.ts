@@ -74,3 +74,8 @@ test("isEmailFormatValid accepts common addresses", () => {
   expect(isEmailFormatValid("user@example.test")).toBe(true);
   expect(isEmailFormatValid("bad")).toBe(false);
 });
+
+test("date fields await their dedicated form UI just like datetime fields", () => {
+  for (const type of ["date", "datetime"] as const)
+    expect(validateRecordForm([field("Day", "Day", type, true)], {}, (f) => f.label)).toEqual({});
+});
