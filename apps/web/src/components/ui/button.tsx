@@ -16,6 +16,7 @@ export { buttonSizes, buttonStyles };
 
 /** Drops live-region nodes left by react-aria pending announcements whose target unmounted. */
 function clearStalePendingAnnouncements(): void {
+  if (typeof document === "undefined") return;
   const root = document.querySelector('[data-live-announcer="true"]');
   if (!root) return;
   for (const node of root.querySelectorAll('[role="img"][aria-labelledby]')) {
@@ -31,8 +32,8 @@ function clearStalePendingAnnouncements(): void {
 
 /** Observes and cleans live region announcements after RAC's delayed pending announce. */
 function scheduleClearPendingAnnouncements(): void {
-  clearStalePendingAnnouncements();
   if (typeof document === "undefined" || !document.body) return;
+  clearStalePendingAnnouncements();
   const observer = new MutationObserver(() => {
     clearStalePendingAnnouncements();
   });

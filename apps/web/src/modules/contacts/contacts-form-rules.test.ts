@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { buildFormModel, formFields } from "@/components/records/form/form-model";
 import {
+  CONTACTS_FORM_ADDRESS_CHILD_ORDER,
   CONTACTS_FORM_ADDRESS_GROUPS,
   CONTACTS_FORM_INFORMATION_COLUMNS,
   contactsFormRules,
@@ -34,8 +35,11 @@ test("reads required Last Name and salutation from metadata and supplies current
   expect(fields.some((field) => field.apiName === "Salutation")).toBe(true);
   expect(contactsFormRules.owner).toBe("Owner");
   expect(contactsFormRules.textPrefixes).toEqual({ Twitter: "@" });
+  expect(contactsFormRules.omitted).toEqual(["Connected_To__s"]);
+  expect(contactsFormRules.countries).toHaveLength(2);
+  expect(contactsFormRules.addresses).toHaveLength(2);
 });
-test("stores only fallback placement and the two address presentation composites", () => {
+test("exports spec column order and address presentation composites", () => {
   expect(CONTACTS_FORM_INFORMATION_COLUMNS[0]).toEqual([
     "Owner",
     "First_Name",
@@ -67,5 +71,14 @@ test("stores only fallback placement and the two address presentation composites
   ).toEqual([
     ["Mailing_Address", "Mailing_Latitude", "Mailing_Longitude"],
     ["Other_Address", "Other_Latitude", "Other_Longitude"],
+  ]);
+  expect(CONTACTS_FORM_ADDRESS_CHILD_ORDER).toEqual([
+    "Country",
+    "Flat_House_No_Building_Apartment_Name",
+    "Street",
+    "City",
+    "State",
+    "Zip",
+    "Latitude",
   ]);
 });

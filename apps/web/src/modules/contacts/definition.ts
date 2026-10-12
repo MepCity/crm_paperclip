@@ -4,11 +4,7 @@ import {
   buildContactsBusinessCardFields,
   buildContactsDetailSections,
 } from "./contacts-detail-sections";
-import {
-  CONTACTS_FORM_ADDRESS_GROUPS,
-  CONTACTS_FORM_INFORMATION_COLUMNS,
-  contactsFormRules,
-} from "./contacts-form-rules";
+import { CONTACTS_FORM_INFORMATION_COLUMNS, contactsFormRules } from "./contacts-form-rules";
 import { isContactInlineEditable } from "./contacts-inline-edit";
 import { formatContactsLastUpdateLabel } from "./contacts-last-update";
 import { contactsRecordHeaderIdentity } from "./contacts-record-header";
@@ -40,7 +36,8 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: contactsFormRules,
     fallbackColumns: { "Contact Information": CONTACTS_FORM_INFORMATION_COLUMNS },
-    addressGroups: CONTACTS_FORM_ADDRESS_GROUPS,
+    inventoryChrome: true,
+    profileImageLaterModule: "M6",
   },
   detail: {
     header: contactsRecordHeaderIdentity,

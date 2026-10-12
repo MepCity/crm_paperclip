@@ -14,6 +14,7 @@ export interface RecordFormShellProps {
   title: string;
   formAriaLabel: string;
   actionLabels: RecordFormShellActionLabels;
+  titleAccessory?: ReactNode;
   onCancel?: () => void;
   onSaveAndNew?: () => void;
   onSave?: () => void;
@@ -27,6 +28,7 @@ export function RecordFormShell({
   title,
   formAriaLabel,
   actionLabels,
+  titleAccessory,
   onCancel,
   onSaveAndNew,
   onSave,
@@ -38,9 +40,12 @@ export function RecordFormShell({
   return (
     <div className="record-form-shell" data-record-form-shell>
       <header className="record-form-strip" data-record-form-strip>
-        <h1 className="record-form-strip__title" data-record-form-title>
-          {title}
-        </h1>
+        <div className="record-form-strip__title-row">
+          <h1 className="record-form-strip__title" data-record-form-title>
+            {title}
+          </h1>
+          {titleAccessory}
+        </div>
         <div className="record-form-strip__actions" data-record-form-actions>
           <Button
             type="button"

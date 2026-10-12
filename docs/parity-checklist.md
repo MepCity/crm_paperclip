@@ -164,6 +164,19 @@ Specs (being written): `contacts.md`, `contacts-record-detail.md`,
 `contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
 are added from their capability tables when the specs are approved.
 
+### Contacts create / edit / clone form — implemented; QA pending (MEP-321)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| F-01–F-04, F-57 | Shared form strip; Edit Page Layout and Client Script tab (M11, inert) | Contacts form e2e; inventory chrome component tests via screen |
+| F-05 | Contact Image placeholder (M6, inert) | `profileImageLaterModule` on create form |
+| F-06–F-32, F-17.1–F-17.8 | Metadata Standard layout; owner picker, salutation prefix, lookups, date, Twitter `@`, picklists | Module definition and shared form tests; contacts form e2e |
+| F-33–F-34.8 | Mailing and Other address groups; Copy Address; Clear All per group | Dual-address rendering; contacts form e2e |
+| F-54 | Description Information textarea | Shared form section |
+| F-55–F-56 | Form footer view controls (M11, inert) | Inventory footer on Contacts form |
+
+Connected To is omitted on create (metadata-enabled but not shown in reference captures). Validation, save destinations, Save and New, unsaved cancel and clone follow interim Leads rules. Account Name (M3) and Vendor Name (P2) lookups are inert; Reporting To uses the Contacts record picker.
+
 ### Contacts list — implemented; QA pending (MEP-319)
 
 | Inventory | Implementation | Verification |
