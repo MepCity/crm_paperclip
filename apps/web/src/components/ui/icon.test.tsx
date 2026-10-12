@@ -73,6 +73,7 @@ const expectedIcons = [
   "recordLookup",
   "tablePlus",
   "diagonalExpand",
+  "recordTag",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

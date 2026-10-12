@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
 }));
 vi.mock("@/lib/session", () => ({
   requireOrgContext: vi.fn(async () => ({ userId: "route-author" })),

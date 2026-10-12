@@ -295,9 +295,10 @@ not evidence of reference CRM behavior and must not determine screen parity.
 
 ## Deferred
 
-- Country/State option inventories and their dependency. Both are picklists with
-  maxLength 120 and no picklist property; seed values are null. MEP-18 tracks these
-  questions and placeholder storage.
+- Leads Country/State inventories remain deferred; those fields have maxLength
+  120 and no picklist property. Contacts and Accounts share the exported 248-country
+  and 3,954-state catalogs. Country-to-state dependency behavior remains unobserved;
+  no dependency constraint is inferred. Seed address values remain null.
 - Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
   fourth contains a forbidden product name and cannot enter this repository.
   Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.
@@ -356,8 +357,19 @@ organization on create, update and mass update, and derives the read name from t
 ignoring caller names. On get, list and count, a registered-module reference whose target no longer
 exists is returned as `null` instead of raising an error. Each fixture module bundle declares `displayNameField` (Leads and Contacts:
 `Full_Name`); public `ModuleMetadata` does not change.
-Accounts and Vendors are not registered yet: references are stored and returned as supplied, including
-their optional name; target existence is not validated (completed in Module 3). Single-module lookup sorting
+Accounts is registered with `Account_Name` as its display name. Contacts Account Name and
+Accounts Parent Account validate targets within the bound organization. Vendors remains
+unregistered: references are stored and returned as supplied, without target validation.
+Lookup equality accepts an opaque target ID for related Contacts and Member Accounts queries;
+existing name filters remain available.
+Open question: Parent Account self-reference and cycle validation are unobserved and not enforced.
+Accounts reuses Contacts country/state catalogs and exposes read-only Billing/Shipping address
+and coordinate composites with independently writable child fields, following the Contacts pattern.
+Accounts business-card fields and the eight writable information rows follow
+`research/specs/accounts-record-detail.md` and `research/specs/accounts-form.md`.
+Offscreen system-field column assignment, search fields and id-descending default
+for null-sort views remain interim. Owner retains the existing membership-validated
+write behavior despite the export's secondary field-read-only flag. Single-module lookup sorting
 and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.

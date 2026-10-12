@@ -7,6 +7,7 @@ import {
   moduleRecordEditPath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { ContactRecordScreen } from "./contacts/contact-record-screen";
 import { ModuleFormClient } from "./module-form-client";
 import { ModuleListClient } from "./module-list-client";
 import { resolveModuleScreen } from "./registry";
@@ -33,17 +34,21 @@ export function ModuleRouteClient({
   if (kind === "list")
     return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
   if (kind === "detail" && recordId) {
+    const paths = {
+      defaultList: moduleListDefaultPath,
+      record: moduleRecordPath,
+      edit: moduleRecordEditPath,
+      clone: moduleRecordClonePath,
+    };
+    if (definition.apiName === "Contacts") {
+      return <ContactRecordScreen orgSlug={orgSlug} recordId={recordId} paths={paths} />;
+    }
     return (
       <RecordDetailScreen
         definition={definition}
         orgSlug={orgSlug}
         recordId={recordId}
-        paths={{
-          defaultList: moduleListDefaultPath,
-          record: moduleRecordPath,
-          edit: moduleRecordEditPath,
-          clone: moduleRecordClonePath,
-        }}
+        paths={paths}
       />
     );
   }
