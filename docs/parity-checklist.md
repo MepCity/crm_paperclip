@@ -164,6 +164,21 @@ Specs (being written): `contacts.md`, `contacts-record-detail.md`,
 `contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
 are added from their capability tables when the specs are approved.
 
+### Global search layer — implemented; QA pending (MEP-349)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-27 | Search records is first in the top bar right controls on every shell screen | Shell and global-search component tests; global-search e2e |
+| S-10, S-10.1–S-10.7, S-13 | Module selector and module search; registry supplies shipped modules; Accounts M3, Deals M4, Tasks/Meetings M5 remain inert | Selector filtering, future-module no-op and module-scoped request tests |
+| S-11, S-14 | Empty focused query; three-character minimum; 300 ms debounce; hash prefix selects nameOrTags and shows Record Name badge | Component request tests |
+| S-12.1–S-12.15 | Record history per organization/user; newest first, unique module/id, capped at 15; absent when empty | History storage and record navigation tests |
+| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module | Component tests; global-search e2e |
+
+Interim rules: localStorage history, substring module filtering, debounce and group cap,
+shared no-records copy and error Alert; Escape/outside dismissal and focus restoration.
+Assistant and cross-application links use neutral labels and remain inert (P3).
+Unavailable storage does not prevent record navigation. No tokens are changed.
+
 ### Contacts create / edit / clone form — implemented; QA pending (MEP-321)
 
 | Inventory | Implementation | Verification |
