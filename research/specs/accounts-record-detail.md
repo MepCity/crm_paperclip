@@ -1,6 +1,6 @@
 # Accounts — record detail
 
-Status: partial observed inventory; stopped at the mandatory safety gate. More Options, Timeline and hierarchy opening are not observed. Not a complete implementation specification.
+Status: observed upper-detail inventory, with explicitly recorded capture gaps. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline attempts were skipped because their selectors matched no element while the list was loading; hierarchy opening was not attempted. These unobserved states are not implementation evidence.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Overview contains a five-field business card: Account Owner, Industry, Employees
 
 ## Control inventory
 
-Stable AD numbers retain corresponding D suffixes where practical. Shared controls use the cited Contacts number, with `moved` when their position differs. `same` inherits the Contacts observation limits; it does not establish activation here. More Options and Timeline were not activated, so their behaviour remains explicitly unobserved in Accounts. Static field labels/values are described above rather than treated as controls. Screenshot-only call icons are inventoried.
+Stable AD numbers retain corresponding D suffixes where practical. Shared controls use the cited Contacts number, with `moved` when their position differs. `same` inherits the Contacts observation limits; it does not establish activation here. More Options and Timeline were attempted but both clicks in each capture were skipped, so their behaviour remains explicitly unobserved in Accounts. Static field labels/values are described above rather than treated as controls. Screenshot-only call icons are inventoried.
 
 ### Control inventory — m3d-list-base
 
@@ -38,7 +38,7 @@ Shell: SH-01–SH-46 as in contacts.md; Accounts is active instead of Contacts. 
 | AD-04 | Header | Add Tags | button | below identity | same | seen (m3d-detail-main) | M6 | D-04 |
 | AD-05 | Header | Send Email | button | right actions, first | same | seen (m3d-detail-main) | M10 | D-05 |
 | AD-06 | Header | Edit | button | right actions, second | same | seen (m3d-detail-main) | M3 | D-06 |
-| AD-07 | Header | More Options / three dots | icon button | right actions, third | not observed; menu capture stopped | seen (m3d-detail-main) | M3 | D-07 |
+| AD-07 | Header | More Options / three dots | icon button | right actions, third | not observed; menu click skipped | seen (m3d-detail-main) | M3 | D-07 |
 | AD-08 | Header | Previous Record | icon button | after More Options | same | seen (m3d-detail-main) | M3 | D-08 |
 | AD-09 | Header | Next Record | icon button | far right | same | seen (m3d-detail-main) | M3 | D-09 |
 | AD-99 | Header | Website link | link | identity line, after account identity | not observed | seen (m3d-detail-main) | M3 | new |
@@ -65,7 +65,7 @@ Shell: SH-01–SH-46 as in contacts.md; Accounts is active instead of Contacts. 
 | AD-31 | Related-list rail | Closed Activities count | badge | after Closed Activities | same | seen (m3d-detail-main) | M5 | D-31 |
 | AD-32 | Tab row | Related-list rail visibility icon | icon button | before Overview | same | seen (m3d-detail-main) | M3 | D-32 |
 | AD-33 | Tab row | Overview | tab | first tab, selected | same | seen (m3d-detail-main) | M3 | D-33 |
-| AD-34 | Tab row | Timeline | tab | second tab | not observed; Timeline capture stopped | seen (m3d-detail-main) | M3 | D-34 |
+| AD-34 | Tab row | Timeline | tab | second tab | not observed; Timeline click skipped | seen (m3d-detail-main) | M3 | D-34 |
 | AD-35 | Tab row | Last Update indicator | badge | far right | same | seen (m3d-detail-main) | M3 | D-35 |
 | AD-37 | Business card | Phone call icon | icon button | after Phone value, fifth field | same | seen (m3d-detail-main) | M5 | D-37 moved |
 | AD-38 | Details card | Hide Details | button | card header, left | same | seen (m3d-detail-main) | M3 | D-38 |
@@ -73,6 +73,28 @@ Shell: SH-01–SH-46 as in contacts.md; Accounts is active instead of Contacts. 
 | AD-100 | Details card | Website link | link | Account Information, right column, fourth field value | not observed | seen (m3d-detail-main) | M3 | new |
 
 Absent here: D-03, D-13, D-17, D-22, D-25, D-27, D-28, D-36, D-39, D-40. D-52 (Organize Contact Details rail control) and D-53 (Notes-row plus) are not painted. This does not establish that hover-only controls are unavailable. Accounts has no email-value link in this business card.
+
+### Control inventory — m3d-detail-more
+
+Shell: SH-01–SH-33 as in contacts.md, except SH-13 (Accounts) is not painted as active. SH-34–SH-46 are not painted during loading. No additional shell control.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No opened controls: both requested clicks were skipped with zero matching elements. The main content area is blank; no record header or menu is painted. The loading progress line is static, not a control.
+
+Rest: as in m3d-detail-main **for shared-shell controls only**; covered by the overlay: none. The record content did not load, so all AD controls from the detail baseline are absent in this image; this is not a claim that they are unavailable in Accounts.
+
+### Control inventory — m3d-detail-timeline
+
+Shell: SH-01–SH-33 as in contacts.md, except SH-13 (Accounts) is not painted as active. SH-34–SH-46 are not painted during loading. No additional shell control.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No opened controls: both requested clicks were skipped with zero matching elements. The main content area shows a loading illustration and Loading text; no record header or Timeline controls are painted. The loading illustration/text is static, not a control.
+
+Rest: as in m3d-detail-main **for shared-shell controls only**; covered by the overlay: none. The record content did not load, so all AD controls from the detail baseline are absent in this image; this is not a claim that they are unavailable in Accounts.
 
 ### Control inventory — m3d-list-after
 
@@ -85,13 +107,13 @@ Rest: as in m3d-list-base; covered by the overlay: none.
 
 ## More Options and Timeline
 
-More Options (AD-07) is visible. Its requested follow-up capture was not taken after the safety stop. No Accounts menu rows were observed; added, removed or reordered rows relative to Contacts D-07.1–D-07.15 remain unknown. Contacts describes the common candidate menu, but its fifteen rows must not be asserted as an Accounts inventory.
+More Options (AD-07) is visible in the detail baseline. In m3d-detail-more the source-verified record link and More Options selector both matched zero elements and were skipped. Only the shell and blank main area were captured. No Accounts menu rows were observed; added, removed or reordered rows relative to Contacts D-07.1–D-07.15 remain unknown. No menu row was selected, and no alternate selector or retry was used. Contacts' fifteen rows must not be asserted as an Accounts inventory.
 
-Timeline (AD-34) is visible beside Overview. Its follow-up capture was not taken. Accounts History/Interactions content, filters and differences from Contacts D-42–D-51 remain not observed. The filter panel was not reopened.
+Timeline (AD-34) is visible beside Overview in the baseline. In m3d-detail-timeline the same record link and the source-verified Timeline selector both matched zero elements and were skipped. The image shows the shell and loading state. Accounts History/Interactions content, filters and differences from Contacts D-42–D-51 remain not observed. The filter panel was not reopened.
 
 ## Account hierarchy
 
-Parent Account is the fourth visible left-column Account Information field. It displays an empty dash in this record, with no link or named hierarchy-view action painted beside it. No named hierarchy-opening control is present in the captured upper header/field area. Member Accounts is a visible related-list rail entry (AD-97); its card interior belongs to the next task and is not hierarchy-view evidence. No parent or other record link was clicked. Hierarchy levels, row controls and populated-parent presentation remain not observed.
+Parent Account is the fourth visible left-column Account Information field. It displays an empty dash in this record, with no link or named hierarchy-view action painted beside it. No named hierarchy-opening control is painted in the captured upper header/field area. The source inventory does contain a named Hierarchy View button outside the screenshot viewport, without a stable attribute selector. Its location and safe opening behaviour could not be confirmed from the upper image. Under the conditional capture rule, m3d-detail-hierarchy was not attempted; hidden/offscreen DOM is not visible-control evidence. Member Accounts is a visible related-list rail entry (AD-97); its card interior belongs to the next task and is not hierarchy-view evidence. No parent or other record link was clicked. Hierarchy levels, row controls and populated-parent presentation remain not observed.
 
 ## Differences from Contacts record detail
 
@@ -100,7 +122,7 @@ Parent Account is the fourth visible left-column Account Information field. It d
 - Account Information replaces Contact Information. Its visible field arrangement is described in Layout. Parent Account is visible here, but empty. Website is linked in the right column (AD-100); no email link is painted.
 - Contacts and Member Accounts are additional rail entries; Add Link follows the Links heading. Notes and Contacts have visible count badges (AD-101–AD-102). Badge values are not reproduced.
 - The shortened rail lacks Cadences, Invited Meetings, Purchase Orders, Campaigns, Reporting Contacts and Voice of the Customer. Several shared entries move; see inventory positions.
-- Header action labels and order match Contacts. More Options content and Timeline differences remain unobserved.
+- Header action labels and order match Contacts. More Options content and Timeline differences remain unobserved after skipped capture attempts.
 
 ## Related-list rail vs metadata
 
@@ -140,8 +162,8 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | Links / Add Link | M11 | Accounts-specific observed addition | AD-98; not activated |
 | Phone call controls | M5 | Reused from Contacts, moved | AD-37 / AD-41; image-only, not activated |
 | Rail visibility / Hide Details / Add Related List | M3 / M11 | Reused from Contacts | persisted-preference controls not activated |
-| More Options rows | Mixed, not determined for Accounts | Comparison pending | not observed; safety stop |
-| Timeline content | M3 | Comparison pending | not observed; safety stop |
+| More Options rows | Mixed, not determined for Accounts | Comparison pending | not observed; both capture clicks skipped |
+| Timeline content | M3 | Comparison pending | not observed; both capture clicks skipped |
 
 ## Capture refs
 
@@ -149,15 +171,17 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | --- | --- | --- | --- |
 | m3d-list-base | 0 | 0 | Populated opening list |
 | m3d-detail-main | 1 | 0 | Header, rail, business card, upper Account Information |
-| m3d-list-after | 0 | 0 | Closing list, same total as opening |
+| m3d-detail-more | 2 requested, 0 executed | 2 | Blank main area; intended menu not opened |
+| m3d-detail-timeline | 2 requested, 0 executed | 2 | Loading main area; intended tab not opened |
+| m3d-list-after | 0 | 0 | Renewed closing list, same total as opening |
 
-m3d-detail-more, m3d-detail-timeline and m3d-detail-hierarchy were not captured after the mandatory stop. They are not evidence slugs. All three successful screenshots were opened as images and inspected. Opening and closing totals are equal; no record selection is painted. The record selector was sourced from the current list baseline and verified offline for exactly one source entry. No alternative selector or open/toggle override was used.
+m3d-detail-more and m3d-detail-timeline are evidence of loading/blank states only, not their intended opened states. m3d-detail-hierarchy was not attempted for the conditional reason recorded above and is not an evidence slug. All five successful screenshots were opened as images and inspected. Opening and the renewed closing totals are equal (373); no record selection is painted. The original record selector was reused and matched exactly one entry in m3d-list-base offline. More Options and Timeline selectors each matched exactly one expected entry in m3d-detail-main offline, but neither matched at capture time. No alternative selector or open/toggle override was used.
 
-Safety: list captures have one occurrence of each expected list-reading path and the shell trigger, plus two blocked background polls. Detail has **three** Accounts bulk requests across distinct query signatures (statuses 200, 204, 200), exceeding the permitted aggregate path count of two. The remaining expected detail-reading calls stay within their bounds. Two background polls and two labelled telemetry calls were blocked. No successful record write is observed. Research stopped without defining an exception; only the mandatory click-free closing list followed. This is a safety-count discrepancy, not evidence of a record mutation.
+Safety: the baseline detail has three Accounts bulk readings (statuses 200, 204, 200), now within the aggregate bound of three approved by the CTO in MEP-330. Its two related readings carry the approved related-record query signatures. The historical stop was correct under the earlier bound and was resolved before this continuation. No successful record write is observed. The new More Options and Timeline attempts have only one list bulk reading each and no new non-GET path. More Options has one blocked telemetry call; Timeline has no blocked requests. The renewed closing list has one occurrence of each expected list-reading path and shell trigger, two blocked background polls and seven blocked telemetry calls. Its total remains 373. No fourth detail bulk call or unexpected non-GET path was observed.
 
 ### Reconciliation of controls.json
 
-Ordinals below are one-based local evidence positions, never click selectors. Every source item has exactly one inventory destination or written exclusion. Multiple DOM wrappers may refer to the same structural control. The list baseline differs from m3-list-base only in a Sort accessibility attribute and the absent incidental row action. The first 82 detail entries match the approved Accounts baseline. Later top-bar entries have different wrapper structure and are mapped individually to the same painted SH controls. Image-only AD-37, AD-41 and SH-46 supplement the source mappings.
+Ordinals below are one-based local evidence positions, never click selectors. Every source item has exactly one inventory destination or written exclusion. Multiple DOM wrappers may refer to the same structural control. The list baseline differs from m3-list-base only in a Sort accessibility attribute and the absent incidental row action. The renewed m3d-list-after retains the 601-entry baseline mapping; only a Sort accessibility attribute differs, without a painted control change. Loading captures retain the first 81 shell entries and map their smaller top-bar tail separately. The first 82 detail entries match the approved Accounts baseline. Later top-bar entries have different wrapper structure and are mapped individually to the same painted SH controls. Image-only AD-37, AD-41 and SH-46 supplement the source mappings.
 
 #### m3d-list-base
 
@@ -464,10 +488,106 @@ Ordinals below are one-based local evidence positions, never click selectors. Ev
 
 601 source items; 92 inventory IDs represented by source entries; 413 excluded items. Image-only controls are additional.
 
+#### m3d-detail-more
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62 |
+| SH-01 | 2, 3, 4 |
+| excluded: invisible zero-area element | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| excluded: invisible below clipped panel/table boundary | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80 |
+| excluded: zero-area element | 82, 89, 90, 92, 93, 95, 96, 99, 100, 104, 105, 106, 107, 108, 109, 110, 111, 112 |
+| SH-26 | 83 |
+| SH-27 | 84 |
+| excluded: duplicate structural wrapper | 85 |
+| SH-28 | 86 |
+| SH-29 | 87 |
+| SH-30 | 88 |
+| SH-31 | 91 |
+| SH-32 | 94 |
+| SH-33 | 97, 98 |
+| excluded: empty icon footprint; no painted control | 101 |
+| excluded: zero-area utility-strip wrapper | 102 |
+| excluded: static loading progress decoration | 103 |
+
+112 source items; 33 inventory IDs represented by source entries; 56 excluded items. No opened AD controls. The entire image, including corners and right edge, was inspected.
+
+#### m3d-detail-timeline
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62 |
+| SH-01 | 2, 3, 4 |
+| excluded: invisible zero-area element | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| excluded: invisible below clipped panel/table boundary | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80 |
+| excluded: zero-area element | 82, 89, 90, 92, 93, 95, 96, 99, 100, 104, 105, 106, 107, 108, 109, 110, 111, 112 |
+| SH-26 | 83 |
+| SH-27 | 84 |
+| excluded: duplicate structural wrapper | 85 |
+| SH-28 | 86 |
+| SH-29 | 87 |
+| SH-30 | 88 |
+| SH-31 | 91 |
+| SH-32 | 94 |
+| SH-33 | 97, 98 |
+| excluded: empty icon footprint; no painted control | 101 |
+| excluded: zero-area utility-strip wrapper | 102 |
+| excluded: static loading progress decoration | 103 |
+
+112 source items; 33 inventory IDs represented by source entries; 56 excluded items. No opened AD controls. The entire image, including corners and right edge, was inspected.
+
 ## Open questions
 
-1. CTO must assess the third Accounts bulk reading call before any further clicked capture. The analyst has not authorized an exception. More Options and Timeline inventories remain incomplete until a continuation is explicitly allowed.
-2. No named hierarchy-opening control was observed in the upper capture. Populated Parent Account display and hierarchy levels/row controls remain unknown; no alternate record was inspected.
+1. More Options rows and Timeline differences remain unobserved: both attempts skipped their record and opening clicks while the list was loading. The earlier third-bulk safety question is resolved by MEP-330. A reviewer should decide whether a separately authorized continuation is required for these gaps; the analyst did not retry skipped clicks.
+2. No named hierarchy-opening control was painted in the upper capture. An offscreen Hierarchy View source entry lacks a stable attribute selector; its safe activation was not established, so the conditional capture was omitted. Populated Parent Account display and hierarchy levels/row controls remain unknown; no alternate record was inspected.
 3. Why are Checklists and Locking Information absent from the painted rail despite visible metadata flags? No hidden rail control or persistent preference was exercised.
 4. Field pencils, portrait hover controls and selected-rail plus actions were not observed. Their existence/activation must not be inferred from Contacts or hidden DOM.
 5. Previous/next ordering and boundaries, back navigation, Website links, and all write outcomes remain not observed. Lower details and related-card interiors are outside this task.
