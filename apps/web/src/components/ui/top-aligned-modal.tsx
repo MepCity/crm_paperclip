@@ -37,7 +37,6 @@ export function TopAlignedModal({
       className="top-aligned-modal-overlay fixed inset-0 z-50 outline-none"
     >
       <Modal
-        isOpen={isOpen}
         className={`top-aligned-modal-panel outline-none ${panelClassName ?? ""}`}
         style={panelStyle}
       >
