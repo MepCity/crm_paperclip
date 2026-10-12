@@ -195,6 +195,11 @@ test("dual address copy and clear run through RecordFormScreen state", async () 
   expectAddressGroupValues(mailingGroup, null);
   expectAddressGroupValues(otherGroup, otherAddressValues);
 
+  await fillAddressGroup(mailingGroup, mailingAddressValues, user);
+  expectAddressGroupValues(mailingGroup, mailingAddressValues);
+  expectAddressGroupValues(otherGroup, otherAddressValues);
+
   await clickGroupClearAll(otherGroup, user);
   expectAddressGroupValues(otherGroup, null);
+  expectAddressGroupValues(mailingGroup, mailingAddressValues);
 }, 60_000);
