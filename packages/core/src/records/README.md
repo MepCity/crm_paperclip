@@ -374,3 +374,37 @@ and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.
 The three Leads conversion lookups remain read-only.
+
+## Search and duplicates
+
+`search` searches every registered module unless `modules` restricts it, using
+trimmed, case-insensitive substring matching (three characters minimum). Name
+scope searches only the computed record name. Paging defaults to page 1 and 30
+rows per module; positive integer page sizes are accepted. Totals precede paging,
+and a matching module remains present when the requested page is empty. Filters,
+sort and projection apply independently. Discovery and list use the same
+organization-scoped read path; discovery does not apply saved-view criteria.
+The current fixture metadata has no multi-selection, automatic-number or formula
+fields; the search helper recognizes the former two and skips absent fields.
+
+`findDuplicateGroups` requires one to three distinct known fields, with nonempty,
+case-insensitive equality on every selected field. Conflicts compare nonempty
+editable business values; system attribution, computed and read-only fields are
+excluded because merge cannot select them. Blank business values are filled from
+the group. Lookup identity is the referenced module and ID, independent of name.
+
+`merge` accepts a master and one or two distinct duplicates in its bound module
+and organization. It applies update validation and the existing update/delete
+lock checks to every participant. The fixture currently has no finer record ACL;
+these checks are the same as existing update/delete, not a new permission model.
+All lookup redirections and unique-field checks are prepared before any write.
+The duplicates disappear permanently; selected values overwrite the master,
+other values remain. Creation attribution comes from the oldest participant;
+modification attribution uses the caller and the merge clock.
+
+`deduplicate` requires the existing `admin` role and holds an organization/module
+lock shared by all service instances until success or failure. Groups with no
+business conflicts and at most three records merge automatically. Latest
+activity chooses the master, then latest modification breaks missing/tied
+activity. Other groups return unchanged as `conflicts`. Notes, attachments,
+activities, automation and queued large merges remain outside this adapter.
