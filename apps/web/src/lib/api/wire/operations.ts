@@ -13,6 +13,7 @@ import {
   encodeWriteResult,
   invalid,
   object,
+  referenceKeys,
 } from "./codec";
 import type { WireMember } from "./types";
 
@@ -62,6 +63,8 @@ async function bodyOf(input: OperationRequest): Promise<unknown> {
     return invalid("data", "Send valid JSON.");
   }
 }
+// Match the existing long-text field limit without narrowing searches to short labels.
+export const MAX_SEARCH_LENGTH = 2000;
 async function restrictions(
   input: OperationRequest,
 ): Promise<Pick<ListQuery, "filters" | "search">> {
@@ -69,6 +72,8 @@ async function restrictions(
   if (value === undefined) return {};
   const body = object(value, "filters");
   if (body.search !== undefined && typeof body.search !== "string") invalid("search");
+  if (typeof body.search === "string" && body.search.length > MAX_SEARCH_LENGTH)
+    invalid("search", "Send at most 2000 characters.");
   return {
     ...(body.filters === undefined ? {} : { filters: decodeCriteria(body.filters) }),
     ...(body.search === undefined ? {} : { search: body.search as string }),
@@ -313,6 +318,7 @@ export const operations = {
       const body = object(await bodyOf(input), "ids");
       const ids = idsOf(body);
       const owner = object(body.owner, "Owner");
+      referenceKeys(owner, ["id", "name", "email"], "Owner");
       if (typeof owner.id !== "string") invalid("Owner");
       await records.changeOwner(moduleOf(input), ids, owner.id);
       return ok(encodeWriteResult(ids, "owner is successfully updated"));
