@@ -3,9 +3,7 @@ import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
-test("Accounts shell, views, sorting, filters, alphabet, paging and record route", async ({
-  page,
-}) => {
+test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, "Leads"));
@@ -59,6 +57,14 @@ test("Accounts shell, views, sorting, filters, alphabet, paging and record route
   await list.getByRole("button", { name: "Account Name column options" }).click();
   await page.getByRole("menuitem", { name: "Asc", exact: true }).click();
   await expect(page).toHaveURL(/sort_by=Account_Name/);
+});
+
+test("Accounts filters, alphabet, paging and record route", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Accounts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // Alphabet filter (AL-36)
   await list.getByRole("button", { name: "Filter by first letter" }).click();
