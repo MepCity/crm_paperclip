@@ -222,3 +222,35 @@ Share, Print Preview and Find and Merge Duplicates are drawn without handlers (s
 | --- | --- |
 | Global search across modules | `app-shell.md` › Actions; `global-search.md` |
 | Find and Merge Duplicates; Deduplicate, for Leads and Contacts | `leads.md` › Actions; `duplicates.md` |
+
+## Module 3 — Accounts
+
+Specs: `accounts.md`, `accounts-form.md`, `accounts-record-detail.md`.
+
+### Accounts create / edit / clone form — implemented; QA pending (MEP-341)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AF-01–AF-04, AF-47 | Shared form strip with `Create Account`; Edit Page Layout and Client Script tab (M11, inert) | `e2e/accounts-form.spec.ts`; inventory chrome tests |
+| AF-05 | Account Image building placeholder (M6, inert) | `profileImageLaterModule` + `profileImageIcon` on the Accounts definition |
+| AF-06–AF-24 | Spec eight-row Account Information grid; owner picker, Parent Account lookup, four picklists, currency prefix and passive information icon, numeric and bigint entries | Module definition, shared form tests; accounts form e2e |
+| AF-11.1–AF-11.18 | Observed record-picker chrome on the Parent Account dialog | `select-record-dialog.test.tsx`; accounts form e2e |
+| AF-13.1–AF-13.8 | Searchable Account Type panel (`searchablePicklists` form rule) | accounts form e2e |
+| AF-25–AF-43 | Billing and Shipping address groups; Copy Address; Clear All per group | Dual-address rendering; accounts form e2e |
+| AF-30.1, AF-35.1–AF-35.8 | State list with only `-None-` while Country is unset; country panel search and options | Shared composite input tests |
+| AF-44 | Description Information textarea | Shared form section |
+| AF-45–AF-46 | Form footer view controls (M11, inert) | Inventory footer on the Accounts form |
+
+Connected To is omitted on create (metadata-enabled but absent from the reference form captures).
+Registering Accounts retires the transitional inert state of Account Name references: the Contacts
+form lookup, the Contacts list cell and the Contacts detail now resolve to Account record links.
+Account Number (`bigint`) draws the single-line numeric entry with the integer validation rule.
+
+`laterModule`: AF-05 image (M6), AF-11.16 picker handset (M5), AF-01/AF-45/AF-46/AF-47 customization
+and automation (M11). Drawn without handlers (never exercised in the capture): AF-11.3 New Account,
+AF-11.4 table mark, AF-11.6/8/10/12 column options, AF-11.13 Filter, AF-16 currency information icon.
+AF-48 Channels and AF-49 Threads (`?`, shell utility strip) are not painted by this task.
+
+Interim rules (behaviour not observed in the reference, taken from the Contacts form): Copy Address
+direction labels, error copy and focus order, unsaved-changes confirmation, save destination,
+Save and New reset, the whole Edit Account form and the clone rule.
