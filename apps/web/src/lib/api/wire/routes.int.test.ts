@@ -534,4 +534,52 @@ describe("operation routes", () => {
       404,
     );
   });
+  it("runs Accounts create, list, read, update and delete handlers", async () => {
+    const create = await call(operations.create, a, {
+      module: "Accounts",
+      body: { data: [{ Account_Name: "Route Account" }] },
+    });
+    expect(create.status).toBe(200);
+    const body = await create.json();
+    const id = body.data[0].details.id;
+    const list = await call(operations.bulk, a, {
+      module: "Accounts",
+      query: { cvid: "all-accounts" },
+      body: {
+        filters: { field: { api_name: "id" }, comparator: "equal", value: id },
+      },
+    });
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.map((row: { id: string }) => row.id)).toEqual([id]);
+    expect((await call(operations.record, a, { module: "Accounts", recordId: id })).status).toBe(
+      200,
+    );
+    const update = await call(operations.update, a, {
+      module: "Accounts",
+      recordId: id,
+      body: { data: [{ Account_Name: "Updated Account" }] },
+    });
+    expect(update.status).toBe(200);
+    expect(
+      (await (await call(operations.record, a, { module: "Accounts", recordId: id })).json())
+        .data[0].Account_Name,
+    ).toBe("Updated Account");
+    expect((await call(operations.delete, a, { module: "Accounts", recordId: id })).status).toBe(
+      200,
+    );
+    expect((await call(operations.record, a, { module: "Accounts", recordId: id })).status).toBe(
+      404,
+    );
+  });
+  it("serves Accounts module, fields, layouts and custom view settings", async () => {
+    for (const op of [operations.module, operations.fields, operations.layouts, operations.views]) {
+      const response = await call(op, a, { module: "Accounts", viewId: "all-accounts" });
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      if (op === operations.fields) expect(body.fields).toHaveLength(51);
+      if (op === operations.views) expect(body.custom_views).toHaveLength(8);
+      if (op === operations.layouts) expect(body.layouts[0].sections).toHaveLength(4);
+      if (op === operations.module) expect(body.modules[0].api_name).toBe("Accounts");
+    }
+  });
 });
