@@ -246,11 +246,7 @@ test("later-module account subtitle is a focusable inert link", async () => {
 
 test("website subtitle renders shared link without opening new tab by default", () => {
   render(
-    <RecordHeader
-      {...base}
-      subtitle="https://example.com"
-      subtitleHref="https://example.com"
-    />,
+    <RecordHeader {...base} subtitle="https://example.com" subtitleHref="https://example.com" />,
   );
   const link = screen.getByRole("link", { name: "https://example.com" });
   expect(link.getAttribute("href")).toBe("https://example.com");

@@ -376,10 +376,7 @@ function LoadedRecordForm({
             className="record-form-profile-image"
             aria-label={field.label}
           >
-            <ProfileIcon
-              aria-hidden
-              className="record-profile-silhouette h-full w-full"
-            />
+            <ProfileIcon aria-hidden className="record-profile-silhouette h-full w-full" />
           </Button>
         </div>
       );
