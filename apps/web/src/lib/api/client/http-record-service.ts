@@ -101,8 +101,8 @@ function listQueryParams(query: ListQuery): Record<string, string | undefined> {
   };
 }
 
-function decodeViewSummaries(body: WireViewsResponse): readonly ViewSummary[] {
-  return body.custom_views.map((summary) => ({
+function decodeViewSummaries(views: WireViewsResponse["custom_views"]): readonly ViewSummary[] {
+  return views.map((summary) => ({
     id: summary.id,
     name: summary.name,
     systemDefined: summary.system_defined,
@@ -223,19 +223,22 @@ export function createHttpRecordService({
     getModule: loadModuleMetadata,
 
     async listViews(module: ModuleApiName): Promise<readonly ListView[]> {
-      const path = operationPath(operations.views, { module });
-      const body = (await request(
-        `${path}${queryString({ module, page: "1", per_page: VIEW_PAGE_SIZE })}`,
-      )) as WireViewsResponse;
-      return Promise.all(body.custom_views.map((summary) => service.getView(module, summary.id)));
+      const summaries = await service.listViewSummaries(module);
+      return Promise.all(summaries.map((summary) => service.getView(module, summary.id)));
     },
 
     async listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]> {
       const path = operationPath(operations.views, { module });
-      const body = (await request(
-        `${path}${queryString({ module, page: "1", per_page: VIEW_PAGE_SIZE })}`,
-      )) as WireViewsResponse;
-      return decodeViewSummaries(body);
+      const summaries: ViewSummary[] = [];
+      for (let page = 1; ; page++) {
+        const body = (await request(
+          `${path}${queryString({ module, page: String(page), per_page: VIEW_PAGE_SIZE })}`,
+        )) as WireViewsResponse | null;
+        if (!body) break;
+        summaries.push(...decodeViewSummaries(body.custom_views));
+        if (!body.info.more_records) break;
+      }
+      return summaries;
     },
 
     async getView(module: ModuleApiName, viewId: string): Promise<ListView> {
@@ -345,14 +348,22 @@ export function createHttpRecordService({
 
     async listUsers(): Promise<readonly OrgMember[]> {
       const path = operationPath(operations.users, {});
-      const body = (await request(
-        `${path}${queryString({ type: "ActiveUsers", page: "1", per_page: VIEW_PAGE_SIZE })}`,
-      )) as WireUsersResponse;
-      return body.users.map((user) => ({
-        userId: user.id,
-        name: user.full_name,
-        email: user.email,
-      }));
+      const members: OrgMember[] = [];
+      for (let page = 1; ; page++) {
+        const body = (await request(
+          `${path}${queryString({ type: "ActiveUsers", page: String(page), per_page: VIEW_PAGE_SIZE })}`,
+        )) as WireUsersResponse | null;
+        if (!body) break;
+        members.push(
+          ...body.users.map((user) => ({
+            userId: user.id,
+            name: user.full_name,
+            email: user.email,
+          })),
+        );
+        if (!body.info.more_records) break;
+      }
+      return members;
     },
   };
 

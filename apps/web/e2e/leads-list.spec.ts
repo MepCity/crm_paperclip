@@ -609,8 +609,22 @@ test.describe("Leads list page", () => {
       "data-selected",
       "true",
     );
-    await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Cancel" }).click();
+    await page.getByRole("option", { name: "None", exact: true }).click();
+    const resetBulk = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        url.pathname === "/crm/v2.2/Leads/bulk" &&
+        !url.searchParams.has("sort_by") &&
+        !url.searchParams.has("sort_order")
+      );
+    });
+    await page.getByRole("button", { name: "Apply" }).click();
+    expect((await resetBulk).ok()).toBe(true);
+    await expect.poll(() => new URL(page.url()).searchParams.has("sort_by")).toBe(false);
+    await expect.poll(() => new URL(page.url()).searchParams.has("sort_order")).toBe(false);
+    await expect
+      .poll(() => companyColumnTexts(page), { timeout: RENDER_TIMEOUT_MS })
+      .toEqual(beforeSort);
     await expectNoA11yViolations(page);
   });
 
@@ -790,10 +804,10 @@ test.describe("Leads list page", () => {
     await search.fill("nothing");
     await expect(options).toHaveCount(0);
 
-    // None keeps Apply disabled.
+    // Explicitly choosing None enables clearing the sort.
     await search.fill("");
     await options.first().click();
-    await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Apply" })).toBeEnabled();
     await expectNoA11yViolations(page);
   });
 

@@ -44,7 +44,7 @@ export async function apiFetch(
     }
   }
   if (response.ok) {
-    if (parsed === undefined && text) throw decodeError(response.status, null);
+    if (!text || parsed === undefined) throw decodeError(response.status, null);
     return parsed;
   }
   const error = decodeError(response.status, parsed === undefined ? null : parsed);

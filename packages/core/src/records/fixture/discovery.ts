@@ -1,4 +1,4 @@
-import { ValidationError } from "../../errors";
+import { ConflictError, RecordLockedError, ValidationError } from "../../errors";
 import type { DuplicateGroup, FieldDefinition, RecordData } from "../contract";
 
 const searchableTypes = new Set([
@@ -45,6 +45,9 @@ export function duplicateKey(value: unknown): string | null {
   return String(value).toLowerCase();
 }
 
+// Identity and the write lock are never values a caller can choose during a merge.
+const neverConflictFields = new Set(["id", "Locked__s"]);
+
 export function duplicateGroups(
   records: readonly RecordData[],
   fields: readonly string[],
@@ -71,11 +74,12 @@ export function duplicateGroups(
     .filter((group) => group.length > 1)
     .map((group) => ({
       records: group,
-      // Identity, attribution and computed names differ independently of business conflicts.
+      // Identity, attribution, the lock flag and computed names
+      // differ independently of business conflicts.
       conflictFields: metadata
         .filter(
           (field) =>
-            field.apiName !== "id" &&
+            !neverConflictFields.has(field.apiName) &&
             !managed.has(field.apiName) &&
             new Set(
               group
@@ -85,6 +89,31 @@ export function duplicateGroups(
         )
         .map((field) => field.apiName),
     }));
+}
+
+/** A lock or unique collision blocks one group; any other merge failure is a bug. */
+export function isDeferredMergeRejection(error: unknown): boolean {
+  return error instanceof RecordLockedError || error instanceof ConflictError;
+}
+
+/**
+ * A lookup copied into the master by the automatic merge must not aim at a record of its own
+ * group: the duplicates disappear and the master would end up pointing at itself.
+ */
+export function pointsAtGroupMember(
+  value: unknown,
+  module: string,
+  members: ReadonlySet<string>,
+): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "module" in value &&
+    "id" in value &&
+    value.module === module &&
+    members.has(String(value.id))
+  );
 }
 
 export function automaticMaster(records: readonly RecordData[]): RecordData {
