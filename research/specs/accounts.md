@@ -57,7 +57,7 @@ Shell: SH-01–SH-46 as in contacts.md. Accounts is the active rail link (SH-15)
 | AL-51 | List footer | Next | icon button | right group, after range | same | seen (m3-list-base) | M3 | L-51 |
 | AL-52 | View strip | All Locked Accounts | tab | left, second | not observed | seen (m3-list-base) | M3 | new |
 | AL-53 | Filter panel | Account Number | checkbox | field section, row 2 | not observed | seen (m3-list-base) | M3 | new |
-| AL-54 | Filter panel | Account Owner | checkbox | field section, row 3 | not observed | seen (m3-list-base) | M3 | new |
+| AL-54 | Filter panel | Account Owner | checkbox | field section, row 3 | same | seen (m3-list-base) | M3 | L-32 moved |
 | AL-55 | Filter panel | Account Site | checkbox | field section, row 4 | not observed | seen (m3-list-base) | M3 | new |
 | AL-56 | Filter panel | Account Type | checkbox | field section, row 5 | not observed | seen (m3-list-base) | M3 | new |
 | AL-57 | Filter panel | Annual Revenue | checkbox | field section, row 6 | not observed | seen (m3-list-base) | M3 | new |
@@ -68,7 +68,7 @@ Shell: SH-01–SH-46 as in contacts.md. Accounts is the active rail link (SH-15)
 | AL-62 | Table | Phone handset icon | icon button | each populated Phone cell, after value | not observed | seen (m3-list-base) | M5 | new |
 | AL-63 | Table | Website link | link | Website cells | not observed | seen (m3-list-base) | M3 | new |
 
-Absent here: L-17–L-19, L-28–L-32, L-37–L-38, L-41, L-43–L-44, L-47. AL-27 is the first Account Name field-filter row; AL-35 is the module-name equivalent in the first column. AL-39 is the same Phone header moved to column 2. The All Locked Accounts tab is additional to Contacts' base strip.
+Absent here: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47. AL-27 is the first Account Name field-filter row; AL-54 reuses the module-name-equivalent Owner filter, moved from the clipped sixth Contacts row to the third Accounts row; AL-35 is the module-name equivalent in the first column. AL-39 is the same Phone header moved to column 2. The All Locked Accounts tab is additional to Contacts' base strip.
 
 ### Control inventory — m3-list-view-selector
 
@@ -767,6 +767,15 @@ Billing State: script comparison of ordered display/actual pairs against Contact
 Shipping State: script comparison of ordered display/actual pairs against Contacts Mailing_State: identical (3954 options). See [contacts.md — State / Province catalog](contacts.md#state--province-catalog).
 
 ## Lookups and relations
+
+| Field | Type | Target | Reverse relation |
+| --- | --- | --- | --- |
+| Account Owner | ownerlookup | Users; no lookup target in export | none exported |
+| Parent Account | lookup | Accounts (M3) | Child_Accounts / Member Accounts |
+| Created By | ownerlookup | Users; no lookup target in export | none exported |
+| Modified By | ownerlookup | Users; no lookup target in export | none exported |
+| Connected To | multi_module_lookup | Leads (M1); dynamic addition allowed | Accounts |
+
 Parent Account targets Accounts; exported reverse API name is Child_Accounts, display label Member Accounts. revalidate_filter_during_edit=false; no system query is configured. Cycle prevention, selection constraints and visible hierarchy affordances are not observed. No inference is made about recursive depth. Connected To exports Leads as its only target and allows dynamic module addition; additional targets are not inferred.
 
 ### Incoming Accounts lookups
