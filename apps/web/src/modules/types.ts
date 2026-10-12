@@ -9,7 +9,7 @@ import type {
 import type { ComponentType } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailSection } from "@/components/records/detail/details-card";
-import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import type { RecordCommand, RecordMenuGroup } from "@/components/records/detail/record-header";
 import type {
   TimelineEvent,
   TimelineFilterOption,
@@ -109,6 +109,8 @@ export interface ModuleScreenDefinition {
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
     };
+    addTags?: { label: string; laterModule: ModuleKey };
+    headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
@@ -128,6 +130,7 @@ export interface ModuleScreenDefinition {
       sources: readonly TimelineFilterOption[];
       events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
+      upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };
     relatedLists?: readonly RelatedListDefinition[];
   };
