@@ -52,3 +52,20 @@ test("a failed revoke warns once, above the table", async () => {
   expect(screen.getAllByRole("alert")).toHaveLength(1);
   expect(screen.getByRole("alert").textContent).toContain("Try again later.");
 });
+
+test("an unexpected revoke rejection warns and allows retry", async () => {
+  const onRevoke = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("Internal details"))
+    .mockResolvedValueOnce({ status: "success" });
+  const user = userEvent.setup();
+  render(<InvitationsTable invitations={[memberInvite]} onRevoke={onRevoke} />);
+  await user.click(screen.getByRole("button", { name: "Revoke bea@example.test" }));
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Unable to revoke the invitation. Please try again.",
+  );
+  expect(screen.getByRole("alert").textContent).not.toContain("Internal details");
+  await user.click(screen.getByRole("button", { name: "Revoke bea@example.test" }));
+  await waitFor(() => expect(onRevoke).toHaveBeenCalledTimes(2));
+  expect(screen.queryByRole("alert")).toBeNull();
+});
