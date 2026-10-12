@@ -295,6 +295,83 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
         service.search({ text: "marker", modules: ["constructor"] }),
       ).rejects.toBeInstanceOf(NotFoundError);
     });
+    it("rules 6–8: a lookup on the master that pointed at a duplicate is nulled, not self-pointed", async () => {
+      const service = make();
+      const duplicate = await service.create("Contacts", { Last_Name: "Self Marker" });
+      const survivor = await service.create("Contacts", { Last_Name: "Self Marker Survivor" });
+      const master = await service.create("Contacts", {
+        Last_Name: "Self Marker Master",
+        Reporting_To: { module: "Contacts", id: duplicate.id },
+      });
+      const related = await service.create("Contacts", {
+        Last_Name: "Self Marker Related",
+        Reporting_To: { module: "Contacts", id: duplicate.id },
+      });
+      const merged = await service.merge("Contacts", {
+        masterId: master.id,
+        duplicateIds: [duplicate.id],
+        values: {},
+      });
+      expect(merged.fields.Reporting_To).toBeNull();
+      expect((await service.get("Contacts", related.id)).fields.Reporting_To).toMatchObject({
+        module: "Contacts",
+        id: master.id,
+      });
+      const explicit = await service.merge("Contacts", {
+        masterId: related.id,
+        duplicateIds: [survivor.id],
+        values: { Reporting_To: { module: "Contacts", id: master.id } },
+      });
+      expect(explicit.fields.Reporting_To).toMatchObject({ module: "Contacts", id: master.id });
+    });
+    it("rules 6, 8, 12–13: the automatic merge blanks a master pointer at its own duplicate", async () => {
+      const ctx = context();
+      let now = new Date("2026-01-01T00:00:00Z");
+      const service = factory(ctx, { now: () => now });
+      const duplicate = await service.create("Contacts", { Last_Name: "Auto Self Marker" });
+      now = new Date("2026-02-01T00:00:00Z");
+      const master = await service.create("Contacts", {
+        Last_Name: "auto self marker",
+        Reporting_To: { module: "Contacts", id: duplicate.id },
+      });
+      const result = await service.deduplicate("Contacts", ["Last_Name"]);
+      expect(result.mergedGroups).toBe(1);
+      expect(result.removedRecords).toBe(1);
+      expect(result.conflicts).toEqual([]);
+      expect((await service.get("Contacts", master.id)).fields.Reporting_To).toBeNull();
+    });
+    it("rules 12–13: a rejected group stays untouched and the run keeps merging later groups", async () => {
+      const service = make();
+      const view = (await service.listViews("Contacts")).find(
+        (candidate) => candidate.criteria === null,
+      );
+      const rows = await service.list("Contacts", {
+        viewId: view?.id ?? "",
+        page: 1,
+        perPage: 100,
+      });
+      const locked = rows.records.find((record) => record.fields.Locked__s === true);
+      expect(locked).toBeDefined();
+      const twin = await service.create("Contacts", {
+        Last_Name: String(locked?.fields.Last_Name),
+      });
+      await service.create("Contacts", { Last_Name: "Deferred Marker" });
+      await service.create("Contacts", { Last_Name: "Deferred Marker" });
+      const groups = await service.findDuplicateGroups("Contacts", ["Last_Name"]);
+      const pair = groups.find((group) =>
+        group.records.some((record) => record.id === (locked?.id ?? "")),
+      );
+      expect(pair?.conflictFields).toEqual([]);
+      const result = await service.deduplicate("Contacts", ["Last_Name"]);
+      expect(result.mergedGroups).toBe(1);
+      expect(result.removedRecords).toBe(1);
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.conflicts[0]?.records.map((record) => record.id).sort()).toEqual(
+        [locked?.id, twin.id].sort(),
+      );
+      expect((await service.get("Contacts", twin.id)).id).toBe(twin.id);
+      expect((await service.get("Contacts", locked?.id ?? "")).id).toBe(locked?.id);
+    });
     it("rule 14: only existing administrators may deduplicate", async () => {
       const service = factory({ ...context(), role: "member" });
       await expect(service.deduplicate("Contacts", ["Last_Name"])).rejects.toBeInstanceOf(
