@@ -164,6 +164,21 @@ Specs (being written): `contacts.md`, `contacts-record-detail.md`,
 `contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
 are added from their capability tables when the specs are approved.
 
+### Global search layer — implemented; QA pending (MEP-349)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-27 | Search records is first in the top bar right controls on every shell screen | Shell and global-search component tests; global-search e2e |
+| S-10, S-10.1–S-10.7, S-13 | Module selector and module search; registry supplies shipped modules; Accounts M3, Deals M4, Tasks/Meetings M5 remain inert | Selector filtering, future-module no-op and module-scoped request tests |
+| S-11, S-14 | Empty focused query; three-character minimum; 300 ms debounce; hash prefix selects nameOrTags and shows Record Name badge | Component request tests |
+| S-12.1–S-12.15 | Record history per organization/user; newest first, unique module/id, capped at 15; absent when empty | History storage and record navigation tests |
+| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module | Component tests; global-search e2e |
+
+Interim rules: localStorage history, substring module filtering, debounce and group cap,
+shared no-records copy and error Alert; Escape/outside dismissal and focus restoration.
+Assistant and cross-application links use neutral labels and remain inert (P3).
+Unavailable storage does not prevent record navigation. No tokens are changed.
+
 ### Contacts create / edit / clone form — implemented; QA pending (MEP-321)
 
 | Inventory | Implementation | Verification |
@@ -248,6 +263,19 @@ comparison); "Do it later" only closes the popup and the groups are found again 
 the same fields, because no emailed link or three-day token exists (M10); the merged
 and removed counts in the popup are our own wording, as the reference documents no
 result copy; the list refreshes through the existing query invalidation.
+
+### Advanced search results page — implemented; QA pending (MEP-351)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| S-19, S-20, S-21, S-22 | Top bar with search input, close icon, filter toggle button, and Sort By selector (defaulting to Modified Time desc) | Component tests; `e2e/advanced-search.spec.ts` |
+| S-23.<Module>, S-24.<Module>.1–.4, S-25.<Module>.* | Result cards for Leads, Contacts, Accounts, and Notes (M6); module count badges, pagination arrows, Manage columns icon button (Icons.columns), record link (Accounts with M3 inert link), and column headers | Component tests; `e2e/advanced-search.spec.ts` |
+| S-26, S-27.*, S-28, S-29 | Manage Columns dialog with column search, 10-column selection limit, Cancel, and Save | Component tests; `e2e/advanced-search.spec.ts` |
+| S-30, S-31.1–.8, S-32.1–.5, S-33, S-34, S-35.1–.2, S-36, S-37 | Filter panel: module checkboxes (Contacts, Accounts, Leads active; Tasks M5, Deals M4, Meetings M5, Calls M5, Products P2 inert), system field filters with operator and user picker, Apply Filter, and Clear | Component tests; `e2e/advanced-search.spec.ts` |
+| S-38, S-39, S-40, S-41, S-42, S-43.* | Row actions button, phone call icon (M5 inert), email link (M10 inert), related record links, stage badge (M4 inert), column values with list cell formatting and user display names | Component tests |
+| S-46 | Bottom link "Search across applications" (P3 inert) | Component tests; `e2e/advanced-search.spec.ts` |
+
+Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
 
 ### Assigned to Module 2 at the Module 1 gate
 

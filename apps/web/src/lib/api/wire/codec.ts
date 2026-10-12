@@ -153,6 +153,13 @@ export function encodeField(field: FieldDefinition): WireField {
           pick_list_values: field.picklist.map((option) => ({
             display_value: option.displayValue,
             actual_value: option.storedValue,
+            ...(option.stage === undefined
+              ? {}
+              : {
+                  probability: option.stage.probability,
+                  forecast_category: { name: option.stage.forecastCategory },
+                  deal_category: option.stage.category,
+                }),
           })),
         }),
     ...(field.lookup === undefined
@@ -160,6 +167,35 @@ export function encodeField(field: FieldDefinition): WireField {
       : { lookup: { module: { api_name: field.lookup.module } } }),
   };
 }
+function decodeStage(option: NonNullable<WireField["pick_list_values"]>[number]): {
+  stage?: import("@crm/core/records").PicklistStageMeta;
+} {
+  const keys = ["probability", "forecast_category", "deal_category"];
+  if (!keys.some((key) => Object.hasOwn(option, key))) return {};
+  if (
+    !Number.isInteger(option.probability) ||
+    typeof option.probability !== "number" ||
+    option.probability < 0 ||
+    option.probability > 100
+  )
+    invalid("pick_list_values");
+  const forecast = object(option.forecast_category, "pick_list_values");
+  if (typeof forecast.name !== "string") invalid("pick_list_values");
+  if (
+    option.deal_category !== "Open" &&
+    option.deal_category !== "Closed Won" &&
+    option.deal_category !== "Closed Lost"
+  )
+    invalid("pick_list_values");
+  return {
+    stage: {
+      probability: option.probability,
+      forecastCategory: forecast.name,
+      category: option.deal_category,
+    },
+  };
+}
+
 export function decodeField(field: WireField): FieldDefinition {
   return {
     apiName: field.api_name,
@@ -182,6 +218,7 @@ export function decodeField(field: WireField): FieldDefinition {
           picklist: field.pick_list_values.map((option) => ({
             displayValue: option.display_value,
             storedValue: option.actual_value,
+            ...decodeStage(option),
           })),
         }),
     ...(field.lookup === undefined ? {} : { lookup: { module: field.lookup.module.api_name } }),
@@ -369,7 +406,11 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
       return invalid("filters", "Unknown token.");
     return value;
   }
-  if (Array.isArray(value)) return value.map((entry) => readFieldValue(entry, "filters"));
+  if (Array.isArray(value)) {
+    if (value.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria values.");
+    return value.map((entry) => readFieldValue(entry, "filters"));
+  }
   if (
     typeof value === "object" &&
     value !== null &&
@@ -416,7 +457,17 @@ export function encodeCriteria(criteria: Criteria): WireCriteria {
 }
 // Match the existing 500-item bulk operation limit.
 export const MAX_CRITERIA_GROUP_SIZE = 500;
+// Allow many full groups while bounding work across the entire tree.
+export const MAX_CRITERIA_NODES = 10_000;
 export function decodeCriteria(value: unknown, depth = 0): Criteria {
+  return decodeCriteriaNode(value, depth, { remaining: MAX_CRITERIA_NODES });
+}
+function decodeCriteriaNode(
+  value: unknown,
+  depth: number,
+  budget: { remaining: number },
+): Criteria {
+  if (budget.remaining-- <= 0) invalid("filters", "Send at most 10000 criteria nodes.");
   if (depth > 32) invalid("filters", "Criteria are too deeply nested.");
   const criteria = object(value, "filters");
   if ("group" in criteria) {
@@ -427,7 +478,7 @@ export function decodeCriteria(value: unknown, depth = 0): Criteria {
       invalid("filters", "Send at most 500 criteria per group.");
     return {
       groupOperator: operator === "AND" ? "and" : "or",
-      group: criteria.group.map((child) => decodeCriteria(child, depth + 1)),
+      group: criteria.group.map((child) => decodeCriteriaNode(child, depth + 1, budget)),
     };
   }
   const field = object(criteria.field, "filters");

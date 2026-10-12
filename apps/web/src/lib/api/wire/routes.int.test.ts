@@ -5,7 +5,7 @@ import { removeMember } from "@crm/core";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
-import { encodeInput } from "./codec";
+import { encodeInput, MAX_CRITERIA_GROUP_SIZE, MAX_CRITERIA_NODES } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
@@ -94,7 +94,51 @@ async function call(
   );
 }
 
+// Root plus 20 child groups; leaves fill each group up to the sibling limit.
+function criteriaTree(nodes: number) {
+  let leaves = nodes - 21;
+  return {
+    group_operator: "AND",
+    group: Array.from({ length: 20 }, () => {
+      const size = Math.min(leaves, MAX_CRITERIA_GROUP_SIZE);
+      leaves -= size;
+      return {
+        group_operator: "OR",
+        group: Array.from({ length: size }, () => ({
+          field: { api_name: "Converted__s" },
+          comparator: "equal",
+          value: false,
+        })),
+      };
+    }),
+  };
+}
+
 describe("operation routes", () => {
+  it.each([operations.bulk, operations.count])(
+    "bounds criteria arrays and total nodes on $path",
+    async (op) => {
+      const values = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, () => "Synthetic Status");
+      const leaf = { field: { api_name: "Lead_Status" }, comparator: "equal", value: values };
+      for (const [accepted, rejected] of [
+        [leaf, { ...leaf, value: [...values, "extra"] }],
+        [criteriaTree(MAX_CRITERIA_NODES), criteriaTree(MAX_CRITERIA_NODES + 1)],
+      ]) {
+        const response = await call(op, a, { body: { filters: rejected } });
+        expect(response.status).toBe(400);
+        const error = await response.json();
+        expect(Object.keys(error).sort()).toEqual(["code", "details", "message", "status"]);
+        expect(error).toMatchObject({
+          code: "INVALID_DATA",
+          status: "error",
+          details: { fields: { filters: expect.any(Array) } },
+        });
+        const boundary = await call(op, a, { body: { filters: accepted } });
+        expect([200, 204]).toContain(boundary.status);
+      }
+    },
+  );
+
   let a: Organization;
   let b: Organization;
   beforeAll(async () => {
@@ -188,7 +232,7 @@ describe("operation routes", () => {
       data: [encodeInput(fields, metadata)],
     });
     const response = await call(operations.create, a, {
-      body: body({ Last_Name: "Owner Test", Company: "Synthetic Company", Owner: member.user.id }),
+      body: body({ Last_Name: "Owner Test", Company: "Synthetic Status", Owner: member.user.id }),
     });
     expect(response.status).toBe(200);
     const id = (await response.json()).data[0].details.id as string;
@@ -207,7 +251,7 @@ describe("operation routes", () => {
     await removeMember(a.ctx, { userId: member.user.id });
     for (const Owner of [member.user.id, b.ctx.userId]) {
       for (const [op, fields] of [
-        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Company", Owner }],
+        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Status", Owner }],
         [operations.update, { Owner, Company: "Rejected Change" }],
       ] as const) {
         const rejected = await call(op, a, { recordId: id, body: body(fields) });
@@ -219,7 +263,7 @@ describe("operation routes", () => {
     }
     expect((await service.get("Leads", id)).fields).toMatchObject({
       Owner: a.ctx.userId,
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
   });
   it("serves discovery handlers through organization and origin checks", async () => {
@@ -496,7 +540,7 @@ describe("operation routes", () => {
     if (!locked) throw new Error("Expected a locked seed lead.");
     const unlocked = await service.create("Leads", {
       Last_Name: "Unlocked",
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
     const ids = [unlocked.id, locked.id];
     for (const [op, body] of [
@@ -691,6 +735,46 @@ describe("operation routes", () => {
       404,
     );
   });
+  it("runs Deals create, list, read, update and delete handlers", async () => {
+    const create = await call(operations.create, a, {
+      module: "Deals",
+      body: {
+        data: [
+          {
+            Deal_Name: "Route Deal",
+            Stage: "Qualification",
+            Closing_Date: "2026-12-15",
+            Account_Name: { id: "500000000000000000" },
+          },
+        ],
+      },
+    });
+    expect(create.status).toBe(200);
+    const body = await create.json();
+    const id = body.data[0].details.id;
+    const list = await call(operations.bulk, a, {
+      module: "Deals",
+      query: { cvid: "all-deals" },
+      body: {
+        filters: { field: { api_name: "id" }, comparator: "equal", value: id },
+      },
+    });
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.map((row: { id: string }) => row.id)).toEqual([id]);
+    expect((await call(operations.record, a, { module: "Deals", recordId: id })).status).toBe(200);
+    const update = await call(operations.update, a, {
+      module: "Deals",
+      recordId: id,
+      body: { data: [{ Deal_Name: "Updated Deal" }] },
+    });
+    expect(update.status).toBe(200);
+    expect(
+      (await (await call(operations.record, a, { module: "Deals", recordId: id })).json()).data[0]
+        .Deal_Name,
+    ).toBe("Updated Deal");
+    expect((await call(operations.delete, a, { module: "Deals", recordId: id })).status).toBe(200);
+    expect((await call(operations.record, a, { module: "Deals", recordId: id })).status).toBe(404);
+  });
   it("serves Accounts module, fields, layouts and custom view settings", async () => {
     for (const op of [operations.module, operations.fields, operations.layouts, operations.views]) {
       const response = await call(op, a, { module: "Accounts", viewId: "all-accounts" });
@@ -700,6 +784,64 @@ describe("operation routes", () => {
       if (op === operations.views) expect(body.custom_views).toHaveLength(8);
       if (op === operations.layouts) expect(body.layouts[0].sections).toHaveLength(4);
       if (op === operations.module) expect(body.modules[0].api_name).toBe("Accounts");
+    }
+  });
+  it("serves Deals settings and stage metadata without changing Leads options", async () => {
+    for (const op of [
+      operations.module,
+      operations.fields,
+      operations.layouts,
+      operations.views,
+      operations.view,
+    ]) {
+      const response = await call(op, a, { module: "Deals", viewId: "all-deals" });
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      if (op === operations.fields) {
+        expect(body.fields).toHaveLength(29);
+        for (const apiName of [
+          "Last_Activity_Time",
+          "Lead_Conversion_Time",
+          "Sales_Cycle_Duration",
+          "Overall_Sales_Duration",
+          "Stage_Modified_Time",
+        ]) {
+          expect(
+            body.fields.find((field: { api_name: string }) => field.api_name === apiName).read_only,
+          ).toBe(true);
+        }
+        expect(
+          body.fields.find((field: { api_name: string }) => field.api_name === "Owner").read_only,
+        ).toBe(false);
+        for (const apiName of ["Closing_Date", "Account_Name"]) {
+          expect(
+            body.fields.find((field: { api_name: string }) => field.api_name === apiName)
+              .system_mandatory,
+          ).toBe(true);
+        }
+        const stages = body.fields.find(
+          (field: { api_name: string }) => field.api_name === "Stage",
+        ).pick_list_values;
+        expect(stages).toHaveLength(9);
+        expect(stages[0]).toEqual({
+          display_value: "Qualification",
+          actual_value: "Qualification",
+          probability: 10,
+          forecast_category: { name: "Pipeline" },
+          deal_category: "Open",
+        });
+      }
+      if (op === operations.views) expect(body.custom_views).toHaveLength(11);
+      if (op === operations.layouts) expect(body.layouts[0].sections).toHaveLength(3);
+      if (op === operations.module) expect(body.modules[0].api_name).toBe("Deals");
+    }
+    const leads = await (await call(operations.fields, a)).json();
+    for (const option of leads.fields.find(
+      (field: { api_name: string }) => field.api_name === "Lead_Status",
+    ).pick_list_values) {
+      expect(option).not.toHaveProperty("probability");
+      expect(option).not.toHaveProperty("forecast_category");
+      expect(option).not.toHaveProperty("deal_category");
     }
   });
 });
