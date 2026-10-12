@@ -1,6 +1,6 @@
 # Accounts — record detail
 
-Status: researched related-card inventory; lower field display and record-page footer remain unobserved. Observed upper-detail inventory retains its earlier capture gaps. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline attempts were skipped because their selectors matched no element while the list was loading; hierarchy opening was not attempted. These unobserved states are not implementation evidence.
+Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. Hierarchy opening was not attempted; its documented structure and remaining observation gaps are recorded below.
 
 ## Purpose
 
@@ -134,7 +134,7 @@ Rest: as in m3d-detail-main; covered by the overlay: none. Moved below viewport:
 | AD-07.3 | More Options menu | Delete | menu item | menu, row 3 | same | seen (m3m-detail-more) | M3 | D-07.3 |
 | AD-07.4 | More Options menu | Print Preview | menu item | menu, row 4 | same | seen (m3m-detail-more) | M3 | D-07.4 |
 | AD-07.5 | More Options menu | Find and Merge Duplicates | menu item | menu, row 5 | same | seen (m3m-detail-more) | M3 | D-07.5 |
-| AD-07.6 | More Options menu | Mail Merge | menu item | menu, row 6; submenu arrow at right | same | seen (m3m-detail-more) | M9 | D-07.6 |
+| AD-07.6 | More Options menu | Mail Merge | menu item | menu, row 6 | same | seen (m3m-detail-more) | M9 | D-07.6 |
 | AD-07.7 | More Options menu | Customize Business Card | menu item | menu, row 7 | same | seen (m3m-detail-more) | M11 | D-07.8 moved |
 | AD-07.8 | More Options menu | Organize Account Details | menu item | menu, row 8 | same | seen (m3m-detail-more) | M11 | D-07.9 moved |
 | AD-07.9 | More Options menu | Add Related List | menu item | menu, row 9 | same | seen (m3m-detail-more) | M11 | D-07.10 moved |
@@ -143,7 +143,7 @@ Rest: as in m3d-detail-main; covered by the overlay: none. Moved below viewport:
 | AD-07.12 | More Options menu | Create Button | menu item | menu, row 12 | same | seen (m3m-detail-more) | M11 | D-07.14 moved |
 | AD-07.13 | More Options menu | Create Client Script | menu item | menu, row 13 | same | seen (m3m-detail-more) | M11 | D-07.15 moved |
 
-Two non-interactive separators follow rows 3 and 6; they have no control ID. Mail Merge carries a right-facing submenu arrow. Add Kiosk carries decorative sparkles. No row was selected or hovered; submenu contents and action outcomes were not observed.
+Two non-interactive separators follow rows 3 and 6; they have no control ID. Mail Merge has no visible submenu arrow. Add Kiosk and Create Client Script carry decorative sparkles. No row was selected or hovered; submenu contents and action outcomes were not observed.
 
 Rest: as in m3m-detail-base; covered by the overlay: AD-35 (partially). The menu covers non-interactive business-card whitespace and the right edge of the Contacts summary. Absent here: D-07.7 (Run Macro), D-07.12 (Enroll to Cadence).
 
@@ -171,7 +171,7 @@ Rest: as in m3m-list-base; covered by the overlay: none.
 
 ## More Options and Timeline
 
-More Options opens a thirteen-row action menu in m3m-detail-more. Its labels and order are compared below; each row remains presence evidence only. Two separators and the Mail Merge submenu arrow are described in the inventory.
+More Options opens a thirteen-row action menu in m3m-detail-more. Its labels and order are compared below; each row remains presence evidence only. Two separators and decorative sparkles beside Add Kiosk and Create Client Script are described in the inventory.
 
 | Accounts # | Label | Contacts ref | Difference |
 | --- | --- | --- | --- |
