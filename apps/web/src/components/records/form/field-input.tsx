@@ -56,6 +56,8 @@ export interface FieldInputProps {
   recordService?: RecordService | ClientRecordService;
   /** Record address for the name-cell links of an observed record picker. */
   lookupRecordHref?: (id: string) => string;
+  /** Owner id to display name, forwarded to the record picker's owner columns. */
+  lookupOwnerNames?: Readonly<Record<string, string>>;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -132,6 +134,7 @@ export function FieldInput({
   inline,
   recordService,
   lookupRecordHref,
+  lookupOwnerNames,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -355,6 +358,7 @@ export function FieldInput({
               recordService={recordService}
               chrome={lookupChrome ?? "interim"}
               recordHref={lookupRecordHref}
+              ownerNames={lookupOwnerNames}
               onDone={(selected) => {
                 onChange(selected);
                 setLookupOpen(false);

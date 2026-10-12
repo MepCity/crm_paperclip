@@ -205,6 +205,10 @@ function LoadedRecordForm({
       : intent === "edit"
         ? `Edit ${metadata.singularLabel}`
         : `Create ${metadata.singularLabel}`;
+  const ownerNames = useMemo(
+    () => Object.fromEntries(users.map((user) => [user.id, user.name])),
+    [users],
+  );
   const labelsByField = useMemo(() => {
     const labels = new Map<string, string>();
     const fieldByName = new Map(fields.map((field) => [field.apiName, field]));
@@ -490,6 +494,7 @@ function LoadedRecordForm({
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
           lookupRecordHref={field.dataType === "lookup" ? config.paths.detail : undefined}
+          lookupOwnerNames={ownerNames}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
           currencyInformation={
             field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined

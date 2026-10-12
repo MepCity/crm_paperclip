@@ -41,6 +41,8 @@ export interface SelectRecordDialogProps {
   chrome?: "interim" | "observed";
   /** Record address for the name-cell links; only used by the `observed` chrome. */
   recordHref?: (id: string) => string;
+  /** Owner id to display name, so `ownerlookup` columns such as Account Owner show a name. */
+  ownerNames?: Readonly<Record<string, string>>;
   onDone: (reference: ModuleRecordReference) => void;
   onCancel: () => void;
   recordService?: RecordService | ClientRecordService;
@@ -60,6 +62,17 @@ function formatCellText(value: FieldValue | undefined): string {
   return String(value);
 }
 
+/** An owner column carries an opaque user id; the picker shows the member's name instead. */
+function cellText(
+  value: FieldValue | undefined,
+  dataType: FieldDefinition["dataType"] | undefined,
+  ownerNames: Readonly<Record<string, string>> | undefined,
+): string {
+  const text = formatCellText(value);
+  if (dataType === "ownerlookup" && text && ownerNames?.[text]) return ownerNames[text];
+  return text;
+}
+
 export function SelectRecordDialog({
   module,
   title,
@@ -70,6 +83,7 @@ export function SelectRecordDialog({
   selectedId,
   chrome = "interim",
   recordHref,
+  ownerNames,
   onDone,
   onCancel,
   recordService,
@@ -406,7 +420,7 @@ export function SelectRecordDialog({
                       </td>
                       {otherCols.map((col) => (
                         <td key={col.key}>
-                          {formatCellText(record.fields[col.key])}
+                          {cellText(record.fields[col.key], col.dataType, ownerNames)}
                           {observed && col.dataType === "phone" && record.fields[col.key] ? (
                             <Button
                               aria-label="Phone"

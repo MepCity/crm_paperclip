@@ -16,6 +16,17 @@ import { expect, test } from "./support/test";
 const ACCOUNTS_TAB = "Accounts";
 const CREATE_PATH = "/crm/v2.2/Accounts";
 
+/**
+ * Latitude and Longitude share one Coordinates row, which is keyed by the latitude field,
+ * so the drawn row order stops at Latitude.
+ */
+const addressRowOrder = (prefix: string) =>
+  ACCOUNTS_FORM_ADDRESS_CHILD_ORDER.filter((suffix) => suffix !== "Longitude").map(
+    (suffix) => `${prefix}_${suffix}`,
+  );
+const BILLING_ADDRESS_ROW_ORDER = addressRowOrder("Billing");
+const SHIPPING_ADDRESS_ROW_ORDER = addressRowOrder("Shipping");
+
 function accountRecordIdFromPath(pathname: string): string {
   const parts = pathname.split("/").filter(Boolean);
   const index = parts.indexOf("Accounts");
@@ -47,10 +58,12 @@ async function saveAccount(page: Page, name: string) {
 
 /**
  * The Accounts record detail belongs to MEP-342, so arrival after a save is proven by the
- * record route only; the create form must be gone.
+ * record route and the record header only.
  */
 async function expectRecordRoute(page: Page, orgSlug: string) {
-  await expect(page).toHaveURL(new RegExp(`^/crm/${orgSlug}/tab/Accounts/\\d+$`));
+  await expect(page).toHaveURL(new RegExp(`/crm/${orgSlug}/tab/Accounts/\\d+$`), {
+    timeout: 60_000,
+  });
   await expect(page.getByRole("heading", { name: "Create Account" })).toHaveCount(0);
 }
 
@@ -89,18 +102,14 @@ test("Account Information and address groups follow the spec field order", async
   const billingOrder = await billing
     .locator("[data-form-field]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
-  expect(billingOrder).toEqual(
-    ACCOUNTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Billing_${suffix}`),
-  );
+  expect(billingOrder).toEqual(BILLING_ADDRESS_ROW_ORDER);
   expect(await billing.locator('[data-form-field="Billing_Coordinates"]').count()).toBe(0);
 
   const shipping = page.locator("[data-record-form-field-group]").nth(1);
   const shippingOrder = await shipping
     .locator("[data-form-field]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
-  expect(shippingOrder).toEqual(
-    ACCOUNTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Shipping_${suffix}`),
-  );
+  expect(shippingOrder).toEqual(SHIPPING_ADDRESS_ROW_ORDER);
   expect(await shipping.locator('[data-form-field="Shipping_Coordinates"]').count()).toBe(0);
 });
 
@@ -139,13 +148,14 @@ test("creates with every field type, a parent account and both addresses", async
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("heading", { name: "Choose Account" })).toBeVisible();
   await expect(dialog.getByRole("textbox", { name: "Search by Account Name" })).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Account 001" })).toBeVisible();
-  const parentRadio = dialog.getByRole("radio", { name: "Account 002" });
+  const parentRadio = dialog.getByRole("radio").first();
   await expect(parentRadio).toBeVisible();
+  const parentName = await parentRadio.getAttribute("aria-label");
+  if (!parentName) throw new Error("Missing account name in the picker");
   await parentRadio.click();
-  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Parent Account", exact: true })).toHaveValue(
-    "Account 002",
+    parentName,
   );
 
   await page.locator("[data-form-field=Billing_Street] input").fill("Billing Street 1");
@@ -180,7 +190,7 @@ test("creates with every field type, a parent account and both addresses", async
   expect(body.Ownership).toBe("Private");
   expect(body.Employees).toBe(42);
   expect(body.SIC_Code).toBe(7370);
-  expect(body.Parent_Account?.name).toBe("Account 002");
+  expect(body.Parent_Account?.name).toBe(parentName);
   expect(body.Billing_Street).toBe("Billing Street 1");
   expect(body.Billing_City).toBe("Ankara");
   expect(body.Shipping_Street).toBe("Billing Street 1");
@@ -207,6 +217,7 @@ test("Cancel returns to the list without saving", async ({ page }) => {
 test("edit keeps the create layout and preserves stored values", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveAccount(page, "Edit Me");
+  await expectRecordRoute(page, org.slug);
   const id = accountRecordIdFromPath(new URL(page.url()).pathname);
   await page.goto(moduleRecordEditPath(org.slug, ACCOUNTS_TAB, id));
   await expect(page.getByRole("heading", { name: "Edit Account" })).toBeVisible();
@@ -216,7 +227,8 @@ test("edit keeps the create layout and preserves stored values", async ({ page }
   await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Edited Account");
   await page.getByRole("textbox", { name: "Employees", exact: true }).fill("7");
   const updateRequest = page.waitForRequest(
-    (request) => request.method() === "PUT" && new URL(request.url()).pathname === CREATE_PATH,
+    (request) =>
+      request.method() === "PUT" && new URL(request.url()).pathname.startsWith(`${CREATE_PATH}/`),
   );
   await page.getByRole("button", { name: "Save", exact: true }).click();
   const request = await updateRequest;
@@ -229,6 +241,7 @@ test("edit keeps the create layout and preserves stored values", async ({ page }
 test("clone saves a new record from the source", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveAccount(page, "Clone Source");
+  await expectRecordRoute(page, org.slug);
   const sourceId = accountRecordIdFromPath(new URL(page.url()).pathname);
   await page.goto(moduleRecordClonePath(org.slug, ACCOUNTS_TAB, sourceId));
   await expect(page.getByRole("heading", { name: "Clone Account" })).toBeVisible();

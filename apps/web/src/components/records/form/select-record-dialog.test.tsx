@@ -34,22 +34,61 @@ function createMockService(): RecordService {
         massUpdate: false,
         views: { view: true, create: true, edit: true, quickCreate: false },
       },
+      {
+        apiName: "Phone",
+        label: "Phone",
+        dataType: "phone",
+        required: false,
+        readOnly: false,
+        unique: false,
+        massUpdate: false,
+        views: { view: true, create: true, edit: true, quickCreate: false },
+      },
+      {
+        apiName: "Owner",
+        label: "Contact Owner",
+        dataType: "ownerlookup",
+        required: false,
+        readOnly: false,
+        unique: false,
+        massUpdate: false,
+        views: { view: true, create: true, edit: true, quickCreate: false },
+      },
     ],
     layout: [],
   };
 
   const records = [
-    { id: "c-1", fields: { Full_Name: "Alice Smith", Email: "alice@example.test" } },
-    { id: "c-2", fields: { Full_Name: "Bob Jones", Email: "bob@example.test" } },
+    {
+      id: "c-1",
+      fields: {
+        Full_Name: "Alice Smith",
+        Email: "alice@example.test",
+        Phone: "555-0100",
+        Owner: "u-1",
+      },
+    },
+    {
+      id: "c-2",
+      fields: {
+        Full_Name: "Bob Jones",
+        Email: "bob@example.test",
+        Phone: "555-0101",
+        Owner: "u-2",
+      },
+    },
   ];
 
   return {
     getModule: vi.fn().mockResolvedValue(metadata),
-    listViews: vi
-      .fn()
-      .mockResolvedValue([
-        { id: "all", name: "All Contacts", isDefault: true, columns: ["Full_Name", "Email"] },
-      ]),
+    listViews: vi.fn().mockResolvedValue([
+      {
+        id: "all",
+        name: "All Contacts",
+        isDefault: true,
+        columns: ["Full_Name", "Email", "Phone", "Owner"],
+      },
+    ]),
     list: vi.fn().mockImplementation((_module, params) => {
       const filtered = params?.search
         ? records.filter((r) =>
@@ -280,4 +319,35 @@ test("interim chrome keeps the summary and paints no picker-only marks", async (
   expect(screen.queryByRole("button", { name: "New Contact" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
   expect(screen.queryByText("Search by Contact Name")).toBeNull();
+  // AF-11.16 belongs to the observed picker only.
+  expect(screen.queryByRole("button", { name: "Phone" })).toBeNull();
+});
+
+test("observed picker resolves the owner column to the member name and marks a phone cell", async () => {
+  const service = createMockService();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      chrome="observed"
+      ownerNames={{ "u-1": "Owner One", "u-2": "Owner Two" }}
+      onDone={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+    },
+    { timeout: 5000 },
+  );
+  expect(screen.getByText("Owner One")).toBeTruthy();
+  expect(screen.queryByText("u-1")).toBeNull();
+  // AF-11.16: one handset per populated phone cell, inert until Activities (M5).
+  const handsets = screen.getAllByRole("button", { name: /^Phone$/ });
+  expect(handsets).toHaveLength(2);
+  expect(handsets[0]?.getAttribute("data-later-module")).toBe("M5");
+  expect(handsets[0]?.getAttribute("aria-disabled")).toBe("true");
 });
