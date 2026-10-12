@@ -130,6 +130,10 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
     expect(page.url()).toBe(before);
   }
 
+  // L-47 pulse icon and badge column are absent in Accounts
+  await expect(list.locator('button[aria-label="Record activity"]')).toHaveCount(0);
+  await expect(list.locator('[data-part="badge"]')).toHaveCount(0);
+
   // AL-14: Actions menu (10 items in reference order)
   await list.getByRole("button", { name: "Actions", exact: true }).click();
   await expect(page.getByRole("menuitem")).toHaveText([

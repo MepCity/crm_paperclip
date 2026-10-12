@@ -402,7 +402,7 @@ test("renders handset icon for populated phone cells when phoneLaterModule is pr
   expect(callBtn.getAttribute("aria-disabled")).toBe("true");
 });
 
-test("renders website cells as links when laterInventory is true", () => {
+test("renders website cells as links only when linkWebsite is true", () => {
   const websiteColumn: FieldDefinition = {
     apiName: "Website",
     views: { view: true, create: true, edit: true, quickCreate: true },
@@ -413,9 +413,9 @@ test("renders website cells as links when laterInventory is true", () => {
     massUpdate: false,
     unique: false,
   };
-  render(
+  const { unmount } = render(
     <RecordTable
-      laterInventory={true}
+      linkWebsite={true}
       columns={[websiteColumn]}
       records={[{ id: "rec-1", fields: { Website: "https://example.org" } }]}
       linkField="Account_Name"
@@ -440,4 +440,76 @@ test("renders website cells as links when laterInventory is true", () => {
   );
   const link = screen.getByRole("link", { name: "https://example.org" });
   expect(link.getAttribute("href")).toBe("https://example.org");
+  unmount();
+
+  render(
+    <RecordTable
+      linkWebsite={false}
+      columns={[websiteColumn]}
+      records={[{ id: "rec-1", fields: { Website: "https://example.org" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  expect(screen.queryByRole("link", { name: "https://example.org" })).toBeNull();
+  expect(screen.getByText("https://example.org")).toBeTruthy();
+});
+
+test("omits badge column and pulse button when badgeColumn is false", () => {
+  const nameColumn: FieldDefinition = {
+    apiName: "Account_Name",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Account Name",
+    dataType: "text",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  render(
+    <RecordTable
+      laterInventory={true}
+      badgeColumn={false}
+      columns={[nameColumn]}
+      records={[{ id: "rec-1", fields: { Account_Name: "Acme Corp" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  expect(document.querySelector("[data-part=badge]")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Record activity" })).toBeNull();
+  expect(screen.getByRole("checkbox", { name: "Select Acme Corp" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Acme Corp" })).toBeTruthy();
 });

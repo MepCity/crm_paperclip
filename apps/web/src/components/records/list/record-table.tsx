@@ -14,7 +14,9 @@ import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-f
 
 export interface RecordTableProps {
   laterInventory?: boolean;
+  badgeColumn?: boolean;
   phoneLaterModule?: ModuleKey;
+  linkWebsite?: boolean;
   /** Columns in screen order. Labels come from the field, not from a module. */
   columns: readonly FieldDefinition[];
   records: readonly RecordData[];
@@ -61,7 +63,7 @@ const dataColumn = [
   "max-w-(--size-list-column-width) bg-surface p-0",
 ].join(" ");
 
-const badgeColumn = [
+const badgeColumnClass = [
   "box-border w-(--size-list-badge-width) min-w-(--size-list-badge-width)",
   "max-w-(--size-list-badge-width) bg-surface p-0",
 ].join(" ");
@@ -87,7 +89,9 @@ const cellLine = [
  */
 export function RecordTable({
   laterInventory = false,
+  badgeColumn = true,
   phoneLaterModule,
+  linkWebsite = false,
   columns,
   records,
   linkField,
@@ -168,11 +172,11 @@ export function RecordTable({
                   </div>
                 </th>
               )}
-              {empty ? null : (
+              {empty || !badgeColumn ? null : (
                 <th
                   scope="col"
                   data-part="badge"
-                  className={`${badgeColumn} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
                 >
                   <span className="sr-only">Badges</span>
                 </th>
@@ -254,22 +258,24 @@ export function RecordTable({
                       />
                     </div>
                   </td>
-                  <td
-                    data-part="badge"
-                    className={`${badgeColumn} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
-                  >
-                    {laterInventory ? (
-                      <Button
-                        variant="ghost"
-                        size="compact"
-                        aria-label="Record activity"
-                        laterModule="P3"
-                        className="mt-2 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
-                      >
-                        <Icons.activity aria-hidden className="h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </td>
+                  {badgeColumn ? (
+                    <td
+                      data-part="badge"
+                      className={`${badgeColumnClass} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                    >
+                      {laterInventory ? (
+                        <Button
+                          variant="ghost"
+                          size="compact"
+                          aria-label="Record activity"
+                          laterModule="P3"
+                          className="mt-2 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
+                        >
+                          <Icons.activity aria-hidden className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </td>
+                  ) : null}
                   {columns.map((field) => (
                     <td
                       key={field.apiName}
@@ -292,7 +298,7 @@ export function RecordTable({
                             field={field}
                             value={record.fields[field.apiName] ?? null}
                             href={field.apiName === linkField ? rowHref(record) : undefined}
-                            linkWebsite={laterInventory}
+                            linkWebsite={linkWebsite}
                             ownerNames={ownerNames}
                             format={format}
                           />

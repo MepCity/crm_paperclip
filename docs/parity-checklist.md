@@ -235,11 +235,11 @@ Share, Print Preview and Find and Merge Duplicates are drawn without handlers (s
 | AL-02.10–AL-02.12 | Customization items in view menu: Dropdown toggle, New Custom View (M11), Manage Custom View (M11) | `view-tab-strip.test.tsx` |
 | AL-03, AL-64 | Filter toggle button, list refresh button | `accounts-list.spec.ts` |
 | AL-04 | Sort popover by Account Name and field dictionary labels | `accounts-list.spec.ts`, `list-config.test.ts` |
-| AL-05–AL-11 | Presentation switcher icons (List, Canvas, Sheet) | Shared component tests |
+| AL-05–AL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | Shared component tests |
 | AL-12, AL-13 | Create Account primary button; attached arrow dropdown (M6, inert) | `accounts-list.spec.ts` |
 | AL-14.1–AL-14.10 | 10 Actions menu items in reference order (Mass Transfer, Mass Delete, Mass Update, Manage Tags M6, Drafts, Deduplicate Accounts, Create Client Script M11, Export Accounts M6, Sheet view P3, Print View) | `accounts-list.spec.ts` |
-| AL-15–AL-25 | System defined filters (Locked, Record Action, Related Records Action, Touched Records, Untouched Records, Cadences P3); no Activities/Campaigns/Latest Email Status | `list-filters.test.ts`, `accounts-list.spec.ts` |
-| AL-26–AL-32, AL-53–AL-59 | Field filters with search and initial visible field rows; no "Filter By Related Modules" | `list-filters.test.ts`, `accounts-list.spec.ts` |
+| AL-15, AL-16, AL-20–AL-25 | System defined filters (Locked, Record Action, Related Records Action, Touched Records, Untouched Records, Cadences P3); no Activities/Campaigns/Latest Email Status (L-17–L-19 absent) | `list-filters.test.ts`, `accounts-list.spec.ts` |
+| AL-26, AL-27, AL-53–AL-59 | Field filters with search and visible field rows (Account Name, Account Number, Account Owner, Account Site, Account Type, Annual Revenue, Billing Address, Billing Address - City; L-28–L-31 absent); no "Filter By Related Modules" | `list-filters.test.ts`, `accounts-list.spec.ts` |
 | AL-33 | View Settings gear button (M11, inert) | `accounts-list.spec.ts` |
 | AL-34, AL-40 | Header and row-level selection checkboxes; selection bar integration | `accounts-list.spec.ts` |
 | AL-35, AL-39, AL-60, AL-61 | Columns: Account Name, Phone, Website, Account Owner | `record-table.test.tsx`, `accounts-list.spec.ts` |
@@ -253,5 +253,6 @@ Share, Print Preview and Find and Merge Duplicates are drawn without handlers (s
 Later-module controls: Create Account arrow M6; view customization M11;
 Cadences P3; View Settings M11; handset icon M5; notes M6; Manage Tags M6;
 Export Accounts M6; Create Client Script M11; Sheet view P3.
+Absent from Contacts: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47 (no row activity pulse or badge column space; selection checkbox is immediately before Account Name).
 Mass action flows (Mass Update, Change Owner, Delete Account) wire to selection bar dialogs.
 Contacts Account Name lookup cells now link to `/tab/Accounts/:id` active record routes.

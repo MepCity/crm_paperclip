@@ -77,6 +77,8 @@ export interface ModuleListScreenConfig {
   paths: ModuleListPaths;
   pinnedViews?: readonly string[];
   phoneLaterModule?: ModuleKey;
+  linkWebsite?: boolean;
+  badgeColumn?: boolean;
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -635,7 +637,9 @@ function ModuleListScreenLoaded({
         <div className="module-list-table-host">
           <RecordTable
             laterInventory={Boolean(config.inventory)}
+            badgeColumn={config.badgeColumn}
             phoneLaterModule={config.phoneLaterModule}
+            linkWebsite={config.linkWebsite}
             columns={columns}
             records={records}
             linkField={config.linkField}
