@@ -635,6 +635,20 @@ describe("operation routes", () => {
       const body = await response.json();
       if (op === operations.fields) {
         expect(body.fields).toHaveLength(29);
+        for (const apiName of [
+          "Last_Activity_Time",
+          "Lead_Conversion_Time",
+          "Sales_Cycle_Duration",
+          "Overall_Sales_Duration",
+          "Stage_Modified_Time",
+        ]) {
+          expect(
+            body.fields.find((field: { api_name: string }) => field.api_name === apiName).read_only,
+          ).toBe(true);
+        }
+        expect(
+          body.fields.find((field: { api_name: string }) => field.api_name === "Owner").read_only,
+        ).toBe(false);
         for (const apiName of ["Closing_Date", "Account_Name"]) {
           expect(
             body.fields.find((field: { api_name: string }) => field.api_name === apiName)

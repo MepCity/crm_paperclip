@@ -94,6 +94,38 @@ describe("Deals export and fixture", () => {
     expect(updated.fields.Next_Step).toBe("Call back");
   });
   it.each([
+    ["Last_Activity_Time", "2026-12-15T12:00:00Z"],
+    ["Lead_Conversion_Time", 12],
+    ["Sales_Cycle_Duration", 30],
+    ["Overall_Sales_Duration", 42],
+    ["Stage_Modified_Time", "2026-12-15T12:00:00Z"],
+  ] as const)("rejects writes to read-only %s on create and update", async (field, value) => {
+    const service = make();
+    expect(dealsMetadata.fields.find((definition) => definition.apiName === field)?.readOnly).toBe(
+      true,
+    );
+    await expect(service.create("Deals", input({ [field]: value }))).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    const deal = await service.create("Deals", input());
+    await expect(service.update("Deals", deal.id, { [field]: value })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    expect((await service.get("Deals", deal.id)).fields[field]).toEqual(deal.fields[field]);
+  });
+  it("keeps Owner writable for a tenant member", async () => {
+    const service = make();
+    expect(dealsMetadata.fields.find((field) => field.apiName === "Owner")?.readOnly).toBe(false);
+    const deal = await service.create("Deals", input({ Owner: "deal-member" }));
+    expect(deal.fields.Owner).toBe("deal-member");
+    expect((await service.update("Deals", deal.id, { Owner: "deal-member" })).fields.Owner).toBe(
+      "deal-member",
+    );
+    await expect(
+      service.update("Deals", deal.id, { Owner: "missing-member" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+  it.each([
     ["Account_Name", "Accounts", "Account_Name"],
     ["Contact_Name", "Contacts", "Full_Name"],
   ] as const)("validates, names and safely resolves %s", async (field, module, displayField) => {

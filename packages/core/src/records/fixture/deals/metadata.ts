@@ -309,7 +309,7 @@ export const dealsMetadata: ModuleMetadata = {
       label: "Last Activity Time",
       dataType: "datetime",
       required: false,
-      readOnly: false,
+      readOnly: true,
       unique: false,
       massUpdate: false,
       views: {
@@ -325,7 +325,7 @@ export const dealsMetadata: ModuleMetadata = {
       label: "Lead Conversion Time",
       dataType: "integer",
       required: false,
-      readOnly: false,
+      readOnly: true,
       unique: false,
       massUpdate: false,
       views: {
@@ -341,7 +341,7 @@ export const dealsMetadata: ModuleMetadata = {
       label: "Sales Cycle Duration",
       dataType: "integer",
       required: false,
-      readOnly: false,
+      readOnly: true,
       unique: false,
       massUpdate: false,
       views: {
@@ -357,7 +357,7 @@ export const dealsMetadata: ModuleMetadata = {
       label: "Overall Sales Duration",
       dataType: "integer",
       required: false,
-      readOnly: false,
+      readOnly: true,
       unique: false,
       massUpdate: false,
       views: {
@@ -453,7 +453,7 @@ export const dealsMetadata: ModuleMetadata = {
       label: "Stage Modified Time",
       dataType: "datetime",
       required: false,
-      readOnly: false,
+      readOnly: true,
       unique: false,
       massUpdate: false,
       views: {

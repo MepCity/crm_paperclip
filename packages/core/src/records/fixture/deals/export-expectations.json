@@ -461,7 +461,7 @@
       "label": "Last Activity Time",
       "dataType": "datetime",
       "required": false,
-      "readOnly": false,
+      "readOnly": true,
       "unique": false,
       "massUpdate": false,
       "views": {
@@ -477,7 +477,7 @@
       "label": "Lead Conversion Time",
       "dataType": "integer",
       "required": false,
-      "readOnly": false,
+      "readOnly": true,
       "unique": false,
       "massUpdate": false,
       "views": {
@@ -493,7 +493,7 @@
       "label": "Sales Cycle Duration",
       "dataType": "integer",
       "required": false,
-      "readOnly": false,
+      "readOnly": true,
       "unique": false,
       "massUpdate": false,
       "views": {
@@ -509,7 +509,7 @@
       "label": "Overall Sales Duration",
       "dataType": "integer",
       "required": false,
-      "readOnly": false,
+      "readOnly": true,
       "unique": false,
       "massUpdate": false,
       "views": {
@@ -647,7 +647,7 @@
       "label": "Stage Modified Time",
       "dataType": "datetime",
       "required": false,
-      "readOnly": false,
+      "readOnly": true,
       "unique": false,
       "massUpdate": false,
       "views": {
