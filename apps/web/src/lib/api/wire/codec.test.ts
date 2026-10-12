@@ -748,6 +748,59 @@ describe("named reference wire contract", () => {
   });
 });
 
+describe("picklist stage metadata", () => {
+  const definition = {
+    ...field("Stage", "picklist"),
+    picklist: [
+      {
+        displayValue: "Qualification",
+        storedValue: "Qualification",
+        stage: { probability: 10, forecastCategory: "Pipeline", category: "Open" as const },
+      },
+      { displayValue: "Plain", storedValue: "Plain" },
+    ],
+  };
+  it("round-trips stages and omits stage keys on plain options", () => {
+    const encoded = json(encodeField(definition));
+    expect(encoded.pick_list_values?.[0]).toEqual({
+      display_value: "Qualification",
+      actual_value: "Qualification",
+      probability: 10,
+      forecast_category: { name: "Pipeline" },
+      deal_category: "Open",
+    });
+    expect(encoded.pick_list_values?.[1]).toEqual({
+      display_value: "Plain",
+      actual_value: "Plain",
+    });
+    expect(decodeField(encoded)).toEqual(definition);
+    expect(decodeField(encoded).picklist?.[1]).not.toHaveProperty("stage");
+  });
+  it.each([
+    { probability: 10 },
+    { forecast_category: { name: "Pipeline" } },
+    { deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" } },
+    { probability: 10, deal_category: "Open" },
+    { forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" }, deal_category: "Other" },
+    { probability: -1, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 101, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 1.5, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: null, deal_category: "Open" },
+  ])("rejects partial or invalid stage metadata %j", (stage) => {
+    const encoded = encodeField(definition);
+    expect(() =>
+      decodeField({
+        ...encoded,
+        pick_list_values: [
+          { display_value: "Qualification", actual_value: "Qualification", ...stage },
+        ],
+      } as unknown as Parameters<typeof decodeField>[0]),
+    ).toThrow(ValidationError);
+  });
+});
+
 describe("wire input bounds", () => {
   it.each([
     ["ownerlookup", { id: "member-id", name: "Member", email: "member@example.test" }],

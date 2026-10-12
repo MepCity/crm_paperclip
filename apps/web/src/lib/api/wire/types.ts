@@ -19,7 +19,13 @@ export type WireField = {
   unique: { enforced?: boolean };
   view_type: { view: boolean; create: boolean; edit: boolean; quick_create: boolean };
   length?: number;
-  pick_list_values?: readonly { display_value: string; actual_value: string }[];
+  pick_list_values?: readonly {
+    display_value: string;
+    actual_value: string;
+    probability?: number;
+    forecast_category?: { name: string };
+    deal_category?: string;
+  }[];
   lookup?: { module: { api_name: string } };
 };
 export type WireModule = {

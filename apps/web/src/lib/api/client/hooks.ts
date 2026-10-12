@@ -8,6 +8,7 @@ import type {
   RecordData,
   RecordId,
   RecordInput,
+  SearchQuery,
 } from "@crm/core/records";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { OrgMember } from "./http-record-service";
@@ -188,5 +189,15 @@ export function useChangeOwner(module: ModuleApiName) {
       for (const id of ids)
         void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
     },
+  });
+}
+
+export function useGlobalSearch(query: SearchQuery, enabled: boolean) {
+  const service = useClientRecordService();
+  const orgSlug = useOrgSlug();
+  return useQuery({
+    queryKey: [...apiKeys.root(orgSlug), "search", query],
+    queryFn: () => service.search(query),
+    enabled,
   });
 }

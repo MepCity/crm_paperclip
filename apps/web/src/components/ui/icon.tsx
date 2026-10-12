@@ -17,6 +17,7 @@ import {
   Loader2,
   LogOut,
   type LucideIcon,
+  Mail,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
@@ -416,6 +417,7 @@ function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { modu
 export const Icons = {
   activity: Activity,
   messageSquare: MessageSquare,
+  envelope: Mail,
   phone: Phone,
   recordLookup: RecordLookupIcon,
   recordUser: RecordUser,
