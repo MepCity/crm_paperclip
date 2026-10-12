@@ -195,7 +195,7 @@ client script M11 and the unresolved Sheet view P3 remain inert.
 
 Interim shared Leads rules: selection toolbar, page-size implementation,
 unobserved create-menu items, filter operators, empty state and additional
-header options. Drafts, Approve Contacts, Deduplicate Contacts, Print View,
+header options. Drafts, Approve Contacts, Print View,
 Show custom views as Dropdown and row ellipsis have no handler, following the
 existing shared screen boundary or the explicit delivery scope. Account cells
 use the merged lookup display: names are shown and later-module links remain inert.
@@ -227,6 +227,27 @@ Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
 | X-38 – X-44.13.3 | Comparison header, conflicts-only, per-field and column selection, merge confirm | `merge-field-selection.test.ts`; `merge-comparison.test.tsx`; `e2e/merge-duplicates.spec.ts` |
 | D-07.5 / Leads More Options | Menu handler → `/merge` route | Contacts/Leads more-options tests; e2e |
 | SH-49 (documentary shell) | Not drawn on merge screens | N/A (out of scope per task) |
+
+### Deduplicate (list Actions) — implemented; QA pending (MEP-354)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| L-14.8 / X-15.10 | Deduplicate Contacts (row 8) and Deduplicate Leads (row 10) start the job without a row selection | `e2e/deduplicate.spec.ts`; Leads menu rows in `leads/list-config.ts` |
+| X-45.1 – X-45.4, X-46, X-47 | Select Field panel: unique fields first, then the documented order, then the module's other text, email and phone fields; Email preselected; a fourth field is refused | `dedup-config.test.ts`, `dedup-job.test.tsx` |
+| X-48 – X-50 | Deduplicate confirmation with the Auto-Merge and Resolve Conflicts notes and Learn More | `dedup-job.test.tsx`; e2e |
+| X-51 | Running notice with OK; the result waits for it | `dedup-job.test.tsx`; e2e |
+| X-52 – X-54 | Conflict popup: merged groups and removed records, Do it later, Resolve Now | `dedup-job.test.tsx`; e2e |
+| X-55 – X-60 | Conflict groups page: field tabs, range with arrows, match value and Duplicates columns, View; groups over three ask for three records first; the shared comparison merges | `dedup-conflict-screen.test.tsx`; e2e |
+
+Later-module controls: none on these screens; the Leads menu rows of later modules
+(M6, M7, M10, M11, M12, P3) are drawn inert with `laterModule`.
+
+Interim rules: the automatic master is chosen by the service and is not selectable
+in the automatic path, while conflict resolution offers the master radio (MEP-352
+comparison); "Do it later" only closes the popup and the groups are found again from
+the same fields, because no emailed link or three-day token exists (M10); the merged
+and removed counts in the popup are our own wording, as the reference documents no
+result copy; the list refreshes through the existing query invalidation.
 
 ### Assigned to Module 2 at the Module 1 gate
 
