@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -1438,4 +1438,58 @@ describe("ModuleListScreen", () => {
     expect(screen.getByRole("columnheader", { name: "Lead Name" })).toBeTruthy();
     expect(screen.queryByRole("columnheader", { name: "Full Name" })).toBeNull();
   });
+});
+
+it("does not persist placeholder records under the next page URL", async () => {
+  navigation.params = new URLSearchParams("per_page=10");
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  const originalList = service.list.bind(service);
+  let release: (() => void) | undefined;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  vi.spyOn(service, "list").mockImplementation(async (module, query) => {
+    if (query.page === 2) await pending;
+    return originalList(module, query);
+  });
+  const content = <ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />;
+  const { rerender } = render(content, { wrapper: wrapper(service) });
+  const key = recordListContextKey(ctx.orgSlug, "Leads");
+  await waitFor(() => expect(sessionStorage.getItem(key)).not.toBeNull());
+  const previous = sessionStorage.getItem(key);
+  navigation.params = new URLSearchParams("per_page=10&page=2");
+  rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />);
+  await waitFor(() =>
+    expect(service.list).toHaveBeenCalledWith("Leads", expect.objectContaining({ page: 2 })),
+  );
+  expect(sessionStorage.getItem(key)).toBe(previous);
+  await act(async () => {
+    release?.();
+    await pending;
+  });
+  await waitFor(() => {
+    const context = JSON.parse(sessionStorage.getItem(key) ?? "{}");
+    expect(context.page).toBe(2);
+    expect(context.listHref).toContain("page=2");
+    expect(context.recordIds).not.toEqual(JSON.parse(previous ?? "{}").recordIds);
+  });
+});
+
+it("clears explicit sort parameters when None is applied", async () => {
+  navigation.params = new URLSearchParams("sort_by=Company&sort_order=desc");
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Sort" }));
+  screen.getByRole("button", { name: /Sort By/ }).focus();
+  await user.keyboard("{Enter}");
+  screen.getByRole("option", { name: "None" }).focus();
+  await user.keyboard("{Enter}");
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  expect(navigation.params.has("sort_by")).toBe(false);
+  expect(navigation.params.has("sort_order")).toBe(false);
 });
