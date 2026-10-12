@@ -797,7 +797,7 @@ Safety: every new capture was checked and commented before the next one. Each de
 
 ### Reconciliation of controls.json — lower-detail continuation
 
-One-based ordinals are local evidence references, never selectors. The list controls reuse accounts.md AL IDs and contacts.md SH IDs. Source wrappers, row data and offscreen elements are excluded explicitly. Screenshot-only Phone call icons remain AL-46 and the far-right utility icon remains SH-46 in both painted lists; no extra icon is visible in the closing skeleton.
+One-based ordinals are local evidence references, never selectors. The list controls reuse accounts.md AL IDs and contacts.md SH IDs. Source wrappers, row data and offscreen elements are excluded explicitly. Source-backed note bubble icons remain AL-46. Screenshot-only Phone handset icons are AL-62 and the far-right utility icon is SH-46 in both painted lists. m3c-list-end shows the fully loaded closing list.
 
 #### m3c-list-base
 
@@ -1424,7 +1424,7 @@ One-based local evidence ordinals are never selectors. Every source item below m
 
 #### m3c-list-end
 
-The source array has 601 entries. Entries 1–588 retain the m3c-list-base inventory/exclusion mapping above (only a Sort wrapper accessibility attribute differs; no painted control change). Entry 589 is the duplicate utility wrapper; 590–600 map in order to SH-35–SH-45; 601 is an invisible zero-height chat wrapper. This accounts for every closing source entry: 92 source-backed inventory IDs and 413 excluded items. Image-only AL-46 and SH-46 remain covered by the shared references. No incidental row three-dots control is painted.
+The source array has 601 entries. Entries 1–588 retain the m3c-list-base inventory/exclusion mapping above (only a Sort wrapper accessibility attribute differs; no painted control change). Entry 589 is the duplicate utility wrapper; 590–600 map in order to SH-35–SH-45; 601 is an invisible zero-height chat wrapper. This accounts for every closing source entry: 92 source-backed inventory IDs and 413 excluded items. Image-only AL-62 and SH-46 remain covered by the shared references; source-backed AL-46 covers the note bubbles. No incidental row three-dots control is painted.
 
 ### Open questions — lower-detail continuation
 
