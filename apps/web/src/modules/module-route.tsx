@@ -29,7 +29,7 @@ export async function modulePageMetadata({ params }: RouteProps) {
 async function renderModuleRoute({ params }: RouteProps, kind: ModuleRouteKind) {
   const route = await params;
   const definition = requireModuleScreen(route.moduleTab);
-  if (kind === "detail" && route.recordId === "create") notFound();
+  if ((kind === "detail" || kind === "merge") && route.recordId === "create") notFound();
   const context = await requireOrgContext(route.orgSlug);
   const client = <ModuleRouteClient {...route} kind={kind} currentUserId={context.userId} />;
   return (
@@ -51,3 +51,4 @@ export const moduleDetailPage = (props: RouteProps) => renderModuleRoute(props, 
 export const moduleCreatePage = (props: RouteProps) => renderModuleRoute(props, "create");
 export const moduleEditPage = (props: RouteProps) => renderModuleRoute(props, "edit");
 export const moduleClonePage = (props: RouteProps) => renderModuleRoute(props, "clone");
+export const moduleMergePage = (props: RouteProps) => renderModuleRoute(props, "merge");

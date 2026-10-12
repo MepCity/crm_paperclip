@@ -7,6 +7,7 @@ export const LEADS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete thi
 export type LeadsRecordMoreOptionsHandlers = {
   onClone: () => void;
   onDelete: () => void;
+  onFindMergeDuplicates: () => void;
 };
 
 type SpecMenuItem = {
@@ -40,7 +41,11 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
     id: "leads-more-print",
     items: [
       { id: "print-preview", label: "Print Preview" },
-      { id: "find-merge-duplicates", label: "Find and Merge Duplicates" },
+      {
+        id: "find-merge-duplicates",
+        label: "Find and Merge Duplicates",
+        handlerKey: "onFindMergeDuplicates",
+      },
       { id: "mail-merge", label: "Mail Merge" },
     ],
   },
@@ -64,7 +69,6 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
 export const LEADS_RECORD_MORE_OPTIONS_DEVIATIONS: readonly LeadsMoreOptionsDeviation[] = [
   { label: "Share", parityModule: "M11 (Record Share)" },
   { label: "Print Preview", parityModule: "M6" },
-  { label: "Find and Merge Duplicates", parityModule: "M2 with Contacts" },
   { label: "Mail Merge", parityModule: "M10" },
   { label: "Run Macro", parityModule: "M12" },
   { label: "Customize Business Card", parityModule: "M11" },
