@@ -86,15 +86,15 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
       expect(await make().search({ text: query.text })).toEqual([]);
       expect((await service.search({ ...query, page: 10 }))[0]?.records).toEqual([]);
     });
-    it("rule 4: searches every registered module when modules are omitted", async () => {
+    it("rule 4: searches every module when omitted and validates projections per module", async () => {
       const service = make();
-      const account = await service.create("Accounts", { Account_Name: "Cross Module Marker" });
-      const contact = await service.create("Contacts", { Last_Name: "Cross Module Marker" });
+      const account = await service.create("Accounts", { Account_Name: "Global Discovery Marker" });
+      const contact = await service.create("Contacts", { Last_Name: "Global Discovery Marker" });
       const lead = await service.create("Leads", {
-        Last_Name: "Cross Module Marker",
+        Last_Name: "Global Discovery Marker",
         Company: "Test Company",
       });
-      const groups = await service.search({ text: "cross module marker" });
+      const groups = await service.search({ text: "global discovery marker" });
       expect(groups.map((group) => group.module).sort()).toEqual(["Accounts", "Contacts", "Leads"]);
       for (const [module, record] of [
         ["Accounts", account],
@@ -105,8 +105,9 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
         expect(group?.total).toBe(1);
         expect(group?.records.map((row) => row.id)).toEqual([record.id]);
       }
+      expect(await make().search({ text: "global discovery marker" })).toEqual([]);
       await expect(
-        service.search({ text: "cross module marker", fields: ["First_Name"] }),
+        service.search({ text: "global discovery marker", fields: ["First_Name"] }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
     it("rule 5: rejects invalid sets, foreign module, foreign organization and missing IDs atomically", async () => {
