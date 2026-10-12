@@ -145,7 +145,9 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   await expect(page).toHaveURL(url);
   // The Account Name lookup targets Accounts, which ships in Module 3, so the still-unshipped
   // Vendor Name lookup (P2) carries the inert-later-module check instead.
-  await page.getByRole("button", { name: "Open Vendor Name lookup", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Open Vendor Name lookup", exact: true })
+    .click({ force: true });
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);

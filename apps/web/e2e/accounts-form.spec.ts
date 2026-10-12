@@ -152,7 +152,8 @@ test("creates with every field type, a parent account and both addresses", async
   await expect(parentRadio).toBeVisible();
   const parentName = await parentRadio.getAttribute("aria-label");
   if (!parentName) throw new Error("Missing account name in the picker");
-  await parentRadio.click();
+  // AF-11.14: the selection circle is wrapped by its label, so the row carries the click.
+  await dialog.getByRole("row", { name: parentName }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Parent Account", exact: true })).toHaveValue(
     parentName,
