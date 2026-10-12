@@ -8,6 +8,10 @@ export function createClientRecordService(
 ): ClientRecordService {
   return {
     ...records,
+    search: (query) => records.search(query),
+    findDuplicateGroups: (module, fields) => records.findDuplicateGroups(module, fields),
+    merge: (module, input) => records.merge(module, input),
+    deduplicate: (module, fields) => records.deduplicate(module, fields),
     getHomeCurrency: () => records.getHomeCurrency(),
     listUsers: extensions.listUsers,
     async listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]> {
