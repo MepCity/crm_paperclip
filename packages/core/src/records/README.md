@@ -397,7 +397,9 @@ business values, read-only fields included: the merge cannot select those either
 but a differing read-only value still tells the records apart. System attribution,
 the computed record name, `id` and the `Locked__s` write-lock flag stay out of the
 comparison — the lock is an access flag, never a value a caller chooses. Blank
-business values are filled from the group. Lookup identity is the referenced module
+business values are filled from the group, except a lookup whose value names a
+record of that same group: the automatic fill never hands the master a pointer at
+itself or at a duplicate about to disappear. Lookup identity is the referenced module
 and ID, independent of name.
 
 `merge` accepts a master and one or two distinct duplicates in its bound module
@@ -407,9 +409,12 @@ these checks are the same as existing update/delete, not a new permission model.
 All lookup redirections and unique-field checks are prepared before any write.
 The duplicates disappear permanently; selected values overwrite the master,
 other values remain. Every lookup that pointed at a removed duplicate is
-redirected to the master, except on the master itself: a master never points at
-itself, so its own such field becomes `null`. A value given explicitly in `values`
-still wins whenever it targets a record that survives. Creation attribution comes
+redirected to the master, except on the master itself: that field is not turned
+into a self-pointer, it becomes `null`. A value given explicitly in `values`
+still wins whenever it targets a record that survives — and a self-pointer the
+caller names explicitly is kept, because `merge` validates references by the same
+rule as `update`, which allows it. Only the automatic path guarantees that a master
+never ends up pointing into its own group. Creation attribution comes
 from the oldest participant; modification attribution uses the caller and the
 merge clock.
 
