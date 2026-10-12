@@ -374,3 +374,58 @@ and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.
 The three Leads conversion lookups remain read-only.
+
+## Search and duplicates
+
+`search` searches every registered module unless `modules` restricts it, using
+trimmed, case-insensitive substring matching (three characters minimum). Name
+scope searches only the computed record name. Paging defaults to page 1 and 30
+rows per module; positive integer page sizes are accepted. Totals precede paging,
+and a matching module remains present when the requested page is empty. Filters,
+sort and projection apply independently. Discovery and list use the same
+organization-scoped read path; discovery does not apply saved-view criteria.
+The current fixture metadata has no multi-selection, automatic-number or formula
+fields; the search helper recognizes the former two and skips absent fields.
+`fields`, `sort` and `filters` are validated against every module the call visits.
+Without `modules` that is all registered modules, so a name only one module knows
+raises `ValidationError` for the whole call (keyed `fields`, `sort` or `filters`).
+Callers that use a module-specific field select that single module with `modules`.
+
+`findDuplicateGroups` requires one to three distinct known fields, with nonempty,
+case-insensitive equality on every selected field. Conflicts compare nonempty
+business values, read-only fields included: the merge cannot select those either,
+but a differing read-only value still tells the records apart. System attribution,
+the computed record name, `id` and the `Locked__s` write-lock flag stay out of the
+comparison — the lock is an access flag, never a value a caller chooses. Blank
+business values are filled from the group, except a lookup whose value names a
+record of that same group: the automatic fill never hands the master a pointer at
+itself or at a duplicate about to disappear. Lookup identity is the referenced module
+and ID, independent of name.
+
+`merge` accepts a master and one or two distinct duplicates in its bound module
+and organization. It applies update validation and the existing update/delete
+lock checks to every participant. The fixture currently has no finer record ACL;
+these checks are the same as existing update/delete, not a new permission model.
+All lookup redirections and unique-field checks are prepared before any write.
+The duplicates disappear permanently; selected values overwrite the master,
+other values remain. Every lookup that pointed at a removed duplicate is
+redirected to the master, except on the master itself: that field is not turned
+into a self-pointer, it becomes `null`. A value given explicitly in `values`
+still wins whenever it targets a record that survives — and a self-pointer the
+caller names explicitly is kept, because `merge` validates references by the same
+rule as `update`, which allows it. Only the automatic path guarantees that a master
+never ends up pointing into its own group. Creation attribution comes
+from the oldest participant; modification attribution uses the caller and the
+merge clock.
+
+`deduplicate` requires the existing `admin` role and holds an organization/module
+lock shared by all service instances until success or failure. Groups with no
+business conflicts and at most three records merge automatically. Latest
+activity chooses the master, then latest modification breaks missing/tied
+activity. Other groups return unchanged as `conflicts`. So does a group whose
+automatic merge is rejected by a record lock or a unique-value collision: the
+run moves on to the next group and `mergedGroups`/`removedRecords` count only
+the groups that really merged, so one rejected group never aborts the call or
+leaves earlier merges unreported. Any other merge failure is a bug and still
+rejects the call. Notes, attachments, activities, automation and queued large
+merges remain outside this adapter.

@@ -1,6 +1,28 @@
-import { NotFoundError, RecordLockedError, ValidationError } from "../../errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  RecordLockedError,
+  ValidationError,
+} from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
-import type { FieldValue, ListQuery, RecordData, RecordInput, RecordService } from "../contract";
+import type {
+  DuplicateGroup,
+  FieldValue,
+  ListQuery,
+  MergeInput,
+  RecordData,
+  RecordInput,
+  RecordService,
+} from "../contract";
+import {
+  automaticMaster,
+  duplicateGroups,
+  duplicateKey,
+  isDeferredMergeRejection,
+  matchesGlobalSearch,
+  pointsAtGroupMember,
+} from "./discovery";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
@@ -15,6 +37,7 @@ interface ModuleStore {
 interface FixtureStore {
   modules: Map<string, ModuleStore>;
   memberIds: Set<string>;
+  deduplicating: Set<string>;
 }
 
 const storeKey = Symbol.for("mepcity.records.fixture.stores");
@@ -61,7 +84,7 @@ export interface FixtureRecordServiceOptions {
 }
 
 function moduleBundle(module: string): FixtureModuleBundle {
-  const bundle = fixtureModules[module];
+  const bundle = Object.hasOwn(fixtureModules, module) ? fixtureModules[module] : undefined;
   if (!bundle) throw new NotFoundError("Module not found.");
   return bundle;
 }
@@ -99,10 +122,13 @@ export function createFixtureRecordService(
         ]),
       ),
       memberIds: new Set(),
+      deduplicating: new Set(),
     };
     stores.set(ctx.orgId, store);
   }
   const state = store;
+  // A development hot reload may retain a store from before discovery was added.
+  state.deduplicating ??= new Set();
   state.memberIds.add(ctx.userId);
 
   const referenceModules = (): Map<string, FixtureReferenceModule> => {
@@ -165,9 +191,13 @@ export function createFixtureRecordService(
           : "Cannot update record that is not approved yet",
       );
   };
-  const matching = (module: string, query: Pick<ListQuery, "viewId" | "filters" | "search">) => {
+  const matching = (
+    module: string,
+    query: Pick<ListQuery, "viewId" | "filters" | "search">,
+    applyView = true,
+  ) => {
     const bundle = bundleFor(module);
-    const view = viewFor(module, query.viewId);
+    const view = applyView ? viewFor(module, query.viewId) : undefined;
     const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
     if (query.filters) validateCriteria(query.filters, fieldMap);
     const runtimeCtx = { userId: ctx.userId, now: clock() };
@@ -175,7 +205,7 @@ export function createFixtureRecordService(
       .map((record) => resolveRead(module, record))
       .filter(
         (record) =>
-          (!view.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
+          (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields),
       );
@@ -210,7 +240,199 @@ export function createFixtureRecordService(
     for (const record of updates) moduleState.records.set(record.id, record);
   };
 
+  const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
+    const bundle = bundleFor(module);
+    const ids = [...input.duplicateIds];
+    if (
+      ids.length < 1 ||
+      ids.length > 2 ||
+      new Set(ids).size !== ids.length ||
+      ids.includes(input.masterId)
+    )
+      throw new ValidationError({
+        duplicateIds: ["Choose one or two distinct duplicates, excluding the master."],
+      });
+    const normalized = normalizeInput(input.values, stringFieldNames(bundle));
+    validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
+    validateReferences(module, normalized);
+    await validateOwner(normalized);
+    // Resolve again after the asynchronous membership check, then commit without yielding.
+    const master = recordFor(module, input.masterId);
+    const group = [master, ...ids.map((id) => recordFor(module, id))];
+    for (const record of group) {
+      assertWritable(record, "update");
+      assertWritable(record, "delete");
+    }
+    const oldest = [...group].sort((a, b) =>
+      String(a.fields.Created_Time).localeCompare(String(b.fields.Created_Time)),
+    )[0] as RecordData;
+    const fields: Record<string, FieldValue> = {
+      ...master.fields,
+      ...normalized,
+      Created_By: oldest.fields.Created_By ?? null,
+      Created_Time: oldest.fields.Created_Time ?? null,
+      Modified_By: ctx.userId,
+      Modified_Time: clock().toISOString(),
+    };
+    fields[bundle.displayNameField] = bundle.fullName(fields);
+    const removed = new Set(ids);
+    const updated = { id: master.id, fields };
+    const projected = new Map<string, Map<string, RecordData>>();
+    for (const [name, moduleState] of state.modules) {
+      const next = new Map<string, RecordData>();
+      for (const record of moduleState.records.values()) {
+        if (name === module && removed.has(record.id)) continue;
+        const source = name === module && record.id === master.id ? updated : record;
+        const nextFields = { ...source.fields };
+        for (const field of bundleFor(name).metadata.fields) {
+          const value = nextFields[field.apiName];
+          if (
+            (field.dataType === "lookup" || field.dataType === "multi_module_lookup") &&
+            typeof value === "object" &&
+            value !== null &&
+            value.module === module &&
+            removed.has(value.id)
+          )
+            nextFields[field.apiName] =
+              name === module && record.id === master.id
+                ? null
+                : {
+                    module,
+                    id: master.id,
+                    name: String(fields[bundle.displayNameField]),
+                  };
+        }
+        next.set(source.id, { id: source.id, fields: nextFields });
+      }
+      assertUniqueFieldValues(bundleFor(name).metadata.fields, next.values());
+      projected.set(name, next);
+    }
+    for (const [name, records] of projected) moduleStore(name).records = records;
+    return copy(resolveRead(module, recordFor(module, master.id)));
+  };
+  const findDuplicateGroups = async (
+    module: string,
+    fields: readonly string[],
+  ): Promise<readonly DuplicateGroup[]> => {
+    const bundle = bundleFor(module);
+    return copy(
+      duplicateGroups(
+        matching(module, { viewId: "" }, false),
+        fields,
+        bundle.metadata.fields,
+        bundle.managedFields,
+      ),
+    );
+  };
+
   return {
+    merge,
+    findDuplicateGroups,
+    async deduplicate(module, fields) {
+      moduleExists(module);
+      if (ctx.role !== "admin") throw new ForbiddenError();
+      if (state.deduplicating.has(module))
+        throw new ConflictError("Deduplication is already running for this module.");
+      state.deduplicating.add(module);
+      try {
+        const groups = await findDuplicateGroups(module, [...fields]);
+        const conflicts: DuplicateGroup[] = [];
+        let mergedGroups = 0;
+        let removedRecords = 0;
+        for (const group of groups) {
+          if (group.conflictFields.length || group.records.length > 3) {
+            conflicts.push(group);
+            continue;
+          }
+          const master = automaticMaster(group.records);
+          const memberIds = new Set(group.records.map((record) => record.id));
+          const values: Record<string, FieldValue> = {};
+          for (const field of bundleFor(module).metadata.fields) {
+            if (field.readOnly || bundleFor(module).managedFields.has(field.apiName)) continue;
+            const current = master.fields[field.apiName];
+            const value =
+              duplicateKey(current) !== null
+                ? current
+                : group.records
+                    .map((record) => record.fields[field.apiName])
+                    .find(
+                      (candidate) =>
+                        duplicateKey(candidate) !== null &&
+                        !pointsAtGroupMember(candidate, module, memberIds),
+                    );
+            if (value !== undefined) values[field.apiName] = value;
+          }
+          try {
+            await merge(module, {
+              masterId: master.id,
+              duplicateIds: group.records
+                .filter((record) => record.id !== master.id)
+                .map((record) => record.id),
+              values,
+            });
+          } catch (error) {
+            if (!isDeferredMergeRejection(error)) throw error;
+            conflicts.push(group);
+            continue;
+          }
+          mergedGroups++;
+          removedRecords += group.records.length - 1;
+        }
+        return { mergedGroups, removedRecords, conflicts };
+      } finally {
+        state.deduplicating.delete(module);
+      }
+    },
+    async search(query) {
+      if (typeof query.text !== "string" || query.text.trim().length < 3)
+        throw new ValidationError({ text: ["Enter at least three characters."] });
+      if (query.scope !== undefined && query.scope !== "all" && query.scope !== "nameOrTags")
+        throw new ValidationError({ scope: ["Choose a search scope."] });
+      const page = query.page ?? 1;
+      const perPage = query.perPage ?? 30;
+      if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(perPage) || perPage < 1)
+        throw new ValidationError({ page: ["Choose positive integer paging values."] });
+      const groups = [];
+      for (const module of new Set(query.modules ?? Object.keys(fixtureModules))) {
+        const bundle = bundleFor(module);
+        if (
+          query.fields?.some(
+            (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
+          )
+        )
+          throw new ValidationError({ fields: ["Choose known field API names."] });
+        const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
+        const rows = sortRecords(
+          matching(module, { viewId: "", filters: query.filters }, false).filter((record) =>
+            matchesGlobalSearch(
+              record,
+              bundle.metadata.fields,
+              query.text.trim().toLowerCase(),
+              query.scope === "nameOrTags" ? bundle.displayNameField : undefined,
+            ),
+          ),
+          query.sort ?? DEFAULT_LIST_SORT,
+          fieldMap,
+        );
+        if (!rows.length) continue;
+        const start = (page - 1) * perPage;
+        groups.push({
+          module,
+          total: rows.length,
+          records: rows.slice(start, start + perPage).map((record) =>
+            query.fields === undefined
+              ? record
+              : {
+                  id: record.id,
+                  fields: Object.fromEntries(
+                    query.fields.map((name) => [name, record.fields[name] ?? null]),
+                  ),
+                },
+          ),
+        });
+      }
+      return copy(groups);
+    },
     async getHomeCurrency() {
       return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
     },

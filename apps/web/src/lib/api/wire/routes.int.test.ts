@@ -9,6 +9,13 @@ import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
+  [operations.search, () => import("@/app/crm/v2.2/actions/search/route")],
+  [
+    operations.duplicateGroups,
+    () => import("@/app/crm/v2.2/[module]/actions/duplicate_groups/route"),
+  ],
+  [operations.merge, () => import("@/app/crm/v2.2/[module]/actions/merge/route")],
+  [operations.deduplicate, () => import("@/app/crm/v2.2/[module]/actions/deduplicate/route")],
   [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
   [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
   [operations.fields, () => import("@/app/crm/v2.2/settings/fields/route")],
@@ -215,6 +222,54 @@ describe("operation routes", () => {
       Company: "Synthetic Company",
     });
   });
+  it("serves discovery handlers through organization and origin checks", async () => {
+    const service = getRecordService(a.ctx);
+    const master = await service.create("Contacts", { Last_Name: "Route Discovery Marker" });
+    const duplicate = await service.create("Contacts", { Last_Name: "Route Discovery Marker" });
+    const query = { text: "route discovery marker", modules: ["Contacts"] };
+    for (const op of [
+      operations.search,
+      operations.duplicateGroups,
+      operations.merge,
+      operations.deduplicate,
+    ]) {
+      expect((await call(op, a, { origin: "http://foreign.example" })).status).toBe(403);
+      expect((await call(op, a, { orgHeader: b.org.slug })).status).toBe(404);
+    }
+    const found = await call(operations.search, a, { body: query });
+    expect(found.status).toBe(200);
+    expect(await found.json()).toMatchObject([{ module: "Contacts", total: 2 }]);
+    const hidden = await call(operations.search, b, { body: query });
+    expect(hidden.status).toBe(200);
+    expect(await hidden.json()).toEqual([]);
+    const groups = await call(operations.duplicateGroups, a, {
+      module: "Contacts",
+      body: { fields: ["Last_Name"] },
+    });
+    expect(groups.status).toBe(200);
+    expect(await groups.json()).toMatchObject([
+      { records: [{ id: master.id }, { id: duplicate.id }], conflictFields: [] },
+    ]);
+    const merged = await call(operations.merge, a, {
+      module: "Contacts",
+      body: { masterId: master.id, duplicateIds: [duplicate.id], values: {} },
+    });
+    expect(merged.status).toBe(200);
+    expect(await merged.json()).toMatchObject({ id: master.id });
+    expect(
+      (await call(operations.record, a, { module: "Contacts", recordId: duplicate.id })).status,
+    ).toBe(404);
+    const deduplicated = await call(operations.deduplicate, a, {
+      module: "Contacts",
+      body: { fields: ["Last_Name"] },
+    });
+    expect(deduplicated.status).toBe(200);
+    expect(await deduplicated.json()).toEqual({
+      mergedGroups: 0,
+      removedRecords: 0,
+      conflicts: [],
+    });
+  });
   it("passes every operation through session authentication", async () => {
     for (const [op] of handlers) {
       const response = await call(op);
@@ -231,6 +286,10 @@ describe("operation routes", () => {
     for (const [op] of handlers.filter(
       ([op]) =>
         ![
+          operations.search,
+          operations.duplicateGroups,
+          operations.merge,
+          operations.deduplicate,
           operations.create,
           operations.update,
           operations.delete,
