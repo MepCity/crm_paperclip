@@ -65,6 +65,11 @@ export interface RelatedListRailLinksGroupDefinition {
   };
 }
 
+export interface RelatedListRailChromeDefinition {
+  organizeAriaLabel: string;
+  linksGroup: RelatedListRailLinksGroupDefinition;
+}
+
 export interface RelatedListDefinition {
   id: string;
   title: string;
@@ -163,5 +168,7 @@ export interface ModuleScreenDefinition {
       upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };
     relatedLists?: readonly RelatedListDefinition[];
+    linkedContactSummary?: boolean;
+    relatedListRail?: RelatedListRailChromeDefinition;
   };
 }

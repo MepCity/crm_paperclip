@@ -36,6 +36,7 @@ import {
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import type { ModuleScreenDefinition, RelatedListDefinition } from "@/modules/types";
+import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
 import { RelatedCardsContainer } from "./related-cards-container";
 
@@ -55,6 +56,7 @@ export type RecordDetailScreenProps = {
   definition: ModuleScreenDefinition;
   now?: Date;
   buildRelatedLists?: (record: RecordData) => readonly RelatedListDefinition[];
+  linkedContactSummaryPath?: (recordId: RecordId) => string;
 };
 
 function useModuleListContext(
@@ -93,6 +95,7 @@ export function RecordDetailScreen({
   definition,
   now = new Date(),
   buildRelatedLists,
+  linkedContactSummaryPath,
 }: RecordDetailScreenProps) {
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
@@ -266,6 +269,12 @@ export function RecordDetailScreen({
         }}
       >
         <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+        {rules.linkedContactSummary && linkedContactSummaryPath ? (
+          <AccountsLinkedContactSummary
+            accountRecord={displayRecord}
+            contactRecordPath={linkedContactSummaryPath}
+          />
+        ) : null}
         <DetailsCard
           sections={detailSections}
           ownerNames={ownerNames}
@@ -278,6 +287,7 @@ export function RecordDetailScreen({
             orgSlug={orgSlug}
             managerRecord={record}
             recordPath={(id) => paths.record(orgSlug, definition.tab, id)}
+            contactRecordPath={(id) => paths.record(orgSlug, "Contacts", id)}
           />
         ) : null}
       </InlineEditProvider>
@@ -312,11 +322,12 @@ export function RecordDetailScreen({
     </TimelineSurface>
   );
 
+  const railChrome = rules.relatedListRail;
   const relatedRailHeaderAction = hasRelatedLists ? (
     <Button
       variant="icon"
       size="compact"
-      aria-label="Organize Contacts Details"
+      aria-label={railChrome?.organizeAriaLabel ?? "Organize Contacts Details"}
       laterModule="M11"
       className="size-6 text-text-muted hover:text-text"
     >
@@ -325,7 +336,7 @@ export function RecordDetailScreen({
   ) : undefined;
 
   const relatedRailFooter = hasRelatedLists ? (
-    <div className="pt-2 border-t border-border mt-2">
+    <div className="pt-2 border-t border-border mt-2 flex flex-col gap-1">
       <Link
         href="#add-related-list"
         variant="body"
@@ -334,6 +345,21 @@ export function RecordDetailScreen({
       >
         Add Related List
       </Link>
+      {railChrome ? (
+        <>
+          <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
+            {railChrome.linksGroup.title}
+          </h3>
+          <Link
+            href={`#${railChrome.linksGroup.addLink.id}`}
+            variant="body"
+            laterModule={railChrome.linksGroup.addLink.moduleKey}
+            className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
+          >
+            {railChrome.linksGroup.addLink.label}
+          </Link>
+        </>
+      ) : null}
     </div>
   ) : undefined;
 

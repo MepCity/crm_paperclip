@@ -3,7 +3,11 @@ import { leadsScreenDefinition } from "./leads/definition";
 import { moduleScreens, resolveModuleScreen } from "./registry";
 
 test("the shipped modules is registered", () => {
-  expect(moduleScreens.map((definition) => definition.tab)).toEqual(["Leads", "Contacts"]);
+  expect(moduleScreens.map((definition) => definition.tab)).toEqual([
+    "Leads",
+    "Contacts",
+    "Accounts",
+  ]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });

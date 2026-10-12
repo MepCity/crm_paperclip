@@ -8,6 +8,8 @@ import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/u
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
+import { AccountContactsCardBody } from "./account-contacts-card-body";
+import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
 
 function controlLaterModule(
@@ -27,9 +29,24 @@ export interface RelatedListCardProps {
     orgSlug: string;
     recordPath: (recordId: RecordId) => string;
   };
+  accountContacts?: {
+    accountRecord: RecordData;
+    orgSlug: string;
+    contactRecordPath: (recordId: RecordId) => string;
+  };
+  memberAccounts?: {
+    parentRecord: RecordData;
+    orgSlug: string;
+    accountRecordPath: (recordId: RecordId) => string;
+  };
 }
 
-export function RelatedListCard({ definition, reportingContacts }: RelatedListCardProps) {
+export function RelatedListCard({
+  definition,
+  reportingContacts,
+  accountContacts,
+  memberAccounts,
+}: RelatedListCardProps) {
   const {
     id,
     title,
@@ -374,6 +391,18 @@ export function RelatedListCard({ definition, reportingContacts }: RelatedListCa
           managerRecord={reportingContacts.managerRecord}
           orgSlug={reportingContacts.orgSlug}
           recordPath={reportingContacts.recordPath}
+        />
+      ) : id === "contacts" && accountContacts ? (
+        <AccountContactsCardBody
+          accountRecord={accountContacts.accountRecord}
+          orgSlug={accountContacts.orgSlug}
+          contactRecordPath={accountContacts.contactRecordPath}
+        />
+      ) : id === "member-accounts" && memberAccounts ? (
+        <AccountMemberAccountsCardBody
+          parentRecord={memberAccounts.parentRecord}
+          orgSlug={memberAccounts.orgSlug}
+          accountRecordPath={memberAccounts.accountRecordPath}
         />
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
