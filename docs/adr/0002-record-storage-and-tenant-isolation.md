@@ -1,7 +1,7 @@
 # ADR 0002 — Record storage, metadata model and tenant isolation
 
-- Status: Proposed — revised after the independent review (MEP-101). Not accepted: acceptance waits for the slot measurements (MEP-96, MEP-103) and the second review (MEP-104), under the acceptance rule in "Outcome"
-- Date: 2026-10-04
+- Status: Proposed — measurements complete (MEP-50, MEP-96, MEP-103) and both reviews worked in (MEP-101, MEP-104). Two measurement expectations failed; "Outcome" says which and what this revision changes. Acceptance waits for the final independent review of that outcome
+- Date: 2026-10-04, revised 2026-10-12
 - Decider: CTO
 - Issue: MEP-40
 
@@ -43,6 +43,7 @@ create table records (
   updated_at      timestamptz not null default now(),
   deleted_at      timestamptz,
   deleted_by      uuid,
+  deleted_with    uuid,          -- the record whose deletion removed this one (§4)
   version         integer not null default 1,
   name            text not null default '',
   data            jsonb not null default '{}',
@@ -56,7 +57,7 @@ create table records (
 );
 ```
 
-- **Keys.** The primary key of every organization-owned table is `(organization_id, id)`, and every foreign key between such tables is composite and starts with `organization_id`. A row cannot reference another organization's row, and no unique constraint spans organizations (§5).
+- **Keys.** The primary key of every organization-owned table that has an `id` is `(organization_id, id)`; relation tables (`record_links`, later `record_unique_values`) have a composite key that starts with `organization_id`. Every foreign key between such tables is composite and starts with `organization_id`. A row cannot reference another organization's row, and no unique constraint spans organizations (§5).
 - `data` is keyed by the field's **storage key**: immutable, `[a-z][a-z0-9_]*`, unique per module, assigned when the field is created. The API name and the label stay editable metadata; renaming never rewrites records.
 - Empty values are absent from the document. There is one representation of "no value".
 - `name` is the record's display name, derived by the write path from the module's display field (for Leads: first and last name). Lookups and related lists read it without touching the document.
@@ -77,6 +78,7 @@ Value formats inside the document:
 | Lookup, user | UUID string | text equality |
 
 - **Decimal and currency values are exact end to end:** text in the document, `numeric` in SQL, a scaled integer in the index slot (§8), a decimal string in the port. They are never held as binary floating point. A `double precision` value cannot hold the 16 digits plus decimal places the export declares, and report totals must not drift.
+- **No rounding anywhere.** A written value with more decimal places than the field declares, or more digits than it allows, is rejected; `-0` is stored as `0`. A filter threshold is parsed as an exact decimal and scaled like the slot (§8). If it has more decimal places than the field, equality matches nothing, `>` and `>=` compare with `>=` against the ceiling of the scaled threshold, and `<` and `<=` with `<=` against its floor. A threshold outside the `bigint` range compiles to a constant true or false, never to an overflow error. MEP-103 checked every operator against the exact `numeric` comparison at negative, zero, 18-digit and out-of-range thresholds.
 - The port changes accordingly in the first engine issue: decimal and currency values become decimal strings, as long integers already are; integers stay numbers. Whether the wire carries them as JSON numbers, as the reference does, is settled under ADR 0004; storage and port are exact either way.
 - The export's `length` of a numeric field does not say whether it counts the decimal places, and some system fields declare 50. Validation reads digits and decimal places from metadata; which digits `length` counts is an open question for the form research and a single validation rule.
 - Date and date-time values are compared as text inside the document on purpose: a fixed-width UTC string sorts chronologically, while a cast to `timestamptz` is not immutable.
@@ -172,6 +174,8 @@ create table record_links (
 | Restore | Clears `deleted_at`. Links are intact. |
 | Purge | First clears every lookup that points at the record, in live **and** deleted sources: document key, slot value and link row, with a `record.updated` event per source. Then deletes the row; its outgoing links cascade. The restricting foreign key is the safety net: a purge that missed a source fails as a whole. |
 
+- **Child records.** Deleting a record also deletes its child records (notes, open and closed activities; public documentation, `research/specs/leads-write-behaviour.md` A1). The lookup that makes a module a child is flagged in its field metadata. A delete issues a delete command for every live child in the same transaction, each with its own event and the same correlation id, and sets the child's `deleted_with` to the parent's id. Whether restoring the parent restores them is open in that spec; `deleted_with` identifies exactly the rows that one deletion removed, so either answer is one statement. This lands with the first child module.
+- **Deleting a field** (Phase 3) is a metadata-service operation in the write path's terms: it removes the document key and the slot value of every record of the module and releases the slot (§8) before the field row goes; the cascade on `record_links.field_id` only removes the links.
 - **Uniqueness** of a field value cannot be a constraint on a JSONB key without runtime DDL. When the first unique field is in scope, `record_unique_values (organization_id, field_id, value, record_id)` with primary key `(organization_id, field_id, value)` and composite foreign keys to the field and the record enforces it; the adapter raises the port's `ConflictError`, and the contract suite gains the rejection test. Delete removes the record's rows, so the value is free again; restore re-inserts them and fails with `ConflictError` if the value was taken meanwhile; purge has nothing left to do. Whether the reference's recycle bin keeps a value reserved is checked with the first unique field; it only changes whether delete removes the rows. No Leads field is unique in the export, so this is deferred.
 
 ### 5. Tenant isolation
@@ -233,7 +237,7 @@ writeRecords(
 
 Inside one `withOrg` transaction, all or nothing:
 
-1. Take a shared lock on the module's row (`select … from modules … for key share`) and load the module's metadata. The lock is the barrier for slot changes (§8).
+1. Take a shared lock on the module's row (`select … from modules … for key share`) and load the module's metadata. The lock is the barrier for slot changes (§8). Metadata is read after the lock is held; a cached copy may be used only if its `metadata_version` equals the locked row's. A transaction that touches several modules or records locks module rows in id order, then record rows in id order. Measured cost of the lock: none outside the noise (insert p95 5.74 ms with it, 5.08 ms without; update 3.93 and 4.00 ms).
 2. Normalize and validate `values` (keyed by API name) against it: unknown, read-only and computed fields are rejected; type, required, length and picklist membership are checked. Errors are returned per field API name, as the port's `ValidationError` requires.
 3. Authorize through one hook, `authorize(ctx, action, module, record)`. Module 1 checks membership; profiles and sharing rules replace the hook body later.
 4. Write the row. An update merges the patch into `data` and removes emptied keys. Every command bumps `version` by one; an update fails with a conflict if `expectedVersion` does not match.
@@ -267,7 +271,7 @@ create table events (
 - **Order.** `record_version` is the record's `version` after the change. Versions of one record increase by one without gaps, so a consumer orders one record's events, and detects a missing one, by `(record_id, record_version)`. There is no total order across records: neither the UUIDv7 id nor a sequence is in commit order.
 - **Delivery** is at least once; the event `id` is the consumer's idempotency key. Delivery state (claimed, done, attempts, next retry) lives in a separate table per consumer, decided with the job queue in Phase 4, so this table stays append-only. Consumers claim rows; they do not page by id.
 - `correlation_id` groups the events of one request or bulk operation; automation uses it later to stop loops.
-- Module 1 reads events only for a record's history, by `(organization_id, record_id, record_version)`.
+- **Record history.** The events are the stored history of a record: the Timeline reads them by `(organization_id, record_id, record_version)`. The port member and which events the Timeline shows, and how, follow the Timeline spec (MEP-159); nothing else stores history.
 - An idempotency key for retried commands (import, public API) is decided with the first caller that retries (Phase 2).
 
 ### 8. Query compiler and indexes
@@ -279,30 +283,33 @@ create table events (
 - Every statement filters by `organization_id`, `module_id` and `deleted_at is null`, and appends `id` in the direction of the sort so that order is total.
 - **Null placement is always explicit** (`nulls first` or `nulls last`), never the PostgreSQL default, which differs by direction. Where empty values go is one compiler setting per direction. The port's interim rule (empty last in both directions) holds until the list research settles the reference's rule.
 - Text sorts by the ICU root collation; the port fixture's interim rule (lower-case code-unit order) is replaced by it, and the contract suite is aligned in the compiler issue.
-- **Paging** is by page number, as the port and ADR 0004 require: `limit perPage + 1 offset (page − 1) × perPage`; the extra row answers `moreRecords`. The cost grows with the offset (measured below); a keyset form is kept inside the compiler for export and bulk iteration, never on the wire.
+- **Paging** is by page number, as the port and ADR 0004 require: `limit perPage + 1 offset (page − 1) × perPage`; the extra row answers `moreRecords`. The cost grows with the offset. The list target holds up to offset 5,000 (page 100 at 50 rows); deeper pages are outside it, with the measured figures in "Outcome". A keyset form is kept inside the compiler for export and bulk iteration, never on the wire (measured: 2.65 ms p95 for page 100).
+- **Keys first.** A statement whose page the index scan cannot deliver directly, because it skips rows or has to sort the matching set, is compiled in two steps inside one statement: a materialized CTE selects only `id` and the sort key for the page, then the rows are read by primary key. Carrying whole rows through the sort was the cost: a sort of 19,800 matches 167 → 6.95 ms p95, offset 5,000 over 13,000 matches 164 → 59 ms.
 - **Count** is the separate request of ADR 0004 and is exact.
 
 **Index slots.** Under row-level security no predicate on the document was used as an index condition (§5), so expression and GIN indexes on `data` are not created. Fields that must be fast are projected instead:
 
-- `records` carries a fixed set of typed slot columns: 8 `text`, 4 `bigint`, 4 `timestamptz`, 4 `uuid`. Each has one index `(organization_id, module_id, <slot>, id) where deleted_at is null`, created by the migration. There is no DDL after migration.
+- `records` carries a fixed set of typed slot columns: 8 `text`, 4 `bigint`, 4 `timestamptz`, 4 `uuid`. Each has one index `(organization_id, module_id, <slot>, id) where deleted_at is null`, created by the migration. There is no DDL after migration. The index includes empty values: with indexes restricted to non-empty values the plain sorts lost the index order (first page 158 ms p95 against 1.6 ms), although those indexes are 3.3 times smaller and writes log 42 KB instead of 104 KB.
 - `fields.index_slot` assigns a field of a module to a free slot of its kind: text-like and picklist to `text`; date (as UTC midnight) and date-time to `timestamptz`; lookup and user to `uuid`; integer, decimal and currency to `bigint`. Booleans are not projected.
 - **Number slots are exact.** The slot holds the value multiplied by ten to the power of the field's decimal places, which preserves order and equality. A field takes a number slot only if its digits before the decimal point plus its decimal places are at most 18. A wider field is filtered and sorted from the document with an exact `numeric` cast, as a scan.
 - The write path fills the slot from the document in the same statement. The document stays the source of truth: slots are never read for display and can be rebuilt.
-- Predicates and sort keys on a slot use only leakproof operators on the plain column, so they are index conditions under RLS. An integration test runs the compiled statements as `crm_app` and fails if the plan of a slot filter has no index condition on the slot.
-- **Both directions from one index.** A slot index is ascending with nulls last. It serves `asc nulls last` forwards and `desc nulls first` backwards. For the other two orders the compiler emits two branches over the same index, the non-empty range in the wanted direction and the empty range by `id`, concatenated in the wanted order under one limit. No second index per slot. MEP-103 measures this form before acceptance.
-- **Shared statistics.** A slot column holds different fields in different modules, so its column statistics mix them. MEP-96 and MEP-103 measure the estimates with several modules and organizations in one slot; if they are off by more than ten times, the migration creates extended statistics on `(module_id, <slot>)`.
+- Predicates and sort keys on a slot use only leakproof operators on the plain column, so they are index conditions under RLS (measured for `text`, `uuid`, `timestamptz` and `bigint`; the catalog marks all five `bigint` comparison operators leakproof). An integration test runs the compiled statements as `crm_app` and fails if a slot filter has no index condition on the slot, if a plain sort on a slot does not read the slot index in order, or if a related list does not use the link index.
+- **Both directions from one index.** A slot index is ascending with nulls last. It serves `asc nulls last` forwards and `desc nulls first` backwards. For the other two orders the compiler emits two branches over the same index, the non-empty range in the wanted direction and the empty range by `id`, each limited to `offset + perPage + 1`, concatenated in the wanted order. No second index per slot. Measured: first pages 2.9 ms p95 (the same order written as one statement sorts the module: 177 to 182 ms), offset 5,000 58 to 61 ms. The form does not hold at depth: at offset 120,000 both branches fetch and sort that many whole rows (1.4 to 1.7 s). See "Outcome".
+- **Shared statistics.** A slot column holds different fields in different modules, so its column statistics mix them. Measured with four value distributions in one slot: row estimates were off by up to 14 times. The migration creates extended statistics (`mcv`) on `(module_id, <slot>)` for every slot; with them the worst measured case fell from 10.7 to 0.74 ms p95. One estimate stayed 20 times off at under 1 ms; estimates are not a correctness matter.
 
 **Slot lifecycle.** A field's `index_state` is `none`, `backfilling`, `ready` or `clearing`. Only the metadata service changes it:
 
 1. *Assign.* Under the module's exclusive lock (`select … from modules … for update`): set `index_slot` to a free slot of the field's kind and the state to `backfilling`, and bump `modules.metadata_version`. Writers hold the shared lock on the same row for their whole transaction (§6), so the change waits for writes in flight, and every later write sees the assignment and fills the slot.
 2. *Backfill.* A maintenance command updates the module's rows in batches. Each statement computes the slot from the row's current `data`, so it cannot store a value older than the row.
-3. *Verify.* One statement counts the rows whose slot differs from the expression over `data`. Only when it returns zero is the state set to `ready`, again under the exclusive lock.
+3. *Verify.* One statement counts the rows whose slot `is distinct from` the expression over `data` (a plain `<>` would not count an empty slot). It runs without the lock: every write since step 1 fills the slot from the row it writes, so only rows the backfill missed can differ. When it returns zero, the state is set to `ready` and `metadata_version` bumped under the exclusive lock. Measured with a concurrent writer at 28 writes per second: backfill of 200,000 rows in 105 s and 2.9 GB of log, verify 3.8 s, no mismatch; 200 rows corrupted on purpose (half emptied, half wrong) were counted exactly, and none after repair.
 4. The compiler uses a slot only in `ready`. In every other state, and for every field without a slot, it compiles to the document expression.
 5. *Release* (field deleted, or its index dropped): the state becomes `clearing` under the exclusive lock; the compiler stops using the slot and writers store null in it. A command nulls the column for the module and verifies. Then the slot is free. A slot is assigned only when free.
 
 **Who gets a slot.** The seed assigns slots to the fields that system views filter and sort on. In Phase 3 the customization flow assigns one when an administrator asks for it or a saved view filters or sorts on the field; when no slot of the kind is free the field stays unindexed (the screen rule comes with the customization spec). If a module needs more indexed fields than slots, the slot count is raised by a migration (a nullable column and its index, no table rewrite). If that stops scaling, the side table in Alternatives is the next mechanism. Slots are derived data, so neither change touches the documents.
 
 A filter or sort on a field without a ready slot scans the module's rows: 57 to 183 ms median at 200,000 records. That is over the 100 ms list target; the target applies to slot fields.
+
+**Aggregates** group and filter on slot columns where the fields have slots, and sum the scaled integer exactly. Measured for the 12-month report: 32 and 38 ms p95, against 100 and 130 ms on document expressions and 57 and 82 ms on typed columns.
 
 **Search** is not decided here. The reference's Leads list shows no record search of its own, and the global search is not specified yet. Until it is, the port's interim search compiles to `ILIKE` over the document values of its four fields and scans the module's rows. Measured on a prepared search text without an index: 0.5 to 1.9 s for a rare term at 200,000 records. No search column and no search index are created.
 
@@ -315,13 +322,31 @@ A filter or sort on a field without a ready slot scans the module's rows: 57 to 
 - Record ids are UUIDv7 (ADR 0001) and opaque to the port. The reference CRM's numeric ids are not reproduced.
 - `created_by`, `updated_by`, `created_at`, `updated_at` are set by the write path only; callers cannot supply them.
 - `version` gives optimistic concurrency for edit forms and orders a record's events (§7).
-- **Soft delete is required:** the reference CRM has a recycle bin from which records are restored. Delete sets `deleted_at` and `deleted_by`; indexes used by lists are partial on `deleted_at is null`. Purge after a retention period needs the Phase 4 worker; its steps are in §4.
+- **Soft delete is required:** the reference CRM has a recycle bin from which records are restored. Delete sets `deleted_at` and `deleted_by` (and `deleted_with` on child records, §4); indexes used by lists are partial on `deleted_at is null`. A deleted record stays 60 days and is then purged (public documentation, `research/specs/leads-write-behaviour.md` A1). The purge needs the Phase 4 worker; its steps are in §4. Who may see and empty the recycle bin belongs to the permissions ADR.
+
+### 10. User preferences
+
+Display preferences that must follow the user across browsers (hidden rail, rows per page, text wrap) are not records: no events, no version, no recycle bin.
+
+```sql
+create table user_preferences (
+  organization_id uuid not null,
+  user_id         uuid not null,
+  key             text not null,
+  value           jsonb not null,
+  updated_at      timestamptz not null default now(),
+  primary key (organization_id, user_id, key)
+);
+```
+
+- Row-level security as in §5; the service reads and writes only the current member's rows. Keys are namespaced strings defined in code, not metadata.
+- The port member is added with the first screen that moves a preference off browser storage.
 
 ## Measurement
 
 Script and full results: `scripts/bench/` and `scripts/bench/results/record-storage.md` (MEP-50, reviewed in MEP-62). Embedded PostgreSQL 18.4, default settings, 8 CPUs, synthetic data: 200,000 records of a 46-field module in the measured organization, 50,000 of the same module in a second organization and 50,000 of a second module. 5 warm-up and 30 measured runs per query, 2,000 writes of each kind. Times are client-side.
 
-Options: **A** the document model of §1 (A0 system indexes only; A3 adds an expression index and expression statistics per filtered or sorted field); **B** one typed table per module with an index per field; **C** entity-attribute-value rows. The slot tiers (A4) and the side table (A5) are measured in MEP-96 and MEP-103; their results are added here before acceptance.
+Options: **A** the document model of §1 (A0 system indexes only; A3 adds an expression index and expression statistics per filtered or sorted field); **B** one typed table per module with an index per field; **C** entity-attribute-value rows. The index slots (**A4b**: the model of §1 and §8 with exact `bigint` number slots) and the side table of indexed values (**A5**) were measured afterwards on the same data and protocol: `scripts/bench/results/record-storage-slots.md` (MEP-96) and `record-storage-slots-2.md` (MEP-103).
 
 Targets, fixed before measuring (p95):
 
@@ -387,37 +412,78 @@ Run as a role that neither owns the tables nor bypasses the policy. Medians in m
 - Search loses its index in A and B alike: a selective prefix went from 2.7 and 1.4 ms to 1,667 and 1,696 ms (p95 1,744 and 4,218 ms), a rare substring from 4.7 and 3.3 ms to 307 and 205 ms.
 - Writes are unaffected (A insert 1.05 ms off, 1.08 ms on).
 
+### Results for the index slots
+
+From MEP-103: 200,000 records, row-level security on, runtime role, three rounds per read (the round with the lowest p95 is shown), 548 correctness, equivalence and isolation checks, none failing. Ten slots assigned unless stated. p95 in ms.
+
+| Scenario | A4b | Note |
+| --- | --- | --- |
+| Picklist filter, text sort, first page | 1.48 | index order |
+| Same, page 100 by keyset | 2.65 | |
+| Same, offset 5,000 | 164; keys first 59 | typed table, in the earlier MEP-96 run: 86 |
+| Owner, date range and number filter | 8.77 | |
+| Three-field filter | 1.97 | |
+| Related list by lookup | 0.85 | |
+| Number filter on a `bigint` slot, sorted by it | 1.09 | |
+| Number filter with an order the index cannot deliver (19,800 matches sorted) | 167; keys first 6.95 | |
+| Count, 13,000 matches | 2.85 | index-only |
+| Single record read | 0.52 | |
+| Insert, update one field, update five fields, with event; 20 slots filled | 5.94, 5.70, 4.49 | 105 KB of log per write |
+| Report, 12 months by one field | 32 and 38 | |
+
+Sort on a text slot with 40 % empty values, all four orders (`asc`/`desc` × empty first/last), p95 in ms:
+
+| Page | Index order (2 orders) | Two branches (2 orders) |
+| --- | --- | --- |
+| First, no filter | 1.6, 1.9 | 2.9, 2.9 |
+| Offset 5,000, no filter | 4.2, 4.3 | 61, 58 |
+| Offset 120,000 (where empty values begin), no filter | 197, 244 | 1,715, 1,409 |
+| First, with a filter on another slot (13,000 matches) | 1.8, 2.0 | 3.5, 2.7 |
+| Offset 5,000, same filter | 60, 58 | 102, 99 |
+| Boundary page, same filter | 63, 62 | 106, 107 |
+
+- **Exactness.** Filters and sorts on the `bigint` slot returned the same records in the same order as the exact `numeric` comparison in every check, including 16 digits before the decimal point. A `double precision` slot differed in 39 of 48 ordered comparisons.
+- **Size** at 200,000 records: table 490 MB and indexes 516 MB with ten slots assigned; 599 and 529 MB with all twenty filled.
+- **Row-level security.** No plan differed between policy off and on. In 18 of 165 off/on pairs the buffer count differed by one, all in parallel plans. The median ratio of the on and off medians is 1.05. Nine of the 55 scenarios were more than 10 % slower with the policy on in all three rounds. Seven are forms the compiler does not emit or deep pages already over the target; the largest, about two times (9.9 → 20 ms, 77 → 153 ms), are one-statement sorts of the whole matching set for a first page. Two are emitted forms inside the target: the index-order walk to offset 5,000 in both directions (about 3 → 4 ms; ratios 1.3 to 1.7). The cause was not isolated. The paired measurement against a role that bypasses the policy gave ratios of 0.76 and 1.00 for the two scenarios where both roles ran the same plan; in the other three the bypass role ran a different plan, so those ratios compare nothing.
+- **Side table (A5),** same data, fields, writes and role: reads 232 ms p95 for the first page of the picklist list (A4b 1.48), 217 ms by keyset (2.65), 34 ms for the owner, date and number filter (8.77), count 60 ms (2.85); equal to the slots on the related list and the number filter. The A5 statements were written once and not tuned. Writes with ten fields are cheaper than slots (insert 3.12 ms, 51 KB of log); with twenty fields the insert costs 9.39 ms and 128 KB, and the data is 1.9 GB against 1.1 GB.
+
 ### Outcome
 
-The decision rule, applied as written, does not settle the question yet.
+**Earlier models.** A3 (expression indexes) misses the list target under RLS wherever its index was a filter (p95 up to 192 ms). B meets every list, read and write target with RLS on. C is out: insert cost, size, list medians. Search misses its target under RLS in A and B alike and does not separate the models; that target is suspended by the exception in §8. What this ADR proposes is A4b, and B's times are not evidence for it.
 
-- **A3 does not meet the targets.** It misses the list target at offset 5,000 (p95 142 ms) and, with RLS on, on every list whose index was a filter (p95 up to 192 ms). Both misses are under three times the target, so the rule neither confirms the document model nor reopens it.
-- **B meets** every list, read and write target with RLS on.
-- **C is out:** insert cost, size, list medians.
-- **Search** misses its target under RLS in A and B alike. It does not separate the models; the target is suspended by the exception in §8.
+**The rule.** Written before the slot results, in the previous revision of this section and, made precise after the second review, as six expectations in MEP-103: with RLS on, as the runtime role, at 200,000 records. Applied as written:
 
-What this ADR proposes is therefore not A3 but **A4**: the document model with typed index slots (§8). B's times are not evidence for it: the slots sit on a wider table, share statistics between modules, and add 20 indexes to the write path.
+| # | Expectation | Result |
+| --- | --- | --- |
+| 1 | Number filter, and owner, date and number filter, on `bigint` slots: slot index condition, p95 ≤ 100 ms, exact at every operator and threshold | Met: 1.09 and 8.77 ms |
+| 2 | Four sort orders: first page and boundary page p95 ≤ 100 ms; plain sorts in index order with no sort of the whole set; offset 5,000 ≤ 300 ms | **Not met.** First pages (≤ 3.5 ms) and offset 5,000 (≤ 102 ms) pass. The boundary page fails: 197 to 1,715 ms without a filter, 106 and 107 ms with one in the two-branch orders, and the two-branch plans sort the whole set there |
+| 3 | Insert and update with their event, 20 slots filled, p95 ≤ 15 ms | Met: 5.94 and 5.70 ms |
+| 4 | Backfill under concurrent writes verifies with no mismatch and finds injected ones exactly | Met: 0, then 200, then 0. The writer reached 28 writes per second, not the 50 intended |
+| 5 | Single read p95 ≤ 5 ms; report p95 ≤ 1 s | Met: 0.52 ms; 32 and 38 ms |
+| 6 | Every read has the same plan and buffer count with the policy off and on; paired on/off ratio ≤ 1.10 | **Not met.** Plans are equal; 18 pairs differ by one buffer; two emitted forms and seven others are reproducibly slower with the policy on; three of the five paired ratios are unusable |
 
-**Acceptance rule, written before the A4 results.** The ADR is accepted only if MEP-96 and MEP-103 show, at 200,000 records, with RLS on, as the runtime role:
+The previous revision said that if a list rule failed, the ADR is not accepted as written, and the side table and the typed table are evaluated on the same scenarios before any decision. That is where this stands:
 
-1. **Lists on slot fields:** every scenario uses the slot index as an index condition and has p95 ≤ 100 ms. This covers first pages, the keyset page, the three-field filter, the related list, the number filter on the `bigint` slot, and both sort directions with both null placements.
-2. **Deep page (offset 5,000):** reported against the same 100 ms. A miss under three times is recorded as a named exception for deep pages, with B's figure beside it; a miss above three times fails the rule.
-3. **Writes:** insert and update with their event, with all 20 slots assigned and filled, p95 ≤ 15 ms.
-4. **Single read:** p95 ≤ 5 ms.
-5. **Exactness:** a filter and a sort on the `bigint` slot return the same records in the same order as the exact `numeric` comparison on the document, including values with 16 digits before the decimal point.
-6. **Backfill:** with concurrent writers, the verify step finds no mismatch.
+- **The side table was evaluated** in the same run. It equals the slots on two reads and is 1.6 to 157 times slower on the other six, and it is worse on size and on writes with twenty fields. Its reads were not tuned; it stays the next mechanism if a module outgrows its slots, not a replacement.
+- **The typed table was not measured on the sort matrix.** It was measured beside the first slot variant on the list scenarios (MEP-96): 86 ms p95 at offset 5,000. The slots with keys first took 59 ms in the later run; two runs, so an indication and not a comparison. Its cost at offset 120,000 is not known.
+- **What failed is depth, not the model.** Every failing figure in expectation 2 is a boundary page: an offset of about 120,000 without the filter, and of roughly 8,000 with it if the filtered set has the same share of empty values. First pages, filters, the keyset page, counts, reads, writes, exactness and the report are inside their targets, several with a wide margin. The page number is the wire format (ADR 0004), and a page-number query walks the rows it skips in any storage model.
 
-Size and write-ahead log have no target; they are reported and listed in Consequences.
+**What this revision changes instead of claiming the rule held:**
 
-If rule 1, 3, 5 or 6 fails, the ADR is not accepted as written. The side table of indexed values (A5, measured in MEP-103) and the typed table per module with a privileged DDL executor are then evaluated on the same scenarios before any decision.
+1. The list target is claimed only up to offset 5,000. Beyond it this ADR claims nothing; it states the measured cost: 0.2 s at offset 120,000 in the two index orders, 1.4 to 1.7 s in the two-branch orders. Such a page is page 2,400 at 50 rows.
+2. Statements are compiled keys first (§8). The two-branch form as measured selects whole rows in each branch; whether it holds at depth with keys first, or needs a second index for a slot that is sorted in a two-branch order, is not measured. Both are changes to the compiler or to one migration, not to stored data. The compiler issue measures the sort matrix at the three depths before it chooses, and reports the typed-table figure beside it if the result is over 300 ms.
+3. The 10 % overhead target for row-level security is claimed for the emitted forms that return a page without skipping rows, where the rounds show it. It is not claimed for plans that walk thousands of rows per page; there the measured overhead is about 1 ms on 3 ms at offset 5,000 and up to two times in forms the compiler does not emit. The compiler issue isolates the cause with one plan compared node by node.
+4. Whether pages beyond a depth should be refused, as a product rule, is a board decision if the list research shows the reference CRM allows them; it is listed under deferred decisions.
+
+On that basis the storage model — one `records` table, the document as the source of truth, exact typed index slots — is put forward for acceptance. The final review is asked one question above all: whether the typed table must be measured on the sort matrix before acceptance, given that no result there would remove the reason it was rejected (runtime DDL and table ownership for the runtime role, see Alternatives).
 
 ## Alternatives considered
 
 | Alternative | Why not |
 | --- | --- |
-| Typed table per module, columns added by runtime DDL | Customization would run DDL at runtime. Either the runtime role gets DDL rights and table ownership, which defeats row-level security and least privilege, or a separate privileged executor applies it, which is a second way into the schema outside Drizzle migrations and the cloned test template. Schema then differs per environment and per organization. Custom columns of different organizations collide in a shared table; a table per organization is the per-tenant schema ADR 0001 rejected. It is the measured fallback if the slots fail the acceptance rule. |
+| Typed table per module, columns added by runtime DDL | Customization would run DDL at runtime. Either the runtime role gets DDL rights and table ownership, which defeats row-level security and least privilege, or a separate privileged executor applies it, which is a second way into the schema outside Drizzle migrations and the cloned test template. Schema then differs per environment and per organization. Custom columns of different organizations collide in a shared table; a table per organization is the per-tenant schema ADR 0001 rejected. It stays the fallback if the slot model fails in use; its speed was never the objection. |
 | Entity-attribute-value rows for all fields | Measured: insert 20 ms and 483 KB of log, 2.9 GB in total, list medians of 180 to 280 ms. |
-| A side table of indexed values only (one typed row per record and indexed field) | No slot limit and no statistics shared between fields of one column. Costs one row and its index entries per record and indexed field on every write, and each filter or sort field is a join under its own policy. Not measured yet: the EAV figures do not apply to it, because EAV stores all 46 fields as rows. MEP-103 measures it next to the slots. It is the fallback if slots fail the acceptance rule and the next mechanism if a module outgrows its slots. |
+| A side table of indexed values only (one typed row per record and indexed field) | No slot limit and no statistics shared between fields of one column. Measured (MEP-103): cheaper writes with ten indexed fields, dearer with twenty (insert 9.39 against 5.94 ms p95), 1.9 GB against 1.1 GB, and reads equal to the slots on two scenarios and 1.6 to 157 times slower on six; its statements were not tuned. It is the next mechanism if a module outgrows its slots. |
 | Typed columns for standard fields, JSONB only for custom fields | Two code paths for every feature (validation, compiler, layouts), and "standard" is still metadata we must be able to change in Phase 3. |
 | A table or partition per module | New modules need runtime DDL; no benefit at this volume. |
 | Document keyed by API name or field id | API names are editable; UUID keys add about 2 KB per record and make documents unreadable. |
@@ -425,7 +491,8 @@ If rule 1, 3, 5 or 6 fails, the ADR is not accepted as written. The side table o
 | Expression or GIN indexes on the document | Measured: not used as a filter under RLS; the GIN index costs 249 MB and almost four times the log per insert. |
 | Decimals and currency as JSON numbers with `double precision` slots | Cannot hold the declared 16 digits with their decimal places exactly, and totals drift. The typed model was measured with `numeric(16,2)`, so its results would not have carried over either. |
 | `numeric` slots | Exact, but `numeric` comparison is not leakproof: the slot would lose its index under RLS. |
-| A second, descending index per slot | Doubles the 20 indexes on the write path. The two-branch form over one index is measured first (MEP-103). |
+| A second index per slot for the two other orders | Doubles the 20 indexes on the write path, which already logs 105 KB per write. The two-branch form serves first pages and offset 5,000 from one index. A second index for one slot remains an option for deep pages (Outcome, change 2). |
+| Slot indexes over non-empty values only | 3.3 times smaller and 42 KB of log per write instead of 104 KB, but plain sorts lost the index order (first page 158 ms p95). |
 | Mark the JSONB and `ILIKE` functions leakproof, or wrap them in leakproof functions | Needs a superuser, changes built-in catalog rows that a dump and restore does not carry, and is refused by managed PostgreSQL services. The deployment topology is not decided (ADR 0001). |
 | Run compiled reads as a role that bypasses the policy | A wrong organization predicate in one compiled statement then returns another organization's rows; ADR 0001 §3 rule 4 exists to prevent that. |
 | A tenant context the runtime role cannot set (a database role per organization, or a signed setting checked by a definer function) | Per-organization roles are created at runtime and switched per transaction. A signed setting needs a secret the runtime role cannot read and a `SECURITY DEFINER` check inside every policy. Both add moving parts to guard a path, arbitrary SQL as the runtime role, that the design closes at the compiler. The triggers for revisiting are in §5. |
@@ -441,8 +508,10 @@ If rule 1, 3, 5 or 6 fails, the ADR is not accepted as written. The side table o
 - The number of indexed fields per module is bounded by the slot count. Other fields filter and sort by scanning the module: 57 to 183 ms median at 200,000 records, over the list target and linear beyond.
 - Decimal and currency values are strings in the port and the document. Code that calculates with them must use a decimal type, never `number`; totals are computed in SQL as `numeric`.
 - Every write transaction holds a shared lock on its module's row. A slot change waits for the writes in flight and briefly blocks new ones.
-- Deep pages cost in proportion to the offset, because the wire format pages by number.
-- Reports aggregate over document expressions: 105 to 272 ms for a 12-month group at 200,000 records, against 63 ms on typed columns. If Phase 5 needs more, it projects into slots or a reporting table without changing the model.
+- Deep pages cost in proportion to the offset, because the wire format pages by number: inside the target to offset 5,000, 0.2 to 1.7 s at offset 120,000.
+- Twenty slot indexes make every write log about 105 KB, and a backfill of one slot over 200,000 records logs 2.9 GB.
+- Reports are fast only on fields that have a slot (32 to 38 ms p95 for a 12-month group at 200,000 records); on document expressions the same report takes 100 to 130 ms. Phase 5 assigns slots to report fields or adds a reporting table without changing the model.
+- Row-level security is not free on plans that walk many rows per page; the compiler must keep emitted forms short of that, and its plan tests are the guard.
 - Every predicate the compiler emits for an index path must stay leakproof. A cast, a function call or a `numeric` comparison on a slot silently turns an index scan into a scan; the plan test in §8 guards it.
 - Row-level security does not contain arbitrary SQL run as the runtime role. The compiler's parameter and identifier rules are the guard for that path, and the credential tables are out of that role's reach.
 - The application needs three database roles and three connection URLs in every environment, including tests.
@@ -461,6 +530,9 @@ If rule 1, 3, 5 or 6 fails, the ADR is not accepted as written. The side table o
 | Profiles, field-level permissions, sharing rules (bodies of `authorize` and record-level policies) | Separate ADR, after the permission screens are researched |
 | Search: fields, matching rule, token table or another index that works under RLS | With the search spec; needs its own measurement |
 | Text sort and equality rules of the reference (case, accents), and where empty values sort in each direction | With the list research; compiler settings |
+| Pages beyond offset 5,000: the two-branch form with keys first, a second index for a slot, or a depth limit | Compiler issue measures the first two; a depth limit is a board decision |
+| Cause of the row-level security overhead on plans that walk many rows | Compiler issue |
+| Whether restoring a record restores the child records deleted with it; who may see and empty the recycle bin | With the first child module; permissions ADR |
 | Which digits a numeric field's `length` counts; the wire form of decimal and currency values | With the Leads form spec; ADR 0004 |
 | Numeric fields wider than 18 digits in an index slot | When such a field must be indexed |
 | Tags, composite address | With the Leads form spec |
