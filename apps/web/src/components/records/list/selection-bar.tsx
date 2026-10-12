@@ -5,6 +5,7 @@ import { Icons } from "@/components/ui/icon";
 import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/menu";
 
 export interface SelectionBarProps {
+  laterInventory?: boolean;
   selectedCount: number;
   onClear: () => void;
   /** The Actions menu operations. Items without a wired handler stay visible but inert. */
@@ -24,6 +25,7 @@ function selectionLabel(count: number): string {
 }
 
 export function SelectionBar({
+  laterInventory = false,
   selectedCount,
   onClear,
   actions = [],
@@ -60,6 +62,7 @@ export function SelectionBar({
           variant="selection"
           size="listSelection"
           className="w-(--size-list-selection-send-email-width)"
+          laterModule={laterInventory ? "M10" : undefined}
           onPress={onSendEmail}
         >
           Send Email
@@ -68,6 +71,7 @@ export function SelectionBar({
           variant="selection"
           size="listSelection"
           className="w-(--size-list-selection-tags-width)"
+          laterModule={laterInventory ? "M6" : undefined}
           onPress={onTags}
         >
           Tags
@@ -93,11 +97,14 @@ export function SelectionBar({
             <Menu
               width="actions"
               items={actions}
-              onAction={(key) => actions.find((item) => item.id === key)?.onAction()}
+              onAction={(key) =>
+                actions.find((item) => item.id === key && !item.laterModule)?.onAction()
+              }
             >
               {(item) => (
                 <MenuItem
                   id={item.id}
+                  laterModule={item.laterModule}
                   appearance="measured"
                   isDisabled={item.isDisabled}
                   className="h-(--size-list-selection-menu-row-height)"

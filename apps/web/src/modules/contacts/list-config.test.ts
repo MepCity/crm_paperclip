@@ -12,3 +12,24 @@ test("defines Contacts identity labels and routes using the Full_Name link colum
   expect(CONTACTS_SORT_FIELD_LABELS).toContain("Date of Birth");
   expect(CONTACTS_SORT_FIELD_LABELS).not.toContain("Lead Status");
 });
+
+test("keeps the Contacts Actions inventory in reference order and assigns later modules", () => {
+  expect(contactsListPageConfig.inventory?.actions.map((item) => item.label)).toEqual([
+    "Mass Transfer",
+    "Mass Delete",
+    "Mass Update",
+    "Manage Tags",
+    "Drafts",
+    "Mass Email",
+    "Approve Contacts",
+    "Deduplicate Contacts",
+    "Add to Campaigns",
+    "Create Client Script",
+    "Export Contacts",
+    "Sheet view",
+    "Print View",
+  ]);
+  expect(
+    contactsListPageConfig.inventory?.actions.find((item) => item.id === "sheet")?.laterModule,
+  ).toBe("P3");
+});

@@ -175,6 +175,20 @@ test("types outside the list columns stay plain text", () => {
   expect(screen.getByText("acc-1").closest("a")).toBeNull();
 });
 
+test("future email controls retain their text and cannot navigate", () => {
+  render(
+    <CellValue
+      field={field("email")}
+      value="synthetic@example.test"
+      format={DEFAULT_FORMAT}
+      laterModule="M10"
+    />,
+  );
+  const link = screen.getByRole("link", { name: "synthetic@example.test" });
+  expect(link.getAttribute("data-later-module")).toBe("M10");
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+});
+
 test("lookup field renders link in list cell (with laterModule for unregistered modules)", () => {
   const { rerender } = render(
     <CellValue
@@ -208,4 +222,22 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
     />,
   );
   expect(screen.queryByRole("link")).toBeNull();
+});
+
+test("Contacts Account Name shows the lookup name without an active Accounts link", () => {
+  render(
+    <CellValue
+      field={field("lookup", {
+        apiName: "Account_Name",
+        label: "Account Name",
+        lookup: { module: "Accounts" },
+      })}
+      value={{ module: "Accounts", id: "synthetic-account", name: "Synthetic Account" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const account = screen.getByText("Synthetic Account");
+  expect(account.closest("a")).toBeNull();
+  expect(account.getAttribute("data-later-module")).toBe("M3");
+  expect(screen.queryByText("synthetic-account")).toBeNull();
 });

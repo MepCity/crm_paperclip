@@ -71,11 +71,18 @@ export function ListToolbar({
             <Menu
               width="actions"
               items={actions}
-              onAction={(key) => actions.find((item) => item.id === key)?.onAction()}
+              onAction={(key) =>
+                actions.find((item) => item.id === key && !item.laterModule)?.onAction()
+              }
             >
               {(item) => (
-                <MenuItem id={item.id} isDisabled={item.isDisabled}>
-                  {item.label}
+                <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
+                  <span className="flex items-center justify-between gap-3">
+                    {item.label}
+                    {item.submenuIndicator ? (
+                      <Icons.chevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    ) : null}
+                  </span>
                 </MenuItem>
               )}
             </Menu>

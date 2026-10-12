@@ -2,11 +2,13 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { useOptionalOrgSlug } from "@/lib/api/client/provider";
 import { formatFieldValue } from "../field-format";
 
 export interface CellValueProps {
+  laterModule?: ModuleKey;
   field: FieldDefinition;
   value: FieldValue;
   /**
@@ -35,9 +37,20 @@ export function CellValue({
   ownerNames = {},
   format,
   orgSlug,
+  laterModule,
 }: CellValueProps) {
   const contextOrgSlug = useOptionalOrgSlug();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
+  // List cells retain the id fallback for references without a display name.
+  if (
+    field.dataType === "lookup" &&
+    typeof value === "object" &&
+    value &&
+    "id" in value &&
+    !value.name?.trim()
+  ) {
+    return value.id;
+  }
   const rendered = formatFieldValue(field, value, ownerNames, format, {
     href: field.dataType === "lookup" ? undefined : href,
     orgSlug: effectiveOrgSlug,
@@ -49,7 +62,7 @@ export function CellValue({
         href={rendered.link.href ?? "#"}
         variant="body"
         prefetch={false}
-        laterModule={rendered.link.laterModule}
+        laterModule={laterModule ?? rendered.link.laterModule}
         className="break-words"
       >
         {rendered.link.text}

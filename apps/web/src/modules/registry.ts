@@ -1,4 +1,5 @@
 import type { ModuleKey } from "@/components/ui/later-module";
+import { contactsScreenDefinition } from "./contacts/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import type { ModuleScreenDefinition } from "./types";
 
@@ -29,7 +30,10 @@ export function resolveModuleLaterKey(moduleApiName: string): ModuleKey {
 }
 
 /** Add a shipped module here to enable its routes and shell entries together. */
-export const moduleScreens: readonly ModuleScreenDefinition[] = [leadsScreenDefinition];
+export const moduleScreens: readonly ModuleScreenDefinition[] = [
+  leadsScreenDefinition,
+  contactsScreenDefinition,
+];
 
 export function resolveModuleScreen(
   tab: string,
