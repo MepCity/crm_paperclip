@@ -41,10 +41,14 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Verify later-module checkboxes in filter panel
+  // Verify active Accounts checkbox and later-module Tasks checkbox in filter panel
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
-  await expect(accountsCheckbox).toHaveAttribute("data-later-module", "M3");
+  await expect(accountsCheckbox).toBeChecked();
+
+  const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
+  await expect(tasksCheckbox).toBeVisible();
+  await expect(tasksCheckbox).toHaveAttribute("data-later-module", "M5");
 
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
@@ -57,7 +61,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).not.toBeVisible();
 
-  // Click a record link in Contacts or Leads card to navigate to detail
+  // Click a record link in Leads card to navigate to detail
   const firstRecordLink = leadsCard.getByRole("link").first();
   await expect(firstRecordLink).toBeVisible();
   await firstRecordLink.click();

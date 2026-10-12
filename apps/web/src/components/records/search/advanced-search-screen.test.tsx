@@ -62,11 +62,11 @@ describe("AdvancedSearchScreen", () => {
 
     renderSearch(service, "ab");
 
-    expect(screen.getByText("Enter at least 3 characters to search.")).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Leads search results" })).toBeNull();
     expect(searchSpy).not.toHaveBeenCalled();
   });
 
-  it("renders search results across Leads and Contacts cards, with Notes card and S-46 link", async () => {
+  it("renders search results across Leads, Contacts, Accounts cards, with Notes card and S-46 link", async () => {
     renderSearch();
 
     // Verify Leads and Contacts cards appear
@@ -89,7 +89,49 @@ describe("AdvancedSearchScreen", () => {
     expect(crossAppSearch.getAttribute("data-later-module")).toBe("P3");
   });
 
-  it("handles module filtering and sends selected modules in search", async () => {
+  it("formats Owner cell using user display name rather than raw user id", async () => {
+    renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Contacts search results" })).toBeTruthy();
+    });
+
+    const contactsCard = screen.getByRole("region", { name: "Contacts search results" });
+    // Owner name Keith Martin should be rendered instead of user-1
+    await waitFor(() => {
+      expect(within(contactsCard).getAllByText("Keith Martin").length).toBeGreaterThan(0);
+    });
+  });
+
+  it("handles Accounts as working filter item and renders Accounts card with laterModule M3 link", async () => {
+    const user = userEvent.setup();
+    const service = createTestService();
+
+    // Seed or search for Account
+    renderSearch(service, "Account");
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Accounts search results" })).toBeTruthy();
+    });
+
+    const accountsCard = screen.getByRole("region", { name: "Accounts search results" });
+    expect(accountsCard).toBeTruthy();
+
+    // Accounts record name link has laterModule="M3"
+    const accountLinks = within(accountsCard).getAllByRole("link");
+    const recordLink = accountLinks.find((l) => l.getAttribute("data-later-module") === "M3");
+    expect(recordLink).toBeDefined();
+
+    // Open filter panel
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
+
+    // Accounts is a working checkbox (no laterModule on the checkbox)
+    const accountsCb = within(filterPanel).getByRole("checkbox", { name: "Accounts" });
+    expect(accountsCb.getAttribute("data-later-module")).toBeNull();
+  });
+
+  it("keeps module checkbox changes as draft until Apply Filter is clicked", async () => {
     const user = userEvent.setup();
     const service = createTestService();
     const searchSpy = vi.spyOn(service, "search");
@@ -100,36 +142,80 @@ describe("AdvancedSearchScreen", () => {
       expect(screen.getByRole("region", { name: "Leads search results" })).toBeTruthy();
     });
 
-    // Open filter panel via S-21 funnel icon
-    const funnelBtn = screen.getByRole("button", { name: "Filter" });
-    await user.click(funnelBtn);
-
+    // Open filter panel
+    await user.click(screen.getByRole("button", { name: "Filter" }));
     const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
-    expect(filterPanel).toBeTruthy();
 
-    // Verify non-registered modules carry laterModule
-    const accountsCb = within(filterPanel).getByRole("checkbox", { name: "Accounts" });
-    expect(accountsCb.getAttribute("data-later-module")).toBe("M3");
-
-    const tasksCb = within(filterPanel).getByRole("checkbox", { name: "Tasks" });
-    expect(tasksCb.getAttribute("data-later-module")).toBe("M5");
-
-    // Uncheck Leads
+    // Uncheck Leads in the panel
     const leadsCb = within(filterPanel).getByRole("checkbox", { name: "Leads" });
     await user.click(leadsCb);
 
     searchSpy.mockClear();
 
-    // Click Apply Filter
+    // Change sort before applying filter
+    const sortSelect = screen.getByRole("button", { name: /Sort By/ });
+    await user.click(sortSelect);
+    const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
+    await user.click(createdTimeOption);
+
+    // The sort triggered search should STILL have the unapplied modules (all 3)
+    await waitFor(() => {
+      expect(searchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          modules: ["Contacts", "Accounts", "Leads"],
+          sort: { field: "Created_Time", order: "desc" },
+        }),
+      );
+    });
+
+    searchSpy.mockClear();
+
+    // Now click Apply Filter
     const applyBtn = within(filterPanel).getByRole("button", { name: "Apply Filter" });
     await user.click(applyBtn);
 
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts"],
+          modules: ["Contacts", "Accounts"],
         }),
       );
+    });
+  });
+
+  it("sends empty array when all modules are deselected and shows no records", async () => {
+    const user = userEvent.setup();
+    const service = createTestService();
+    const searchSpy = vi.spyOn(service, "search");
+
+    renderSearch(service, "Sample");
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Leads search results" })).toBeTruthy();
+    });
+
+    // Open filter panel
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
+
+    // Deselect all working modules
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Contacts" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
+
+    searchSpy.mockClear();
+    await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
+
+    await waitFor(() => {
+      expect(searchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          modules: [],
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("No records found.")).toBeTruthy();
     });
   });
 
@@ -244,35 +330,6 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).toBeNull();
-    });
-  });
-
-  it("handles Sort By selection and updates sort parameter", async () => {
-    const user = userEvent.setup();
-    const service = createTestService();
-    const searchSpy = vi.spyOn(service, "search");
-
-    renderSearch(service, "Sample");
-
-    await waitFor(() => {
-      expect(screen.getByRole("region", { name: "Leads search results" })).toBeTruthy();
-    });
-
-    searchSpy.mockClear();
-
-    // Change Sort By
-    const sortSelect = screen.getByRole("button", { name: /Sort By/ });
-    await user.click(sortSelect);
-
-    const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
-    await user.click(createdTimeOption);
-
-    await waitFor(() => {
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sort: { field: "Created_Time", order: "desc" },
-        }),
-      );
     });
   });
 

@@ -12,14 +12,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Select, SelectItem } from "@/components/ui/select";
-import { useModule, useUsers, useViews } from "@/lib/api/client/hooks";
+import { useModule, useUsers, useView, useViews } from "@/lib/api/client/hooks";
 import { useClientRecordService, useOrgSlug } from "@/lib/api/client/provider";
-import { moduleScreens } from "@/modules/registry";
 import { AdvancedSearchCard, NotesSearchCard } from "./advanced-search-card";
 import { AdvancedSearchFilterPanel } from "./advanced-search-filter-panel";
 import {
   DEFAULT_PAGE_SIZE,
   DOCUMENTED_MODULE_FILTER_ITEMS,
+  REGISTERED_SEARCH_MODULES,
   SORT_OPTIONS,
   SYSTEM_FILTER_FIELDS,
 } from "./constants";
@@ -44,12 +44,11 @@ export function AdvancedSearchScreen({
   const [selectedSortId, setSelectedSortId] = useState<string>("Modified_Time");
 
   // Selected modules in filter
-  const registeredModuleNames = useMemo(() => moduleScreens.map((s) => s.apiName), []);
-  const [selectedModules, setSelectedModules] = useState<ModuleApiName[]>(() => {
-    if (initialModule && registeredModuleNames.includes(initialModule)) {
+  const [appliedModules, setAppliedModules] = useState<ModuleApiName[]>(() => {
+    if (initialModule && REGISTERED_SEARCH_MODULES.includes(initialModule)) {
       return [initialModule];
     }
-    return [...registeredModuleNames];
+    return [...REGISTERED_SEARCH_MODULES];
   });
 
   // Applied field criteria
@@ -62,14 +61,37 @@ export function AdvancedSearchScreen({
   // Search results
   const [searchGroups, setSearchGroups] = useState<readonly SearchGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<unknown | null>(null);
 
-  // Metadata for Leads & Contacts
+  // Metadata for Leads, Contacts, Accounts
   const leadsModule = useModule("Leads");
   const contactsModule = useModule("Contacts");
+  const accountsModule = useModule("Accounts");
+
   const leadsViews = useViews("Leads");
   const contactsViews = useViews("Contacts");
+  const accountsViews = useViews("Accounts");
+
+  const leadsDefaultViewId =
+    leadsViews.data?.find((v) => v.isDefault)?.id ?? leadsViews.data?.[0]?.id ?? "";
+  const contactsDefaultViewId =
+    contactsViews.data?.find((v) => v.isDefault)?.id ?? contactsViews.data?.[0]?.id ?? "";
+  const accountsDefaultViewId =
+    accountsViews.data?.find((v) => v.isDefault)?.id ?? accountsViews.data?.[0]?.id ?? "";
+
+  const leadsDefaultView = useView("Leads", leadsDefaultViewId);
+  const contactsDefaultView = useView("Contacts", contactsDefaultViewId);
+  const accountsDefaultView = useView("Accounts", accountsDefaultViewId);
+
   const users = useUsers();
+
+  const ownerNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const member of users.data ?? []) {
+      map[member.userId] = member.name;
+    }
+    return map;
+  }, [users.data]);
 
   const fieldsByModule = useMemo(() => {
     const map: Record<string, Record<string, FieldDefinition>> = {};
@@ -79,44 +101,43 @@ export function AdvancedSearchScreen({
     if (contactsModule.data?.fields) {
       map.Contacts = Object.fromEntries(contactsModule.data.fields.map((f) => [f.apiName, f]));
     }
+    if (accountsModule.data?.fields) {
+      map.Accounts = Object.fromEntries(accountsModule.data.fields.map((f) => [f.apiName, f]));
+    }
     return map;
-  }, [leadsModule.data?.fields, contactsModule.data?.fields]);
+  }, [leadsModule.data?.fields, contactsModule.data?.fields, accountsModule.data?.fields]);
 
-  // Selected columns per module card
+  // Selected columns per module card (temporary, per page session)
   const [moduleColumns, setModuleColumns] = useState<Record<string, string[]>>({});
 
-  // Initialize default 5 columns from default list view
-  useEffect(() => {
-    setModuleColumns((current) => {
-      const next = { ...current };
-      let changed = false;
-
-      if (!next.Leads && leadsViews.data) {
-        const defaultView = leadsViews.data.find((v) => v.isDefault);
-        if (defaultView) {
-          // If listViewSummaries only has summaries, fetch default view or fallback
-          next.Leads = ["Full_Name", "Company", "Email", "Phone", "Lead_Source"];
-          changed = true;
-        } else if (leadsModule.data?.fields) {
-          next.Leads = leadsModule.data.fields.slice(0, 5).map((f) => f.apiName);
-          changed = true;
-        }
-      }
-
-      if (!next.Contacts && contactsViews.data) {
-        const defaultView = contactsViews.data.find((v) => v.isDefault);
-        if (defaultView) {
-          next.Contacts = ["Full_Name", "Account_Name", "Email", "Phone", "Owner"];
-          changed = true;
-        } else if (contactsModule.data?.fields) {
-          next.Contacts = contactsModule.data.fields.slice(0, 5).map((f) => f.apiName);
-          changed = true;
-        }
-      }
-
-      return changed ? next : current;
-    });
-  }, [leadsViews.data, contactsViews.data, leadsModule.data?.fields, contactsModule.data?.fields]);
+  const defaultColumnsByModule = useMemo(() => {
+    return {
+      Leads: leadsDefaultView.data?.columns?.slice(0, 5) ?? [
+        "Full_Name",
+        "Company",
+        "Email",
+        "Phone",
+        "Lead_Source",
+      ],
+      Contacts: contactsDefaultView.data?.columns?.slice(0, 5) ?? [
+        "Full_Name",
+        "Account_Name",
+        "Email",
+        "Phone",
+        "Owner",
+      ],
+      Accounts: accountsDefaultView.data?.columns?.slice(0, 5) ?? [
+        "Account_Name",
+        "Phone",
+        "Website",
+        "Owner",
+      ],
+    };
+  }, [
+    leadsDefaultView.data?.columns,
+    contactsDefaultView.data?.columns,
+    accountsDefaultView.data?.columns,
+  ]);
 
   // Manage columns modal state
   const [managingModule, setManagingModule] = useState<ModuleApiName | null>(null);
@@ -138,17 +159,17 @@ export function AdvancedSearchScreen({
       if (trimmed.length < 3) {
         setSearchGroups([]);
         setIsLoading(false);
-        setErrorMessage(null);
+        setSearchError(null);
         return;
       }
 
       setIsLoading(true);
-      setErrorMessage(null);
+      setSearchError(null);
 
       try {
         const results = await service.search({
           text: trimmed,
-          modules: modules.length > 0 ? modules : undefined,
+          modules: modules,
           filters: criteria,
           sort: sortSpec,
           perPage: DEFAULT_PAGE_SIZE,
@@ -158,7 +179,7 @@ export function AdvancedSearchScreen({
         // Reset card pages to 1
         setCardPages({});
       } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : "Search failed.");
+        setSearchError(err);
         setSearchGroups([]);
       } finally {
         setIsLoading(false);
@@ -173,10 +194,10 @@ export function AdvancedSearchScreen({
     if (isFirstMount.current) {
       isFirstMount.current = false;
       if (initialQuery.trim().length >= 3) {
-        void performSearch(initialQuery, selectedModules, appliedCriteria, activeSortSpec);
+        void performSearch(initialQuery, appliedModules, appliedCriteria, activeSortSpec);
       }
     }
-  }, [initialQuery, selectedModules, appliedCriteria, activeSortSpec, performSearch]);
+  }, [initialQuery, appliedModules, appliedCriteria, activeSortSpec, performSearch]);
 
   // Single card page change
   async function handleCardPageChange(module: ModuleApiName, newPage: number) {
@@ -207,12 +228,10 @@ export function AdvancedSearchScreen({
     setSubmittedQuery(queryText);
     router.replace(
       `/crm/${orgSlug}/search?q=${encodeURIComponent(queryText.trim())}${
-        selectedModules.length === 1
-          ? `&module=${encodeURIComponent(selectedModules[0] ?? "")}`
-          : ""
+        appliedModules.length === 1 ? `&module=${encodeURIComponent(appliedModules[0] ?? "")}` : ""
       }`,
     );
-    void performSearch(queryText, selectedModules, appliedCriteria, activeSortSpec);
+    void performSearch(queryText, appliedModules, appliedCriteria, activeSortSpec);
   }
 
   function handleClose() {
@@ -227,7 +246,7 @@ export function AdvancedSearchScreen({
     setSelectedSortId(sortId);
     const found = SORT_OPTIONS.find((opt) => opt.id === sortId);
     if (found) {
-      void performSearch(submittedQuery, selectedModules, appliedCriteria, found.sort);
+      void performSearch(submittedQuery, appliedModules, appliedCriteria, found.sort);
     }
   }
 
@@ -238,12 +257,12 @@ export function AdvancedSearchScreen({
     modules: ModuleApiName[];
     criteria?: Criteria;
   }) {
-    setSelectedModules(modules);
+    setAppliedModules(modules);
     setAppliedCriteria(criteria);
 
     // Compute active filter names for summary
     const names: string[] = [];
-    if (modules.length < registeredModuleNames.length) {
+    if (modules.length < REGISTERED_SEARCH_MODULES.length) {
       names.push(...modules);
     }
     if (criteria) {
@@ -265,10 +284,10 @@ export function AdvancedSearchScreen({
   }
 
   function handleFilterClear() {
-    setSelectedModules([...registeredModuleNames]);
+    setAppliedModules([...REGISTERED_SEARCH_MODULES]);
     setAppliedCriteria(undefined);
     setAppliedFilterNames([]);
-    void performSearch(submittedQuery, [...registeredModuleNames], undefined, activeSortSpec);
+    void performSearch(submittedQuery, [...REGISTERED_SEARCH_MODULES], undefined, activeSortSpec);
   }
 
   const filterSummary = useMemo(() => {
@@ -276,8 +295,12 @@ export function AdvancedSearchScreen({
     return appliedFilterNames.join(", ");
   }, [appliedFilterNames]);
 
+  if (searchError) {
+    throw searchError;
+  }
+
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-slate-100 overflow-y-auto">
+    <div className="fixed inset-0 z-40 flex flex-col bg-bg overflow-y-auto">
       {/* Top Header Bar (Dark) */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 bg-rail-surface px-6 text-white shadow-md">
         <h1 className="text-lg font-bold tracking-tight text-white">Search</h1>
@@ -354,8 +377,7 @@ export function AdvancedSearchScreen({
         {/* Left Filter Panel */}
         {isFilterPanelOpen && (
           <AdvancedSearchFilterPanel
-            selectedModules={selectedModules}
-            onModulesChange={setSelectedModules}
+            appliedModules={appliedModules}
             onApply={handleFilterApply}
             onClear={handleFilterClear}
             users={users.data ?? []}
@@ -364,48 +386,24 @@ export function AdvancedSearchScreen({
 
         {/* Results Area */}
         <div className="flex min-w-0 flex-1 flex-col">
-          {isLoading && (
-            <div className="flex items-center justify-center p-12 text-sm text-text-muted">
-              <Icons.spinner className="size-5 animate-spin mr-2" />
-              Loading results...
+          {!isLoading && submittedQuery.trim().length >= 3 && searchGroups.length === 0 && (
+            <div className="border border-panel-border bg-surface py-6 text-center text-sm text-text-muted">
+              No records found.
             </div>
           )}
-
-          {errorMessage && (
-            <div
-              className="mb-4 rounded-md border border-danger/20 bg-danger/10 p-4 text-sm text-danger"
-              role="alert"
-            >
-              {errorMessage}
-            </div>
-          )}
-
-          {!isLoading && !errorMessage && submittedQuery.trim().length < 3 && (
-            <div className="rounded-md border border-panel-border bg-surface p-12 text-center text-sm text-text-muted">
-              Enter at least 3 characters to search.
-            </div>
-          )}
-
-          {!isLoading &&
-            !errorMessage &&
-            submittedQuery.trim().length >= 3 &&
-            searchGroups.length === 0 && (
-              <div className="rounded-md border border-panel-border bg-surface p-12 text-center text-sm text-text-muted">
-                No records found.
-              </div>
-            )}
 
           {/* Result Cards */}
           {!isLoading &&
-            !errorMessage &&
             submittedQuery.trim().length >= 3 &&
             searchGroups.map((group) => {
-              const defaultCols =
-                group.module === "Contacts"
-                  ? ["Full_Name", "Account_Name", "Email", "Phone", "Owner"]
-                  : ["Full_Name", "Company", "Email", "Phone", "Lead_Source"];
-
-              const activeColumns = moduleColumns[group.module] ?? defaultCols;
+              const activeColumns = moduleColumns[group.module] ??
+                defaultColumnsByModule[group.module as keyof typeof defaultColumnsByModule] ?? [
+                  "Full_Name",
+                  "Company",
+                  "Email",
+                  "Phone",
+                  "Lead_Source",
+                ];
               const moduleLabel =
                 DOCUMENTED_MODULE_FILTER_ITEMS.find((m) => m.moduleApiName === group.module)
                   ?.label ?? group.module;
@@ -421,6 +419,7 @@ export function AdvancedSearchScreen({
                   perPage={DEFAULT_PAGE_SIZE}
                   columns={activeColumns}
                   fieldsByApiName={fieldsByModule[group.module] ?? {}}
+                  ownerNames={ownerNames}
                   onPageChange={(newPage) => handleCardPageChange(group.module, newPage)}
                   onOpenManageColumns={() => setManagingModule(group.module)}
                   orgSlug={orgSlug}
@@ -457,15 +456,12 @@ export function AdvancedSearchScreen({
             managingModule
           }
           allFields={
-            managingModule === "Leads"
-              ? (leadsModule.data?.fields ?? [])
-              : (contactsModule.data?.fields ?? [])
+            fieldsByModule[managingModule] ? Object.values(fieldsByModule[managingModule]) : []
           }
           selectedColumns={
             moduleColumns[managingModule] ??
-            (managingModule === "Contacts"
-              ? ["Full_Name", "Account_Name", "Email", "Phone", "Owner"]
-              : ["Full_Name", "Company", "Email", "Phone", "Lead_Source"])
+            defaultColumnsByModule[managingModule as keyof typeof defaultColumnsByModule] ??
+            []
           }
           onSave={(cols) => {
             setModuleColumns((prev) => ({ ...prev, [managingModule]: cols }));

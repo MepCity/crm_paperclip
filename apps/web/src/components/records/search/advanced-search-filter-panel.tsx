@@ -14,23 +14,32 @@ import type { MultiSelectOption } from "@/components/ui/multi-select";
 import { TextField } from "@/components/ui/text-field";
 import type { OrgMember } from "@/lib/api/client/http-record-service";
 import { type PanelFilterInput, panelFiltersToCriteria } from "@/lib/records/filter-criteria";
-import { DOCUMENTED_MODULE_FILTER_ITEMS, SYSTEM_FILTER_FIELDS } from "./constants";
+import {
+  DOCUMENTED_MODULE_FILTER_ITEMS,
+  REGISTERED_SEARCH_MODULES,
+  SYSTEM_FILTER_FIELDS,
+} from "./constants";
 
 export interface AdvancedSearchFilterPanelProps {
-  selectedModules: readonly ModuleApiName[];
-  onModulesChange: (modules: ModuleApiName[]) => void;
+  appliedModules: readonly ModuleApiName[];
   onApply: (params: { modules: ModuleApiName[]; criteria?: Criteria }) => void;
   onClear: () => void;
   users: readonly OrgMember[];
 }
 
 export function AdvancedSearchFilterPanel({
-  selectedModules,
-  onModulesChange,
+  appliedModules,
   onApply,
   onClear,
   users,
 }: AdvancedSearchFilterPanelProps) {
+  const [draftModules, setDraftModules] = useState<ModuleApiName[]>(() => [...appliedModules]);
+  const [prevApplied, setPrevApplied] = useState(appliedModules);
+  if (appliedModules !== prevApplied) {
+    setPrevApplied(appliedModules);
+    setDraftModules([...appliedModules]);
+  }
+
   const [moduleSearch, setModuleSearch] = useState("");
   const [selectedFieldApiNames, setSelectedFieldApiNames] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<Record<string, FilterDraft>>({});
@@ -65,9 +74,9 @@ export function AdvancedSearchFilterPanel({
 
   function handleToggleModule(moduleName: ModuleApiName, checked: boolean) {
     if (checked) {
-      onModulesChange([...selectedModules, moduleName]);
+      setDraftModules((prev) => [...prev, moduleName]);
     } else {
-      onModulesChange(selectedModules.filter((m) => m !== moduleName));
+      setDraftModules((prev) => prev.filter((m) => m !== moduleName));
     }
   }
 
@@ -106,7 +115,7 @@ export function AdvancedSearchFilterPanel({
 
     const criteria = panelFiltersToCriteria(inputs);
     onApply({
-      modules: [...selectedModules],
+      modules: [...draftModules],
       criteria,
     });
   }
@@ -114,6 +123,7 @@ export function AdvancedSearchFilterPanel({
   function handleClear() {
     setSelectedFieldApiNames([]);
     setDrafts({});
+    setDraftModules([...REGISTERED_SEARCH_MODULES]);
     onClear();
   }
 
@@ -137,7 +147,7 @@ export function AdvancedSearchFilterPanel({
         <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
           {filteredModules.map((item) => {
             if (item.isRegistered) {
-              const isChecked = selectedModules.includes(item.moduleApiName);
+              const isChecked = draftModules.includes(item.moduleApiName);
               return (
                 <Checkbox
                   key={item.id}

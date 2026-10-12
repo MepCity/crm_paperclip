@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { moduleRecordPath } from "@/lib/crm-paths";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
+import { formatFieldValue } from "../field-format";
 import { NOTES_CARD_COLUMNS } from "./constants";
 
 export interface AdvancedSearchCardProps {
@@ -17,6 +19,7 @@ export interface AdvancedSearchCardProps {
   perPage: number;
   columns: readonly string[];
   fieldsByApiName: Readonly<Record<string, FieldDefinition>>;
+  ownerNames: Readonly<Record<string, string>>;
   onPageChange: (newPage: number) => void;
   onOpenManageColumns: () => void;
   orgSlug: string;
@@ -31,6 +34,7 @@ export function AdvancedSearchCard({
   perPage,
   columns,
   fieldsByApiName,
+  ownerNames,
   onPageChange,
   onOpenManageColumns,
   orgSlug,
@@ -42,13 +46,15 @@ export function AdvancedSearchCard({
 
   const definition = resolveModuleScreenByApiName(module);
   const tabName = definition?.tab ?? module;
-  const linkFieldName = definition?.list?.linkField ?? "Full_Name";
+  const linkFieldName =
+    definition?.list?.linkField ?? (module === "Accounts" ? "Account_Name" : "Full_Name");
 
   function getColumnLabel(colApiName: string): string {
     const field = fieldsByApiName[colApiName];
     if (field?.label) return field.label;
     if (colApiName === "Owner") return `${moduleLabel} Owner`;
     if (colApiName === "Full_Name") return `${moduleLabel} Name`;
+    if (colApiName === "Account_Name" && module === "Accounts") return "Account Name";
     return colApiName.replace(/_/g, " ");
   }
 
@@ -63,7 +69,7 @@ export function AdvancedSearchCard({
           <h3 className="text-base font-semibold text-text">{moduleLabel}</h3>
           <span
             data-testid={`module-count-${module}`}
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-surface-hover px-2 py-0.5 text-xs font-semibold text-text-muted"
           >
             {total}
           </span>
@@ -78,7 +84,7 @@ export function AdvancedSearchCard({
             aria-label={`Previous ${moduleLabel} page`}
             disabled={!hasPrev}
             onClick={() => onPageChange(page - 1)}
-            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-slate-100 hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Icons.chevronLeft className="size-4" />
           </button>
@@ -87,7 +93,7 @@ export function AdvancedSearchCard({
             aria-label={`Next ${moduleLabel} page`}
             disabled={!hasNext}
             onClick={() => onPageChange(page + 1)}
-            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-slate-100 hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Icons.chevronRight className="size-4" />
           </button>
@@ -101,7 +107,7 @@ export function AdvancedSearchCard({
           aria-label={`${moduleLabel} records table`}
         >
           <thead>
-            <tr className="border-b border-border bg-slate-50 text-xs font-semibold text-text-muted">
+            <tr className="border-b border-border bg-surface-hover text-xs font-semibold text-text-muted">
               {/* Row action column */}
               <th scope="col" className="w-8 px-2 py-2" />
 
@@ -116,15 +122,15 @@ export function AdvancedSearchCard({
                 </th>
               ))}
 
-              {/* Manage columns header icon */}
+              {/* Manage columns header icon (S-24.<Module>.3) */}
               <th scope="col" className="w-10 px-2 py-2 text-right">
                 <button
                   type="button"
                   aria-label={`Manage ${moduleLabel} columns`}
                   onClick={onOpenManageColumns}
-                  className="inline-flex size-6 items-center justify-center rounded text-text-muted hover:bg-slate-200 hover:text-text"
+                  className="inline-flex size-6 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text"
                 >
-                  <Icons.settingsSliders className="size-3.5" />
+                  <Icons.columns className="size-3.5" />
                 </button>
               </th>
             </tr>
@@ -133,14 +139,14 @@ export function AdvancedSearchCard({
             {records.map((record) => (
               <tr
                 key={record.id}
-                className="group border-b border-border hover:bg-slate-50/80 transition-colors"
+                className="group border-b border-border hover:bg-surface-hover/80 transition-colors"
               >
                 {/* S-38: Row action icon button */}
                 <td className="w-8 px-2 py-2.5">
                   <button
                     type="button"
                     aria-label="Row actions"
-                    className="flex size-6 items-center justify-center rounded text-text-muted opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-slate-100 hover:text-text"
+                    className="flex size-6 items-center justify-center rounded text-text-muted opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-surface-hover hover:text-text"
                   >
                     <Icons.ellipsis className="size-3.5" />
                   </button>
@@ -150,19 +156,28 @@ export function AdvancedSearchCard({
                 {columns.map((col) => {
                   const val = record.fields[col];
                   const fieldDef = fieldsByApiName[col];
-                  const isLinkField =
-                    col === linkFieldName ||
-                    col === "Full_Name" ||
-                    col === "Subject" ||
-                    col === "Deal_Name";
+                  const isLinkField = col === linkFieldName;
 
                   // S-24.<Module>.4: Record Name Link
                   if (isLinkField) {
                     const text = String(val ?? "—");
+                    if (definition) {
+                      return (
+                        <td key={col} className="px-3 py-2.5 whitespace-nowrap">
+                          <Link
+                            href={moduleRecordPath(orgSlug, tabName, record.id)}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {text}
+                          </Link>
+                        </td>
+                      );
+                    }
                     return (
                       <td key={col} className="px-3 py-2.5 whitespace-nowrap">
                         <Link
-                          href={moduleRecordPath(orgSlug, tabName, record.id)}
+                          href="#"
+                          laterModule={resolveModuleLaterKey(module)}
                           className="font-medium text-primary hover:underline"
                         >
                           {text}
@@ -180,7 +195,9 @@ export function AdvancedSearchCard({
                     if (val && typeof val === "object" && "id" in val) {
                       const ref = val as { module?: string; id: string; name?: string };
                       const targetModule =
-                        ref.module ?? (col === "Account_Name" ? "Accounts" : "Contacts");
+                        ref.module ??
+                        fieldDef?.lookup?.module ??
+                        (col === "Account_Name" ? "Accounts" : "Contacts");
                       const targetScreen = resolveModuleScreenByApiName(targetModule);
                       if (targetScreen) {
                         return (
@@ -206,34 +223,13 @@ export function AdvancedSearchCard({
                         </td>
                       );
                     }
-                    if (typeof val === "string" && val.trim()) {
-                      // If scalar name for related record like Account Name:
-                      const targetModule = col === "Account_Name" ? "Accounts" : "Contacts";
-                      const targetScreen = resolveModuleScreenByApiName(targetModule);
-                      if (targetScreen) {
-                        return (
-                          <td key={col} className="px-3 py-2.5 whitespace-nowrap">
-                            <Link
-                              href={moduleRecordPath(orgSlug, targetScreen.tab, record.id)}
-                              className="text-primary hover:underline"
-                            >
-                              {val}
-                            </Link>
-                          </td>
-                        );
-                      }
-                      return (
-                        <td key={col} className="px-3 py-2.5 whitespace-nowrap">
-                          <Link
-                            href="#"
-                            laterModule={resolveModuleLaterKey(targetModule)}
-                            className="text-primary hover:underline"
-                          >
-                            {val}
-                          </Link>
-                        </td>
-                      );
-                    }
+                    // Kimliği olmayan düz metin bağlantı açmasın (plain text)
+                    const plainText = val != null && val !== "" ? String(val) : "—";
+                    return (
+                      <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
+                        {plainText}
+                      </td>
+                    );
                   }
 
                   // S-39: Phone icon with laterModule="M5"
@@ -241,8 +237,8 @@ export function AdvancedSearchCard({
                     const text = val ? String(val) : "";
                     return (
                       <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
-                        <span>{text}</span>
-                        {text && (
+                        <span>{text || "—"}</span>
+                        {text ? (
                           <Button
                             variant="icon"
                             size="compact"
@@ -252,7 +248,7 @@ export function AdvancedSearchCard({
                           >
                             <Icons.phone className="size-3.5 inline" />
                           </Button>
-                        )}
+                        ) : null}
                       </td>
                     );
                   }
@@ -283,13 +279,14 @@ export function AdvancedSearchCard({
                     return (
                       <td key={col} className="px-3 py-2.5 whitespace-nowrap">
                         {stageText ? (
-                          <span
-                            data-later-module="M4"
-                            aria-disabled="true"
-                            className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                          <Button
+                            variant="secondary"
+                            size="compact"
+                            laterModule="M4"
+                            className="rounded-full px-2.5 py-0.5 text-xs font-medium"
                           >
                             {stageText}
-                          </span>
+                          </Button>
                         ) : (
                           "—"
                         )}
@@ -297,7 +294,60 @@ export function AdvancedSearchCard({
                     );
                   }
 
-                  // Default display
+                  // Standard field formatted with formatFieldValue
+                  if (fieldDef) {
+                    const formatted = formatFieldValue(
+                      fieldDef,
+                      val ?? null,
+                      ownerNames,
+                      DEFAULT_FORMAT,
+                      { orgSlug },
+                    );
+                    if (formatted.kind === "empty") {
+                      return (
+                        <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
+                          —
+                        </td>
+                      );
+                    }
+                    if (formatted.kind === "link") {
+                      return (
+                        <td key={col} className="px-3 py-2.5 whitespace-nowrap">
+                          <Link
+                            href={formatted.link.href ?? "#"}
+                            laterModule={formatted.link.laterModule}
+                            className="text-primary hover:underline"
+                          >
+                            {formatted.link.text}
+                          </Link>
+                        </td>
+                      );
+                    }
+                    if (formatted.kind === "audit") {
+                      return (
+                        <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
+                          {formatted.name}
+                          {formatted.timestamp ? ` ${formatted.timestamp}` : null}
+                        </td>
+                      );
+                    }
+                    return (
+                      <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
+                        {formatted.text}
+                      </td>
+                    );
+                  }
+
+                  // Fallback for fields without fieldDef
+                  if (col === "Owner" || col === "Created_By" || col === "Modified_By") {
+                    const ownerText = val ? (ownerNames[String(val)] ?? String(val)) : "—";
+                    return (
+                      <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
+                        {ownerText}
+                      </td>
+                    );
+                  }
+
                   return (
                     <td key={col} className="px-3 py-2.5 whitespace-nowrap text-text">
                       {val != null && val !== "" ? String(val) : "—"}
@@ -328,7 +378,7 @@ export function NotesSearchCard() {
           <h3 className="text-base font-semibold text-text">Notes</h3>
           <span
             data-testid="module-count-Notes"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-surface-hover px-2 py-0.5 text-xs font-semibold text-text-muted"
           >
             0
           </span>
@@ -341,7 +391,7 @@ export function NotesSearchCard() {
             size="compact"
             aria-label="Previous Notes page"
             laterModule="M6"
-            className="flex size-7 items-center justify-center rounded text-text-muted"
+            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text"
           >
             <Icons.chevronLeft className="size-4" />
           </Button>
@@ -350,7 +400,7 @@ export function NotesSearchCard() {
             size="compact"
             aria-label="Next Notes page"
             laterModule="M6"
-            className="flex size-7 items-center justify-center rounded text-text-muted"
+            className="flex size-7 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text"
           >
             <Icons.chevronRight className="size-4" />
           </Button>
@@ -363,7 +413,7 @@ export function NotesSearchCard() {
           aria-label="Notes records table"
         >
           <thead>
-            <tr className="border-b border-border bg-slate-50 text-xs font-semibold text-text-muted">
+            <tr className="border-b border-border bg-surface-hover text-xs font-semibold text-text-muted">
               <th scope="col" className="w-8 px-2 py-2" />
               {NOTES_CARD_COLUMNS.map((col) => (
                 <th
@@ -380,9 +430,9 @@ export function NotesSearchCard() {
                   size="compact"
                   aria-label="Manage Notes columns"
                   laterModule="M6"
-                  className="inline-flex size-6 items-center justify-center rounded text-text-muted"
+                  className="inline-flex size-6 items-center justify-center rounded text-text-muted hover:bg-surface-hover hover:text-text"
                 >
-                  <Icons.settingsSliders className="size-3.5" />
+                  <Icons.columns className="size-3.5" />
                 </Button>
               </th>
             </tr>

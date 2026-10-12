@@ -15,8 +15,7 @@ export const DOCUMENTED_MODULE_FILTER_ITEMS: readonly DocumentedModuleFilterItem
     id: "S-31.2",
     moduleApiName: "Accounts",
     label: "Accounts",
-    isRegistered: false,
-    laterModule: "M3",
+    isRegistered: true,
   },
   { id: "S-31.3", moduleApiName: "Tasks", label: "Tasks", isRegistered: false, laterModule: "M5" },
   { id: "S-31.4", moduleApiName: "Leads", label: "Leads", isRegistered: true },
@@ -76,3 +75,8 @@ export const NOTES_CARD_COLUMNS = [
 
 export const DEFAULT_PAGE_SIZE = 10;
 export const MAX_SELECTED_COLUMNS = 10;
+export const REGISTERED_SEARCH_MODULES: readonly ModuleApiName[] = [
+  "Contacts",
+  "Accounts",
+  "Leads",
+];
