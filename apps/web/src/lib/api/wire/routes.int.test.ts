@@ -5,7 +5,7 @@ import { removeMember } from "@crm/core";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
-import { encodeInput } from "./codec";
+import { encodeInput, MAX_CRITERIA_GROUP_SIZE, MAX_CRITERIA_NODES } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
@@ -94,7 +94,51 @@ async function call(
   );
 }
 
+// Root plus 20 child groups; leaves fill each group up to the sibling limit.
+function criteriaTree(nodes: number) {
+  let leaves = nodes - 21;
+  return {
+    group_operator: "AND",
+    group: Array.from({ length: 20 }, () => {
+      const size = Math.min(leaves, MAX_CRITERIA_GROUP_SIZE);
+      leaves -= size;
+      return {
+        group_operator: "OR",
+        group: Array.from({ length: size }, () => ({
+          field: { api_name: "Converted__s" },
+          comparator: "equal",
+          value: false,
+        })),
+      };
+    }),
+  };
+}
+
 describe("operation routes", () => {
+  it.each([operations.bulk, operations.count])(
+    "bounds criteria arrays and total nodes on $path",
+    async (op) => {
+      const values = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, () => "Synthetic Status");
+      const leaf = { field: { api_name: "Lead_Status" }, comparator: "equal", value: values };
+      for (const [accepted, rejected] of [
+        [leaf, { ...leaf, value: [...values, "extra"] }],
+        [criteriaTree(MAX_CRITERIA_NODES), criteriaTree(MAX_CRITERIA_NODES + 1)],
+      ]) {
+        const response = await call(op, a, { body: { filters: rejected } });
+        expect(response.status).toBe(400);
+        const error = await response.json();
+        expect(Object.keys(error).sort()).toEqual(["code", "details", "message", "status"]);
+        expect(error).toMatchObject({
+          code: "INVALID_DATA",
+          status: "error",
+          details: { fields: { filters: expect.any(Array) } },
+        });
+        const boundary = await call(op, a, { body: { filters: accepted } });
+        expect([200, 204]).toContain(boundary.status);
+      }
+    },
+  );
+
   let a: Organization;
   let b: Organization;
   beforeAll(async () => {
@@ -188,7 +232,7 @@ describe("operation routes", () => {
       data: [encodeInput(fields, metadata)],
     });
     const response = await call(operations.create, a, {
-      body: body({ Last_Name: "Owner Test", Company: "Synthetic Company", Owner: member.user.id }),
+      body: body({ Last_Name: "Owner Test", Company: "Synthetic Status", Owner: member.user.id }),
     });
     expect(response.status).toBe(200);
     const id = (await response.json()).data[0].details.id as string;
@@ -207,7 +251,7 @@ describe("operation routes", () => {
     await removeMember(a.ctx, { userId: member.user.id });
     for (const Owner of [member.user.id, b.ctx.userId]) {
       for (const [op, fields] of [
-        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Company", Owner }],
+        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Status", Owner }],
         [operations.update, { Owner, Company: "Rejected Change" }],
       ] as const) {
         const rejected = await call(op, a, { recordId: id, body: body(fields) });
@@ -219,7 +263,7 @@ describe("operation routes", () => {
     }
     expect((await service.get("Leads", id)).fields).toMatchObject({
       Owner: a.ctx.userId,
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
   });
   it("serves discovery handlers through organization and origin checks", async () => {
@@ -496,7 +540,7 @@ describe("operation routes", () => {
     if (!locked) throw new Error("Expected a locked seed lead.");
     const unlocked = await service.create("Leads", {
       Last_Name: "Unlocked",
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
     const ids = [unlocked.id, locked.id];
     for (const [op, body] of [

@@ -231,6 +231,19 @@ remain authoritative.
 
 Share, Print Preview and Find and Merge Duplicates are drawn without handlers (separate tasks). Connected Records (`?`) uses `laterModule="P3"`. Lower Contact Information field order follows layout metadata (interim rule).
 
+### Advanced search results page — implemented; QA pending (MEP-351)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| S-19, S-20, S-21, S-22 | Top bar with search input, close icon, filter toggle button, and Sort By selector (defaulting to Modified Time desc) | Component tests; `e2e/advanced-search.spec.ts` |
+| S-23.<Module>, S-24.<Module>.1–.4, S-25.<Module>.* | Result cards for Leads, Contacts, Accounts, and Notes (M6); module count badges, pagination arrows, Manage columns icon button (Icons.columns), record link (Accounts with M3 inert link), and column headers | Component tests; `e2e/advanced-search.spec.ts` |
+| S-26, S-27.*, S-28, S-29 | Manage Columns dialog with column search, 10-column selection limit, Cancel, and Save | Component tests; `e2e/advanced-search.spec.ts` |
+| S-30, S-31.1–.8, S-32.1–.5, S-33, S-34, S-35.1–.2, S-36, S-37 | Filter panel: module checkboxes (Contacts, Accounts, Leads active; Tasks M5, Deals M4, Meetings M5, Calls M5, Products P2 inert), system field filters with operator and user picker, Apply Filter, and Clear | Component tests; `e2e/advanced-search.spec.ts` |
+| S-38, S-39, S-40, S-41, S-42, S-43.* | Row actions button, phone call icon (M5 inert), email link (M10 inert), related record links, stage badge (M4 inert), column values with list cell formatting and user display names | Component tests |
+| S-46 | Bottom link "Search across applications" (P3 inert) | Component tests; `e2e/advanced-search.spec.ts` |
+
+Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
+
 ## Module 3 — Accounts
 
 Specs: `accounts.md`, `accounts-record-detail.md`, `accounts-form.md`.
