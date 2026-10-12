@@ -103,7 +103,7 @@ describe("AdvancedSearchScreen", () => {
     });
   });
 
-  it("handles Accounts as working filter item and renders Accounts card with laterModule M3 link", async () => {
+  it("handles Accounts as working filter item and links its card rows to the record", async () => {
     const user = userEvent.setup();
     const service = createTestService();
 
@@ -117,10 +117,12 @@ describe("AdvancedSearchScreen", () => {
     const accountsCard = screen.getByRole("region", { name: "Accounts search results" });
     expect(accountsCard).toBeTruthy();
 
-    // Accounts record name link has laterModule="M3"
-    const accountLinks = within(accountsCard).getAllByRole("link");
-    const recordLink = accountLinks.find((l) => l.getAttribute("data-later-module") === "M3");
-    expect(recordLink).toBeDefined();
+    // Accounts is shipped, so its record name cell is a record link, not a later-module control
+    const recordLink = within(accountsCard)
+      .getAllByRole("link")
+      .find((link) => link.getAttribute("href")?.startsWith(`/crm/${ctx.orgSlug}/tab/Accounts/`));
+    expect(recordLink).toBeTruthy();
+    expect(recordLink?.hasAttribute("data-later-module")).toBe(false);
 
     // Open filter panel
     await user.click(screen.getByRole("button", { name: "Filter" }));
