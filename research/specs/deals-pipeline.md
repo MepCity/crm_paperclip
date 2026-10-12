@@ -156,14 +156,14 @@ Positions are limited to the documented region; order is `not observed`. These a
 | DP-94 | Kanban selector menu | Create Kanban View | menu item | dropdown; order not observed | Creates view | documented (D4) | M4 | new |
 | DP-95 | Kanban selector menu | Manage Kanban Views | menu item | dropdown; order not observed | Manages views | documented (D4) | M4 | new |
 | DP-96 | Kanban board | Pipeline | select | board; order not observed | Selects pipeline for Stage grouping | documented (D4) | M4 | new |
-| DP-97 | Stage footer | Stage-specific creation button (label not observed) | button | each stage footer | Prefills layout/pipeline/stage | documented (D4) | M4 | new |
+| DP-97 | Stage footer | Stage-specific creation button (label not observed) | button | each stage footer | Creates stage-specific records | documented (D4) | M4 | new |
 | DP-98 | Record detail | Quick stage-update section | not observed | detail; exact widget/order not observed | Updates stage/date | documented (D1) | M4 | pending |
-| DP-99 | Verify Details | Amount | input | won popup; order not observed | Confirms amount | documented (D1) | M4 | new |
-| DP-100 | Verify Details | Closing date | input | won popup; order not observed | Confirms date | documented (D1) | M4 | new |
-| DP-101 | Verify Details | Stage | select | won popup; order not observed | Confirms stage | documented (D1) | M4 | new |
+| DP-99 | Verify Details | Amount | not observed | won popup; order not observed | Confirms amount | documented (D1) | M4 | new |
+| DP-100 | Verify Details | Closing date | not observed | won popup; order not observed | Confirms date | documented (D1) | M4 | new |
+| DP-101 | Verify Details | Stage | not observed | won popup; order not observed | Confirms stage | documented (D1) | M4 | new |
 | DP-102 | Verify Details | Reason for Loss | select | lost popup; order not observed | Chooses loss reason | documented (D1) | M4 | new |
 
-No invented popup submit/cancel/close labels or mandatory asterisks. D4 documents expand/collapse capability but not a control label/type/position; its visual control remains an open question. DP-93 and DP-98 widget types are not observed; no concrete control type is asserted.
+No invented popup submit/cancel/close labels or mandatory asterisks. D4 documents expand/collapse capability but not a control label/type/position; its visual control remains an open question. DP-93, DP-98, DP-99, DP-100 and DP-101 widget types are not observed; no concrete control type is asserted.
 
 ### Shell controls missing from app-shell.md
 
