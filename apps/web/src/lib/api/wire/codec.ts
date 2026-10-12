@@ -153,6 +153,13 @@ export function encodeField(field: FieldDefinition): WireField {
           pick_list_values: field.picklist.map((option) => ({
             display_value: option.displayValue,
             actual_value: option.storedValue,
+            ...(option.stage === undefined
+              ? {}
+              : {
+                  probability: option.stage.probability,
+                  forecast_category: { name: option.stage.forecastCategory },
+                  deal_category: option.stage.category,
+                }),
           })),
         }),
     ...(field.lookup === undefined
@@ -160,6 +167,35 @@ export function encodeField(field: FieldDefinition): WireField {
       : { lookup: { module: { api_name: field.lookup.module } } }),
   };
 }
+function decodeStage(option: NonNullable<WireField["pick_list_values"]>[number]): {
+  stage?: import("@crm/core/records").PicklistStageMeta;
+} {
+  const keys = ["probability", "forecast_category", "deal_category"];
+  if (!keys.some((key) => Object.hasOwn(option, key))) return {};
+  if (
+    !Number.isInteger(option.probability) ||
+    typeof option.probability !== "number" ||
+    option.probability < 0 ||
+    option.probability > 100
+  )
+    invalid("pick_list_values");
+  const forecast = object(option.forecast_category, "pick_list_values");
+  if (typeof forecast.name !== "string") invalid("pick_list_values");
+  if (
+    option.deal_category !== "Open" &&
+    option.deal_category !== "Closed Won" &&
+    option.deal_category !== "Closed Lost"
+  )
+    invalid("pick_list_values");
+  return {
+    stage: {
+      probability: option.probability,
+      forecastCategory: forecast.name,
+      category: option.deal_category,
+    },
+  };
+}
+
 export function decodeField(field: WireField): FieldDefinition {
   return {
     apiName: field.api_name,
@@ -182,6 +218,7 @@ export function decodeField(field: WireField): FieldDefinition {
           picklist: field.pick_list_values.map((option) => ({
             displayValue: option.display_value,
             storedValue: option.actual_value,
+            ...decodeStage(option),
           })),
         }),
     ...(field.lookup === undefined ? {} : { lookup: { module: field.lookup.module.api_name } }),

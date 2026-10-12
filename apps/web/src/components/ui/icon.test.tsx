@@ -7,6 +7,7 @@ afterEach(cleanup);
 const expectedIcons = [
   "activity",
   "messageSquare",
+  "envelope",
   "phone",
   "recordUser",
   "avatarPerson",
@@ -65,6 +66,7 @@ const expectedIcons = [
   "viewTypeCards",
   "viewTypeArrow",
   "settingsSliders",
+  "columns",
   "eye",
   "refresh",
   "ellipsis",

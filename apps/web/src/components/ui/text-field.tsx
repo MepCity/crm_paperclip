@@ -21,7 +21,7 @@ export interface TextFieldProps extends AriaTextFieldProps {
   endAction?: ReactNode;
   hideLabel?: boolean;
   placeholder?: string;
-  variant?: "default" | "filter-search";
+  variant?: "default" | "filter-search" | "search";
   /** `measured` keeps the filter search width token; `fill` spans the container it sits in. */
   size?: "measured" | "fill";
   /** Optional class on the filter-search field wrapper (replaces styling primitive internals). */
@@ -63,7 +63,19 @@ export function TextField({
       >
         {label}
       </Label>
-      {variant === "filter-search" ? (
+      {variant === "search" ? (
+        <div className="flex items-center gap-2">
+          {prefix}
+          <Input
+            ref={laterRef}
+            placeholder={placeholder}
+            className="min-w-0 flex-1 bg-transparent py-1 text-md text-text outline-none placeholder:text-text-muted"
+            readOnly={Boolean(laterModule) || props.isReadOnly}
+            {...(laterModule ? laterModuleProps(laterModule) : {})}
+          />
+          {suffix}
+        </div>
+      ) : variant === "filter-search" ? (
         <div
           className={
             filterSearchWrapperClassName ??

@@ -209,6 +209,8 @@ The field names and configured values come from the metadata export. The path
 and response envelope were not captured; see ADR 0004. The decoder rejects
 missing, malformed and unknown currency fields with the existing ValidationError.
 
+Deals Stage options carry probability, forecast_category (name only), and deal_category together; options without stage metadata omit all three keys. Partial or invalid stage metadata fails decoding.
+
 ## Input bounds
 
 Reference values reject unknown inner keys with field-keyed `INVALID_DATA` (400).
