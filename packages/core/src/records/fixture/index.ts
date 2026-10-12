@@ -15,7 +15,14 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
-import { automaticMaster, duplicateGroups, duplicateKey, matchesGlobalSearch } from "./discovery";
+import {
+  automaticMaster,
+  duplicateGroups,
+  duplicateKey,
+  isDeferredMergeRejection,
+  matchesGlobalSearch,
+  pointsAtGroupMember,
+} from "./discovery";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
@@ -286,11 +293,14 @@ export function createFixtureRecordService(
             value.module === module &&
             removed.has(value.id)
           )
-            nextFields[field.apiName] = {
-              module,
-              id: master.id,
-              name: String(fields[bundle.displayNameField]),
-            };
+            nextFields[field.apiName] =
+              name === module && record.id === master.id
+                ? null
+                : {
+                    module,
+                    id: master.id,
+                    name: String(fields[bundle.displayNameField]),
+                  };
         }
         next.set(source.id, { id: source.id, fields: nextFields });
       }
@@ -335,6 +345,7 @@ export function createFixtureRecordService(
             continue;
           }
           const master = automaticMaster(group.records);
+          const memberIds = new Set(group.records.map((record) => record.id));
           const values: Record<string, FieldValue> = {};
           for (const field of bundleFor(module).metadata.fields) {
             if (field.readOnly || bundleFor(module).managedFields.has(field.apiName)) continue;
@@ -344,16 +355,26 @@ export function createFixtureRecordService(
                 ? current
                 : group.records
                     .map((record) => record.fields[field.apiName])
-                    .find((value) => duplicateKey(value) !== null);
+                    .find(
+                      (candidate) =>
+                        duplicateKey(candidate) !== null &&
+                        !pointsAtGroupMember(candidate, module, memberIds),
+                    );
             if (value !== undefined) values[field.apiName] = value;
           }
-          await merge(module, {
-            masterId: master.id,
-            duplicateIds: group.records
-              .filter((record) => record.id !== master.id)
-              .map((record) => record.id),
-            values,
-          });
+          try {
+            await merge(module, {
+              masterId: master.id,
+              duplicateIds: group.records
+                .filter((record) => record.id !== master.id)
+                .map((record) => record.id),
+              values,
+            });
+          } catch (error) {
+            if (!isDeferredMergeRejection(error)) throw error;
+            conflicts.push(group);
+            continue;
+          }
           mergedGroups++;
           removedRecords += group.records.length - 1;
         }

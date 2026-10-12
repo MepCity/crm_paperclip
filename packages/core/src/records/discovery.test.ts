@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { ConflictError, NotFoundError, RecordLockedError, ValidationError } from "../errors";
 import type { FieldDefinition, RecordData } from "./contract";
 import { describeDiscoveryContract } from "./discovery-contract-suite";
 import { createFixtureRecordService } from "./fixture";
 import {
   automaticMaster,
   duplicateGroups,
+  isDeferredMergeRejection,
   matchesGlobalSearch,
   searchableText,
 } from "./fixture/discovery";
@@ -78,6 +80,28 @@ describe("discovery helpers", () => {
       bundle.managedFields,
     );
     expect(groups[0]?.conflictFields).toEqual(["Unsubscribed_Mode"]);
+  });
+  it("rule 12: treats the write lock as an access flag, never as a business conflict", () => {
+    const bundle = fixtureModules.Contacts;
+    if (!bundle) throw new Error("Missing Contacts bundle");
+    const groups = duplicateGroups(
+      [
+        { id: "open", fields: { id: "open", Last_Name: "Locked Marker", Locked__s: false } },
+        { id: "locked", fields: { id: "locked", Last_Name: "locked marker", Locked__s: true } },
+      ],
+      ["Last_Name"],
+      bundle.metadata.fields,
+      bundle.managedFields,
+    );
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.conflictFields).toEqual([]);
+  });
+  it("rules 12–13: defers a group only for a lock or a unique collision", () => {
+    expect(isDeferredMergeRejection(new RecordLockedError())).toBe(true);
+    expect(isDeferredMergeRejection(new ConflictError("This value is already used."))).toBe(true);
+    expect(isDeferredMergeRejection(new ValidationError({ Last_Name: ["Required."] }))).toBe(false);
+    expect(isDeferredMergeRejection(new NotFoundError())).toBe(false);
+    expect(isDeferredMergeRejection(new Error("Unexpected failure."))).toBe(false);
   });
   it("rule 13: prefers latest activity, then modification time for empty or tied activity", () => {
     const row = (id: string, activity: string | null, modified: string): RecordData => ({
