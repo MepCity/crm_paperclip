@@ -20,6 +20,30 @@ export function buildFormModel(metadata: ModuleMetadata, mode: FormMode): FormSe
   }));
 }
 
+/** Screen-order overrides when service layout columns do not match the reference form. */
+export function applySectionColumnOverrides(
+  sections: readonly FormSectionModel[],
+  overrides: Readonly<Record<string, readonly (readonly string[])[]>> | undefined,
+  metadata: ModuleMetadata,
+  mode: FormMode,
+): FormSectionModel[] {
+  if (!overrides) return [...sections];
+  const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
+  return sections.map((section) => {
+    const override = overrides[section.label];
+    if (!override) return section;
+    return {
+      label: section.label,
+      columns: override.map((column) =>
+        column.flatMap((name) => {
+          const field = fields.get(name);
+          return field?.views[mode] ? [field] : [];
+        }),
+      ),
+    };
+  });
+}
+
 export function textValue(value: FieldValue | undefined): string {
   return typeof value === "string" ? value : "";
 }
@@ -110,6 +134,7 @@ export interface FormRules {
   address?: AddressFormRule;
   addresses?: readonly AddressFormRule[];
   country?: { field: string; state: string };
+  countries?: readonly { field: string; state: string }[];
   currency?: string;
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];

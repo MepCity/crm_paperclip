@@ -12,7 +12,7 @@ test("exports a complete definition and registers Contacts in production", () =>
     navigation: { id: "contacts" },
   });
   expect(contactsScreenDefinition.detail.statusRibbon).toBeUndefined();
-  expect(contactsScreenDefinition.form.addressGroups).toHaveLength(2);
+  expect(contactsScreenDefinition.form.rules.addresses).toHaveLength(2);
   expect(resolveModuleScreen("Contacts")).toBe(contactsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.apiName === "Contacts")).toBe(true);
 });

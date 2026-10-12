@@ -21,6 +21,57 @@ import type { ModuleListScreenConfig } from "@/components/records/list/module-li
 import type { Icon } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 
+export type RelatedListControlType = "button" | "split-button" | "select" | "icon-button";
+
+export interface RelatedListControlDefinition {
+  id: string;
+  label: string;
+  type: RelatedListControlType;
+  moduleKey?: ModuleKey | "M2";
+  moreModuleKey?: ModuleKey | "M2";
+  icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
+  position?: "right" | "after-title";
+  options?: readonly { id: string; label: string; onAction?: () => void }[];
+  onAction?: () => void;
+}
+
+export interface RelatedListActivityColumnDefinition {
+  id: string;
+  title: string;
+  count: number;
+  emptyText: string;
+  icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
+}
+
+export interface RelatedListDefinition {
+  id: string;
+  title: string;
+  moduleKey: ModuleKey | "M2";
+  order: number;
+  targetId: string;
+  countBadge?: number | string;
+  railAction?: {
+    id: string;
+    label: string;
+    moduleKey?: ModuleKey | "M2";
+    onAction?: () => void;
+  };
+  upperControls?: readonly RelatedListControlDefinition[];
+  emptyStateText?: string;
+  loadingText?: string;
+  activityColumns?: readonly RelatedListActivityColumnDefinition[];
+  subtabs?: readonly { id: string; label: string }[];
+  socialLinks?: readonly { id: string; label: string; moduleKey?: ModuleKey | "M2" }[];
+  socialGuidance?: string;
+  introductoryText?: string;
+  bodyAction?: {
+    id: string;
+    label: string;
+    moduleKey?: ModuleKey | "M2";
+    onAction?: () => void;
+  };
+}
+
 export interface StatusRibbonSectionProps {
   module: ModuleApiName;
   recordId: string;
@@ -47,16 +98,10 @@ export interface ModuleScreenDefinition {
   }) => readonly FilterGroup[];
   form: {
     rules: FormRules;
-    /** Screen fallback only when layout columns are missing; never overrides metadata. */
+    /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
-    addressGroups?: readonly {
-      field: string;
-      country: string;
-      state: string;
-      latitude: string;
-      longitude: string;
-      coordinates: string;
-    }[];
+    inventoryChrome?: boolean;
+    profileImageLaterModule?: ModuleKey;
   };
   detail: {
     header: (record: RecordData) => {
@@ -84,5 +129,6 @@ export interface ModuleScreenDefinition {
       events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
     };
+    relatedLists?: readonly RelatedListDefinition[];
   };
 }

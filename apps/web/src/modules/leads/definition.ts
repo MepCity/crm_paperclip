@@ -54,5 +54,6 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
       events: LEADS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: (kind) => (kind === "lead_image_upload" ? "image_upload" : kind),
     },
+    relatedLists: [],
   },
 };

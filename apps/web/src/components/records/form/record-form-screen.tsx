@@ -4,6 +4,9 @@ import { isAppError, NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import {
   useCreateRecord,
   useModule,
@@ -26,6 +29,7 @@ import {
   type AddressFormRule,
   addressLabel,
   addressRulesList,
+  applySectionColumnOverrides,
   buildFormModel,
   type FormMode,
   type FormRules,
@@ -42,6 +46,11 @@ import { formSaveBannerMessage, formSaveFieldErrors } from "./form-save-error";
 import { FormSection } from "./form-section";
 import { validateRecordForm } from "./form-validation";
 import { RECORD_FORM_COPY } from "./record-form-copy";
+import {
+  RecordFormClientScriptTab,
+  RecordFormEditPageLayoutLink,
+  RecordFormInventoryFooter,
+} from "./record-form-inventory-chrome";
 import { RecordFormShell } from "./record-form-shell";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
@@ -99,6 +108,9 @@ export interface RecordFormConfig {
   paths: { detail: (id: string) => string; create: string; cancel: string };
   navigate: (path: string) => void;
   currencyPrefix?: string;
+  sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
+  inventoryChrome?: boolean;
+  profileImageLaterModule?: ModuleKey;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
 }
 
@@ -149,7 +161,12 @@ function LoadedRecordForm({
   users: OwnerOption[];
 }) {
   const mode: FormMode = intent === "edit" ? "edit" : "create";
-  const sections = buildFormModel(metadata, mode);
+  const sections = applySectionColumnOverrides(
+    buildFormModel(metadata, mode),
+    config.sectionColumnOverrides,
+    metadata,
+    mode,
+  );
   const fields = formFields(metadata, sections, mode, config.rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const emptyValues = () => initialFormValues(fields, { [config.rules.owner]: currentUserId });
@@ -334,8 +351,32 @@ function LoadedRecordForm({
       return null;
     const label = parent ? addressLabel(field, parent) : field.label;
     const id = `record-form-${field.apiName}`;
-    if (field.dataType === "profileimage")
-      return <FieldInput key={field.apiName} field={field} value={null} onChange={() => {}} />;
+    if (field.dataType === "profileimage") {
+      if (!config.profileImageLaterModule) {
+        return (
+          <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
+            <FieldInput field={field} value={null} onChange={() => {}} />
+          </div>
+        );
+      }
+      return (
+        <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            laterModule={config.profileImageLaterModule}
+            className="record-form-profile-image"
+            aria-label={field.label}
+          >
+            <Icons.recordPortraitSilhouette
+              aria-hidden
+              className="record-profile-silhouette h-full w-full"
+            />
+          </Button>
+        </div>
+      );
+    }
     if (addressRules.some((rule) => rule.longitude === field.apiName)) return null;
     let input: ReactNode;
     const latitudeRule = addressRules.find((rule) => rule.latitude === field.apiName);
@@ -470,9 +511,11 @@ function LoadedRecordForm({
 
   return (
     <div ref={rootRef}>
+      {config.inventoryChrome ? <RecordFormClientScriptTab /> : null}
       <RecordFormShell
         title={title}
         formAriaLabel={title}
+        titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
         actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
         errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
         disabled={saving}
@@ -592,6 +635,7 @@ function LoadedRecordForm({
             </FormSection>
           );
         })}
+        {config.inventoryChrome ? <RecordFormInventoryFooter /> : null}
       </RecordFormShell>
       <UnsavedChangesDialog
         isOpen={unsavedOpen}
