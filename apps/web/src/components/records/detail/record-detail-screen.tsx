@@ -1,7 +1,7 @@
 "use client";
 
 import { NotFoundError } from "@crm/core/errors";
-import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
+import type { ListQuery, ModuleApiName, RecordData, RecordId } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
@@ -35,7 +35,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
-import type { ModuleScreenDefinition } from "@/modules/types";
+import type { ModuleScreenDefinition, RelatedListDefinition } from "@/modules/types";
 import { InlineEditProvider } from "./inline-edit-context";
 import { RelatedCardsContainer } from "./related-cards-container";
 
@@ -54,6 +54,7 @@ export type RecordDetailScreenProps = {
   paths: RecordDetailPaths;
   definition: ModuleScreenDefinition;
   now?: Date;
+  buildRelatedLists?: (record: RecordData) => readonly RelatedListDefinition[];
 };
 
 function useModuleListContext(
@@ -91,6 +92,7 @@ export function RecordDetailScreen({
   paths,
   definition,
   now = new Date(),
+  buildRelatedLists,
 }: RecordDetailScreenProps) {
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
@@ -148,7 +150,10 @@ export function RecordDetailScreen({
     [usersQuery.data],
   );
 
-  const relatedLists = rules.relatedLists ?? [];
+  const relatedLists = useMemo(() => {
+    if (recordQuery.data && buildRelatedLists) return buildRelatedLists(recordQuery.data);
+    return rules.relatedLists ?? [];
+  }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
     return relatedLists.map((item) => ({
@@ -267,8 +272,13 @@ export function RecordDetailScreen({
           format={DEFAULT_FORMAT}
           railLayout={railVisible ? "shown" : "hidden"}
         />
-        {rules.relatedLists && rules.relatedLists.length > 0 ? (
-          <RelatedCardsContainer relatedLists={rules.relatedLists} />
+        {relatedLists.length > 0 ? (
+          <RelatedCardsContainer
+            relatedLists={relatedLists}
+            orgSlug={orgSlug}
+            managerRecord={record}
+            recordPath={(id) => paths.record(orgSlug, definition.tab, id)}
+          />
         ) : null}
       </InlineEditProvider>
     </>
@@ -297,6 +307,7 @@ export function RecordDetailScreen({
         sourceOptions={rules.timeline.sources}
         applyLabel="Apply Filter"
         onApply={() => {}}
+        upcomingAutomatedActions={rules.timeline.upcomingAutomatedActions}
       />
     </TimelineSurface>
   );
@@ -350,8 +361,10 @@ export function RecordDetailScreen({
             title={title}
             subtitle={subtitle}
             subtitleLaterModule={subtitleLaterModule}
+            addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
             commands={[
+              ...(rules.headerCommands ?? []),
               {
                 id: "edit",
                 label: "Edit",

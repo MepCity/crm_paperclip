@@ -47,7 +47,7 @@ test("Contacts shell, views, sorting, filters, alphabet, paging and record route
   await expect(page).toHaveURL(/page=2/);
   await list.locator("tbody tr").first().getByRole("link").first().click();
   await expect(page).toHaveURL(/\/tab\/Contacts\/[^/?]+/);
-  await expect(page.getByRole("heading", { name: "Contacts", exact: true })).toBeVisible();
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
 
 test("Contacts later-module inventory stays inert and mass flows reuse selection dialogs", async ({

@@ -24,6 +24,7 @@ import {
   Plus,
   Settings,
   Store,
+  Tag,
   Triangle,
   Users,
   X,
@@ -481,6 +482,7 @@ export const Icons = {
   timelineGeneric: TimelineGenericIcon,
   tablePlus: TablePlusIcon,
   diagonalExpand: DiagonalExpandIcon,
+  recordTag: Tag,
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
