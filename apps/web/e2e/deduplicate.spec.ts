@@ -185,9 +185,7 @@ test.describe("Module-wide deduplication", () => {
     await expect(panel.getByRole("checkbox", { name: "Email", exact: true })).toBeChecked();
     await runCleanup(page, LEADS);
 
-    await expect(page.getByRole("alert")).toContainText(
-      "1 duplicate group merged and 1 record removed.",
-    );
+    await expect(page.getByText("1 duplicate group merged and 1 record removed.")).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     const statuses = await Promise.all(
       [first, second].map((id) => recordStatus(page, LEADS, org.slug, id)),
