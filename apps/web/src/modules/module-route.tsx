@@ -35,7 +35,7 @@ async function renderModuleRoute({ params }: RouteProps, kind: ModuleRouteKind) 
   return (
     <>
       <PageTitle title={definition.pageTitle} />
-      {kind === "list" ? (
+      {kind === "list" || kind === "deduplicate" ? (
         <Suspense fallback={<div className="module-list-page min-h-full" aria-hidden="true" />}>
           {client}
         </Suspense>
@@ -52,3 +52,4 @@ export const moduleCreatePage = (props: RouteProps) => renderModuleRoute(props, 
 export const moduleEditPage = (props: RouteProps) => renderModuleRoute(props, "edit");
 export const moduleClonePage = (props: RouteProps) => renderModuleRoute(props, "clone");
 export const moduleMergePage = (props: RouteProps) => renderModuleRoute(props, "merge");
+export const moduleDeduplicatePage = (props: RouteProps) => renderModuleRoute(props, "deduplicate");

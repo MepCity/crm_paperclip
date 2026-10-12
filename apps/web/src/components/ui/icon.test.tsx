@@ -36,6 +36,7 @@ const expectedIcons = [
   "hideMenu",
   "showMenu",
   "plus",
+  "minus",
   "productCaretDown",
   "settings",
   "users",

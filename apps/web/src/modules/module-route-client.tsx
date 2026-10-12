@@ -1,5 +1,6 @@
 "use client";
 
+import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-conflict-route";
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
 import {
@@ -14,7 +15,14 @@ import { ModuleFormClient } from "./module-form-client";
 import { ModuleListClient } from "./module-list-client";
 import { resolveModuleScreen } from "./registry";
 
-export type ModuleRouteKind = "list" | "detail" | "create" | "edit" | "clone" | "merge";
+export type ModuleRouteKind =
+  | "list"
+  | "detail"
+  | "create"
+  | "edit"
+  | "clone"
+  | "merge"
+  | "deduplicate";
 
 export function ModuleRouteClient({
   moduleTab,
@@ -35,6 +43,8 @@ export function ModuleRouteClient({
   if (!definition) throw new Error("Unknown module screen.");
   if (kind === "list")
     return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
+  if (kind === "deduplicate")
+    return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
   if (kind === "merge" && recordId) {
     const paths = {
       defaultList: moduleListDefaultPath,
