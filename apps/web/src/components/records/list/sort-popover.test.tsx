@@ -141,16 +141,19 @@ test("the search starts empty on every opening", async () => {
   expect(within(reopened).getAllByRole("option")).toHaveLength(3);
 });
 
-test("choosing None keeps Apply disabled and clears a chosen field", async () => {
+test("choosing None enables Apply and clears an applied sort", async () => {
   const user = userEvent.setup();
   const apply = vi.fn();
-  render(<SortPopover fields={fields} sort={null} onApply={apply} />);
+  render(
+    <SortPopover fields={fields} sort={{ field: "Company", order: "desc" }} onApply={apply} />,
+  );
   await user.click(screen.getByRole("button", { name: "Sort" }));
-  await chooseOption(user, /Sort By/, "Company");
   expect(isDisabled(screen.getByRole("button", { name: "Apply" }))).toBe(false);
   await chooseOption(user, /Sort By/, "None");
-  expect(isDisabled(screen.getByRole("button", { name: "Apply" }))).toBe(true);
+  expect(isDisabled(screen.getByRole("button", { name: "Apply" }))).toBe(false);
   expect(screen.getByRole("button", { name: /Sort By/ }).textContent).toContain("None");
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  expect(apply).toHaveBeenCalledWith(null);
 });
 
 test("the applied field is marked in the list and picking one keeps the Sort dialog open", async () => {

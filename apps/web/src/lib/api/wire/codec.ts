@@ -34,10 +34,14 @@ export function object(value: unknown, key: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) invalid(key);
   return value as Record<string, unknown>;
 }
+export function referenceKeys(ref: Record<string, unknown>, keys: readonly string[], key: string) {
+  if (Object.keys(ref).some((name) => !keys.includes(name))) invalid(key, "Unknown reference key.");
+}
 function readFieldValue(value: unknown, key: string): FieldValue {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const ref = object(value, key);
+  referenceKeys(ref, ["module", "id", "name"], key);
   if (typeof ref.module === "string" && typeof ref.id === "string")
     return { module: ref.module, id: ref.id, ...referenceName(ref, key) };
   return invalid(key);
@@ -68,10 +72,12 @@ function decodeValue(field: FieldDefinition, value: unknown): FieldValue {
   if (value === null) return null;
   if (field.dataType === "ownerlookup") {
     const ref = object(value, field.apiName);
+    referenceKeys(ref, ["id", "name", "email"], field.apiName);
     return typeof ref.id === "string" ? ref.id : invalid(field.apiName);
   }
   if (field.dataType === "lookup") {
     const ref = object(value, field.apiName);
+    referenceKeys(ref, ["id", "name"], field.apiName);
     if (typeof ref.id !== "string" || !field.lookup) invalid(field.apiName);
     return { module: field.lookup.module, id: ref.id, ...referenceName(ref, field.apiName) };
   }
@@ -445,6 +451,8 @@ export function encodeCriteria(criteria: Criteria): WireCriteria {
     value: encodeCriteriaValue(criteria.value),
   };
 }
+// Match the existing 500-item bulk operation limit.
+export const MAX_CRITERIA_GROUP_SIZE = 500;
 export function decodeCriteria(value: unknown, depth = 0): Criteria {
   if (depth > 32) invalid("filters", "Criteria are too deeply nested.");
   const criteria = object(value, "filters");
@@ -452,6 +460,8 @@ export function decodeCriteria(value: unknown, depth = 0): Criteria {
     const operator = criteria.group_operator;
     if (!Array.isArray(criteria.group) || (operator !== "AND" && operator !== "OR"))
       invalid("filters");
+    if (criteria.group.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria per group.");
     return {
       groupOperator: operator === "AND" ? "and" : "or",
       group: criteria.group.map((child) => decodeCriteria(child, depth + 1)),

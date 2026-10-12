@@ -112,7 +112,10 @@ function InvitationRowView({
                 }
                 router.refresh();
               },
-              () => setPending(false),
+              () => {
+                setPending(false);
+                report("Unable to revoke the invitation. Please try again.");
+              },
             );
           }}
         >

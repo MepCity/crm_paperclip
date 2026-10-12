@@ -190,6 +190,42 @@ export interface ListResult {
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
 
+export interface SearchQuery {
+  text: string;
+  /** Only the record name field; tags arrive with Module 6. */
+  scope?: "all" | "nameOrTags";
+  /** Omitted means every registered module. */
+  modules?: readonly ModuleApiName[];
+  filters?: Criteria;
+  sort?: SortSpec;
+  /** One-based, applied to each module group. */
+  page?: number;
+  perPage?: number;
+  fields?: readonly string[];
+}
+export interface SearchGroup {
+  module: ModuleApiName;
+  total: number;
+  records: readonly RecordData[];
+}
+export interface MergeInput {
+  masterId: RecordId;
+  /** One or two other records of the same module. */
+  duplicateIds: readonly RecordId[];
+  /** Omitted fields retain the master's values. */
+  values: RecordInput;
+}
+export interface DuplicateGroup {
+  records: readonly RecordData[];
+  /** Fields whose non-empty values differ in the group. */
+  conflictFields: readonly string[];
+}
+export interface DeduplicateResult {
+  mergedGroups: number;
+  removedRecords: number;
+  conflicts: readonly DuplicateGroup[];
+}
+
 /** The organization's home currency. `symbol` is configured display text, never derived from a locale. */
 export interface CurrencyDefinition {
   /** ISO 4217 code; the argument `formatCurrency` expects. */
@@ -206,6 +242,13 @@ export interface CurrencyDefinition {
  * a locked target leaves every target unchanged.
  */
 export interface RecordService {
+  search(query: SearchQuery): Promise<readonly SearchGroup[]>;
+  findDuplicateGroups(
+    module: ModuleApiName,
+    fields: readonly string[],
+  ): Promise<readonly DuplicateGroup[]>;
+  merge(module: ModuleApiName, input: MergeInput): Promise<RecordData>;
+  deduplicate(module: ModuleApiName, fields: readonly string[]): Promise<DeduplicateResult>;
   getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
   listViews(module: ModuleApiName): Promise<readonly ListView[]>;
