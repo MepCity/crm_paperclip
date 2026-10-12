@@ -1,4 +1,6 @@
 import type {
+  DeduplicateResult,
+  DuplicateGroup,
   ListQuery,
   ListResult,
   ListView,
@@ -8,6 +10,7 @@ import type {
   RecordId,
   RecordInput,
   RecordService,
+  SearchGroup,
 } from "@crm/core/records";
 import {
   decodeCurrency,
@@ -184,6 +187,31 @@ export function createHttpRecordService({
   }
 
   const service: ClientRecordService = {
+    async search(query) {
+      return (await request(operationPath(operations.search), {
+        method: operations.search.method,
+        body: { ...query, ...(query.filters ? { filters: encodeCriteria(query.filters) } : {}) },
+      })) as readonly SearchGroup[];
+    },
+    async findDuplicateGroups(module, fields) {
+      return (await request(operationPath(operations.duplicateGroups, { module }), {
+        method: operations.duplicateGroups.method,
+        body: { fields },
+      })) as readonly DuplicateGroup[];
+    },
+    async merge(module, input) {
+      const metadata = await loadModuleMetadata(module);
+      return (await request(operationPath(operations.merge, { module }), {
+        method: operations.merge.method,
+        body: { ...input, values: encodeInput(input.values, metadata) },
+      })) as RecordData;
+    },
+    async deduplicate(module, fields) {
+      return (await request(operationPath(operations.deduplicate, { module }), {
+        method: operations.deduplicate.method,
+        body: { fields },
+      })) as DeduplicateResult;
+    },
     async getHomeCurrency() {
       const body = (await request(operationPath(operations.currencies), {
         method: operations.currencies.method,
