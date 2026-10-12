@@ -345,7 +345,7 @@ describe("wire operations", () => {
   });
   it("returns 404 for unknown modules, views and records", async () => {
     for (const op of Object.values(operations).filter(
-      (op) => op !== operations.users && op !== operations.currencies,
+      (op) => op !== operations.users && op !== operations.currencies && op !== operations.search,
     )) {
       await expect(
         op.run(deps, {
@@ -354,6 +354,10 @@ describe("wire operations", () => {
             {
               data: [{ Company: "Example", Last_Name: "Example" }],
               ids: ["missing"],
+              fields: ["Last_Name"],
+              masterId: "missing",
+              duplicateIds: ["other"],
+              values: {},
               owner: { id: "wire-user" },
             },
           ),
