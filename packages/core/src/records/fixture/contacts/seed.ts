@@ -1,4 +1,5 @@
 import type { FieldValue, RecordData } from "../../contract";
+import { fixtureAccountId } from "../accounts/seed";
 import { contactsMetadata } from "./metadata";
 
 const DAY_MS = 86_400_000;
@@ -74,7 +75,11 @@ export function generateFixtureContacts(
       Date_of_Birth: index % 7 === 0 ? "1990-06-15" : null,
       Account_Name:
         index % 4 === 0
-          ? { module: "Accounts", id: `account-${suffix}`, name: `Account ${suffix}` }
+          ? {
+              module: "Accounts",
+              id: fixtureAccountId(Math.floor(index / 8)),
+              name: `Account ${String(Math.floor(index / 8) + 1).padStart(3, "0")}`,
+            }
           : null,
       Vendor_Name:
         index % 9 === 0
