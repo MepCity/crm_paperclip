@@ -12,8 +12,15 @@ const FILTER_FLAGS = new Set([
   "--changed",
   "--since",
   "--changedSince",
+  "--changed-since",
   "--filter",
 ]);
+
+const EXEMPT_FLAGS = new Set(["-h", "--help", "-v", "--version"]);
+
+const EXEMPT_COMMANDS = new Set(["related", "bench", "list", "init"]);
+
+const GUARDED_COMMANDS = new Set(["run", "watch", "dev"]);
 
 const OPTIONS_WITH_VALUE = new Set([
   "-c",
@@ -22,9 +29,13 @@ const OPTIONS_WITH_VALUE = new Set([
   "--root",
   "-R",
   "--reporter",
+  "--reporters",
   "--outputFile",
+  "--output-file",
+  "--exclude",
   "--pool",
   "--poolOptions",
+  "--pool-options",
   "--maxWorkers",
   "--max-workers",
   "--minWorkers",
@@ -38,16 +49,53 @@ const OPTIONS_WITH_VALUE = new Set([
   "--slowTestThreshold",
   "--slow-test-threshold",
   "--retry",
+  "--repeats",
   "--environment",
   "--mode",
   "--dir",
   "--env",
   "--shard",
+  "--maxConcurrency",
+  "--max-concurrency",
 ]);
 
 export interface VitestGuardResult {
   allowed: boolean;
   reason?: string;
+}
+
+export function isVitestEntry(scriptPath: string): boolean {
+  const normalized = scriptPath.replace(/\\/g, "/");
+  const base = basename(normalized);
+  if (/^vitest(\.(m?js|cjs|ts))?$/i.test(base)) {
+    return true;
+  }
+  if (/(?:^|\/)node_modules\/(?:\.bin\/vitest|vitest\/)/i.test(normalized)) {
+    return true;
+  }
+  return false;
+}
+
+export function isVitestCliProcess(args: string[]): boolean {
+  if (args.length === 0) {
+    return true;
+  }
+  const first = args[0];
+  if (first === undefined) {
+    return true;
+  }
+  const baseFirst = basename(first);
+  if (/^(node|tsx|bun)(\.exe)?$/i.test(baseFirst)) {
+    const second = args[1];
+    if (second === undefined) {
+      return false;
+    }
+    return isVitestEntry(second);
+  }
+  if (/^vitest(\.exe)?$/i.test(baseFirst)) {
+    return true;
+  }
+  return true;
 }
 
 export function normalizeArgs(args: string[]): string[] {
@@ -56,16 +104,10 @@ export function normalizeArgs(args: string[]): string[] {
     const first = args[0];
     if (first !== undefined) {
       const baseFirst = basename(first);
-      if (/^node(\.exe)?$/.test(baseFirst)) {
+      if (/^(node|tsx|bun)(\.exe)?$/i.test(baseFirst)) {
         startIndex = 1;
         const second = args[1];
-        if (
-          second !== undefined &&
-          (second.includes("vitest") ||
-            second.endsWith(".js") ||
-            second.endsWith(".mjs") ||
-            second.endsWith(".ts"))
-        ) {
+        if (second !== undefined && isVitestEntry(second)) {
           startIndex = 2;
         }
       } else if (/^vitest(\.exe)?$/.test(baseFirst)) {
@@ -84,12 +126,11 @@ export function evaluateVitestRun(
     return { allowed: true };
   }
 
-  const cliArgs = normalizeArgs(args);
-  const isRunMode = cliArgs.includes("run") || cliArgs.includes("--run");
-
-  if (!isRunMode) {
+  if (!isVitestCliProcess(args)) {
     return { allowed: true };
   }
+
+  const cliArgs = normalizeArgs(args);
 
   let hasCommandBeenConsumed = false;
   let afterEndOfOptions = false;
@@ -111,9 +152,8 @@ export function evaluateVitestRun(
       continue;
     }
 
-    if (arg === "run" && !hasCommandBeenConsumed) {
-      hasCommandBeenConsumed = true;
-      continue;
+    if (EXEMPT_FLAGS.has(arg)) {
+      return { allowed: true };
     }
 
     if (arg.startsWith("-")) {
@@ -141,6 +181,19 @@ export function evaluateVitestRun(
         continue;
       }
 
+      continue;
+    }
+
+    if (!hasCommandBeenConsumed) {
+      if (EXEMPT_COMMANDS.has(arg)) {
+        return { allowed: true };
+      }
+      if (GUARDED_COMMANDS.has(arg)) {
+        hasCommandBeenConsumed = true;
+        continue;
+      }
+      hasCommandBeenConsumed = true;
+      positionalFilterCount++;
       continue;
     }
 
