@@ -479,6 +479,8 @@ export const Icons = {
   ellipsis: EllipsisIcon,
   timelinePencil: TimelinePencilIcon,
   timelineGeneric: TimelineGenericIcon,
+  tablePlus: TablePlusIcon,
+  diagonalExpand: DiagonalExpandIcon,
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
@@ -695,5 +697,52 @@ function ViewTypeArrowIcon(props: SVGProps<SVGSVGElement>) {
     <InkGlyph viewBox="0 0 11 6.5" {...props}>
       <path d="M5.5 6.5 0 0h11Z" />
     </InkGlyph>
+  );
+}
+
+/** Related-list upper control, table with plus: ink box 16 × 16 px. */
+function TablePlusIcon(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" />
+      <line x1="1.5" y1="5.5" x2="14.5" y2="5.5" />
+      <line x1="6.5" y1="5.5" x2="6.5" y2="14.5" />
+      <line x1="10.5" y1="8" x2="10.5" y2="12" />
+      <line x1="8.5" y1="10" x2="12.5" y2="10" />
+    </svg>
+  );
+}
+
+/** Related-list upper control, diagonal expand arrows: ink box 16 × 16 px. */
+function DiagonalExpandIcon(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <polyline points="10 1.5 14.5 1.5 14.5 6" />
+      <line x1="14.5" y1="1.5" x2="9" y2="7" />
+      <polyline points="6 14.5 1.5 14.5 1.5 10" />
+      <line x1="1.5" y1="14.5" x2="7" y2="9" />
+    </svg>
   );
 }
