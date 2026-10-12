@@ -36,7 +36,7 @@ async function expectError(response: Response, status: number) {
   expect(response.headers.get("access-control-allow-origin")).toBeNull();
   const body = await response.json();
   expect(Object.keys(body).sort()).toEqual(["code", "details", "message", "status"]);
-  expect(body.status).toBe(status);
+  expect(body.status).toBe("error");
   return body;
 }
 
@@ -59,7 +59,7 @@ describe("apiRoute", () => {
   it("rejects a cross-site POST before it looks at the session", async () => {
     const response = await call(handler, { origin: "http://evil.example" });
     const body = await expectError(response, 403);
-    expect(body.code).toBe("forbidden");
+    expect(body.code).toBe("NO_PERMISSION");
     expect(body.details).toEqual({});
     expect(JSON.stringify(body)).not.toContain("evil.example");
     expect(decodeError(response.status, body)).toBeInstanceOf(ForbiddenError);
@@ -76,7 +76,7 @@ describe("apiRoute", () => {
     ]) {
       const response = await call(handler, { cookie, org, origin });
       const body = await expectError(response, 403);
-      expect(body.code).toBe("forbidden");
+      expect(body.code).toBe("NO_PERMISSION");
     }
   });
 
@@ -99,7 +99,7 @@ describe("apiRoute", () => {
   it("answers 401 with the four-key body when the session is missing", async () => {
     const response = await call(handler, { origin: appOrigin, org: orgA.org.slug });
     const body = await expectError(response, 401);
-    expect(body.code).toBe("unauthenticated");
+    expect(body.code).toBe("AUTHENTICATION_FAILURE");
     expect(body.details).toEqual({});
     const decoded = decodeError(response.status, body);
     expect(decoded).toBeInstanceOf(UnauthenticatedError);
@@ -112,7 +112,7 @@ describe("apiRoute", () => {
     for (const org of [null, "   "]) {
       const response = await call(handler, { origin: appOrigin, cookie, org });
       const body = await expectError(response, 400);
-      expect(body.code).toBe("validation");
+      expect(body.code).toBe("INVALID_DATA");
       expect(body.details.fields.organization.length).toBeGreaterThan(0);
     }
   });
@@ -152,6 +152,18 @@ describe("apiRoute", () => {
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
   });
 
+  it("normalizes missing static-route params to an empty object", async () => {
+    const staticHandler = apiRoute(async ({ params, query }) => ({ params, query }));
+    const response = await staticHandler(
+      new Request(`${appOrigin}/crm/v2.2/settings/fields?module=Leads`, {
+        headers: { cookie: cookieOf(orgA), "X-CRM-ORG": orgA.org.slug },
+      }),
+      {},
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ params: {}, query: { module: "Leads" } });
+  });
+
   it("hides an unexpected handler error behind a fixed 500", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const failing = apiRoute(async () => {
@@ -164,7 +176,7 @@ describe("apiRoute", () => {
         org: orgA.org.slug,
       });
       const body = await expectError(response, 500);
-      expect(body.code).toBe("internal_error");
+      expect(body.code).toBe("INTERNAL_ERROR");
       expect(body.details).toEqual({});
       expect(JSON.stringify(body)).not.toContain("secret-internal");
       expect(decodeError(response.status, body)).toBeInstanceOf(UnexpectedApiError);

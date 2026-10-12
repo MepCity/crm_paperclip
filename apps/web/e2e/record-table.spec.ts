@@ -34,9 +34,7 @@ test("record table matches the measured list layout", async ({ page }) => {
   const chevronWidth = await length(page, "--size-list-chevron-width");
   const chevronHeight = await length(page, "--size-list-chevron-height");
   const radius = await length(page, "--radius-md");
-  const textSm = await fontSize(page, "--text-sm");
-  const text13 = await fontSize(page, "--text-13");
-  const weightMedium = await fontWeight(page, "--font-weight-medium");
+  const textMd = await fontSize(page, "--text-md");
   const weightNormal = await fontWeight(page, "--font-weight-normal");
   const weightSemibold = await fontWeight(page, "--font-weight-semibold");
   const surface = await color(page, "--color-surface");
@@ -63,10 +61,10 @@ test("record table matches the measured list layout", async ({ page }) => {
   await expect(headerCell).toHaveCSS("border-bottom-width", headerBorder);
   await expect(headerCell).toHaveCSS("border-bottom-color", panel);
   await expect(headerCell).toHaveCSS("border-left-width", "0px");
-  await expect(headerCell.locator("[data-part=header-label]")).toHaveCSS("font-size", textSm);
+  await expect(headerCell.locator("[data-part=header-label]")).toHaveCSS("font-size", textMd);
   await expect(headerCell.locator("[data-part=header-label]")).toHaveCSS(
     "font-weight",
-    weightMedium,
+    weightNormal,
   );
   await expect(headerCell.locator("[data-part=header-label]")).toHaveCSS("color", strong);
 
@@ -134,7 +132,7 @@ test("record table matches the measured list layout", async ({ page }) => {
   // Text roles: ordinary cells are body text, and links use that colour too.
   const company = populated.getByRole("cell", { name: "Example Co" }).first();
   const companyValue = company.locator("[data-part=value]");
-  await expect(companyValue).toHaveCSS("font-size", textSm);
+  await expect(companyValue).toHaveCSS("font-size", textMd);
   await expect(companyValue).toHaveCSS("font-weight", weightNormal);
   await expect(companyValue).toHaveCSS("color", text);
   const nameLink = populated.getByRole("link", { name: "Lead 001" });
@@ -174,7 +172,9 @@ test("record table matches the measured list layout", async ({ page }) => {
   expectPx(await contentHeight(footer), footerHeight);
   await expect(footer).toHaveCSS("border-top-color", panel);
   await expect(footer).toHaveCSS("border-bottom-color", panel);
-  await expect(footer).toHaveCSS("font-size", text13);
+  await expect(footer).toHaveCSS("font-size", textMd);
+  await expect(footer.locator("[data-part=total-label]")).toHaveCSS("font-size", textMd);
+  await expect(footer.locator("[data-part=total-label]")).toHaveCSS("font-weight", weightNormal);
   await expect(footer.locator("[data-part=total-value]")).toHaveCSS("font-weight", weightSemibold);
   await expect(footer.locator("[data-part=range-to-word]")).toHaveCSS("font-weight", weightNormal);
   await expect(footer.locator("[data-part=range-to-word]")).toHaveCSS("color", muted);

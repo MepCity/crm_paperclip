@@ -1,0 +1,14 @@
+/* record-detail.md: card and heading x 332 within the expanded CRM shell. */
+.module-form-page {
+  min-height: 100%;
+  padding-inline: var(--size-form-card-inset);
+  background: var(--color-bg);
+}
+
+/* record-detail.md › Address frame and Description Information and textarea. */
+.module-form-page [data-form-type="textarea"] .record-form-row__control {
+  max-width: var(--size-form-description-width);
+}
+.module-form-page .record-textarea {
+  height: var(--size-form-input-height);
+}

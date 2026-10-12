@@ -1,10 +1,15 @@
 import { act, cleanup, configure, getConfig, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import type { Key } from "react-aria-components";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { describedBy, submittedValues } from "@/test/dom";
 import { render } from "@/test/render";
 import { ComboBox, ComboBoxItem } from "./combo-box";
 import { Form } from "./form";
+import { UiProvider } from "./ui-provider";
 
 interface Account {
   id: string;
@@ -632,3 +637,130 @@ test("lookup reverts an uncommitted search without reporting a new selection", a
   expect(onSelectionChange.mock.calls).toEqual([["account-2"]]);
   expect(onInputChange.mock.calls).toEqual([["f"], ["fa"], ["fab"], ["Contoso Ltd"]]);
 });
+
+test("keeps characters typed before hydration", async () => {
+  const html = renderToString(
+    <UiProvider>
+      <ComboBox label="Account" items={accounts}>
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  const container = document.createElement("div");
+  document.body.append(container);
+  container.innerHTML = html;
+  const serverInput = container.querySelector("input");
+  expect(serverInput).toBeTruthy();
+  if (!serverInput) return;
+  serverInput.value = "cont";
+
+  const root = hydrateRoot(
+    container,
+    <UiProvider>
+      <ComboBox label="Account" items={accounts}>
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  await act(async () => {});
+
+  expect(container.querySelector("input")?.value).toBe("cont");
+  root.unmount();
+  container.remove();
+});
+
+test("hydration does not search for a label that was already saved", async () => {
+  const loadOptions = vi.fn(async () => [] as Account[]);
+  const field = (
+    <UiProvider>
+      <ComboBox
+        label="Account"
+        loadOptions={loadOptions}
+        defaultSelectedItem={{ id: "account-3", label: "Fabrikam Inc" }}
+      >
+        {accountItem}
+      </ComboBox>
+    </UiProvider>
+  );
+  const container = document.createElement("div");
+  document.body.append(container);
+  container.innerHTML = renderToString(field);
+  const root = hydrateRoot(
+    container,
+    <UiProvider>
+      <ComboBox
+        label="Account"
+        loadOptions={loadOptions}
+        defaultSelectedItem={{ id: "account-3", label: "Fabrikam Inc" }}
+      >
+        {accountItem}
+      </ComboBox>
+    </UiProvider>,
+  );
+  await act(async () => {});
+
+  expect(container.querySelector("input")?.value).toBe("Fabrikam Inc");
+  expect(loadOptions).not.toHaveBeenCalled();
+  root.unmount();
+  container.remove();
+});
+
+test.each(["value", "selectedKey"] as const)(
+  "controlled %s lookup emits callbacks on each attempt when parent rejects change",
+  async (prop) => {
+    const user = setupUser();
+    const onChange = vi.fn();
+    const onSelectionChange = vi.fn();
+
+    function ControlledLookup() {
+      const [value] = useState<Key | null>("account-3");
+      const [inputValue] = useState("Fabrikam Inc");
+      const controlledProps =
+        prop === "value" ? { value, inputValue } : { selectedKey: value, inputValue };
+
+      return (
+        <form>
+          <ComboBox
+            label="Account"
+            name="account"
+            loadOptions={async () => [accounts[1] as Account]}
+            {...controlledProps}
+            onChange={onChange}
+            onSelectionChange={onSelectionChange}
+          >
+            {accountItem}
+          </ComboBox>
+        </form>
+      );
+    }
+
+    render(<ControlledLookup />);
+    expectLookup("Fabrikam Inc", "account-3");
+
+    // First attempt: open and select Contoso Ltd
+    await user.click(input());
+    await user.keyboard("{ArrowDown}");
+    await advanceTime();
+    expect(screen.getByRole("option", { name: "Contoso Ltd" })).toBeTruthy();
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith("account-2");
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(onSelectionChange).toHaveBeenLastCalledWith("account-2");
+    expectLookup("Fabrikam Inc", "account-3");
+
+    // Second attempt: open and select Contoso Ltd again
+    await user.click(input());
+    await user.keyboard("{ArrowDown}");
+    await advanceTime();
+    expect(screen.getByRole("option", { name: "Contoso Ltd" })).toBeTruthy();
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenLastCalledWith("account-2");
+    expect(onSelectionChange).toHaveBeenCalledTimes(2);
+    expect(onSelectionChange).toHaveBeenLastCalledWith("account-2");
+    expectLookup("Fabrikam Inc", "account-3");
+  },
+);

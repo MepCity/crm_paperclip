@@ -1,0 +1,27 @@
+.top-aligned-modal-overlay {
+  background-color: color-mix(in srgb, var(--color-overlay) 50%, transparent);
+}
+
+.top-aligned-modal-panel {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: var(--top-aligned-modal-width, var(--size-select-user-dialog-width));
+  transform: translateX(-50%);
+  border-bottom-left-radius: var(
+    --top-aligned-modal-bottom-radius,
+    var(--radius-select-user-dialog-bottom)
+  );
+  border-bottom-right-radius: var(
+    --top-aligned-modal-bottom-radius,
+    var(--radius-select-user-dialog-bottom)
+  );
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+
+.top-aligned-modal-dialog {
+  min-height: inherit;
+  outline: none;
+}

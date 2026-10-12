@@ -8,6 +8,31 @@ function options(values: readonly (string | readonly [string, string])[]): Pickl
   );
 }
 
+/** Lead Status options plus the record category each stored value belongs to. */
+const leadStatusOptions: readonly { display: string; stored: string; category?: string }[] = [
+  { display: "-None-", stored: "-None-" },
+  { display: "Attempted to Contact", stored: "Attempted to Contact", category: "Open" },
+  { display: "Contact in Future", stored: "Contact in Future", category: "Open" },
+  { display: "Contacted", stored: "Contacted", category: "Open" },
+  { display: "Junk Lead", stored: "Junk Lead", category: "Junk" },
+  { display: "Lost Lead", stored: "Lost Lead", category: "Open" },
+  { display: "Not Contacted", stored: "Not Contacted", category: "Open" },
+  { display: "Pre-Qualified", stored: "Pre-Qualified", category: "Open" },
+  { display: "Not Qualified", stored: "Not Qualified", category: "Not Qualified" },
+];
+
+const categorySources: Readonly<Record<string, readonly { stored: string; category?: string }[]>> =
+  {
+    Lead_Status: leadStatusOptions,
+  };
+
+/** Stored values of `field` whose picklist category is `category`, in option order. */
+export function categoryStoredValues(field: string, category: string): readonly string[] {
+  return (categorySources[field] ?? [])
+    .filter((option) => option.category === category)
+    .map((option) => option.stored);
+}
+
 export const leadsPicklists: Readonly<Record<string, readonly PicklistOption[]>> = {
   Lead_Source: options([
     "-None-",
@@ -28,17 +53,10 @@ export const leadsPicklists: Readonly<Record<string, readonly PicklistOption[]>>
     "Web Research",
     "Chat",
   ]),
-  Lead_Status: options([
-    "-None-",
-    "Attempted to Contact",
-    "Contact in Future",
-    "Contacted",
-    "Junk Lead",
-    "Lost Lead",
-    "Not Contacted",
-    "Pre-Qualified",
-    "Not Qualified",
-  ]),
+  Lead_Status: leadStatusOptions.map((option) => ({
+    displayValue: option.display,
+    storedValue: option.stored,
+  })),
   Industry: options([
     "-None-",
     "ASP (Application Service Provider)",

@@ -1,12 +1,24 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { ValidationError } from "../errors";
-import type { Criteria, FieldValue, RecordInput } from "./contract";
+import { ConflictError, NotFoundError, ValidationError } from "../errors";
+import type {
+  Criteria,
+  CriteriaToken,
+  CriteriaValue,
+  FieldValue,
+  RecordData,
+  RecordInput,
+} from "./contract";
 import { describeRecordServiceContract } from "./contract-suite";
+import {
+  contactsRecordServiceContractModule,
+  leadsRecordServiceContractModule,
+} from "./contract-suite-module";
 import { createFixtureRecordService } from "./fixture";
+import { sortRecords } from "./fixture/query";
+import { fixtureModules } from "./fixture/registry";
 import { generateFixtureLeads } from "./fixture/seed";
-import { SYSTEM_VIEW_IDS_WITH_INTERIM_NULL_CRITERIA } from "./fixture/views";
 
 const make = () =>
   createFixtureRecordService({
@@ -21,7 +33,108 @@ const input = (extra: RecordInput = {}): RecordInput => ({
   Company: "Example Company",
   ...extra,
 });
-describeRecordServiceContract("fixture", createFixtureRecordService);
+describeRecordServiceContract(
+  "fixture",
+  createFixtureRecordService,
+  leadsRecordServiceContractModule,
+);
+describeRecordServiceContract(
+  "fixture",
+  createFixtureRecordService,
+  contactsRecordServiceContractModule,
+);
+
+describe("Leads surface metadata", () => {
+  it("publishes the exact surface counts and observed layout columns", async () => {
+    const metadata = await make().getModule("Leads");
+    expect(metadata.fields).toHaveLength(56);
+    expect(
+      metadata.fields.filter((field) => field.massUpdate).map((field) => field.apiName),
+    ).toEqual([
+      "Company",
+      "Designation",
+      "Phone",
+      "Fax",
+      "Mobile",
+      "Website",
+      "Lead_Source",
+      "Lead_Status",
+      "Industry",
+      "No_of_Employees",
+      "Annual_Revenue",
+      "Rating",
+      "Email_Opt_Out",
+      "Skype_ID",
+      "Salutation",
+    ]);
+    for (const [surface, count] of Object.entries({
+      view: 44,
+      create: 34,
+      edit: 33,
+      quickCreate: 5,
+    }))
+      expect(
+        metadata.fields.filter((field) => field.views[surface as keyof typeof field.views]),
+      ).toHaveLength(count);
+    expect(metadata.businessCardFields).toEqual([
+      "Owner",
+      "Email",
+      "Phone",
+      "Mobile",
+      "Lead_Status",
+    ]);
+    expect(metadata.layout.map((section) => section.columns)).toEqual([
+      [["Record_Image"]],
+      [
+        [
+          "Owner",
+          "First_Name",
+          "Designation",
+          "Phone",
+          "Mobile",
+          "Lead_Source",
+          "Industry",
+          "Annual_Revenue",
+          "Email_Opt_Out",
+          "Modified_By",
+        ],
+        [
+          "Company",
+          "Last_Name",
+          "Full_Name",
+          "Email",
+          "Fax",
+          "Website",
+          "Lead_Status",
+          "No_of_Employees",
+          "Rating",
+          "Created_By",
+          "Skype_ID",
+          "Secondary_Email",
+          "Twitter",
+        ],
+      ],
+      [
+        [
+          "Address",
+          "Country",
+          "Flat_House_No_Building_Apartment_Name",
+          "Street",
+          "City",
+          "State",
+          "Zip_Code",
+          "Latitude",
+          "Longitude",
+        ],
+        [],
+      ],
+      [["Description"]],
+    ]);
+    expect(
+      metadata.fields.filter((field) => field.views.quickCreate).map((field) => field.apiName),
+    ).toEqual(["Company", "First_Name", "Last_Name", "Email", "Phone"]);
+  });
+});
 
 describe("interim fixture policies (not reference parity)", () => {
   it("generates 250 repeatable synthetic records with a seeded generator", async () => {
@@ -92,14 +205,14 @@ describe("interim fixture policies (not reference parity)", () => {
         filters: {
           groupOperator: "and" as const,
           group: [
-            { field: "Company", comparator: "is" as const, value: marker },
-            { field, comparator: "is" as const, value: null },
+            { field: "Company", comparator: "equal" as const, value: marker },
+            { field, comparator: "equal" as const, value: null },
           ],
         },
       };
       expect((await service.list("Leads", query)).records.map((record) => record.id)).toEqual([
-        created.id,
         updated.id,
+        created.id,
       ]);
       expect(await service.count("Leads", query)).toBe(2);
     }
@@ -147,13 +260,17 @@ describe("interim fixture policies (not reference parity)", () => {
     const { createFixtureRecordService: reloaded } = await import("./fixture");
     const sameOrg = reloaded({ ...ctx, userId: "second-user" });
     expect(await sameOrg.get("Leads", created.id)).toEqual(created);
-    expect(await sameOrg.count("Leads", { viewId: "all-leads" })).toBe(251);
+    expect(await sameOrg.count("Leads", { viewId: "all-leads" })).toBe(
+      generateFixtureLeads().filter((record) => record.fields.Converted__s === false).length + 1,
+    );
     const next = await sameOrg.create("Leads", input());
     expect(next.id).not.toBe(created.id);
     expect(await service.get("Leads", next.id)).toEqual(next);
     const otherOrg = reloaded({ ...ctx, orgId: randomUUID() });
     await expect(otherOrg.get("Leads", created.id)).rejects.toMatchObject({ code: "not_found" });
-    expect(await otherOrg.count("Leads", { viewId: "all-leads" })).toBe(250);
+    expect(await otherOrg.count("Leads", { viewId: "all-leads" })).toBe(
+      generateFixtureLeads().filter((record) => record.fields.Converted__s === false).length,
+    );
   });
   it("assigns all seeded user fields once to each organization's first bound user", async () => {
     for (const userId of ["synthetic-first-user", "synthetic-other-user"]) {
@@ -166,11 +283,8 @@ describe("interim fixture policies (not reference parity)", () => {
       };
       const service = createFixtureRecordService(ctx);
       const records = [];
-      for (let page = 1; page <= 3; page++) {
-        records.push(
-          ...(await service.list("Leads", { viewId: "all-leads", page, perPage: 100 })).records,
-        );
-      }
+      for (const seeded of generateFixtureLeads())
+        records.push(await service.get("Leads", seeded.id));
       expect(records).toHaveLength(250);
       const secondUser = createFixtureRecordService({ ...ctx, userId: "synthetic-later-user" });
       for (const record of records) {
@@ -334,40 +448,156 @@ describe("interim fixture policies (not reference parity)", () => {
       expect(field).not.toHaveProperty("picklist");
     }
   });
-  it("publishes all 14 views with exact names, columns, category expansion and null system predicates", async () => {
+  it("publishes all 14 views with the saved criteria trees, columns and flags", async () => {
     const all = ["Full_Name", "Company", "Email", "Phone", "Lead_Source", "Owner"];
-    const converted = ["Full_Name", "Company", "Phone", "Email"];
+    const convertedColumns = ["Full_Name", "Company", "Phone", "Email"];
     const custom = ["Last_Name", "First_Name", "Company", "Email"];
-    const rows: [string, string, readonly string[], readonly string[] | null][] = [
-      ["all-leads", "All Leads", all, null],
-      ["all-locked-leads", "All Locked Leads", all, null],
-      ["converted-leads", "Converted Leads", converted, null],
-      ["junk-leads", "Junk Leads", custom, ["Junk Lead"]],
-      ["mailing-labels", "Mailing Labels", ["Salutation", "Full_Name", "Company"], null],
-      ["my-converted-leads", "My Converted Leads", converted, null],
-      ["my-leads", "My Leads", all.slice(0, -1), null],
-      ["not-qualified-leads", "Not Qualified Leads", custom, ["Not Qualified"]],
-      [
-        "open-leads",
-        "Open Leads",
-        custom,
-        [
-          "Attempted to Contact",
-          "Contact in Future",
-          "Contacted",
-          "Lost Lead",
-          "Not Contacted",
-          "Pre-Qualified",
-        ],
-      ],
-      ["recently-created-leads", "Recently Created Leads", all, null],
-      ["recently-modified-leads", "Recently Modified Leads", all, null],
-      ["todays-leads", "Today's Leads", all, null],
-      ["unread-leads", "Unread Leads", all, null],
-      [
-        "unsubscribed-leads",
-        "Unsubscribed Leads",
-        [
+    const user = { token: "CURRENTUSER" } as const;
+    const today = { token: "TODAY" } as const;
+    const age31 = { token: "AGEINDAYS", offset: 31 } as const;
+    const category = (name: string): CriteriaToken => ({ token: "CATEGORY", name });
+    const equal = (field: string, value: CriteriaValue): Criteria => ({
+      field,
+      comparator: "equal",
+      value,
+    });
+    const notConverted = equal("Converted__s", false);
+    const and = (...group: Criteria[]): Criteria => ({ groupOperator: "and", group });
+    const views = await make().listViews("Leads");
+    expect(views).toEqual([
+      {
+        id: "all-leads",
+        name: "All Leads",
+        systemDefined: true,
+        isDefault: true,
+        columns: all,
+        sort: null,
+        criteria: notConverted,
+      },
+      {
+        id: "all-locked-leads",
+        name: "All Locked Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all,
+        sort: null,
+        criteria: and(equal("Locked__s", true), notConverted),
+      },
+      {
+        id: "converted-leads",
+        name: "Converted Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: convertedColumns,
+        sort: null,
+        criteria: equal("Converted__s", true),
+      },
+      {
+        id: "junk-leads",
+        name: "Junk Leads",
+        systemDefined: false,
+        isDefault: false,
+        columns: custom,
+        sort: null,
+        criteria: equal("Lead_Status", category("Junk")),
+      },
+      {
+        id: "mailing-labels",
+        name: "Mailing Labels",
+        systemDefined: true,
+        isDefault: false,
+        columns: ["Salutation", "Full_Name", "Company"],
+        sort: null,
+        criteria: notConverted,
+      },
+      {
+        id: "my-converted-leads",
+        name: "My Converted Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: convertedColumns,
+        sort: null,
+        criteria: and(equal("Converted__s", true), equal("Owner", user)),
+      },
+      {
+        id: "my-leads",
+        name: "My Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all.slice(0, -1),
+        sort: null,
+        criteria: and(equal("Owner", user), notConverted),
+      },
+      {
+        id: "not-qualified-leads",
+        name: "Not Qualified Leads",
+        systemDefined: false,
+        isDefault: false,
+        columns: custom,
+        sort: null,
+        criteria: equal("Lead_Status", category("Not Qualified")),
+      },
+      {
+        id: "open-leads",
+        name: "Open Leads",
+        systemDefined: false,
+        isDefault: false,
+        columns: custom,
+        sort: null,
+        criteria: equal("Lead_Status", category("Open")),
+      },
+      {
+        id: "recently-created-leads",
+        name: "Recently Created Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all,
+        sort: null,
+        criteria: and(
+          and({ field: "Common_Status", comparator: "contains", value: "c" }, notConverted),
+          { field: "Created_Time", comparator: "less_equal", value: age31 },
+        ),
+      },
+      {
+        id: "recently-modified-leads",
+        name: "Recently Modified Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all,
+        sort: null,
+        criteria: and(
+          and({ field: "Common_Status", comparator: "contains", value: "m" }, notConverted),
+          { field: "Modified_Time", comparator: "less_equal", value: age31 },
+        ),
+      },
+      {
+        id: "todays-leads",
+        name: "Today's Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all,
+        sort: null,
+        criteria: and(equal("Created_Time", today), notConverted),
+      },
+      {
+        id: "unread-leads",
+        name: "Unread Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: all,
+        sort: null,
+        criteria: and(notConverted, {
+          field: "Common_Status",
+          comparator: "not_contains",
+          value: "v",
+        }),
+      },
+      {
+        id: "unsubscribed-leads",
+        name: "Unsubscribed Leads",
+        systemDefined: true,
+        isDefault: false,
+        columns: [
           "Full_Name",
           "Company",
           "Email",
@@ -376,24 +606,11 @@ describe("interim fixture policies (not reference parity)", () => {
           "Unsubscribed_Mode",
           "Unsubscribed_Time",
         ],
-        null,
-      ],
-    ];
-    const views = await make().listViews("Leads");
-    expect(views).toEqual(
-      rows.map(([id, name, columns, statuses]) => ({
-        id,
-        name,
-        columns,
-        systemDefined: statuses === null,
-        isDefault: id === "all-leads",
         sort: null,
-        criteria: statuses ? { field: "Lead_Status", comparator: "is", value: statuses } : null,
-      })),
-    );
-    expect(SYSTEM_VIEW_IDS_WITH_INTERIM_NULL_CRITERIA).toEqual(
-      rows.filter((row) => row[3] === null).map((row) => row[0]),
-    );
+        criteria: and(notConverted, equal("Email_Opt_Out", true)),
+      },
+    ]);
+    expect(views.map((view) => view.criteria)).not.toContain(null);
   });
   it("validates deferred picklist type and length but permits arbitrary text and null", async () => {
     const service = make();
@@ -408,19 +625,127 @@ describe("interim fixture policies (not reference parity)", () => {
         });
     }
   });
-  it("recomputes Full_Name on create/update without salutation", async () => {
+  it("recomputes Full_Name in salutation, first name, last name order", async () => {
     const service = make();
     const record = await service.create(
       "Leads",
       input({ First_Name: "Example", Last_Name: "Lead", Salutation: "Dr." }),
     );
-    expect(record.fields.Full_Name).toBe("Example Lead");
+    expect(record.fields.Full_Name).toBe("Dr. Example Lead");
     expect(
       (await service.update("Leads", record.id, { Last_Name: "Updated" })).fields.Full_Name,
-    ).toBe("Example Updated");
+    ).toBe("Dr. Example Updated");
     expect((await service.update("Leads", record.id, { First_Name: null })).fields.Full_Name).toBe(
-      "Updated",
+      "Dr. Updated",
     );
+  });
+  it("composes names without salutation and with only a last name", async () => {
+    const service = make();
+    const created = await service.create(
+      "Leads",
+      input({ First_Name: "Example", Last_Name: "Lead" }),
+    );
+    expect(created.fields.Full_Name).toBe("Example Lead");
+    expect((await service.update("Leads", created.id, { First_Name: null })).fields.Full_Name).toBe(
+      "Lead",
+    );
+    expect(
+      (await service.update("Leads", created.id, { Salutation: "Dr." })).fields.Full_Name,
+    ).toBe("Dr. Lead");
+    expect(
+      (await service.update("Leads", created.id, { Salutation: "", First_Name: "" })).fields
+        .Full_Name,
+    ).toBe("Lead");
+  });
+  it("validates Owner against the live membership source on every write", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "owners",
+      orgName: "Owner Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let members = ["actor", "other-member"];
+    const service = createFixtureRecordService(ctx, { listMemberIds: async () => members });
+    const created = await service.create("Leads", input({ Owner: "other-member" }));
+    expect(created.fields.Owner).toBe("other-member");
+    expect(created.fields.Created_By).toBe("actor");
+    members = ["actor"];
+    await expect(service.create("Leads", input({ Owner: "other-member" }))).rejects.toMatchObject({
+      fieldErrors: { Owner: expect.any(Array) },
+    });
+    await expect(
+      service.update("Leads", created.id, { Owner: "other-member", Company: "Changed" }),
+    ).rejects.toMatchObject({ fieldErrors: { Owner: expect.any(Array) } });
+    expect(await service.get("Leads", created.id)).toEqual(created);
+    expect((await service.update("Leads", created.id, { Owner: "actor" })).fields.Owner).toBe(
+      "actor",
+    );
+  });
+  it("preserves intervening updates and does not resurrect deletes during Owner validation", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "owner-race",
+      orgName: "Owner Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let resolveMembers: (members: readonly string[]) => void = () => {};
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: () =>
+        new Promise((resolve) => {
+          resolveMembers = resolve;
+        }),
+    });
+    const created = await service.create("Leads", input());
+    const ownerWrite = service.update("Leads", created.id, { Owner: "other-member" });
+    await service.update("Leads", created.id, { Company: "Intervening Company" });
+    resolveMembers(["actor", "other-member"]);
+    expect((await ownerWrite).fields).toMatchObject({
+      Owner: "other-member",
+      Company: "Intervening Company",
+    });
+    const pendingWrite = service.update("Leads", created.id, { Owner: "actor" });
+    await service.delete("Leads", [created.id]);
+    resolveMembers(["actor", "other-member"]);
+    await expect(pendingWrite).rejects.toBeInstanceOf(NotFoundError);
+    await expect(service.get("Leads", created.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+  it("keeps ownership batches atomic across asynchronous membership checks", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "batch-race",
+      orgName: "Batch Test",
+      userId: "actor",
+      role: "admin" as const,
+    };
+    let resolveMembers: (members: readonly string[]) => void = () => {};
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: () =>
+        new Promise((resolve) => {
+          resolveMembers = resolve;
+        }),
+    });
+    const first = await service.create("Leads", input());
+    const second = await service.create("Leads", input());
+    const ids = [first.id, second.id];
+    const pending = service.changeOwner("Leads", ids, "new-owner");
+    ids.splice(0, ids.length);
+    await service.update("Leads", first.id, { Company: "Concurrent Change" });
+    resolveMembers(["actor", "new-owner"]);
+    await pending;
+    expect((await service.get("Leads", first.id)).fields).toMatchObject({
+      Owner: "new-owner",
+      Company: "Concurrent Change",
+    });
+    expect((await service.get("Leads", second.id)).fields.Owner).toBe("new-owner");
+    const before = await service.get("Leads", first.id);
+    const deletedTarget = service.changeOwner("Leads", [first.id, second.id], "actor");
+    await service.delete("Leads", [second.id]);
+    resolveMembers(["actor", "new-owner"]);
+    await expect(deletedTarget).rejects.toBeInstanceOf(NotFoundError);
+    expect(await service.get("Leads", first.id)).toEqual(before);
+    await expect(service.get("Leads", second.id)).rejects.toBeInstanceOf(NotFoundError);
   });
   it("searches only Full_Name, Company, Email and Phone, trims search and combines restrictions", async () => {
     const service = make();
@@ -445,20 +770,26 @@ describe("interim fixture policies (not reference parity)", () => {
       search: `  ${marker.toUpperCase()}  `,
     };
     expect((await service.list("Leads", query)).records.map((record) => record.id)).toEqual(
-      records.slice(0, 4).map((record) => record.id),
+      records
+        .slice(0, 4)
+        .map((record) => record.id)
+        .reverse(),
     );
     const restricted = {
       ...query,
       viewId: "junk-leads",
-      filters: { field: "Phone", comparator: "is" as const, value: marker },
+      filters: { field: "Phone", comparator: "equal" as const, value: marker },
     };
     expect(await service.count("Leads", restricted)).toBe(1);
     expect((await service.list("Leads", restricted)).records.map((record) => record.id)).toEqual([
       records[3]?.id,
     ]);
-    expect(await service.count("Leads", { ...query, search: "  " })).toBe(257);
+    expect(await service.count("Leads", { ...query, search: "  " })).toBe(
+      generateFixtureLeads().filter((record) => record.fields.Converted__s === false).length +
+        records.length,
+    );
   });
-  it("implements case-sensitive exact is, null, any-of arrays and nested and/or groups", async () => {
+  it("implements case-insensitive text is, null and nested and/or groups", async () => {
     const service = make();
     const marker = randomUUID().slice(0, 20);
     const a = await service.create("Leads", input({ Company: marker, First_Name: "Alpha" }));
@@ -471,16 +802,16 @@ describe("interim fixture policies (not reference parity)", () => {
         perPage: 10,
         filters: {
           groupOperator: "and",
-          group: [{ field: "Company", comparator: "is", value: marker }, filters],
+          group: [{ field: "Company", comparator: "equal", value: marker }, filters],
         },
       });
     expect(
-      (await query({ field: "First_Name", comparator: "is", value: "Alpha" })).records.map(
+      (await query({ field: "First_Name", comparator: "equal", value: "Alpha" })).records.map(
         (row) => row.id,
       ),
-    ).toEqual([a.id]);
+    ).toEqual([c.id, a.id]);
     expect(
-      (await query({ field: "First_Name", comparator: "is", value: null })).records.map(
+      (await query({ field: "First_Name", comparator: "equal", value: null })).records.map(
         (row) => row.id,
       ),
     ).toEqual([b.id]);
@@ -489,46 +820,41 @@ describe("interim fixture policies (not reference parity)", () => {
         await query({
           groupOperator: "or",
           group: [
-            { field: "First_Name", comparator: "is", value: ["Alpha", "alpha"] },
-            { field: "First_Name", comparator: "is", value: null },
+            { field: "First_Name", comparator: "equal", value: "ALPHA" },
+            { field: "First_Name", comparator: "equal", value: null },
           ],
         })
       ).records.map((row) => row.id),
-    ).toEqual([a.id, b.id, c.id]);
+    ).toEqual([c.id, b.id, a.id]);
   });
-  it("keeps insertion order, stable ties and empty values last in both directions", async () => {
+  it("keeps id-descending order, stable ties and empty values last in both directions", async () => {
     const service = make();
     const marker = randomUUID().slice(0, 20);
     const ids = [];
     for (const value of [null, "beta", "ALPHA", "alpha", ""])
       ids.push((await service.create("Leads", input({ Company: marker, First_Name: value }))).id);
     const query = { viewId: "all-leads", page: 1, perPage: 10, search: marker };
-    expect((await service.list("Leads", query)).records.map((record) => record.id)).toEqual(ids);
+    const unordered = await service.list("Leads", query);
+    expect(unordered.sort).toEqual({ field: "id", order: "desc" });
+    expect(unordered.records.map((record) => record.id)).toEqual([...ids].reverse());
     expect(
       (
         await service.list("Leads", { ...query, sort: { field: "First_Name", order: "asc" } })
       ).records.map((record) => record.id),
-    ).toEqual([ids[2], ids[3], ids[1], ids[0], ids[4]]);
+    ).toEqual([ids[3], ids[2], ids[1], ids[4], ids[0]]);
     expect(
       (
         await service.list("Leads", { ...query, sort: { field: "First_Name", order: "desc" } })
       ).records.map((record) => record.id),
-    ).toEqual([ids[1], ids[2], ids[3], ids[0], ids[4]]);
-    const seedOrder = (await service.list("Leads", { viewId: "all-leads", page: 1, perPage: 100 }))
-      .records;
-    expect(seedOrder).toEqual(
-      generateFixtureLeads()
-        .slice(0, 100)
-        .map((record) => ({
-          ...record,
-          fields: {
-            ...record.fields,
-            Owner: "fixture-test-user",
-            Created_By: "fixture-test-user",
-            Modified_By: "fixture-test-user",
-          },
-        })),
-    );
+    ).toEqual([ids[1], ids[3], ids[2], ids[4], ids[0]]);
+  });
+  it("compares record identifiers as decimal numbers", () => {
+    const records = ["100", "99", "1000"].map((id) => ({ id, fields: { id } })) as RecordData[];
+    expect(sortRecords(records, { field: "id", order: "asc" }).map((record) => record.id)).toEqual([
+      "99",
+      "100",
+      "1000",
+    ]);
   });
   it("sorts booleans, numbers and module references by value and leaves empty values last", async () => {
     const service = make();
@@ -591,7 +917,7 @@ describe("interim fixture policies (not reference parity)", () => {
     ).rejects.toMatchObject({ fieldErrors: { sort: expect.any(Array) } });
     const filters: Criteria = {
       groupOperator: "and",
-      group: [{ field: "Unknown", comparator: "is", value: null }],
+      group: [{ field: "Unknown", comparator: "equal", value: null }],
     };
     await expect(service.list("Leads", { ...query, filters })).rejects.toMatchObject({
       fieldErrors: { filters: expect.any(Array) },
@@ -604,7 +930,6 @@ describe("interim fixture policies (not reference parity)", () => {
     const service = make();
     const record = await service.create("Leads", input());
     for (const field of [
-      "Owner",
       "Created_By",
       "Modified_By",
       "Created_Time",
@@ -654,5 +979,535 @@ describe("interim fixture policies (not reference parity)", () => {
       (await service.create("Leads", input({ Lead_Source: "OnlineStore", Rating: "ShutDown" })))
         .fields,
     ).toMatchObject({ Lead_Source: "OnlineStore", Rating: "ShutDown" });
+  });
+  it("stamps writes with the adapter clock and leaves new leads unconverted", async () => {
+    let now = new Date("2026-04-01T00:00:00.000Z");
+    const service = createFixtureRecordService(
+      {
+        orgId: randomUUID(),
+        orgSlug: "fixture-clock",
+        orgName: "Fixture Organization",
+        userId: "fixture-clock-user",
+        role: "admin",
+      },
+      { now: () => now },
+    );
+    const created = await service.create("Leads", input());
+    expect(created.fields).toMatchObject({
+      Created_Time: "2026-04-01T00:00:00.000Z",
+      Modified_Time: "2026-04-01T00:00:00.000Z",
+      Converted__s: false,
+      Locked__s: false,
+    });
+    now = new Date("2026-04-02T03:04:05.000Z");
+    const updated = await service.update("Leads", created.id, { Company: "Renamed Example" });
+    expect(updated.fields.Created_Time).toBe("2026-04-01T00:00:00.000Z");
+    expect(updated.fields.Modified_Time).toBe("2026-04-02T03:04:05.000Z");
+  });
+  it("lists and counts each view from an independent predicate, including interim boundaries", async () => {
+    const clock = new Date("2026-06-15T12:00:00.000Z");
+    const userId = "fixture-view-user";
+    const service = createFixtureRecordService(
+      {
+        orgId: randomUUID(),
+        orgSlug: "fixture-views",
+        orgName: "Fixture Organization",
+        userId,
+        role: "admin",
+      },
+      { now: () => clock },
+    );
+    const day = 86_400_000;
+    const names = new Set((await service.getModule("Leads")).fields.map((field) => field.apiName));
+    const categories: Record<string, readonly string[]> = {
+      Open: [
+        "Attempted to Contact",
+        "Contact in Future",
+        "Contacted",
+        "Lost Lead",
+        "Not Contacted",
+        "Pre-Qualified",
+      ],
+      Junk: ["Junk Lead"],
+      "Not Qualified": ["Not Qualified"],
+    };
+    const utcDay = (value: string | Date) => {
+      const parsed = value instanceof Date ? value.getTime() : Date.parse(value);
+      return Number.isFinite(parsed) ? new Date(parsed).toISOString().slice(0, 10) : null;
+    };
+    const token = (value: unknown): value is CriteriaToken =>
+      typeof value === "object" && value !== null && !Array.isArray(value) && "token" in value;
+    const same = (left: FieldValue, right: FieldValue) => {
+      if (typeof left === "object" && left && typeof right === "object" && right)
+        return left.id === right.id && left.module === right.module;
+      return left === right;
+    };
+    const leafMatches = (record: RecordData, criteria: Criteria): boolean => {
+      if ("group" in criteria) {
+        return criteria.groupOperator === "and"
+          ? criteria.group.every((child) => leafMatches(record, child))
+          : criteria.group.some((child) => leafMatches(record, child));
+      }
+      if (!names.has(criteria.field)) return true;
+      const value = record.fields[criteria.field] ?? null;
+      if (criteria.comparator === "equal") {
+        if (Array.isArray(criteria.value)) return criteria.value.some((item) => same(value, item));
+        if (token(criteria.value)) {
+          if (criteria.value.token === "CURRENTUSER") return value === userId;
+          if (criteria.value.token === "TODAY")
+            return typeof value === "string" && utcDay(value) === utcDay(clock);
+          if (criteria.value.token === "CATEGORY")
+            return (categories[criteria.value.name] ?? []).includes(String(value));
+          return false;
+        }
+        return same(value, criteria.value as FieldValue);
+      }
+      if (criteria.comparator === "contains" || criteria.comparator === "not_contains") {
+        const hit =
+          typeof value === "string" &&
+          typeof criteria.value === "string" &&
+          value.toLowerCase().includes(criteria.value.toLowerCase());
+        return criteria.comparator === "contains" ? hit : !hit;
+      }
+      if (
+        criteria.comparator === "less_equal" &&
+        token(criteria.value) &&
+        criteria.value.token === "AGEINDAYS" &&
+        typeof value === "string"
+      ) {
+        const parsed = Date.parse(value);
+        if (!Number.isFinite(parsed)) return false;
+        return Math.floor((clock.getTime() - parsed) / day) <= criteria.value.offset;
+      }
+      return false;
+    };
+    const stored: RecordData[] = generateFixtureLeads(68, clock).map((record) => ({
+      ...record,
+      fields: {
+        ...record.fields,
+        Owner: userId,
+        Created_By: userId,
+        Modified_By: userId,
+      },
+    }));
+    const byId = (ids: readonly string[]) =>
+      [...ids].sort((left, right) => (BigInt(left) < BigInt(right) ? -1 : left === right ? 0 : 1));
+    const listed = async (viewId: string) => {
+      const ids: string[] = [];
+      for (let page = 1; page <= 5; page++) {
+        const result = await service.list("Leads", { viewId, page, perPage: 100 });
+        expect(result.sort).toEqual({ field: "id", order: "desc" });
+        ids.push(...result.records.map((record) => record.id));
+        if (!result.moreRecords) break;
+      }
+      expect(await service.count("Leads", { viewId })).toBe(ids.length);
+      return ids;
+    };
+    const views = await service.listViews("Leads");
+    expect(views).toHaveLength(14);
+    const members = new Map<string, string[]>();
+    for (const view of views) {
+      expect(view.criteria).not.toBeNull();
+      if (!view.criteria) throw new Error("Expected criteria.");
+      const actual = await listed(view.id);
+      const expected = stored.filter((record) => leafMatches(record, view.criteria as Criteria));
+      expect(actual.length).toBeGreaterThan(0);
+      expect(byId(actual)).toEqual(byId(expected.map((record) => record.id)));
+      members.set(view.id, actual);
+    }
+    const midnight = Date.UTC(clock.getUTCFullYear(), clock.getUTCMonth(), clock.getUTCDate());
+    const at = (ms: number) => new Date(ms).toISOString();
+    const findCreated = (ms: number) =>
+      stored.find((record) => record.fields.Created_Time === at(ms));
+    const justAfter = findCreated(midnight + 1000);
+    const justBefore = findCreated(midnight - 1000);
+    const within31 = findCreated(clock.getTime() - 31 * day);
+    const beyond31 = findCreated(clock.getTime() - 32 * day);
+    const missingTime = stored.find((record) => record.fields.Created_Time === null);
+    const modifiedInside = stored.find(
+      (record) =>
+        record.fields.Modified_Time === at(clock.getTime() - 31 * day) &&
+        record.fields.Created_Time === at(clock.getTime() - 40 * day),
+    );
+    for (const record of [justAfter, justBefore, within31, beyond31, missingTime, modifiedInside]) {
+      expect(record).toBeDefined();
+      expect(record?.fields.Converted__s).toBe(false);
+    }
+    const today = members.get("todays-leads") ?? [];
+    const created = members.get("recently-created-leads") ?? [];
+    const modified = members.get("recently-modified-leads") ?? [];
+    const everyone = members.get("all-leads") ?? [];
+    expect(today).toContain(justAfter?.id);
+    expect(today).not.toContain(justBefore?.id);
+    expect(today).not.toContain(missingTime?.id);
+    expect(created).toContain(within31?.id);
+    expect(created).toContain(justBefore?.id);
+    expect(created).not.toContain(beyond31?.id);
+    expect(created).not.toContain(missingTime?.id);
+    expect(created).not.toContain(modifiedInside?.id);
+    expect(modified).toContain(modifiedInside?.id);
+    expect(modified).not.toContain(beyond31?.id);
+    expect(modified).not.toContain(missingTime?.id);
+    expect(everyone).toContain(missingTime?.id);
+    expect(byId(members.get("unread-leads") ?? [])).toEqual(byId(everyone));
+    expect(created.length).toBeGreaterThan(0);
+    expect(byId(members.get("converted-leads") ?? [])).not.toEqual(byId(everyone));
+  });
+});
+
+const contactsExportFieldFlags = [
+  { apiName: "Mailing_Latitude", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Longitude", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Latitude", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Longitude", required: false, readOnly: false, unique: false },
+  { apiName: "Owner", required: false, readOnly: false, unique: false },
+  { apiName: "Lead_Source", required: false, readOnly: false, unique: false },
+  { apiName: "First_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Last_Name", required: true, readOnly: false, unique: false },
+  { apiName: "Account_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Vendor_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Email", required: false, readOnly: false, unique: true },
+  { apiName: "Title", required: false, readOnly: false, unique: false },
+  { apiName: "Department", required: false, readOnly: false, unique: false },
+  { apiName: "Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Home_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Fax", required: false, readOnly: false, unique: false },
+  { apiName: "Mobile", required: false, readOnly: false, unique: false },
+  { apiName: "Date_of_Birth", required: false, readOnly: false, unique: false },
+  { apiName: "Assistant", required: false, readOnly: false, unique: false },
+  { apiName: "Asst_Phone", required: false, readOnly: false, unique: false },
+  { apiName: "Created_By", required: false, readOnly: false, unique: false },
+  { apiName: "Modified_By", required: false, readOnly: false, unique: false },
+  { apiName: "Created_Time", required: false, readOnly: false, unique: false },
+  { apiName: "Modified_Time", required: false, readOnly: false, unique: false },
+  { apiName: "Full_Name", required: false, readOnly: false, unique: false },
+  { apiName: "Description", required: false, readOnly: false, unique: false },
+  { apiName: "Email_Opt_Out", required: false, readOnly: false, unique: false },
+  { apiName: "Skype_ID", required: false, readOnly: false, unique: false },
+  { apiName: "Salutation", required: false, readOnly: false, unique: false },
+  { apiName: "Secondary_Email", required: false, readOnly: false, unique: false },
+  { apiName: "Last_Activity_Time", required: false, readOnly: true, unique: false },
+  { apiName: "Twitter", required: false, readOnly: false, unique: false },
+  { apiName: "Tag", required: false, readOnly: false, unique: false },
+  { apiName: "Record_Image", required: false, readOnly: false, unique: false },
+  { apiName: "Reporting_To", required: false, readOnly: false, unique: false },
+  { apiName: "Unsubscribed_Mode", required: false, readOnly: true, unique: false },
+  { apiName: "Unsubscribed_Time", required: false, readOnly: true, unique: false },
+  { apiName: "id", required: false, readOnly: true, unique: false },
+  { apiName: "Change_Log_Time__s", required: false, readOnly: true, unique: false },
+  { apiName: "Locked__s", required: false, readOnly: true, unique: false },
+  { apiName: "Last_Enriched_Time__s", required: false, readOnly: true, unique: false },
+  { apiName: "Enrich_Status__s", required: false, readOnly: true, unique: false },
+  { apiName: "Mailing_Address", required: false, readOnly: true, unique: false },
+  { apiName: "Mailing_Country", required: false, readOnly: false, unique: false },
+  {
+    apiName: "Mailing_Flat_House_No_Building_Apartment_Name",
+    required: false,
+    readOnly: false,
+    unique: false,
+  },
+  { apiName: "Mailing_Street", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_City", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_State", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Zip", required: false, readOnly: false, unique: false },
+  { apiName: "Mailing_Coordinates", required: false, readOnly: true, unique: false },
+  { apiName: "Other_Address", required: false, readOnly: true, unique: false },
+  { apiName: "Other_Country", required: false, readOnly: false, unique: false },
+  {
+    apiName: "Other_Flat_House_No_Building_Apartment_Name",
+    required: false,
+    readOnly: false,
+    unique: false,
+  },
+  { apiName: "Other_Street", required: false, readOnly: false, unique: false },
+  { apiName: "Other_City", required: false, readOnly: false, unique: false },
+  { apiName: "Other_State", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Zip", required: false, readOnly: false, unique: false },
+  { apiName: "Other_Coordinates", required: false, readOnly: true, unique: false },
+  { apiName: "nearby_distance__s", required: false, readOnly: true, unique: false },
+  { apiName: "Connected_To__s", required: false, readOnly: false, unique: false },
+] as const;
+
+describe("Contacts fixture", () => {
+  it("requires Last Name on create", async () => {
+    const service = make();
+    await expect(service.create("Contacts", { First_Name: "Only" })).rejects.toThrow(
+      ValidationError,
+    );
+  });
+  it("validates Reporting_To against an existing contact on write", async () => {
+    const service = make();
+    await expect(
+      service.create("Contacts", {
+        Last_Name: "Child",
+        Reporting_To: { module: "Contacts", id: "missing-contact" },
+      }),
+    ).rejects.toThrow(ValidationError);
+  });
+  it("returns null Reporting_To after the target contact is deleted", async () => {
+    const service = make();
+    const manager = await service.create("Contacts", { Last_Name: "Manager" });
+    const report = await service.create("Contacts", {
+      Last_Name: "Report",
+      Reporting_To: { module: "Contacts", id: manager.id },
+    });
+    expect(report.fields.Reporting_To).toMatchObject({ id: manager.id, name: expect.any(String) });
+    await service.delete("Contacts", [manager.id]);
+    expect((await service.get("Contacts", report.id)).fields.Reporting_To).toBeNull();
+    const listed = (
+      await service.list("Contacts", { viewId: "all-contacts", page: 1, perPage: 100 })
+    ).records.find((row) => row.id === report.id);
+    expect(listed?.fields.Reporting_To).toBeNull();
+  });
+  it("lists all ten contacts views", async () => {
+    expect(await make().listViews("Contacts")).toHaveLength(10);
+  });
+  it("matches the exported field inventory and picklist values", async () => {
+    const metadata = await make().getModule("Contacts");
+    expect(metadata.fields).toHaveLength(61);
+    const expectedFieldInventory = [
+      ["Mailing_Latitude", "double"],
+      ["Mailing_Longitude", "double"],
+      ["Other_Latitude", "double"],
+      ["Other_Longitude", "double"],
+      ["Owner", "ownerlookup"],
+      ["Lead_Source", "picklist"],
+      ["First_Name", "text"],
+      ["Last_Name", "text"],
+      ["Account_Name", "lookup"],
+      ["Vendor_Name", "lookup"],
+      ["Email", "email"],
+      ["Title", "text"],
+      ["Department", "text"],
+      ["Phone", "phone"],
+      ["Home_Phone", "phone"],
+      ["Other_Phone", "phone"],
+      ["Fax", "text"],
+      ["Mobile", "phone"],
+      ["Date_of_Birth", "date"],
+      ["Assistant", "text"],
+      ["Asst_Phone", "phone"],
+      ["Created_By", "ownerlookup"],
+      ["Modified_By", "ownerlookup"],
+      ["Created_Time", "datetime"],
+      ["Modified_Time", "datetime"],
+      ["Full_Name", "text"],
+      ["Description", "textarea"],
+      ["Email_Opt_Out", "boolean"],
+      ["Skype_ID", "text"],
+      ["Salutation", "picklist"],
+      ["Secondary_Email", "email"],
+      ["Last_Activity_Time", "datetime"],
+      ["Twitter", "text"],
+      ["Tag", "text"],
+      ["Record_Image", "profileimage"],
+      ["Reporting_To", "lookup"],
+      ["Unsubscribed_Mode", "picklist"],
+      ["Unsubscribed_Time", "datetime"],
+      ["id", "bigint"],
+      ["Change_Log_Time__s", "datetime"],
+      ["Locked__s", "boolean"],
+      ["Last_Enriched_Time__s", "datetime"],
+      ["Enrich_Status__s", "picklist"],
+      ["Mailing_Address", "textarea"],
+      ["Mailing_Country", "picklist"],
+      ["Mailing_Flat_House_No_Building_Apartment_Name", "text"],
+      ["Mailing_Street", "text"],
+      ["Mailing_City", "text"],
+      ["Mailing_State", "picklist"],
+      ["Mailing_Zip", "text"],
+      ["Mailing_Coordinates", "textarea"],
+      ["Other_Address", "textarea"],
+      ["Other_Country", "picklist"],
+      ["Other_Flat_House_No_Building_Apartment_Name", "text"],
+      ["Other_Street", "text"],
+      ["Other_City", "text"],
+      ["Other_State", "picklist"],
+      ["Other_Zip", "text"],
+      ["Other_Coordinates", "textarea"],
+      ["nearby_distance__s", "double"],
+      ["Connected_To__s", "multi_module_lookup"],
+    ];
+    expect(metadata.fields.map((field) => [field.apiName, field.dataType])).toEqual(
+      expectedFieldInventory,
+    );
+    expect(
+      metadata.fields.map((field) => ({
+        apiName: field.apiName,
+        required: field.required,
+        readOnly: field.readOnly,
+        unique: field.unique,
+      })),
+    ).toEqual(contactsExportFieldFlags);
+    expect(
+      metadata.fields
+        .filter((field) => field.lookup)
+        .map((field) => [field.apiName, field.lookup?.module]),
+    ).toEqual([
+      ["Account_Name", "Accounts"],
+      ["Vendor_Name", "Vendors"],
+      ["Reporting_To", "Contacts"],
+    ]);
+
+    const picklists = Object.fromEntries(
+      metadata.fields
+        .filter((field) => field.picklist)
+        .map((field) => [
+          field.apiName,
+          field.picklist?.map((opt) => [opt.displayValue, opt.storedValue]),
+        ]),
+    );
+    expect(picklists.Lead_Source).toEqual([
+      ["-None-", "-None-"],
+      ["Advertisement", "Advertisement"],
+      ["Cold Call", "Cold Call"],
+      ["Employee Referral", "Employee Referral"],
+      ["External Referral", "External Referral"],
+      ["Online Store", "OnlineStore"],
+      ["Partner", "Partner"],
+      ["X (Twitter)", "Twitter"],
+      ["Facebook", "Facebook"],
+      ["Public Relations", "Public Relations"],
+      ["Sales Email Alias", "Sales Mail Alias"],
+      ["Seminar Partner", "Seminar Partner"],
+      ["Internal Seminar", "Seminar-Internal"],
+      ["Trade Show", "Trade Show"],
+      ["Web Download", "Web Download"],
+      ["Web Research", "Web Research"],
+      ["Web Cases", "Web Cases"],
+      ["Web Mail", "Web Mail"],
+      ["Chat", "Chat"],
+    ]);
+    expect(picklists.Salutation).toEqual([
+      ["-None-", "-None-"],
+      ["Mr.", "Mr."],
+      ["Mrs.", "Mrs."],
+      ["Ms.", "Ms."],
+      ["Dr.", "Dr."],
+      ["Prof.", "Prof."],
+    ]);
+    expect(picklists.Unsubscribed_Mode).toEqual([
+      ["Consent form", "Consent form"],
+      ["Manual", "Manual"],
+      ["Unsubscribe link", "Unsubscribe link"],
+      ["reference CRM campaigns", "reference CRM campaigns"],
+    ]);
+    expect(picklists.Enrich_Status__s).toEqual([
+      ["Available", "Available"],
+      ["Enriched", "Enriched"],
+      ["Data not found", "Data not found"],
+    ]);
+  });
+  it("rejects duplicate Email case-insensitively and permits null or other orgs", async () => {
+    const orgId = randomUUID();
+    const service = createFixtureRecordService({
+      orgId,
+      orgSlug: "contacts-unique",
+      orgName: "Contacts Unique Org",
+      userId: "member",
+      role: "admin",
+    });
+    const email = `${randomUUID()}@example.org`;
+    await service.create("Contacts", { Last_Name: "First", Email: email });
+    await expect(
+      service.create("Contacts", { Last_Name: "Second", Email: email.toUpperCase() }),
+    ).rejects.toThrow(ConflictError);
+    const third = await service.create("Contacts", { Last_Name: "Third", Email: null });
+    const fourth = await service.create("Contacts", { Last_Name: "Fourth", Email: null });
+    expect(third.id).not.toBe(fourth.id);
+    await expect(service.update("Contacts", third.id, { Email: email })).rejects.toThrow(
+      ConflictError,
+    );
+    const otherOrg = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-unique-other",
+      orgName: "Contacts Unique Other Org",
+      userId: "member",
+      role: "admin",
+    });
+    await expect(
+      otherOrg.create("Contacts", { Last_Name: "Other", Email: email }),
+    ).resolves.toBeDefined();
+  });
+  it("rejects massUpdate Email that would duplicate within the batch", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-mass-unique-batch",
+      orgName: "Contacts Mass Unique Batch",
+      userId: "member",
+      role: "admin",
+    });
+    const contactsBundle = fixtureModules.Contacts;
+    if (!contactsBundle) throw new Error("Contacts fixture module missing.");
+    const emailField = contactsBundle.metadata.fields.find((field) => field.apiName === "Email");
+    if (!emailField) throw new Error("Contacts Email field missing from fixture metadata.");
+    const previousMassUpdate = emailField.massUpdate;
+    emailField.massUpdate = true;
+    try {
+      const first = await service.create("Contacts", {
+        Last_Name: "Batch First",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const second = await service.create("Contacts", {
+        Last_Name: "Batch Second",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const emailBeforeFirst = (await service.get("Contacts", first.id)).fields.Email;
+      const emailBeforeSecond = (await service.get("Contacts", second.id)).fields.Email;
+      const sharedEmail = `${randomUUID()}@example.org`;
+      await expect(
+        service.massUpdate("Contacts", [first.id, second.id], { Email: sharedEmail }),
+      ).rejects.toThrow(ConflictError);
+      expect((await service.get("Contacts", first.id)).fields.Email).toBe(emailBeforeFirst);
+      expect((await service.get("Contacts", second.id)).fields.Email).toBe(emailBeforeSecond);
+    } finally {
+      emailField.massUpdate = previousMassUpdate;
+    }
+  });
+  it("rejects massUpdate Email that matches another record case-insensitively", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-mass-unique-other",
+      orgName: "Contacts Mass Unique Other",
+      userId: "member",
+      role: "admin",
+    });
+    const contactsBundle = fixtureModules.Contacts;
+    if (!contactsBundle) throw new Error("Contacts fixture module missing.");
+    const emailField = contactsBundle.metadata.fields.find((field) => field.apiName === "Email");
+    if (!emailField) throw new Error("Contacts Email field missing from fixture metadata.");
+    const previousMassUpdate = emailField.massUpdate;
+    emailField.massUpdate = true;
+    try {
+      const existingEmail = `${randomUUID()}@example.org`;
+      await service.create("Contacts", { Last_Name: "Existing", Email: existingEmail });
+      const target = await service.create("Contacts", {
+        Last_Name: "Target",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const emailBefore = (await service.get("Contacts", target.id)).fields.Email;
+      await expect(
+        service.massUpdate("Contacts", [target.id], { Email: existingEmail.toUpperCase() }),
+      ).rejects.toThrow(ConflictError);
+      expect((await service.get("Contacts", target.id)).fields.Email).toBe(emailBefore);
+    } finally {
+      emailField.massUpdate = previousMassUpdate;
+    }
+  });
+  it("permits update to the same Email with different letter case", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-update-same-email-case",
+      orgName: "Contacts Update Same Email Case",
+      userId: "member",
+      role: "admin",
+    });
+    const email = `${randomUUID()}@example.org`;
+    const record = await service.create("Contacts", { Last_Name: "Self", Email: email });
+    await expect(
+      service.update("Contacts", record.id, { Email: email.toUpperCase() }),
+    ).resolves.toBeDefined();
+    expect((await service.get("Contacts", record.id)).fields.Email).toBe(email.toUpperCase());
   });
 });

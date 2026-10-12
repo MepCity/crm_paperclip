@@ -99,10 +99,12 @@ WCAG 2.1 AA: every control has a label, focus is visible, everything works from 
 
 Exception (board decision, 2026-10-04, MEP-63). The one-to-one look takes precedence over the contrast minimum in two places only. There the measured reference values stay as they are:
 
-- **Placeholder text.** `--color-text-placeholder` and `--color-rail-placeholder` measure 2.75:1 to 3.33:1 against their surfaces, below the 4.5:1 text minimum. The two tokens are used only for the placeholder of a real input. A placeholder is never the only label of a control and never carries a value, an instruction or an error.
+- **Placeholder text.** `--color-text-placeholder` and `--color-rail-placeholder` measure 2.75:1 to 3.33:1 against their surfaces, below the 4.5:1 text minimum. The two tokens are used only for the placeholder of a real input and for the empty-value text of a selection control: the text its trigger shows while no option is selected, and only where the spec measures that muted ink. Neither text is ever the only label of a control, and neither carries a value, an instruction or an error. A selected option is drawn in `--color-text`. The empty-value case is the CTO's reading of the board decision (2026-10-05, MEP-157): the same token, the same pair and the same role as a placeholder. The board sees it with the Module 1 gate list and may overturn it.
 - **Separator lines.** `--color-border`, `--color-topbar-border` and `--color-rail-border` measure 1.36:1 to 1.90:1, below the 3:1 non-text minimum, where they divide regions. A border that outlines a control is not covered.
 
-Everything else meets AA. Text in `--color-primary` is drawn on `--color-surface` (4.69:1) and not on `--color-bg` (4.15:1). The ratios are listed under "Contrast notes" in `apps/web/src/components/ui/README.md`. A newly measured pair below AA is not covered by this exception: the engineer reports it to the CTO and the board decides.
+Text in `--color-primary` is drawn on `--color-surface` (4.69:1) and not on `--color-bg` (4.15:1). The ratios are listed under "Contrast notes" in `apps/web/src/components/ui/README.md`. A newly measured pair below AA is not covered by this exception: its value stays as measured, the engineer lists it there and reports it to the CTO, and the board decides.
+
+In the accessibility scan a text that stays below AA is left out by excluding the element that holds only that text, through a selector of its own, with a comment at the call site that names the pair and this section. The control around it stays in the scan and no rule is disabled.
 
 ## Alternatives considered
 

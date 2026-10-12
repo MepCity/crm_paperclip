@@ -1,4 +1,4 @@
-import { formatDateTime } from "@crm/core/format";
+import { formatDate, formatDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
@@ -18,7 +18,9 @@ function field(
     dataType,
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
     ...extra,
   };
 }
@@ -120,6 +122,37 @@ test("datetime uses the shared formatter", () => {
   expect(screen.queryByText(value)).toBeNull();
 });
 
+test("date uses the shared formatter and shows no clock", () => {
+  show("date", "2026-02-15");
+  expect(screen.getByText(formatDate("2026-02-15", DEFAULT_FORMAT))).toBeTruthy();
+  expect(screen.queryByText("2026-02-15")).toBeNull();
+});
+
+test("integer, boolean, currency and Created_By match shared field formatting", () => {
+  const { rerender } = show("integer", 12_345);
+  expect(screen.getByText("12345")).toBeTruthy();
+
+  rerender(<CellValue field={field("boolean")} value={true} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("true")).toBeTruthy();
+
+  rerender(<CellValue field={field("boolean")} value={false} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("false")).toBeTruthy();
+
+  rerender(<CellValue field={field("currency")} value={1200.5} format={DEFAULT_FORMAT} />);
+  expect(screen.getByText("1,200.5")).toBeTruthy();
+
+  rerender(
+    <CellValue
+      field={field("ownerlookup", { apiName: "Created_By", label: "Created By" })}
+      value="user-1"
+      format={DEFAULT_FORMAT}
+      ownerNames={{ "user-1": "Owner One" }}
+    />,
+  );
+  expect(screen.getByText("Owner One")).toBeTruthy();
+  expect(screen.queryByText(/Mar 2026/)).toBeNull();
+});
+
 test("types outside the list columns stay plain text", () => {
   const { rerender } = show("boolean", true);
   expect(screen.getByText("true").closest("a")).toBeNull();
@@ -134,10 +167,77 @@ test("types outside the list columns stay plain text", () => {
 
   rerender(
     <CellValue
-      field={field("lookup")}
+      field={field("multi_module_lookup")}
       value={{ module: "Accounts", id: "acc-1" }}
       format={DEFAULT_FORMAT}
     />,
   );
   expect(screen.getByText("acc-1").closest("a")).toBeNull();
+});
+
+test("future email controls retain their text and cannot navigate", () => {
+  render(
+    <CellValue
+      field={field("email")}
+      value="synthetic@example.test"
+      format={DEFAULT_FORMAT}
+      laterModule="M10"
+    />,
+  );
+  const link = screen.getByRole("link", { name: "synthetic@example.test" });
+  expect(link.getAttribute("data-later-module")).toBe("M10");
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+});
+
+test("lookup field renders link in list cell (with laterModule for unregistered modules)", () => {
+  const { rerender } = render(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Leads" } })}
+      value={{ module: "Leads", id: "lead-1", name: "Lead One" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const registeredLink = screen.getByRole("link", { name: "Lead One" });
+  expect(registeredLink.getAttribute("href")).toBe("/tab/Leads/lead-1");
+  expect(registeredLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Accounts" } })}
+      value={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Acme Corp" });
+  expect(laterLink.tagName).toBe("SPAN");
+  expect(laterLink.hasAttribute("href")).toBe(false);
+  expect(laterLink.getAttribute("data-later-module")).toBe("M3");
+  expect(laterLink.getAttribute("aria-disabled")).toBe("true");
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Accounts" } })}
+      value={null}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  expect(screen.queryByRole("link")).toBeNull();
+});
+
+test("Contacts Account Name shows the lookup name without an active Accounts link", () => {
+  render(
+    <CellValue
+      field={field("lookup", {
+        apiName: "Account_Name",
+        label: "Account Name",
+        lookup: { module: "Accounts" },
+      })}
+      value={{ module: "Accounts", id: "synthetic-account", name: "Synthetic Account" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const account = screen.getByText("Synthetic Account");
+  expect(account.closest("a")).toBeNull();
+  expect(account.getAttribute("data-later-module")).toBe("M3");
+  expect(screen.queryByText("synthetic-account")).toBeNull();
 });

@@ -3,11 +3,18 @@ import { z } from "zod";
 
 export const uuidInput = z.uuid();
 export const roleInput = z.enum(["admin", "member"]);
-export const slugInput = z
+const reservedOrgSlug = /^v\d+(?:\.\d+)?$/;
+
+const slugShape = z
   .string()
   .min(3)
   .max(40)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and interior hyphens.");
+
+export const slugInput = z
+  .string()
+  .refine((value) => !reservedOrgSlug.test(value), "This slug is reserved.")
+  .pipe(slugShape);
 export const emailInput = z
   .string()
   .trim()

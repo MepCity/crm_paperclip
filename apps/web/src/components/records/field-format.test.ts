@@ -1,0 +1,56 @@
+import { formatDate } from "@crm/core/format";
+import { expect, test } from "vitest";
+import { DEFAULT_FORMAT } from "@/lib/locale";
+import { formatFieldValue } from "./field-format";
+
+const format = DEFAULT_FORMAT;
+
+function textField(
+  apiName: string,
+  dataType: "text" | "integer" | "currency" | "boolean" | "date" | "datetime",
+) {
+  return {
+    apiName,
+    label: apiName,
+    dataType,
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+}
+
+test("integer and boolean match list cell string rendering", () => {
+  const integer = formatFieldValue(textField("n", "integer"), 12_345, {}, format);
+  expect(integer).toEqual({ kind: "text", text: "12345" });
+  const booleanTrue = formatFieldValue(textField("b", "boolean"), true, {}, format);
+  expect(booleanTrue).toEqual({ kind: "text", text: "true" });
+  const booleanFalse = formatFieldValue(textField("b2", "boolean"), false, {}, format);
+  expect(booleanFalse).toEqual({ kind: "text", text: "false" });
+});
+
+test("currency uses a supplied code and plain numbers otherwise", () => {
+  const field = textField("amount", "currency");
+  const plain = formatFieldValue(field, 1200.5, {}, format);
+  expect(plain.kind).toBe("text");
+  if (plain.kind === "text") {
+    expect(plain.text).toBe("1,200.5");
+  }
+
+  const usd = formatFieldValue(field, 1200.5, {}, format, { currencyCode: "USD" });
+  expect(usd.kind).toBe("text");
+  if (usd.kind === "text") {
+    expect(usd.text).toContain("1,200.50");
+    expect(usd.text).toContain("$");
+  }
+});
+
+test("date renders the calendar day with the shared formatter and no clock", () => {
+  const rendered = formatFieldValue(textField("Date_of_Birth", "date"), "2026-02-15", {}, format);
+  expect(rendered).toEqual({ kind: "text", text: formatDate("2026-02-15", format) });
+  if (rendered.kind === "text") expect(rendered.text).not.toContain(":");
+  expect(formatFieldValue(textField("Date_of_Birth", "date"), null, {}, format)).toEqual({
+    kind: "empty",
+  });
+});

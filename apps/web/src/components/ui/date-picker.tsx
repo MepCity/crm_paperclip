@@ -27,7 +27,7 @@ import { Icons } from "./icon";
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-sm font-medium text-text",
+  label: "text-md font-normal text-text",
   group:
     "flex items-center rounded-md border border-border bg-surface " +
     "data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
@@ -49,7 +49,7 @@ const styles = {
     "flex cursor-default items-center justify-center rounded-md p-1 text-text outline-none " +
     "data-disabled:opacity-50 data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
-  weekday: "w-8 pb-1 text-center text-xs font-medium text-text-muted",
+  weekday: "w-8 pb-1 text-center text-xs font-semibold text-text-muted",
   day:
     "flex h-8 w-8 cursor-default items-center justify-center rounded-md text-sm text-text outline-none " +
     "data-disabled:opacity-50 data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +

@@ -1,0 +1,458 @@
+/* Geometry: record-detail.md, Visual layout → record information rows. */
+.record-form-validation-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-form-required);
+}
+.record-control {
+  box-sizing: border-box;
+  height: var(--size-form-input-height);
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-form-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  padding: 0 var(--space-3);
+  outline: none;
+}
+.record-control:focus,
+.record-control[data-focused],
+.record-control[data-focus-visible] {
+  border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
+}
+.record-control[aria-required="true"]:focus,
+.record-control[aria-required="true"][data-focused],
+.record-control[aria-required="true"][data-focus-visible],
+.record-control[data-required]:focus,
+.record-control[data-required][data-focused],
+.record-control[data-required][data-focus-visible] {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
+}
+.record-control[aria-required="true"],
+.record-control[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
+.record-control[aria-invalid="true"],
+.record-control[data-invalid] {
+  border-color: var(--color-form-required);
+}
+.record-control:disabled,
+.record-control[data-disabled] {
+  background: var(--color-surface-hover);
+  opacity: 0.5;
+}
+.record-control::placeholder {
+  color: var(--color-text-placeholder);
+}
+.record-label {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+}
+.record-textarea {
+  height: auto;
+  min-height: var(--size-form-input-height);
+  padding-block: var(--space-2);
+  resize: both;
+}
+.record-input-frame {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+}
+.record-input-frame > .record-control,
+.record-input-frame > input.record-control {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  padding-inline: var(--space-3);
+}
+.record-input-frame:has(:focus) {
+  border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
+}
+.record-input-frame:has([aria-required="true"]:focus),
+.record-input-frame:has([data-required]:focus) {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
+}
+.record-input-frame[data-required],
+.record-choice-shell[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
+.record-input-frame[data-invalid],
+.record-input-frame:has([aria-invalid="true"]) {
+  border-color: var(--color-form-required);
+}
+.record-input-frame:has(:disabled),
+.record-choice-shell:has(:disabled) {
+  background: var(--color-surface-hover);
+  opacity: 0.5;
+}
+.record-prefix {
+  flex: none;
+}
+.record-currency-prefix {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--size-form-currency-divider-gap);
+  padding-left: calc(var(--size-form-currency-prefix-inset) - 1px);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+.record-currency-divider {
+  flex: none;
+  width: 1px;
+  height: var(--size-form-currency-divider-height);
+  align-self: flex-start;
+  margin-top: calc(var(--size-form-currency-divider-top) - 1px);
+  background: var(--color-control-border);
+}
+.record-input-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-form-input-end);
+  margin-right: 0;
+  border: 0;
+  background: var(--color-form-input-end);
+  color: var(--color-text);
+  padding: 0;
+  cursor: default;
+}
+.record-input-end:disabled {
+  opacity: 1;
+}
+.record-input-end-icon {
+  width: var(--size-form-input-end-icon);
+  height: var(--size-form-input-end-icon);
+}
+.record-choice-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  padding-left: var(--space-3);
+  padding-right: calc(var(--size-form-caret-inset-end) + var(--size-form-caret-width));
+}
+.record-choice-trigger > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.record-choice-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+}
+.record-choice-shell[data-required] {
+  box-shadow: inset var(--size-form-required-bar) 0 var(--color-form-required);
+}
+.record-choice-shell:has(:focus) {
+  border-color: var(--color-focus-ring);
+  box-shadow: var(--shadow-form-focus-glow);
+}
+.record-choice-shell[data-required]:has(:focus) {
+  box-shadow:
+    inset var(--size-form-required-bar) 0 var(--color-form-required),
+    var(--shadow-form-focus-glow);
+}
+.record-choice-shell[data-invalid] {
+  border-color: var(--color-form-required);
+}
+.record-choice-shell .record-choice-trigger {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  height: 100%;
+  padding-left: var(--space-3);
+  padding-right: calc(var(--size-form-caret-inset-end) + var(--size-form-caret-width));
+}
+.record-choice-shell--owner .record-choice-trigger {
+  padding-right: calc(var(--size-form-owner-caret-gap) + var(--size-form-caret-width));
+}
+.record-form-caret {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--size-form-caret-inset-end) - 1px);
+  width: var(--size-form-caret-width);
+  height: var(--size-form-caret-height);
+  color: var(--color-form-caret);
+  transform: translateY(-50%);
+}
+.record-choice-shell--owner .record-form-caret {
+  right: var(--size-form-owner-caret-gap);
+}
+.record-form-caret[data-open] {
+  transform: translateY(-50%) rotate(180deg);
+}
+.record-profile {
+  position: relative;
+  width: var(--size-form-portrait);
+  height: var(--size-form-portrait);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-form-portrait-ring);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.record-profile-silhouette {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: var(--size-form-portrait);
+  height: var(--size-form-portrait);
+  color: var(--color-form-portrait);
+}
+/* Dropdown panel rows: Country panel, Standard picklist, Owner dropdown. */
+.record-choice-panel {
+  width: var(--trigger-width);
+  max-height: var(--available-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-form-control);
+  background: var(--color-surface);
+  outline: none;
+}
+.record-choice-list {
+  max-height: 100%;
+  overflow: auto;
+  padding-block: var(--size-form-list-padding);
+  outline: none;
+}
+.record-search-panel .record-choice-list {
+  padding-block: 0 var(--size-form-panel-owner-content-bottom);
+  padding-top: var(--size-form-panel-list-first-gap);
+}
+.record-owner-panel .record-choice-list {
+  padding-top: calc(
+    var(--size-form-panel-owner-content-top) -
+    (var(--size-form-panel-owner-row-pitch) - var(--size-form-panel-owner-avatar-size)) /
+    2
+  );
+  padding-bottom: calc(
+    var(--size-form-panel-owner-content-bottom) -
+    (var(--size-form-panel-owner-row-pitch) - var(--size-form-panel-owner-avatar-size)) /
+    2 -
+    1px
+  );
+}
+.record-choice-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--size-form-panel-owner-name-gap);
+  height: var(--size-form-option-height);
+  padding-inline-start: calc(var(--size-form-panel-option-text-inset) - 1px);
+  padding-inline-end: var(--size-form-panel-inset-inline);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  outline: none;
+  cursor: default;
+}
+.record-search-panel .record-choice-row[data-selected],
+.record-owner-panel .record-choice-row[data-selected] {
+  background: transparent;
+  font-weight: var(--font-weight-semibold);
+}
+.record-choice-row[data-focused]:not([data-selected])::before,
+.record-choice-row[data-hovered]:not([data-selected])::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  right: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  height: var(--size-form-panel-selected-fill-height);
+  border-radius: var(--radius-form-control);
+  background: var(--color-surface-selected);
+  transform: translateY(-50%);
+}
+.record-choice-row[data-focused]:not([data-selected]),
+.record-choice-row[data-hovered]:not([data-selected]) {
+  background: transparent;
+}
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel):not(
+    .record-inline-choice-panel
+  )
+  .record-choice-row[data-selected]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  right: calc(var(--size-form-panel-selected-fill-inset) - 1px);
+  height: var(--size-form-panel-selected-fill-height);
+  border-radius: var(--radius-form-control);
+  background: var(--color-surface-selected);
+  transform: translateY(-50%);
+}
+.record-choice-panel:not(.record-search-panel):not(.record-owner-panel):not(
+    .record-inline-choice-panel
+  )
+  .record-choice-row[data-selected] {
+  background: transparent;
+  font-weight: var(--font-weight-semibold);
+}
+.record-choice-check {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--size-form-panel-check-inset) - 1px);
+  width: var(--size-form-panel-check-width);
+  height: var(--size-form-panel-check-height);
+  color: var(--color-text);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.record-owner-row .record-choice-check {
+  left: calc(var(--size-form-panel-owner-check-inset) - 1px);
+}
+.record-search-panel {
+  height: var(--size-form-country-height);
+}
+.record-owner-panel {
+  height: var(--size-form-owner-height);
+}
+.record-search-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: var(--available-height);
+  min-height: 0;
+  outline: none;
+}
+.record-panel-search {
+  position: relative;
+  flex: none;
+  margin-inline: var(--size-form-panel-inset-inline);
+  margin-top: var(--size-form-panel-search-top);
+}
+.record-panel-search .record-control {
+  width: 100%;
+  height: var(--size-form-input-height);
+  padding-inline-start: var(--size-form-panel-search-text-inset);
+}
+.record-prefix-select .record-control {
+  border: 0;
+  height: 100%;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.record-owner-panel .record-panel-search .record-control {
+  height: var(--size-form-panel-search-height-owner);
+}
+.record-panel-search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--size-form-panel-search-icon-inset);
+  width: var(--size-form-panel-search-icon-size);
+  height: var(--size-form-panel-search-icon-size);
+  color: var(--color-text);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.record-search-dialog .record-choice-list {
+  flex: 1;
+  min-height: 0;
+}
+.record-owner-row {
+  height: var(--size-form-panel-owner-row-pitch);
+  min-height: var(--size-form-panel-owner-row-pitch);
+  padding-inline-start: calc(var(--size-form-panel-owner-avatar-inset) - 1px);
+  gap: var(--size-form-panel-owner-name-gap);
+}
+.record-owner-avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-form-panel-owner-avatar-size);
+  height: var(--size-form-panel-owner-avatar-size);
+  border-radius: var(--radius-full);
+  background: var(--color-avatar);
+  color: var(--color-surface);
+}
+.record-owner-avatar-icon {
+  width: calc(var(--size-form-panel-owner-avatar-size) * 0.55);
+  height: calc(var(--size-form-panel-owner-avatar-size) * 0.55);
+}
+.record-owner-row .record-owner-email {
+  color: var(--color-text-muted);
+}
+.record-owner-name {
+  font-weight: var(--font-weight-normal);
+}
+.record-owner-row[data-selected] .record-owner-name {
+  font-weight: var(--font-weight-semibold);
+}
+.record-prefix-select {
+  position: relative;
+  flex: none;
+  width: var(--size-form-prefix-divider-offset);
+}
+.record-prefix-select > div,
+.record-prefix-select .record-choice-trigger {
+  height: 100%;
+}
+.record-prefix-select .record-form-caret {
+  right: calc(var(--size-form-prefix-caret-gap) + 1px);
+}
+.record-prefix-select .record-prefix-divider {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--color-control-border);
+  pointer-events: none;
+}
+.record-prefix-select .record-choice-trigger {
+  width: 100%;
+  padding-left: var(--space-3);
+  padding-right: calc(var(--size-form-prefix-caret-gap) + var(--size-form-caret-width));
+}
+.record-prefix-empty {
+  color: var(--color-text-placeholder);
+}
+.record-input-frame:has(.record-prefix-select) > .record-control,
+.record-input-frame:has(.record-prefix-select) > input.record-control {
+  padding-left: var(--space-3);
+}
+.record-input-frame:has(.record-input-end) > .record-control,
+.record-input-frame:has(.record-input-end) > input.record-control {
+  padding-right: var(--space-3);
+}
+.record-input-frame:has(.record-currency-prefix) > .record-control,
+.record-input-frame:has(.record-currency-prefix) > input.record-control {
+  padding-left: var(--space-3);
+}
+
+.record-filter-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--size-list-filter-search-width);
+}
+
+.record-filter-search-wrap--fill {
+  max-width: none;
+}
+/* record-detail.md › Disabled input is Not observed: the wrapper already fades to 0.5, so the
+   inner control must not fade again (two stacked layers would render the value text at 0.25). */
+.record-input-frame:has(:disabled) .record-control,
+.record-choice-shell:has(:disabled) .record-control {
+  opacity: 1;
+}

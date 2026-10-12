@@ -18,6 +18,7 @@ export default function CheckboxDemo() {
         errorMessage="You have to accept the terms"
       />
       <Checkbox name="demo-checkbox-disabled" label="Disabled" isDisabled defaultSelected />
+      <Checkbox name="demo-checkbox-later" label="Activities" laterModule="M5" />
       <Checkbox name="demo-checkbox-required" label="Required" isRequired />
     </div>
   );

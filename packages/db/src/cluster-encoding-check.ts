@@ -8,17 +8,21 @@ try {
   await client.connect();
   try {
     const encoding = await client.query<{ server_encoding: string }>("show server_encoding");
-    const collation = await client.query(
-      "select collname from pg_collation where collname = 'und-x-icu'",
-    );
     const serverEncoding = encoding.rows[0]?.server_encoding;
-    if (serverEncoding !== "UTF8" || collation.rowCount !== 1) {
-      console.error(
-        JSON.stringify({ serverEncoding: serverEncoding ?? null, collations: collation.rowCount }),
-      );
+    let icuCollationOk = false;
+    if (serverEncoding === "UTF8") {
+      try {
+        await client.query(`select 'a' < 'b' collate "und-x-icu"`);
+        icuCollationOk = true;
+      } catch {
+        icuCollationOk = false;
+      }
+    }
+    if (serverEncoding !== "UTF8" || !icuCollationOk) {
+      console.error(JSON.stringify({ serverEncoding: serverEncoding ?? null, icuCollationOk }));
       failed = true;
     } else {
-      console.log(JSON.stringify({ serverEncoding, collations: collation.rowCount }));
+      console.log(JSON.stringify({ serverEncoding, icuCollationOk }));
     }
   } finally {
     await client.end();

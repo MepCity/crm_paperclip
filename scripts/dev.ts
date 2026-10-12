@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 import { ensureDatabase, type LocalPostgres, startLocalPostgres } from "@crm/db/local-postgres";
 import { runMigrations } from "@crm/db/migrate";
 import { isPortFree, pickFreePort } from "@crm/db/ports";
+import {
+  registerSignalShutdown,
+  startWithSignalShutdown,
+  stopApplicationChild,
+} from "@crm/db/signal-shutdown";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const webDir = `${root}apps/web`;
@@ -47,13 +52,7 @@ async function main(): Promise<number> {
 
   const stop = (): Promise<void> => {
     stopping ??= (async () => {
-      if (next && next.exitCode === null && next.signalCode === null) {
-        const child = next;
-        const exited = new Promise((resolve) => child.once("exit", resolve));
-        child.kill("SIGTERM");
-        await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 5000))]);
-        if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
-      }
+      await stopApplicationChild(next);
       await postgres?.stop();
     })();
     return stopping;
@@ -72,18 +71,13 @@ async function main(): Promise<number> {
       },
     );
   };
-  for (const signal of ["SIGINT", "SIGTERM"] as const) {
-    process.once(signal, () => {
-      console.log(`\ndev: ${signal} received, shutting down`);
-      shutdown(0);
-    });
-  }
+  const stopOnSignal = registerSignalShutdown(stop);
 
   try {
     let databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
       mkdirSync(dataDir, { recursive: true });
-      postgres = await startLocalPostgres({ dataDir });
+      postgres = await startWithSignalShutdown(() => startLocalPostgres({ dataDir }));
       await ensureDatabase(postgres.urlFor("postgres"), DATABASE_NAME);
       databaseUrl = postgres.urlFor(DATABASE_NAME);
       console.log(
@@ -120,11 +114,13 @@ async function main(): Promise<number> {
     console.log("");
   } catch (error) {
     console.error(error);
-    await stop();
+    await stopOnSignal();
     return 1;
   }
 
-  return exitCode;
+  const code = await exitCode;
+  await stopOnSignal();
+  return code;
 }
 
 main().then((code) => process.exit(code));

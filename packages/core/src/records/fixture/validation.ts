@@ -1,20 +1,6 @@
 import { type FieldErrors, ValidationError } from "../../errors";
 import type { FieldDefinition, FieldValue, RecordInput } from "../contract";
-import { leadsMetadata } from "./metadata";
 
-// These fields are supplied by the bound context or computed by this adapter.
-const managed = new Set([
-  "Owner",
-  "Full_Name",
-  "Created_By",
-  "Modified_By",
-  "Created_Time",
-  "Modified_Time",
-  "Last_Activity_Time",
-  "Converted_Date_Time",
-  "Lead_Conversion_Time",
-  "Lead_Status_Modified_Time",
-]);
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
   if (typeof value === "object" && value !== null) return value.id.length;
@@ -29,7 +15,13 @@ function valueLength(value: FieldValue): number | undefined {
     ? 1 - decimalPosition + integer.length + fraction.length
     : Math.max(decimalPosition, integer.length + fraction.length);
 }
-function validType(field: FieldDefinition, value: FieldValue): boolean {
+export function isValidDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): boolean {
   if (value === null) return true;
   switch (field.dataType) {
     case "integer":
@@ -39,6 +31,8 @@ function validType(field: FieldDefinition, value: FieldValue): boolean {
       return typeof value === "number" && Number.isFinite(value);
     case "boolean":
       return typeof value === "boolean";
+    case "date":
+      return typeof value === "string" && isValidDateOnly(value);
     case "datetime":
       return (
         typeof value === "string" &&
@@ -47,24 +41,32 @@ function validType(field: FieldDefinition, value: FieldValue): boolean {
       );
     case "bigint":
       return typeof value === "string" && /^-?\d+$/.test(value);
+    case "lookup":
     case "multi_module_lookup":
       return (
         typeof value === "object" &&
         typeof value.id === "string" &&
         typeof value.module === "string" &&
-        Object.keys(value).every((key) => key === "id" || key === "module")
+        (field.dataType !== "lookup" || value.module === field.lookup?.module) &&
+        (value.name === undefined || typeof value.name === "string") &&
+        Object.keys(value).every((key) => key === "id" || key === "module" || key === "name")
       );
     default:
       return typeof value === "string";
   }
 }
-export function validateInput(input: RecordInput, partial: boolean): void {
+export function validateInput(
+  input: RecordInput,
+  partial: boolean,
+  fields: readonly FieldDefinition[],
+  managed: ReadonlySet<string>,
+): void {
   const errors: FieldErrors = Object.create(null);
+  let mandatory = false;
   for (const name of Object.keys(input)) {
-    if (!leadsMetadata.fields.some((field) => field.apiName === name))
-      errors[name] = ["Unknown field."];
+    if (!fields.some((field) => field.apiName === name)) errors[name] = ["Unknown field."];
   }
-  for (const field of leadsMetadata.fields) {
+  for (const field of fields) {
     const present = Object.hasOwn(input, field.apiName);
     const value = input[field.apiName];
     if (present && (field.readOnly || managed.has(field.apiName))) {
@@ -76,9 +78,10 @@ export function validateInput(input: RecordInput, partial: boolean): void {
       (!partial || present) &&
       (value == null || (typeof value === "string" && !value.trim()))
     ) {
+      mandatory = true;
       errors[field.apiName] = ["This field is required."];
     } else if (present) {
-      if (value === undefined || !validType(field, value))
+      if (value === undefined || !acceptsFieldValue(field, value))
         errors[field.apiName] = ["Invalid field type."];
       else if (field.maxLength !== undefined && (valueLength(value) ?? 0) > field.maxLength)
         errors[field.apiName] = ["Value is too long."];
@@ -90,5 +93,6 @@ export function validateInput(input: RecordInput, partial: boolean): void {
         errors[field.apiName] = ["Choose a listed option."];
     }
   }
-  if (Object.keys(errors).length) throw new ValidationError(errors);
+  if (Object.keys(errors).length)
+    throw new ValidationError(errors, undefined, mandatory ? "mandatory" : "invalid");
 }

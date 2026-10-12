@@ -1,25 +1,64 @@
+import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
-import { signUpNewUser } from "./support/auth";
+import { AUTH_NAVIGATION_TIMEOUT_MS, signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
-test("a new user creates an organization and returns to it from home", async ({ page }) => {
+test("organization creation passes accessibility right after redirect", async ({ page }) => {
   await signUpNewUser(page);
-  // A full load drops the submit button's temporary live announcement.
-  // That node points at the previous screen for several seconds.
-  await page.goto("/orgs/new");
-  await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
-  await expectNoA11yViolations(page);
-
   const organization = await createOrganization(page, "Çağrı Şirketi Örnek");
   expect(organization).toEqual({ name: "Çağrı Şirketi Örnek", slug: "cagri-sirketi-ornek" });
-  await page.reload();
-  await expect(page.getByRole("heading", { name: organization.name, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
+  await expectNoA11yViolations(page);
+});
+
+/** Records every full document load of the organization form, the sign of a lost page state. */
+function watchFormDocumentLoads(page: Page): string[] {
+  const loads: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document" && new URL(request.url()).pathname === "/orgs/new")
+      loads.push(request.url());
+  });
+  return loads;
+}
+
+test("the form helper fills the form it already sits on without loading it again", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const formLoads = watchFormDocumentLoads(page);
+
+  const organization = await createOrganization(page);
+
+  expect(formLoads).toEqual([]);
+  await expect(page).toHaveURL(`/crm/${organization.slug}`);
+});
+
+test("the form helper opens the form when it starts from another page", async ({ page }) => {
+  await signUpNewUser(page);
+  const first = await createOrganization(page, "First Org");
+
+  const formLoads = watchFormDocumentLoads(page);
+  const second = await createOrganization(page, "Second Org");
+
+  expect(second).toEqual({ name: "Second Org", slug: "second-org" });
+  expect(formLoads).toHaveLength(1);
+  await expect(page).toHaveURL(`/crm/${second.slug}`);
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
+  expect(first.slug).toBe("first-org");
+});
+
+test("a new user creates an organization and returns to it from home", async ({ page }) => {
+  await signUpNewUser(page);
+  await expectNoA11yViolations(page);
+
+  const organization = await createOrganization(page);
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
   await expectNoA11yViolations(page);
 
   await page.goto("/");
-  await expect(page).toHaveURL(`/o/${organization.slug}`);
-  await expect(page.getByRole("heading", { name: organization.name, exact: true })).toBeVisible();
+  await expect(page).toHaveURL(`/crm/${organization.slug}`);
+  await expect(page.getByRole("heading", { name: "Home", exact: true })).toBeVisible();
 });
 
 test("a slug that is already in use is reported on the slug field", async ({ page, browser }) => {
@@ -45,7 +84,10 @@ test("a slug that is already in use is reported on the slug field", async ({ pag
   }
 });
 
-test("a member of another organization sees the same not-found page", async ({ page, browser }) => {
+test("a user without organization membership sees the same not-found page", async ({
+  page,
+  browser,
+}) => {
   await signUpNewUser(page);
   const organization = await createOrganization(page);
 
@@ -53,11 +95,11 @@ test("a member of another organization sees the same not-found page", async ({ p
   const other = await otherContext.newPage();
   try {
     await signUpNewUser(other);
-    await other.goto(`/o/${organization.slug}`);
+    await other.goto(`/crm/${organization.slug}`);
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     await expect(other.getByText("The page you are looking for does not exist.")).toBeVisible();
 
-    await other.goto("/o/missing-organization");
+    await other.goto("/crm/missing-organization");
     await expect(other.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
     await expect(other.getByText("The page you are looking for does not exist.")).toBeVisible();
   } finally {
@@ -75,7 +117,7 @@ test("organization creation requires sign-in and returns there afterwards", asyn
   await page.getByRole("textbox", { name: "Email" }).fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL("/orgs/new");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });
 

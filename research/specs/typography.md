@@ -204,6 +204,126 @@ Adopted Figtree values (`letter-spacing: normal`). The board selected Figtree on
 
 No font or application code is changed by this research task.
 
+## List and detail text roles
+
+The measurements below use only existing local captures and extend the Method above: 2 image pixels equal 1 CSS px; the same 50% relative foreground-to-background distance defines visible ink, not a DOM advance box. Backgrounds are sampled as the most common color across the text scanlines (excluding core text pixels), or at the vertical center of the label bounding box for vertical gradients (such as primary buttons); text color is sampled from the darkest solid core pixels (or `#FFFFFF` for white text). Cap and x-height targets use the vertical ink spans of isolated first capitals and lowercase x-height glyphs. Straight lowercase `l` stems use normalized coverage averaged through the middle 45–65% of that glyph, in CSS px. Where a generic label has no lowercase `l`, the straight vertical stem of lowercase `i` (below the dot, in the middle 45–65% of the glyph) is measured and marked with `(i)` in the table; Figtree's straight vertical `i` and `l` strokes have identical thickness. For thick headings that exceeded the previous 600 ceiling, the variable-weight scan was extended from 600 up to 800 in steps of 10. Record, owner, and event values contribute heights and stems only; their customer strings and widths are excluded.
+
+For each role, Figtree was rendered at 0.5 px size steps across the entire eligible height band (where both cap and x-height are within 0.5 CSS px of the capture). Generic labels were rendered across all sizes in their height band at weights 400, 500, 600, and at the role's fitted weight. A candidate size is chosen only when it forms an interior local minimum (mean absolute ink-width error is strictly lower than both adjacent 0.5 px neighbors in the band). If error is monotonic across the band or minimizes at the boundary, the size is reported as `not measurable: width fit has no minimum inside the height band (<band>)`. Size selection follows a two-step cycle: initial size fit at starting weight, stem measurement to identify the closest Figtree variable weight, and a re-evaluation of width fit at that fitted weight. Roles lacking an isolated `l` or `i` report the size range obtained across weights 400 and 600. Value-only roles report their height band and suggest the token of the label role with that height (`--text-md` or `--text-sm`), without inventing unsupported size tokens.
+
+| Role | Spec estimate | Measured cap / x height | Figtree font-size | `wght` (reference → Figtree stem) | Suggested token | Evidence (capture slug, generic labels / ink widths) |
+| --- | --- | --- | ---: | --- | --- | --- |
+| List view tab | ~13 / semibold | 9.5 / 7 | 13.5 | 640 (1.75 → 1.75) | --text-sm | list-default, list-converted (2; 55, 104) |
+| List toolbar Filter / Sort | ~14 / medium | 10–10.5 / 7.5 | 14 | 560 (1.61 → 1.61) | --text-md or new value needed: 14px | list-default (2; 32, 26.5) |
+| List primary button | ~14 / unspecified | 10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (14–15.5 px) | not measurable: no isolated lowercase `l` or `i` (14.5px at 400, 14px at 600) | --text-md | list-default (1; 77) |
+| Filter panel title | ~15 / semibold | 10 / 7.5 | 14.5 | 660 (1.92 → 1.93) | --text-md | list-default (1; 95.5) |
+| Filter group heading | ~14 / semibold | 11 / 8 | 15.5 | 650 (2.06 → 2.04) | new value needed: 15.5px | list-default (1; 102) |
+| Filter checkbox row | ~14 / regular | 10–10.5 / 7.5 | 14.5 | 410 (1.32 → 1.32) | --text-md | list-default (3; 59, 73.5, 120.5) |
+| Table column header | ~14 / medium | 10–10.5 / 7.5 | 14.5 | 410 (1.32 → 1.32) | --text-md | list-default (3; 71.5, 63, 33.5) |
+| Table cell value | ~14 / regular | 10 / 7.5 | 13.5–15 px (height band 10 / 7.5) | not measurable: no isolated lowercase `l` or `i` | --text-md | list-default (2 value crops; widths omitted) |
+| Footer fixed label | ~13 / unspecified | 10 / 7.5 | 14.5 | 400 (1.31 → 1.30) | --text-md | list-default (1; 87) |
+| Footer connector `to` | ~13 / unspecified | not measurable | not measurable: adjacent endpoints enter the crop; no separable glyphs | not measurable | not measurable | list-default (unmeasurable) |
+| Filter search placeholder | unspecified | 10.5 / 7.5 | 14.5 | not measurable: no isolated lowercase `l` or `i` (14.5px at 400, 14px at 600) | --text-md | list-default (1; 43.5) |
+| Empty-list message | unspecified | 10 / 7.5 | 14.5 | not measurable: no isolated lowercase `l` or `i` (14.5px at 400, 14px at 600) | --text-md | list-converted (1; 103.5) |
+| Record title value | 18.5 / 600 candidate | 14.5 / 11 | 20.5–21 px (height band 14.5 / 11) | not measurable: no isolated lowercase `l` or `i` | new value needed: 20.5–21px | detail-main (1 value crop; widths omitted) |
+| Record primary command | unspecified | 10.5 / 7.5 | 14.5 | 620 (1.81 → 1.81) | --text-md | detail-main (1; 71.5) |
+| Record secondary button | unspecified | 10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (14–15.5 px) | not measurable: no isolated lowercase `l` or `i` (14.5px at 400/600) | --text-md | detail-main (1; 52.5) |
+| Related-list rail heading | 14.5 / 600 candidate | 11 / 8 | 15.5 | 640 (2.02 → 2.01) | new value needed: 15.5px | detail-main (1; 81.5) |
+| Related-list rail row | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | not measurable: no isolated lowercase `l` or `i` (14.5px at 400/600) | --text-md | detail-main (2; 36.5, 128.5) |
+| Selected Overview tab | unspecified | 11.5 / 8 | not measurable: width fit has no minimum inside the height band (14.5–16.5 px) | 520–540 (i) (1.68 → 1.68) | new value needed: 15.5px | detail-main (1; 65.5) |
+| Inactive Timeline tab | unspecified | 11 / 8 | not measurable: width fit has no minimum inside the height band (14.5–16.5 px) | 410 (1.44 → 1.43) | new value needed: 15.5px | detail-main (1; 58.5) |
+| Status stage value | unspecified | 9.5 / 7 | 13–14 px (height band 9.5 / 7) | not measurable: no isolated lowercase `l` or `i` | --text-sm | detail-main (1 value crop; widths omitted) |
+| Business/details field label | 14.5 / 400 candidate | 10 / 7.5 | 14.5 | 450 (1.41 → 1.40) | --text-md | detail-main (2; 77, 33.5) |
+| Business/details field value | unspecified | 10 / 7.5 | 13.5–15 px (height band 10 / 7.5) | not measurable: no isolated lowercase `l` or `i` | --text-md | detail-main (2 value crops; widths omitted) |
+| Details divider heading | unspecified | 11 / 8 | 15.5 | 650 (2.06 → 2.04) | new value needed: 15.5px | detail-main (1; 84.5) |
+| Details subsection heading | unspecified | 10 / 7.5 | 14.5 | 650 (i) (1.89 → 1.90) | --text-md | detail-main (1; 112.5) |
+| Header tag command | unspecified | not measurable | not measurable: tag icon overlaps the available label crop | not measurable | not measurable | detail-main (unmeasurable) |
+| Header recency text | unspecified | 9.5 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | --text-sm | detail-main (1; 76.5) |
+| Timeline active subtab | 14.5 / 600 candidate | 11 / 8.5 | 15 | 560 (i) (1.71 → 1.72) | new value needed: 15px | detail-timeline-filter (1; 48.5) |
+| Timeline inactive subtab | 14.5 / 600 candidate (conflicts: measured regular 400) | 11 / 8 | 15.5 | 400 (i) (1.38 → 1.41) | new value needed: 15.5px | detail-timeline-filter (1; 81.5) |
+| Timeline heading | unspecified | 11 / 8 | 15.5 | 640 (2.01 → 2.01) | new value needed: 15.5px | detail-timeline-filter (1; 116) |
+| Timeline filter label | unspecified | 10–10.5 / 7.5 | 14.5 | 410 (1.32 → 1.32) | --text-md | detail-timeline-filter (2; 54, 52) |
+| Timeline filter selected text | unspecified | 10 / 7.5 | 14.5 | 470 (1.45 → 1.45) | --text-md | detail-timeline-filter (1; 74) |
+| Disabled Apply Filter button | unspecified | 10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (14–15.5 px) | 570 (1.70 → 1.69) | --text-md | detail-timeline-filter (1; 74) |
+| Timeline event title value | unspecified | 10 / 7.5 | 13.5–15 px (height band 10 / 7.5) | not measurable: no isolated lowercase `l` or `i` | --text-md | detail-timeline-filter (1 value crop; widths omitted) |
+| Timeline date, time, byline | unspecified | not measurable | not measurable: date/time lack cap/x pair; byline mixes clipped value and date | not measurable | not measurable | detail-timeline-filter (unmeasurable) |
+| Interactions heading | unspecified | 11 / 8 | 15.5 | 650 (i) (2.04 → 2.04) | new value needed: 15.5px | detail-interactions (1; 156.5) |
+| Interactions legend | unspecified | 9.5 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | 440 (1.29 → 1.28) | --text-sm | detail-interactions (2; 43, 73) |
+| Interactions empty text | unspecified | 9.5 / 7 | 13.5 | 450 (1.31 → 1.30) | --text-sm | detail-interactions (1; 99.5) |
+| More Options menu | 14.5 / 400 candidate | 10.5 / 7.5 | 14.5 | 410 (1.32 → 1.32) | --text-md | detail-more (2; 37, 36) |
+| Create form title | 18.5 / 600 candidate | 14.5 / 11 | not measurable: width fit has no minimum inside the height band (20.5–21 px) | not measurable: no isolated lowercase `l` or `i` (21px at 400, 20.5px at 600) | new value needed: 20.5–21px | detail-create (1; 113) |
+| Create form button | unspecified | 10–10.5 / 7.5 | 14.5 | 530 (1.61 → 1.60) | --text-md | detail-create (2; 30.5, 44.5) |
+| Create form section heading | 14.5 / 600 candidate | 10 / 7.5 | 14.5 | 650 (i) (1.89 → 1.90) | --text-md | detail-create (2; 112.5, 76) |
+| Create form field label | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | 430 (1.36 → 1.36) | --text-md | detail-create (2; 62.5, 33) |
+| Filled form value | unspecified | 10 / not measurable | 13.5–15 px (height band 10 / not measurable) | not measurable: no isolated lowercase `l` or `i` | --text-md | detail-create (1 value crop; widths omitted) |
+| Empty form picklist text | unspecified | 10 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15 px) | not measurable: no isolated lowercase `l` or `i` (13.5px at 400/600) | --text-md | detail-create (1; 42.5) |
+| Selected dropdown option | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | new value needed: 14px | detail-create-salutation-panel (1; 44.5) |
+| Ordinary dropdown option value | unspecified | 10 / 7.5 | 13.5–15 px (height band 10 / 7.5) | 400 (1.31 → 1.30) | --text-md | detail-create-country (1 value crop; widths omitted) |
+| Owner picker primary value | unspecified | 10 / not measurable | 13.5–15 px (height band 10 / not measurable) | not measurable: no isolated lowercase `l` or `i` | --text-md | detail-create-owner-panel (1 value crop; widths omitted) |
+| Owner picker secondary value | unspecified | not measurable | not measurable: clipped text overlaps row boundary | not measurable | not measurable | detail-create-owner-panel (unmeasurable) |
+| Select User dialog title | unspecified | 14.5 / 11 | not measurable: width fit has no minimum inside the height band (20.5–21 px) | 640 (2.71 → 2.73) | new value needed: 20.5–21px | detail-create-owner (1; 107) |
+| Select User table header | unspecified | 10 / 7.5 | 14.5 | 530 (1.61 → 1.60) | --text-md | detail-create-owner (2; 70.5, 27.5) |
+| Select User summary label | unspecified | 10.5 / 7.5 | 14.5 | 430 (1.37 → 1.36) | --text-md | detail-create-owner (1; 92.5) |
+| Select User search placeholder | unspecified | 10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (14–15.5 px) | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | --text-md | detail-create-owner (1; 83) |
+| Select User footer button | unspecified | 10.5 / 7.5 | 14.5 | 520 (1.59 → 1.58) | --text-md | detail-create-owner (2; 34, 43.5) |
+| Related-list card heading | unspecified | 11 / 8 | 15 | not measurable: no isolated lowercase `l` or `i` (15.5px at 400, 15px at 600) | new value needed: 15px | detail-notes-card (1; 40.5) |
+| Related-list card action | unspecified | 9.5 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | not measurable: no isolated lowercase `l` or `i` (13px at 400/600) | --text-sm | detail-attachments-card (1; 39.5) |
+| Related-list input placeholder | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | new value needed: 14px | detail-notes-card (1; 69) |
+| Related-list empty message | unspecified | 10 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15 px) | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | --text-md | detail-notes-card (1; 110.5) |
+| Related-list loading message | unspecified | 10 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15 px) | 450 (i) (1.40 → 1.40) | --text-md | detail-notes-card (1; 64.5) |
+| Sort dialog heading | ~14 / medium | 10.5 / 7.5 | 14 | not measurable: no isolated lowercase `l` or `i` (14px at 400, 13.5px at 600) | --text-md or new value needed: 14px | list-sort (1; 45.5) |
+| Sort dialog field selector value | unspecified | 9.5 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | not measurable: no isolated lowercase `l` or `i` (13px at 400/600) | --text-sm | list-sort (1; 30.5) |
+| Sort dialog order selector option | unspecified | 9.5–10 / 7 | 13.5 | 400 (i) (1.21 → 1.21) | --text-sm | list-sort (1; 63.5) |
+| Sort dialog footer button | ~13.5 / unspecified | 9.5–10 / 7 | 13.5 | 530 (1.47 → 1.47) | --text-sm | list-sort (1; 41) |
+| Sort dialog disabled Apply button | ~13.5 / unspecified | 9.5–10 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | 620 (1.70 → 1.71) | --text-sm | list-sort (1; 35.5) |
+| Manage Columns dialog title | 18.5 / semibold candidate | 14.5 / 11 | 21 | 630–650 (2.70 → 2.69) | new value needed: 20.5–21px | list-columns (1; 164.5) |
+| Manage Columns search placeholder | unspecified | 10.5 / 7.5 | 14.5 | not measurable: no isolated lowercase `l` or `i` (14.5px at 400/600) | --text-md | list-columns (1; 44) |
+| Manage Columns checkbox row | ~14 / regular | 10.5–11 / 7.5 | 14.5 | 410 (1.32 → 1.32) | --text-md | list-columns (10; 93, 75, 62.5, 33.5, 40, 79, 77.5, 67.5, 27, 51.5) |
+| Manage Columns footer button | unspecified | 10.5 / 7.5 | 14.5 | 530 (1.61 → 1.60) | --text-md | list-columns (1; 44.5) |
+| Manage Columns primary Save button | unspecified | 10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15.5 px) | not measurable: no isolated lowercase `l` or `i` (14.5px at 400, 14px at 600) | --text-md | list-columns (1; 30.5) |
+| List menu item | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | 410 (1.31 → 1.32) | --text-md | list-more, list-actions, list-view-options (11; 18, 83, 125, 117, 101, 76.5, 84, 114.5, 37.5, 69.5, 63.5) |
+| List menu item (hovered) | 14.5 / 400 candidate | 10–10.5 / 7.5 | 14.5 | 400 (1.30 → 1.30) | --text-md | list-more, list-actions, list-view-options, list-settings (4; 83.5, 87.5, 23, 110) |
+| List menu item (disabled) | unspecified | 10–10.5 / 7.5 | 14 | 430 (1.32 → 1.31) | --text-md or new value needed: 14px | list-view-options, list-settings (4; 37, 70, 75, 118) |
+| Table settings row label | unspecified | 10.5–11 / 7.5 | 14 | 420 (i) (1.29 → 1.29) | --text-md or new value needed: 14px | list-settings (2; 110.5, 69) |
+| Table settings row value | unspecified | 10–10.5 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15.5 px) | 640–660 (r, t) (1.88–1.92 → 1.87–1.93) | --text-md | list-settings (2; 13.5, 66.5) |
+| View selector menu item | unspecified | not measurable | not measurable: view selector dropdown menu was not opened in capture (only tab focus state captured) | not measurable | --text-md | list-view-selector (unmeasurable) |
+
+Measured straight stems partition list and detail typography into three distinct weight classes rather than a separate 'medium' tier: regular body, column headers, menu items, and field labels at stems 1.21–1.45 CSS px (Figtree `wght` 400–470); semibold controls, form/dialog buttons, and active subtabs at stems 1.47–1.71 CSS px (`wght` 520–560; 1.47 CSS px for 13.5px Sort footer button, 1.59–1.71 CSS px at 14–15.5px); and bold headings, panel titles, and list view tabs at stems 1.75 CSS px at 13.5px, 1.89–1.92 CSS px at 14.5px, 2.01–2.06 CSS px at 15.5px, and 2.70–2.71 CSS px at 21px (`wght` 630–660). No generic roles fall in the gaps between 470 and 520 or between 560 and 630 (aside from three isolated white-on-fill buttons: Disabled Apply Filter at 570, Record primary command at 620 and Sort dialog disabled Apply at 620). 'Medium' is not a separate weight: the two roles previously estimated as 'medium' divide into regular (column headers) and semibold (toolbar controls). The semibold group directly aligns with the app shell's adopted 510 token region, while the bold heading group currently has no existing token (suggested token: `new value needed: 650`).
+
+### Size and weight classes
+
+The evidence supports six distinct size tiers and three weight groups across the list and detail screens:
+
+#### Size classes
+
+| Size | Height target (cap / x) | Supported roles | Suggested token | Notes |
+| ---: | --- | --- | --- | --- |
+| 13.5px | 9.5 / 7 | List view tab, Interactions empty text, Sort dialog order selector option, Sort dialog footer button; height band for Status stage value, Interactions legend, Header recency, Card action, Sort dialog field selector value, Sort dialog disabled Apply button | `--text-sm` (13.5px) | Existing token `--text-sm` (13.5px) fits all 9.5/7 roles. |
+| 14.0px | 10 / 7.5 | List toolbar Filter/Sort, Selected dropdown option, Related-list input placeholder, Sort dialog heading, List menu item (disabled), Table settings row label | `--text-md` or `new value needed: 14px` | Supported by 1–2 generic labels per role (toolbar MAE is 0.25 at 14px vs 0.50 at 14.5px). If 14px is not added, `--text-md` (14.5px) differs by only 0.5 CSS px. |
+| 14.5px | 10–10.5 / 7.5 | Column header, Filter title & checkbox row, Footer fixed, Details subsection & Create section headings, Field labels, Command & buttons, Timeline labels, Select User table header & footer buttons, Manage Columns search placeholder, Manage Columns checkbox row, Manage Columns footer button, List menu item, List menu item (hovered); height band for all table/field values, Manage Columns primary Save button, Table settings row value | `--text-md` (14.5px) | Dominant body, control, and section-heading size. Fully covered by existing token `--text-md`. |
+| 15.0px | 11 / 8.5 (and 11 / 8 for Notes) | Timeline active subtab (History), Related-list card heading (Notes) | `new value needed: 15px` | Supported by single-label samples (Timeline subtab targets 11 / 8.5, while Related-list card heading is 11 / 8; both minimize at 15px). |
+| 15.5px | 11 / 8 | Filter group heading, Related-list rail heading, Timeline inactive subtab (Interactions), Timeline heading, Details divider heading, Customer Interactions heading; height class only (width fit has no interior minimum): Selected Overview tab (11.5 / 8), Inactive Timeline tab | `new value needed: 15.5px` | Consistent interior minimum for all 11 / 8 headings and subtabs. |
+| 20.5–21.0px | 14.5 / 11 | Create form title, Select User dialog title, Manage Columns dialog title; height band for Record title value | `new value needed: 20.5–21px` | Distinct large title tier. Exceeds existing `--text-xl` (18.5px) by 2–2.5 CSS px. |
+
+#### Weight classes
+
+| Group | Stem range (CSS px) | Figtree `wght` | Representative roles | Relationship to shell tokens | Suggested token |
+| --- | --- | ---: | --- | --- | --- |
+| **Regular** | 1.21–1.45 (at 13.5–15.5px) | 400–470 | Table column header (410), Filter checkbox (410), Footer fixed (400), Timeline filter label (410), Field labels (430–450), Inactive Timeline tab (410), Timeline inactive subtab (400), Timeline filter selected text (470), Dropdown options (400), Related-list loading (450), Select User summary label (430), Sort dialog order selector option (400), Manage Columns checkbox row (410), List menu item (410), List menu item (hovered) (400), List menu item (disabled) (430), Table settings row label (420) | Matches `--font-weight-normal` (400); variation up to 470 reflects antialiasing on single-label samples. | `--font-weight-normal` |
+| **Semibold** | 1.47–1.71 (at 13.5–15.5px) | 520–560 | List toolbar Filter/Sort (530–560), Form Cancel button (530), Select User table header Role (530), Select User footer button Cancel (520), Overview tab (520–540), Timeline active subtab History (560), Sort dialog footer button (530), Manage Columns footer button (530) | Tightly clusters with the app shell's adopted semibold weight **510**. | `--font-weight-semibold` (510; measured 520–560) |
+| **Bold headings** | 1.75 at 13.5px; 1.89–1.92 at 14.5px; 2.01–2.06 at 15.5px; 2.70–2.71 at 21px | 630–660 | List view tab (640), Filter panel title (660), Filter group heading (650), Related-list rail heading (640), Details divider heading (650), Details subsection heading (650), Create form section heading (650), Timeline heading (640), Customer Interactions heading (650), Select User dialog title (640), Manage Columns dialog title (630–650), Table settings row value (640–660) | Heavy section dividers, major panel headings, modal titles, and list view tabs; no existing token. | `new value needed: 650` |
+
+### Open questions for list and detail typography
+
+- In `record-detail.md`, the heading entries specify "cap/x 13/10, 18.5 px", but the direct measurement on the capture shows cap/x 14.5 / 11 px (matching Figtree 20.5–21 px). `record-detail.md` was corrected to the measured values afterwards; the measured rows in this file remain the source.
+- In `list-views.md`, the common dialog title was estimated as ~18.5 px / semibold, but the direct measurement on `list-columns` (Manage Columns) shows cap/x 14.5 / 11 px, which fits Figtree 21 px (MAE 1.0) with a bold stem of 2.70 CSS px (`wght` 630–650). This aligns directly with `Select User dialog title` (20.5–21 px / `wght` 640). Modal overlay dialog titles across list and record screens form a consistent 20.5–21 px / bold tier.
+- Sort dialog buttons in `list-sort` measure cap/x 9.5–10 / 7 px and fit the smaller 13.5 px tier (`--text-sm`) with Cancel at `wght` 530 (stem 1.47 CSS px) and disabled Apply at `wght` 620 (stem 1.70 CSS px), in contrast to standard form and modal buttons which use 14.5 px (`--text-md`).
+- White text rendered over solid background fills (Disabled Apply Filter button at `wght` 570 / stem 1.70 CSS px; Record primary command at `wght` 620 / stem 1.81 CSS px; Sort dialog disabled Apply button at `wght` 620 / stem 1.70 CSS px; Manage Columns primary Save button (weight not measurable)) sits between the semibold (520–560) and bold (630–660) clusters. Because each is supported by only a single label, whether button fills introduce a distinct intermediate weight or should map to semibold/bold remains an open question.
+- Disabled menu items and table settings row labels minimize at 14 px, but appear in the same menus and share the same cap / x-height (10–10.5 / 7.5 px) as ordinary menu items measured at 14.5 px. Because the 14 px fit is supported by only 4 and 2 labels respectively, this 0.5 px difference may fall within single-capture fitting variation; unless a wider multi-capture sample establishes an intentional distinction, all items within a menu should adopt `--text-md`.
+- The list footer connector, header tag command, and timeline byline require an isolated, generic-label crop before a defensible cap/x-height and width fit can be measured.
+- In `list-view-selector`, clicking the view tab produced only tab focus and revealed the tab's options ellipsis without opening the view selector dropdown menu; view selector dropdown menu options remain unobservable in this capture.
+- Record and owner values without an isolated lowercase `l` support height-only sizes. Their weights remain unmeasured; no customer string or width is retained here.
+- For roles whose width fit has no interior minimum inside the height band (e.g. List primary button, Related-list empty/loading, Create form title, Sort dialog field selector value, Manage Columns primary Save button, Table settings row value), the value of the size class with the same cap / x height is suggested (`--text-sm`, `--text-md`, 15.5 px, or 20.5–21 px); establishing a subpixel distinction would require wider multi-label captures.
+
 ## Open questions
 
 - The loaded reference family, number of source weights, and static/variable format remain not determinable from capture. A static-file listing in a JSON response is insufficient evidence of loading.

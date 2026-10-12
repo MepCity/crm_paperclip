@@ -4,7 +4,7 @@ export type ModuleApiName = string;
 /** Opaque; callers never parse or construct record identifiers. */
 export type RecordId = string;
 
-/** Only data types listed in the Leads field specification. */
+/** Data types supported by the module record contract. */
 export type FieldDataType =
   | "text"
   | "textarea"
@@ -15,6 +15,7 @@ export type FieldDataType =
   | "integer"
   | "currency"
   | "boolean"
+  | "date"
   | "datetime"
   | "double"
   | "bigint"
@@ -27,12 +28,13 @@ export type FieldDataType =
 export type ModuleRecordReference = {
   module: ModuleApiName;
   id: RecordId;
+  name?: string;
 };
 
 /**
- * Text-like values, timestamps, images, long integers and single-module references
- * use strings. Integer, decimal and currency values use finite numbers. Checkbox
- * values use booleans; connected-module references include their module. Null is
+ * Text-like values, calendar dates (YYYY-MM-DD), timestamps, images, long integers
+ * and owner IDs use strings. Numeric values use finite numbers; checkboxes use
+ * booleans. Lookup references include their module, ID and optional display name. Null is
  * an empty field. This domain representation is independent of transport/storage.
  */
 export type FieldValue = string | number | boolean | ModuleRecordReference | null;
@@ -42,7 +44,16 @@ export interface PicklistOption {
   storedValue: string;
 }
 
+export interface FieldViewFlags {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  quickCreate: boolean;
+}
+
 export interface FieldDefinition {
+  massUpdate: boolean;
+  views: FieldViewFlags;
   apiName: string;
   label: string;
   dataType: FieldDataType;
@@ -57,6 +68,7 @@ export interface FieldDefinition {
 export interface LayoutSection {
   label: string;
   columnCount: number;
+  columns: readonly (readonly string[])[];
   fields: readonly string[];
 }
 
@@ -64,6 +76,7 @@ export interface ModuleMetadata {
   apiName: ModuleApiName;
   singularLabel: string;
   pluralLabel: string;
+  businessCardFields: readonly string[];
   fields: readonly FieldDefinition[];
   layout: readonly LayoutSection[];
 }
@@ -74,11 +87,59 @@ export interface RecordData {
   fields: Readonly<Record<string, FieldValue>>;
 }
 
-/** The only comparator observed in the list specification. */
-export type Comparator = "is";
+/** Saved-view wire literals plus interim filter-panel comparators. */
+export type Comparator =
+  | "equal"
+  | "contains"
+  | "not_contains"
+  | "less_equal"
+  | "not_equal"
+  | "starts_with"
+  | "ends_with"
+  | "is_empty"
+  | "is_not_empty"
+  | "less_than"
+  | "greater_than"
+  | "greater_equal"
+  | "between"
+  | "not_between";
+
+/** Interim age/due and relative panel units (UTC calendar rules). */
+export type CriteriaUnit = "days" | "weeks" | "months";
+
+/** Interim UTC calendar periods; TODAY retains its existing standalone token. */
+export type CriteriaPeriod =
+  | "TOMORROW"
+  | "YESTERDAY"
+  | "TILL_YESTERDAY"
+  | "STARTING_TOMORROW"
+  | "THIS_WEEK"
+  | "PREVIOUS_WEEK"
+  | "THIS_MONTH"
+  | "PREVIOUS_MONTH"
+  | "THIS_YEAR"
+  | "PREVIOUS_YEAR"
+  | "NEXT_YEAR";
+
+/** A `${…}` value of a view definition; the adapter resolves it when the query runs. */
+export type CriteriaToken =
+  | { token: "CURRENTUSER" }
+  | { token: "TODAY" }
+  | { token: "AGEINDAYS"; offset: number; unit?: CriteriaUnit }
+  | { token: "CATEGORY"; name: string }
+  | { token: "DUEINDAYS"; offset: number; unit?: CriteriaUnit }
+  | {
+      token: "RELATIVE";
+      direction: "previous" | "next";
+      count: number;
+      unit: CriteriaUnit;
+    }
+  | { token: "PERIOD"; name: CriteriaPeriod };
+
+export type CriteriaValue = FieldValue | readonly FieldValue[] | CriteriaToken;
 
 export type Criteria =
-  | { field: string; comparator: Comparator; value: FieldValue | readonly FieldValue[] }
+  | { field: string; comparator: Comparator; value: CriteriaValue }
   | { groupOperator: "and" | "or"; group: readonly Criteria[] };
 
 export interface SortSpec {
@@ -102,6 +163,8 @@ export interface ListQuery {
   page: number;
   /** One of the six page sizes documented in the list specification. */
   perPage: number;
+  /** Field projection; id is always included. Omitted returns all fields. */
+  fields?: readonly string[];
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;
@@ -112,11 +175,29 @@ export interface ListResult {
   page: number;
   perPage: number;
   moreRecords: boolean;
+  /** The order the adapter applied: query sort, else view sort, else the default. */
+  sort: SortSpec;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
 
+/** The organization's home currency. `symbol` is configured display text, never derived from a locale. */
+export interface CurrencyDefinition {
+  /** ISO 4217 code; the argument `formatCurrency` expects. */
+  isoCode: string;
+  symbol: string;
+  name: string;
+  /** True when the symbol is written before the amount. */
+  prefixSymbol: boolean;
+}
+
+/**
+ * update, massUpdate, changeOwner and delete reject Locked__s === true with
+ * RecordLockedError. Batch operations validate all targets before writing;
+ * a locked target leaves every target unchanged.
+ */
 export interface RecordService {
+  getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
   listViews(module: ModuleApiName): Promise<readonly ListView[]>;
   getView(module: ModuleApiName, viewId: string): Promise<ListView>;
@@ -128,6 +209,8 @@ export interface RecordService {
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
   create(module: ModuleApiName, input: RecordInput): Promise<RecordData>;
   update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData>;
+  massUpdate(module: ModuleApiName, ids: readonly RecordId[], input: RecordInput): Promise<void>;
+  changeOwner(module: ModuleApiName, ids: readonly RecordId[], ownerId: string): Promise<void>;
   delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void>;
 }
 

@@ -12,7 +12,7 @@ import {
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-sm font-medium text-text",
+  label: "text-md font-normal text-text",
   options: {
     vertical: "flex flex-col gap-2",
     horizontal: "flex flex-row flex-wrap gap-4",

@@ -3,12 +3,28 @@ import type { Page } from "@playwright/test";
 
 const WCAG_21_A_AND_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
+/** Measured sub-AA placeholder ink on white (ADR 0003 §8). Used on `/dev/ui` timeline filter demos. */
+export const DEV_UI_A11Y_EXCLUDE = [
+  "[data-part=empty]",
+  "[data-part=empty-value]",
+  '.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-selector-label',
+  '.timeline-filter-selector-wrap[data-tone="user-placeholder"] .timeline-filter-selector-label',
+  /** Reference CRM measured validation ink (`--color-form-required`, ~3.04:1 on white). */
+  ".record-form-validation-error",
+  /** Save-error banner ink matches validation error token (MEP-168; ADR 0003 §8). */
+  "[data-record-form-error-banner]",
+  /** Measured Clear All ink (`--color-form-clear-address`, sub-AA on white). ADR 0003 §8. */
+  ".record-form-clear-address > span",
+] as const;
+
 type AxeViolations = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];
 type AxeTarget = AxeViolations[number]["nodes"][number]["target"];
 
 export type A11yCheckOptions = {
   /** Selectors left out of the scan. Every call site must comment why. */
   exclude?: readonly string[];
+  /** When set, only these roots are scanned (faster on large gallery pages). */
+  include?: readonly string[];
 };
 
 function formatTarget(target: AxeTarget): string {
@@ -63,6 +79,9 @@ export async function expectNoA11yViolations(
 ): Promise<void> {
   await settleFiniteAnimations(page);
   const builder = new AxeBuilder({ page }).withTags(WCAG_21_A_AND_AA);
+  for (const selector of options?.include ?? []) {
+    builder.include(selector);
+  }
   for (const selector of options?.exclude ?? []) {
     builder.exclude(selector);
   }

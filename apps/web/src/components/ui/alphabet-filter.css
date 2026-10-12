@@ -1,0 +1,84 @@
+/* Alphabet filter. Sizes come from research/specs/list-views.md → Layout → Visual layout
+   → All alphabet dropdown. The closed control is Interim: the capture does not measure it,
+   so it uses existing tokens and the Table column header text role
+   (research/specs/typography.md → List and detail text roles). */
+
+.alphabet-trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--size-list-filter-row-padding);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-strong);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--size-list-line-height);
+  cursor: default;
+  outline: none;
+}
+
+.alphabet-trigger[data-hovered] {
+  background: var(--color-surface-hover);
+}
+
+.alphabet-trigger[data-pressed] {
+  background: var(--color-surface-pressed);
+}
+
+/* The header cell clips its content, so the focus edge is drawn inside the box. */
+.alphabet-trigger[data-focus-visible] {
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+}
+
+/* Outer box: 59 px wide, 412 px visible height. Border, surface and shadow come from the
+   shared popover chrome; only the box size and the row padding are measured here. */
+.alphabet-panel {
+  width: var(--size-popover-alphabet-width);
+  height: var(--size-popover-alphabet-height);
+  padding-inline: var(--size-popover-alphabet-inset);
+  overflow: hidden;
+}
+
+.alphabet-panel .alphabet-dialog {
+  height: 100%;
+  padding: 0;
+}
+
+/* The 27 rows do not fit the visible height, so the list body scrolls. */
+.alphabet-list {
+  height: 100%;
+  overflow-y: auto;
+  outline: none;
+}
+
+.alphabet-option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: var(--size-popover-alphabet-row-width);
+  height: var(--size-popover-alphabet-row-height);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  white-space: nowrap;
+  cursor: default;
+  outline: none;
+}
+
+.alphabet-option[data-hovered],
+.alphabet-option[data-focused] {
+  background: var(--color-surface-hover);
+}
+
+/* "selected/hovered item row fill is #F0F4FC … selected item text is blue … no checkmark
+   or marker glyph observed", so the selection is the fill plus the text colour only. */
+.alphabet-option[data-selected] {
+  background: var(--color-surface-selected);
+  color: var(--color-primary);
+}
+
+.alphabet-option[data-focus-visible] {
+  box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+}

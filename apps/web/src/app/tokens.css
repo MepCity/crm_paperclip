@@ -65,6 +65,7 @@
 
   /* Menus and popovers */
   --color-menu-surface: #ffffff;
+  --color-menu-icon: #adb0b6;
 
   /* Bottom utility strip */
   --color-utility-border: #c5c4d3;
@@ -89,6 +90,9 @@
   --color-button-border: #d5d8e9;
   --color-button-gradient-start: #fefefe;
   --color-button-gradient-end: #f2f1f8;
+  /* list-views.md › Selection toolbar: the four record-action buttons use their own gradient. */
+  --color-selection-button-gradient-start: #fdfdfe;
+  --color-selection-button-gradient-end: #f3f2f8;
   --color-primary-gradient-start: #5767f6;
   --color-primary-gradient-end: #154ec5;
   --color-primary-divider: #c3c8f4;
@@ -97,31 +101,39 @@
   --color-popover-sort-border: #ced0e1;
   --color-surface-selected: #f0f4fc;
   --color-surface-active: #edf0f9;
+  --color-list-filter-toggle-icon: #000000;
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
+  --color-detail-timeline-filter-surface: #f9faff;
+  --color-detail-timeline-muted-border: #d6d6e3;
+  --color-detail-timeline-badge-text: #434d5f;
+  --color-detail-timeline-caret-placeholder: #a0a8b8;
+  --color-detail-timeline-caret-value: #838892;
+  --color-form-portrait: #b2b2b2;
+  /* MEP-172 interim: Address field group border on create/edit form. */
+  --color-form-field-group-border: #797883;
 
   /* Figtree is the board-selected open-license typeface (MEP-66, 2026-10-04).
      Its official file is served locally; no reference CRM font file is copied. */
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* typography.md fits bold stems at weight 510. The list spec also measures medium
-     for toolbar labels and column headers. A type style's CSS line-height is not a
+  /* typography.md adopts semibold at 510 and bold headings at 650. Regular table
+     text and field labels use 400. A type style's CSS line-height is not a
      --leading-* token; the list row's 18 px line pitch is --size-list-line-height. */
   --font-weight-normal: 400;
-  --font-weight-medium: 500;
   --font-weight-semibold: 510;
+  --font-weight-bold: 650;
 
   --text-2xs: 0.53125rem;
   --text-xs: 0.71875rem;
-  --text-13: 0.8125rem;
   --text-sm: 0.84375rem;
   --text-md: 0.90625rem;
   --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-lg: 0.96875rem;
   --text-xl: 1.15625rem;
-  --text-2xl: 1.5rem;
+  --text-2xl: 1.28125rem;
   --text-3xl: 1.875rem;
 
   /* Measured corners: 2–3 px (--radius-sm, kept at 2 px), about 6 px (--radius-md),
@@ -131,11 +143,19 @@
   --radius-lg: 0.5rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
+  --radius-form-control: 5px;
+  --radius-form-field-group: 10px;
+  --radius-create-menu: 4px;
+  --radius-create-menu-search: 4px;
 
   /* Shadow blur, spread and opacity are not measurable from capture. */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* Global create menu search focus halo. A shadow with no spread fades out over about half its
+     blur radius, so twice the measured 7.5 px halo depth is used as blur. The halo colour is the
+     measured 1 px focus edge colour #5464F2; its opacity is not measurable from capture. */
+  --shadow-create-menu-focus: 0 0 15px rgba(84, 100, 242, 0.35);
 
   /* Generic spacing scale. Measured gaps carry their own --size-* token below. */
   --space-1: 0.25rem;
@@ -157,8 +177,11 @@
   --size-rail-row-gap: 6px;
   --size-rail-row-pitch: 36px;
   --size-rail-nested-row-pitch: 32px;
+  --size-rail-nested-row-gap: 2px;
   --size-rail-inset: 10px;
   --size-rail-nested-indent: 30px;
+  --size-rail-nested-icon-offset: 28px;
+  --size-rail-nested-label-gap: 14px;
   --size-rail-label-gap: 12px;
   --size-rail-icon: 16px;
   --size-rail-group-icon: 14px;
@@ -166,10 +189,19 @@
   --size-rail-scrollbar-width: 8px;
   --size-rail-group-gap: 9px;
 
+  /* Coordinates derived from app-shell.md Visual layout. */
+  --size-rail-header-top: 11px;
+  --size-rail-nav-start: 5px;
+  --size-rail-product-gap: 8px;
+  --size-rail-pinned-region: 227px;
+  --size-rail-teamspace-top: 11px;
+  --size-rail-teamspace-group-gap: 49px;
+
   /* Rail header, product selector and teamspace selector */
   --size-rail-header-inset: 15px;
   --size-rail-product-selector-height: 30px;
   --size-rail-product-mark: 30px;
+  --size-rail-product-caret: 10px;
   --size-rail-selector-height: 24px;
   --size-rail-selector-inset: 13px;
   --size-rail-monogram: 24px;
@@ -178,6 +210,7 @@
   /* Top bar controls */
   --size-topbar-icon: 18px;
   --size-topbar-control-pitch: 34px;
+  --size-topbar-control-gap: 2px;
   --size-topbar-quick-create: 28px;
   --size-topbar-avatar: 30px;
   --size-topbar-search-width: 235px;
@@ -202,11 +235,73 @@
   /* Filter panel. Width includes the 1 px borders. */
   --size-list-filter-width: 202px;
   --size-list-filter-gap: 10px;
+  /* list-views.md: Checked filter checkbox, Filter operator dropdown,
+     Filter value input, Open operator list and their coordinate differences. */
+  --size-filter-editor-inset: 23px;
+  --size-filter-editor-top-gap: 8px;
+  --size-filter-editor-value-gap: 7px;
+  --size-filter-date-range-gap: 3px;
+  --size-filter-date-unit-width: 80px;
+  --size-filter-role-group-width: 141px;
+  --size-filter-role-group-height: 25px;
+  --size-filter-role-group-search-width: 112px;
+  --size-filter-role-group-search-height: 16px;
+  --size-filter-address-width: 144px;
+  --size-filter-address-location-height: 25px;
+  --size-filter-address-radius-height: 54px;
+  --size-filter-control-height: 24px;
+  --size-filter-operator-gap: 5.5px;
+  --size-filter-range-width: 100px;
+  --size-filter-currency-range-height: 25px;
+  --size-filter-state-width: 81px;
+  --size-filter-choice-width: 170px;
+  --size-filter-choice-height: 220px;
+  --size-filter-choice-row-height: 28px;
+  --size-filter-user-width: 327px;
+  --size-filter-user-type-width: 77px;
+  --size-filter-user-search-width: 229px;
+  --size-filter-user-header-height: 28px;
+  --size-filter-user-body-height: 174px;
+  --size-filter-user-row-height: 41px;
+  --size-filter-control-min-width: 36px;
+  --radius-filter-control: 3px;
+  --size-filter-operator-list-width: 146px;
+  --size-filter-operator-list-height: 220px;
+  --size-filter-operator-row-height: 27px;
+  --size-filter-operator-list-offset: 1px;
   --size-list-filter-padding: 18px;
   --size-list-filter-search-height: 34px;
+  --size-list-filter-search-icon: 13.5px;
+  --size-list-filter-search-icon-inset: 11.5px;
+  --size-list-filter-search-padding: 31px;
+  --size-list-filter-search-width: 167px;
+  --size-list-filter-search-end-inset: 15px;
+  --size-list-filter-title-inset-top: 20.5px;
+  --size-list-filter-title-line: 13px;
+  --size-list-filter-group-heading-line: 20px;
+  --size-list-filter-heading-to-search: 19.5px;
+  --size-list-filter-search-to-group: 18px;
+  --size-list-filter-group-to-row: 7px;
+  --size-list-filter-group-gap: 16px;
   --size-list-filter-row-height: 30px;
+  --size-list-filter-row-padding: 6px;
+  /* list-views.md › Filter panel row label. The row's own container boundary is `Not observed`;
+     126 px is the width that reproduces every break the row records: the longest unbroken label
+     ink (Latest Email Status, 119.5 px) stays on one line, while Related Records Action,
+     Untouched Records and Address - Country / Region wrap after their first word group. */
+  --size-list-filter-label-width: 126px;
+  --size-list-filter-chevron-width: 8px;
+  --size-list-filter-chevron-height: 4.5px;
+  --size-list-filter-chevron-offset: 1.25px;
+  --size-list-filter-heading-inset: 17.5px;
   --size-list-filter-button-width: 69.5px;
   --size-list-filter-button-height: 27px;
+  /* list-views.md › Filter toggle, panel open: funnel glyph ink box and the gap to the label ink. */
+  --size-list-filter-toggle-icon-width: 15px;
+  --size-list-filter-toggle-icon-height: 16px;
+  --size-list-filter-toggle-icon-gap: 9.5px;
+  /* list-views.md › Filter toggle, panel open and View type switcher: 3.5–4 px corner radius. */
+  --radius-list-toolbar-tile: 3.5px;
 
   /* Records table. Header height includes the 2 px bottom border. A single-line row is
      the 9 px pad, one 18 px line and the 9 px pad again; the pitch adds the 1 px
@@ -236,6 +331,56 @@
   --size-list-chevron-width: 6px;
   --size-list-chevron-height: 11px;
   --size-list-view-icon: 26px;
+  /* list-views.md › View type switcher: six type tiles and the trailing arrow on a 32 px pitch
+     (26 px box plus a 6 px gap). The glyph tokens are each control's measured ink box. */
+  --size-list-view-switcher-gap: 6px;
+  /* The row puts the first tile at x 500 and the Filter/Sort group ends at x 484.5 on the measured
+     viewport. The group's 8 px gap plus this offset places the switcher on that edge. */
+  --size-list-view-switcher-offset: 7.5px;
+  --size-list-view-type-list: 15.5px;
+  --size-list-view-type-split: 16px;
+  --size-list-view-type-grid: 16px;
+  --size-list-view-type-chart: 15px;
+  --size-list-view-type-connected-width: 17px;
+  --size-list-view-type-connected-height: 13px;
+  --size-list-view-type-cards-width: 16px;
+  --size-list-view-type-cards-height: 15.5px;
+  --size-list-view-type-arrow-width: 11px;
+  --size-list-view-type-arrow-height: 6.5px;
+
+  /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
+  --color-detail-divider: #d6d6e3;
+  --size-detail-card-width: 906px;
+  --size-detail-card-padding: 20px;
+  --size-detail-business-label-width: 153.5px;
+  --size-detail-business-label-value-gap: 45.5px;
+  --size-detail-business-row-pitch: 44.5px;
+  --size-detail-details-label-width: 129px;
+  --size-detail-details-label-value-gap: 36.5px;
+  --size-detail-details-row-pitch: 44px;
+  --size-detail-details-wrapped-row-pitch: 60px;
+  --size-detail-column-width: 433.5px;
+  --size-detail-business-min-height: 287px;
+  --size-detail-business-padding-block-start: 42.75px;
+  --size-detail-business-padding-block-end: 21.75px;
+  --size-detail-details-toggle-padding-block: 12.75px;
+  --size-detail-details-sections-margin-top: 18.25px;
+  --size-detail-section-title-margin-block: 0 32.5px;
+  --size-detail-inter-section-gap: 26px;
+  --size-detail-audit-line-pitch: 18.5px;
+  --size-detail-multiline-line-pitch: 15.5px;
+  --size-detail-wrapped-link-line-pitch: 19.5px;
+  --size-detail-cap-height: 10.5px;
+  --size-detail-card-width-rail-hidden: 1126px;
+  --size-detail-column-width-rail-hidden: 543px;
+  --size-detail-field-pencil-ink-left-rail-hidden: 1000.5px;
+  --size-detail-description-label-width: 73px;
+  --size-detail-description-label-extend: 39px;
+  --size-detail-field-pencil-size: 11.5px;
+  /* Ink-level target: the pencil's antialiased ink top sits 1.5 px above the label cap
+     (record-detail.md › Details field pencil). The margin is applied to the icon box, whose
+     ink starts ~0.9 px inside it, so the box offset carries the extra 1.5 px. */
+  --size-detail-field-pencil-above-label-cap: 3px;
 
   /* View edit form */
   --size-list-view-name-width: 600px;
@@ -250,20 +395,118 @@
   --size-button-ellipsis-width: 44px;
   --size-button-ellipsis-height: 32px;
 
+  /* record-detail.md, Visual layout: Lead Information rows and dropdown panels. */
+  --color-form-required: #ff5d5a;
+  --color-form-caret: #838892;
+  --color-form-input-end: #f0f4ff;
+  --color-form-portrait-ring: #b4b4b4;
+  --size-form-required-bar: 3px;
+  --size-form-option-height: 32px;
+  --size-form-list-padding: 6px;
+  --size-form-country-height: 270px;
+  --size-form-owner-height: 179px;
+  --size-form-prefix-width: 110px;
+  --size-form-prefix-divider-offset: 94px;
+  --size-form-prefix-caret-gap: 11px;
+  --size-form-caret-width: 8px;
+  --size-form-caret-height: 5px;
+  --size-form-caret-inset-end: 12px;
+  --size-form-input-end: 32px;
+  --size-form-input-end-icon: 16px;
+  --size-form-currency-prefix-inset: 11.5px;
+  --size-form-currency-divider-gap: 9.5px;
+  --size-form-currency-divider-height: 20px;
+  --size-form-currency-divider-top: 7px;
+  --size-form-owner-caret-gap: 9px;
+  --shadow-form-focus-glow: 0 0 6px rgb(84 100 255 / 0.56);
+  --size-form-panel-inset-inline: 11px;
+  --size-form-panel-search-top: 12px;
+  --size-form-panel-search-height-owner: 30px;
+  --size-form-panel-check-inset: 15px;
+  --size-form-panel-owner-check-inset: 16px;
+  --size-form-panel-check-width: 11.5px;
+  --size-form-panel-check-height: 8.5px;
+  --size-form-panel-option-text-inset: 32.5px;
+  --size-form-panel-selected-fill-inset: 7px;
+  --size-form-panel-selected-fill-height: 32px;
+  --size-form-panel-search-icon-inset: 11.5px;
+  --size-form-panel-search-icon-size: 13.5px;
+  --size-form-panel-search-text-inset: 33px;
+  --size-form-panel-list-first-gap: 7.5px;
+  --size-form-panel-owner-avatar-inset: 32px;
+  --size-form-panel-owner-row-pitch: 41px;
+  --size-form-panel-owner-avatar-size: 30px;
+  --size-form-panel-owner-name-gap: 11px;
+  --size-form-panel-owner-content-top: 12px;
+  --size-form-panel-owner-content-bottom: 13px;
+
   /* Checkbox */
   --size-checkbox: 15px;
   --size-checkbox-border: 2px;
+  --size-checkbox-label-gap: 8.5px;
+  --size-checkbox-label-line: 16px;
 
   /* Manage Columns dialog */
   --size-dialog-width: 400px;
   --size-dialog-height: 770px;
   --size-dialog-padding: 30px;
 
+  /* Unsaved changes modal (record-detail.md › Visual layout) */
+  --color-confirm-dialog-body: #434d5e;
+  --size-confirm-dialog-padding-block-start: 29.5px;
+  --size-confirm-dialog-padding-inline: 26.5px;
+  --size-confirm-dialog-padding-block-end: 26px;
+  --size-confirm-dialog-title-gap: 18.5px;
+  --size-confirm-dialog-message-actions-gap: 30.5px;
+  --size-confirm-dialog-actions-gap: 10.5px;
+  --size-unsaved-dialog-stay-width: 91px;
+  --size-unsaved-dialog-leave-width: 130.5px;
+  --color-unsaved-dialog-stay-border: #d6d8e8;
+  --color-unsaved-dialog-stay-start: #ffffff;
+  --color-unsaved-dialog-stay-end: #f1f0f7;
+  --color-unsaved-dialog-stay-text: #313949;
+  --color-unsaved-dialog-leave-start: #ff4657;
+  --color-unsaved-dialog-leave-end: #e33041;
+  --color-unsaved-dialog-leave-text: #ffffff;
+
+  /* list-views.md › Selection toolbar and Selection Actions menu. The counter strip and the
+     record-action strip are the row's two boxes; the action buttons are measured individually
+     and sit on an 8 px pitch (101 + 73 + 113 + 45 + three 8 px gaps = the measured 356 px). */
+  --size-list-selection-counter-width: 170px;
+  --size-list-selection-counter-height: 42px;
+  --size-list-selection-clear-width: 34px;
+  --size-list-selection-clear-height: 16px;
+  --size-list-selection-strip-gap: 15px;
+  --size-list-selection-button-gap: 8px;
+  --size-list-selection-send-email-width: 101px;
+  --size-list-selection-tags-width: 73px;
+  --size-list-selection-actions-width: 45px;
+  --size-list-selection-menu-row-height: 32px;
+  --size-list-mass-update-button-width: 113px;
+  --size-mass-update-dialog-width: 484px;
+  --size-mass-update-dialog-height: 207px;
+  --size-mass-update-dialog-padding-inline: 31px;
+  --size-mass-update-dialog-title-padding-inline-start: 32.5px;
+  --size-mass-update-dialog-title-line-height: 18.5px;
+  --size-mass-update-dialog-padding-block-start: 29.5px;
+  --size-mass-update-dialog-padding-block-end: 31px;
+  --size-mass-update-dialog-title-fields-gap: 32px;
+  --size-mass-update-dialog-fields-actions-gap: 30px;
+  --size-mass-update-field-selector-width: 122px;
+  --size-mass-update-value-width: 285px;
+  --size-mass-update-field-gap: 15px;
+  --size-mass-update-cancel-width: 74px;
+  --size-mass-update-update-width: 76px;
+  --size-mass-update-actions-gap: 11.5px;
+  --color-mass-update-value-disabled-fill: #f5f6f8;
+  --color-mass-update-value-border: #d9dce2;
+
   /* List popovers */
   --size-popover-view-width: 128px;
   --size-popover-import-width: 180px;
   --size-popover-actions-width: 200px;
   --size-popover-settings-width: 264px;
+  --size-popover-column-options-width: 151px;
   --size-popover-sort-width: 385px;
   --size-popover-sort-height: 157px;
   --size-popover-sort-field-width: 150px;
@@ -280,4 +523,293 @@
   --size-popover-sort-cancel-width: 66.5px;
   --size-popover-sort-apply-width: 60px;
   --size-popover-sort-button-gap: 8px;
+  --size-popover-sort-field-dropdown-width: 380px;
+  --size-popover-sort-field-dropdown-height: 268px;
+  /* 268 − 222, the band between the panel top and the list top in the Sort By field dropdown row. */
+  --size-popover-sort-field-dropdown-list-offset: 46px;
+  /* No list width token: the body fills the panel, whose 378 px content box is the measurement. */
+  --size-popover-sort-field-dropdown-list-height: 220px;
+  /* list-views.md › All alphabet dropdown: outer box x 881–940 (59 px) and y 182–594 (412 px visible). */
+  --size-popover-alphabet-width: 59px;
+  --size-popover-alphabet-height: 412px;
+  /* "approx 6 px horizontal padding around option rows"; rows are 45 × 23 px. */
+  --size-popover-alphabet-inset: 6px;
+  --size-popover-alphabet-row-width: 45px;
+  --size-popover-alphabet-row-height: 23px;
+
+  /* Record detail › Timeline. record-detail.md › Layout › Visual layout › Timeline. */
+  --size-detail-timeline-width: 906px;
+  --size-detail-timeline-subtab-row-height: 38.5px;
+  --size-detail-timeline-subtab-inset: 30px;
+  --size-detail-timeline-subtab-padding-inline: 6px;
+  --size-detail-timeline-subtab-underline-height: 3px;
+  --size-detail-timeline-history-padding-top: 25px;
+  --size-detail-timeline-history-padding-inline: 26px;
+  --size-detail-timeline-filter-button-width: 42px;
+  --size-detail-timeline-filter-button-height: 30px;
+  --size-detail-timeline-filter-button-gap: 11px;
+  --size-detail-timeline-filter-panel-gap: 15px;
+  --size-detail-timeline-filter-panel-padding-block-start: 15px;
+  --size-detail-timeline-filter-panel-padding-inline: 20px;
+  --size-detail-timeline-filter-panel-padding-bottom: 16px;
+  --size-detail-timeline-filter-field-gap: 4px;
+  --size-detail-timeline-filter-selector-row-gap: 8px;
+  --size-detail-timeline-filter-row2-margin-top: 14px;
+  --size-detail-timeline-filter-selector-width: 250px;
+  --size-detail-timeline-filter-selector-height: 33px;
+  --size-detail-timeline-filter-selector-padding-inline: 11px;
+  --size-detail-timeline-filter-caret-width: 9px;
+  --size-detail-timeline-filter-caret-height: 5px;
+  --size-detail-timeline-filter-caret-inset: 12px;
+  --size-detail-timeline-apply-height: 32px;
+  --size-detail-timeline-apply-padding-inline: 14px;
+  --size-detail-timeline-track-offset: 25px;
+  --size-detail-timeline-date-badge-width: 130px;
+  --size-detail-timeline-date-badge-height: 27px;
+  --size-detail-timeline-date-badge-offset-inline: 25px;
+  --size-detail-timeline-connector-height: 25px;
+  --size-detail-timeline-track-center: 125.5px;
+  --size-detail-timeline-time-column-end: 98.5px;
+  --size-detail-timeline-event-icon: 36px;
+  --size-detail-timeline-event-icon-offset-inline: 108px;
+  --size-detail-timeline-event-column-gap: 17.5px;
+  --size-detail-timeline-event-line-height: 18px;
+  --size-detail-timeline-event-body-padding-top: 7px;
+  --size-detail-timeline-event-row-padding-bottom: 18px;
+  --size-detail-timeline-day-gap: 16px;
+
+  /* Select User dialog — record-detail.md › Layout › Visual layout › Select User dialog */
+  --size-select-user-panel-max-height: 100dvh;
+  --size-select-user-summary-text-offset: 20px;
+  --size-select-user-summary-label-margin-top: 5px;
+  --size-select-user-dialog-width: 882px;
+  --radius-select-user-dialog-bottom: 12px;
+  --size-select-user-dialog-inset: 31px;
+  --size-select-user-title-cap-top: 29px;
+  --size-select-user-title-cap-inset: 3px;
+  --size-select-user-search-top: 64px;
+  --size-select-user-search-width: 300px;
+  --size-select-user-search-height: 34px;
+  --size-select-user-table-top: 119px;
+  --size-select-user-table-header-band: 32px;
+  --size-select-user-table-header-cap-adjust: 2px;
+  --size-select-user-table-header-rule: 2px;
+  --size-select-user-table-row-height: 38px;
+  --size-select-user-table-row-divider: 1px;
+  --size-select-user-table-footer-gap: 20px;
+  --size-select-user-dialog-bottom-padding: 30.5px;
+  --size-select-user-done-height: 32px;
+  --size-select-user-done-width: 63.5px;
+  --size-select-user-cancel-width: 74.5px;
+  --size-select-user-footer-gap: 10.5px;
+  --size-select-user-summary-search-gap: 16px;
+  --size-select-user-summary-label-width: 92px;
+  --size-select-user-summary-label-avatar-gap: 8px;
+  --size-select-user-summary-avatar-name-gap: 11px;
+  --size-select-user-avatar: 30px;
+  --size-select-user-radio: 15px;
+  --size-select-user-radio-ring-selected: 4px;
+  --size-select-user-radio-ring-unselected: 2px;
+  --size-select-user-radio-centre: 7px;
+  --color-select-user-table-border: #d9e0eb;
+  --color-select-user-row-divider: #eef1f7;
+  --size-select-user-table-radio-inset: 20px;
+  --size-select-user-table-radio-row-inset: 13px;
+  --size-select-user-table-avatar-row-inset: 4px;
+  --size-select-user-table-text-row-inset: 14.5px;
+  --size-select-user-table-radio-column: 36px;
+  --size-select-user-table-avatar-column: 60px;
+  --size-select-user-table-name-column: 141.5px;
+  --size-select-user-table-role-column: 164.5px;
+  --size-select-user-table-email-column: 253px;
+  --size-select-user-table-name-header-inset: 31px;
+  --size-select-user-table-avatar-inset: 30px;
+  --size-select-user-table-name-text-inset: 11px;
+
+  /* Create/edit form. record-detail.md › Layout › Visual layout › Create/edit form. */
+  --size-form-layout-subpixel-trim: 1px;
+  --size-form-strip-height: 57px;
+  --size-form-strip-padding-end: 8px;
+  --size-form-card-inset: 12px;
+  /* MEP-172 interim vertical rhythm on create/edit form. */
+  --size-form-first-title-center: 30px;
+  --size-form-first-content-top: 63px;
+  --size-form-section-gap: 55.5px;
+  --size-form-section-title-center-above: 61px;
+  --size-form-section-title-center-below: 33px;
+  --size-form-portrait: 48px;
+  --size-form-label-column-left: 172px;
+  --size-form-label-column-right: 221.5px;
+  --size-form-label-gap: 37px;
+  --size-form-input-left-width: 320px;
+  --size-form-input-right-width: 314.5px;
+  --size-form-column-gap: 258.5px;
+  --size-form-label-line-height: 17.5px;
+  --size-form-label-padding-top: 8px;
+  /* record-detail.md › Form text baselines: label ink top sits 12 px below the input top;
+     the label box keeps the measured row rhythm, so the last pixel is painted, not laid out. */
+  --size-form-label-baseline-offset: 1px;
+  --size-form-input-group-width: 303px;
+  --size-form-input-height: 34px;
+  --size-form-row-pitch: 54px;
+  /* record-detail.md › Email Opt Out checkbox: box sits 5 px inside the input column,
+     10 px below the row top and 9 px above its bottom inside the 34 px row. */
+  --size-form-checkbox-inset-start: 5px;
+  --size-form-checkbox-inset-top: 10px;
+  /* record-detail.md › Form text baselines: 12 px above the cap and 12 px below the flat
+     letter ink inside the 34 px box; the extra top inset centers the ink, not the line. */
+  --size-form-control-text-padding-top: 2px;
+  --size-form-control-padding-inline: 10px;
+  --size-form-control-padding-block: 8px;
+  --size-form-action-height: 32px;
+  --size-form-action-gap: 8px;
+  --size-form-action-padding-inline: 14.5px;
+  --size-form-field-group-padding-end: 15px;
+  --size-form-field-group-body-top: 30px;
+  --size-form-field-group-margin-bottom: 17px;
+  --size-form-field-group-legend-inset: 10px;
+  --size-form-field-group-legend-padding-start: 8.5px;
+  --size-form-field-group-legend-padding-end: 12.5px;
+  /* MEP-174 Address legend baseline; MEP-237 documents named transform offset. */
+  --size-form-field-group-legend-baseline-offset: 3px;
+  --size-form-input-full-width: 639px;
+  --size-form-description-height: 34px;
+  /* record-detail.md › Address frame; Description Information and textarea. */
+  --size-form-address-footer-bottom: 15px;
+  --size-form-address-radius: 10px;
+  --size-form-coordinate-gap: 10px;
+  --color-form-clear-address: #a0a8b8;
+  --size-form-description-width: 639px;
+  --size-form-description-extra-gap: 17px;
+  --size-form-page-cancel-width: 74px;
+  --size-form-page-save-new-width: 119.5px;
+  --size-form-page-save-width: 59.5px;
+  --size-form-description-rule-gap: 40px;
+
+  /* Global create menu. record-detail.md › Layout › Visual layout › Global create menu.
+     Offsets are panel-border-box coordinates minus the panel origin x 534, y 50. */
+  --size-create-menu-width: 670px;
+  --size-create-menu-height: 429px;
+  /* Panel top y 50 minus the quick-create box bottom y 38. */
+  --size-create-menu-offset: 12px;
+  /* Divider at x 868.5 minus the panel left edge x 534. */
+  --size-create-menu-column-width: 334.5px;
+  /* Search box x 565 minus panel x 534; the header ink starts 0.5 px later. */
+  --size-create-menu-inset-inline: 31px;
+  /* Header ink top y 63.5 minus panel y 50 is 13.5 px; the line box sits 2.2 px above the ink
+     at line-height 1, so the box inset is 11.3 px and the measured ink lands at 13.5 px. */
+  --size-create-menu-heading-top: 11.3px;
+  --size-create-menu-search-top: 40px;
+  --size-create-menu-search-width: 287.5px;
+  --size-create-menu-search-height: 30px;
+  /* First module row band y 125 minus panel y 50; visible rows end at y 475. */
+  --size-create-menu-list-top: 75px;
+  --size-create-menu-list-height: 350px;
+  --size-create-menu-row-height: 34px;
+  --size-create-menu-row-icon: 7px;
+  /* Plus glyph ink x 579.5 minus panel x 534. */
+  --size-create-menu-row-icon-inset: 45.5px;
+  /* Label ink x 599.5 minus the glyph ink end x 586.5. */
+  --size-create-menu-row-label-gap: 13px;
+
+  /* record-detail.md > Visual layout > Record page and More Options menu. */
+  --color-record-primary-end: #134dc4;
+  --color-record-secondary-start: #fdfdfe;
+  --color-record-secondary-end: #f1f0f7;
+  --color-record-arrow-disabled: #adb0b6;
+  --color-record-tab-selected: #ebedff;
+  --color-record-tab-border: #a3acff;
+  --color-record-rail-toggle-shown: #dfe4ef;
+  --color-record-rail-toggle-hidden-border: #e2e7ee;
+  --size-record-header-height: 73px;
+  --size-record-portrait: 48px;
+  --size-record-back-region: 52px;
+  --size-record-title-gap: 15px;
+  --size-record-title-separator-gap: 6px;
+  --size-record-header-end: 24px;
+  --radius-record-menu-row: 5px;
+  --size-record-rail-width: 220px;
+  --size-record-rail-heading-height: 38px;
+  --size-record-rail-text-inset: 8.5px;
+  --size-record-tab-row-height: 62px;
+  --size-record-tab-top: 14px;
+  --size-record-toggle-slot: 36px;
+  --size-record-tab-width: 222.5px;
+  --size-record-tab-height: 37px;
+  --size-record-tab-inset: 3px;
+  --size-record-tab-slice-width: 108px;
+  --size-record-tab-slice-height: 29px;
+  --size-record-menu-width: 217px;
+  --radius-record-menu: 4px;
+  --size-record-menu-inset: 5px;
+  --size-record-menu-inset-inline: 5.75px;
+  --size-record-menu-text-inset: 10.25px;
+  /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
+  --size-record-scroll-top: 36px;
+  --size-record-scroll-offset: 16px;
+  --size-record-demo-height: 560px;
+  /* record-detail.md: status ribbon and picklist panels. */
+  --color-status-current: #eeeffc;
+  --color-status-terminal-border: #ffadac;
+  --color-status-terminal-fill: #ffecec;
+  --color-status-terminal-icon: #ff5d5a;
+  --color-status-check: #333333;
+  --radius-status-control: 4px;
+  --size-status-card-height: 68px;
+  --size-status-card-inset: 20px;
+  --size-status-band-height: 28px;
+  --size-status-chevron-tip: 6px;
+  --size-status-stage-inset: 18px;
+  --size-status-label-gap: 6.5px;
+  --size-status-stage-thumb: 14px;
+  --size-status-terminal-gap: 11px;
+  --size-status-terminal-width: 52px;
+  --size-status-terminal-height: 27px;
+  --size-status-terminal-icon-width: 28.5px;
+  --size-status-terminal-icon-height: 14px;
+  --size-status-scroll-width: 20px;
+  --size-status-stage-menu-width: 207px;
+  --size-status-stage-menu-height: 244px;
+  --size-status-stage-search-height: 31px;
+  --size-status-terminal-menu-width: 215.5px;
+  --size-status-terminal-search-height: 30.5px;
+  --size-status-pointer-width: 17px;
+  --size-status-pointer-height: 8.5px;
+  --size-status-pointer-right: 18px;
+  --size-status-option-height: 35px;
+  --size-status-option-inset: 31.5px;
+  --size-status-search-icon-inset: 10px;
+  --size-status-options-padding: 5px;
+  --size-status-check-inset: 9px;
+  --size-status-check-width: 10px;
+  --size-status-check-height: 6.5px;
+  --size-status-group-inset: 10.5px;
+  --size-status-terminal-options-top: 6px;
+  --size-status-terminal-options-bottom: 8px;
+  --size-status-terminal-header-height: 29.5px;
+  --size-status-terminal-option-height: 29.5px;
+  --size-status-terminal-divider-top: 8.5px;
+  --size-status-terminal-divider-bottom: 6px;
+  --size-status-demo-wide: 1126px;
+  --size-status-demo-narrow: 906px;
+}
+
+/* record-detail.md → Inline editor */
+:root {
+  --radius-detail-inline-control: 4px;
+  --size-detail-inline-width: 273px;
+  --size-detail-inline-value-inset: 12.5px;
+  --size-detail-inline-halo: 7.5px;
+  --size-detail-inline-action-size: 21px;
+  --size-detail-inline-action-icon: 12px;
+  --size-detail-inline-action-inset: 10px;
+  --size-detail-inline-action-gap: 6.5px;
+  --size-detail-inline-trailing-inset: 27.5px;
+  --size-detail-inline-list-padding: 6px;
+  --size-detail-inline-option-height: 32px;
+  --size-detail-inline-check-size: 12px;
+  --size-detail-inline-check-height: 9px;
+  --size-detail-inline-save-check-width: 10px;
+  --size-detail-inline-save-check-height: 7.5px;
+  --size-detail-inline-check-gap: 6px;
 }

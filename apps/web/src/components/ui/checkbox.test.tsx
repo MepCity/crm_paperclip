@@ -1,6 +1,6 @@
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { describedBy, submittedValues } from "@/test/dom";
 import { render } from "@/test/render";
 import { Checkbox } from "./checkbox";
@@ -90,4 +90,24 @@ test("Checkbox marks itself required", () => {
   render(<Checkbox name="accept" label="Accept the terms" isRequired />);
 
   expect(accept().required).toBe(true);
+});
+
+test("later-module checkbox retains active appearance and focus without changing", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Checkbox name="accept" label="Accept the terms" laterModule="M5" onChange={change} />);
+  expect(accept().getAttribute("aria-disabled")).toBe("true");
+  expect(accept().getAttribute("data-later-module")).toBe("M5");
+  expect(accept().disabled).toBe(false);
+  expect(accept().closest("label")?.hasAttribute("data-disabled")).toBe(false);
+  await user.tab();
+  expect(document.activeElement).toBe(accept());
+  await user.keyboard("{Enter} ");
+  await user.click(screen.getByText("Accept the terms"));
+  await user.click(accept());
+  expect(accept().checked).toBe(false);
+  expect(change).not.toHaveBeenCalled();
+  // React Aria uses an empty input title to suppress native validation tooltips.
+  expect(accept().getAttribute("title")).toBeFalsy();
+  expect(accept().closest("label")?.hasAttribute("title")).toBe(false);
 });

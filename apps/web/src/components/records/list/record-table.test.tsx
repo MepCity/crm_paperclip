@@ -1,8 +1,8 @@
-import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { RecordTable, type RecordTableProps } from "./record-table";
@@ -12,26 +12,32 @@ afterEach(cleanup);
 const columns: FieldDefinition[] = [
   {
     apiName: "Full_Name",
+    views: { view: true, create: false, edit: false, quickCreate: false },
     label: "Name",
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
     apiName: "Email",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Email",
     dataType: "email",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
   {
     apiName: "Company",
+    views: { view: true, create: true, edit: true, quickCreate: true },
     label: "Company",
     dataType: "text",
     required: false,
     readOnly: false,
+    massUpdate: false,
     unique: false,
   },
 ];
@@ -45,13 +51,21 @@ function Harness({
   emptyMessage = "No records found.",
   wrapText = false,
   settings,
+  alphabet,
   footer,
+  linkFieldLabel,
+  sortableFields = new Set(columns.map((field) => field.apiName)),
+  onSortChange = () => {},
 }: {
   records: readonly RecordData[];
   emptyMessage?: string;
   wrapText?: boolean;
   settings?: RecordTableProps["settings"];
+  alphabet?: RecordTableProps["alphabet"];
   footer?: Partial<RecordTableProps["footer"]>;
+  linkFieldLabel?: string;
+  sortableFields?: ReadonlySet<string>;
+  onSortChange?: (sort: SortSpec) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   return (
@@ -59,9 +73,13 @@ function Harness({
       columns={columns}
       records={records}
       linkField="Full_Name"
+      linkFieldLabel={linkFieldLabel}
       rowHref={(item) => `/records/${item.id}`}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
+      sortableFields={sortableFields}
+      onSortChange={onSortChange}
+      alphabet={alphabet}
       wrapText={wrapText}
       emptyMessage={emptyMessage}
       settings={settings}
@@ -78,6 +96,10 @@ function Harness({
       }}
     />
   );
+}
+
+function control() {
+  return screen.getByRole("button", { name: "Filter by first letter" });
 }
 
 test("exposes the table, column headers and row links", () => {
@@ -129,6 +151,10 @@ test("selects the page from the header box and one row from its box, including t
   expect(first.checked).toBe(false);
   expect(second.checked).toBe(false);
 
+  // Past the header box come the three column option triggers, then the row boxes.
+  await user.tab();
+  await user.tab();
+  await user.tab();
   await user.tab();
   expect(document.activeElement).toBe(first);
   await user.keyboard(" ");
@@ -162,6 +188,21 @@ test("empty state keeps the header and footer, drops the badge and checkboxes, a
   expect(scroller?.getAttribute("aria-label")).toBe("Records");
 });
 
+test("link cells take the cell's wrap mode instead of forcing their own", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText={false} />);
+  const truncated = document.querySelector("[data-part=row] [data-part=value]");
+  expect(truncated?.className).toContain("truncate");
+  const link = truncated?.querySelector("a");
+  expect(link?.className).not.toContain("whitespace-normal");
+  expect(link?.className).not.toContain("inline-block");
+  cleanup();
+
+  render(<Harness records={[record("rec-001", "Lead 001")]} wrapText />);
+  const wrapped = document.querySelector("[data-part=row] [data-part=value]");
+  expect(wrapped?.className).toContain("whitespace-normal");
+  expect(wrapped?.querySelector("a")?.className).toContain("break-words");
+});
+
 test("renders the settings slot and keeps selection off the rest of the page", async () => {
   const user = userEvent.setup();
   render(<Harness records={[record("rec-001", "Lead 001")]} settings={<span>Columns</span>} />);
@@ -170,4 +211,152 @@ test("renders the settings slot and keeps selection off the rest of the page", a
   expect(screen.queryByRole("columnheader", { name: "View settings" })).toBeNull();
   await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
   expect(screen.queryByRole("toolbar")).toBeNull();
+});
+
+test("draws the column options trigger only for fields in the sortable set", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      sortableFields={new Set(["Full_Name", "Company"])}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "Name column options" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Company column options" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Email column options" })).toBeNull();
+});
+
+test("keeps the link column trigger visible and reveals the others on hover or focus", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+
+  const link = screen.getByRole("button", { name: "Name column options" });
+  const company = screen.getByRole("button", { name: "Company column options" });
+  expect(link.className).not.toContain("opacity-0");
+  expect(company.className).toContain("opacity-0");
+  expect(company.className).toContain("group-hover/column:opacity-100");
+  expect(company.className).toContain("group-focus-within/column:opacity-100");
+});
+
+test("opens the menu from the keyboard with Asc then Desc", async () => {
+  const user = userEvent.setup();
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+
+  screen.getByRole("button", { name: "Company column options" }).focus();
+  await user.keyboard("{Enter}");
+
+  const items = screen.getAllByRole("menuitem");
+  expect(items.map((item) => item.textContent?.trim())).toEqual(["Asc", "Desc"]);
+});
+
+test("applies the picked order and closes the menu", async () => {
+  const user = userEvent.setup();
+  const onSortChange = vi.fn();
+  render(<Harness records={[record("rec-001", "Lead 001")]} onSortChange={onSortChange} />);
+
+  await user.click(screen.getByRole("button", { name: "Company column options" }));
+  await user.click(screen.getByRole("menuitem", { name: "Desc" }));
+
+  expect(onSortChange).toHaveBeenCalledWith({ field: "Company", order: "desc" });
+  expect(screen.queryByRole("menuitem")).toBeNull();
+});
+
+test("Escape closes the menu and returns focus to the trigger", async () => {
+  const user = userEvent.setup();
+  const onSortChange = vi.fn();
+  render(<Harness records={[record("rec-001", "Lead 001")]} onSortChange={onSortChange} />);
+
+  const trigger = screen.getByRole("button", { name: "Name column options" });
+  await user.click(trigger);
+  expect(screen.getByRole("menuitem", { name: "Asc" })).toBeTruthy();
+
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menuitem")).toBeNull();
+  expect(onSortChange).not.toHaveBeenCalled();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
+
+test("no alphabetical control without the alphabet prop", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  expect(screen.queryByRole("button", { name: "Filter by first letter" })).toBeNull();
+});
+
+test("the alphabetical control sits in the link column header and keeps its name", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: null, onChange: vi.fn() }}
+    />,
+  );
+  const headers = screen.getAllByRole("columnheader");
+  const withControl = headers.filter((header) =>
+    within(header).queryByRole("button", { name: "Filter by first letter" }),
+  );
+  expect(withControl).toHaveLength(1);
+  expect(withControl[0]?.getAttribute("aria-label")).toBe("Name");
+  expect(control().textContent).toBe("All");
+});
+
+test("the alphabetical control shows the chosen letter", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      alphabet={{ value: "R", onChange: vi.fn() }}
+    />,
+  );
+  expect(control().textContent).toBe("R");
+});
+
+test("picking a letter in the list reports it, All reports null, and the list closes", async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  render(
+    <Harness records={[record("rec-001", "Lead 001")]} alphabet={{ value: null, onChange }} />,
+  );
+  await user.click(control());
+  const list = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  expect(within(list).getAllByRole("option")).toHaveLength(27);
+  await user.click(within(list).getByRole("option", { name: "B" }));
+  expect(onChange).toHaveBeenCalledWith("B");
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  await user.click(control());
+  const reopened = await screen.findByRole("listbox", { name: "Filter by first letter choices" });
+  await user.click(within(reopened).getByRole("option", { name: "All" }));
+  expect(onChange).toHaveBeenLastCalledWith(null);
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
+
+test("the empty view keeps the alphabetical control in its header", () => {
+  render(<Harness records={[]} alphabet={{ value: "C", onChange: vi.fn() }} />);
+  expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(control().textContent).toBe("C");
+});
+
+test("shows configured linkFieldLabel in link column header, or falls back to metadata label", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} linkFieldLabel="Lead Name" />);
+  expect(screen.getByRole("columnheader", { name: "Lead Name" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Name" })).toBeNull();
+  expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
+
+  cleanup();
+
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  expect(screen.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Lead Name" })).toBeNull();
+  expect(screen.getByRole("columnheader", { name: "Email" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Company" })).toBeTruthy();
+});
+
+test("the alphabetical control works alongside linkFieldLabel", () => {
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      linkFieldLabel="Lead Name"
+      alphabet={{ value: null, onChange: vi.fn() }}
+    />,
+  );
+  const header = screen.getByRole("columnheader", { name: "Lead Name" });
+  expect(within(header).getByRole("button", { name: "Filter by first letter" })).toBeTruthy();
+  expect(header.getAttribute("aria-label")).toBe("Lead Name");
 });

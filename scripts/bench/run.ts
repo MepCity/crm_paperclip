@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { cpus, tmpdir, totalmem } from "node:os";
 import { join } from "node:path";
 import { ensureDatabase, startLocalPostgres } from "@crm/db/local-postgres";
+import { startWithSignalShutdown } from "@crm/db/signal-shutdown";
 import pg from "pg";
 import {
   picklistValue,
@@ -631,7 +632,7 @@ export async function runBench(
     return { update1, update5 };
   };
   try {
-    server = await startLocalPostgres({ dataDir });
+    server = await startWithSignalShutdown(() => startLocalPostgres({ dataDir }));
     client = new pg.Client({ connectionString: server.urlFor("bench") });
     await ensureDatabase(server.urlFor("postgres"), "bench");
     await client.connect();

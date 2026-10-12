@@ -3,10 +3,10 @@ import { expect, it } from "vitest";
 
 const source = readFileSync(new URL("./route.ts", import.meta.url), "utf8");
 
-it("keeps the count route to the wrapper and one service call", () => {
-  expect(source).toContain("apiRoute");
-  expect(source).toContain("getRecordService");
-  expect(source.match(/getRecordService\(/g)).toHaveLength(1);
+it("delegates the count route to the shared operation wrapper", () => {
+  expect(source).toContain("export const POST = operationRoute(operations.count);");
+  expect(source).not.toContain("getRecordService");
+  expect(source).not.toContain("listMembers");
   expect(source).not.toContain("X-CRM-ORG");
   expect(source).not.toContain("getSession");
   expect(source).not.toContain("requireOrgContext");

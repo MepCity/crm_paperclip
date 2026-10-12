@@ -11,7 +11,12 @@
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
   --color-text-placeholder: var(--color-text-placeholder);
+  --color-text-strong: var(--color-text-strong);
   --color-border: var(--color-border);
+  --color-panel-border: var(--color-panel-border);
+  --color-control-border: var(--color-control-border);
+  --color-select-user-table-border: var(--color-select-user-table-border);
+  --color-select-user-row-divider: var(--color-select-user-row-divider);
   --color-primary: var(--color-primary);
   --color-primary-text: var(--color-primary-text);
   --color-primary-hover: var(--color-primary-hover);
@@ -46,11 +51,13 @@
   --color-topbar-surface: var(--color-topbar-surface);
   --color-topbar-border: var(--color-topbar-border);
   --color-menu-surface: var(--color-menu-surface);
+  --color-menu-icon: var(--color-menu-icon);
   --color-utility-border: var(--color-utility-border);
   --color-utility-help: var(--color-utility-help);
   --color-panel-border: var(--color-panel-border);
   --color-row-separator: var(--color-row-separator);
   --color-text-strong: var(--color-text-strong);
+  --color-confirm-dialog-body: var(--color-confirm-dialog-body);
   --color-text-disabled: var(--color-text-disabled);
   --color-text-empty: var(--color-text-empty);
 
@@ -67,12 +74,11 @@
   --font-mono: var(--font-mono);
 
   --font-weight-normal: var(--font-weight-normal);
-  --font-weight-medium: var(--font-weight-medium);
   --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
 
   --text-2xs: var(--text-2xs);
   --text-xs: var(--text-xs);
-  --text-13: var(--text-13);
   --text-sm: var(--text-sm);
   --text-md: var(--text-md);
   --text-base: var(--text-base);

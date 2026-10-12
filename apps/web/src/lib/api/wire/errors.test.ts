@@ -4,10 +4,11 @@ import {
   ForbiddenError,
   isAppError,
   NotFoundError,
+  RecordLockedError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   decodeError,
   encodeError,
@@ -27,6 +28,7 @@ describe("encodeError / decodeError", () => {
     ["unauthenticated", new UnauthenticatedError("Sign in again.")],
     ["forbidden", new ForbiddenError("You cannot change this record.")],
     ["not_found", new NotFoundError("That view does not exist.")],
+    ["record_locked", new RecordLockedError()],
     ["conflict", new ConflictError("That record was changed.")],
     ["validation", new ValidationError(fieldErrors, "Check the highlighted fields.")],
   ] as const)("round-trips %s through JSON", (_label, error) => {
@@ -38,16 +40,60 @@ describe("encodeError / decodeError", () => {
     expect(isAppError(decoded)).toBe(true);
     expect(decoded.message).toBe(error.message);
     expect(encoded.status).toBe(
-      { unauthenticated: 401, forbidden: 403, not_found: 404, conflict: 409, validation: 400 }[
-        error.code
-      ],
+      {
+        unauthenticated: 401,
+        forbidden: 403,
+        not_found: 404,
+        conflict: 400,
+        validation: 400,
+        record_locked: 400,
+      }[error.code],
     );
-    expect(encoded.body.status).toBe(encoded.status);
+    expect(encoded.body.status).toBe("error");
     expect(Object.keys(encoded.body).sort()).toEqual(["code", "details", "message", "status"]);
     if (error instanceof ValidationError && decoded instanceof ValidationError) {
       expect(decoded.fieldErrors).toEqual(error.fieldErrors);
       expect(decoded.fieldErrors).not.toBe(error.fieldErrors);
     }
+  });
+
+  it.each([
+    [
+      new ValidationError({ Company: ["This field is required."] }, undefined, "mandatory"),
+      400,
+      "MANDATORY_NOT_FOUND",
+    ],
+    [new ValidationError(fieldErrors), 400, "INVALID_DATA"],
+    [
+      new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit"),
+      400,
+      "LIMIT_EXCEEDED",
+    ],
+    [new ConflictError("Duplicate."), 400, "DUPLICATE_DATA"],
+    [new RecordLockedError(), 400, "RECORD_LOCKED"],
+    [new ForbiddenError(), 403, "NO_PERMISSION"],
+    [new UnauthenticatedError(), 401, "AUTHENTICATION_FAILURE"],
+    [new NotFoundError(), 404, "not_found"],
+    [new Error("Unexpected."), 500, "INTERNAL_ERROR"],
+  ] as const)("maps %s to HTTP %s and %s", (error, status, code) => {
+    const encoded = encodeError(error);
+    expect(encoded).toMatchObject({ status, body: { code, status: "error" } });
+    const restored = decodeError(status, JSON.stringify(encoded.body));
+    if (error instanceof ValidationError) {
+      expect(restored).toBeInstanceOf(ValidationError);
+      expect(restored).toMatchObject({ fieldErrors: error.fieldErrors, reason: error.reason });
+    }
+  });
+
+  it("encodes field errors from a second module instance", async () => {
+    vi.resetModules();
+    const { ValidationError: OtherValidationError } = await import("@crm/core/errors");
+    const error = new OtherValidationError(fieldErrors);
+    expect(error).not.toBeInstanceOf(ValidationError);
+    expect(encodeError(error)).toMatchObject({
+      status: 400,
+      body: { details: { fields: fieldErrors } },
+    });
   });
 
   it("does not copy a validation stack or share field-error arrays", () => {
@@ -73,7 +119,7 @@ describe("encodeError / decodeError", () => {
       code: INTERNAL_ERROR_CODE,
       details: {},
       message: INTERNAL_ERROR_MESSAGE,
-      status: 500,
+      status: "error",
     });
     expect(serialized).not.toContain("secret-host");
     expect(serialized).not.toContain("ECONNREFUSED");
@@ -89,7 +135,7 @@ describe("decodeError unexpected responses", () => {
     code: "not_found",
     details: {},
     message: leaked,
-    status: 404,
+    status: "error",
   };
 
   it.each([
@@ -109,10 +155,10 @@ describe("decodeError unexpected responses", () => {
       "invalid field messages",
       400,
       {
-        code: "validation",
+        code: "INVALID_DATA",
         details: { fields: { name: "Enter a name." } },
         message: leaked,
-        status: 400,
+        status: "error",
       },
     ],
   ] as const)("returns UnexpectedApiError for %s", (_label, status, body) => {
@@ -128,7 +174,7 @@ describe("decodeError unexpected responses", () => {
 
   it("rejects a prototype field name instead of restoring a validation error", () => {
     const body = JSON.parse(
-      '{"code":"validation","details":{"fields":{"__proto__":["owned"],"name":["ok"]}},"message":"UNIQUE_BODY_MESSAGE_secret","status":400}',
+      '{"code":"INVALID_DATA","details":{"fields":{"__proto__":["owned"],"name":["ok"]}},"message":"UNIQUE_BODY_MESSAGE_secret","status":"error"}',
     );
     const decoded = decodeError(400, body);
     expect(decoded).toBeInstanceOf(UnexpectedApiError);

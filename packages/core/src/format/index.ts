@@ -62,6 +62,31 @@ export function formatDate(
   return render(options.locale, options.timeZone, { dateStyle: "medium" }, instant(value));
 }
 
+/**
+ * Formats an instant for Created By / Modified By detail rows: weekday, day, month,
+ * year and 12-hour clock in `options.timeZone`.
+ */
+export function formatRecordAuditDateTime(
+  value: Date | string | null | undefined,
+  options: FormatOptions,
+): string {
+  if (value === null || value === undefined) return "";
+  const formatter = new Intl.DateTimeFormat(options.locale, {
+    timeZone: options.timeZone,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const parts = formatter.formatToParts(instant(value));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? "";
+  return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")} ${part("hour")}:${part("minute")} ${part("dayPeriod")}`;
+}
+
 /** Formats an instant as a date and a time of day in `options.timeZone`. */
 export function formatDateTime(
   value: Date | string | null | undefined,

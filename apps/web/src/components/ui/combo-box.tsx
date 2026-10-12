@@ -1,5 +1,7 @@
 "use client";
 
+import "./record-input.css";
+
 import {
   type ReactNode,
   type RefObject,
@@ -33,12 +35,9 @@ const LOAD_DEBOUNCE_MS = 300;
 
 const styles = {
   field: "flex flex-col gap-1",
-  label: "text-sm font-medium text-text",
-  group:
-    "flex items-center rounded-md border border-border bg-surface " +
-    "focus-within:border-primary focus-within:ring-2 focus-within:ring-focus-ring " +
-    "data-disabled:bg-surface-hover data-disabled:opacity-50 data-invalid:border-danger",
-  input: "min-w-0 flex-1 bg-transparent px-3 py-2 text-text outline-none data-disabled:opacity-50",
+  label: "record-label text-md",
+  group: "record-control record-input-frame",
+  input: "record-control flex-1",
   trigger:
     "flex cursor-default items-center justify-center rounded-md px-2 py-2 outline-none " +
     "data-disabled:opacity-50 data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
@@ -109,7 +108,7 @@ export function ComboBox<T extends object>({
   useLayoutEffect(() => {
     currentKey.current = key;
     currentInput.current = inputValue;
-  }, [key, inputValue]);
+  });
   const [search, setSearch] = useState<{ query: string } | null>(null);
   const [loaded, setLoaded] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -235,8 +234,12 @@ export function ComboBox<T extends object>({
           <Label className={styles.label}>{label}</Label>
           {/* The group draws the border, but React Aria reports the resolved invalid state
               (prop or Form validationErrors) only on the ComboBox root. */}
-          <Group data-invalid={isInvalid || undefined} className={styles.group}>
-            <Input className={styles.input} />
+          <Group
+            data-required={props.isRequired || undefined}
+            data-invalid={isInvalid || undefined}
+            className={styles.group}
+          >
+            <PreservedInput className={styles.input} />
             <Button slot="trigger" className={styles.trigger}>
               <Icons.chevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
             </Button>
@@ -267,6 +270,25 @@ export function ComboBox<T extends object>({
       )}
     </AriaComboBox>
   );
+}
+
+/**
+ * Hydration leaves text the user typed into the server markup, then React writes the
+ * field state over it. The value tracker already matches that text, so an input event
+ * would be ignored. Reset the tracker and publish the event so React Aria keeps it.
+ */
+function PreservedInput({ className }: { className: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || node.value === node.defaultValue) return;
+    const tracker = (
+      node as HTMLInputElement & { _valueTracker?: { setValue: (value: string) => void } }
+    )._valueTracker;
+    tracker?.setValue(node.defaultValue);
+    node.dispatchEvent(new Event("input", { bubbles: true }));
+  }, []);
+  return <Input ref={ref} className={className} />;
 }
 
 /** Reads option text from RAC's collection without imposing a shape on loader results. */
