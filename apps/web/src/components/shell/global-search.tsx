@@ -88,10 +88,10 @@ function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string })
         variant="icon"
         size="compact"
         aria-label="Search records"
-        className="h-(--size-topbar-control-pitch) w-56 justify-start! gap-2 bg-primary/10! px-3"
+        className="h-(--size-topbar-control-pitch) w-(--size-topbar-control-pitch) justify-center! gap-2 bg-primary/10! px-0! sm:w-56 sm:justify-start! sm:px-3!"
       >
         <Icons.filterSearch className="size-(--size-topbar-icon)" aria-hidden />
-        <span>Search records</span>
+        <span className="hidden sm:inline">Search records</span>
       </Button>
       <SearchLayer>
         <div className="p-2">
