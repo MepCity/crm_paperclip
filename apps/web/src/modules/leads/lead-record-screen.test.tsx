@@ -30,6 +30,7 @@ const paths: LeadRecordPaths = {
   record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
   edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
   clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
+  merge: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/merge`,
 };
 
 function createService(): ClientRecordService {
@@ -306,6 +307,7 @@ describe("LeadRecordScreen", () => {
       record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
       edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
       clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
+      merge: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/merge`,
     };
     const records = createFixtureRecordService(deleteCtx);
     const service = createClientRecordService(records, {
@@ -377,6 +379,7 @@ describe("LeadRecordScreen", () => {
       record: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}`,
       edit: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/edit`,
       clone: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/clone`,
+      merge: (orgSlug, module, recordId) => `/crm/${orgSlug}/tab/${module}/${recordId}/merge`,
     };
     const records = createFixtureRecordService(deleteCtx);
     const service = createClientRecordService(records, {

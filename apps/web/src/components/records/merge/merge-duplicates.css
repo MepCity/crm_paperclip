@@ -1,0 +1,7 @@
+.merge-duplicates {
+  background: var(--color-surface);
+}
+
+.merge-criteria .record-label {
+  color: var(--color-text-muted);
+}

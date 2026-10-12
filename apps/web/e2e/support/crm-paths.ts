@@ -4,6 +4,7 @@ export {
   moduleListDefaultPath,
   moduleRecordClonePath,
   moduleRecordEditPath,
+  moduleRecordMergePath,
   moduleRecordPath,
 } from "../../src/lib/crm-paths";
 
