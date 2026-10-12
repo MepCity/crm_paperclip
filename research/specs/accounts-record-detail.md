@@ -76,7 +76,7 @@ Absent here: D-03, D-13, D-17, D-22, D-25, D-27, D-28, D-36, D-39, D-40. D-52 (O
 
 ### Control inventory — m3d-detail-more
 
-Shell: SH-01–SH-33 as in contacts.md, except SH-13 (Accounts) is not painted as active. SH-34–SH-46 are not painted during loading. No additional shell control.
+Shell: SH-01–SH-33 as in contacts.md, except SH-15 (Accounts) is not painted as active. SH-34–SH-46 are not painted during loading. No additional shell control.
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -87,7 +87,7 @@ Rest: as in m3d-detail-main **for shared-shell controls only**; covered by the o
 
 ### Control inventory — m3d-detail-timeline
 
-Shell: SH-01–SH-33 as in contacts.md, except SH-13 (Accounts) is not painted as active. SH-34–SH-46 are not painted during loading. No additional shell control.
+Shell: SH-01–SH-32 as in contacts.md, except SH-15 (Accounts) is not painted as active. SH-33–SH-46 are not painted during loading. No additional shell control.
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -577,12 +577,12 @@ Ordinals below are one-based local evidence positions, never click selectors. Ev
 | SH-30 | 88 |
 | SH-31 | 91 |
 | SH-32 | 94 |
-| SH-33 | 97, 98 |
+| excluded: profile source entries; no painted control in screenshot | 97, 98 |
 | excluded: empty icon footprint; no painted control | 101 |
 | excluded: zero-area utility-strip wrapper | 102 |
 | excluded: static loading progress decoration | 103 |
 
-112 source items; 33 inventory IDs represented by source entries; 56 excluded items. No opened AD controls. The entire image, including corners and right edge, was inspected.
+112 source items; 32 inventory IDs represented by source entries; 58 excluded items. No opened AD controls. The entire image, including corners and right edge, was inspected.
 
 ## Open questions
 
