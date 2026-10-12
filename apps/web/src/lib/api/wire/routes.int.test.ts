@@ -574,7 +574,16 @@ describe("operation routes", () => {
   it("runs Deals create, list, read, update and delete handlers", async () => {
     const create = await call(operations.create, a, {
       module: "Deals",
-      body: { data: [{ Deal_Name: "Route Deal", Stage: "Qualification" }] },
+      body: {
+        data: [
+          {
+            Deal_Name: "Route Deal",
+            Stage: "Qualification",
+            Closing_Date: "2026-12-15",
+            Account_Name: { id: "500000000000000000" },
+          },
+        ],
+      },
     });
     expect(create.status).toBe(200);
     const body = await create.json();
@@ -626,6 +635,12 @@ describe("operation routes", () => {
       const body = await response.json();
       if (op === operations.fields) {
         expect(body.fields).toHaveLength(29);
+        for (const apiName of ["Closing_Date", "Account_Name"]) {
+          expect(
+            body.fields.find((field: { api_name: string }) => field.api_name === apiName)
+              .system_mandatory,
+          ).toBe(true);
+        }
         const stages = body.fields.find(
           (field: { api_name: string }) => field.api_name === "Stage",
         ).pick_list_values;

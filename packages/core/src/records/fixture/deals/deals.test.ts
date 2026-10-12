@@ -23,6 +23,8 @@ const make = () =>
 const input = (extra: RecordInput = {}): RecordInput => ({
   Deal_Name: "Example Deal",
   Stage: "Qualification",
+  Closing_Date: "2026-12-15",
+  Account_Name: { module: "Accounts", id: "500000000000000000" },
   ...extra,
 });
 describeRecordServiceContract(
@@ -75,10 +77,21 @@ describe("Deals export and fixture", () => {
     }
     await expect(service.getModule("MissingModule")).rejects.toBeInstanceOf(NotFoundError);
   });
-  it.each(["Deal_Name", "Stage"])("requires %s on creation", async (field) => {
-    const values = { ...input() };
-    delete values[field];
-    await expect(make().create("Deals", values)).rejects.toBeInstanceOf(ValidationError);
+  it.each(["Deal_Name", "Stage", "Closing_Date", "Account_Name"])(
+    "requires %s on creation",
+    async (field) => {
+      const values = { ...input() };
+      delete values[field];
+      await expect(make().create("Deals", values)).rejects.toBeInstanceOf(ValidationError);
+    },
+  );
+  it("preserves required fields during a partial update", async () => {
+    const service = make();
+    const deal = await service.create("Deals", input());
+    const updated = await service.update("Deals", deal.id, { Next_Step: "Call back" });
+    expect(updated.fields.Closing_Date).toBe(deal.fields.Closing_Date);
+    expect(updated.fields.Account_Name).toEqual(deal.fields.Account_Name);
+    expect(updated.fields.Next_Step).toBe("Call back");
   });
   it.each([
     ["Account_Name", "Accounts", "Account_Name"],

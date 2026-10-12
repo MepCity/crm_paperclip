@@ -287,6 +287,8 @@ export const dealsRecordServiceContractModule: RecordServiceContractModuleDefini
   buildMinimalValidInput: (extra = {}) => ({
     Deal_Name: "Contract Deal",
     Stage: "Qualification",
+    Closing_Date: "2026-12-15",
+    Account_Name: { module: "Accounts", id: "500000000000000000" },
     ...extra,
   }),
   systemFields: leadsSystemFields,
