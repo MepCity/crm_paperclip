@@ -105,3 +105,43 @@ all numeric thresholds/operators, null boundaries, partial indexes, side-row
 absence, full-record/page equivalence, composite primary-key reads, exact
 aggregates, RLS, ten/twenty-field writes with events and concurrent backfill.
 Acceptance misses remain evidence; the benchmark does not modify the ADR.
+
+## Deep-page evidence (MEP-358)
+
+Run the frozen second-slot dataset and protocol in a new isolated cluster:
+
+```sh
+pnpm exec tsx scripts/bench/deep-pages.ts --rows 200000 --writes 2000 \
+  --warmup 5 --measure 30 \
+  --out scripts/bench/results/record-storage-deep-pages.md \
+  --json scripts/bench/results/record-storage-deep-pages.json
+```
+
+S1 retains the original A4b statements. S2 narrows every inner page and both
+union arms to identity and sort key before fetching documents. S3 uses a
+separate copy with sixteen additional nulls-first indexes. B-1 retains the
+original typed B1 indexes; B-2 adds the complementary company nulls-first
+index with the same keys and partial module predicate as B1. All variants
+retain the original seed and precision cohort; B's unqueried revenue column
+is widened to numeric(18,2) to retain that cohort exactly.
+
+The runner checks identities and ordering under both policies for every cell,
+retains all three off/on rounds and measured samples in JSON, and renders the
+minimum on-p95 round with its range. The write comparison rebuilds the same
+fully filled twenty-slot arrangement for each index count. Every transaction
+includes its event. Five paired node-level timing plans for the unchanged S1
+O1/O2 offset-5000 statements are retained in JSON. Database and clients are
+removed in finally; no service remains after completion.
+
+Regenerate the report solely from its JSON (without rerunning measurements):
+
+```sh
+pnpm exec tsx scripts/bench/deep-pages.ts --render \
+  scripts/bench/results/record-storage-deep-pages.json \
+  scripts/bench/results/record-storage-deep-pages.md
+```
+
+For a smoke run, use `--rows 800 --writes 4 --warmup 1 --measure 2` and output
+files in the run scratch directory. Smoke numbers are not full-scale evidence.
+Run only `pnpm exec vitest run scripts/bench`, Biome on the changed TypeScript
+files, and `node scripts/typecheck.mjs`; the merge bot owns the full verify.
