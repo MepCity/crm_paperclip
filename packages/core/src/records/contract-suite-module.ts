@@ -243,3 +243,38 @@ export const contactsRecordServiceContractModule: RecordServiceContractModuleDef
     },
   },
 };
+
+export const accountsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Accounts",
+  singularLabel: "Account",
+  pluralLabel: "Accounts",
+  expectedFieldCount: 51,
+  buildMinimalValidInput: (extra = {}) => ({ Account_Name: "Contract Account", ...extra }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Account_Site",
+    sample: "Contract Site",
+    updated: "Updated Site",
+    tenantOther: "Other Site",
+  },
+  sortFields: ["Account_Site", "Employees"],
+  duplicatePermittedField: "Account_Name",
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Account_Name", 3],
+    ["Employees", 1.5],
+    ["Annual_Revenue", "3"],
+    ["Parent_Account", "account"],
+  ],
+  optional: {
+    lockedRecords: { field: "Locked__s" },
+    massUpdateClearablePhone: "Phone",
+    massUpdateInvalidNumeric: "Employees",
+    lengthValidationField: "Account_Name",
+    singleModuleLookup: {
+      field: "Parent_Account",
+      reference: { module: "Accounts", id: "500000000000000000" },
+      expectedName: "Account 001",
+    },
+  },
+};

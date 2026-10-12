@@ -408,6 +408,16 @@ export function matches(
   // A leaf on a field absent from module metadata is published but does not constrain.
   if (!fields.has(criteria.field)) return true;
   const raw = record.fields[criteria.field] ?? null;
+  // Equality by opaque ID serves related lists; other text values still match names.
+  if (
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    (criteria.comparator === "equal" || criteria.comparator === "not_equal") &&
+    typeof criteria.value === "string" &&
+    typeof raw === "object" &&
+    raw !== null &&
+    raw.id === criteria.value
+  )
+    return criteria.comparator === "equal";
   const value =
     fields.get(criteria.field)?.dataType === "lookup" && typeof raw === "object" && raw !== null
       ? (raw.name ?? null)

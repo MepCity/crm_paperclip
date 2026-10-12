@@ -1,4 +1,7 @@
 import type { FieldValue, ListView, ModuleMetadata, RecordData } from "../contract";
+import { accountsMetadata } from "./accounts/metadata";
+import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
+import { accountsViews } from "./accounts/views";
 import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
@@ -56,6 +59,17 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
       Created_Time: stamp,
       Modified_Time: stamp,
     }),
+  },
+  Accounts: {
+    metadata: accountsMetadata,
+    views: accountsViews,
+    displayNameField: "Account_Name",
+    generateSeed: (now) => generateFixtureAccounts(68, now),
+    fullName: accountsFullName,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Account_Name", "Phone", "Website", "Account_Site"],
+    initialNextId: 600000000000000000n,
+    createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Contacts: {
     metadata: contactsMetadata,
