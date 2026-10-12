@@ -23,3 +23,7 @@ No customer data, no copied text blocks, no screenshots in the repo.
 - contacts-form.md — Contacts create/edit forms (planned; MEP-287).
 - global-search.md — Global search (planned; MEP-288).
 - duplicates.md — Duplicate flows (planned; MEP-288).
+
+- [accounts.md](accounts.md) — Accounts list inventory and exported configuration (image inventory and metadata; MEP-21).
+- accounts-record-detail.md — Accounts record detail (planned; MEP-327).
+- accounts-form.md — Accounts create/edit forms (planned; MEP-329).
