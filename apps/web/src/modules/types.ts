@@ -43,6 +43,28 @@ export interface RelatedListActivityColumnDefinition {
   icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
 }
 
+export interface RelatedListTableColumnDefinition {
+  id: string;
+  label: string;
+}
+
+export interface RelatedListTableRowDefinition {
+  id: string;
+  cells: Readonly<Record<string, string>>;
+  recordLink?: { href: string };
+  emailLink?: { href: string };
+  phoneAction?: { moduleKey?: ModuleKey };
+}
+
+export interface RelatedListRailLinksGroupDefinition {
+  title: string;
+  addLink: {
+    id: string;
+    label: string;
+    moduleKey: ModuleKey;
+  };
+}
+
 export interface RelatedListDefinition {
   id: string;
   title: string;
@@ -61,6 +83,10 @@ export interface RelatedListDefinition {
   loadingText?: string;
   activityColumns?: readonly RelatedListActivityColumnDefinition[];
   subtabs?: readonly { id: string; label: string }[];
+  subtabRowEndControl?: RelatedListControlDefinition;
+  tableColumns?: readonly RelatedListTableColumnDefinition[];
+  tablePreviewRows?: readonly RelatedListTableRowDefinition[];
+  notesShowMore?: boolean;
   socialLinks?: readonly { id: string; label: string; moduleKey?: ModuleKey | "M2" }[];
   socialGuidance?: string;
   introductoryText?: string;
