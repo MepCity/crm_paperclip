@@ -1,5 +1,8 @@
 import path from "node:path";
 import { defineConfig } from "vitest/config";
+import { enforceVitestGuard } from "./scripts/vitest-guard";
+
+enforceVitestGuard();
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
 

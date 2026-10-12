@@ -1095,3 +1095,12 @@ range filter inputs) and Value list structures.
 | `--size-filter-user-header-height` | 28px | Owner header controls height |
 | `--size-filter-user-body-height` | 174px | Owner list height |
 | `--size-filter-user-row-height` | 41px | Owner entry height |
+
+## Global search primitives
+
+`SearchLayer` composes the React Aria modal overlay and dialog for a top-centered
+search layer. Outside interaction and Escape dismiss it; React Aria contains focus
+and restores the trigger. `TextField.variant="search"` supplies an unbordered query
+inside its caller's shared selector/query frame, including prefix content for the
+Record Name badge. Both use existing tokens; geometry is interim under Module 2's
+visual parity rule. Existing text-field variants are unchanged.
