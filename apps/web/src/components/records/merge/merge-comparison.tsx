@@ -61,7 +61,7 @@ export function MergeComparison({
             <tr className="border-b border-panel-border bg-surface-muted">
               <th
                 scope="col"
-                className="sticky left-0 z-10 bg-surface-muted px-4 py-3 text-left font-medium text-text"
+                className="sticky left-0 z-10 bg-surface-muted px-4 py-3 text-left font-semibold text-text"
               >
                 Field
               </th>
@@ -71,7 +71,7 @@ export function MergeComparison({
                   <th
                     key={record.id}
                     scope="col"
-                    className="min-w-[10rem] border-l border-panel-border px-4 py-3 text-left font-medium text-text"
+                    className="min-w-[10rem] border-l border-panel-border px-4 py-3 text-left font-semibold text-text"
                   >
                     <div className="flex flex-col gap-2">
                       <label className="flex cursor-pointer items-center gap-2">

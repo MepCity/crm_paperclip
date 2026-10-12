@@ -44,11 +44,11 @@ export function MergeMatchingTable({
       <table className="w-full min-w-[48rem] border-collapse text-sm" aria-label="Matching records">
         <thead>
           <tr className="border-b border-panel-border bg-surface-muted text-left">
-            <th scope="col" className="w-12 px-3 py-2 font-medium">
+            <th scope="col" className="w-12 px-3 py-2 font-semibold">
               {" "}
             </th>
             {columns.map((column) => (
-              <th key={column.apiName} scope="col" className="px-3 py-2 font-medium text-text">
+              <th key={column.apiName} scope="col" className="px-3 py-2 font-semibold text-text">
                 {column.label}
               </th>
             ))}

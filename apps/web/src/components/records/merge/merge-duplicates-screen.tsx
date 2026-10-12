@@ -258,7 +258,7 @@ export function MergeDuplicatesScreen({
       <div className="merge-duplicates flex h-full min-h-0 flex-col" data-merge-step="compare">
         <header className="flex items-center justify-between border-b border-panel-border px-6 py-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-medium text-text">Merge Records</h1>
+            <h1 className="text-lg font-semibold text-text">Merge Records</h1>
             <MergeComparisonInfoButton />
           </div>
           <MergeComparisonHeaderActions
@@ -311,12 +311,12 @@ export function MergeDuplicatesScreen({
   return (
     <div className="merge-duplicates flex h-full min-h-0 flex-col" data-merge-step="search">
       <header className="border-b border-panel-border px-6 py-4">
-        <h1 className="text-lg font-medium text-text">Find and Merge Duplicates</h1>
+        <h1 className="text-lg font-semibold text-text">Find and Merge Duplicates</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-auto p-6">
         <section className="merge-criteria mb-8" aria-label="Search criteria">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-md font-medium text-text">Search Criteria</h2>
+            <h2 className="text-md font-semibold text-text">Search Criteria</h2>
             <Select
               label="Match any of the criteria below"
               hideLabel
