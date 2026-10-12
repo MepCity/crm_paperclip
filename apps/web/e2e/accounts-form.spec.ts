@@ -1,0 +1,274 @@
+import type { Page } from "@playwright/test";
+import {
+  ACCOUNTS_FORM_ADDRESS_CHILD_ORDER,
+  ACCOUNTS_FORM_INFORMATION_COLUMNS,
+} from "../src/modules/accounts/accounts-form-rules";
+import { signUpNewUser } from "./support/auth";
+import {
+  moduleCreatePath,
+  moduleListDefaultPath,
+  moduleRecordClonePath,
+  moduleRecordEditPath,
+} from "./support/crm-paths";
+import { createOrganization } from "./support/org";
+import { expect, test } from "./support/test";
+
+const ACCOUNTS_TAB = "Accounts";
+const CREATE_PATH = "/crm/v2.2/Accounts";
+
+function accountRecordIdFromPath(pathname: string): string {
+  const parts = pathname.split("/").filter(Boolean);
+  const index = parts.indexOf("Accounts");
+  const id = index >= 0 ? parts[index + 1] : undefined;
+  if (!id || id === "list" || id === "create" || id === "custom-view") {
+    throw new Error(`Expected an account record id in ${pathname}`);
+  }
+  return id;
+}
+
+async function openCreate(page: Page) {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const list = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+  await page.goto(list);
+  await page.getByRole("link", { name: "Create Account", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Create Account" })).toBeVisible();
+  return { org, list };
+}
+
+async function saveAccount(page: Page, name: string) {
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill(name);
+  const createRequest = page.waitForRequest(
+    (request) => request.method() === "POST" && new URL(request.url()).pathname === CREATE_PATH,
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await createRequest;
+}
+
+/**
+ * The Accounts record detail belongs to MEP-342, so arrival after a save is proven by the
+ * record route only; the create form must be gone.
+ */
+async function expectRecordRoute(page: Page, orgSlug: string) {
+  await expect(page).toHaveURL(new RegExp(`^/crm/${orgSlug}/tab/Accounts/\\d+$`));
+  await expect(page.getByRole("heading", { name: "Create Account" })).toHaveCount(0);
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+});
+
+test("empty save shows Account Name validation", async ({ page }) => {
+  await openCreate(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Account Name cannot be empty.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Create Account" })).toBeVisible();
+});
+
+test("creates with Account Name only and arrives at the record route", async ({ page }) => {
+  const { org } = await openCreate(page);
+  await saveAccount(page, "Solo Account");
+  await expectRecordRoute(page, org.slug);
+});
+
+test("Account Information and address groups follow the spec field order", async ({ page }) => {
+  await openCreate(page);
+  const accountInfo = page
+    .getByRole("heading", { name: "Account Information", exact: true })
+    .locator("xpath=ancestor::*[@data-record-form-section][1]");
+  const leftOrder = await accountInfo
+    .locator('[data-record-form-column="left"] [data-form-field]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(leftOrder).toEqual([...ACCOUNTS_FORM_INFORMATION_COLUMNS[0]]);
+  const rightOrder = await accountInfo
+    .locator('[data-record-form-column="right"] [data-form-field]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(rightOrder).toEqual([...ACCOUNTS_FORM_INFORMATION_COLUMNS[1]]);
+
+  const billing = page.locator("[data-record-form-field-group]").first();
+  const billingOrder = await billing
+    .locator("[data-form-field]")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(billingOrder).toEqual(
+    ACCOUNTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Billing_${suffix}`),
+  );
+  expect(await billing.locator('[data-form-field="Billing_Coordinates"]').count()).toBe(0);
+
+  const shipping = page.locator("[data-record-form-field-group]").nth(1);
+  const shippingOrder = await shipping
+    .locator("[data-form-field]")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(shippingOrder).toEqual(
+    ACCOUNTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Shipping_${suffix}`),
+  );
+  expect(await shipping.locator('[data-form-field="Shipping_Coordinates"]').count()).toBe(0);
+});
+
+test("creates with every field type, a parent account and both addresses", async ({ page }) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Full Form Account");
+  await page.getByRole("textbox", { name: "Account Site", exact: true }).fill("Istanbul Site");
+  await page.getByRole("textbox", { name: "Account Number", exact: true }).fill("123456");
+  await page.getByRole("button", { name: "Account Type", exact: true }).click();
+  await page.getByRole("textbox", { name: "Search", exact: true }).fill("Cust");
+  await page.getByRole("option", { name: "Customer", exact: true }).click();
+  await page.getByRole("button", { name: "Industry", exact: true }).click();
+  await page.getByRole("option", { name: "Data/Telecom OEM", exact: true }).click();
+  await page.getByRole("textbox", { name: "Annual Revenue", exact: true }).fill("250000");
+  await expect(
+    page.locator("[data-form-field=Annual_Revenue] .record-currency-prefix"),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator("[data-form-field=Annual_Revenue]")
+      .getByRole("img", { name: "Currency information" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Rating", exact: true }).click();
+  await page.getByRole("option", { name: "Active", exact: true }).click();
+  await page.getByRole("textbox", { name: "Phone", exact: true }).fill("555-0100");
+  await page.getByRole("textbox", { name: "Fax", exact: true }).fill("555-0101");
+  await page.getByRole("textbox", { name: "Website", exact: true }).fill("https://example.test");
+  await page.getByRole("textbox", { name: "Ticker Symbol", exact: true }).fill("MPCT");
+  await page.getByRole("button", { name: "Ownership", exact: true }).click();
+  await page.getByRole("option", { name: "Private", exact: true }).click();
+  await page.getByRole("textbox", { name: "Employees", exact: true }).fill("42");
+  await page.getByRole("textbox", { name: "SIC Code", exact: true }).fill("7370");
+
+  // AF-11: the Parent Account picker is the observed Choose Account dialog.
+  await page.getByRole("button", { name: "Open Parent Account lookup", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Choose Account" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Search by Account Name" })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Account 001" })).toBeVisible();
+  const parentRadio = dialog.getByRole("radio", { name: "Account 002" });
+  await expect(parentRadio).toBeVisible();
+  await parentRadio.click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("textbox", { name: "Parent Account", exact: true })).toHaveValue(
+    "Account 002",
+  );
+
+  await page.locator("[data-form-field=Billing_Street] input").fill("Billing Street 1");
+  await page.locator("[data-form-field=Billing_City] input").fill("Ankara");
+  await page.getByRole("button", { name: "Copy Address", exact: true }).click();
+  await page
+    .getByRole("menuitem", { name: "Billing Address → Shipping Address", exact: true })
+    .click();
+  await expect(page.locator("[data-form-field=Shipping_Street] input")).toHaveValue(
+    "Billing Street 1",
+  );
+  await page.locator("[data-form-field=Shipping_City] input").fill("Izmir");
+  await page.getByRole("textbox", { name: "Description", exact: true }).fill("Created by e2e");
+
+  const createRequest = page.waitForRequest(
+    (request) => request.method() === "POST" && new URL(request.url()).pathname === CREATE_PATH,
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await createRequest;
+  const body = request.postDataJSON().data[0];
+  expect(body.Account_Name).toBe("Full Form Account");
+  expect(body.Account_Site).toBe("Istanbul Site");
+  expect(body.Account_Number).toBe(123456);
+  expect(body.Account_Type).toBe("Customer");
+  expect(body.Industry).toBe("Data/Telecom OEM");
+  expect(body.Annual_Revenue).toBe(250000);
+  expect(body.Rating).toBe("Active");
+  expect(body.Phone).toBe("555-0100");
+  expect(body.Fax).toBe("555-0101");
+  expect(body.Website).toBe("https://example.test");
+  expect(body.Ticker_Symbol).toBe("MPCT");
+  expect(body.Ownership).toBe("Private");
+  expect(body.Employees).toBe(42);
+  expect(body.SIC_Code).toBe(7370);
+  expect(body.Parent_Account?.name).toBe("Account 002");
+  expect(body.Billing_Street).toBe("Billing Street 1");
+  expect(body.Billing_City).toBe("Ankara");
+  expect(body.Shipping_Street).toBe("Billing Street 1");
+  expect(body.Shipping_City).toBe("Izmir");
+  expect(body.Description).toBe("Created by e2e");
+});
+
+test("Save and New resets the create form", async ({ page }) => {
+  const { org } = await openCreate(page);
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Save And New");
+  await page.getByRole("button", { name: "Save and New", exact: true }).click();
+  await expect(page).toHaveURL(moduleCreatePath(org.slug, ACCOUNTS_TAB));
+  await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue("");
+});
+
+test("Cancel returns to the list without saving", async ({ page }) => {
+  const { list } = await openCreate(page);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(list);
+  await page.goto(list);
+  await expect(page.getByRole("link", { name: "Cancelled Account", exact: true })).toHaveCount(0);
+});
+
+test("edit keeps the create layout and preserves stored values", async ({ page }) => {
+  const { org } = await openCreate(page);
+  await saveAccount(page, "Edit Me");
+  const id = accountRecordIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordEditPath(org.slug, ACCOUNTS_TAB, id));
+  await expect(page.getByRole("heading", { name: "Edit Account" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+    "Edit Me",
+  );
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Edited Account");
+  await page.getByRole("textbox", { name: "Employees", exact: true }).fill("7");
+  const updateRequest = page.waitForRequest(
+    (request) => request.method() === "PUT" && new URL(request.url()).pathname === CREATE_PATH,
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await updateRequest;
+  const body = request.postDataJSON().data[0];
+  expect(body.Account_Name).toBe("Edited Account");
+  expect(body.Employees).toBe(7);
+  await expectRecordRoute(page, org.slug);
+});
+
+test("clone saves a new record from the source", async ({ page }) => {
+  const { org } = await openCreate(page);
+  await saveAccount(page, "Clone Source");
+  const sourceId = accountRecordIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordClonePath(org.slug, ACCOUNTS_TAB, sourceId));
+  await expect(page.getByRole("heading", { name: "Clone Account" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+    "Clone Source",
+  );
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Clone Saved");
+  const createRequest = page.waitForRequest(
+    (request) => request.method() === "POST" && new URL(request.url()).pathname === CREATE_PATH,
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await createRequest;
+  expect(request.postDataJSON().data[0].Account_Name).toBe("Clone Saved");
+  await expectRecordRoute(page, org.slug);
+});
+
+test("laterModule controls do not navigate or open dialogs", async ({ page }) => {
+  await openCreate(page);
+  const url = page.url();
+  // AF-01 and AF-47 (M11), AF-05 (M6) and the footer pair (M11) stay inert.
+  for (const name of ["Edit Page Layout", "Client Script", "Account Image", "Standard View"]) {
+    await page.getByRole("button", { name, exact: true }).click({ force: true });
+  }
+  await expect(page).toHaveURL(url);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  // AF-11.16: the picker handset belongs to Activities (M5).
+  await page.getByRole("button", { name: "Open Parent Account lookup", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Choose Account" })).toBeVisible();
+  const handset = dialog.getByRole("button", { name: "Phone" }).first();
+  await expect(handset).toBeVisible();
+  await handset.click({ force: true });
+  await expect(dialog.getByRole("heading", { name: "Choose Account" })).toBeVisible();
+  // AF-11.3, AF-11.4 and AF-11.13 were never exercised in the reference capture.
+  for (const name of ["New Account", "Table columns", "Filter"]) {
+    await dialog.getByRole("button", { name, exact: true }).click({ force: true });
+  }
+  await expect(dialog.getByRole("heading", { name: "Choose Account" })).toBeVisible();
+  await expect(page).toHaveURL(url);
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(dialog).toBeHidden();
+});

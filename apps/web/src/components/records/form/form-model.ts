@@ -139,6 +139,8 @@ export interface FormRules {
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
   labelLines?: Readonly<Record<string, readonly string[]>>;
+  /** Picklists whose reference panel paints a search field above the options (AF-13.1). */
+  searchablePicklists?: readonly string[];
 }
 
 export function formFields(

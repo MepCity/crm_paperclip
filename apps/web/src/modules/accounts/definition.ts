@@ -39,6 +39,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     inventoryChrome: true,
     profileImageLaterModule: "M6",
     profileImageIcon: AccountBuildingPlaceholder,
+    recordPickerChrome: "observed",
   },
   detail: {
     header: accountsRecordHeaderIdentity,

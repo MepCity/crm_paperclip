@@ -1,4 +1,5 @@
 import type { ModuleKey } from "@/components/ui/later-module";
+import { accountsScreenDefinition } from "./accounts/definition";
 import { contactsScreenDefinition } from "./contacts/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import type { ModuleScreenDefinition } from "./types";
@@ -33,6 +34,7 @@ export function resolveModuleLaterKey(moduleApiName: string): ModuleKey {
 export const moduleScreens: readonly ModuleScreenDefinition[] = [
   leadsScreenDefinition,
   contactsScreenDefinition,
+  accountsScreenDefinition,
 ];
 
 export function resolveModuleScreen(

@@ -482,7 +482,11 @@ function LoadedRecordForm({
                 }
               : undefined
           }
-          searchable={Boolean(countryRule && field.apiName === countryRule.country) || isState}
+          searchable={
+            Boolean(countryRule && field.apiName === countryRule.country) ||
+            isState ||
+            Boolean(rules.searchablePicklists?.includes(field.apiName))
+          }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
           lookupRecordHref={field.dataType === "lookup" ? config.paths.detail : undefined}

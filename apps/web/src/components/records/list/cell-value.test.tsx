@@ -203,20 +203,20 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Accounts" } })}
-      value={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      field={field("lookup", { lookup: { module: "Deals" } })}
+      value={{ module: "Deals", id: "deal-1", name: "Acme Corp" }}
       format={DEFAULT_FORMAT}
     />,
   );
   const laterLink = screen.getByRole("link", { name: "Acme Corp" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("M3");
+  expect(laterLink.getAttribute("data-later-module")).toBe("M4");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Accounts" } })}
+      field={field("lookup", { lookup: { module: "Deals" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
@@ -224,7 +224,7 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
   expect(screen.queryByRole("link")).toBeNull();
 });
 
-test("Contacts Account Name shows the lookup name without an active Accounts link", () => {
+test("Contacts Account Name links to the Account record now that Accounts ships", () => {
   render(
     <CellValue
       field={field("lookup", {
@@ -236,8 +236,8 @@ test("Contacts Account Name shows the lookup name without an active Accounts lin
       format={DEFAULT_FORMAT}
     />,
   );
-  const account = screen.getByText("Synthetic Account");
-  expect(account.closest("a")).toBeNull();
-  expect(account.getAttribute("data-later-module")).toBe("M3");
+  const account = screen.getByRole("link", { name: "Synthetic Account" });
+  expect(account.getAttribute("href")).toBe("/tab/Accounts/synthetic-account");
+  expect(account.getAttribute("data-later-module")).toBeNull();
   expect(screen.queryByText("synthetic-account")).toBeNull();
 });

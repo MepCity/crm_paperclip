@@ -152,16 +152,16 @@ test("lookup field links to registered target module detail page", () => {
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
-  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
-    module: "Accounts",
-    id: "acc-123",
+  show(field("Deal_Name", "lookup", { lookup: { module: "Deals" } }), {
+    module: "Deals",
+    id: "deal-123",
     name: "Acme Corp",
   });
   const link = screen.getByRole("link", { name: "Acme Corp" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.getAttribute("data-later-module")).toBe("M4");
 });
 
 test("empty lookup field renders an em dash", () => {
