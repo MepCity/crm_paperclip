@@ -82,7 +82,7 @@ Rest: as in m4-list-base is not visually established because the loading screen 
 
 ### Control inventory — m4-list-actions
 
-No opened controls. Both attempts skipped the first selector (matched 0); the 25-second image has a painted rail/top shell but no module content. Actions rows remain `not observed`. Shell: SH-01–SH-34 as in contacts.md; SH-16 is not painted active while loading. Utility strip SH-35–SH-46 is absent in this saved image.
+No opened controls. Both attempts skipped the first selector (matched 0); the 25-second image has a painted rail/top shell but no module content. Actions rows remain `not observed`. Shell: SH-01–SH-33 as in contacts.md; SH-16 is not painted active while loading. The application-menu grid SH-34 has an unpainted footprint; utility strip SH-35–SH-46 is absent in this saved image.
 
 Rest: as in m4-list-base is not visually established; covered by the loading state: all DL controls. No menu overlay opened.
 
@@ -253,13 +253,13 @@ Every source item maps to an inventory number or explicit exclusion below. Repea
 | SH-31 | 91 |
 | SH-32 | 94 |
 | SH-33 | 97–98 |
-| SH-34 | 101 |
+| excluded: application-menu grid footprint is unpainted; no visible control | 101 |
 | excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 85 |
 | excluded: invisible below panel boundary or beyond horizontal viewport | 65–80 |
 | excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81–82, 89–90, 92–93, 95–96, 99–100, 102, 104–112 |
 | excluded: loading progress indicator; no interactive control | 103 |
 
-112 source items; 34 inventory IDs represented; 55 excluded items.
+112 source items; 33 inventory IDs represented; 56 excluded items.
 
 #### m4-list-after
 
@@ -564,7 +564,7 @@ Form and record-detail entries are reuse references; the Deals form and detail h
 | m4-list-actions | 1 | 1 | Painted shell only; matched 0 at both waits; menu not observed. |
 | m4-list-after | 0 | 0 | Loading at 25 seconds; count comparison not observed. |
 
-In base: successful Deals/actions/count × 1, Deals/bulk × 1 plus six board reads (7 total; 200/204), visitor triggers × 1; no Analytics run. Automatic PUT to settings/modules/Deals × 1 was blocked. These no-click additions form the permitted screen baseline. Reminder and notification polls are blocked. All later saved images have only GET calls plus blocked telemetry: view-selector has one urlMonitor; create has urlMonitor, exceptions and logs once each; Actions has urlMonitor twice and exceptions once; after has urlMonitor, exceptions and logs once each. No unblocked telemetry, new click-triggered non-GET path or excess baseline count was found. All three requested openers were skipped; no actual menu click completed.
+In base: successful Deals/actions/count × 1, Deals/bulk × 1 plus six board reads (7 total; 200/204), visitor triggers × 1; no Analytics run. Automatic PUT to settings/modules/Deals × 1 and POST /crm/v2.2/Deals/actions/grouped_counts × 1 were blocked. These no-click additions form the permitted screen baseline. Reminder and notification polls are blocked. All later saved images have only GET calls plus blocked telemetry: view-selector has one urlMonitor; create has urlMonitor, exceptions and logs once each; Actions has urlMonitor twice and exceptions once; after has urlMonitor, exceptions and logs once each. No unblocked telemetry, new click-triggered non-GET path or excess baseline count was found. All three requested openers were skipped; no actual menu click completed.
 
 Raw screenshots remain in the research workspace; no reference image or customer value is copied into the repository. Every completed capture image was opened and examined. Controls reconciliation ordinals are source-list positions, never selectors. No record-write request received a successful status. The basic screen automatically attempted a settings PUT, which the tool blocked; it is a no-click baseline, not an authorized setting action.
 
