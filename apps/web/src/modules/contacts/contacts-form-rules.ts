@@ -46,3 +46,14 @@ export const CONTACTS_FORM_ADDRESS_GROUPS = ["Mailing", "Other"].map((prefix) =>
   longitude: `${prefix}_Longitude`,
   coordinates: `${prefix}_Coordinates`,
 }));
+
+/** Child field order inside each address group (parent `*_Address` excluded). */
+export const CONTACTS_FORM_ADDRESS_CHILD_ORDER = [
+  "Country",
+  "Flat_House_No_Building_Apartment_Name",
+  "Street",
+  "City",
+  "State",
+  "Zip",
+  "Latitude",
+] as const;

@@ -140,5 +140,69 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
     .getByRole("button", { name: "Open Account Name lookup", exact: true })
     .click({ force: true });
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
+  await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));
+});
+
+test("Contact Information and address groups follow spec field order", async ({ page }) => {
+  await openCreate(page);
+  const contactInfo = page
+    .getByRole("heading", { name: "Contact Information", exact: true })
+    .locator("xpath=ancestor::*[@data-record-form-section][1]");
+  const leftOrder = await contactInfo
+    .locator('[data-record-form-column="left"] [data-form-field]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(leftOrder[0]).toBe("Owner");
+  expect(leftOrder).toContain("First_Name");
+  const rightOrder = await contactInfo
+    .locator('[data-record-form-column="right"] [data-form-field]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(rightOrder[0]).toBe("Lead_Source");
+  expect(rightOrder).toContain("Last_Name");
+
+  const mailing = page.locator("[data-record-form-field-group]").first();
+  const mailingOrder = await mailing
+    .locator("[data-form-field]")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  expect(mailingOrder).toEqual([
+    "Mailing_Country",
+    "Mailing_Flat_House_No_Building_Apartment_Name",
+    "Mailing_Street",
+    "Mailing_City",
+    "Mailing_State",
+    "Mailing_Zip",
+    "Mailing_Latitude",
+  ]);
+});
+
+test("creates with common field types", async ({ page }) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("All Types");
+  await page.getByRole("textbox", { name: "First Name", exact: true }).fill("Contact");
+  await page.getByRole("button", { name: "Salutation", exact: true }).click();
+  await page.getByRole("option", { name: "Mr.", exact: true }).click();
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill("all-types@example.test");
+  await page.getByRole("textbox", { name: "Phone", exact: true }).fill("555-0100");
+  await page.getByRole("textbox", { name: "Twitter", exact: true }).fill("mepcity");
+  await page.getByRole("button", { name: "Lead Source", exact: true }).click();
+  await page.getByRole("option", { name: "Advertisement", exact: true }).click();
+  const emailOptOut = page.locator('[data-form-field="Email_Opt_Out"] input[type="checkbox"]');
+  await emailOptOut.scrollIntoViewIfNeeded();
+  await emailOptOut.click({ force: true });
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Contacts",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await createRequest;
+  const body = request.postDataJSON().data[0];
+  expect(body.Last_Name).toBe("All Types");
+  expect(body.First_Name).toBe("Contact");
+  expect(body.Salutation).toBe("Mr.");
+  expect(body.Email).toBe("all-types@example.test");
+  expect(body.Phone).toBe("555-0100");
+  expect(body.Twitter).toBe("mepcity");
+  expect(body.Lead_Source).toBe("Advertisement");
+  expect(body.Email_Opt_Out).toBe(true);
 });

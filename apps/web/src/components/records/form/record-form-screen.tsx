@@ -4,8 +4,9 @@ import { isAppError, NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
-import { laterModuleProps } from "@/components/ui/later-module";
 import {
   useCreateRecord,
   useModule,
@@ -22,6 +23,7 @@ import { FormGrid } from "./form-grid";
 import {
   type AddressGroupRule,
   addressLabel,
+  applySectionColumnOverrides,
   buildFormModel,
   type FormMode,
   type FormRules,
@@ -69,7 +71,9 @@ export interface RecordFormConfig {
   paths: { detail: (id: string) => string; create: string; cancel: string };
   navigate: (path: string) => void;
   currencyPrefix?: string;
+  sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   addressGroups?: readonly AddressGroupRule[];
+  addressChildFieldOrder?: readonly string[];
   inventoryChrome?: boolean;
   profileImageLaterModule?: ModuleKey;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -122,7 +126,12 @@ function LoadedRecordForm({
   users: OwnerOption[];
 }) {
   const mode: FormMode = intent === "edit" ? "edit" : "create";
-  const sections = buildFormModel(metadata, mode);
+  const sections = applySectionColumnOverrides(
+    buildFormModel(metadata, mode),
+    config.sectionColumnOverrides,
+    metadata,
+    mode,
+  );
   const fields = formFields(metadata, sections, mode, config.rules, config.addressGroups);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const countryRules = useMemo(() => {
@@ -321,19 +330,30 @@ function LoadedRecordForm({
       return null;
     const label = parent ? addressLabel(field, parent) : field.label;
     const id = `record-form-${field.apiName}`;
+    if (config.addressGroups?.some((group) => group.coordinates === field.apiName)) return null;
     if (field.dataType === "profileimage") {
-      const portrait = (
-        <FieldInput key={field.apiName} field={field} value={null} onChange={() => {}} />
-      );
-      if (!config.profileImageLaterModule) return portrait;
+      if (!config.profileImageLaterModule) {
+        return (
+          <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
+            <FieldInput field={field} value={null} onChange={() => {}} />
+          </div>
+        );
+      }
       return (
-        <div
-          key={field.apiName}
-          data-form-field={field.apiName}
-          data-form-type={field.dataType}
-          {...laterModuleProps(config.profileImageLaterModule)}
-        >
-          {portrait}
+        <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            laterModule={config.profileImageLaterModule}
+            className="record-form-profile-image"
+            aria-label={field.label}
+          >
+            <Icons.recordPortraitSilhouette
+              aria-hidden
+              className="record-profile-silhouette h-full w-full"
+            />
+          </Button>
         </div>
       );
     }
@@ -468,15 +488,35 @@ function LoadedRecordForm({
     );
   }
 
+  function orderAddressChildren(
+    addressParent: FieldDefinition,
+    columnFields: readonly FieldDefinition[],
+  ): FieldDefinition[] {
+    const order = config.addressChildFieldOrder;
+    if (!order?.length) {
+      return columnFields.filter((field) => field.apiName !== addressParent.apiName);
+    }
+    const prefix = addressParent.apiName.replace(/_Address$/, "_");
+    const rank = (apiName: string) => {
+      if (apiName === addressParent.apiName) return -1;
+      const suffix = apiName.startsWith(prefix) ? apiName.slice(prefix.length) : apiName;
+      const index = order.indexOf(suffix);
+      return index === -1 ? order.length : index;
+    };
+    return [...columnFields]
+      .filter((field) => field.apiName !== addressParent.apiName)
+      .sort((left, right) => rank(left.apiName) - rank(right.apiName));
+  }
+
   function renderAddressGroup(
     addressParent: FieldDefinition,
     columnFields: readonly FieldDefinition[],
   ) {
     return (
       <FieldGroup name={addressParent.label}>
-        {columnFields
-          .filter((field) => field.apiName !== addressParent.apiName)
-          .map((field) => row(field, "left", addressParent))}
+        {orderAddressChildren(addressParent, columnFields).map((field) =>
+          row(field, "left", addressParent),
+        )}
         <button
           type="button"
           className="record-form-clear-address"

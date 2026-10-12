@@ -49,6 +49,7 @@ export interface ModuleScreenDefinition {
     rules: FormRules;
     /** Screen fallback only when layout columns are missing; never overrides metadata. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
+    addressChildFieldOrder?: readonly string[];
     addressGroups?: readonly {
       field: string;
       country: string;

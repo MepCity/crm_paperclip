@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { buildFormModel, formFields } from "@/components/records/form/form-model";
 import {
+  CONTACTS_FORM_ADDRESS_CHILD_ORDER,
   CONTACTS_FORM_ADDRESS_GROUPS,
   CONTACTS_FORM_INFORMATION_COLUMNS,
   contactsFormRules,
@@ -69,5 +70,14 @@ test("stores only fallback placement and the two address presentation composites
   ).toEqual([
     ["Mailing_Address", "Mailing_Latitude", "Mailing_Longitude"],
     ["Other_Address", "Other_Latitude", "Other_Longitude"],
+  ]);
+  expect(CONTACTS_FORM_ADDRESS_CHILD_ORDER).toEqual([
+    "Country",
+    "Flat_House_No_Building_Apartment_Name",
+    "Street",
+    "City",
+    "State",
+    "Zip",
+    "Latitude",
   ]);
 });
