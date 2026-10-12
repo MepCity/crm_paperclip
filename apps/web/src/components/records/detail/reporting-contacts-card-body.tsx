@@ -1,7 +1,6 @@
 "use client";
 
-import type { Criteria } from "@crm/core/records";
-import type { RecordData, RecordId } from "@crm/core/records";
+import type { Criteria, RecordData, RecordId } from "@crm/core/records";
 import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { Link } from "@/components/ui/link";
@@ -29,7 +28,6 @@ export function ReportingContactsCardBody({
   managerRecord,
   recordPath,
 }: ReportingContactsCardBodyProps) {
-  const managerRecordId = managerRecord.id;
   const moduleQuery = useModule("Contacts");
   const viewsQuery = useViews("Contacts");
   const defaultViewId = useMemo(

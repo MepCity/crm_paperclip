@@ -3,7 +3,6 @@ import {
   moduleCreatePath,
   moduleListDefaultPath,
   moduleRecordClonePath,
-  moduleRecordEditPath,
   moduleRecordPath,
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
@@ -119,7 +118,9 @@ test.describe("Contacts record detail", () => {
     const frame = page.locator("[data-record-frame]");
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
-    await expect(frame.getByRole("button", { name: "Show Upcoming Automated Actions" })).toBeVisible();
+    await expect(
+      frame.getByRole("button", { name: "Show Upcoming Automated Actions" }),
+    ).toBeVisible();
     const filterButton = frame.getByRole("button", { name: "History filter" });
     await filterButton.click();
     await expect(frame.locator("[data-timeline-filter-panel]")).toBeVisible();
@@ -158,7 +159,9 @@ test.describe("Contacts record detail", () => {
     const org = await createOrganization(page);
     await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
     const before = page.url();
-    const sendEmail = page.locator("[data-record-header]").getByRole("button", { name: "Send Email" });
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
     await expect(sendEmail).toHaveAttribute("data-later-module", "M10");
     await sendEmail.click({ force: true });
     expect(page.url()).toBe(before);
