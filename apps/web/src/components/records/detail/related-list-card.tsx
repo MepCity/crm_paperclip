@@ -160,7 +160,9 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
           />
         </div>
       ) : loadingText ? (
-        <div className="py-8 text-center text-md text-text-empty">{loadingText}</div>
+        <div data-part="empty" className="py-8 text-center text-md text-text-empty">
+          {loadingText}
+        </div>
       ) : activityColumns && activityColumns.length > 0 ? (
         <div className="flex divide-x divide-panel-border overflow-x-auto py-2">
           {activityColumns.map((col) => {
@@ -182,7 +184,9 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
                     {col.count}
                   </span>
                 </div>
-                <div className="py-4 text-center text-md text-text-empty">{col.emptyText}</div>
+                <div data-part="empty" className="py-4 text-center text-md text-text-empty">
+                  {col.emptyText}
+                </div>
               </div>
             );
           })}
@@ -212,7 +216,9 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
               );
             })}
           </div>
-          <div className="py-8 text-center text-md text-text-empty">{emptyStateText}</div>
+          <div data-part="empty" className="py-8 text-center text-md text-text-empty">
+            {emptyStateText}
+          </div>
         </div>
       ) : socialLinks && socialLinks.length > 0 ? (
         <div className="flex divide-x divide-panel-border py-4">
@@ -250,7 +256,9 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
           )}
         </div>
       ) : (
-        <div className="py-8 text-center text-md text-text-empty">{emptyStateText}</div>
+        <div data-part="empty" className="py-8 text-center text-md text-text-empty">
+          {emptyStateText}
+        </div>
       )}
     </section>
   );
