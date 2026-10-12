@@ -39,6 +39,9 @@ export function ModuleFormClient({
         config={{
           module: moduleApiName,
           rules: definition.form.rules,
+          addressGroups: definition.form.addressGroups,
+          inventoryChrome: definition.form.inventoryChrome,
+          profileImageLaterModule: definition.form.profileImageLaterModule,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id) => moduleRecordPath(orgSlug, definition.tab, id),

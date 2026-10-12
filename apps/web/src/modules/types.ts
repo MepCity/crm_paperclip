@@ -57,6 +57,8 @@ export interface ModuleScreenDefinition {
       longitude: string;
       coordinates: string;
     }[];
+    inventoryChrome?: boolean;
+    profileImageLaterModule?: ModuleKey;
   };
   detail: {
     header: (record: RecordData) => {

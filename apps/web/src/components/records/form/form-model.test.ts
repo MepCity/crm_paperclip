@@ -121,6 +121,30 @@ describe("metadata form model", () => {
     });
   });
 
+  it("includes coordinate members for each Contacts address group", async () => {
+    const service = createFixtureRecordService({
+      orgId: "form-model-contacts",
+      orgSlug: "form-model-contacts",
+      orgName: "Form Model Contacts",
+      userId: "form-user",
+      role: "admin",
+    });
+    const { contactsFormRules, CONTACTS_FORM_ADDRESS_GROUPS } = await import(
+      "@/modules/contacts/contacts-form-rules"
+    );
+    const module = await service.getModule("Contacts");
+    const fields = formFields(
+      module,
+      buildFormModel(module, "create"),
+      "create",
+      contactsFormRules,
+      CONTACTS_FORM_ADDRESS_GROUPS,
+    );
+    expect(fields.some((field) => field.apiName === "Mailing_Latitude")).toBe(true);
+    expect(fields.some((field) => field.apiName === "Other_Longitude")).toBe(true);
+    expect(fields.some((field) => field.apiName === "Connected_To__s")).toBe(false);
+  });
+
   it("includes unplaced Leads composite values, excludes Connected To and system fields", async () => {
     const service = createFixtureRecordService({
       orgId: "form-model-org",

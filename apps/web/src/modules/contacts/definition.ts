@@ -41,6 +41,8 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     rules: contactsFormRules,
     fallbackColumns: { "Contact Information": CONTACTS_FORM_INFORMATION_COLUMNS },
     addressGroups: CONTACTS_FORM_ADDRESS_GROUPS,
+    inventoryChrome: true,
+    profileImageLaterModule: "M6",
   },
   detail: {
     header: contactsRecordHeaderIdentity,

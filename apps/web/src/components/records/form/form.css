@@ -28,11 +28,25 @@
   background-color: var(--color-bg);
 }
 
+.record-form-strip__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
 .record-form-strip__title {
   margin: 0;
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-strong);
+}
+
+.record-form-edit-page-layout {
+  padding: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-primary);
 }
 
 .record-form-strip__actions {
@@ -113,6 +127,87 @@
 .record-form-section:not(:first-child) .record-form-section__title {
   margin-top: calc(var(--size-form-section-title-center-above) - 0.5em);
   margin-bottom: calc(var(--size-form-section-title-center-below) - 0.5em);
+}
+
+.record-form-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.record-form-section__header .record-form-section__title {
+  margin-bottom: calc(var(--size-form-section-title-center-below) - 0.5em);
+}
+
+.record-form-section__header-actions {
+  flex-shrink: 0;
+}
+
+.record-form-copy-address {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--text-md);
+  line-height: var(--size-form-label-line-height);
+  cursor: pointer;
+}
+
+.record-form-dual-address {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.record-form-dual-address .record-form-field-group {
+  flex: 1 1 var(--size-form-dual-address-min-width, 320px);
+  min-width: 0;
+}
+
+.record-form-page {
+  position: relative;
+}
+
+.record-form-client-script-tab {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+}
+
+.record-form-client-script-tab__icon {
+  width: 12px;
+  height: 12px;
+  margin-bottom: var(--space-1);
+  transform: rotate(-90deg);
+}
+
+.record-form-inventory-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  max-width: var(--record-form-content-width);
+  margin-top: var(--space-4);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.record-form-standard-view__icon {
+  width: 12px;
+  height: 12px;
+  margin-left: var(--space-1);
 }
 
 .record-form-portrait {

@@ -2,8 +2,10 @@
 
 import { isAppError, NotFoundError } from "@crm/core/errors";
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import type { ModuleKey } from "@/components/ui/later-module";
+import { laterModuleProps } from "@/components/ui/later-module";
 import {
   useCreateRecord,
   useModule,
@@ -18,6 +20,7 @@ import { FieldInput, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
 import {
+  type AddressGroupRule,
   addressLabel,
   buildFormModel,
   type FormMode,
@@ -35,6 +38,11 @@ import { formSaveBannerMessage, formSaveFieldErrors } from "./form-save-error";
 import { FormSection } from "./form-section";
 import { validateRecordForm } from "./form-validation";
 import { RECORD_FORM_COPY } from "./record-form-copy";
+import {
+  RecordFormClientScriptTab,
+  RecordFormEditPageLayoutLink,
+  RecordFormInventoryFooter,
+} from "./record-form-inventory-chrome";
 import { RecordFormShell } from "./record-form-shell";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
@@ -61,6 +69,9 @@ export interface RecordFormConfig {
   paths: { detail: (id: string) => string; create: string; cancel: string };
   navigate: (path: string) => void;
   currencyPrefix?: string;
+  addressGroups?: readonly AddressGroupRule[];
+  inventoryChrome?: boolean;
+  profileImageLaterModule?: ModuleKey;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
 }
 
@@ -112,8 +123,29 @@ function LoadedRecordForm({
 }) {
   const mode: FormMode = intent === "edit" ? "edit" : "create";
   const sections = buildFormModel(metadata, mode);
-  const fields = formFields(metadata, sections, mode, config.rules);
+  const fields = formFields(metadata, sections, mode, config.rules, config.addressGroups);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
+  const countryRules = useMemo(() => {
+    const list = [...(config.rules.countries ?? [])];
+    if (config.rules.country) list.unshift(config.rules.country);
+    return list;
+  }, [config.rules]);
+  const coordinatesRuleFor = useCallback(
+    (apiName: string) => {
+      if (
+        config.rules.address &&
+        (config.rules.address.latitude === apiName || config.rules.address.longitude === apiName)
+      ) {
+        return config.rules.address;
+      }
+      return config.addressGroups?.find(
+        (group) => group.latitude === apiName || group.longitude === apiName,
+      );
+    },
+    [config.addressGroups, config.rules.address],
+  );
+  const countryRuleFor = (apiName: string) =>
+    countryRules.find((item) => item.field === apiName || item.state === apiName);
   const emptyValues = () => initialFormValues(fields, { [config.rules.owner]: currentUserId });
   const cloneSeed =
     intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
@@ -171,8 +203,8 @@ function LoadedRecordForm({
         const fieldName = row.dataset.formField ?? "";
         const prefixName =
           config.rules.prefix?.field === fieldName ? config.rules.prefix.prefix : undefined;
-        const longitudeName =
-          config.rules.address?.latitude === fieldName ? config.rules.address.longitude : undefined;
+        const coordRule = coordinatesRuleFor(fieldName);
+        const longitudeName = coordRule?.latitude === fieldName ? coordRule.longitude : undefined;
         const compositeError =
           prefixName && errors[prefixName]
             ? prefixName
@@ -200,12 +232,13 @@ function LoadedRecordForm({
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [errors, saving, config.rules]);
+  }, [errors, saving, config.rules, coordinatesRuleFor]);
 
   /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
-  const dependentClears: Readonly<Record<string, readonly string[]>> = config.rules.country
-    ? { [config.rules.country.field]: [config.rules.country.state] }
-    : {};
+  const dependentClears: Readonly<Record<string, readonly string[]>> = useMemo(
+    () => Object.fromEntries(countryRules.map((item) => [item.field, [item.state] as const])),
+    [countryRules],
+  );
 
   function change(name: string, value: FieldValue) {
     const field = byName.get(name);
@@ -288,12 +321,27 @@ function LoadedRecordForm({
       return null;
     const label = parent ? addressLabel(field, parent) : field.label;
     const id = `record-form-${field.apiName}`;
-    if (field.dataType === "profileimage")
-      return <FieldInput key={field.apiName} field={field} value={null} onChange={() => {}} />;
-    if (field.apiName === rules.address?.longitude) return null;
+    if (field.dataType === "profileimage") {
+      const portrait = (
+        <FieldInput key={field.apiName} field={field} value={null} onChange={() => {}} />
+      );
+      if (!config.profileImageLaterModule) return portrait;
+      return (
+        <div
+          key={field.apiName}
+          data-form-field={field.apiName}
+          data-form-type={field.dataType}
+          {...laterModuleProps(config.profileImageLaterModule)}
+        >
+          {portrait}
+        </div>
+      );
+    }
+    const coordBinding = coordinatesRuleFor(field.apiName);
+    if (coordBinding?.longitude === field.apiName) return null;
     let input: ReactNode;
-    if (field.apiName === rules.address?.latitude) {
-      const address = rules.address;
+    if (coordBinding?.latitude === field.apiName) {
+      const address = coordBinding;
       const longitude = byName.get(address.longitude);
       const coordinates = metadata.fields.find((item) => item.apiName === address.coordinates);
       input = (
@@ -368,8 +416,9 @@ function LoadedRecordForm({
         />
       );
     } else {
-      const emptyCountry = rules.country && !values[rules.country.field];
-      const isState = field.apiName === rules.country?.state;
+      const countryRule = countryRuleFor(field.apiName);
+      const emptyCountry = countryRule && !values[countryRule.field];
+      const isState = countryRule?.state === field.apiName;
       input = (
         <FieldInput
           id={id}
@@ -388,7 +437,7 @@ function LoadedRecordForm({
                 }
               : undefined
           }
-          searchable={field.apiName === rules.country?.field || isState}
+          searchable={countryRule?.field === field.apiName || isState}
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
@@ -419,11 +468,70 @@ function LoadedRecordForm({
     );
   }
 
+  function renderAddressGroup(
+    addressParent: FieldDefinition,
+    columnFields: readonly FieldDefinition[],
+  ) {
+    return (
+      <FieldGroup name={addressParent.label}>
+        {columnFields
+          .filter((field) => field.apiName !== addressParent.apiName)
+          .map((field) => row(field, "left", addressParent))}
+        <button
+          type="button"
+          className="record-form-clear-address"
+          disabled={saving}
+          onClick={() => {
+            for (const field of columnFields) {
+              if (field.apiName !== addressParent.apiName && !field.readOnly)
+                change(field.apiName, null);
+            }
+          }}
+        >
+          <span>{RECORD_FORM_COPY.clearAll}</span>
+        </button>
+      </FieldGroup>
+    );
+  }
+
+  function copyMailingToOther() {
+    const groups = config.addressGroups;
+    const mailingGroup = groups?.[0];
+    const otherGroup = groups?.[1];
+    if (!mailingGroup || !otherGroup) return;
+    const sourcePrefix = mailingGroup.field.replace(/_Address$/, "_");
+    const targetPrefix = otherGroup.field.replace(/_Address$/, "_");
+    const writes: Record<string, FieldValue> = {};
+    for (const field of fields) {
+      if (!field.apiName.startsWith(sourcePrefix) || field.readOnly) continue;
+      const targetName = field.apiName.replace(sourcePrefix, targetPrefix);
+      const target = byName.get(targetName);
+      if (!target || target.readOnly) continue;
+      writes[targetName] = values[field.apiName] ?? null;
+    }
+    if (Object.keys(writes).length === 0) return;
+    setValues((previous) => ({ ...previous, ...writes }));
+    setErrors((previous) => {
+      const next = { ...previous };
+      for (const key of Object.keys(writes)) delete next[key];
+      return next;
+    });
+  }
+
+  const dualAddressGroups =
+    config.addressGroups &&
+    config.addressGroups.length >= 2 &&
+    config.addressGroups.every((group) => byName.has(group.field))
+      ? config.addressGroups
+      : undefined;
+
   return (
     <div ref={rootRef}>
+      {config.inventoryChrome ? <RecordFormClientScriptTab /> : null}
       <RecordFormShell
         title={title}
         formAriaLabel={title}
+        titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
         actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
         errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
         disabled={saving}
@@ -441,11 +549,50 @@ function LoadedRecordForm({
       >
         {sections.map((section) => {
           const address =
+            !dualAddressGroups &&
             config.rules.address &&
             section.columns.flat().find((field) => field.apiName === config.rules.address?.field);
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );
+          const mailingGroup = dualAddressGroups?.[0];
+          const otherGroup = dualAddressGroups?.[1];
+          const isDualAddressSection =
+            mailingGroup &&
+            otherGroup &&
+            section.columns.some((column) =>
+              column.some((field) => field.apiName === mailingGroup.field),
+            ) &&
+            section.columns.some((column) =>
+              column.some((field) => field.apiName === otherGroup.field),
+            );
+          if (isDualAddressSection) {
+            const leftParent = byName.get(mailingGroup.field);
+            const rightParent = byName.get(otherGroup.field);
+            if (!leftParent || !rightParent) return null;
+            return (
+              <FormSection
+                key={section.label}
+                title={section.label}
+                layout="single"
+                headerActions={
+                  <button
+                    type="button"
+                    className="record-form-copy-address"
+                    disabled={saving}
+                    onClick={copyMailingToOther}
+                  >
+                    Copy Address
+                  </button>
+                }
+              >
+                <div className="record-form-dual-address" data-record-form-dual-address>
+                  {renderAddressGroup(leftParent, columns[0] ?? [])}
+                  {renderAddressGroup(rightParent, columns[1] ?? [])}
+                </div>
+              </FormSection>
+            );
+          }
           return (
             <FormSection
               key={section.label}
@@ -453,25 +600,7 @@ function LoadedRecordForm({
               layout={columns.length === 1 ? "single" : "two-column"}
             >
               {address ? (
-                <FieldGroup name={address.label}>
-                  {columns
-                    .flat()
-                    .filter((field) => field.apiName !== address.apiName)
-                    .map((field) => row(field, "left", address))}
-                  <button
-                    type="button"
-                    className="record-form-clear-address"
-                    disabled={saving}
-                    onClick={() => {
-                      for (const field of columns.flat()) {
-                        if (field.apiName !== address.apiName && !field.readOnly)
-                          change(field.apiName, null);
-                      }
-                    }}
-                  >
-                    <span>{RECORD_FORM_COPY.clearAll}</span>
-                  </button>
-                </FieldGroup>
+                renderAddressGroup(address, columns.flat())
               ) : columns.length === 1 ? (
                 columns[0]?.map((field) => row(field, "full"))
               ) : (
@@ -483,6 +612,7 @@ function LoadedRecordForm({
             </FormSection>
           );
         })}
+        {config.inventoryChrome ? <RecordFormInventoryFooter /> : null}
       </RecordFormShell>
       <UnsavedChangesDialog
         isOpen={unsavedOpen}

@@ -93,11 +93,21 @@ export function formPayload(
   );
 }
 
+export interface AddressGroupRule {
+  field: string;
+  country: string;
+  state: string;
+  latitude: string;
+  longitude: string;
+  coordinates: string;
+}
+
 export interface FormRules {
   owner: string;
   prefix?: { field: string; prefix: string };
   address?: { field: string; latitude: string; longitude: string; coordinates: string };
   country?: { field: string; state: string };
+  countries?: readonly { field: string; state: string }[];
   currency?: string;
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
@@ -109,6 +119,7 @@ export function formFields(
   sections: readonly FormSectionModel[],
   mode: FormMode,
   rules: FormRules,
+  addressGroups?: readonly Pick<AddressGroupRule, "field" | "latitude" | "longitude">[],
 ): FieldDefinition[] {
   const names = new Set(
     sections.flatMap((section) => section.columns.flat().map((f) => f.apiName)),
@@ -117,6 +128,12 @@ export function formFields(
   if (rules.address && names.has(rules.address.field)) {
     names.add(rules.address.latitude);
     names.add(rules.address.longitude);
+  }
+  for (const group of addressGroups ?? []) {
+    if (names.has(group.field)) {
+      names.add(group.latitude);
+      names.add(group.longitude);
+    }
   }
   return metadata.fields.filter(
     (field) =>

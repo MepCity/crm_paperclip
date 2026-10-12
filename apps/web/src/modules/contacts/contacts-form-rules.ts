@@ -1,9 +1,20 @@
 import type { FormRules } from "@/components/records/form/form-model";
 
+const buildingLabelLines = ["Flat / House No./", "Building /", "Apartment Name"] as const;
+
 export const contactsFormRules: FormRules = {
   owner: "Owner",
   prefix: { field: "First_Name", prefix: "Salutation" },
   textPrefixes: { Twitter: "@" },
+  omitted: ["Connected_To__s"],
+  countries: [
+    { field: "Mailing_Country", state: "Mailing_State" },
+    { field: "Other_Country", state: "Other_State" },
+  ],
+  labelLines: {
+    Mailing_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
+    Other_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
+  },
 };
 
 /** Only used when service layout columns are unavailable; metadata always wins. */
