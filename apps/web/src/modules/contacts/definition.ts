@@ -41,6 +41,8 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   },
   detail: {
     header: contactsRecordHeaderIdentity,
+    addTags: { label: "Add Tags", laterModule: "M6" },
+    headerCommands: [{ id: "send-email", label: "Send Email", laterModule: "M10" }],
     businessCard: buildContactsBusinessCardFields,
     sections: buildContactsDetailSections,
     inlineEditable: isContactInlineEditable,
@@ -48,12 +50,17 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildContactsRecordMoreMenuGroups,
     deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
     deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
+    loadingAttributes: { "data-contact-record-loading": true },
     timeline: {
       subtabs: CONTACTS_TIMELINE_SUBTABS,
       modules: CONTACTS_TIMELINE_MODULE_OPTIONS,
       sources: CONTACTS_TIMELINE_SOURCE_OPTIONS,
       events: CONTACTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeContactsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };

@@ -112,6 +112,7 @@ export interface RecordFormConfig {
   inventoryChrome?: boolean;
   profileImageLaterModule?: ModuleKey;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
+  createPrefill?: Readonly<Record<string, FieldValue>>;
 }
 
 export interface RecordFormScreenProps {
@@ -169,13 +170,17 @@ function LoadedRecordForm({
   );
   const fields = formFields(metadata, sections, mode, config.rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
-  const emptyValues = () => initialFormValues(fields, { [config.rules.owner]: currentUserId });
+  const emptyValues = () =>
+    initialFormValues(fields, {
+      [config.rules.owner]: currentUserId,
+      ...config.createPrefill,
+    });
   const cloneSeed =
     intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
   const [baseline] = useState(() =>
     intent === "edit"
       ? initialFormValues(fields, sourceRecord?.fields)
-      : initialFormValues(fields, cloneSeed),
+      : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
   const [values, setValues] = useState(() =>
     intent === "create" && !cloneSeed ? emptyValues() : baseline,
