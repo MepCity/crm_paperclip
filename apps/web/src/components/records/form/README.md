@@ -146,14 +146,15 @@ All copy/data may be supplied through props; fallback copy is generic English.
 | --- | --- |
 | text, email, phone, website | TextField (text, email, tel, url) |
 | textarea | TextArea with lower-corner resize handle |
-| integer, double | NumberField without grouping; integer uses integer precision |
+| integer, bigint, double | NumberField without grouping; integer and bigint use integer precision |
 | currency | NumberField with optional prefix/information annotation |
 | boolean | Checkbox |
 | picklist | RecordChoice without search; ordered list and null first option |
 | picklist + searchable | RecordChoice with focused search and scrolling list |
 | ownerlookup | RecordChoice with name/email/avatar and selected checkmark |
 | profileimage | 48px noninteractive original portrait placeholder |
-| lookup, multi_module_lookup, datetime, bigint | Nothing; absent from the observed Leads form |
+| lookup | TextField with the record-picker action; the picker follows the target module's observed chrome |
+| multi_module_lookup, datetime | Nothing; absent from the observed Leads form |
 
 ### Composite inputs
 
@@ -222,8 +223,9 @@ surrounding trigger.
 - Measured validation appearance and unsaved-changes dialog: MEP-146 (row 22).
 - Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
-- Unsupported lookup/multi-module/date-time/long-integer controls: absent from
-  Leads form; their corresponding later modules must supply primitives.
+- Unsupported multi-module/date-time controls: absent from the Leads form; their
+  corresponding later modules must supply primitives. `bigint` renders the integer
+  entry (Accounts `Account Number`, `m3f-create`).
 - Currency prefix/information content is supplied by callers; the organization
   currency comes from `useHomeCurrency` (MEP-225, decision MEP-221), never a fixed
   symbol, an ISO code or a locale guess. Company stays a text field (suggestions unseen).

@@ -194,7 +194,10 @@ export function FieldInput({
       return (
         <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
+    // A `bigint` field is drawn as the same single-line numeric entry as `integer`: the reference
+    // Accounts form shows Account Number without any long-number widget.
     case "integer":
+    case "bigint":
     case "double":
     case "currency":
       return (
@@ -354,7 +357,6 @@ export function FieldInput({
     }
     case "multi_module_lookup":
     case "datetime":
-    case "bigint":
       return null;
   }
 }

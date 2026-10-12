@@ -27,8 +27,7 @@ function skippedField(field: FieldDefinition): boolean {
     field.readOnly ||
     field.dataType === "profileimage" ||
     field.dataType === "multi_module_lookup" ||
-    field.dataType === "datetime" ||
-    field.dataType === "bigint"
+    field.dataType === "datetime"
   );
 }
 
@@ -54,7 +53,7 @@ function validateField(
       return validationFormatMessage(label);
   }
 
-  if (field.dataType === "integer") {
+  if (field.dataType === "integer" || field.dataType === "bigint") {
     if (typeof value === "number" && !Number.isInteger(value))
       return validationFormatMessage(label);
   }
