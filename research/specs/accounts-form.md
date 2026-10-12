@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Specify Accounts form differences and inventory every visible control. Reuse [contacts-form.md](contacts-form.md), [record-detail.md](record-detail.md), [accounts.md](accounts.md) and the shared lookup component (MEP-318). **Safety stop:** m3f-detail-base contains three Accounts/bulk POST calls when aggregated by path (statuses 200, 204, 200), exceeding the permitted two. Research stopped before Edit; only the mandatory no-click after capture followed. Edit form remains not observed. No record-write request was observed. Screenshots establish presence; no field was filled, option selected, search performed, or save/cancel action invoked. Metadata does not establish rendered behaviour.
+Specify Accounts form differences and inventory every visible control. Reuse [contacts-form.md](contacts-form.md), [record-detail.md](record-detail.md), [accounts.md](accounts.md) and the shared lookup component (MEP-318). The earlier request-count stop is resolved by the CTO decision in MEP-330: the three Accounts/bulk reads in m3f-detail-base are within the revised limit of three. The authorized m3f-edit capture was then attempted; its Edit click was skipped because the selector matched zero elements at capture time. The screenshot remained on the list. Under capture rule 6, no alternate selector or route was attempted, so the Edit form remains not observed. The final no-click list was recaptured with the same total of 373. No record-write request was observed. Screenshots establish presence; no field was filled, option selected, search performed, or save/cancel action invoked. Metadata does not establish rendered behaviour.
 
 ## Layout
 
@@ -174,11 +174,20 @@ Rest: as in m3f-create; covered by the overlay: AF-36–AF-39. Scrolling leaves 
 
 ### Control inventory — m3f-detail-base
 
-No inventory by task scope: this capture establishes the Edit selector source only. The screenshot was inspected. Safety stop: Accounts/bulk path aggregate is three, above the two-call limit; no Edit click followed. Detail inventory belongs to the separate detail task. Source controls are outside this form inventory’s scope rather than silently counted as form exclusions.
+No inventory by task scope: this capture establishes the Edit selector source only. The screenshot was inspected. Accounts/bulk path aggregate is three, within the revised MEP-330 limit; this existing capture supplies the Edit selector for the continuation. Detail inventory belongs to the separate detail task. Source controls are outside this form inventory’s scope rather than silently counted as form exclusions.
 
 ### Control inventory — m3f-edit
 
-Not captured: safety stop in m3f-detail-base. No observed Edit form inventory, title, fields, buttons or footer is claimed.
+The capture requested the existing record-link click followed by Edit. The Edit selector was verified against exactly one control in m3f-detail-base, but matched zero elements when the tool tried it; one of two requested clicks was skipped. The screenshot still shows the Accounts list, not an Edit form. No alternate selector or route was tried. No observed Edit title, fields, actions or footer is claimed.
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Accounts active. Channels/Threads are absent, and Contacts returns to the third utility position.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AL-45 | Table | Three dots | icon button | hovered record row, before note icon | not observed | seen (m3f-edit) | M3 | L-45 |
+| AL-62 | Table | Phone handset icon | icon button | populated Phone cells, after value | not observed | seen (m3f-edit) | M5 | new |
+
+Rest: as in m3f-list-base; covered by the overlay: none. AF-48–AF-49 are not painted. A narrow loading indicator is visible at the top; it is status feedback, not an interactive control. Source reconciliation covers the actual list controls below.
 
 ### Control inventory — m3f-list-after
 
@@ -190,7 +199,7 @@ Rest: as in m3f-list-base; covered by the overlay: none. Final count is 373, unc
 
 ## Edit form
 
-Not observed. The record detail showed an Edit action, but the preceding capture exceeded the permitted non-GET path count. Create fields are not asserted to be identical to edit; titles, actions, required markers, population and edit-only controls remain open.
+Not observed after the authorized continuation attempt. The offline selector source contained one matching header Edit control; at capture time it matched zero elements and the tool skipped the click. The recorded screenshot stayed on the list. No alternate selector, direct edit route, field focus or form action was used. Create fields are not asserted to be identical to edit; titles, actions, required markers, population and edit-only controls remain open.
 
 ## Parent Account lookup
 
@@ -259,7 +268,7 @@ Every observed field matches accounts.md › Field dictionary. `Observed` below 
 | Shipping Address (group) | Shipping_Address | textarea | Observed grouping; no independent editor |
 | Shipping Address - Coordinates (group) | Shipping_Coordinates | textarea | Observed grouping; no independent editor |
 
-Form field absent from metadata: none. Create-enabled metadata absent from observed form: Connected To (Connected_To__s, multi-module lookup); no corresponding form control was found in screenshot or accessible evidence. Edit-enabled metadata absence cannot be evaluated because Edit was not captured. Non-create system fields Created By, Modified By, Created Time, Modified Time, Last Activity Time, Tag and Record Id are not shown as create editors; Change Log Time, Locked, Last Enriched Time, Enrich Status and Distance are outside the configured layout.
+Form field absent from metadata: none. Create-enabled metadata absent from observed form: Connected To (Connected_To__s, multi-module lookup); no corresponding form control was found in screenshot or accessible evidence. Edit-enabled metadata absence cannot be evaluated because the Edit form was not reached. Non-create system fields Created By, Modified By, Created Time, Modified Time, Last Activity Time, Tag and Record Id are not shown as create editors; Change Log Time, Locked, Last Enriched Time, Enrich Status and Distance are outside the configured layout.
 
 ## Capability table
 
@@ -286,11 +295,11 @@ Form field absent from metadata: none. Create-enabled metadata absent from obser
 | m3f-create-parent | 1 | 0 | Choose Account popup |
 | m3f-create-billing-state | 1 | 0 | Lower address groups and Description; only -None- state item |
 | m3f-create-shipping-country | 1 | 0 | Shipping country popup and unobscured Billing zip input |
-| m3f-detail-base | 1 | 0 | Record detail; safety stop |
-| m3f-edit | — | — | Not captured because safety stop |
-| m3f-list-after | 0 | 0 | Final list, total 373 (same as base) |
+| m3f-detail-base | 1 | 0 | Existing record detail; three permitted Accounts/bulk reads |
+| m3f-edit | 2 | 1 | List remained visible; Edit selector matched zero elements |
+| m3f-list-after | 0 | 0 | Recaptured final list, total 373 (same as base) |
 
-All captured screenshots were opened as images. Non-GET checks aggregate counts by path, including separate network entries with distinct queries: this is why detail’s three Accounts/bulk entries trigger the stop despite each entry count being one. Create baseline has one shell triggers call and no extra non-GET baseline path. Create-type/state/country each have that one shell call; Parent additionally has one Accounts/bulk lookup read. List reads are the three permitted list paths once each plus shell triggers once. Reminder/notification and any telemetry calls are blocked. No record-write call was observed. No further capture was attempted after the detail stop except list-after.
+All captured screenshots were opened as images. Non-GET checks aggregate counts by path, including separate network entries with distinct queries: detail’s three Accounts/bulk entries are within the revised CTO-authorized limit of three (MEP-330). Create baseline has one shell triggers call and no extra non-GET baseline path. Create-type/state/country each have that one shell call; Parent additionally has one Accounts/bulk lookup read. List reads are the three permitted list paths once each plus shell triggers once. Reminder/notification and any telemetry calls are blocked. No record-write call was observed. The original stop was respected until the capture contract changed. In the continuation, m3f-edit shows only the permitted list and shell reads once each; no detail-related or record-write request was observed. The Edit click was skipped and the final list was recaptured. All background and telemetry requests in both new captures were blocked.
 
 ## Shell controls missing from app-shell.md
 
@@ -298,8 +307,7 @@ AF-48 Channels and AF-49 Threads appear only in m3f-list-base and m3f-create. Th
 
 ## Open questions
 
-- Safety decision required through the lead/CTO path: detail opening produced three Accounts/bulk calls versus the authorized two. Determine whether a revised capture contract may permit this path/count before any Edit research resumes. This spec does not grant an exception.
-- Edit form is wholly unobserved; do not infer its title, buttons, fields, requirements or footer from create.
+- Edit form remains unobserved after the authorized attempt: the Edit selector matched zero elements and the screenshot remained on the list. Rule 6 forbids another selector or route in this task. Do not infer its title, buttons, fields, requirements or footer from create; the UI Lead can decide whether a separately authorized research task is needed.
 - Create Form Views / Standard View (AF-45) and Create a custom form page (AF-46) exist in source control evidence but are outside every permitted screenshot viewport. Footer placement/rendering remains unobserved; no extra scroll-opening click was invented.
 - Copy Address direction labels/results, Clear All results, image upload/menu, revenue information tooltip, country/state dependence after a change, lookup search/selection, hover-only controls, validation and save results remain not observed. Existing documented rules in leads-write-behaviour.md and duplicates.md are shared references, not Accounts screenshots.
 - Connected To is create-enabled metadata without a captured form control; conditional visibility is unresolved.
@@ -903,8 +911,110 @@ Each one-based controls.json ordinal is mapped below. Exclusions describe zero-a
 
 ### m3f-detail-base
 
-482 source items; inventory deliberately omitted by task scope (detail is a separate task). All 482 are excluded from the form reconciliation as out of scope, not as absent controls; 1 requested click, 0 skipped. This capture is safety and selector evidence only.
+482 source items; inventory deliberately omitted by task scope (detail is a separate task). All 482 are excluded from the form reconciliation as out of scope, not as absent controls; 1 requested click, 0 skipped. This capture is request-audit and selector evidence only.
 
 ### m3f-edit
 
-No capture/source items; omitted because of the safety stop.
+| Inventory number / exclusion reason | Item ordinals |
+| --- | --- |
+| Excluded: duplicate structural wrapper or non-interactive text | 1, 37, 51, 59, 62, 82–83, 86, 110, 119, 128–129, 135, 140, 154, 171–172, 253–254, 258–260, 262–263, 272–273, 419, 421, 424, 591 |
+| SH-01 | 2–4 |
+| Excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 106–109, 134, 138, 251–252, 256–257, 561–569, 574, 576–590 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| Excluded: outside captured viewport | 65–80, 173–250, 430–431, 433, 436, 442–443, 445, 448, 454–455, 457, 460, 466–467, 469, 472, 478–479, 481, 484, 489, 491–492, 494, 497, 503–504, 506, 509, 515–516, 518, 521, 527–528, 530, 533, 539–540, 542, 545, 550, 552–553, 555, 558 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| AL-01 | 111 |
+| AL-52 | 112 |
+| AL-02 | 113–116 |
+| AL-03 | 117 |
+| AL-04 | 118 |
+| AL-05 | 120 |
+| AL-06 | 121 |
+| AL-07 | 122 |
+| AL-08 | 123 |
+| AL-09 | 124 |
+| AL-10 | 125 |
+| AL-11 | 126–127 |
+| AL-12 | 130 |
+| AL-13 | 131–132 |
+| AL-14 | 133 |
+| AL-15 | 136–137 |
+| AL-16 | 139 |
+| AL-20 | 141–142 |
+| AL-21 | 143–144 |
+| AL-22 | 145–146 |
+| AL-23 | 147–148 |
+| AL-24 | 149–150 |
+| AL-25 | 151–152 |
+| AL-26 | 153 |
+| AL-27 | 155–156 |
+| AL-53 | 157–158 |
+| AL-54 | 159–160 |
+| AL-55 | 161–162 |
+| AL-56 | 163–164 |
+| AL-57 | 165–166 |
+| AL-58 | 167–168 |
+| AL-59 | 169–170 |
+| AL-33 | 255 |
+| Excluded: record row data or table structure | 261, 274–275, 278, 281, 283–284, 286–290, 293, 295–296, 298–301, 303, 306, 308–309, 311–314, 316, 319, 321–322, 324–327, 329, 332, 334–339, 341, 344, 346–347, 349–352, 354, 357, 359–360, 362–365, 367, 370, 372–373, 375–378, 380, 383, 385–386, 388–392, 395, 397–398, 400–403, 405, 408, 410–411, 413–417, 420, 422–423, 425–429, 432, 434–435, 437–441, 444, 446–447, 449–453, 456, 458–459, 461–465, 468, 470–471, 473–477, 480, 482–483, 485–488, 490, 493, 495–496, 498–502, 505, 507–508, 510–514, 517, 519–520, 522–526, 529, 531–532, 534–538, 541, 543–544, 546–549, 551, 554, 556–557, 559–560 |
+| AL-34 | 264–265 |
+| AL-35 | 266 |
+| AL-36 | 267–268 |
+| AL-39 | 269 |
+| AL-60 | 270 |
+| AL-61 | 271 |
+| AL-45 | 276 |
+| AL-46 | 277, 302, 315, 328, 340, 353, 366, 379, 404 |
+| AL-40 | 279–280, 291–292, 304–305, 317–318, 330–331, 342–343, 355–356, 368–369, 381–382, 393–394, 406–407 |
+| AL-42 | 282, 294, 307, 320, 333, 345, 358, 371, 384, 396, 409 |
+| AL-63 | 285, 297, 310, 323, 348, 361, 374, 387, 399, 412 |
+| Excluded: row below list clipping boundary | 418 |
+| AL-48 | 570 |
+| AL-49 | 571 |
+| AL-50 | 572 |
+| AL-51 | 573 |
+| Excluded: non-interactive loading status | 575 |
+| SH-35 | 592 |
+| SH-36 | 593 |
+| SH-37 | 594 |
+| SH-38 | 595 |
+| SH-39 | 596 |
+| SH-40 | 597 |
+| SH-41 | 598 |
+| SH-42 | 599 |
+| SH-43 | 600 |
+| SH-44 | 601 |
+| SH-45 | 602 |
+
+602 source items; 93 source-backed inventory numbers; 413 excluded items. This is the actual list screenshot, not an Edit form; 2 requested clicks, 1 skipped. Image-only Phone handsets and SH-46 supplement the source mapping.
