@@ -61,6 +61,7 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
           });
       const query = {
         text: "grouped marker",
+        modules: ["Leads", "Contacts"],
         perPage: 1,
         page: 2,
         sort: { field: "First_Name", order: "asc" as const },
@@ -84,6 +85,30 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
       ).toBe(1);
       expect(await make().search({ text: query.text })).toEqual([]);
       expect((await service.search({ ...query, page: 10 }))[0]?.records).toEqual([]);
+    });
+    it("rule 4: searches every module when omitted and validates projections per module", async () => {
+      const service = make();
+      const account = await service.create("Accounts", { Account_Name: "Global Discovery Marker" });
+      const contact = await service.create("Contacts", { Last_Name: "Global Discovery Marker" });
+      const lead = await service.create("Leads", {
+        Last_Name: "Global Discovery Marker",
+        Company: "Test Company",
+      });
+      const groups = await service.search({ text: "global discovery marker" });
+      expect(groups.map((group) => group.module).sort()).toEqual(["Accounts", "Contacts", "Leads"]);
+      for (const [module, record] of [
+        ["Accounts", account],
+        ["Contacts", contact],
+        ["Leads", lead],
+      ] as const) {
+        const group = groups.find((group) => group.module === module);
+        expect(group?.total).toBe(1);
+        expect(group?.records.map((row) => row.id)).toEqual([record.id]);
+      }
+      expect(await make().search({ text: "global discovery marker" })).toEqual([]);
+      await expect(
+        service.search({ text: "global discovery marker", fields: ["First_Name"] }),
+      ).rejects.toBeInstanceOf(ValidationError);
     });
     it("rule 5: rejects invalid sets, foreign module, foreign organization and missing IDs atomically", async () => {
       const service = make();
