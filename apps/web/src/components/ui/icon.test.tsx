@@ -66,6 +66,7 @@ const expectedIcons = [
   "viewTypeCards",
   "viewTypeArrow",
   "settingsSliders",
+  "columns",
   "eye",
   "refresh",
   "ellipsis",
