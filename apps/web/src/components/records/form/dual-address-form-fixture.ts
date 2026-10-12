@@ -15,6 +15,9 @@ export const dualAddressCountryOptions = [
   "Andorra",
 ] as const;
 
+/** Nonempty states from metadata global set States__s (contacts spec catalog). */
+export const dualAddressStateOptions = ["-None-", "Ontario", "Alberta"] as const;
+
 function textField(apiName: string, label: string, maxLength = 255): FieldDefinition {
   return {
     apiName,
@@ -75,7 +78,11 @@ function subfieldsFor(parentApiName: "Mailing_Address" | "Other_Address", label:
     `${label} - Country / Region`,
     dualAddressCountryOptions,
   );
-  const state = picklistField(`${prefix}_State`, `${label} - State / Province`, ["-None-"]);
+  const state = picklistField(
+    `${prefix}_State`,
+    `${label} - State / Province`,
+    dualAddressStateOptions,
+  );
   const flat = textField(
     `${prefix}_Flat_House_No_Building_Apartment_Name`,
     `${label} - Flat / House No./ Building / Apartment Name`,

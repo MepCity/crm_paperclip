@@ -54,24 +54,72 @@ function group(name: string) {
   return within(screen.getByRole("group", { name }));
 }
 
-async function fillMailingAddress(user: ReturnType<typeof userEvent.setup>) {
-  const mailing = group("Mailing Address");
-  await user.type(
-    mailing.getByRole("textbox", { name: "Flat / House No./ Building / Apartment Name" }),
-    "Unit 9",
-  );
-  await user.type(mailing.getByRole("textbox", { name: "Street Address" }), "1 King St");
-  await user.type(mailing.getByRole("textbox", { name: "City" }), "Toronto");
-  await user.click(mailing.getByRole("button", { name: "State / Province" }));
-  await user.click(screen.getByRole("option", { name: "-None-" }));
-  await user.type(mailing.getByRole("textbox", { name: "Zip / Postal Code" }), "M5H");
-  await user.type(mailing.getByRole("textbox", { name: "Latitude" }), "43.65");
-  await user.type(mailing.getByRole("textbox", { name: "Longitude" }), "-79.38");
-  await user.click(mailing.getByRole("button", { name: "Country / Region" }));
-  await user.click(screen.getByRole("option", { name: "Afghanistan" }));
+const mailingAddressValues = {
+  country: "Afghanistan",
+  flat: "Unit 9",
+  street: "1 King St",
+  city: "Toronto",
+  state: "Ontario",
+  zip: "M5H",
+  latitude: "43.65",
+  longitude: "-79.38",
+} as const;
+
+const otherAddressValues = {
+  country: "Albania",
+  flat: "Suite 2",
+  street: "9 Queen St",
+  city: "Ottawa",
+  state: "Alberta",
+  zip: "K1A",
+  latitude: "45.42",
+  longitude: "-75.69",
+} as const;
+
+async function selectPicklistOption(
+  scope: ReturnType<typeof within>,
+  buttonName: string,
+  optionName: string,
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  await user.click(scope.getByRole("button", { name: buttonName }));
+  await user.click(screen.getByRole("option", { name: optionName }));
 }
 
-function expectMailingValues(scope: ReturnType<typeof within>, filled: boolean) {
+async function fillAddressGroup(
+  scope: ReturnType<typeof within>,
+  values: typeof mailingAddressValues | typeof otherAddressValues,
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  const flat = scope.getByRole("textbox", {
+    name: "Flat / House No./ Building / Apartment Name",
+  });
+  const street = scope.getByRole("textbox", { name: "Street Address" });
+  const city = scope.getByRole("textbox", { name: "City" });
+  const zip = scope.getByRole("textbox", { name: "Zip / Postal Code" });
+  const lat = scope.getByRole("textbox", { name: "Latitude" });
+  const lng = scope.getByRole("textbox", { name: "Longitude" });
+
+  await selectPicklistOption(scope, "Country / Region", values.country, user);
+  await user.clear(flat);
+  await user.type(flat, values.flat);
+  await user.clear(street);
+  await user.type(street, values.street);
+  await user.clear(city);
+  await user.type(city, values.city);
+  await selectPicklistOption(scope, "State / Province", values.state, user);
+  await user.clear(zip);
+  await user.type(zip, values.zip);
+  await user.clear(lat);
+  await user.type(lat, values.latitude);
+  await user.clear(lng);
+  await user.type(lng, values.longitude);
+}
+
+function expectAddressGroupValues(
+  scope: ReturnType<typeof within>,
+  values: typeof mailingAddressValues | typeof otherAddressValues | null,
+) {
   const flat = scope.getByRole("textbox", {
     name: "Flat / House No./ Building / Apartment Name",
   }) as HTMLInputElement;
@@ -81,15 +129,17 @@ function expectMailingValues(scope: ReturnType<typeof within>, filled: boolean) 
   const lat = scope.getByRole("textbox", { name: "Latitude" }) as HTMLInputElement;
   const lng = scope.getByRole("textbox", { name: "Longitude" }) as HTMLInputElement;
   const country = scope.getByRole("button", { name: "Country / Region" });
+  const state = scope.getByRole("button", { name: "State / Province" });
 
-  if (filled) {
-    expect(flat.value).toBe("Unit 9");
-    expect(street.value).toBe("1 King St");
-    expect(city.value).toBe("Toronto");
-    expect(zip.value).toBe("M5H");
-    expect(lat.value).toBe("43.65");
-    expect(lng.value).toBe("-79.38");
-    expect(country.textContent).toContain("Afghanistan");
+  if (values) {
+    expect(flat.value).toBe(values.flat);
+    expect(street.value).toBe(values.street);
+    expect(city.value).toBe(values.city);
+    expect(zip.value).toBe(values.zip);
+    expect(lat.value).toBe(values.latitude);
+    expect(lng.value).toBe(values.longitude);
+    expect(country.textContent).toContain(values.country);
+    expect(state.textContent).toContain(values.state);
   } else {
     expect(flat.value).toBe("");
     expect(street.value).toBe("");
@@ -98,6 +148,7 @@ function expectMailingValues(scope: ReturnType<typeof within>, filled: boolean) 
     expect(lat.value).toBe("");
     expect(lng.value).toBe("");
     expect(country.textContent).toContain("-None-");
+    expect(state.textContent).toContain("-None-");
   }
 }
 
@@ -124,51 +175,26 @@ test("dual address copy and clear run through RecordFormScreen state", async () 
   const mailingGroup = group("Mailing Address");
   const otherGroup = group("Other Address");
 
-  await fillMailingAddress(user);
+  await fillAddressGroup(mailingGroup, mailingAddressValues, user);
 
   await user.click(screen.getByRole("button", { name: "Copy Address" }));
   await user.click(screen.getByRole("menuitem", { name: "Mailing Address → Other Address" }));
 
-  expectMailingValues(otherGroup, true);
-  expectMailingValues(mailingGroup, true);
+  expectAddressGroupValues(otherGroup, mailingAddressValues);
+  expectAddressGroupValues(mailingGroup, mailingAddressValues);
 
-  await user.type(otherGroup.getByRole("textbox", { name: "Street Address" }), " override");
-  await user.type(otherGroup.getByRole("textbox", { name: "City" }), "X");
-  await user.type(
-    otherGroup.getByRole("textbox", { name: "Flat / House No./ Building / Apartment Name" }),
-    "B",
-  );
+  await fillAddressGroup(otherGroup, otherAddressValues, user);
 
   await user.click(screen.getByRole("button", { name: "Copy Address" }));
   await user.click(screen.getByRole("menuitem", { name: "Other Address → Mailing Address" }));
 
-  expect(
-    (mailingGroup.getByRole("textbox", { name: "Street Address" }) as HTMLInputElement).value,
-  ).toBe("1 King St override");
-  expect((mailingGroup.getByRole("textbox", { name: "City" }) as HTMLInputElement).value).toBe(
-    "TorontoX",
-  );
-  expect(
-    (
-      mailingGroup.getByRole("textbox", {
-        name: "Flat / House No./ Building / Apartment Name",
-      }) as HTMLInputElement
-    ).value,
-  ).toBe("Unit 9B");
+  expectAddressGroupValues(mailingGroup, otherAddressValues);
+  expectAddressGroupValues(otherGroup, otherAddressValues);
 
   await clickGroupClearAll(mailingGroup, user);
-  expectMailingValues(mailingGroup, false);
-  expect(
-    (otherGroup.getByRole("textbox", { name: "Street Address" }) as HTMLInputElement).value,
-  ).toBe("1 King St override");
-  expect(
-    (
-      otherGroup.getByRole("textbox", {
-        name: "Flat / House No./ Building / Apartment Name",
-      }) as HTMLInputElement
-    ).value,
-  ).toBe("Unit 9B");
+  expectAddressGroupValues(mailingGroup, null);
+  expectAddressGroupValues(otherGroup, otherAddressValues);
 
   await clickGroupClearAll(otherGroup, user);
-  expectMailingValues(otherGroup, false);
+  expectAddressGroupValues(otherGroup, null);
 }, 60_000);
