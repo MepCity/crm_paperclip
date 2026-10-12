@@ -57,8 +57,8 @@ async function saveAccount(page: Page, name: string) {
 }
 
 /**
- * The Accounts record detail belongs to MEP-342, so arrival after a save is proven by the
- * record route and the record header only.
+ * The Accounts record detail inventory belongs to MEP-342, so arrival after a save is proven
+ * by the record route and by the create form being gone.
  */
 async function expectRecordRoute(page: Page, orgSlug: string) {
   await expect(page).toHaveURL(new RegExp(`/crm/${orgSlug}/tab/Accounts/\\d+$`), {
