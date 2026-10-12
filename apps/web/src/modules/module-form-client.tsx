@@ -40,8 +40,6 @@ export function ModuleFormClient({
           module: moduleApiName,
           rules: definition.form.rules,
           sectionColumnOverrides: definition.form.fallbackColumns,
-          addressGroups: definition.form.addressGroups,
-          addressChildFieldOrder: definition.form.addressChildFieldOrder,
           inventoryChrome: definition.form.inventoryChrome,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           currencyPrefix: homeCurrency.data?.symbol,

@@ -5,6 +5,7 @@ import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import FormErrorBannerDemo from "@/components/records/form/form-error-banner.demo";
+import RecordFormAddressDemo from "@/components/records/form/record-form-address.demo";
 import RecordFormLayoutDemo from "@/components/records/form/record-form-layout.demo";
 import SelectUserDialogDemo from "@/components/records/form/select-user-dialog.demo";
 import UnsavedChangesDialogDemo from "@/components/records/form/unsaved-changes-dialog.demo";
@@ -98,6 +99,7 @@ export const demos: Record<string, React.ComponentType> = {
   "mass-update-dialog": MassUpdateDialogDemo,
   "change-owner-dialog": ChangeOwnerDialogDemo,
   "record-form-layout": RecordFormLayoutDemo,
+  "record-form-address": RecordFormAddressDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,
 };

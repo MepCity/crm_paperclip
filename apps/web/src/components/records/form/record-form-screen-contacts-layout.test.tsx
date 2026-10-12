@@ -34,8 +34,6 @@ function renderContactsCreate() {
           module: definition.apiName,
           rules: definition.form.rules,
           sectionColumnOverrides: definition.form.fallbackColumns,
-          addressGroups: definition.form.addressGroups,
-          addressChildFieldOrder: definition.form.addressChildFieldOrder,
           inventoryChrome: definition.form.inventoryChrome,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "list" },

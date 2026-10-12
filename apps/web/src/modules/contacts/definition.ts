@@ -5,8 +5,6 @@ import {
   buildContactsDetailSections,
 } from "./contacts-detail-sections";
 import {
-  CONTACTS_FORM_ADDRESS_CHILD_ORDER,
-  CONTACTS_FORM_ADDRESS_GROUPS,
   CONTACTS_FORM_INFORMATION_COLUMNS,
   contactsFormRules,
 } from "./contacts-form-rules";
@@ -41,8 +39,6 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: contactsFormRules,
     fallbackColumns: { "Contact Information": CONTACTS_FORM_INFORMATION_COLUMNS },
-    addressGroups: CONTACTS_FORM_ADDRESS_GROUPS,
-    addressChildFieldOrder: [...CONTACTS_FORM_ADDRESS_CHILD_ORDER],
     inventoryChrome: true,
     profileImageLaterModule: "M6",
   },

@@ -47,17 +47,8 @@ export interface ModuleScreenDefinition {
   }) => readonly FilterGroup[];
   form: {
     rules: FormRules;
-    /** Screen fallback only when layout columns are missing; never overrides metadata. */
+    /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
-    addressChildFieldOrder?: readonly string[];
-    addressGroups?: readonly {
-      field: string;
-      country: string;
-      state: string;
-      latitude: string;
-      longitude: string;
-      coordinates: string;
-    }[];
     inventoryChrome?: boolean;
     profileImageLaterModule?: ModuleKey;
   };

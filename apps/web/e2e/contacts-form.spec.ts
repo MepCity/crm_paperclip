@@ -66,6 +66,9 @@ test("creates with date, reporting lookup, dual addresses and Copy Address", asy
   await page.getByRole("textbox", { name: "Date of Birth", exact: true }).fill("15.03.1990");
   await page.locator("[data-form-field=Mailing_Street] input").fill("Mailing Street 1");
   await page.getByRole("button", { name: "Copy Address", exact: true }).click();
+  await page
+    .getByRole("menuitem", { name: "Mailing Address → Other Address", exact: true })
+    .click();
   await expect(page.locator("[data-form-field=Other_Street] input")).toHaveValue(
     "Mailing Street 1",
   );

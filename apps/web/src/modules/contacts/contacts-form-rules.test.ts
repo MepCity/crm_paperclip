@@ -25,18 +25,14 @@ test("reads required Last Name and salutation from metadata and supplies current
       },
     ],
   };
-  const fields = formFields(
-    metadata,
-    buildFormModel(metadata, "create"),
-    "create",
-    contactsFormRules,
-  );
+  const fields = formFields(metadata, buildFormModel(metadata, "create"), "create", contactsFormRules);
   expect(fields.find((field) => field.apiName === "Last_Name")?.required).toBe(true);
   expect(fields.some((field) => field.apiName === "Salutation")).toBe(true);
   expect(contactsFormRules.owner).toBe("Owner");
   expect(contactsFormRules.textPrefixes).toEqual({ Twitter: "@" });
   expect(contactsFormRules.omitted).toEqual(["Connected_To__s"]);
   expect(contactsFormRules.countries).toHaveLength(2);
+  expect(contactsFormRules.addresses).toHaveLength(2);
 });
 test("stores only fallback placement and the two address presentation composites", () => {
   expect(CONTACTS_FORM_INFORMATION_COLUMNS[0]).toEqual([

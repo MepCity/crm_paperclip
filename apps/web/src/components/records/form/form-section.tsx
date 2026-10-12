@@ -8,16 +8,11 @@ export type FormSectionLayout = "single" | "two-column";
 export interface FormSectionProps {
   title?: string;
   layout?: FormSectionLayout;
-  headerActions?: ReactNode;
+  headerEnd?: ReactNode;
   children: ReactNode;
 }
 
-export function FormSection({
-  title,
-  layout = "single",
-  headerActions,
-  children,
-}: FormSectionProps) {
+export function FormSection({ title, layout = "single", headerEnd, children }: FormSectionProps) {
   return (
     <section
       className="record-form-section"
@@ -29,9 +24,7 @@ export function FormSection({
           <h2 className="record-form-section__title" data-record-form-section-title>
             {title}
           </h2>
-          {headerActions ? (
-            <div className="record-form-section__header-actions">{headerActions}</div>
-          ) : null}
+          {headerEnd ? <div className="record-form-section__header-end">{headerEnd}</div> : null}
         </div>
       ) : null}
       {children}

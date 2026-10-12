@@ -1,6 +1,16 @@
 import type { FormRules } from "@/components/records/form/form-model";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 
 const buildingLabelLines = ["Flat / House No./", "Building /", "Apartment Name"] as const;
+
+export const CONTACTS_FORM_ADDRESS_GROUPS = ["Mailing", "Other"].map((prefix) => ({
+  field: `${prefix}_Address`,
+  country: `${prefix}_Country`,
+  state: `${prefix}_State`,
+  latitude: `${prefix}_Latitude`,
+  longitude: `${prefix}_Longitude`,
+  coordinates: `${prefix}_Coordinates`,
+}));
 
 export const contactsFormRules: FormRules = {
   owner: "Owner",
@@ -15,6 +25,10 @@ export const contactsFormRules: FormRules = {
     Mailing_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
     Other_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
   },
+  addresses: CONTACTS_FORM_ADDRESS_GROUPS.map((group) => ({
+    ...group,
+    subfields: addressSubfieldApiNames(group.field),
+  })),
 };
 
 /** Only used when service layout columns are unavailable; metadata always wins. */
@@ -37,15 +51,6 @@ export const CONTACTS_FORM_INFORMATION_COLUMNS = [
     "Reporting_To",
   ],
 ] as const;
-/** Last_Name.required and create owner initialization come from metadata and the shared form. */
-export const CONTACTS_FORM_ADDRESS_GROUPS = ["Mailing", "Other"].map((prefix) => ({
-  field: `${prefix}_Address`,
-  country: `${prefix}_Country`,
-  state: `${prefix}_State`,
-  latitude: `${prefix}_Latitude`,
-  longitude: `${prefix}_Longitude`,
-  coordinates: `${prefix}_Coordinates`,
-}));
 
 /** Child field order inside each address group (parent `*_Address` excluded). */
 export const CONTACTS_FORM_ADDRESS_CHILD_ORDER = [
