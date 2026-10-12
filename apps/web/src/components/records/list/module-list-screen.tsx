@@ -77,7 +77,7 @@ export interface ModuleListScreenConfig {
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
-    createItems: readonly MenuAction[];
+    createItems?: readonly MenuAction[];
   };
 }
 
