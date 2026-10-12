@@ -145,7 +145,11 @@ export interface ModuleScreenDefinition {
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
     lastUpdate: (record: RecordData, now: Date, format: FormatOptions) => string | null;
-    moreOptions: (handlers: { onClone: () => void; onDelete: () => void }) => RecordMenuGroup[];
+    moreOptions: (handlers: {
+      onClone: () => void;
+      onDelete: () => void;
+      onFindMergeDuplicates: () => void;
+    }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;
     loadingAttributes?: Readonly<Record<string, boolean>>;

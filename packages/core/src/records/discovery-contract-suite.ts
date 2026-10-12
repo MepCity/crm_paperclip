@@ -59,10 +59,12 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
             First_Name,
             ...(module === "Leads" ? { Company: "Test Company" } : {}),
           });
+      // A projection is checked against every module the query walks, so it is
+      // scoped to the modules that carry the field; omitted modules means all.
       const query = {
         text: "grouped marker",
         // First_Name is unknown to Accounts, so the caller selects the two modules that have it.
-        modules: ["Leads", "Contacts"],
+        modules: ["Leads", "Contacts"] as const,
         perPage: 1,
         page: 2,
         sort: { field: "First_Name", order: "asc" as const },
@@ -75,6 +77,9 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
         expect(group.records).toHaveLength(1);
         expect(group.records[0]?.fields).toEqual({ First_Name: "Beta" });
       }
+      await expect(
+        service.search({ text: query.text, fields: ["Not_A_Field"] }),
+      ).rejects.toBeInstanceOf(ValidationError);
       expect(
         (
           await service.search({

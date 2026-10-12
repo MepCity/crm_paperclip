@@ -41,17 +41,28 @@ describe("leads-record-more-options", () => {
   it("renders only handler-backed items and preserves spec group boundaries", () => {
     const onClone = vi.fn();
     const onDelete = vi.fn();
-    const groups = buildLeadsRecordMoreMenuGroups({ onClone, onDelete });
-    expect(groups).toHaveLength(1);
-    expect(groups[0]?.id).toBe("leads-more-primary");
+    const onFindMergeDuplicates = vi.fn();
+    const groups = buildLeadsRecordMoreMenuGroups({
+      onClone,
+      onDelete,
+      onFindMergeDuplicates,
+    });
+    expect(groups).toHaveLength(2);
     expect(groups[0]?.items).toEqual([
       { id: "clone", label: "Clone", onAction: onClone },
       { id: "delete", label: "Delete", onAction: onDelete },
     ]);
+    expect(groups[1]?.items).toEqual([
+      {
+        id: "find-merge-duplicates",
+        label: "Find and Merge Duplicates",
+        onAction: onFindMergeDuplicates,
+      },
+    ]);
   });
 
   it("lists every unimplemented label in deviations with a parity module", () => {
-    const implemented = new Set(["Clone", "Delete"]);
+    const implemented = new Set(["Clone", "Delete", "Find and Merge Duplicates"]);
     const specLabels = LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS.flatMap((group) =>
       group.items.map((item) => item.label),
     );

@@ -4,7 +4,7 @@ import type { ModuleKey } from "@/components/ui/later-module";
 export const CONTACTS_DELETE_CONFIRM_TITLE = "Delete Contact";
 /** Interim: shared Leads confirmation wording. */
 export const CONTACTS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete this Contact?";
-type Handlers = { onClone: () => void; onDelete: () => void };
+type Handlers = { onClone: () => void; onDelete: () => void; onFindMergeDuplicates: () => void };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 /** Three observed groups; separators follow Delete and Mail Merge. */
 export const CONTACTS_RECORD_MORE_OPTIONS_GROUPS: readonly { id: string; items: readonly Row[] }[] =
@@ -21,7 +21,11 @@ export const CONTACTS_RECORD_MORE_OPTIONS_GROUPS: readonly { id: string; items: 
       id: "contacts-more-print",
       items: [
         { id: "print-preview", label: "Print Preview" },
-        { id: "find-merge-duplicates", label: "Find and Merge Duplicates" },
+        {
+          id: "find-merge-duplicates",
+          label: "Find and Merge Duplicates",
+          handler: "onFindMergeDuplicates",
+        },
         { id: "mail-merge", label: "Mail Merge", laterModule: "M9" },
       ],
     },

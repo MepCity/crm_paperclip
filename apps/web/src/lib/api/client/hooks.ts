@@ -3,6 +3,7 @@
 import type {
   CurrencyDefinition,
   ListQuery,
+  MergeInput,
   ModuleApiName,
   ModuleMetadata,
   RecordData,
@@ -188,6 +189,23 @@ export function useChangeOwner(module: ModuleApiName) {
       invalidateModuleLists(queryClient, orgSlug, module);
       for (const id of ids)
         void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
+    },
+  });
+}
+
+export function useMergeRecords(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: MergeInput) => service.merge(module, input),
+    onSuccess: (record, input) => {
+      invalidateModuleLists(queryClient, orgSlug, module, record.id);
+      for (const id of input.duplicateIds) {
+        void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
+        queryClient.removeQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
+      }
+      void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
     },
   });
 }

@@ -5,6 +5,7 @@ import {
   moduleListDefaultPath,
   moduleRecordClonePath,
   moduleRecordEditPath,
+  moduleRecordMergePath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
 import { LeadRecordScreen } from "./lead-record-screen";
@@ -19,6 +20,7 @@ export function LeadsDetailClient({ orgSlug, recordId }: { orgSlug: string; reco
         record: moduleRecordPath,
         edit: moduleRecordEditPath,
         clone: moduleRecordClonePath,
+        merge: moduleRecordMergePath,
       }}
     />
   );

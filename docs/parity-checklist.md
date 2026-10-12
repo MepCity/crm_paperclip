@@ -229,7 +229,19 @@ remain authoritative.
 | D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
 
-Share, Print Preview and Find and Merge Duplicates are drawn without handlers (separate tasks). Connected Records (`?`) uses `laterModule="P3"`. Lower Contact Information field order follows layout metadata (interim rule).
+Share and Print Preview are drawn without handlers (separate tasks). Find and Merge
+Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
+`laterModule="P3"`. Lower Contact Information field order follows layout metadata
+(interim rule).
+
+### Find and Merge Duplicates (record detail) — implemented; QA pending (MEP-352)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| X-27 – X-37.5 | Criteria, matching table, selection (2–3), Search / Next / Clear | `merge-criteria.test.ts`, `merge-field-selection.test.ts`, `merge-matching-table.test.tsx`, `e2e/merge-duplicates.spec.ts` |
+| X-38 – X-44.13.3 | Comparison header, conflicts-only, per-field and column selection, merge confirm | `merge-field-selection.test.ts`; `merge-comparison.test.tsx`; `e2e/merge-duplicates.spec.ts` |
+| D-07.5 / Leads More Options | Menu handler → `/merge` route | Contacts/Leads more-options tests; e2e |
+| SH-49 (documentary shell) | Not drawn on merge screens | N/A (out of scope per task) |
 
 ### Advanced search results page — implemented; QA pending (MEP-351)
 
