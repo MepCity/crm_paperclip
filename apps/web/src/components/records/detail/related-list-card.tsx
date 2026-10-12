@@ -316,11 +316,8 @@ export function RelatedListCard({
         </div>
       ) : subtabs && subtabs.length > 0 ? (
         <div>
-          <div
-            role="tablist"
-            className="flex items-center justify-between gap-4 border-b border-panel-border pt-2"
-          >
-            <div className="flex gap-4">
+          <div className="flex items-center justify-between gap-4 border-b border-panel-border pt-2">
+            <div role="tablist" className="flex gap-4">
               {subtabs.map((tab) => {
                 const tabLater = moduleKey === "M2" ? undefined : moduleKey;
                 const isSelected = activeSubtab === tab.id;
