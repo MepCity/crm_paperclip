@@ -19,7 +19,8 @@ export type RecordCommand = {
   label: string;
   variant?: "primary" | "secondary";
   isDisabled?: boolean;
-} & ({ href: string; onPress?: never } | { href?: never; onPress: () => void });
+  laterModule?: ModuleKey;
+} & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
 export interface RecordMenuGroup {
   id: string;
   items: readonly (Omit<MenuAction, "onAction"> & { onAction?: () => void })[];
@@ -41,6 +42,7 @@ export interface RecordHeaderProps {
   nextLabel: string;
   previousHref?: string;
   nextHref?: string;
+  addTags?: { label: string; laterModule: ModuleKey };
 }
 
 export function RecordHeader({
@@ -57,6 +59,7 @@ export function RecordHeader({
   nextLabel,
   previousHref,
   nextHref,
+  addTags,
 }: RecordHeaderProps) {
   const groups = menuGroups.filter((group) => group.items.length > 0);
   const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
@@ -93,39 +96,44 @@ export function RecordHeader({
           <Icons.recordPortrait className="h-full w-full" />
         )}
       </div>
-      <h1
-        className="min-w-0 flex-1 truncate ml-(--size-record-title-gap) mr-3 text-text"
-        title={accessibleTitle}
-        aria-label={accessibleTitle}
-      >
-        <span className="text-2xl font-bold">{title}</span>
-        {subtitle ? (
-          <>
-            <span
-              className="text-md font-normal mx-(--size-record-title-separator-gap)"
-              aria-hidden
-            >
-              -
-            </span>
-            {subtitleLaterModule ? (
-              <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
-                {subtitle}
-              </Link>
-            ) : subtitleHref ? (
-              <a
-                href={subtitleHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-md font-normal text-primary hover:underline"
+      <div className="min-w-0 flex-1 ml-(--size-record-title-gap) mr-3">
+        <h1
+          className="min-w-0 truncate text-text"
+          title={accessibleTitle}
+          aria-label={accessibleTitle}
+        >
+          <span className="text-2xl font-bold">{title}</span>
+          {subtitle ? (
+            <>
+              <span
+                className="text-md font-normal mx-(--size-record-title-separator-gap)"
+                aria-hidden
               >
-                {subtitle}
-              </a>
-            ) : (
-              <span className="text-md font-normal">{subtitle}</span>
-            )}
-          </>
+                -
+              </span>
+              {subtitleLaterModule ? (
+                <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
+                  {subtitle}
+                </Link>
+              ) : subtitleHref ? (
+                <Link href={subtitleHref} className="text-md font-normal">
+                  {subtitle}
+                </Link>
+              ) : (
+                <span className="text-md font-normal">{subtitle}</span>
+              )}
+            </>
+          ) : null}
+        </h1>
+        {addTags ? (
+          <div className="mt-1 flex items-center gap-1.5">
+            <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
+            <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
+              {addTags.label}
+            </Button>
+          </div>
         ) : null}
-      </h1>
+      </div>
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
           const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
@@ -136,6 +144,7 @@ export function RecordHeader({
               variant={variant}
               size="record"
               isDisabled={command.isDisabled}
+              laterModule={command.laterModule}
             >
               {command.label}
             </Link>
@@ -146,6 +155,7 @@ export function RecordHeader({
               size="record"
               onPress={command.onPress}
               isDisabled={command.isDisabled}
+              laterModule={command.laterModule}
             >
               {command.label}
             </Button>

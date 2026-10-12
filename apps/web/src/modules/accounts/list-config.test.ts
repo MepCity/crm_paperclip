@@ -44,4 +44,5 @@ test("keeps the Accounts Actions inventory in reference order (AL-14.1 - AL-14.1
   expect(
     accountsListPageConfig.inventory?.actions.find((item) => item.id === "print")?.submenuIndicator,
   ).toBe(true);
+  expect(accountsListPageConfig.inventory?.createItems).toBeUndefined();
 });

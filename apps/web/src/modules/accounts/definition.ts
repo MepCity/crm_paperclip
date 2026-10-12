@@ -38,10 +38,13 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     fallbackColumns: { "Account Information": ACCOUNTS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
     profileImageLaterModule: "M6",
+    profileImageIcon: AccountBuildingPlaceholder,
   },
   detail: {
     header: accountsRecordHeaderIdentity,
     portraitIcon: AccountBuildingPlaceholder,
+    addTags: { label: "Add Tags", laterModule: "M6" },
+    headerCommands: [{ id: "send-email", label: "Send Email", laterModule: "M10" }],
     businessCard: buildAccountsBusinessCardFields,
     sections: buildAccountsDetailSections,
     inlineEditable: isAccountInlineEditable,
@@ -51,12 +54,17 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildContactsRecordMoreMenuGroups,
     deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
     deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
+    loadingAttributes: { "data-account-record-loading": true },
     timeline: {
       subtabs: CONTACTS_TIMELINE_SUBTABS,
       modules: CONTACTS_TIMELINE_MODULE_OPTIONS,
       sources: CONTACTS_TIMELINE_SOURCE_OPTIONS,
       events: CONTACTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeContactsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };

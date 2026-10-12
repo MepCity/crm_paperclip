@@ -111,7 +111,9 @@ export interface RecordFormConfig {
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
   profileImageLaterModule?: ModuleKey;
+  profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
+  createPrefill?: Readonly<Record<string, FieldValue>>;
 }
 
 export interface RecordFormScreenProps {
@@ -169,13 +171,17 @@ function LoadedRecordForm({
   );
   const fields = formFields(metadata, sections, mode, config.rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
-  const emptyValues = () => initialFormValues(fields, { [config.rules.owner]: currentUserId });
+  const emptyValues = () =>
+    initialFormValues(fields, {
+      [config.rules.owner]: currentUserId,
+      ...config.createPrefill,
+    });
   const cloneSeed =
     intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
   const [baseline] = useState(() =>
     intent === "edit"
       ? initialFormValues(fields, sourceRecord?.fields)
-      : initialFormValues(fields, cloneSeed),
+      : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
   const [values, setValues] = useState(() =>
     intent === "create" && !cloneSeed ? emptyValues() : baseline,
@@ -359,6 +365,7 @@ function LoadedRecordForm({
           </div>
         );
       }
+      const ProfileIcon = config.profileImageIcon ?? Icons.recordPortraitSilhouette;
       return (
         <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
           <Button
@@ -369,7 +376,7 @@ function LoadedRecordForm({
             className="record-form-profile-image"
             aria-label={field.label}
           >
-            <Icons.recordPortraitSilhouette
+            <ProfileIcon
               aria-hidden
               className="record-profile-silhouette h-full w-full"
             />

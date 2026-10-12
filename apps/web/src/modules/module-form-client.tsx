@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { RecordFormScreen } from "@/components/records/form/record-form-screen";
 import { SelectUserDialog } from "@/components/records/form/select-user-dialog";
 import { useHomeCurrency } from "@/lib/api/client/hooks";
 import { moduleCreatePath, moduleListDefaultPath, moduleRecordPath } from "@/lib/crm-paths";
+import { consumeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { readRecordListContext } from "@/lib/records/record-list-context";
 import type { ModuleScreenDefinition } from "./types";
 import "./module-form-page.css";
@@ -25,6 +27,11 @@ export function ModuleFormClient({
   const moduleApiName = definition.apiName;
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
+  const [createPrefill] = useState(() =>
+    !recordId && !cloneSourceId
+      ? consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields
+      : undefined,
+  );
   const defaultCancel = cloneSourceId
     ? moduleRecordPath(orgSlug, definition.tab, cloneSourceId)
     : recordId
@@ -42,6 +49,8 @@ export function ModuleFormClient({
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
           profileImageLaterModule: definition.form.profileImageLaterModule,
+          profileImageIcon: definition.form.profileImageIcon,
+          createPrefill,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id) => moduleRecordPath(orgSlug, definition.tab, id),

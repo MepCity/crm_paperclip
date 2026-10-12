@@ -9,7 +9,7 @@ import type {
 import type { ComponentType } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailSection } from "@/components/records/detail/details-card";
-import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import type { RecordCommand, RecordMenuGroup } from "@/components/records/detail/record-header";
 import type {
   TimelineEvent,
   TimelineFilterOption,
@@ -102,6 +102,7 @@ export interface ModuleScreenDefinition {
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
     profileImageLaterModule?: ModuleKey;
+    profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
   };
   detail: {
     header: (record: RecordData) => {
@@ -112,6 +113,8 @@ export interface ModuleScreenDefinition {
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     };
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    addTags?: { label: string; laterModule: ModuleKey };
+    headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
@@ -131,6 +134,7 @@ export interface ModuleScreenDefinition {
       sources: readonly TimelineFilterOption[];
       events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
+      upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };
     relatedLists?: readonly RelatedListDefinition[];
   };

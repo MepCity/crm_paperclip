@@ -68,9 +68,6 @@ export const accountsListPageConfig: ModuleListScreenConfig = {
   filterGroups: accountsFilterGroups,
   sortFieldLabels: ACCOUNTS_SORT_FIELD_LABELS,
   inventory: {
-    createItems: [
-      { id: "import", label: "Import Accounts", laterModule: "M6", onAction: () => {} },
-    ],
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },
       { id: "mass-delete", label: "Mass Delete" },

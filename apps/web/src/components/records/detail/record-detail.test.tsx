@@ -243,3 +243,24 @@ test("later-module account subtitle is a focusable inert link", async () => {
   expect(document.activeElement).toBe(link);
   expect(window.location.href).toBe(location);
 });
+
+test("website subtitle renders shared link without opening new tab by default", () => {
+  render(
+    <RecordHeader
+      {...base}
+      subtitle="https://example.com"
+      subtitleHref="https://example.com"
+    />,
+  );
+  const link = screen.getByRole("link", { name: "https://example.com" });
+  expect(link.getAttribute("href")).toBe("https://example.com");
+  expect(link.hasAttribute("target")).toBe(false);
+});
+
+test("custom portrait icon renders in portrait container", () => {
+  function CustomIcon(props: import("react").SVGProps<SVGSVGElement>) {
+    return <svg data-testid="custom-portrait" {...props} />;
+  }
+  render(<RecordHeader {...base} portraitIcon={CustomIcon} />);
+  expect(screen.getByTestId("custom-portrait")).toBeTruthy();
+});
