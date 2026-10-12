@@ -102,6 +102,7 @@ export interface ModuleScreenDefinition {
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
     profileImageLaterModule?: ModuleKey;
+    profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     /**
      * Pickers that target this module draw the reference-observed record-picker chrome
      * (`accounts-form.md` › Parent Account lookup). Omitted keeps the shared interim picker.
@@ -113,7 +114,10 @@ export interface ModuleScreenDefinition {
       title: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
+      subtitleHref?: string;
+      portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     };
+    portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];

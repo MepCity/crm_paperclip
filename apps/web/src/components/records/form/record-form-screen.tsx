@@ -111,6 +111,7 @@ export interface RecordFormConfig {
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
   profileImageLaterModule?: ModuleKey;
+  profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
   createPrefill?: Readonly<Record<string, FieldValue>>;
 }
@@ -364,6 +365,7 @@ function LoadedRecordForm({
           </div>
         );
       }
+      const ProfileIcon = config.profileImageIcon ?? Icons.recordPortraitSilhouette;
       return (
         <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
           <Button
@@ -374,10 +376,7 @@ function LoadedRecordForm({
             className="record-form-profile-image"
             aria-label={field.label}
           >
-            <Icons.recordPortraitSilhouette
-              aria-hidden
-              className="record-profile-silhouette h-full w-full"
-            />
+            <ProfileIcon aria-hidden className="record-profile-silhouette h-full w-full" />
           </Button>
         </div>
       );
