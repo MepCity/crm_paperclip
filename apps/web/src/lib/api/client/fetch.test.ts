@@ -213,3 +213,13 @@ describe("shouldRetryQuery", () => {
     expect(shouldRetryQuery(3, new UnexpectedApiError(500))).toBe(false);
   });
 });
+
+describe("bodyless success", () => {
+  it.each([200, 201, 202])("rejects a bodyless %s response", async (status) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status })),
+    );
+    await expect(apiFetch("test", "/crm/v2.2/Leads")).rejects.toBeInstanceOf(UnexpectedApiError);
+  });
+});

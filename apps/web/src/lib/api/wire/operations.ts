@@ -1,4 +1,4 @@
-import type { ListQuery, RecordService, SortSpec } from "@crm/core/records";
+import type { ListQuery, RecordService, SearchQuery, SortSpec } from "@crm/core/records";
 import {
   decodeCriteria,
   decodeInput,
@@ -13,6 +13,7 @@ import {
   encodeWriteResult,
   invalid,
   object,
+  referenceKeys,
 } from "./codec";
 import type { WireMember } from "./types";
 
@@ -62,6 +63,8 @@ async function bodyOf(input: OperationRequest): Promise<unknown> {
     return invalid("data", "Send valid JSON.");
   }
 }
+// Match the existing long-text field limit without narrowing searches to short labels.
+export const MAX_SEARCH_LENGTH = 2000;
 async function restrictions(
   input: OperationRequest,
 ): Promise<Pick<ListQuery, "filters" | "search">> {
@@ -69,6 +72,8 @@ async function restrictions(
   if (value === undefined) return {};
   const body = object(value, "filters");
   if (body.search !== undefined && typeof body.search !== "string") invalid("search");
+  if (typeof body.search === "string" && body.search.length > MAX_SEARCH_LENGTH)
+    invalid("search", "Send at most 2000 characters.");
   return {
     ...(body.filters === undefined ? {} : { filters: decodeCriteria(body.filters) }),
     ...(body.search === undefined ? {} : { search: body.search as string }),
@@ -110,8 +115,86 @@ function idsOf(body: Record<string, unknown>): string[] {
   return [...body.ids] as string[];
 }
 
+function stringList(value: unknown, key: string): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item))
+    invalid(key);
+  return [...value] as string[];
+}
+function searchQuery(body: Record<string, unknown>): SearchQuery {
+  if (typeof body.text !== "string") invalid("text");
+  if (body.scope !== undefined && body.scope !== "all" && body.scope !== "nameOrTags")
+    invalid("scope");
+  for (const key of ["page", "perPage"]) {
+    if (
+      body[key] !== undefined &&
+      (typeof body[key] !== "number" || !Number.isSafeInteger(body[key]) || Number(body[key]) < 1)
+    )
+      invalid(key);
+  }
+  let sort: SortSpec | undefined;
+  if (body.sort !== undefined) {
+    const value = object(body.sort, "sort");
+    if (typeof value.field !== "string" || (value.order !== "asc" && value.order !== "desc"))
+      invalid("sort");
+    sort = { field: value.field, order: value.order };
+  }
+  return {
+    text: body.text,
+    ...(body.scope === undefined ? {} : { scope: body.scope as SearchQuery["scope"] }),
+    ...(body.modules === undefined ? {} : { modules: stringList(body.modules, "modules") }),
+    ...(body.fields === undefined ? {} : { fields: stringList(body.fields, "fields") }),
+    ...(body.filters === undefined ? {} : { filters: decodeCriteria(body.filters) }),
+    ...(body.page === undefined ? {} : { page: body.page as number }),
+    ...(body.perPage === undefined ? {} : { perPage: body.perPage as number }),
+    ...(sort ? { sort } : {}),
+  };
+}
+
 /** The sole API path inventory, shared with the browser HTTP adapter. */
 export const operations = {
+  // Module 2 discovery uses local domain response DTOs, not reference request shapes.
+  search: {
+    method: "POST",
+    path: "/crm/v2.2/actions/search",
+    async run({ records }, input) {
+      return ok(await records.search(searchQuery(object(await bodyOf(input), "query"))));
+    },
+  },
+  duplicateGroups: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/duplicate_groups",
+    async run({ records }, input) {
+      const body = object(await bodyOf(input), "fields");
+      return ok(
+        await records.findDuplicateGroups(moduleOf(input), stringList(body.fields, "fields")),
+      );
+    },
+  },
+  merge: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/merge",
+    async run({ records }, input) {
+      const module = moduleOf(input);
+      const body = object(await bodyOf(input), "merge");
+      if (typeof body.masterId !== "string" || !body.masterId) invalid("masterId");
+      const metadata = await records.getModule(module);
+      return ok(
+        await records.merge(module, {
+          masterId: body.masterId,
+          duplicateIds: stringList(body.duplicateIds, "duplicateIds"),
+          values: decodeInput(body.values, metadata),
+        }),
+      );
+    },
+  },
+  deduplicate: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/deduplicate",
+    async run({ records }, input) {
+      const body = object(await bodyOf(input), "fields");
+      return ok(await records.deduplicate(moduleOf(input), stringList(body.fields, "fields")));
+    },
+  },
   currencies: {
     method: "GET",
     path: "/crm/v2.2/org/currencies",
@@ -313,6 +396,7 @@ export const operations = {
       const body = object(await bodyOf(input), "ids");
       const ids = idsOf(body);
       const owner = object(body.owner, "Owner");
+      referenceKeys(owner, ["id", "name", "email"], "Owner");
       if (typeof owner.id !== "string") invalid("Owner");
       await records.changeOwner(moduleOf(input), ids, owner.id);
       return ok(encodeWriteResult(ids, "owner is successfully updated"));

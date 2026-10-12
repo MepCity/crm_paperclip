@@ -11,7 +11,8 @@
     "./records": "./src/records/index.ts",
     "./records/fixture": "./src/records/fixture/index.ts",
     "./records/contract-suite": "./src/records/contract-suite.ts",
-    "./records/contract-suite-module": "./src/records/contract-suite-module.ts"
+    "./records/contract-suite-module": "./src/records/contract-suite-module.ts",
+    "./records/discovery-contract-suite": "./src/records/discovery-contract-suite.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

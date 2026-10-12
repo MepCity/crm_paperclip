@@ -77,7 +77,7 @@ export interface ModuleListScreenConfig {
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
-    createItems: readonly MenuAction[];
+    createItems?: readonly MenuAction[];
   };
 }
 
@@ -309,7 +309,7 @@ function ModuleListScreenLoaded({
 
   useEffect(() => {
     const pageData = list.data;
-    if (!listQuery || !pageData || !listHrefForContext) return;
+    if (!listQuery || !pageData || !listHrefForContext || list.isPlaceholderData) return;
     writeRecordListContext(orgSlug, {
       module: config.module,
       viewId,
@@ -318,7 +318,15 @@ function ModuleListScreenLoaded({
       perPage: pageData.perPage,
       recordIds: pageData.records.map((record) => record.id),
     });
-  }, [config.module, list.data, listHrefForContext, listQuery, orgSlug, viewId]);
+  }, [
+    config.module,
+    list.data,
+    list.isPlaceholderData,
+    listHrefForContext,
+    listQuery,
+    orgSlug,
+    viewId,
+  ]);
 
   function navigate(next: ListSearchState) {
     if (!listBasePath) return;
@@ -556,11 +564,11 @@ function ModuleListScreenLoaded({
           onRefresh={refreshView}
           fields={sortFields}
           sort={appliedSort}
-          onSortApply={(next: SortSpec) => {
+          onSortApply={(next: SortSpec | null) => {
             navigate({
               ...searchState,
-              sortBy: next.field,
-              sortOrder: next.order,
+              sortBy: next?.field ?? null,
+              sortOrder: next?.order ?? null,
             });
           }}
           actions={config.inventory?.actions.map((item) => ({

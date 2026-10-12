@@ -4,11 +4,21 @@ import type { RecordData, RecordId } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
+
+function controlLaterModule(
+  cardModuleKey: RelatedListDefinition["moduleKey"],
+  ctrlModuleKey?: ModuleKey | "M2",
+): ModuleKey | undefined {
+  if (!ctrlModuleKey) return undefined;
+  if (ctrlModuleKey === "M2") return undefined;
+  if (ctrlModuleKey === "M3" && cardModuleKey === "M3") return undefined;
+  return ctrlModuleKey;
+}
 
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
@@ -30,6 +40,10 @@ export function RelatedListCard({ definition, reportingContacts }: RelatedListCa
     loadingText,
     activityColumns,
     subtabs,
+    subtabRowEndControl,
+    tableColumns,
+    tablePreviewRows,
+    notesShowMore,
     socialLinks,
     socialGuidance,
     introductoryText,
@@ -43,12 +57,10 @@ export function RelatedListCard({ definition, reportingContacts }: RelatedListCa
   const rightControls = upperControls.filter((c) => c.position !== "after-title");
 
   function renderControl(ctrl: RelatedListControlDefinition) {
-    const laterMod = ctrl.moduleKey === "M2" ? undefined : ctrl.moduleKey;
+    const laterMod = controlLaterModule(moduleKey, ctrl.moduleKey);
     const moreLaterMod =
       ctrl.moreModuleKey !== undefined
-        ? ctrl.moreModuleKey === "M2"
-          ? undefined
-          : ctrl.moreModuleKey
+        ? controlLaterModule(moduleKey, ctrl.moreModuleKey)
         : laterMod;
     if (ctrl.type === "split-button") {
       return (
@@ -165,6 +177,93 @@ export function RelatedListCard({ definition, reportingContacts }: RelatedListCa
             aria-label="Add a note"
             className="w-full resize-none rounded-(--radius-md) border border-control-border bg-surface px-3 py-2 text-md text-text focus:outline-primary placeholder:text-text-placeholder"
           />
+          {notesShowMore ? (
+            <div className="mt-2 text-right">
+              <Button variant="secondary" size="compact" laterModule="M6">
+                Show More
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : tableColumns &&
+        tableColumns.length > 0 &&
+        tablePreviewRows &&
+        tablePreviewRows.length > 0 ? (
+        <div className="overflow-x-auto py-2">
+          <table className="w-full text-left text-md">
+            <thead>
+              <tr className="border-b border-panel-border text-text-muted">
+                <th scope="col" className="w-8 px-2 py-2">
+                  <span className="sr-only">Selection</span>
+                </th>
+                {tableColumns.map((col) => (
+                  <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tablePreviewRows.map((row) => (
+                <tr key={row.id} className="border-b border-panel-border last:border-b-0">
+                  <td className="px-2 py-2" />
+                  {tableColumns.map((col) => {
+                    const cellValue = row.cells[col.id] ?? "";
+                    if (col.id === "contactName" && row.recordLink) {
+                      return (
+                        <td key={col.id} className="px-2 py-2">
+                          <Link
+                            href={row.recordLink.href}
+                            variant="body"
+                            className="text-primary hover:underline font-normal"
+                          >
+                            {cellValue}
+                          </Link>
+                        </td>
+                      );
+                    }
+                    if (col.id === "email" && row.emailLink) {
+                      return (
+                        <td key={col.id} className="px-2 py-2">
+                          <Link
+                            href={row.emailLink.href}
+                            variant="body"
+                            laterModule="M10"
+                            className="text-primary hover:underline font-normal"
+                          >
+                            {cellValue}
+                          </Link>
+                        </td>
+                      );
+                    }
+                    if (col.id === "phone" && row.phoneAction) {
+                      return (
+                        <td key={col.id} className="px-2 py-2">
+                          <span className="inline-flex items-center gap-2">
+                            <span>{cellValue}</span>
+                            <Button
+                              variant="icon"
+                              size="compact"
+                              aria-label="Call"
+                              laterModule={row.phoneAction.moduleKey ?? "M5"}
+                              className="size-6 text-text-muted"
+                            >
+                              <Icons.phone aria-hidden className="size-3.5" />
+                            </Button>
+                          </span>
+                        </td>
+                      );
+                    }
+                    return (
+                      <td key={col.id} className="px-2 py-2 text-text">
+                        {cellValue}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : loadingText ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
@@ -200,28 +299,33 @@ export function RelatedListCard({ definition, reportingContacts }: RelatedListCa
         </div>
       ) : subtabs && subtabs.length > 0 ? (
         <div>
-          <div role="tablist" className="flex gap-4 border-b border-panel-border pt-2">
-            {subtabs.map((tab) => {
-              const tabLater = moduleKey === "M2" ? undefined : moduleKey;
-              const isSelected = activeSubtab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isSelected}
-                  onClick={() => !tabLater && setActiveSubtab(tab.id)}
-                  {...(tabLater ? laterModuleProps(tabLater) : {})}
-                  className={`pb-2 text-md transition-colors ${
-                    isSelected
-                      ? "border-b-2 border-primary text-primary font-semibold"
-                      : "text-text-muted hover:text-text font-normal"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between gap-4 border-b border-panel-border pt-2">
+            <div role="tablist" className="flex gap-4">
+              {subtabs.map((tab) => {
+                const tabLater = moduleKey === "M2" ? undefined : moduleKey;
+                const isSelected = activeSubtab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => !tabLater && setActiveSubtab(tab.id)}
+                    {...(tabLater ? laterModuleProps(tabLater) : {})}
+                    className={`pb-2 text-md transition-colors ${
+                      isSelected
+                        ? "border-b-2 border-primary text-primary font-semibold"
+                        : "text-text-muted hover:text-text font-normal"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+            {subtabRowEndControl ? (
+              <div className="pb-2 shrink-0">{renderControl(subtabRowEndControl)}</div>
+            ) : null}
           </div>
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
             {emptyStateText}

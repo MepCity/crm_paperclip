@@ -9,6 +9,13 @@ import { encodeInput } from "./codec";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
+  [operations.search, () => import("@/app/crm/v2.2/actions/search/route")],
+  [
+    operations.duplicateGroups,
+    () => import("@/app/crm/v2.2/[module]/actions/duplicate_groups/route"),
+  ],
+  [operations.merge, () => import("@/app/crm/v2.2/[module]/actions/merge/route")],
+  [operations.deduplicate, () => import("@/app/crm/v2.2/[module]/actions/deduplicate/route")],
   [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
   [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
   [operations.fields, () => import("@/app/crm/v2.2/settings/fields/route")],
@@ -215,6 +222,54 @@ describe("operation routes", () => {
       Company: "Synthetic Company",
     });
   });
+  it("serves discovery handlers through organization and origin checks", async () => {
+    const service = getRecordService(a.ctx);
+    const master = await service.create("Contacts", { Last_Name: "Route Discovery Marker" });
+    const duplicate = await service.create("Contacts", { Last_Name: "Route Discovery Marker" });
+    const query = { text: "route discovery marker", modules: ["Contacts"] };
+    for (const op of [
+      operations.search,
+      operations.duplicateGroups,
+      operations.merge,
+      operations.deduplicate,
+    ]) {
+      expect((await call(op, a, { origin: "http://foreign.example" })).status).toBe(403);
+      expect((await call(op, a, { orgHeader: b.org.slug })).status).toBe(404);
+    }
+    const found = await call(operations.search, a, { body: query });
+    expect(found.status).toBe(200);
+    expect(await found.json()).toMatchObject([{ module: "Contacts", total: 2 }]);
+    const hidden = await call(operations.search, b, { body: query });
+    expect(hidden.status).toBe(200);
+    expect(await hidden.json()).toEqual([]);
+    const groups = await call(operations.duplicateGroups, a, {
+      module: "Contacts",
+      body: { fields: ["Last_Name"] },
+    });
+    expect(groups.status).toBe(200);
+    expect(await groups.json()).toMatchObject([
+      { records: [{ id: master.id }, { id: duplicate.id }], conflictFields: [] },
+    ]);
+    const merged = await call(operations.merge, a, {
+      module: "Contacts",
+      body: { masterId: master.id, duplicateIds: [duplicate.id], values: {} },
+    });
+    expect(merged.status).toBe(200);
+    expect(await merged.json()).toMatchObject({ id: master.id });
+    expect(
+      (await call(operations.record, a, { module: "Contacts", recordId: duplicate.id })).status,
+    ).toBe(404);
+    const deduplicated = await call(operations.deduplicate, a, {
+      module: "Contacts",
+      body: { fields: ["Last_Name"] },
+    });
+    expect(deduplicated.status).toBe(200);
+    expect(await deduplicated.json()).toEqual({
+      mergedGroups: 0,
+      removedRecords: 0,
+      conflicts: [],
+    });
+  });
   it("passes every operation through session authentication", async () => {
     for (const [op] of handlers) {
       const response = await call(op);
@@ -231,6 +286,10 @@ describe("operation routes", () => {
     for (const [op] of handlers.filter(
       ([op]) =>
         ![
+          operations.search,
+          operations.duplicateGroups,
+          operations.merge,
+          operations.deduplicate,
           operations.create,
           operations.update,
           operations.delete,
@@ -307,6 +366,67 @@ describe("operation routes", () => {
       const count = await call(operations.count, a, { query: { cvid } });
       expect(count.status).toBe(200);
       expect((await count.json()).count).toBeGreaterThan(0);
+    }
+  });
+  it("rejects unknown reference keys on every reference write path", async () => {
+    const service = getRecordService(a.ctx);
+    const record = await service.create("Leads", { Company: "Wire Bounds", Last_Name: "Example" });
+    for (const op of [
+      operations.create,
+      operations.update,
+      operations.massUpdate,
+      operations.changeOwner,
+    ]) {
+      const owner = { id: a.ctx.userId, unexpected: true };
+      const response = await call(op, a, {
+        recordId: record.id,
+        body:
+          op === operations.changeOwner
+            ? { ids: [record.id], owner }
+            : {
+                ids: [record.id],
+                data: [{ Company: "Wire Bounds", Last_Name: "Example", Owner: owner }],
+              },
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        code: "INVALID_DATA",
+        status: "error",
+        message: "Check the highlighted fields.",
+        details: { fields: { Owner: ["Unknown reference key."] } },
+      });
+    }
+  });
+  it("retains search and group boundaries on bulk and count with the existing error envelope", async () => {
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value: "Example" };
+    const group = (size: number) => ({
+      group_operator: "AND",
+      group: Array.from({ length: size }, () => leaf),
+    });
+    for (const op of [operations.bulk, operations.count]) {
+      for (const [body, key, message] of [
+        [{ search: "x".repeat(2001) }, "search", "Send at most 2000 characters."],
+        [{ filters: group(501) }, "filters", "Send at most 500 criteria per group."],
+        [
+          { filters: { group_operator: "OR", group: [group(501)] } },
+          "filters",
+          "Send at most 500 criteria per group.",
+        ],
+      ] as const) {
+        const response = await call(op, a, { body });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({
+          code: "INVALID_DATA",
+          status: "error",
+          message: "Check the highlighted fields.",
+          details: { fields: { [key]: [message] } },
+        });
+      }
+      for (const body of [{ search: "x".repeat(2000) }, { filters: group(500) }, { search: "" }]) {
+        expect((await call(op, a, { body })).status).toBe(
+          op === operations.count || ("search" in body && body.search === "") ? 200 : 204,
+        );
+      }
     }
   });
   it("answers unknown comparators with a filters-keyed 400", async () => {
