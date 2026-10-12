@@ -486,6 +486,7 @@ function LoadedRecordForm({
           searchable={Boolean(countryRule && field.apiName === countryRule.country) || isState}
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          lookupRecordHref={field.dataType === "lookup" ? config.paths.detail : undefined}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
           currencyInformation={
             field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined

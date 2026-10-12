@@ -165,3 +165,119 @@ test("searching filters records by query", async () => {
     expect(screen.getByRole("radio", { name: "Bob Jones" })).toBeTruthy();
   });
 });
+
+test("observed chrome paints the reference picker and keeps the footer actions out", async () => {
+  const user = userEvent.setup();
+  const service = createMockService();
+  const onDone = vi.fn();
+  const onCancel = vi.fn();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      chrome="observed"
+      recordHref={(id) => `/crm/test-org/tab/Contacts/${id}`}
+      onDone={onDone}
+      onCancel={onCancel}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+  });
+
+  // AF-11.2: the search field is named after the record column.
+  expect(screen.getByRole("textbox", { name: "Search by Contact Name" })).toBeTruthy();
+  // AF-11.5–AF-11.12: every text header carries its own column-options mark.
+  expect(screen.getByRole("button", { name: "Contact Name column options" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Email column options" })).toBeTruthy();
+  // AF-11.14/AF-11.15: the name cell is a record link.
+  const link = screen.getByRole("link", { name: "Alice Smith" });
+  expect(link.getAttribute("href")).toBe("/crm/test-org/tab/Contacts/c-1");
+  // AF-11.17/AF-11.18: pagination is a pair of footer arrows.
+  expect(screen.getByRole("button", { name: "Previous" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Next" })).toBeTruthy();
+  // The observed picker paints no footer actions and no selection summary.
+  expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+  expect(screen.queryByText("Selected Contact:")).toBeNull();
+
+  // AF-11.1: the header cross dismisses without writing a value.
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  expect(onCancel).toHaveBeenCalled();
+  expect(onDone).not.toHaveBeenCalled();
+});
+
+test("observed chrome applies a row selection at once", async () => {
+  const user = userEvent.setup();
+  const service = createMockService();
+  const onDone = vi.fn();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      chrome="observed"
+      onDone={onDone}
+      onCancel={() => {}}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByRole("radio", { name: "Bob Jones" })).toBeTruthy();
+  });
+  await user.click(screen.getByRole("radio", { name: "Bob Jones" }));
+  expect(onDone).toHaveBeenCalledWith({ module: "Contacts", id: "c-2", name: "Bob Jones" });
+});
+
+test("observed chrome paints the unexercised picker controls without handlers", async () => {
+  const user = userEvent.setup();
+  const service = createMockService();
+  const onDone = vi.fn();
+  const onCancel = vi.fn();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      chrome="observed"
+      onDone={onDone}
+      onCancel={onCancel}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+  });
+
+  // AF-11.3, AF-11.4, AF-11.13: their actions were never exercised in the reference capture.
+  for (const name of ["New Contact", "Table columns", "Filter"]) {
+    await user.click(screen.getByRole("button", { name }));
+  }
+  expect(onDone).not.toHaveBeenCalled();
+  expect(onCancel).not.toHaveBeenCalled();
+  expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+});
+
+test("interim chrome keeps the summary and paints no picker-only marks", async () => {
+  const service = createMockService();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      onDone={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+  });
+  expect(screen.getByText("Selected Contact:")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "New Contact" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+  expect(screen.queryByText("Search by Contact Name")).toBeNull();
+});

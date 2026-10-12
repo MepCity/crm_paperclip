@@ -102,6 +102,11 @@ export interface ModuleScreenDefinition {
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
     profileImageLaterModule?: ModuleKey;
+    /**
+     * Pickers that target this module draw the reference-observed record-picker chrome
+     * (`accounts-form.md` › Parent Account lookup). Omitted keeps the shared interim picker.
+     */
+    recordPickerChrome?: "observed";
   };
   detail: {
     header: (record: RecordData) => {
