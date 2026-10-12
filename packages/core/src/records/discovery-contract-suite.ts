@@ -388,6 +388,24 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
       expect(result.conflicts).toEqual([]);
       expect((await service.get("Contacts", master.id)).fields.Reporting_To).toBeNull();
     });
+    it("rules 6, 8, 12–13: the automatic merge does not point the master at a record of its group", async () => {
+      const ctx = context();
+      let now = new Date("2026-01-01T00:00:00Z");
+      const service = factory(ctx, { now: () => now });
+      const older = await service.create("Contacts", { Last_Name: "Group Pointer Marker" });
+      now = new Date("2026-02-01T00:00:00Z");
+      const master = await service.create("Contacts", { Last_Name: "group pointer marker" });
+      // The duplicate reports to the master while the master's own field is blank.
+      now = new Date("2026-01-15T00:00:00Z");
+      await service.update("Contacts", older.id, {
+        Reporting_To: { module: "Contacts", id: master.id },
+      });
+      const result = await service.deduplicate("Contacts", ["Last_Name"]);
+      expect(result.mergedGroups).toBe(1);
+      expect(result.removedRecords).toBe(1);
+      expect(result.conflicts).toEqual([]);
+      expect((await service.get("Contacts", master.id)).fields.Reporting_To).toBeNull();
+    });
     it("rules 12–13: a rejected group stays untouched and the run keeps merging later groups", async () => {
       const service = make();
       const view = (await service.listViews("Contacts")).find(

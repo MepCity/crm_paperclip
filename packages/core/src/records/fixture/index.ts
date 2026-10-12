@@ -21,6 +21,7 @@ import {
   duplicateKey,
   isDeferredMergeRejection,
   matchesGlobalSearch,
+  pointsAtGroupMember,
 } from "./discovery";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
@@ -344,6 +345,7 @@ export function createFixtureRecordService(
             continue;
           }
           const master = automaticMaster(group.records);
+          const memberIds = new Set(group.records.map((record) => record.id));
           const values: Record<string, FieldValue> = {};
           for (const field of bundleFor(module).metadata.fields) {
             if (field.readOnly || bundleFor(module).managedFields.has(field.apiName)) continue;
@@ -353,7 +355,11 @@ export function createFixtureRecordService(
                 ? current
                 : group.records
                     .map((record) => record.fields[field.apiName])
-                    .find((value) => duplicateKey(value) !== null);
+                    .find(
+                      (candidate) =>
+                        duplicateKey(candidate) !== null &&
+                        !pointsAtGroupMember(candidate, module, memberIds),
+                    );
             if (value !== undefined) values[field.apiName] = value;
           }
           try {

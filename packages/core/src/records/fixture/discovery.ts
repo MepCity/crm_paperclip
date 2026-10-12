@@ -96,6 +96,26 @@ export function isDeferredMergeRejection(error: unknown): boolean {
   return error instanceof RecordLockedError || error instanceof ConflictError;
 }
 
+/**
+ * A lookup copied into the master by the automatic merge must not aim at a record of its own
+ * group: the duplicates disappear and the master would end up pointing at itself.
+ */
+export function pointsAtGroupMember(
+  value: unknown,
+  module: string,
+  members: ReadonlySet<string>,
+): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "module" in value &&
+    "id" in value &&
+    value.module === module &&
+    members.has(String(value.id))
+  );
+}
+
 export function automaticMaster(records: readonly RecordData[]): RecordData {
   const timestamp = (record: RecordData, name: string) => {
     const parsed = Date.parse(String(record.fields[name] ?? ""));
