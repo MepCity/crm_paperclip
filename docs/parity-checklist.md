@@ -223,8 +223,8 @@ Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| X-27 – X-37.5 | Criteria, matching table, selection (2–3), Search / Next / Clear | `merge-criteria.test.ts`, `merge-field-selection.test.ts`, `e2e/merge-duplicates.spec.ts` |
-| X-38 – X-44.13.3 | Comparison header, conflicts-only, per-field and column selection, merge confirm | `merge-field-selection.test.ts`; merge component tests |
+| X-27 – X-37.5 | Criteria, matching table, selection (2–3), Search / Next / Clear | `merge-criteria.test.ts`, `merge-field-selection.test.ts`, `merge-matching-table.test.tsx`, `e2e/merge-duplicates.spec.ts` |
+| X-38 – X-44.13.3 | Comparison header, conflicts-only, per-field and column selection, merge confirm | `merge-field-selection.test.ts`; `merge-comparison.test.tsx`; `e2e/merge-duplicates.spec.ts` |
 | D-07.5 / Leads More Options | Menu handler → `/merge` route | Contacts/Leads more-options tests; e2e |
 | SH-49 (documentary shell) | Not drawn on merge screens | N/A (out of scope per task) |
 

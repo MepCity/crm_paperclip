@@ -14,8 +14,24 @@ export function fieldValueKey(value: FieldValue | undefined): string {
   return JSON.stringify(value);
 }
 
+export const SYSTEM_MANAGED_FIELDS: ReadonlySet<string> = new Set([
+  "id",
+  "Full_Name",
+  "Created_By",
+  "Modified_By",
+  "Created_Time",
+  "Modified_Time",
+  "Last_Activity_Time",
+  "Converted_Date_Time",
+  "Lead_Conversion_Time",
+  "Lead_Status_Modified_Time",
+]);
+
 export function isMergeValueSelectable(field: FieldDefinition): boolean {
-  return !field.readOnly;
+  if (field.readOnly) return false;
+  if (SYSTEM_MANAGED_FIELDS.has(field.apiName)) return false;
+  if (field.views && !field.views.edit) return false;
+  return true;
 }
 
 export function comparisonFields(

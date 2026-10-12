@@ -1,17 +1,16 @@
 import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ComponentProps, useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MergeComparison } from "./merge-comparison";
+
+afterEach(cleanup);
 
 const format = { locale: "en-US", timeZone: "Europe/Istanbul" };
 
 function ComparisonHarness(
-  props: Omit<
-    ComponentProps<typeof MergeComparison>,
-    "conflictsOnly" | "onConflictsOnlyChange"
-  >,
+  props: Omit<ComponentProps<typeof MergeComparison>, "conflictsOnly" | "onConflictsOnlyChange">,
 ) {
   const [conflictsOnly, setConflictsOnly] = useState(false);
   return (
@@ -88,5 +87,53 @@ describe("MergeComparison", () => {
       />,
     );
     expect(screen.queryAllByRole("radio", { name: /Modified Time value choice/ })).toHaveLength(0);
+  });
+
+  it("handles master radio, row value radio, and column select all", async () => {
+    const user = userEvent.setup();
+    const onMasterChange = vi.fn();
+    const onFieldChoiceChange = vi.fn();
+    const onSelectAllFromRecord = vi.fn();
+
+    render(
+      <MergeComparison
+        records={records}
+        fields={[email]}
+        masterId="1"
+        fieldChoices={{ Email: "1" }}
+        conflictsOnly={false}
+        ownerNames={{}}
+        format={format}
+        displayNameField="Full_Name"
+        onMasterChange={onMasterChange}
+        onFieldChoiceChange={onFieldChoiceChange}
+        onSelectAllFromRecord={onSelectAllFromRecord}
+        onConflictsOnlyChange={vi.fn()}
+      />,
+    );
+
+    // Master radio for Record 2 (X-42.2)
+    const masterRadios = screen.getAllByRole("radio", { name: /Record/ });
+    expect(masterRadios).toHaveLength(2);
+    const secondMasterRadio = masterRadios[1];
+    expect(secondMasterRadio).toBeDefined();
+    if (secondMasterRadio) await user.click(secondMasterRadio);
+    expect(onMasterChange).toHaveBeenCalledWith("2");
+
+    // Row value choice radio for Record 2 (X-44.*)
+    const valueRadios = screen.getAllByRole("radio", { name: /Email value choice/ });
+    expect(valueRadios).toHaveLength(2);
+    const secondValueRadio = valueRadios[1];
+    expect(secondValueRadio).toBeDefined();
+    if (secondValueRadio) await user.click(secondValueRadio);
+    expect(onFieldChoiceChange).toHaveBeenCalledWith("Email", "2");
+
+    // Select All link for Record 2 (X-43.2)
+    const selectAllLinks = screen.getAllByRole("link", { name: "Select All" });
+    expect(selectAllLinks).toHaveLength(2);
+    const secondSelectAllLink = selectAllLinks[1];
+    expect(secondSelectAllLink).toBeDefined();
+    if (secondSelectAllLink) await user.click(secondSelectAllLink);
+    expect(onSelectAllFromRecord).toHaveBeenCalledWith("2");
   });
 });

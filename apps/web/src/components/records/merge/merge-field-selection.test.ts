@@ -65,4 +65,13 @@ describe("merge field selection", () => {
     expect(choices.First_Name).toBe("2");
     expect(choices.Email).toBe("1");
   });
+
+  it("marks system managed and non-editable fields as non-selectable", () => {
+    const fullNameField: FieldDefinition = {
+      ...textField,
+      apiName: "Full_Name",
+      views: { view: true, create: false, edit: false, quickCreate: false },
+    };
+    expect(isMergeValueSelectable(fullNameField)).toBe(false);
+  });
 });
