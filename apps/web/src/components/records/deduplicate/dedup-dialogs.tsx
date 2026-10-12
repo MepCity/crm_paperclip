@@ -17,10 +17,13 @@ import { DEDUP_MAX_FIELDS, dedupConfirmMessage, dedupFieldPanelMessage } from ".
 function DedupModal({
   labelledBy,
   widthClassName,
+  bodyClassName = "p-6",
   children,
 }: {
   labelledBy: string;
   widthClassName: string;
+  /** Dialog padding; the conflict notice paints its own full-bleed title row. */
+  bodyClassName?: string;
   children: ReactNode;
 }) {
   return (
@@ -30,9 +33,9 @@ function DedupModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
     >
       <Modal
-        className={`${widthClassName} max-w-full rounded-(--radius-create-menu) bg-surface shadow-lg outline-none`}
+        className={`${widthClassName} max-w-full overflow-hidden rounded-(--radius-create-menu) bg-surface shadow-lg outline-none`}
       >
-        <AriaDialog aria-labelledby={labelledBy} className="p-6 outline-none">
+        <AriaDialog aria-labelledby={labelledBy} className={`${bodyClassName} outline-none`}>
           {children}
         </AriaDialog>
       </Modal>
@@ -191,9 +194,9 @@ export function DedupConflictPopup({
 }: DedupConflictPopupProps) {
   const titleId = useId();
   return (
-    <DedupModal labelledBy={titleId} widthClassName="w-[32rem]">
+    <DedupModal labelledBy={titleId} widthClassName="w-[32rem]" bodyClassName="p-0">
       <div data-dedup-conflict-popup>
-        <div className="-m-6 mb-4 flex items-center justify-between bg-overlay px-6 py-3">
+        <div className="flex items-center justify-between bg-overlay px-6 py-3">
           <h2 id={titleId} className="text-md font-semibold text-surface">
             Deduplicate {pluralLabel}
           </h2>
@@ -207,15 +210,17 @@ export function DedupConflictPopup({
             <Icons.minus aria-hidden className="size-4" />
           </Button>
         </div>
-        <p className="mb-1 text-md text-confirm-dialog-body">{summary}</p>
-        <p className="mb-5 text-md text-confirm-dialog-body">{conflictMessage}</p>
-        <div className="flex items-center justify-end gap-(--size-confirm-dialog-actions-gap)">
-          <Link href="#do-it-later" variant="body" onPress={onLater}>
-            Do it later
-          </Link>
-          <Button variant="secondary" size="record" onPress={onResolveNow}>
-            Resolve Now
-          </Button>
+        <div className="p-6">
+          <p className="mb-1 text-md text-confirm-dialog-body">{summary}</p>
+          <p className="mb-5 text-md text-confirm-dialog-body">{conflictMessage}</p>
+          <div className="flex items-center justify-end gap-(--size-confirm-dialog-actions-gap)">
+            <Link href="#do-it-later" variant="body" onPress={onLater}>
+              Do it later
+            </Link>
+            <Button variant="secondary" size="record" onPress={onResolveNow}>
+              Resolve Now
+            </Button>
+          </div>
         </div>
       </div>
     </DedupModal>

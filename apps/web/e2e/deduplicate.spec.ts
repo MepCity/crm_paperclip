@@ -104,7 +104,7 @@ test.describe("Module-wide deduplication", () => {
     const popup = page.getByRole("dialog", { name: "Deduplicate Contacts" });
     await expect(popup.getByText("1 duplicate group merged and 1 record removed.")).toBeVisible();
     await expect(popup.getByText("A Few duplicate Contacts with conflicts found.")).toBeVisible();
-    await expect(popup.getByRole("button", { name: "Do it later" })).toBeVisible();
+    await expect(popup.getByRole("link", { name: "Do it later" })).toBeVisible();
     await popup.getByRole("button", { name: "Resolve Now" }).click();
 
     await expect(page).toHaveURL(new RegExp(`/tab/${CONTACTS}/deduplicate\\?fields=Last_Name`));
@@ -177,11 +177,12 @@ test.describe("Module-wide deduplication", () => {
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
 
     const panel = await openDedupPanel(page, LEADS);
-    const boxes = panel.getByRole("checkbox");
-    await expect(boxes.nth(0)).toHaveText("Email");
-    await expect(boxes.nth(1)).toHaveText("Company");
-    await expect(boxes.nth(2)).toHaveText("Phone");
-    await expect(boxes.nth(3)).toHaveText("Mobile");
+    const rows = panel.locator("[data-dedup-field-dialog] ul li label");
+    await expect(rows.nth(0)).toHaveText("Email");
+    await expect(rows.nth(1)).toHaveText("Company");
+    await expect(rows.nth(2)).toHaveText("Phone");
+    await expect(rows.nth(3)).toHaveText("Mobile");
+    await expect(panel.getByRole("checkbox", { name: "Email", exact: true })).toBeChecked();
     await runCleanup(page, LEADS);
 
     await expect(page.getByRole("alert")).toContainText(

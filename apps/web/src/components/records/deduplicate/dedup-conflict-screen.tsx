@@ -290,9 +290,9 @@ export function DedupConflictGroups({
             }}
           >
             <div className="mb-4 flex items-center justify-between gap-4">
-              <TabList aria-label="Duplicate match fields">
+              <TabList appearance="record" className="w-auto" aria-label="Duplicate match fields">
                 {panelFields.map((field) => (
-                  <Tab key={field.apiName} id={field.apiName}>
+                  <Tab key={field.apiName} id={field.apiName} appearance="record">
                     {field.label}
                   </Tab>
                 ))}
