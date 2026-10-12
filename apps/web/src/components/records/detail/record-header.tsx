@@ -28,6 +28,8 @@ export interface RecordHeaderProps {
   title: string;
   subtitle?: string;
   subtitleLaterModule?: ModuleKey;
+  subtitleHref?: string;
+  portraitIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   back: { label: string } & (
     | { href: string; onPress?: never }
     | { href?: never; onPress: () => void }
@@ -45,6 +47,8 @@ export function RecordHeader({
   title,
   subtitle,
   subtitleLaterModule,
+  subtitleHref,
+  portraitIcon: PortraitIcon,
   back,
   commands = [],
   menuGroups = [],
@@ -83,7 +87,11 @@ export function RecordHeader({
         aria-hidden
         className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
       >
-        <Icons.recordPortrait className="h-full w-full" />
+        {PortraitIcon ? (
+          <PortraitIcon className="h-full w-full" />
+        ) : (
+          <Icons.recordPortrait className="h-full w-full" />
+        )}
       </div>
       <h1
         className="min-w-0 flex-1 truncate ml-(--size-record-title-gap) mr-3 text-text"
@@ -103,6 +111,15 @@ export function RecordHeader({
               <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
                 {subtitle}
               </Link>
+            ) : subtitleHref ? (
+              <a
+                href={subtitleHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-md font-normal text-primary hover:underline"
+              >
+                {subtitle}
+              </a>
             ) : (
               <span className="text-md font-normal">{subtitle}</span>
             )}

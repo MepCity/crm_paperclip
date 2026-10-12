@@ -108,7 +108,10 @@ export interface ModuleScreenDefinition {
       title: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
+      subtitleHref?: string;
+      portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     };
+    portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
