@@ -83,9 +83,12 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await open(user);
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
-  const accounts = within(menu).getByRole("button", { name: "Accounts" });
-  expect(accounts.getAttribute("data-later-module")).toBe("M3");
-  await user.click(accounts);
+  expect(
+    within(menu).getByRole("button", { name: "Accounts" }).hasAttribute("data-later-module"),
+  ).toBe(false);
+  const deals = within(menu).getByRole("button", { name: "Deals" });
+  expect(deals.getAttribute("data-later-module")).toBe("M4");
+  await user.click(deals);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
   await user.type(within(menu).getByRole("textbox"), "cont");
   expect(within(menu).queryByRole("button", { name: "Leads" })).toBeNull();
