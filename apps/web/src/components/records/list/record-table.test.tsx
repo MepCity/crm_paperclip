@@ -360,3 +360,84 @@ test("the alphabetical control works alongside linkFieldLabel", () => {
   expect(within(header).getByRole("button", { name: "Filter by first letter" })).toBeTruthy();
   expect(header.getAttribute("aria-label")).toBe("Lead Name");
 });
+
+test("renders handset icon for populated phone cells when phoneLaterModule is provided", () => {
+  const phoneColumn: FieldDefinition = {
+    apiName: "Phone",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Phone",
+    dataType: "phone",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  render(
+    <RecordTable
+      columns={[phoneColumn]}
+      records={[{ id: "rec-1", fields: { Phone: "555-0100" } }]}
+      linkField="Phone"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      phoneLaterModule="M5"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  const callBtn = screen.getByRole("button", { name: "Call" });
+  expect(callBtn.getAttribute("data-later-module")).toBe("M5");
+  expect(callBtn.getAttribute("aria-disabled")).toBe("true");
+});
+
+test("renders website cells as links when laterInventory is true", () => {
+  const websiteColumn: FieldDefinition = {
+    apiName: "Website",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Website",
+    dataType: "website",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  render(
+    <RecordTable
+      laterInventory={true}
+      columns={[websiteColumn]}
+      records={[{ id: "rec-1", fields: { Website: "https://example.org" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  const link = screen.getByRole("link", { name: "https://example.org" });
+  expect(link.getAttribute("href")).toBe("https://example.org");
+});

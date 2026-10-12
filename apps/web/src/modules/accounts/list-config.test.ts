@@ -5,6 +5,8 @@ test("defines Accounts identity labels and routes using the Account_Name link co
   expect(accountsListPageConfig.linkField).toBe("Account_Name");
   expect(accountsListPageConfig.linkFieldLabel).toBe("Account Name");
   expect(accountsListPageConfig.createLabel).toBe("Create Account");
+  expect(accountsListPageConfig.pinnedViews).toEqual(["All Accounts", "All Locked Accounts"]);
+  expect(accountsListPageConfig.phoneLaterModule).toBe("M5");
   expect(accountsListPageConfig.paths.create("sample-org", "Accounts")).toContain(
     "/tab/Accounts/create",
   );

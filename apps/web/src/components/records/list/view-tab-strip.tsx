@@ -10,21 +10,63 @@ export interface ViewTabStripProps {
   viewName: string;
   views?: readonly Pick<ListView, "id" | "name">[];
   onViewChange?: (id: string) => void;
+  pinnedViews?: readonly string[];
 }
 
-export function ViewTabStrip({ viewName, views, onViewChange }: ViewTabStripProps) {
+export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews }: ViewTabStripProps) {
   const [publicOpen, setPublicOpen] = useState(true);
   return (
     <div
       className="flex h-(--size-list-tab-height) items-center gap-3 border-b border-(--color-panel-border)"
       data-view-tab-strip
     >
-      <span
-        className="inline-flex h-(--size-list-pill-height) min-w-(--size-list-pill-width) items-center justify-center rounded-md bg-(--color-surface-selected) px-2 text-sm font-bold text-text"
-        data-view-pill
-      >
-        {viewName}
-      </span>
+      {pinnedViews && pinnedViews.length > 0 ? (
+        <>
+          {pinnedViews.map((tabName) => {
+            const isActive = tabName === viewName;
+            if (isActive) {
+              return (
+                <span
+                  key={tabName}
+                  className="inline-flex h-(--size-list-pill-height) min-w-(--size-list-pill-width) items-center justify-center rounded-md bg-(--color-surface-selected) px-2 text-sm font-bold text-text"
+                  data-view-pill
+                >
+                  {tabName}
+                </span>
+              );
+            }
+            const target = views?.find((v) => v.name === tabName);
+            return (
+              <button
+                key={tabName}
+                type="button"
+                onClick={() => {
+                  if (target) onViewChange?.(target.id);
+                }}
+                className="inline-flex h-(--size-list-pill-height) min-w-(--size-list-pill-width) items-center justify-center rounded-md px-2 text-sm font-normal text-text hover:bg-surface-hover cursor-pointer"
+              >
+                {tabName}
+              </button>
+            );
+          })}
+          {!pinnedViews.includes(viewName) ? (
+            <span
+              key={viewName}
+              className="inline-flex h-(--size-list-pill-height) min-w-(--size-list-pill-width) items-center justify-center rounded-md bg-(--color-surface-selected) px-2 text-sm font-bold text-text"
+              data-view-pill
+            >
+              {viewName}
+            </span>
+          ) : null}
+        </>
+      ) : (
+        <span
+          className="inline-flex h-(--size-list-pill-height) min-w-(--size-list-pill-width) items-center justify-center rounded-md bg-(--color-surface-selected) px-2 text-sm font-bold text-text"
+          data-view-pill
+        >
+          {viewName}
+        </span>
+      )}
       {views ? (
         <MenuTrigger>
           <Button variant="ghost" size="listIcon" aria-label="Custom views">

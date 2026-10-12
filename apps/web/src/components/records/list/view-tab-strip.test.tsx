@@ -33,3 +33,25 @@ test("preserves the original strip when a module has no view inventory", () => {
   render(<ViewTabStrip viewName="All Leads" />);
   expect(screen.queryByRole("button", { name: "Custom views" })).toBeNull();
 });
+
+test("renders multiple pinned tabs and allows switching between them", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="All Accounts"
+      pinnedViews={["All Accounts", "All Locked Accounts"]}
+      views={[
+        { id: "all", name: "All Accounts" },
+        { id: "locked", name: "All Locked Accounts" },
+        { id: "mine", name: "My Accounts" },
+      ]}
+      onViewChange={change}
+    />,
+  );
+  expect(screen.getByText("All Accounts").hasAttribute("data-view-pill")).toBe(true);
+  const lockedBtn = screen.getByRole("button", { name: "All Locked Accounts" });
+  expect(lockedBtn).toBeTruthy();
+  await user.click(lockedBtn);
+  expect(change).toHaveBeenCalledWith("locked");
+});

@@ -7,12 +7,14 @@ import { AlphabetFilter } from "@/components/ui/alphabet-filter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
 
 export interface RecordTableProps {
   laterInventory?: boolean;
+  phoneLaterModule?: ModuleKey;
   /** Columns in screen order. Labels come from the field, not from a module. */
   columns: readonly FieldDefinition[];
   records: readonly RecordData[];
@@ -85,6 +87,7 @@ const cellLine = [
  */
 export function RecordTable({
   laterInventory = false,
+  phoneLaterModule,
   columns,
   records,
   linkField,
@@ -289,10 +292,24 @@ export function RecordTable({
                             field={field}
                             value={record.fields[field.apiName] ?? null}
                             href={field.apiName === linkField ? rowHref(record) : undefined}
+                            linkWebsite={laterInventory}
                             ownerNames={ownerNames}
                             format={format}
                           />
                         </div>
+                        {phoneLaterModule &&
+                        field.dataType === "phone" &&
+                        record.fields[field.apiName] ? (
+                          <Button
+                            variant="ghost"
+                            size="compact"
+                            aria-label="Call"
+                            laterModule={phoneLaterModule}
+                            className="ms-1 inline-flex shrink-0 h-4 w-4 p-0 text-muted hover:text-text"
+                          >
+                            <Icons.phone aria-hidden className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   ))}
