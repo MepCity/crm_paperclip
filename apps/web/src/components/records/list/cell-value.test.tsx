@@ -223,3 +223,21 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
   );
   expect(screen.queryByRole("link")).toBeNull();
 });
+
+test("Contacts Account Name shows the lookup name without an active Accounts link", () => {
+  render(
+    <CellValue
+      field={field("lookup", {
+        apiName: "Account_Name",
+        label: "Account Name",
+        lookup: { module: "Accounts" },
+      })}
+      value={{ module: "Accounts", id: "synthetic-account", name: "Synthetic Account" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const account = screen.getByText("Synthetic Account");
+  expect(account.closest("a")).toBeNull();
+  expect(account.getAttribute("data-later-module")).toBe("M3");
+  expect(screen.queryByText("synthetic-account")).toBeNull();
+});

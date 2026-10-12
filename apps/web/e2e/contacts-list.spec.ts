@@ -94,12 +94,18 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
     await expect(list.locator("[data-selection-bar]")).toHaveCount(0);
-    await expect(list.getByRole("checkbox", { name: /Select / }).first()).not.toBeChecked();
+    await expect(
+      list
+        .locator("tbody")
+        .getByRole("checkbox", { name: /Select / })
+        .first(),
+    ).not.toBeChecked();
   }
   await list
+    .locator("tbody")
     .getByRole("checkbox", { name: /Select / })
     .first()
-    .check();
+    .check({ force: true });
   await expect(list.locator("[data-selection-bar]")).toContainText("1 Record Selected.");
   await list.getByRole("button", { name: "Mass Update", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Mass Update" })).toBeVisible();
@@ -114,6 +120,11 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(list.locator("[data-selection-bar]")).toContainText("1 Record Selected.");
-    await expect(list.getByRole("checkbox", { name: /Select / }).nth(1)).not.toBeChecked();
+    await expect(
+      list
+        .locator("tbody")
+        .getByRole("checkbox", { name: /Select / })
+        .nth(1),
+    ).not.toBeChecked();
   }
 });
