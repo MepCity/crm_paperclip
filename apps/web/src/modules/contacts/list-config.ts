@@ -91,7 +91,7 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
       { id: "export", label: "Export Contacts", laterModule: "M6" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
-      { id: "print", label: "Print View" },
+      { id: "print", label: "Print View", submenuIndicator: true },
     ],
   },
   paths: {

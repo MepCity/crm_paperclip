@@ -109,3 +109,42 @@ test("datetime keeps being skipped until its own form task", () => {
   const fields = [field("Created_Time", "Created Time", "datetime", true)];
   expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
 });
+
+test("required lookup fields require a populated reference", () => {
+  const fields = [field("Account_Name", "Account Name", "lookup", true)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(validateRecordForm(fields, { Account_Name: null }, (f) => f.label)).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "", name: "" } },
+      (f) => f.label,
+    ),
+  ).toEqual({
+    Account_Name: "Account Name cannot be empty.",
+  });
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "acc-1", name: "Acme" } },
+      (f) => f.label,
+    ),
+  ).toEqual({});
+});
+
+test("optional lookup fields accept null or populated references", () => {
+  const fields = [field("Account_Name", "Account Name", "lookup", false)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
+  expect(validateRecordForm(fields, { Account_Name: null }, (f) => f.label)).toEqual({});
+  expect(
+    validateRecordForm(
+      fields,
+      { Account_Name: { module: "Accounts", id: "acc-1", name: "Acme" } },
+      (f) => f.label,
+    ),
+  ).toEqual({});
+});

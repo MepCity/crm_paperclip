@@ -77,7 +77,12 @@ export function ListToolbar({
             >
               {(item) => (
                 <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
-                  {item.label}
+                  <span className="flex items-center justify-between gap-3">
+                    {item.label}
+                    {item.submenuIndicator ? (
+                      <Icons.chevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    ) : null}
+                  </span>
                 </MenuItem>
               )}
             </Menu>

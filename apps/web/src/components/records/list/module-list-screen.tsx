@@ -486,9 +486,9 @@ function ModuleListScreenLoaded({
     }
   }
 
-  function selectPageForMassAction(action: string) {
+  function openSelectedMassAction(action: string) {
     if (!["mass-transfer", "mass-update", "mass-delete"].includes(action)) return;
-    setSelectedIds(records.map((record) => record.id));
+    if (!selectionActive) return;
     if (action === "mass-transfer") setChangeOwnerOpen(true);
     if (action === "mass-update") setMassUpdateOpen(true);
     if (action === "mass-delete") openDeleteDialog();
@@ -565,7 +565,7 @@ function ModuleListScreenLoaded({
           }}
           actions={config.inventory?.actions.map((item) => ({
             ...item,
-            onAction: () => selectPageForMassAction(item.id),
+            onAction: () => openSelectedMassAction(item.id),
           }))}
           create={{
             label: config.createLabel,

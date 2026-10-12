@@ -185,7 +185,9 @@ unobserved create-menu items, filter operators, empty state and additional
 header options. Drafts, Approve Contacts, Deduplicate Contacts, Print View,
 Show custom views as Dropdown and row ellipsis have no handler, following the
 existing shared screen boundary or the explicit delivery scope. Account cells
-remain plain text until the lookup display task is merged. Unknown saved-view
+use the merged lookup display: names are shown and later-module links remain inert.
+Mass menu actions never create selection; dialogs act only on selected rows.
+Print View retains its visual submenu arrow without opening a submenu. Unknown saved-view
 columns have a read-only text rendering fallback; service-provided column lists
 remain authoritative.
 

@@ -34,6 +34,11 @@ export function normalizeFormValue(
 ): FieldValue {
   if (value === undefined || value === "" || (field.dataType === "picklist" && value === "-None-"))
     return null;
+  if (field.dataType === "lookup" && typeof value === "object" && value !== null) {
+    if (!("id" in value) || typeof value.id !== "string" || value.id.trim() === "") {
+      return null;
+    }
+  }
   return value;
 }
 

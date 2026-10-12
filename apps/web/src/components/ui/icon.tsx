@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Contact,
   Folder,
   Home,
   Info,
@@ -22,6 +23,7 @@ import {
   Phone,
   Plus,
   Settings,
+  Store,
   Triangle,
   Users,
   X,
@@ -397,10 +399,24 @@ function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
 
 export type Icon = LucideIcon;
 
+function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { module?: string }) {
+  switch (module) {
+    case "Accounts":
+      return <Building2 {...props} />;
+    case "Vendors":
+      return <Store {...props} />;
+    case "Contacts":
+      return <Contact {...props} />;
+    default:
+      return <Building2 {...props} />;
+  }
+}
+
 export const Icons = {
   activity: Activity,
   messageSquare: MessageSquare,
   phone: Phone,
+  recordLookup: RecordLookupIcon,
   recordUser: RecordUser,
   avatarPerson: AvatarPerson,
   recordPortraitSilhouette: RecordPortraitSilhouette,

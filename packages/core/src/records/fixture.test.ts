@@ -17,6 +17,7 @@ import {
 } from "./contract-suite-module";
 import { createFixtureRecordService } from "./fixture";
 import { sortRecords } from "./fixture/query";
+import { fixtureModules } from "./fixture/registry";
 import { generateFixtureLeads } from "./fixture/seed";
 
 const make = () =>
@@ -1428,5 +1429,85 @@ describe("Contacts fixture", () => {
     await expect(
       otherOrg.create("Contacts", { Last_Name: "Other", Email: email }),
     ).resolves.toBeDefined();
+  });
+  it("rejects massUpdate Email that would duplicate within the batch", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-mass-unique-batch",
+      orgName: "Contacts Mass Unique Batch",
+      userId: "member",
+      role: "admin",
+    });
+    const contactsBundle = fixtureModules.Contacts;
+    if (!contactsBundle) throw new Error("Contacts fixture module missing.");
+    const emailField = contactsBundle.metadata.fields.find((field) => field.apiName === "Email");
+    if (!emailField) throw new Error("Contacts Email field missing from fixture metadata.");
+    const previousMassUpdate = emailField.massUpdate;
+    emailField.massUpdate = true;
+    try {
+      const first = await service.create("Contacts", {
+        Last_Name: "Batch First",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const second = await service.create("Contacts", {
+        Last_Name: "Batch Second",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const emailBeforeFirst = (await service.get("Contacts", first.id)).fields.Email;
+      const emailBeforeSecond = (await service.get("Contacts", second.id)).fields.Email;
+      const sharedEmail = `${randomUUID()}@example.org`;
+      await expect(
+        service.massUpdate("Contacts", [first.id, second.id], { Email: sharedEmail }),
+      ).rejects.toThrow(ConflictError);
+      expect((await service.get("Contacts", first.id)).fields.Email).toBe(emailBeforeFirst);
+      expect((await service.get("Contacts", second.id)).fields.Email).toBe(emailBeforeSecond);
+    } finally {
+      emailField.massUpdate = previousMassUpdate;
+    }
+  });
+  it("rejects massUpdate Email that matches another record case-insensitively", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-mass-unique-other",
+      orgName: "Contacts Mass Unique Other",
+      userId: "member",
+      role: "admin",
+    });
+    const contactsBundle = fixtureModules.Contacts;
+    if (!contactsBundle) throw new Error("Contacts fixture module missing.");
+    const emailField = contactsBundle.metadata.fields.find((field) => field.apiName === "Email");
+    if (!emailField) throw new Error("Contacts Email field missing from fixture metadata.");
+    const previousMassUpdate = emailField.massUpdate;
+    emailField.massUpdate = true;
+    try {
+      const existingEmail = `${randomUUID()}@example.org`;
+      await service.create("Contacts", { Last_Name: "Existing", Email: existingEmail });
+      const target = await service.create("Contacts", {
+        Last_Name: "Target",
+        Email: `${randomUUID()}@example.org`,
+      });
+      const emailBefore = (await service.get("Contacts", target.id)).fields.Email;
+      await expect(
+        service.massUpdate("Contacts", [target.id], { Email: existingEmail.toUpperCase() }),
+      ).rejects.toThrow(ConflictError);
+      expect((await service.get("Contacts", target.id)).fields.Email).toBe(emailBefore);
+    } finally {
+      emailField.massUpdate = previousMassUpdate;
+    }
+  });
+  it("permits update to the same Email with different letter case", async () => {
+    const service = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "contacts-update-same-email-case",
+      orgName: "Contacts Update Same Email Case",
+      userId: "member",
+      role: "admin",
+    });
+    const email = `${randomUUID()}@example.org`;
+    const record = await service.create("Contacts", { Last_Name: "Self", Email: email });
+    await expect(
+      service.update("Contacts", record.id, { Email: email.toUpperCase() }),
+    ).resolves.toBeDefined();
+    expect((await service.get("Contacts", record.id)).fields.Email).toBe(email.toUpperCase());
   });
 });

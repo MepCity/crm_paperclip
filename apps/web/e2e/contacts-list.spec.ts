@@ -83,8 +83,37 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
-  await page.getByRole("menuitem", { name: "Mass Update", exact: true }).click();
+  const print = page.getByRole("menuitem", { name: "Print View", exact: true });
+  await expect(print.locator("svg")).toBeVisible();
+  await print.click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  expect(page.url()).toBe(before);
+  for (const action of ["Mass Transfer", "Mass Delete", "Mass Update"]) {
+    await list.getByRole("button", { name: "Actions", exact: true }).click();
+    await page.getByRole("menuitem", { name: action, exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(list.locator("[data-selection-bar]")).toHaveCount(0);
+    await expect(list.getByRole("checkbox", { name: /Select / }).first()).not.toBeChecked();
+  }
+  await list
+    .getByRole("checkbox", { name: /Select / })
+    .first()
+    .check();
+  await expect(list.locator("[data-selection-bar]")).toContainText("1 Record Selected.");
+  await list.getByRole("button", { name: "Mass Update", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Mass Update" })).toBeVisible();
   await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
-  await expect(list.locator("[data-selection-bar]")).toBeVisible();
+  for (const [action, role, title] of [
+    ["Change Owner", "dialog", "Change Owner"],
+    ["Delete", "alertdialog", "Delete Contact"],
+  ] as const) {
+    await list.getByRole("button", { name: "Actions", exact: true }).click();
+    await page.getByRole("menuitem", { name: action, exact: true }).click();
+    const dialog = page.getByRole(role, { name: title });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(list.locator("[data-selection-bar]")).toContainText("1 Record Selected.");
+    await expect(list.getByRole("checkbox", { name: /Select / }).nth(1)).not.toBeChecked();
+  }
 });
