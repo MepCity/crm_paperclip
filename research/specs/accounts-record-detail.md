@@ -1,6 +1,6 @@
 # Accounts — record detail
 
-Status: researched related-card inventory; lower field display and record-page footer remain unobserved. Observed upper-detail inventory retains its earlier capture gaps. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline attempts were skipped because their selectors matched no element while the list was loading; hierarchy opening was not attempted. These unobserved states are not implementation evidence.
+Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. Hierarchy opening was not attempted; its documented structure and remaining observation gaps are recorded below.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Overview contains a five-field business card: Account Owner, Industry, Employees
 
 ## Control inventory
 
-Stable AD numbers retain corresponding D suffixes where practical. Shared controls use the cited Contacts number, with `moved` when their position differs. `same` inherits the Contacts observation limits; it does not establish activation here. More Options and Timeline were attempted but both clicks in each capture were skipped, so their behaviour remains explicitly unobserved in Accounts. Static field labels/values are described above rather than treated as controls. Screenshot-only call icons are inventoried.
+Stable AD numbers retain corresponding D suffixes where practical. Shared controls use the cited Contacts number, with `moved` when their position differs. `same` inherits the Contacts observation limits; it does not establish activation here. Earlier loading-only attempts remain below; the m3m continuation observes the opened menu and Timeline. Static field labels/values are described above rather than treated as controls. Screenshot-only call icons are inventoried.
 
 ### Control inventory — m3d-list-base
 
@@ -38,7 +38,7 @@ Shell: SH-01–SH-46 as in contacts.md; Accounts is active instead of Contacts. 
 | AD-04 | Header | Add Tags | button | below identity | same | seen (m3d-detail-main) | M6 | D-04 |
 | AD-05 | Header | Send Email | button | right actions, first | same | seen (m3d-detail-main) | M10 | D-05 |
 | AD-06 | Header | Edit | button | right actions, second | same | seen (m3d-detail-main) | M3 | D-06 |
-| AD-07 | Header | More Options / three dots | icon button | right actions, third | not observed; menu click skipped | seen (m3d-detail-main) | M3 | D-07 |
+| AD-07 | Header | More Options / three dots | icon button | right actions, third | Opens the menu seen in m3m-detail-more | seen (m3d-detail-main) | M3 | D-07 |
 | AD-08 | Header | Previous Record | icon button | after More Options | same | seen (m3d-detail-main) | M3 | D-08 |
 | AD-09 | Header | Next Record | icon button | far right | same | seen (m3d-detail-main) | M3 | D-09 |
 | AD-99 | Header | Website link | link | identity line, after account identity | not observed | seen (m3d-detail-main) | M3 | new |
@@ -65,7 +65,7 @@ Shell: SH-01–SH-46 as in contacts.md; Accounts is active instead of Contacts. 
 | AD-31 | Related-list rail | Closed Activities count | badge | after Closed Activities | same | seen (m3d-detail-main) | M5 | D-31 |
 | AD-32 | Tab row | Related-list rail visibility icon | icon button | before Overview | same | seen (m3d-detail-main) | M3 | D-32 |
 | AD-33 | Tab row | Overview | tab | first tab, selected | same | seen (m3d-detail-main) | M3 | D-33 |
-| AD-34 | Tab row | Timeline | tab | second tab | not observed; Timeline click skipped | seen (m3d-detail-main) | M3 | D-34 |
+| AD-34 | Tab row | Timeline | tab | second tab | Opens Timeline seen in m3m-detail-timeline | seen (m3d-detail-main) | M3 | D-34 |
 | AD-35 | Tab row | Last Update indicator | badge | far right | same | seen (m3d-detail-main) | M3 | D-35 |
 | AD-37 | Business card | Phone call icon | icon button | after Phone value, fifth field | same | seen (m3d-detail-main) | M5 | D-37 moved |
 | AD-38 | Details card | Hide Details | button | card header, left | same | seen (m3d-detail-main) | M3 | D-38 |
@@ -105,15 +105,110 @@ No changed controls relative to m3d-list-base. The screenshot is the closing lis
 
 Rest: as in m3d-list-base; covered by the overlay: none.
 
+### Control inventory — m3m-list-base
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No changed visible controls relative to m3-list-base; incidental row action AL-45 is absent. Shell: SH-01–SH-46 as in contacts.md; Accounts is active.
+
+Rest: as in m3-list-base in accounts.md; covered by the overlay: none. Absent here: AL-45.
+
+### Control inventory — m3m-detail-base
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AD-103 | Contacts summary | Contact record link | link | body, after portrait | not observed | seen (m3m-detail-base) | M2 | new |
+| AD-104 | Contacts summary | Email link | link | body, below record link | not observed | seen (m3m-detail-base) | M10 | new |
+
+Shell: SH-01–SH-46 as in contacts.md; Accounts is active. No new shell control. The longer wait paints the same Contacts summary already inventoried in m3c-detail-open. Its portrait, envelope and telephone glyphs are static; only the two links are interactive.
+
+Rest: as in m3d-detail-main; covered by the overlay: none. Moved below viewport: AD-41, AD-100 and the Parent Account field. The business-card call icon AD-37 and Hide Details AD-38 remain visible.
+
+### Control inventory — m3m-detail-more
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AD-07.1 | More Options menu | Clone | menu item | menu, row 1 | same | seen (m3m-detail-more) | M3 | D-07.1 |
+| AD-07.2 | More Options menu | Share | menu item | menu, row 2 | same | seen (m3m-detail-more) | M3 | D-07.2 |
+| AD-07.3 | More Options menu | Delete | menu item | menu, row 3 | same | seen (m3m-detail-more) | M3 | D-07.3 |
+| AD-07.4 | More Options menu | Print Preview | menu item | menu, row 4 | same | seen (m3m-detail-more) | M3 | D-07.4 |
+| AD-07.5 | More Options menu | Find and Merge Duplicates | menu item | menu, row 5 | same | seen (m3m-detail-more) | M3 | D-07.5 |
+| AD-07.6 | More Options menu | Mail Merge | menu item | menu, row 6 | same | seen (m3m-detail-more) | M9 | D-07.6 |
+| AD-07.7 | More Options menu | Customize Business Card | menu item | menu, row 7 | same | seen (m3m-detail-more) | M11 | D-07.8 moved |
+| AD-07.8 | More Options menu | Organize Account Details | menu item | menu, row 8 | same | seen (m3m-detail-more) | M11 | D-07.9 moved |
+| AD-07.9 | More Options menu | Add Related List | menu item | menu, row 9 | same | seen (m3m-detail-more) | M11 | D-07.10 moved |
+| AD-07.10 | More Options menu | Review History | menu item | menu, row 10 | same | seen (m3m-detail-more) | P3 | D-07.11 moved |
+| AD-07.11 | More Options menu | Add Kiosk | menu item | menu, row 11 | same | seen (m3m-detail-more) | M11 | D-07.13 moved |
+| AD-07.12 | More Options menu | Create Button | menu item | menu, row 12 | same | seen (m3m-detail-more) | M11 | D-07.14 moved |
+| AD-07.13 | More Options menu | Create Client Script | menu item | menu, row 13 | same | seen (m3m-detail-more) | M11 | D-07.15 moved |
+
+Two non-interactive separators follow rows 3 and 6; they have no control ID. Mail Merge has no visible submenu arrow. Add Kiosk and Create Client Script carry decorative sparkles. No row was selected or hovered; submenu contents and action outcomes were not observed.
+
+Rest: as in m3m-detail-base; covered by the overlay: AD-35 (partially). The menu covers non-interactive business-card whitespace and the right edge of the Contacts summary. Absent here: D-07.7 (Run Macro), D-07.12 (Enroll to Cadence).
+
+### Control inventory — m3m-detail-timeline
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AD-33 | Tab row | Overview | tab | first tab, unselected | same | seen (m3m-detail-timeline) | M3 | D-33 |
+| AD-34 | Tab row | Timeline | tab | second tab, selected | Opens History | seen (m3m-detail-timeline) | M3 | D-34 |
+| AD-159 | Timeline | History | tab | inner tab row, first and only painted tab | same | seen (m3m-detail-timeline) | M3 | D-42 |
+| AD-160 | Timeline | Show Upcoming Automated Actions | button | history toolbar, right, with downward chevron | same | seen (m3m-detail-timeline) | M12 | D-44 |
+| AD-161 | Timeline | Filter Timeline History | icon button | after Timeline History heading | same | seen (m3m-detail-timeline) | M3 | D-45 |
+| AD-162 | Timeline | Activity record link | link | call-event descriptions | same | seen (m3m-detail-timeline) | M5 | D-46 |
+
+Rest: as in m3m-detail-base for shell, header, rail and outer tab row; covered by the overlay: none. Overview content is replaced: AD-37, AD-38, AD-103–AD-104 are absent. Absent here: D-43 (Interactions). D-47–D-51 belong to the unopened filter panel and are not asserted as visible here.
+
+### Control inventory — m3m-list-after
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No changed painted controls relative to m3m-list-base.
+
+Rest: as in m3m-list-base; covered by the overlay: none.
+
 ## More Options and Timeline
 
-More Options (AD-07) is visible in the detail baseline. In m3d-detail-more the source-verified record link and More Options selector both matched zero elements and were skipped. Only the shell and blank main area were captured. No Accounts menu rows were observed; added, removed or reordered rows relative to Contacts D-07.1–D-07.15 remain unknown. No menu row was selected, and no alternate selector or retry was used. Contacts' fifteen rows must not be asserted as an Accounts inventory.
+More Options opens a thirteen-row action menu in m3m-detail-more. Its labels and order are compared below; each row remains presence evidence only. Two separators and decorative sparkles beside Add Kiosk and Create Client Script are described in the inventory.
 
-Timeline (AD-34) is visible beside Overview in the baseline. In m3d-detail-timeline the same record link and the source-verified Timeline selector both matched zero elements and were skipped. The image shows the shell and loading state. Accounts History/Interactions content, filters and differences from Contacts D-42–D-51 remain not observed. The filter panel was not reopened.
+| Accounts # | Label | Contacts ref | Difference |
+| --- | --- | --- | --- |
+| AD-07.1 | Clone | D-07.1 | Same label/order |
+| AD-07.2 | Share | D-07.2 | Same label/order |
+| AD-07.3 | Delete | D-07.3 | Same label/order |
+| AD-07.4 | Print Preview | D-07.4 | Same label/order |
+| AD-07.5 | Find and Merge Duplicates | D-07.5 | Same label/order |
+| AD-07.6 | Mail Merge | D-07.6 | Same label/order |
+| AD-07.7 | Customize Business Card | D-07.8 | Moves from row 8 to row 7 |
+| AD-07.8 | Organize Account Details | D-07.9 | Module-name substitution; moves from row 9 to row 8 |
+| AD-07.9 | Add Related List | D-07.10 | Moves from row 10 to row 9 |
+| AD-07.10 | Review History | D-07.11 | Moves from row 11 to row 10 |
+| AD-07.11 | Add Kiosk | D-07.13 | Moves from row 13 to row 11 |
+| AD-07.12 | Create Button | D-07.14 | Moves from row 14 to row 12 |
+| AD-07.13 | Create Client Script | D-07.15 | Moves from row 15 to row 13 |
+| absent | Run Macro | D-07.7 | Not painted in Accounts |
+| absent | Enroll to Cadence | D-07.12 | Not painted in Accounts |
+
+Timeline (AD-34) opens a populated History region in m3m-detail-timeline. Unlike Contacts, no Interactions tab is painted. Timeline History, its filter icon and Show Upcoming Automated Actions with a downward chevron match the Contacts toolbar. The history is grouped by date, with a vertical connector, event-type glyphs, times, descriptions and author/date lines. Visible event structures include account-field changes and call added/updated entries; call descriptions link to activity records (AD-162). Date headers and event glyphs are static display, not editable controls. No event text, values or names are reproduced. The empty-history state is not observed. The filter panel was not reopened; its shared Contacts inventory D-47–D-51 remains the comparison source, without asserting Accounts panel contents. No event link or automated-action control was activated.
 
 ## Account hierarchy
 
-Parent Account is the fourth visible left-column Account Information field. It displays an empty dash in this record, with no link or named hierarchy-view action painted beside it. No named hierarchy-opening control is painted in the captured upper header/field area. The source inventory does contain a named Hierarchy View button outside the screenshot viewport, without a stable attribute selector. Its location and safe opening behaviour could not be confirmed from the upper image. Under the conditional capture rule, m3d-detail-hierarchy was not attempted; hidden/offscreen DOM is not visible-control evidence. Member Accounts is a visible related-list rail entry (AD-97); its empty card and New action are observed in the continuation below; neither establishes hierarchy-view behaviour. No parent or other record link was clicked. Hierarchy levels, row controls and populated-parent presentation remain not observed.
+AD-115 is the Hierarchy View button in the **Contacts card**, after its title, already seen in m3c-card-deals and inventoried by the related-card continuation. It was not clicked here. Its card location does not establish an account-company tree.
+
+The public help describes the Contacts-card hierarchy as the contact reporting structure, available inside Accounts and Contacts records (`documented`, D-H1). The Reporting to lookup links a contact to another contact associated with an account (`documented`, D-H1). The documented structure includes direct reports and the overall reporting hierarchy; the Accounts entry point is its Contacts related list (`documented`, D-H1). The document does not establish the exact modern opened container, depth limit, empty state or row controls: these remain `not observed` (D-H1 documentation gap).
+
+Separately, Member Accounts represents secondary divisions or subsidiaries associated with a parent account (`documented`, D-H2). Its documented list supports Account Name, Phone, Website, Account Type, Industry and Annual Revenue sorting links, Edit/Del row links and New (`documented`, D-H2); these are documentation evidence, not additional painted AD controls. A multilevel account-company tree, its depth and its controls remain `not observed`; the document describes parent/member relationships without specifying that tree (D-H2 documentation gap).
+
+### Documentation keys
+
+Public help was read on 2026-10-12. Locators below are article paths on the reference CRM public help site; host/product names are intentionally omitted under repository policy. No source image or customer example is copied.
+
+| Key | Public article / section | Neutral locator | Supports |
+| --- | --- | --- | --- |
+| D-H1 | Modifying Special Fields / Add Reporting Manager for Contacts; View Contact Hierarchy | /portal/en/kb/crm/customize-crm-account/customizing-fields/articles/modify-special-fields | Reporting to relationship; direct reports and overall contact structure; Accounts Contacts-card entry point |
+| D-H2 | Creating Accounts / Add Member Accounts | /portal/en/kb/crm/sales-force-automation/accounts/articles/create-accounts | Parent/member divisions and subsidiaries; documented list sorting and row actions |
 
 ## Differences from Contacts record detail
 
@@ -122,7 +217,7 @@ Parent Account is the fourth visible left-column Account Information field. It d
 - Account Information replaces Contact Information. Its visible field arrangement is described in Layout. Parent Account is visible here, but empty. Website is linked in the right column (AD-100); no email link is painted.
 - Contacts and Member Accounts are additional rail entries; Add Link follows the Links heading. Notes and Contacts have visible count badges (AD-101–AD-102). Badge values are not reproduced.
 - The shortened rail lacks Cadences, Invited Meetings, Purchase Orders, Campaigns, Reporting Contacts and Voice of the Customer. Several shared entries move; see inventory positions.
-- Header action labels and order match Contacts. More Options content and Timeline differences remain unobserved after skipped capture attempts.
+- Header action labels and order match Contacts. More Options has 13 rows instead of 15: Run Macro and Enroll to Cadence are absent, Organize Account Details substitutes the module name, and later rows move up. Accounts Timeline paints History alone, whereas Contacts also paints Interactions; the history toolbar and activity-link structure are shared.
 
 ## Related-list rail vs metadata
 
@@ -156,14 +251,15 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | Header actions and record navigation | M3 / M6 / M10 | Reused from Contacts | AD-01–AD-09 excluding AD-03; presence only |
 | Website links | M3 | Accounts-specific | AD-99–AD-100; links not followed |
 | Overview business card and Account Information | M3 | Accounts-specific fields, shared structure | visible upper fields only |
-| Parent Account / Member Accounts | M3 | Accounts-specific | empty parent display and rail entry; hierarchy not opened |
+| Parent Account / Member Accounts | M3 | Accounts-specific | parent display/rail/cards seen; documented relationship D-H2; no hierarchy opened |
+| Contacts hierarchy entry point | M2 | Shared contact reporting structure | AD-115 in Contacts card; documented D-H1; opened controls not observed |
 | Related-list rail / activity badges | Mixed as inventoried | Reused from Contacts, with moved entries | Notes, Deals, Closed Activities and Sales Orders rail jumps observed in this continuation |
 | Contacts rail and Notes/Contacts badges | M2 / M6 | Accounts-specific relative to Contacts detail | AD-96 / AD-101–AD-102; Contacts summary links AD-103–AD-104 |
 | Links / Add Link | M11 | Accounts-specific observed addition | AD-98; not activated |
 | Phone call controls | M5 | Reused from Contacts, moved | AD-37 / AD-41; image-only, not activated |
 | Rail visibility / Hide Details / Add Related List | M3 / M11 | Reused from Contacts | persisted-preference controls not activated |
-| More Options rows | Mixed, not determined for Accounts | Comparison pending | not observed; both capture clicks skipped |
-| Timeline content | M3 | Comparison pending | not observed; both capture clicks skipped |
+| More Options rows | M3 / M9 / M11 / P3 | Shared menu with two absent rows and module-name substitution | AD-07.1–AD-07.13, m3m-detail-more; no row activated |
+| Timeline content | M3 / M12 | Shared History toolbar; see More Options and Timeline | m3m-detail-timeline; filter not reopened |
 
 ## Capture refs
 
@@ -171,13 +267,18 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | --- | --- | --- | --- |
 | m3d-list-base | 0 | 0 | Populated opening list |
 | m3d-detail-main | 1 | 0 | Header, rail, business card, upper Account Information |
-| m3d-detail-more | 2 requested, 0 executed | 2 | Blank main area; intended menu not opened |
-| m3d-detail-timeline | 2 requested, 0 executed | 2 | Loading main area; intended tab not opened |
+| m3d-detail-more | 2 requested, 0 executed | 2 | Blank main area; loading state only; see m3m-detail-more |
+| m3d-detail-timeline | 2 requested, 0 executed | 2 | Loading main area; loading state only; see m3m-detail-timeline |
 | m3d-list-after | 0 | 0 | Renewed closing list, same total as opening |
+| m3m-list-base | 0 | 0 | Opening list; total 373 |
+| m3m-detail-base | 1 | 0 | Painted header/rail, business card, Contacts summary and beginning of Account Information |
+| m3m-detail-more | 2 | 0 | Thirteen-row action menu |
+| m3m-detail-timeline | 2 | 0 | Populated History, filter and automated-actions control; no Interactions tab |
+| m3m-list-after | 0 | 0 | Closing list; total 373 |
 
-m3d-detail-more and m3d-detail-timeline are evidence of loading/blank states only, not their intended opened states. m3d-detail-hierarchy was not attempted for the conditional reason recorded above and is not an evidence slug. All five successful screenshots were opened as images and inspected. Opening and the renewed closing totals are equal (373); no record selection is painted. The original record selector was reused and matched exactly one entry in m3d-list-base offline. More Options and Timeline selectors each matched exactly one expected entry in m3d-detail-main offline, but neither matched at capture time. No alternative selector or open/toggle override was used.
+m3d-detail-more and m3d-detail-timeline are evidence of loading/blank states only, not their intended opened states. m3d-detail-hierarchy was not attempted because the named entry was outside the upper viewport and safe activation was not established and is not an evidence slug. All five successful screenshots were opened as images and inspected. Opening and the renewed closing totals are equal (373); no record selection is painted. The original record selector was reused and matched exactly one entry in m3d-list-base offline. More Options and Timeline selectors each matched exactly one expected entry in m3d-detail-main offline, but neither matched at capture time. No alternative selector or open/toggle override was used.
 
-Safety: the baseline detail has three Accounts bulk readings (statuses 200, 204, 200), now within the aggregate bound of three approved by the CTO in MEP-330. Its two related readings carry the approved related-record query signatures. The historical stop was correct under the earlier bound and was resolved before this continuation. No successful record write is observed. The new More Options and Timeline attempts have only one list bulk reading each and no new non-GET path. More Options has one blocked telemetry call; Timeline has no blocked requests. The renewed closing list has one occurrence of each expected list-reading path and shell trigger, two blocked background polls and seven blocked telemetry calls. Its total remains 373. No fourth detail bulk call or unexpected non-GET path was observed.
+Safety: the baseline detail has three Accounts bulk readings (statuses 200, 204, 200), now within the aggregate bound of three approved by the CTO in MEP-330. Its two related readings carry the approved related-record query signatures. The historical stop was correct under the earlier bound and was resolved before this continuation. No successful record write is observed. The historical m3d More Options and Timeline attempts have only one list bulk reading each and no new non-GET path. More Options has one blocked telemetry call; Timeline has no blocked requests. The renewed closing list has one occurrence of each expected list-reading path and shell trigger, two blocked background polls and seven blocked telemetry calls. Its total remains 373. No fourth detail bulk call or unexpected non-GET path was observed.
 
 ### Reconciliation of controls.json
 
@@ -586,8 +687,8 @@ Ordinals below are one-based local evidence positions, never click selectors. Ev
 
 ## Open questions
 
-1. More Options rows and Timeline differences remain unobserved: both attempts skipped their record and opening clicks while the list was loading. The earlier third-bulk safety question is resolved by MEP-330. A reviewer should decide whether a separately authorized continuation is required for these gaps; the analyst did not retry skipped clicks.
-2. No named hierarchy-opening control was painted in the upper capture. An offscreen Hierarchy View source entry lacks a stable attribute selector; its safe activation was not established, so the conditional capture was omitted. Populated Parent Account display and hierarchy levels/row controls remain unknown; no alternate record was inspected.
+1. Hierarchy View opens the contact reporting structure according to D-H1; its exact opened container, depth, row controls and empty state remain not observed. D-H2 does not document a multilevel account-company tree or its controls. No hierarchy activation or preference-write experiment is authorized.
+2. Parent Account populated presentation remains not observed; no alternate record was opened. Contacts summary links, menu actions/submenus, Interactions and automated-action outcomes remain not observed.
 3. Why are Checklists and Locking Information absent from the painted rail despite visible metadata flags? No hidden rail control or persistent preference was exercised.
 4. Field pencils, portrait hover controls and selected-rail plus actions were not observed. Their existence/activation must not be inferred from Contacts or hidden DOM.
 5. Previous/next ordering and boundaries, back navigation, Website links, and all write outcomes remain not observed. Lower field display remains unobserved; related-card controls are documented in the continuation below.
@@ -1433,8 +1534,522 @@ The source array has 601 entries. Entries 1–588 retain the m3c-list-base inven
 3. Populated Deals/Member Accounts columns, counters and row ends, Contacts empty state, Notes empty state and any hover-only row/field/rail controls remain unobserved. No additional record was opened.
 4. Open/Closed Calls columns and counters remain outside the horizontal activity viewport. No horizontal scroll or activity preference action was used.
 5. Connected Records ownership (`?`) and shared-shell ownership questions remain inherited from Contacts. UI Lead should confirm the M11 assignment for Contacts table customization and Organize Accounts Details.
-6. Hierarchy View is visible on the Contacts relationship card, but was not activated because card upper buttons are outside permitted clicks. It does not establish the Accounts parent/member hierarchy screen. More Options and Timeline gaps from the upper research remain unchanged.
+6. Hierarchy View is visible on the Contacts relationship card, but was not activated because card upper buttons are outside permitted clicks. It does not establish the Accounts parent/member hierarchy screen. More Options and Timeline are now observed in the m3m continuation above; hierarchy activation remains outside the permitted clicks.
 
 ### Shell controls missing from app-shell.md — lower-detail continuation
 
 None newly observed. All six resumed images reuse SH-01–SH-46. Organize Accounts Details and selected-row plus controls belong to the record rail, not the shared app shell.
+
+## Longer-wait continuation — source reconciliation
+
+The five m3m screenshots were opened as images. Ordinals identify local evidence items only, never selectors. Existing approved mappings are reused when the source structure matches; changed, invisible and static-data entries are assigned explicitly. Image-only AD-37 and SH-46 supplement the DOM counts. The Contacts summary reuses AD-103–AD-104; no new number is allocated for the same control.
+
+#### m3m-list-base
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 82–83, 87, 111, 120, 136, 141, 155, 255, 259–264, 273 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 84, 91–92, 94–95, 97–98, 101–102, 107–110, 135, 139, 252–253, 257–258, 561–569, 574–585, 587–588, 601 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: invisible below clipped panel/table boundary | 65–80, 172–251, 418–419, 421, 424, 427–560, 589 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99–100 |
+| SH-34 | 103–106 |
+| AL-01 | 112 |
+| AL-52 | 113 |
+| AL-02 | 114–117 |
+| AL-03 | 118 |
+| AL-04 | 119 |
+| AL-05 | 121 |
+| AL-06 | 122 |
+| AL-07 | 123 |
+| AL-08 | 124 |
+| AL-09 | 125 |
+| AL-10 | 126 |
+| AL-11 | 127–128 |
+| excluded: invisible refresh footprint; no painted icon in base | 129–130 |
+| AL-12 | 131 |
+| AL-13 | 132–133 |
+| AL-14 | 134 |
+| AL-15 | 137–138 |
+| AL-16 | 140 |
+| AL-20 | 142–143 |
+| AL-21 | 144–145 |
+| AL-22 | 146–147 |
+| AL-23 | 148–149 |
+| AL-24 | 150–151 |
+| AL-25 | 152–153 |
+| AL-26 | 154 |
+| AL-27 | 156–157 |
+| AL-53 | 158–159 |
+| AL-54 | 160–161 |
+| AL-55 | 162–163 |
+| AL-56 | 164–165 |
+| AL-57 | 166–167 |
+| AL-58 | 168–169 |
+| AL-59 | 170–171 |
+| excluded: invisible resize hotspot; no painted grip | 254 |
+| AL-33 | 256 |
+| AL-34 | 265–266 |
+| AL-35 | 267 |
+| AL-36 | 268–269 |
+| AL-39 | 270 |
+| AL-60 | 271 |
+| AL-61 | 272 |
+| excluded: record row data or row wrapper | 274–276, 278, 281, 283–284, 286–290, 293, 295–296, 298–301, 303, 306, 308–309, 311–314, 316, 319, 321–322, 324–327, 329, 332, 334–339, 341, 344, 346–347, 349–352, 354, 357, 359–360, 362–365, 367, 370, 372–373, 375–378, 380, 383, 385–386, 388–392, 395, 397–398, 400–403, 405, 408, 410–411, 413–417, 420, 422–423, 425–426 |
+| AL-46 | 277, 302, 315, 328, 340, 353, 366, 379, 404 |
+| AL-40 | 279–280, 291–292, 304–305, 317–318, 330–331, 342–343, 355–356, 368–369, 381–382, 393–394, 406–407 |
+| AL-42 | 282, 294, 307, 320, 333, 345, 358, 371, 384, 396, 409 |
+| AL-63 | 285, 297, 310, 323, 348, 361, 374, 387, 399, 412 |
+| AL-48 | 570 |
+| AL-49 | 571 |
+| AL-50 | 572 |
+| AL-51 | 573 |
+| excluded: zero-area/invisible element | 586 |
+| SH-35 | 590 |
+| SH-36 | 591 |
+| SH-37 | 592 |
+| SH-38 | 593 |
+| SH-39 | 594 |
+| SH-40 | 595 |
+| SH-41 | 596 |
+| SH-42 | 597 |
+| SH-43 | 598 |
+| SH-44 | 599 |
+| SH-45 | 600 |
+
+601 source items; 92 inventory IDs represented by source entries; 413 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
+
+#### m3m-detail-base
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 82, 86, 106, 176, 180–181, 215, 218, 221 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 109, 115, 117, 126, 133, 136, 139, 145, 154, 157, 160, 163, 166, 169, 172, 193, 199, 201, 206, 208, 214, 236, 241, 247, 252, 256, 260, 268, 274, 278, 289, 294, 298, 302, 315, 320, 323–324, 340–343, 347, 369, 380–381, 405–406, 412, 414, 417, 422, 425, 466–469, 477–496 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43, 83 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: outside or covered by captured content boundary | 65–80, 231–235, 237–240, 242–246, 248–251, 253–255, 257–259, 261–264, 273, 275–277, 279–288, 290–293, 295–297, 299–301, 303–314, 316–319, 321–322, 325–339, 344–346, 348–368, 370–379, 382–404, 407–411, 413, 415–416, 418–421, 423–424, 426–465, 470–476, 497 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| AD-01 | 107–108 |
+| AD-02 | 110–111 |
+| excluded: static label, value or structural text | 112, 127, 182–192, 194–198, 200, 202–205, 207, 209–213, 222–230, 265–267, 269–272 |
+| AD-99 | 113–114 |
+| AD-04 | 116 |
+| AD-05 | 118–119 |
+| AD-06 | 120–121 |
+| AD-07 | 122–123 |
+| AD-08 | 124 |
+| AD-09 | 125 |
+| AD-10 | 128–129 |
+| AD-101 | 130 |
+| AD-11 | 131–132 |
+| AD-12 | 134–135 |
+| AD-14 | 137–138 |
+| AD-96 | 140–141 |
+| AD-102 | 142 |
+| AD-23 | 143–144 |
+| AD-15 | 146–147 |
+| AD-30 | 148 |
+| AD-16 | 149–150 |
+| AD-31 | 151 |
+| AD-18 | 152–153 |
+| AD-20 | 155–156 |
+| AD-21 | 158–159 |
+| AD-24 | 161–162 |
+| AD-97 | 164–165 |
+| AD-19 | 167–168 |
+| AD-26 | 170–171 |
+| AD-29 | 173 |
+| AD-98 | 174 |
+| AD-32 | 175 |
+| AD-33 | 177 |
+| AD-34 | 178 |
+| AD-35 | 179 |
+| AD-103 | 216 |
+| AD-104 | 217 |
+| AD-38 | 219–220 |
+| SH-35 | 498 |
+| SH-36 | 499 |
+| SH-37 | 500 |
+| SH-38 | 501 |
+| SH-39 | 502 |
+| SH-40 | 503 |
+| SH-41 | 504 |
+| SH-42 | 505 |
+| SH-43 | 506 |
+| SH-44 | 507 |
+| SH-45 | 508 |
+
+508 source items; 82 inventory IDs represented by source entries; 377 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
+
+#### m3m-detail-more
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 82, 86, 106, 176, 180–181, 215, 218, 221 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 109, 115, 117, 126, 133, 136, 139, 145, 154, 157, 160, 163, 166, 169, 172, 193, 199, 201, 206, 208, 214, 236, 241, 247, 252, 256, 260, 268, 274, 278, 289, 294, 298, 302, 315, 320, 323–324, 340–343, 347, 371, 382–383, 407–408, 474–477, 485–500, 502–503 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43, 83 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: outside or covered by captured content boundary | 65–80, 231–235, 237–240, 242–246, 248–251, 253–255, 257–259, 261–264, 273, 275–277, 279–288, 290–293, 295–297, 299–301, 303–314, 316–319, 321–322, 325–339, 344–346, 348–353, 360–370, 372–381, 384–406, 409–410, 420–421, 427–432, 439–440, 447–448, 455–460, 467–473, 478–484, 504 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| AD-01 | 107–108 |
+| AD-02 | 110–111 |
+| excluded: static label, value or structural text | 112, 127, 182–192, 194–198, 200, 202–205, 207, 209–213, 222–230, 265–267, 269–272 |
+| AD-99 | 113–114 |
+| AD-04 | 116 |
+| AD-05 | 118–119 |
+| AD-06 | 120–121 |
+| AD-07 | 122–123 |
+| AD-08 | 124 |
+| AD-09 | 125 |
+| AD-10 | 128–129 |
+| AD-101 | 130 |
+| AD-11 | 131–132 |
+| AD-12 | 134–135 |
+| AD-14 | 137–138 |
+| AD-96 | 140–141 |
+| AD-102 | 142 |
+| AD-23 | 143–144 |
+| AD-15 | 146–147 |
+| AD-30 | 148 |
+| AD-16 | 149–150 |
+| AD-31 | 151 |
+| AD-18 | 152–153 |
+| AD-20 | 155–156 |
+| AD-21 | 158–159 |
+| AD-24 | 161–162 |
+| AD-97 | 164–165 |
+| AD-19 | 167–168 |
+| AD-26 | 170–171 |
+| AD-29 | 173 |
+| AD-98 | 174 |
+| AD-32 | 175 |
+| AD-33 | 177 |
+| AD-34 | 178 |
+| AD-35 | 179 |
+| AD-103 | 216 |
+| AD-104 | 217 |
+| AD-38 | 219–220 |
+| excluded: outside captured content viewport | 354–359, 411–413, 415, 417–418, 422, 424–425, 433–438, 441–446, 449–454, 461–466 |
+| excluded: zero-area/invisible element | 414, 416, 419, 423, 426, 501, 516 |
+| SH-35 | 505 |
+| SH-36 | 506 |
+| SH-37 | 507 |
+| SH-38 | 508 |
+| SH-39 | 509 |
+| SH-40 | 510 |
+| SH-41 | 511 |
+| SH-42 | 512 |
+| SH-43 | 513 |
+| SH-44 | 514 |
+| SH-45 | 515 |
+| AD-07.1 | 517 |
+| AD-07.2 | 518 |
+| AD-07.3 | 519 |
+| AD-07.4 | 520 |
+| AD-07.5 | 521 |
+| AD-07.6 | 522 |
+| AD-07.7 | 523 |
+| AD-07.8 | 524 |
+| AD-07.9 | 525 |
+| AD-07.10 | 526 |
+| AD-07.11 | 527 |
+| AD-07.12 | 528 |
+| AD-07.13 | 529 |
+
+529 source items; 95 inventory IDs represented by source entries; 385 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
+
+#### m3m-detail-timeline
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 82, 86, 106, 176 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 109, 115, 117, 126, 133, 136, 139, 145, 154, 157, 160, 163, 166, 169, 172 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43, 83 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: outside or covered by captured content boundary | 65–80, 244 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| AD-01 | 107–108 |
+| AD-02 | 110–111 |
+| excluded: static label, value or structural text | 112, 127 |
+| AD-99 | 113–114 |
+| AD-04 | 116 |
+| AD-05 | 118–119 |
+| AD-06 | 120–121 |
+| AD-07 | 122–123 |
+| AD-08 | 124 |
+| AD-09 | 125 |
+| AD-10 | 128–129 |
+| AD-101 | 130 |
+| AD-11 | 131–132 |
+| AD-12 | 134–135 |
+| AD-14 | 137–138 |
+| AD-96 | 140–141 |
+| AD-102 | 142 |
+| AD-23 | 143–144 |
+| AD-15 | 146–147 |
+| AD-30 | 148 |
+| AD-16 | 149–150 |
+| AD-31 | 151 |
+| AD-18 | 152–153 |
+| AD-20 | 155–156 |
+| AD-21 | 158–159 |
+| AD-24 | 161–162 |
+| AD-97 | 164–165 |
+| AD-19 | 167–168 |
+| AD-26 | 170–171 |
+| AD-29 | 173 |
+| AD-98 | 174 |
+| AD-32 | 175 |
+| AD-33 | 177 |
+| AD-34 | 178 |
+| AD-35 | 179 |
+| excluded: static event/date/icon or duplicate structural wrapper | 180, 182–183, 185, 187, 189–191, 193–198, 200–202 |
+| excluded: zero-area/invisible element | 181, 208, 217, 221–243 |
+| AD-159 | 184 |
+| AD-160 | 186 |
+| AD-161 | 188 |
+| AD-162 | 192, 199, 203 |
+| excluded: outside captured content viewport | 204–207, 209–216, 218–220 |
+| SH-35 | 245 |
+| SH-36 | 246 |
+| SH-37 | 247 |
+| SH-38 | 248 |
+| SH-39 | 249 |
+| SH-40 | 250 |
+| SH-41 | 251 |
+| SH-42 | 252 |
+| SH-43 | 253 |
+| SH-44 | 254 |
+| SH-45 | 255 |
+
+255 source items; 83 inventory IDs represented by source entries; 122 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
+
+#### m3m-list-after
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: duplicate or structural wrapper; no separate painted control | 1, 37, 51, 59, 62, 82–83, 87, 111, 120, 136, 141, 155, 255, 259–264, 273 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 84, 91–92, 94–95, 97–98, 101–102, 107–110, 135, 139, 252–253, 257–258, 561–569, 574–587, 601 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: invisible below clipped panel/table boundary | 65–80, 172–251, 418–419, 421, 424, 427–560, 589 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99–100 |
+| SH-34 | 103–106 |
+| AL-01 | 112 |
+| AL-52 | 113 |
+| AL-02 | 114–117 |
+| AL-03 | 118 |
+| AL-04 | 119 |
+| AL-05 | 121 |
+| AL-06 | 122 |
+| AL-07 | 123 |
+| AL-08 | 124 |
+| AL-09 | 125 |
+| AL-10 | 126 |
+| AL-11 | 127–128 |
+| excluded: invisible refresh footprint; no painted icon in base | 129–130 |
+| AL-12 | 131 |
+| AL-13 | 132–133 |
+| AL-14 | 134 |
+| AL-15 | 137–138 |
+| AL-16 | 140 |
+| AL-20 | 142–143 |
+| AL-21 | 144–145 |
+| AL-22 | 146–147 |
+| AL-23 | 148–149 |
+| AL-24 | 150–151 |
+| AL-25 | 152–153 |
+| AL-26 | 154 |
+| AL-27 | 156–157 |
+| AL-53 | 158–159 |
+| AL-54 | 160–161 |
+| AL-55 | 162–163 |
+| AL-56 | 164–165 |
+| AL-57 | 166–167 |
+| AL-58 | 168–169 |
+| AL-59 | 170–171 |
+| excluded: invisible resize hotspot; no painted grip | 254 |
+| AL-33 | 256 |
+| AL-34 | 265–266 |
+| AL-35 | 267 |
+| AL-36 | 268–269 |
+| AL-39 | 270 |
+| AL-60 | 271 |
+| AL-61 | 272 |
+| excluded: record row data or row wrapper | 274–276, 278, 281, 283–284, 286–290, 293, 295–296, 298–301, 303, 306, 308–309, 311–314, 316, 319, 321–322, 324–327, 329, 332, 334–339, 341, 344, 346–347, 349–352, 354, 357, 359–360, 362–365, 367, 370, 372–373, 375–378, 380, 383, 385–386, 388–392, 395, 397–398, 400–403, 405, 408, 410–411, 413–417, 420, 422–423, 425–426 |
+| AL-46 | 277, 302, 315, 328, 340, 353, 366, 379, 404 |
+| AL-40 | 279–280, 291–292, 304–305, 317–318, 330–331, 342–343, 355–356, 368–369, 381–382, 393–394, 406–407 |
+| AL-42 | 282, 294, 307, 320, 333, 345, 358, 371, 384, 396, 409 |
+| AL-63 | 285, 297, 310, 323, 348, 361, 374, 387, 399, 412 |
+| AL-48 | 570 |
+| AL-49 | 571 |
+| AL-50 | 572 |
+| AL-51 | 573 |
+| excluded: zero-area/invisible element | 588 |
+| SH-35 | 590 |
+| SH-36 | 591 |
+| SH-37 | 592 |
+| SH-38 | 593 |
+| SH-39 | 594 |
+| SH-40 | 595 |
+| SH-41 | 596 |
+| SH-42 | 597 |
+| SH-43 | 598 |
+| SH-44 | 599 |
+| SH-45 | 600 |
+
+601 source items; 92 inventory IDs represented by source entries; 413 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
