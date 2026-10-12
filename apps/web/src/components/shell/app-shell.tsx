@@ -6,6 +6,7 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { PreferenceProvider } from "@/lib/preferences";
 import { CreateRecordsMenu } from "./create-records";
+import { GlobalSearch } from "./global-search";
 import { Navigation } from "./navigation";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
 import { PageTitleContext } from "./page-title";
@@ -95,6 +96,7 @@ export function AppShell({
               <h1 className="truncate text-xl font-semibold text-text">{title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-(--size-topbar-control-gap)">
+              <GlobalSearch key={`${orgSlug}:${user.id}`} orgSlug={orgSlug} userId={user.id} />
               <CreateRecordsMenu orgSlug={orgSlug} />
               <Link
                 variant="icon"
