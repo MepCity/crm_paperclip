@@ -15,6 +15,8 @@ import type {
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import {
+  MAX_CRITERIA_GROUP_SIZE,
+  MAX_CRITERIA_NODES,
   decodeCriteria,
   decodeCurrency,
   decodeField,
@@ -92,7 +94,42 @@ const tokens: { port: CriteriaToken; wire: unknown }[] = [
   { port: { token: "CATEGORY", name: "Junk" }, wire: `\${CATEGORY.Junk}` },
 ];
 
+// Root plus 20 child groups; leaves fill each group up to the sibling limit.
+function criteriaTree(nodes: number) {
+  let leaves = nodes - 21;
+  return {
+    group_operator: "AND",
+    group: Array.from({ length: 20 }, () => {
+      const size = Math.min(leaves, MAX_CRITERIA_GROUP_SIZE);
+      leaves -= size;
+      return {
+        group_operator: "OR",
+        group: Array.from({ length: size }, () => ({
+          field: { api_name: "Converted__s" }, comparator: "equal", value: false,
+        })),
+      };
+    }),
+  };
+}
+
 describe("wire codec", () => {
+  it("bounds criteria value arrays without changing accepted values", () => {
+    const value = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, (_, i) => `Value ${i}`);
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value };
+    expect(decodeCriteria(leaf)).toEqual({ field: "Company", comparator: "equal", value });
+    expect(() => decodeCriteria({ ...leaf, value: [...value, "extra"] })).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+  });
+  it("shares a total node budget across sibling groups and resets it per decode", () => {
+    const boundary = criteriaTree(MAX_CRITERIA_NODES);
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+    expect(() => decodeCriteria(criteriaTree(MAX_CRITERIA_NODES + 1))).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+  });
+
   it.each(["equal", "contains", "not_contains", "less_equal"] as const)(
     "preserves comparator %s and each token through JSON",
     (comparator) => {

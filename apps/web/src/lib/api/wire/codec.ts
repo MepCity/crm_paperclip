@@ -363,7 +363,11 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
       return invalid("filters", "Unknown token.");
     return value;
   }
-  if (Array.isArray(value)) return value.map((entry) => readFieldValue(entry, "filters"));
+  if (Array.isArray(value)) {
+    if (value.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria values.");
+    return value.map((entry) => readFieldValue(entry, "filters"));
+  }
   if (
     typeof value === "object" &&
     value !== null &&
@@ -408,16 +412,30 @@ export function encodeCriteria(criteria: Criteria): WireCriteria {
     value: encodeCriteriaValue(criteria.value),
   };
 }
+// Match the existing 500-item bulk operation limit.
+export const MAX_CRITERIA_GROUP_SIZE = 500;
+// Allow many full groups while bounding work across the entire tree.
+export const MAX_CRITERIA_NODES = 10_000;
 export function decodeCriteria(value: unknown, depth = 0): Criteria {
+  return decodeCriteriaNode(value, depth, { remaining: MAX_CRITERIA_NODES });
+}
+function decodeCriteriaNode(
+  value: unknown,
+  depth: number,
+  budget: { remaining: number },
+): Criteria {
+  if (budget.remaining-- <= 0) invalid("filters", "Send at most 10000 criteria nodes.");
   if (depth > 32) invalid("filters", "Criteria are too deeply nested.");
   const criteria = object(value, "filters");
   if ("group" in criteria) {
     const operator = criteria.group_operator;
     if (!Array.isArray(criteria.group) || (operator !== "AND" && operator !== "OR"))
       invalid("filters");
+    if (criteria.group.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria per group.");
     return {
       groupOperator: operator === "AND" ? "and" : "or",
-      group: criteria.group.map((child) => decodeCriteria(child, depth + 1)),
+      group: criteria.group.map((child) => decodeCriteriaNode(child, depth + 1, budget)),
     };
   }
   const field = object(criteria.field, "filters");

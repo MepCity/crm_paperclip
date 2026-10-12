@@ -208,3 +208,15 @@ semantics are the service's responsibility, documented in the record-service REA
 The field names and configured values come from the metadata export. The path
 and response envelope were not captured; see ADR 0004. The decoder rejects
 missing, malformed and unknown currency fields with the existing ValidationError.
+
+
+## Input bounds
+
+These are local validation limits, not observed reference CRM limits. Criteria
+retain the existing maximum depth of 32 (root depth 0). Each group and each
+criteria value array accepts at most 500 entries. A decoded criteria tree accepts
+at most 10,000 nodes in total, counting the root, groups, and leaves; value array
+entries do not count as tree nodes. The node budget is shared across all branches
+and starts fresh for each decode. This allows nearly twenty full 500-leaf groups,
+well above the current panel and saved-view criteria, while bounding total tree
+traversal. Oversized inputs use the existing filters-keyed validation error.
