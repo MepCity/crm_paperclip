@@ -5,6 +5,9 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "activity",
+  "messageSquare",
+  "phone",
   "recordUser",
   "avatarPerson",
   "recordPortraitSilhouette",
@@ -67,6 +70,7 @@ const expectedIcons = [
   "ellipsis",
   "timelineGeneric",
   "timelinePencil",
+  "recordLookup",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

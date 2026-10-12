@@ -39,8 +39,13 @@ function readFieldValue(value: unknown, key: string): FieldValue {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const ref = object(value, key);
   if (typeof ref.module === "string" && typeof ref.id === "string")
-    return { module: ref.module, id: ref.id };
+    return { module: ref.module, id: ref.id, ...referenceName(ref, key) };
   return invalid(key);
+}
+function referenceName(ref: Record<string, unknown>, key: string): { name?: string } {
+  if (ref.name === undefined) return {};
+  if (typeof ref.name !== "string") invalid(key);
+  return { name: ref.name };
 }
 function encodeValue(
   field: FieldDefinition,
@@ -52,14 +57,23 @@ function encodeValue(
     const member = members.find((candidate) => candidate.userId === value);
     return member ? { id: value, name: member.name, email: member.email } : { id: value };
   }
-  if (field.dataType === "lookup" && typeof value === "string") return { id: value };
+  if (field.dataType === "lookup") {
+    const ref = object(value, field.apiName);
+    if (typeof ref.id !== "string" || ref.module !== field.lookup?.module) invalid(field.apiName);
+    return { id: ref.id, ...referenceName(ref, field.apiName) };
+  }
   return structuredClone(value);
 }
 function decodeValue(field: FieldDefinition, value: unknown): FieldValue {
   if (value === null) return null;
-  if (["ownerlookup", "lookup"].includes(field.dataType)) {
+  if (field.dataType === "ownerlookup") {
     const ref = object(value, field.apiName);
     return typeof ref.id === "string" ? ref.id : invalid(field.apiName);
+  }
+  if (field.dataType === "lookup") {
+    const ref = object(value, field.apiName);
+    if (typeof ref.id !== "string" || !field.lookup) invalid(field.apiName);
+    return { module: field.lookup.module, id: ref.id, ...referenceName(ref, field.apiName) };
   }
   return readFieldValue(value, field.apiName);
 }

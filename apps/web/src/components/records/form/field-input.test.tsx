@@ -1,4 +1,4 @@
-import type { FieldDataType, FieldDefinition, FieldValue } from "@crm/core/records";
+import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
@@ -97,6 +97,77 @@ test("integer keeps a typed decimal so Save can report it", async () => {
   expect((input as HTMLInputElement).value).toBe("12.5");
   expect(change).toHaveBeenLastCalledWith(12.5);
 });
+test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form model", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-15" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("15.02.2026");
+  expect(input.getAttribute("placeholder")).toBe("DD.MM.YYYY");
+  // contacts-form.md › Date of Birth: no calendar or information icon beside the input.
+  expect(screen.queryByRole("button")).toBeNull();
+  expect(screen.queryByRole("img")).toBeNull();
+  await user.clear(input);
+  expect(change).toHaveBeenLastCalledWith(null);
+  await user.type(input, "0");
+  expect(input.value).toBe("0");
+  expect(change).toHaveBeenLastCalledWith(null);
+  await user.type(input, "4.07.1998");
+  expect(input.value).toBe("04.07.1998");
+  expect(change).toHaveBeenLastCalledWith("1998-07-04");
+});
+test("date keeps an impossible day in its typed shape so Save can report it", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial={null} onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  await user.type(input, "30.02.2026");
+  expect(input.value).toBe("30.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-30");
+});
+test("date keeps a partial day when deleting from a filled value", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-15" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("15.02.2026");
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}");
+  expect(input.value).toBe("15.02.202");
+  expect(change).toHaveBeenLastCalledWith(null);
+  await user.type(input, "6");
+  expect(input.value).toBe("15.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-15");
+});
+test("date keeps an impossible day while it is being corrected", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-30" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("30.02.2026");
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}");
+  expect(input.value).toBe("30.02.202");
+  expect(change).toHaveBeenLastCalledWith(null);
+  await user.type(input, "6");
+  expect(input.value).toBe("30.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-30");
+});
+test("date follows a model written from outside the input", () => {
+  const noop = () => {};
+  const { rerender } = render(
+    <FieldInput field={field("date")} value="2026-02-15" onChange={noop} />,
+  );
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe(
+    "15.02.2026",
+  );
+  rerender(<FieldInput field={field("date")} value={null} onChange={noop} />);
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe("");
+  rerender(<FieldInput field={field("date")} value="1998-07-04" onChange={noop} />);
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe(
+    "04.07.1998",
+  );
+});
 test("checkbox maps both boolean states", async () => {
   const change = vi.fn();
   const user = userEvent.setup();
@@ -179,7 +250,7 @@ test("owner searches name/email, selects opaque id and invokes the adjacent pick
   await user.click(screen.getByRole("button", { name: "Open owner picker" }));
   expect(picker).toHaveBeenCalledOnce();
 });
-test.each(["text", "textarea", "integer", "picklist", "ownerlookup", "boolean"] as const)(
+test.each(["text", "textarea", "date", "integer", "picklist", "ownerlookup", "boolean"] as const)(
   "%s disabled rejects interaction and errors are associated",
   async (type) => {
     const user = userEvent.setup();
@@ -202,11 +273,171 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["lookup", "multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["multi_module_lookup", "datetime", "bigint"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
   }
+});
+
+test("lookup input with registered target displays value and opens selector dialog", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const mockService = {
+    getModule: vi.fn().mockResolvedValue({
+      apiName: "Leads",
+      singularLabel: "Lead",
+      pluralLabel: "Leads",
+      businessCardFields: [],
+      fields: [
+        {
+          apiName: "Full_Name",
+          label: "Lead Name",
+          dataType: "text",
+          required: true,
+          readOnly: false,
+          unique: false,
+          massUpdate: false,
+          views: { view: true, create: true, edit: true, quickCreate: false },
+        },
+      ],
+      layout: [],
+    }),
+    listViews: vi
+      .fn()
+      .mockResolvedValue([
+        { id: "all", name: "All Leads", isDefault: true, columns: ["Full_Name"] },
+      ]),
+    list: vi.fn().mockResolvedValue({
+      records: [
+        { id: "lead-1", fields: { Full_Name: "First Lead" } },
+        { id: "lead-2", fields: { Full_Name: "Second Lead" } },
+      ],
+      moreRecords: false,
+    }),
+    count: vi.fn().mockResolvedValue(2),
+  };
+
+  const lookupField: FieldDefinition = {
+    apiName: "Parent_Lead",
+    label: "Parent Lead",
+    dataType: "lookup",
+    lookup: { module: "Leads" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Leads", id: "lead-1", name: "First Lead" }}
+      onChange={change}
+      recordService={mockService as unknown as RecordService}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Parent Lead" }) as HTMLInputElement;
+  expect(input.value).toBe("First Lead");
+
+  // Non-empty typing does not mutate reference name (prevents desynchronizing id and name)
+  await user.type(input, " typing");
+  expect(change).not.toHaveBeenCalled();
+
+  // Clearing the input sets value to null
+  await user.clear(input);
+  expect(change).toHaveBeenCalledWith(null);
+
+  // Click lookup button opens SelectRecordDialog
+  const lookupBtn = screen.getByRole("button", { name: "Open Parent Lead lookup" });
+  await user.click(lookupBtn);
+
+  // Dialog appears with records
+  expect(await screen.findByRole("radio", { name: "Second Lead" })).toBeTruthy();
+
+  // Select second lead and click Done
+  await user.click(screen.getByRole("radio", { name: "Second Lead" }));
+  await user.click(screen.getByRole("button", { name: "Done" }));
+
+  expect(change).toHaveBeenCalledWith({
+    module: "Leads",
+    id: "lead-2",
+    name: "Second Lead",
+  });
+});
+
+test("lookup input non-empty typing does not mutate reference name, only clearing sets null", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const lookupField: FieldDefinition = {
+    apiName: "Parent_Lead",
+    label: "Parent Lead",
+    dataType: "lookup",
+    lookup: { module: "Leads" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Leads", id: "lead-1", name: "First Lead" }}
+      onChange={change}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Parent Lead" }) as HTMLInputElement;
+  await user.type(input, " Modified");
+  expect(change).not.toHaveBeenCalled();
+
+  await user.clear(input);
+  expect(change).toHaveBeenCalledWith(null);
+});
+
+test("lookup input with unregistered target renders with laterModule and blocks clicks", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const lookupField: FieldDefinition = {
+    apiName: "Account_Name",
+    label: "Account Name",
+    dataType: "lookup",
+    lookup: { module: "Accounts" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+
+  render(
+    <Controlled
+      type="lookup"
+      field={lookupField}
+      initial={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      onChange={change}
+    />,
+  );
+
+  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+  expect(input.value).toBe("Acme Corp");
+  expect(input.readOnly).toBe(true);
+  expect(input.getAttribute("data-later-module")).toBe("M3");
+  expect(input.getAttribute("aria-disabled")).toBe("true");
+
+  const btn = screen.getByRole("button", { name: "Open Account Name lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M3");
+  expect(btn.getAttribute("aria-disabled")).toBe("true");
+
+  // Clicking button does not open dialog
+  await user.click(btn);
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
 test("read-only metadata prevents editing", () => {
   render(<Controlled type="text" field={{ ...field("text"), readOnly: true }} />);

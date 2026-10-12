@@ -17,6 +17,7 @@ const expectations = {
   email: { defaultOperator: "equal", operators: text },
   phone: { defaultOperator: "equal", operators: text },
   website: { defaultOperator: "contains", operators: text },
+  lookup: { defaultOperator: "contains", operators: text },
   picklist: {
     defaultOperator: "equal",
     operators: [
@@ -118,16 +119,21 @@ for (const [type, expected] of Object.entries(expectations)) {
 test("integer reuses the observed numeric operators without a currency prefix", () => {
   expect(filterOperators.integer).toEqual(filterOperators.currency);
 });
+test("date takes the datetime operator set and default", () => {
+  expect(filterOperators.date).toEqual(filterOperators.datetime);
+});
 test("unobserved field types have no editor catalog", () => {
   expect(Object.keys(filterOperators)).toEqual([
     "text",
     "email",
     "phone",
     "website",
+    "lookup",
     "picklist",
     "currency",
     "boolean",
     "ownerlookup",
+    "date",
     "datetime",
     "tag",
     "multilookup",

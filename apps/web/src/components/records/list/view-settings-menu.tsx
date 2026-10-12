@@ -3,10 +3,12 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { Menu, MenuItem, MenuTrigger, Submenu, SubmenuTrigger } from "@/components/ui/menu";
 import { LIST_PER_PAGE_OPTIONS, type ListPerPage } from "@/lib/records/list-search-params";
 
 export interface ViewSettingsMenuProps {
+  laterModule?: ModuleKey;
   /** Page size in effect: the address value when it carries `per_page`, otherwise the stored preference. */
   perPage: ListPerPage;
   onPerPageChange: (perPage: ListPerPage) => void;
@@ -40,6 +42,7 @@ const WRAP_TEXT_LABEL = "Wrap Text";
  * from the trigger row, which is how `list-page-size` names it ("Records Per Page 30").
  */
 export function ViewSettingsMenu({
+  laterModule,
   perPage,
   onPerPageChange,
   wrapText,
@@ -49,7 +52,13 @@ export function ViewSettingsMenu({
   const viewModeLabel = wrapText ? `View Mode ${WRAP_TEXT_LABEL}` : "View Mode";
   return (
     <MenuTrigger>
-      <Button variant="ghost" size="listIcon" aria-label="View Settings" className="shrink-0">
+      <Button
+        laterModule={laterModule}
+        variant="ghost"
+        size="listIcon"
+        aria-label="View Settings"
+        className="shrink-0"
+      >
         <Icons.settingsSliders aria-hidden="true" className={iconWidth} />
       </Button>
       <Menu

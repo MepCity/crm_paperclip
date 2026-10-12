@@ -1,10 +1,14 @@
+import { formatDate } from "@crm/core/format";
 import { expect, test } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { formatFieldValue } from "./field-format";
 
 const format = DEFAULT_FORMAT;
 
-function textField(apiName: string, dataType: "text" | "integer" | "currency" | "boolean") {
+function textField(
+  apiName: string,
+  dataType: "text" | "integer" | "currency" | "boolean" | "date" | "datetime",
+) {
   return {
     apiName,
     label: apiName,
@@ -40,4 +44,13 @@ test("currency uses a supplied code and plain numbers otherwise", () => {
     expect(usd.text).toContain("1,200.50");
     expect(usd.text).toContain("$");
   }
+});
+
+test("date renders the calendar day with the shared formatter and no clock", () => {
+  const rendered = formatFieldValue(textField("Date_of_Birth", "date"), "2026-02-15", {}, format);
+  expect(rendered).toEqual({ kind: "text", text: formatDate("2026-02-15", format) });
+  if (rendered.kind === "text") expect(rendered.text).not.toContain(":");
+  expect(formatFieldValue(textField("Date_of_Birth", "date"), null, {}, format)).toEqual({
+    kind: "empty",
+  });
 });

@@ -35,8 +35,8 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByRole("dialog", { name: "Create Records" });
 }
 
-test("The registry holds one Lead entry pointing at the create page", () => {
-  expect(createRecordsNav.map((entry) => entry.label)).toEqual(["Lead"]);
+test("The registry holds Lead and Contact entries pointing at their create pages", () => {
+  expect(createRecordsNav.map((entry) => entry.label)).toEqual(["Lead", "Contact"]);
   expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
 });
 
@@ -83,7 +83,7 @@ test("The Lead row links to the Create Lead page", async () => {
   const dialog = await openMenu(user);
   const row = within(dialog).getByRole("link", { name: "Lead" });
   expect(row.getAttribute("href")).toBe("/crm/example/tab/Leads/create");
-  expect(within(dialog).getAllByRole("link")).toHaveLength(1);
+  expect(within(dialog).getAllByRole("link")).toHaveLength(2);
 });
 
 test("Choosing a row closes the menu", async () => {
@@ -96,7 +96,7 @@ test("Choosing a row closes the menu", async () => {
 
 test("The search box filters rows by label and leaves the list empty on no match", async () => {
   const user = userEvent.setup();
-  render(<CreateRecordsMenu orgSlug="example" entries={[...createRecordsNav, extraEntry]} />);
+  render(<CreateRecordsMenu orgSlug="example" entries={createRecordsNav} />);
   const dialog = await openMenu(user);
   const search = within(dialog).getByRole("textbox", { name: "Search" });
   expect(

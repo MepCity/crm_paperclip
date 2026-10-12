@@ -13,7 +13,7 @@
    across the client boundary. The client resolves presentation callbacks locally.
 4. Add focused definition tests and reuse the existing screen tests. Unknown tabs
    reach the existing not-found boundary. Register unfinished modules only when
-   their screens are ready; Contacts is intentionally absent from this change.
+   their screens are ready; Leads and Contacts are registered.
 
 The small Leads adapters preserve existing component-test entry points. Production
 routes use `ModuleRouteClient` and the shared clients directly.

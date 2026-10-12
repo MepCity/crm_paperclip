@@ -126,6 +126,8 @@ export function MenuItem<T extends object>({
 }
 
 export interface MenuAction {
+  /** Visual indicator only; does not create a submenu. */
+  submenuIndicator?: boolean;
   id: string;
   label: string;
   onAction: () => void;

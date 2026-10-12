@@ -1,15 +1,23 @@
 import {
   type FormatOptions,
   formatCurrency,
+  formatDate,
   formatDateTime,
   formatNumber,
   formatRecordAuditDateTime,
 } from "@crm/core/format";
-import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import type { FieldDefinition, FieldValue, ModuleRecordReference } from "@crm/core/records";
+import type { ModuleKey } from "@/components/ui/later-module";
+import { moduleRecordPath } from "@/lib/crm-paths";
+import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 
 export const EMPTY_FIELD_DISPLAY = "—";
 
-export type FieldFormattedLink = { href: string; text: string };
+export type FieldFormattedLink = {
+  href?: string;
+  text: string;
+  laterModule?: ModuleKey;
+};
 
 export type FieldFormattedValue =
   | { kind: "empty" }
@@ -22,6 +30,11 @@ export function isFieldValueEmpty(field: FieldDefinition, value: FieldValue): bo
   if (value === null || value === "") return true;
   if (field.dataType === "boolean" && value === false) return true;
   if (field.dataType === "picklist" && typeof value === "string" && value === "") return true;
+  if (field.dataType === "lookup") {
+    if (typeof value !== "object" || value === null || !("id" in value)) return true;
+    if (!value.name || value.name.trim() === "") return true;
+    return false;
+  }
   return false;
 }
 
@@ -38,9 +51,28 @@ export function formatFieldValue(
     linkWebsite?: boolean;
     /** ISO 4217 code; when omitted, currency values use plain number formatting. */
     currencyCode?: string;
+    orgSlug?: string;
   },
 ): FieldFormattedValue {
   if (value === null || value === "") return { kind: "empty" };
+
+  if (field.dataType === "lookup") {
+    if (isFieldValueEmpty(field, value)) return { kind: "empty" };
+    const ref = value as ModuleRecordReference;
+    const name = ref.name?.trim() ?? "";
+    const targetModule = ref.module || field.lookup?.module || "";
+    const registered = resolveModuleScreenByApiName(targetModule);
+    if (registered) {
+      const href =
+        options?.href ??
+        (options?.orgSlug
+          ? moduleRecordPath(options.orgSlug, registered.tab, ref.id)
+          : `/tab/${encodeURIComponent(registered.tab)}/${encodeURIComponent(ref.id)}`);
+      return { kind: "link", link: { href, text: name } };
+    }
+    const laterModule = resolveModuleLaterKey(targetModule);
+    return { kind: "link", link: { href: "#", text: name, laterModule } };
+  }
 
   if (isAuditField(field) && typeof value === "string") {
     const name = ownerNames[value] ?? value;
@@ -94,6 +126,10 @@ function valueText(
     return ownerNames[value] ?? value;
   }
 
+  if (field.dataType === "date" && typeof value === "string") {
+    return formatDate(value, format);
+  }
+
   if (field.dataType === "datetime" && typeof value === "string") {
     return formatDateTime(value, format);
   }
@@ -112,7 +148,9 @@ function valueText(
 
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (typeof value === "object" && value !== null && "id" in value) return value.id;
+  if (typeof value === "object" && value !== null && "id" in value) {
+    return "name" in value && typeof value.name === "string" && value.name ? value.name : value.id;
+  }
   return null;
 }
 

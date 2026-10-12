@@ -1,12 +1,28 @@
 "use client";
 
-import type { FieldDefinition, FieldValue, PicklistOption } from "@crm/core/records";
+import type {
+  FieldDefinition,
+  FieldValue,
+  ModuleRecordReference,
+  PicklistOption,
+  RecordService,
+} from "@crm/core/records";
+import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextArea } from "@/components/ui/text-area";
-import { TextField } from "@/components/ui/text-field";
+import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import type { ClientRecordService } from "@/lib/api/client/provider";
+import {
+  calendarShapeToDisplayDate,
+  DATE_MASK_PLACEHOLDER,
+  displayDateToCalendarShape,
+} from "@/lib/records/calendar-date";
+import { isModuleRegistered, resolveModuleLaterKey } from "@/modules/registry";
+import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
   id: string;
@@ -33,6 +49,7 @@ export interface FieldInputProps {
   id?: string;
   hideLabel?: boolean;
   inline?: boolean;
+  recordService?: RecordService | ClientRecordService;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -45,6 +62,46 @@ export function picklistChoices(options: readonly PicklistOption[], value: strin
   if (value !== null && !choices.some((option) => option.value === value))
     choices.push({ value, label: value });
   return choices;
+}
+
+type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
+  /** The contract value: `YYYY-MM-DD`, or empty when the field has no day. */
+  value: string;
+  onModelChange: (value: FieldValue) => void;
+};
+
+/**
+ * A `date` field is typed as `DD.MM.YYYY` while the form model carries `YYYY-MM-DD`, so the entry
+ * and the model cannot be the same string. What is typed stays visible, including a day that does
+ * not exist: the shape is mapped to `YYYY-MM-DD` and `form-validation` rejects the impossible day,
+ * instead of the input silently dropping it.
+ *
+ * Only a model write that did not come from this input replaces the entry. An incomplete day has
+ * no model value at all, so treating the echo of our own write as an outside write would clear the
+ * text the moment somebody deletes a character from a date that is already filled in.
+ */
+function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
+  const [written, setWritten] = useState(value);
+  const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
+  if (written !== value) {
+    setWritten(value);
+    setEntry(calendarShapeToDisplayDate(value));
+  }
+  return (
+    <TextField
+      {...textField}
+      type="text"
+      value={entry}
+      placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
+      onChange={(next) => {
+        const shape = displayDateToCalendarShape(next);
+        // The empty model comes back as "" (`FieldInput` reads a non-string value as empty).
+        setWritten(shape ?? "");
+        setEntry(next);
+        onModelChange(shape);
+      }}
+    />
+  );
 }
 
 export function FieldInput({
@@ -67,6 +124,7 @@ export function FieldInput({
   id,
   hideLabel,
   inline,
+  recordService,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -81,6 +139,18 @@ export function FieldInput({
     errorMessage,
     validationBehavior: "aria" as const,
   };
+  const isLookup = field.dataType === "lookup";
+  const targetModule = field.lookup?.module ?? "";
+  const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
+  const targetLaterModule =
+    isLookup && !isTargetRegistered ? resolveModuleLaterKey(targetModule) : undefined;
+  const lookupButtonRef = useLaterModule<HTMLButtonElement>(targetLaterModule);
+  const [lookupOpen, setLookupOpen] = useState(false);
+  const reference =
+    isLookup && typeof value === "object" && value !== null && "id" in value
+      ? (value as ModuleRecordReference)
+      : undefined;
+
   const text = typeof value === "string" ? value : "";
   const number = typeof value === "number" ? value : Number.NaN;
   switch (field.dataType) {
@@ -119,6 +189,10 @@ export function FieldInput({
           maxLength={field.maxLength}
           onChange={(next) => onChange(next === "" ? null : next)}
         />
+      );
+    case "date":
+      return (
+        <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
     case "integer":
     case "double":
@@ -225,7 +299,59 @@ export function FieldInput({
           />
         </div>
       );
-    case "lookup":
+    case "lookup": {
+      const displayText = reference?.name ?? (typeof value === "string" ? value : "");
+      return (
+        <>
+          <TextField
+            {...common}
+            placeholder={placeholder}
+            value={displayText}
+            laterModule={targetLaterModule}
+            onChange={(next) => {
+              if (next === "") {
+                onChange(null);
+              }
+            }}
+            endAction={
+              <button
+                ref={lookupButtonRef}
+                type="button"
+                className="record-input-end"
+                aria-label={
+                  pickerLabel !== "Open owner picker" ? pickerLabel : `Open ${field.label} lookup`
+                }
+                disabled={common.isDisabled}
+                onClick={() => {
+                  if (isTargetRegistered) {
+                    setLookupOpen(true);
+                  }
+                }}
+                {...(targetLaterModule ? laterModuleProps(targetLaterModule) : {})}
+              >
+                <Icons.recordLookup
+                  module={targetModule}
+                  className="record-input-end-icon"
+                  aria-hidden
+                />
+              </button>
+            }
+          />
+          {lookupOpen && isTargetRegistered && (
+            <SelectRecordDialog
+              module={targetModule}
+              selectedId={reference?.id}
+              recordService={recordService}
+              onDone={(selected) => {
+                onChange(selected);
+                setLookupOpen(false);
+              }}
+              onCancel={() => setLookupOpen(false)}
+            />
+          )}
+        </>
+      );
+    }
     case "multi_module_lookup":
     case "datetime":
     case "bigint":

@@ -20,6 +20,7 @@ const types: FieldDataType[] = [
   "phone",
   "website",
   "textarea",
+  "date",
   "integer",
   "double",
   "currency",
@@ -50,6 +51,8 @@ function example(type: FieldDataType): FieldValue {
       return "https://example.test";
     case "phone":
       return "+1 555 0100";
+    case "date":
+      return "2026-02-15";
     default:
       return "Example";
   }
@@ -110,6 +113,34 @@ function SearchableSample({ state }: { state: "empty" | "filled" | "required" | 
     />
   );
 }
+function LookupSample({
+  targetModule,
+  state,
+}: {
+  targetModule: string;
+  state: "empty" | "filled" | "required" | "disabled";
+}) {
+  const [value, setValue] = useState<FieldValue>(
+    state === "filled" || state === "disabled"
+      ? { module: targetModule, id: "demo-1", name: `${targetModule} Record` }
+      : null,
+  );
+  const field: FieldDefinition = {
+    apiName: `${targetModule}_${state}`,
+    label: `${targetModule} (${state})`,
+    dataType: "lookup",
+    lookup: { module: targetModule },
+    required: state === "required",
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: formFieldViews,
+  };
+  return (
+    <FieldInput field={field} value={value} onChange={setValue} disabled={state === "disabled"} />
+  );
+}
+
 export default function FieldInputDemo() {
   const [name, setName] = useState("");
   const [prefix, setPrefix] = useState<string | null>(null);
@@ -134,6 +165,22 @@ export default function FieldInputDemo() {
         {(["empty", "filled", "required", "disabled"] as const).map((state) => (
           <SearchableSample key={state} state={state} />
         ))}
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-text-muted">
+          Lookup fields (Registered: Leads, Unregistered: Accounts M3, Vendors P2)
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          {(["empty", "filled", "required", "disabled"] as const).map((state) => (
+            <LookupSample key={`leads-${state}`} targetModule="Leads" state={state} />
+          ))}
+          {(["empty", "filled", "required", "disabled"] as const).map((state) => (
+            <LookupSample key={`accounts-${state}`} targetModule="Accounts" state={state} />
+          ))}
+          {(["empty", "filled", "required", "disabled"] as const).map((state) => (
+            <LookupSample key={`vendors-${state}`} targetModule="Vendors" state={state} />
+          ))}
+        </div>
       </div>
       <FieldInput
         field={{

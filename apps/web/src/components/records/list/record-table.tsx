@@ -12,6 +12,7 @@ import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
 
 export interface RecordTableProps {
+  laterInventory?: boolean;
   /** Columns in screen order. Labels come from the field, not from a module. */
   columns: readonly FieldDefinition[];
   records: readonly RecordData[];
@@ -83,6 +84,7 @@ const cellLine = [
  * columns. The data area scrolls horizontally. View Settings is a header overlay.
  */
 export function RecordTable({
+  laterInventory = false,
   columns,
   records,
   linkField,
@@ -217,11 +219,26 @@ export function RecordTable({
           {empty ? null : (
             <tbody>
               {records.map((record) => (
-                <tr key={record.id} data-part="row">
+                <tr
+                  key={record.id}
+                  data-part="row"
+                  className={laterInventory ? "group/row hover:bg-surface-selected" : undefined}
+                >
                   <td
                     data-part="leading"
                     className={`${halfLeading} ${bodyBox} sticky left-0 z-10`}
-                  />
+                  >
+                    {laterInventory ? (
+                      <div className="flex pt-(--size-list-checkbox-offset) opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
+                        <Button variant="ghost" size="compact" aria-label="Record actions">
+                          <Icons.ellipsis aria-hidden className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="compact" aria-label="Notes" laterModule="M6">
+                          <Icons.messageSquare aria-hidden className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : null}
+                  </td>
                   <td
                     data-part="leading"
                     className={`${halfLeading} ${bodyBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-10`}
@@ -237,7 +254,19 @@ export function RecordTable({
                   <td
                     data-part="badge"
                     className={`${badgeColumn} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
-                  />
+                  >
+                    {laterInventory ? (
+                      <Button
+                        variant="ghost"
+                        size="compact"
+                        aria-label="Record activity"
+                        laterModule="P3"
+                        className="mt-2 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
+                      >
+                        <Icons.activity aria-hidden className="h-4 w-4" />
+                      </Button>
+                    ) : null}
+                  </td>
                   {columns.map((field) => (
                     <td
                       key={field.apiName}
@@ -254,6 +283,9 @@ export function RecordTable({
                           }
                         >
                           <CellValue
+                            laterModule={
+                              laterInventory && field.dataType === "email" ? "M10" : undefined
+                            }
                             field={field}
                             value={record.fields[field.apiName] ?? null}
                             href={field.apiName === linkField ? rowHref(record) : undefined}

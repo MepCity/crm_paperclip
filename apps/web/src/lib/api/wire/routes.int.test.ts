@@ -33,6 +33,7 @@ async function call(
   op: Operation,
   org?: Organization,
   options: {
+    module?: string;
     recordId?: string;
     viewId?: string;
     query?: Record<string, string>;
@@ -51,8 +52,10 @@ async function call(
     >
   )[op.method];
   if (!handler) throw new Error("Missing method");
+  const moduleName = options.module ?? params.module;
   const boundParams = {
     ...params,
+    module: moduleName,
     recordId: options.recordId ?? params.recordId,
     viewId: options.viewId ?? params.viewId,
   };
@@ -61,8 +64,8 @@ async function call(
   );
   const url = new URL(operationPath(op, boundParams), origin);
   for (const [key, value] of Object.entries({
-    module: "Leads",
-    cvid: "all-leads",
+    module: moduleName,
+    cvid: options.viewId ?? (moduleName === "Contacts" ? "all-contacts" : "all-leads"),
     ...options.query,
   }))
     url.searchParams.set(key, value);
@@ -493,5 +496,42 @@ describe("operation routes", () => {
       data: [{ code: "SUCCESS", details: { id }, message: "record deleted", status: "success" }],
     });
     expect((await call(operations.record, a, { recordId: id })).status).toBe(404);
+  });
+  it("runs Contacts create, list, read, update and delete handlers", async () => {
+    const create = await call(operations.create, a, {
+      module: "Contacts",
+      body: { data: [{ Last_Name: "Route Contact" }] },
+    });
+    expect(create.status).toBe(200);
+    const body = await create.json();
+    const id = body.data[0].details.id;
+    const list = await call(operations.bulk, a, {
+      module: "Contacts",
+      query: { cvid: "all-contacts" },
+      body: {
+        filters: { field: { api_name: "id" }, comparator: "equal", value: id },
+      },
+    });
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.map((row: { id: string }) => row.id)).toEqual([id]);
+    expect((await call(operations.record, a, { module: "Contacts", recordId: id })).status).toBe(
+      200,
+    );
+    const update = await call(operations.update, a, {
+      module: "Contacts",
+      recordId: id,
+      body: { data: [{ Last_Name: "Updated Contact" }] },
+    });
+    expect(update.status).toBe(200);
+    expect(
+      (await (await call(operations.record, a, { module: "Contacts", recordId: id })).json())
+        .data[0].Last_Name,
+    ).toBe("Updated Contact");
+    expect((await call(operations.delete, a, { module: "Contacts", recordId: id })).status).toBe(
+      200,
+    );
+    expect((await call(operations.record, a, { module: "Contacts", recordId: id })).status).toBe(
+      404,
+    );
   });
 });

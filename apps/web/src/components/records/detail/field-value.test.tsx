@@ -1,4 +1,4 @@
-import { formatRecordAuditDateTime } from "@crm/core/format";
+import { formatDate, formatRecordAuditDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
@@ -72,6 +72,11 @@ test("email and website values use links", () => {
   expect(site.getAttribute("href")).toBe("https://example.org");
 });
 
+test("date shows the formatted calendar day in a detail row", () => {
+  show(field("Date_of_Birth", "date"), "2026-02-15");
+  expect(screen.getByText(formatDate("2026-02-15", DEFAULT_FORMAT))).toBeTruthy();
+});
+
 test("Created_By renders user and audit timestamp on two lines", () => {
   const auditTimestamp = "2026-03-01T22:30:00Z";
   const format = { locale: "en-US", timeZone: "UTC" };
@@ -133,4 +138,41 @@ test("textarea values preserve line breaks", () => {
   show(field("Description", "textarea"), "Line one\nLine two");
   expect(screen.getByText(/Line one/)).toBeTruthy();
   expect(screen.getByText(/Line two/)).toBeTruthy();
+});
+
+test("lookup field links to registered target module detail page", () => {
+  show(field("Parent_Lead", "lookup", { lookup: { module: "Leads" } }), {
+    module: "Leads",
+    id: "lead-123",
+    name: "Jane Doe",
+  });
+  const link = screen.getByRole("link", { name: "Jane Doe" });
+  expect(link.getAttribute("href")).toBe("/tab/Leads/lead-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field attaches laterModule to unregistered target link", () => {
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
+    module: "Accounts",
+    id: "acc-123",
+    name: "Acme Corp",
+  });
+  const link = screen.getByRole("link", { name: "Acme Corp" });
+  expect(link.tagName).toBe("SPAN");
+  expect(link.hasAttribute("href")).toBe(false);
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+  expect(link.getAttribute("data-later-module")).toBe("M3");
+});
+
+test("empty lookup field renders an em dash", () => {
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), null);
+  expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
+
+  cleanup();
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
+    module: "Accounts",
+    id: "acc-123",
+    name: "   ",
+  });
+  expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
 });
