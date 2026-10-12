@@ -92,7 +92,7 @@ async function verticalCenter(locator: Locator) {
 async function sectionContentBottom(section: Locator) {
   return section.evaluate((node) => {
     const children = Array.from(node.children).filter(
-      (child) => !child.matches(".record-form-section__title"),
+      (child) => !child.matches(".record-form-section__title, .record-form-section__header"),
     );
     let bottom = node.getBoundingClientRect().top;
     for (const child of children) {
@@ -105,7 +105,7 @@ async function sectionContentBottom(section: Locator) {
 async function sectionContentTop(section: Locator) {
   return section.evaluate((node) => {
     const children = Array.from(node.children).filter(
-      (child) => !child.matches(".record-form-section__title"),
+      (child) => !child.matches(".record-form-section__title, .record-form-section__header"),
     );
     if (children.length === 0) {
       return node.getBoundingClientRect().bottom;

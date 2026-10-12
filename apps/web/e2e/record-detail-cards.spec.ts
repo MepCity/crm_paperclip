@@ -371,7 +371,7 @@ test.describe("record detail cards visual layout", () => {
     expect(interSectionCardBox).not.toBeNull();
 
     const addressValueInter = interSectionCard.locator(
-      '[data-detail-field="Address"] .detail-field-value',
+      '[data-detail-field="Other_Address"] .detail-field-value',
     );
     const addressLineCaps = await wrappedLineSolidCapTops(addressValueInter);
     const descriptionHeading = interSectionCard.getByRole("heading", {

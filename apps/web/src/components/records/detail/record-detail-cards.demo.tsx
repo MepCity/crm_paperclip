@@ -162,12 +162,12 @@ export default function RecordDetailCardsDemo() {
                   fields: [
                     {
                       column: "full",
-                      field: field("Mailing Address", "Mailing_Address", "textarea"),
+                      field: field("Mailing_Address", "Mailing Address", "textarea"),
                       value: "100 Market St, Toronto, Canada",
                     },
                     {
                       column: "full",
-                      field: field("Other Address", "Other_Address", "textarea"),
+                      field: field("Other_Address", "Other Address", "textarea"),
                       value: "1 Main St, Springfield, IL 62701, United States",
                     },
                   ],
