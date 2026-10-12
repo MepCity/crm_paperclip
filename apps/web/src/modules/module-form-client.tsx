@@ -49,6 +49,7 @@ export function ModuleFormClient({
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
           profileImageLaterModule: definition.form.profileImageLaterModule,
+          profileImageIcon: definition.form.profileImageIcon,
           createPrefill,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
