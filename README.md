@@ -51,7 +51,8 @@ Without a global pnpm, prefix every command with `corepack`, for example `corepa
 Tests never touch the dev database. Integration tests start a throwaway PostgreSQL, migrate a template
 database and clone it for every test file. End-to-end tests build the app and serve it on a free port
 against their own throwaway database, so they can run while `pnpm dev` is running, also from another
-worktree.
+worktree. Direct Vitest runs without a filter are blocked on shared machines; use targeted tests
+(`pnpm exec vitest run <paths or name filter>`) or project scripts.
 
 ## Layout
 
