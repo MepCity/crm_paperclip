@@ -83,3 +83,15 @@ string. A 400 DUPLICATE_DATA restores ConflictError, and validation maps retain
 all field messages. Remaining Interim choices are listed in ADR 0004 §5.
 
 `useHomeCurrency()` reads the organization home currency through `getHomeCurrency`, cached under `apiKeys.homeCurrency(orgSlug)` inside the organization provider.
+
+## Module 2 discovery
+
+The client exposes `search`, `findDuplicateGroups`, `merge` and `deduplicate` on
+both HTTP and fixture wrappers. New operations use POST JSON bodies at
+`/crm/v2.2/actions/search` and
+`/crm/v2.2/{module}/actions/{duplicate_groups|merge|deduplicate}`. They use the
+existing authenticated organization/origin wrapper. Search criteria and merge
+values use the existing input codec; response DTOs retain the domain shapes
+(`SearchGroup[]`, `DuplicateGroup[]`, `RecordData`, `DeduplicateResult`). These
+local endpoints do not claim reference request parity. Empty discovery returns
+200 with an empty array rather than a list endpoint's 204 envelope.
