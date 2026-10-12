@@ -93,10 +93,22 @@ export function formPayload(
   );
 }
 
+export interface AddressFormRule {
+  field: string;
+  latitude: string;
+  longitude: string;
+  coordinates: string;
+  country: string;
+  state: string;
+  /** Writable sub-fields in render/copy/clear order when metadata names are not suffix-derived. */
+  subfields?: readonly string[];
+}
+
 export interface FormRules {
   owner: string;
   prefix?: { field: string; prefix: string };
-  address?: { field: string; latitude: string; longitude: string; coordinates: string };
+  address?: AddressFormRule;
+  addresses?: readonly AddressFormRule[];
   country?: { field: string; state: string };
   currency?: string;
   textPrefixes?: Readonly<Record<string, string>>;
@@ -114,14 +126,22 @@ export function formFields(
     sections.flatMap((section) => section.columns.flat().map((f) => f.apiName)),
   );
   if (rules.prefix && names.has(rules.prefix.field)) names.add(rules.prefix.prefix);
-  if (rules.address && names.has(rules.address.field)) {
-    names.add(rules.address.latitude);
-    names.add(rules.address.longitude);
+  for (const address of addressRulesList(rules)) {
+    if (names.has(address.field)) {
+      names.add(address.latitude);
+      names.add(address.longitude);
+    }
   }
   return metadata.fields.filter(
     (field) =>
       names.has(field.apiName) && field.views[mode] && !rules.omitted?.includes(field.apiName),
   );
+}
+
+export function addressRulesList(rules: FormRules): readonly AddressFormRule[] {
+  if (rules.addresses?.length) return rules.addresses;
+  if (rules.address) return [rules.address];
+  return [];
 }
 
 /** Address labels describe the subfield, while its parent is the fieldset legend. */

@@ -13,6 +13,8 @@ export const DEV_UI_A11Y_EXCLUDE = [
   ".record-form-validation-error",
   /** Save-error banner ink matches validation error token (MEP-168; ADR 0003 §8). */
   "[data-record-form-error-banner]",
+  /** Measured Clear All ink (`--color-form-clear-address`, sub-AA on white). ADR 0003 §8. */
+  ".record-form-clear-address > span",
 ] as const;
 
 type AxeViolations = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];

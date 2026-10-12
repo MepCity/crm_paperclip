@@ -25,6 +25,8 @@ export const leadsFormRules: FormRules = {
     latitude: leadsFormFields.latitude,
     longitude: leadsFormFields.longitude,
     coordinates: leadsFormFields.coordinates,
+    country: leadsFormFields.country,
+    state: leadsFormFields.state,
   },
   country: { field: leadsFormFields.country, state: leadsFormFields.state },
   currency: leadsFormFields.revenue,
