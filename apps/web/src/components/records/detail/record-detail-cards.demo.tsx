@@ -2,6 +2,7 @@
 
 import type { FieldDefinition } from "@crm/core/records";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { accountsRelatedLists } from "@/modules/accounts/accounts-related-lists";
 import { contactsRelatedLists } from "@/modules/contacts/contacts-related-lists";
 import { BusinessCard } from "./business-card";
 import { DetailsCard } from "./details-card";
@@ -243,6 +244,17 @@ export default function RecordDetailCardsDemo() {
         <h2 className="text-xl font-bold text-text-strong">Contacts Related Lists</h2>
         <div className="detail-demo-frame">
           <RelatedCardsContainer relatedLists={contactsRelatedLists} />
+        </div>
+      </section>
+
+      <section
+        aria-label="Accounts related list cards"
+        data-accounts-cards-demo
+        className="space-y-4"
+      >
+        <h2 className="text-xl font-bold text-text-strong">Accounts Related Lists</h2>
+        <div className="detail-demo-frame">
+          <RelatedCardsContainer relatedLists={accountsRelatedLists} />
         </div>
       </section>
     </div>
