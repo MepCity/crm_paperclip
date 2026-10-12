@@ -571,6 +571,37 @@ describe("operation routes", () => {
       404,
     );
   });
+  it("runs Deals create, list, read, update and delete handlers", async () => {
+    const create = await call(operations.create, a, {
+      module: "Deals",
+      body: { data: [{ Deal_Name: "Route Deal", Stage: "Qualification" }] },
+    });
+    expect(create.status).toBe(200);
+    const body = await create.json();
+    const id = body.data[0].details.id;
+    const list = await call(operations.bulk, a, {
+      module: "Deals",
+      query: { cvid: "all-deals" },
+      body: {
+        filters: { field: { api_name: "id" }, comparator: "equal", value: id },
+      },
+    });
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.map((row: { id: string }) => row.id)).toEqual([id]);
+    expect((await call(operations.record, a, { module: "Deals", recordId: id })).status).toBe(200);
+    const update = await call(operations.update, a, {
+      module: "Deals",
+      recordId: id,
+      body: { data: [{ Deal_Name: "Updated Deal" }] },
+    });
+    expect(update.status).toBe(200);
+    expect(
+      (await (await call(operations.record, a, { module: "Deals", recordId: id })).json()).data[0]
+        .Deal_Name,
+    ).toBe("Updated Deal");
+    expect((await call(operations.delete, a, { module: "Deals", recordId: id })).status).toBe(200);
+    expect((await call(operations.record, a, { module: "Deals", recordId: id })).status).toBe(404);
+  });
   it("serves Accounts module, fields, layouts and custom view settings", async () => {
     for (const op of [operations.module, operations.fields, operations.layouts, operations.views]) {
       const response = await call(op, a, { module: "Accounts", viewId: "all-accounts" });
@@ -580,6 +611,44 @@ describe("operation routes", () => {
       if (op === operations.views) expect(body.custom_views).toHaveLength(8);
       if (op === operations.layouts) expect(body.layouts[0].sections).toHaveLength(4);
       if (op === operations.module) expect(body.modules[0].api_name).toBe("Accounts");
+    }
+  });
+  it("serves Deals settings and stage metadata without changing Leads options", async () => {
+    for (const op of [
+      operations.module,
+      operations.fields,
+      operations.layouts,
+      operations.views,
+      operations.view,
+    ]) {
+      const response = await call(op, a, { module: "Deals", viewId: "all-deals" });
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      if (op === operations.fields) {
+        expect(body.fields).toHaveLength(29);
+        const stages = body.fields.find(
+          (field: { api_name: string }) => field.api_name === "Stage",
+        ).pick_list_values;
+        expect(stages).toHaveLength(9);
+        expect(stages[0]).toEqual({
+          display_value: "Qualification",
+          actual_value: "Qualification",
+          probability: 10,
+          forecast_category: { name: "Pipeline" },
+          deal_category: "Open",
+        });
+      }
+      if (op === operations.views) expect(body.custom_views).toHaveLength(11);
+      if (op === operations.layouts) expect(body.layouts[0].sections).toHaveLength(3);
+      if (op === operations.module) expect(body.modules[0].api_name).toBe("Deals");
+    }
+    const leads = await (await call(operations.fields, a)).json();
+    for (const option of leads.fields.find(
+      (field: { api_name: string }) => field.api_name === "Lead_Status",
+    ).pick_list_values) {
+      expect(option).not.toHaveProperty("probability");
+      expect(option).not.toHaveProperty("forecast_category");
+      expect(option).not.toHaveProperty("deal_category");
     }
   });
 });

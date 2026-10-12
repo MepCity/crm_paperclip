@@ -39,9 +39,18 @@ export type ModuleRecordReference = {
  */
 export type FieldValue = string | number | boolean | ModuleRecordReference | null;
 
+export type StageCategory = "Open" | "Closed Won" | "Closed Lost";
+
+export interface PicklistStageMeta {
+  probability: number;
+  forecastCategory: string;
+  category: StageCategory;
+}
+
 export interface PicklistOption {
   displayValue: string;
   storedValue: string;
+  stage?: PicklistStageMeta;
 }
 
 export interface FieldViewFlags {

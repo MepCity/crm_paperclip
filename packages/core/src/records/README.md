@@ -374,3 +374,5 @@ and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.
 The three Leads conversion lookups remain read-only.
+
+Deals validates and resolves Account_Name and Contact_Name against registered fixture modules; lookups into unregistered modules, including Campaign_Source, remain unchanged. The metadata export contains no separate pipeline definition or selected business-card fields.
