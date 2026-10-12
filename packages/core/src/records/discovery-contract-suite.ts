@@ -61,6 +61,8 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
           });
       const query = {
         text: "grouped marker",
+        // First_Name is unknown to Accounts, so the caller selects the two modules that have it.
+        modules: ["Leads", "Contacts"],
         perPage: 1,
         page: 2,
         sort: { field: "First_Name", order: "asc" as const },
@@ -84,6 +86,28 @@ export function describeDiscoveryContract(label: string, factory: Factory) {
       ).toBe(1);
       expect(await make().search({ text: query.text })).toEqual([]);
       expect((await service.search({ ...query, page: 10 }))[0]?.records).toEqual([]);
+    });
+    it("rule 4: rejects a module-specific field when the search spans every module", async () => {
+      const service = make();
+      for (const field of ["Company", "Last_Name"]) {
+        await expect(
+          service.search({ text: "cross marker", fields: [field] }),
+        ).rejects.toBeInstanceOf(ValidationError);
+        await expect(
+          service.search({ text: "cross marker", sort: { field, order: "asc" } }),
+        ).rejects.toBeInstanceOf(ValidationError);
+        await expect(
+          service.search({
+            text: "cross marker",
+            filters: { field, comparator: "equal", value: "x" },
+          }),
+        ).rejects.toBeInstanceOf(ValidationError);
+      }
+      // Selecting the module that owns the field is the documented way to project it.
+      await service.create("Leads", { Company: "Cross Marker", Last_Name: "Owner" });
+      expect(
+        await service.search({ text: "cross marker", modules: ["Leads"], fields: ["Company"] }),
+      ).toHaveLength(1);
     });
     it("rule 5: rejects invalid sets, foreign module, foreign organization and missing IDs atomically", async () => {
       const service = make();
