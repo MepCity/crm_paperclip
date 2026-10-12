@@ -353,7 +353,7 @@ export function AdvancedSearchScreen({
 
           {/* Filter By Summary */}
           {filterSummary && (
-            <span className="text-sm font-medium text-text">Filter By {filterSummary}</span>
+            <span className="text-sm font-semibold text-text">Filter By {filterSummary}</span>
           )}
         </div>
 

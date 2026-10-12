@@ -166,7 +166,7 @@ export function AdvancedSearchCard({
                         <td key={col} className="px-3 py-2.5 whitespace-nowrap">
                           <Link
                             href={moduleRecordPath(orgSlug, tabName, record.id)}
-                            className="font-medium text-primary hover:underline"
+                            className="font-semibold text-primary hover:underline"
                           >
                             {text}
                           </Link>
@@ -178,7 +178,7 @@ export function AdvancedSearchCard({
                         <Link
                           href="#"
                           laterModule={resolveModuleLaterKey(module)}
-                          className="font-medium text-primary hover:underline"
+                          className="font-semibold text-primary hover:underline"
                         >
                           {text}
                         </Link>
@@ -283,7 +283,7 @@ export function AdvancedSearchCard({
                             variant="secondary"
                             size="compact"
                             laterModule="M4"
-                            className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                           >
                             {stageText}
                           </Button>
