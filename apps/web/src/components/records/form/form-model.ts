@@ -58,6 +58,10 @@ export function normalizeFormValue(
 ): FieldValue {
   if (value === undefined || value === "" || (field.dataType === "picklist" && value === "-None-"))
     return null;
+  // A `bigint` entry is numeric like `integer`, but the service accepts only decimal text for a
+  // long integer, so the model — not the widget — is where the typed number becomes exact digits.
+  if (field.dataType === "bigint" && typeof value === "number")
+    return Number.isFinite(value) ? String(value) : null;
   if (field.dataType === "lookup" && typeof value === "object" && value !== null) {
     if (!("id" in value) || typeof value.id !== "string" || value.id.trim() === "") {
       return null;

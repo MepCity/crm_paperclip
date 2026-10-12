@@ -244,7 +244,8 @@ Specs: `accounts.md`, `accounts-form.md`, `accounts-record-detail.md`.
 Connected To is omitted on create (metadata-enabled but absent from the reference form captures).
 Registering Accounts retires the transitional inert state of Account Name references: the Contacts
 form lookup, the Contacts list cell and the Contacts detail now resolve to Account record links.
-Account Number (`bigint`) draws the single-line numeric entry with the integer validation rule.
+Account Number (`bigint`) draws the single-line numeric entry with the integer validation rule and
+is written as decimal text, the only shape the service accepts for a long integer.
 
 `laterModule`: AF-05 image (M6), AF-11.16 picker handset (M5), AF-01/AF-45/AF-46/AF-47 customization
 and automation (M11). Drawn without handlers (never exercised in the capture): AF-11.3 New Account,

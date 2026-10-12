@@ -225,7 +225,8 @@ surrounding trigger.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
 - Unsupported multi-module/date-time controls: absent from the Leads form; their
   corresponding later modules must supply primitives. `bigint` renders the integer
-  entry (Accounts `Account Number`, `m3f-create`).
+  entry (Accounts `Account Number`, `m3f-create`); the entry is numeric, but the form
+  model hands the service decimal text because a long integer accepts no other shape.
 - Currency prefix/information content is supplied by callers; the organization
   currency comes from `useHomeCurrency` (MEP-225, decision MEP-221), never a fixed
   symbol, an ISO code or a locale guess. Company stays a text field (suggestions unseen).

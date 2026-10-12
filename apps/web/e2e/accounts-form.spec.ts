@@ -179,7 +179,8 @@ test("creates with every field type, a parent account and both addresses", async
   const body = request.postDataJSON().data[0];
   expect(body.Account_Name).toBe("Full Form Account");
   expect(body.Account_Site).toBe("Istanbul Site");
-  expect(body.Account_Number).toBe(123456);
+  // A long integer travels as decimal text: the service rejects a JSON number for `bigint`.
+  expect(body.Account_Number).toBe("123456");
   expect(body.Account_Type).toBe("Customer");
   expect(body.Industry).toBe("Data/Telecom OEM");
   expect(body.Annual_Revenue).toBe(250000);
