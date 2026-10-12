@@ -170,7 +170,7 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
                   {ColumnIcon && (
                     <ColumnIcon aria-hidden className="size-3.5 text-text-muted shrink-0" />
                   )}
-                  <span className="text-md font-medium text-text-strong">{col.title}</span>
+                  <span className="text-md font-semibold text-text-strong">{col.title}</span>
                   <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
                     {col.count}
                   </span>
@@ -194,10 +194,10 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
                   aria-selected={isSelected}
                   onClick={() => !tabLater && setActiveSubtab(tab.id)}
                   {...(tabLater ? laterModuleProps(tabLater) : {})}
-                  className={`pb-2 text-md font-medium transition-colors ${
+                  className={`pb-2 text-md transition-colors ${
                     isSelected
-                      ? "border-b-2 border-primary text-primary"
-                      : "text-text-muted hover:text-text"
+                      ? "border-b-2 border-primary text-primary font-semibold"
+                      : "text-text-muted hover:text-text font-normal"
                   }`}
                 >
                   {tab.label}
@@ -216,7 +216,7 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
                 href={`#${link.id}`}
                 variant="body"
                 laterModule={link.moduleKey === "M2" ? undefined : link.moduleKey}
-                className="text-primary hover:underline font-medium text-md"
+                className="text-primary hover:underline font-normal text-md"
               >
                 {link.label}
               </Link>
