@@ -15,8 +15,6 @@ import type {
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import {
-  MAX_CRITERIA_GROUP_SIZE,
-  MAX_CRITERIA_NODES,
   decodeCriteria,
   decodeCurrency,
   decodeField,
@@ -34,6 +32,8 @@ import {
   encodeModule,
   encodeRecord,
   encodeView,
+  MAX_CRITERIA_GROUP_SIZE,
+  MAX_CRITERIA_NODES,
 } from "./codec";
 import { encodeError } from "./errors";
 
@@ -105,7 +105,9 @@ function criteriaTree(nodes: number) {
       return {
         group_operator: "OR",
         group: Array.from({ length: size }, () => ({
-          field: { api_name: "Converted__s" }, comparator: "equal", value: false,
+          field: { api_name: "Converted__s" },
+          comparator: "equal",
+          value: false,
         })),
       };
     }),
@@ -782,5 +784,45 @@ describe("named reference wire contract", () => {
     const definition = field("Birthday", "date");
     expect(encodeField(definition).data_type).toBe("date");
     expect(decodeField(encodeField(definition))).toEqual(definition);
+  });
+});
+
+describe("wire input bounds", () => {
+  it.each([
+    ["ownerlookup", { id: "member-id", name: "Member", email: "member@example.test" }],
+    ["lookup", { id: "account", name: "Account" }],
+    ["multi_module_lookup", { module: "Contacts", id: "contact", name: "Contact" }],
+  ])("rejects unknown keys inside %s without losing valid reference support", (key, ref) => {
+    expect(() => decodeInput({ [key]: ref }, metadata)).not.toThrow();
+    try {
+      decodeInput({ [key]: { ...ref, unexpected: true } }, metadata);
+      throw new Error("Expected rejection");
+    } catch (error) {
+      expect(encodeError(error)).toMatchObject({
+        status: 400,
+        body: {
+          code: "INVALID_DATA",
+          status: "error",
+          details: { fields: { [key]: ["Unknown reference key."] } },
+        },
+      });
+    }
+  });
+  it("accepts 500 siblings and rejects 501 at the root or in a nested group", () => {
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value: "Example" };
+    const group = (size: number) => ({
+      group_operator: "AND",
+      group: Array.from({ length: size }, () => leaf),
+    });
+    expect(decodeCriteria(group(500))).toMatchObject({
+      group: Array.from({ length: 500 }, () => ({
+        field: "Company",
+        comparator: "equal",
+        value: "Example",
+      })),
+    });
+    for (const criteria of [group(501), { group_operator: "OR", group: [group(501)] }]) {
+      expect(() => decodeCriteria(criteria)).toThrow(ValidationError);
+    }
   });
 });

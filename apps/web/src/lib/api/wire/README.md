@@ -209,14 +209,21 @@ The field names and configured values come from the metadata export. The path
 and response envelope were not captured; see ADR 0004. The decoder rejects
 missing, malformed and unknown currency fields with the existing ValidationError.
 
-
 ## Input bounds
 
-These are local validation limits, not observed reference CRM limits. Criteria
-retain the existing maximum depth of 32 (root depth 0). Each group and each
-criteria value array accepts at most 500 entries. A decoded criteria tree accepts
-at most 10,000 nodes in total, counting the root, groups, and leaves; value array
-entries do not count as tree nodes. The node budget is shared across all branches
-and starts fresh for each decode. This allows nearly twenty full 500-leaf groups,
-well above the current panel and saved-view criteria, while bounding total tree
-traversal. Oversized inputs use the existing filters-keyed validation error.
+Reference values reject unknown inner keys with field-keyed `INVALID_DATA` (400).
+Owner references accept `id`, `name`, and `email`; lookup references accept `id`
+and `name`; connected references accept `module`, `id`, and `name`. Existing
+optional display fields remain accepted for response round trips.
+
+Bulk and count restrictions accept search strings up to 2,000 UTF-16 code units,
+matching the existing long-text field limit. Empty strings remain valid and text
+is passed to the service unchanged. Each criteria group and each criteria
+value array accepts up to 500 entries, matching the existing bulk ID limit; the
+group limit applies at every nesting level alongside the existing depth limit
+of 32. A decoded criteria tree accepts at most 10,000 nodes in total (root,
+groups and leaves; value array entries do not count). The budget is shared
+across all branches and starts fresh for each decode; it allows nearly twenty
+full 500-leaf groups, well above current panel and saved-view criteria. These are local input bounds,
+not claims about observed reference CRM limits. Rejections retain the existing
+four-key error envelope with `details.fields.search` or `details.fields.filters`.
