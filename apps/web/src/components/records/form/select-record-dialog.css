@@ -1,0 +1,49 @@
+/* Select Record dialog — builds upon select-user-dialog pattern */
+@import "./select-user-dialog.css";
+
+.select-record-modal-panel {
+  width: var(--size-select-user-dialog-width);
+  max-width: 95vw;
+}
+
+.select-record-pagination {
+  position: absolute;
+  left: var(--size-select-user-dialog-inset);
+  right: var(--size-select-user-dialog-inset);
+  bottom: calc(
+    var(--size-select-user-dialog-bottom-padding) +
+    var(--size-select-user-done-height) +
+    var(--size-select-user-table-footer-gap)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.select-record-table-wrap {
+  bottom: calc(
+    var(--size-select-user-dialog-bottom-padding) +
+    var(--size-select-user-done-height) +
+    var(--size-select-user-table-footer-gap) +
+    38px
+  );
+}
+
+.select-record-col-name {
+  width: 220px;
+}
+
+.select-record-summary-icon {
+  width: var(--size-select-user-avatar);
+  height: var(--size-select-user-avatar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}

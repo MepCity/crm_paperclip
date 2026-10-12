@@ -9,6 +9,9 @@ test("Link renders an anchor to its target for every variant", () => {
   render(
     <>
       <Link href="/text">Text link</Link>
+      <Link href="/records/1" variant="body">
+        Body link
+      </Link>
       <Link href="/primary" variant="primary">
         Primary link
       </Link>
@@ -26,6 +29,7 @@ test("Link renders an anchor to its target for every variant", () => {
 
   const targets: Record<string, string> = {
     "Text link": "/text",
+    "Body link": "/records/1",
     "Primary link": "/primary",
     "Secondary link": "/secondary",
     "Ghost link": "/ghost",
@@ -67,5 +71,63 @@ test("Link in the disabled state renders no anchor and ignores presses", async (
   expect(element.getAttribute("data-disabled")).toBe("true");
 
   await user.click(element);
+  expect(presses).toBe(0);
+});
+
+test("Rail and icon links retain destinations, current page semantics and keyboard focus", async () => {
+  const user = userEvent.setup();
+  render(
+    <>
+      <Link href="/home" variant="rail" aria-current="page">
+        Home
+      </Link>
+      <Link href="/child" variant="railNested">
+        Child
+      </Link>
+      <Link href="/settings" variant="icon" aria-label="Settings">
+        Settings
+      </Link>
+    </>,
+  );
+  const home = screen.getByRole("link", { name: "Home" });
+  expect(home.getAttribute("aria-current")).toBe("page");
+  expect(home.getAttribute("href")).toBe("/home");
+  await user.tab();
+  expect(document.activeElement).toBe(home);
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Child" }));
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Settings" }));
+});
+
+test("Link with laterModule renders active appearance without anchor, takes focus, and ignores presses", async () => {
+  const user = userEvent.setup();
+  let presses = 0;
+  render(
+    <Link href="/leads/detail" laterModule="M3" onPress={() => presses++}>
+      Later Detail
+    </Link>,
+  );
+
+  const link = screen.getByRole("link", { name: "Later Detail" });
+  expect(link.tagName).toBe("SPAN");
+  expect(link.hasAttribute("href")).toBe(false);
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.hasAttribute("title")).toBe(false);
+  expect(link.hasAttribute("data-disabled")).toBe(false);
+  expect(link.classList.contains("opacity-50")).toBe(false);
+  expect(link.classList.contains("cursor-not-allowed")).toBe(false);
+
+  // Focus and keyboard
+  link.focus();
+  expect(document.activeElement).toBe(link);
+  await user.keyboard("{Enter}");
+  expect(presses).toBe(0);
+  await user.keyboard(" ");
+  expect(presses).toBe(0);
+
+  // Click does not navigate or trigger onPress
+  await user.click(link);
   expect(presses).toBe(0);
 });

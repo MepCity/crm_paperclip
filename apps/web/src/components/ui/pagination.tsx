@@ -7,7 +7,7 @@ export interface PaginationProps {
   href: (page: number) => string;
 }
 
-const disabledControlClass = `inline-flex items-center justify-center font-medium rounded-md opacity-50 cursor-not-allowed ${buttonStyles.secondary} ${buttonSizes.sm}`;
+const disabledControlClass = `inline-flex items-center justify-center font-semibold rounded-md opacity-50 cursor-not-allowed ${buttonStyles.secondary} ${buttonSizes.sm}`;
 
 function PageControl({
   label,

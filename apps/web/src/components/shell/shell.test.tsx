@@ -1,0 +1,320 @@
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icon";
+import { AppShell } from "./app-shell";
+import { isNavLinkActive, type NavConfig, navLinkIconClassName, shellNav } from "./nav";
+import { Navigation } from "./navigation";
+import { OrganizationSwitcher } from "./organization-switcher";
+import { PageHeader } from "./page-header";
+import { PageTitle } from "./page-title";
+import { SettingsNavigation } from "./settings-navigation";
+import { UserMenu } from "./user-menu";
+
+const navigation = vi.hoisted(() => ({
+  path: "/crm/example",
+  push: vi.fn(),
+  replace: vi.fn(),
+  refresh: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.path,
+  useRouter: () => navigation,
+}));
+
+const organizations = [
+  { name: "Example team", slug: "example" },
+  { name: "Second team", slug: "second" },
+  { name: "Create team", slug: "create" },
+];
+const user = { id: "user-test", name: "Example User", email: "user@example.test" };
+const leadsLink = {
+  id: "leads",
+  label: "Leads",
+  icon: Icons.building,
+  href: (slug: string) => `/crm/${slug}/leads`,
+  match: "prefix" as const,
+};
+const config: NavConfig = {
+  links: [
+    { id: "home", label: "Home", icon: Icons.home, href: (slug) => `/crm/${slug}`, match: "exact" },
+  ],
+  sections: [
+    {
+      id: "crm",
+      label: "CRM Teamspace",
+      groups: [
+        {
+          id: "sales",
+          label: "Sales",
+          icon: Icons.folder,
+          links: [
+            {
+              id: "leads",
+              label: "Leads",
+              icon: Icons.building,
+              href: (slug) => `/crm/${slug}/leads`,
+              match: "prefix",
+            },
+          ],
+        },
+        { id: "empty", label: "Empty group", icon: Icons.folder, links: [] },
+      ],
+    },
+    { id: "empty-section", label: "Empty section", groups: [] },
+  ],
+};
+
+function classes(element: HTMLElement): Set<string> {
+  return new Set(element.className.split(/\s+/));
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  navigation.path = "/crm/example";
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+  );
+  vi.stubGlobal("requestAnimationFrame", (fn: FrameRequestCallback) => setTimeout(() => fn(0), 0));
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+test("Pinned links without an icon accent token keep the previous icon class rules", () => {
+  const link = config.links[0]!;
+  expect(navLinkIconClassName(link, { nested: false, active: true })).toBe(
+    "size-(--size-rail-icon) shrink-0",
+  );
+  const leads = config.sections[0]!.groups[0]!.links[0]!;
+  expect(navLinkIconClassName(leads, { nested: true, active: false })).toContain("text-rail-icon");
+  expect(navLinkIconClassName(leads, { nested: true, active: true })).toBe(
+    "size-(--size-rail-icon) shrink-0",
+  );
+  expect(navLinkIconClassName(shellNav.links[0]!, { nested: false, active: true })).toContain(
+    "text-accent-blue",
+  );
+});
+
+test("Navigation renders configured links and populated groups, with correct active paths", () => {
+  const view = render(<Navigation orgSlug="example" config={config} />);
+  const home = screen.getByRole("link", { name: "Home" });
+  expect(home.getAttribute("href")).toBe("/crm/example");
+  expect(home.getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("link", { name: "Leads" }).getAttribute("aria-current")).toBeNull();
+  expect(screen.queryByText("Empty group")).toBeNull();
+  expect(screen.queryByText("Empty section")).toBeNull();
+  navigation.path = "/crm/example/leads/record";
+  view.rerender(<Navigation orgSlug="example" config={config} />);
+  expect(screen.getByRole("link", { name: "Leads" }).getAttribute("aria-current")).toBe("page");
+  expect(home.getAttribute("aria-current")).toBeNull();
+  expect(isNavLinkActive(leadsLink, "example", "/crm/example/leads-other")).toBe(false);
+});
+
+test("Navigation groups collapse and expand with mouse and keyboard", async () => {
+  const keyboard = userEvent.setup();
+  render(<Navigation orgSlug="example" config={config} />);
+  const group = screen.getByRole("button", { name: "Sales" });
+  expect(group.getAttribute("aria-expanded")).toBe("true");
+  await keyboard.click(group);
+  expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
+  await keyboard.keyboard("{Enter}");
+  expect(screen.getByRole("link", { name: "Leads" })).toBeTruthy();
+  await keyboard.keyboard(" ");
+  expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
+});
+
+test("Default navigation renders Leads and Contacts under Sales and omits empty groups", () => {
+  render(<Navigation orgSlug="example" />);
+  expect(screen.getAllByRole("link")).toHaveLength(3);
+  expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Leads/list",
+  );
+  expect(screen.getByRole("link", { name: "Contacts" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Contacts/list",
+  );
+  expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
+});
+
+test("Organization switcher exposes the current organization in its accessible name", () => {
+  render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
+  expect(screen.getByRole("button", { name: "Organization switcher: Example team" })).toBeTruthy();
+});
+
+test("Organization switcher lists organizations, marks the current one and selects using the keyboard", async () => {
+  const keyboard = userEvent.setup();
+  render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
+  await keyboard.tab();
+  await keyboard.keyboard("{Enter}");
+  const current = screen.getByRole("menuitemradio", { name: "Example team" });
+  expect(current.getAttribute("aria-checked")).toBe("true");
+  expect(
+    screen.getByRole("menuitemradio", { name: "Second team" }).getAttribute("aria-checked"),
+  ).toBe("false");
+  await keyboard.keyboard("{Home}{ArrowDown}{Enter}");
+  expect(navigation.push).toHaveBeenCalledWith("/crm/second");
+});
+
+test("Organization switcher creates organizations and does not confuse a slug named create", async () => {
+  const keyboard = userEvent.setup();
+  render(<OrganizationSwitcher currentSlug="example" organizations={organizations} />);
+  const trigger = screen.getByRole("button", { name: "Organization switcher: Example team" });
+  await keyboard.click(trigger);
+  await keyboard.click(screen.getByRole("menuitemradio", { name: "Create team" }));
+  expect(navigation.push).toHaveBeenLastCalledWith("/crm/create");
+  await keyboard.click(trigger);
+  await keyboard.keyboard("{End}{Enter}");
+  expect(navigation.push).toHaveBeenLastCalledWith("/orgs/new");
+});
+
+test("User menu shows identity and initials and signs out", async () => {
+  const keyboard = userEvent.setup();
+  const signOut = vi.fn(async () => ({ ok: true as const }));
+  render(<UserMenu user={user} onSignOut={signOut} />);
+  expect(screen.getByRole("button", { name: "User menu" }).textContent).toBe("EU");
+  await keyboard.tab();
+  await keyboard.keyboard("{Enter}");
+  expect(screen.getByText(user.name)).toBeTruthy();
+  expect(screen.getByText(user.email)).toBeTruthy();
+  await keyboard.keyboard("{ArrowDown}{Enter}");
+  await waitFor(() => expect(signOut).toHaveBeenCalledOnce());
+  expect(navigation.replace).toHaveBeenCalledWith("/sign-in");
+  expect(navigation.refresh).toHaveBeenCalledOnce();
+});
+
+test("Failed sign out shows an error and preserves the session", async () => {
+  const keyboard = userEvent.setup();
+  render(
+    <UserMenu
+      user={user}
+      onSignOut={async () => ({ ok: false, message: "Network unavailable." })}
+    />,
+  );
+  await keyboard.click(screen.getByRole("button", { name: "User menu" }));
+  await keyboard.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Network unavailable.");
+  expect(navigation.replace).not.toHaveBeenCalled();
+});
+
+test("Page title appears once in the top bar and updates on page changes", () => {
+  const view = render(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Home" />
+      <p>Content</p>
+    </AppShell>,
+  );
+  expect(
+    within(screen.getByRole("banner")).getByRole("heading", { level: 1, name: "Home" }),
+  ).toBeTruthy();
+  expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  expect(document.title).toBe("Home | MepCity CRM");
+  view.rerender(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Settings" />
+    </AppShell>,
+  );
+  expect(screen.getByRole("heading", { name: "Settings", level: 1 })).toBeTruthy();
+  expect(document.title).toBe("Settings | MepCity CRM");
+});
+
+test("Rail hiding and reopening transfer focus to the available control", async () => {
+  const keyboard = userEvent.setup();
+  render(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Home" />
+    </AppShell>,
+  );
+  const hide = screen.getByRole("button", { name: "Hide Menu" });
+  await keyboard.click(hide);
+  expect(screen.getByLabelText("Navigation rail").className).toContain("hidden");
+  const show = screen.getByRole("button", { name: "Show Menu" });
+  await waitFor(() => expect(document.activeElement).toBe(show));
+  await keyboard.keyboard("{Enter}");
+  expect(screen.getByLabelText("Navigation rail").className).not.toContain("hidden");
+  await waitFor(() => expect(document.activeElement).toBe(hide));
+});
+
+test("Mobile rail starts hidden and changes with viewport width", () => {
+  let onChange: (() => void) | undefined;
+  const media = {
+    matches: false,
+    addEventListener: vi.fn((_: string, fn: () => void) => {
+      onChange = fn;
+    }),
+    removeEventListener: vi.fn(),
+  };
+  vi.stubGlobal("matchMedia", () => media);
+  const view = render(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Home" />
+    </AppShell>,
+  );
+  expect(screen.getByLabelText("Navigation rail").className).toContain("hidden");
+  view.unmount();
+  expect(media.removeEventListener).toHaveBeenCalledWith("change", onChange);
+});
+
+test("Settings navigation links to Members and keeps General exact", () => {
+  navigation.path = "/crm/example/settings/members";
+  render(<SettingsNavigation orgSlug="example" />);
+  const members = screen.getByRole("link", { name: "Members" });
+  expect(members.getAttribute("href")).toBe("/crm/example/settings/members");
+  expect(members.getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
+});
+
+test("Settings navigation marks only the current page with fill and bold", () => {
+  navigation.path = "/crm/example/settings/members";
+  const view = render(<SettingsNavigation orgSlug="example" />);
+
+  const members = classes(screen.getByRole("link", { name: "Members" }));
+  const general = classes(screen.getByRole("link", { name: "General" }));
+  expect(members.has("bg-surface-hover")).toBe(true);
+  expect(members.has("font-semibold")).toBe(true);
+  expect(members.has("text-text-muted")).toBe(false);
+  expect(general.has("bg-surface-hover")).toBe(false);
+  expect(general.has("font-semibold")).toBe(false);
+  expect(general.has("text-text-muted")).toBe(true);
+  expect(general.has("data-hovered:bg-surface-hover")).toBe(true);
+  for (const link of [members, general]) {
+    expect(link.has("px-3")).toBe(true);
+    expect(link.has("py-2")).toBe(true);
+  }
+
+  navigation.path = "/crm/example/settings";
+  view.rerender(<SettingsNavigation orgSlug="example" />);
+  const activeGeneral = classes(screen.getByRole("link", { name: "General" }));
+  expect(activeGeneral.has("bg-surface-hover")).toBe(true);
+  expect(activeGeneral.has("font-semibold")).toBe(true);
+  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-surface-hover")).toBe(
+    false,
+  );
+});
+
+test("PageHeader supplies description and actions without repeating a title", () => {
+  const view = render(
+    <PageHeader description="Organization details." actions={<Button>Invite member</Button>} />,
+  );
+  expect(screen.getByText("Organization details.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Invite member" })).toBeTruthy();
+  expect(screen.queryByRole("heading")).toBeNull();
+  view.rerender(<PageHeader />);
+  expect(view.container.textContent).toBe("");
+});
+
+test("Skip to content transfers focus to the main landmark", async () => {
+  const keyboard = userEvent.setup();
+  render(
+    <AppShell orgSlug="example" organizations={organizations} user={user}>
+      <PageTitle title="Home" />
+    </AppShell>,
+  );
+  await keyboard.tab();
+  const skip = screen.getByRole("link", { name: "Skip to content" });
+  expect(document.activeElement).toBe(skip);
+  await keyboard.keyboard("{Enter}");
+  expect(document.activeElement).toBe(screen.getByRole("main"));
+});

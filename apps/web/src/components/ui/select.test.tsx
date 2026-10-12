@@ -1,6 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test } from "vitest";
+import { render } from "@/test/render";
 import { Form } from "./form";
 import { Select, SelectItem } from "./select";
 
@@ -82,6 +83,17 @@ test("Select marks its trigger invalid from form field errors", () => {
   );
 
   expect(screen.getByRole("button", { name: /Fruit/ }).getAttribute("data-invalid")).toBe("true");
+});
+
+test("Select can keep its label accessible without showing it", () => {
+  render(
+    <Select label="Order" hideLabel items={fruits}>
+      {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+    </Select>,
+  );
+
+  expect(screen.getByText("Order").className).toContain("sr-only");
+  expect(screen.getByRole("button", { name: /Order/ })).toBeTruthy();
 });
 
 test("Select in the disabled state cannot be opened", async () => {

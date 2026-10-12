@@ -48,7 +48,7 @@ test("passes when the page has no violations", async ({ page }) => {
   await expectNoA11yViolations(page);
 });
 
-test("waits for a running fade to reach its resting color before scanning", async ({ page }) => {
+test("settles a running fade at its resting color before scanning", async ({ page }) => {
   await page.setContent(
     pageHtml(`
       <style>
@@ -75,7 +75,8 @@ test("waits for a running fade to reach its resting color before scanning", asyn
     page.locator("#fading").evaluate((element) => Number(getComputedStyle(element).opacity));
 
   // Still in the fade: partial opacity composites the text toward the page
-  // and drops it under 4.5:1. Scanning here fails unless the helper waits.
+  // and drops it under 4.5:1. Scanning here fails unless the helper settles
+  // the animation at its end state.
   expect(await opacity()).toBeLessThan(0.5);
   await expectNoA11yViolations(page);
   expect(await opacity()).toBeGreaterThan(0.99);
@@ -95,10 +96,20 @@ test("does not wait out an infinite animation", async ({ page }) => {
     `),
   );
 
-  const started = Date.now();
   await expectNoA11yViolations(page);
-  // A spinner never finishes. Waiting on it would hang this scan.
-  expect(Date.now() - started).toBeLessThan(5_000);
+  // A spinner never finishes. The helper must not finish it for the scan.
+  const spinAnimation = await page.locator(".spin").evaluate((element) => {
+    const animation = element.getAnimations()[0];
+    if (!animation) return null;
+    const timing = animation.effect?.getComputedTiming();
+    return {
+      playState: animation.playState,
+      iterations: timing?.iterations ?? null,
+    };
+  });
+  expect(spinAnimation).not.toBeNull();
+  expect(spinAnimation?.playState).toBe("running");
+  expect(spinAnimation?.iterations).toBe(Infinity);
 });
 
 test("leaves excluded selectors out of the scan", async ({ page }) => {

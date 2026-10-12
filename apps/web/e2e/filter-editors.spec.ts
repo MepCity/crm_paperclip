@@ -1,0 +1,501 @@
+import { writeFile } from "node:fs/promises";
+import { expect, type Locator, test } from "@playwright/test";
+import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
+import { signUpNewUser } from "./support/auth";
+import { LEADS_MODULE, moduleListDefaultPath } from "./support/crm-paths";
+import { createOrganization } from "./support/org";
+import { expectType } from "./support/typography";
+
+const near = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(0.5);
+/** Intrinsic operator trigger widths share one padding rule; Chromium may read ~36.92px for is. */
+const nearOperatorWidth = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+/** Popover gap below anchor: sub-pixel layout may differ from spec row by up to 1px. */
+const nearPopoverGap = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+const nearOnePx = (actual: number, expected: number) =>
+  expect(Math.abs(actual - expected), `${actual} vs ${expected}`).toBeLessThanOrEqual(1);
+async function fillCreatedTimeDayCount(panel: Locator, count: string) {
+  const input = panel.getByRole("textbox", { name: "Created Time value" });
+  await input.click();
+  await input.fill("");
+  await input.pressSequentially(count);
+  await input.press("Tab");
+}
+test.use({ viewport: { width: 1470, height: 835 } });
+test("field filter editors match measured rows, keyboard, sticky actions and accessibility", async ({
+  page,
+}, testInfo) => {
+  // Two full-gallery accessibility scans and editor interactions need the same
+  // wall-time budget as the gallery smoke test on the shared test machine.
+  test.setTimeout(180_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  await panel.scrollIntoViewIfNeeded();
+  await expect(panel).toBeVisible();
+  const checkbox = panel.getByRole("checkbox", { name: "Sample text", exact: true });
+  await expect(checkbox).toBeChecked();
+  const box = panel
+    .getByRole("listitem")
+    .filter({ hasText: "Sample text" })
+    .locator("span[aria-hidden='true']")
+    .first();
+  // list-views.md > Visual layout > Checked filter checkbox.
+  await expect(box).toHaveCSS("width", "15px");
+  await expect(box).toHaveCSS("height", "15px");
+  await expect(box).toHaveCSS("background-color", "rgb(84, 100, 242)");
+  await expect(box).toHaveCSS("border-width", "2px");
+  await expect(box).toHaveCSS("border-radius", "2px");
+  await expect(box.locator("svg")).toHaveCSS("color", "rgb(255, 255, 255)");
+  const operator = panel.getByRole("button", { name: /Sample text operator$/ });
+  const value = panel.getByRole("textbox", { name: "Sample text value" });
+  const frame = value.locator("..");
+  // Filter operator dropdown and Filter value input: 24 high, 1px border, 3px corners.
+  for (const control of [operator, frame]) {
+    await expect(control).toHaveCSS("height", "24px");
+    await expect(control).toHaveCSS("border-width", "1px");
+    await expect(control).toHaveCSS("border-color", "rgb(197, 196, 211)");
+    await expect(control).toHaveCSS("border-radius", "3px");
+    await expect(control).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expectType(page, control, "--text-sm", "--font-weight-normal");
+  }
+  await expect(operator).toHaveCSS("color", "rgb(49, 57, 73)");
+  await expect(value).toHaveCSS("color", "rgb(49, 57, 73)");
+  await expect(value).toHaveAttribute("placeholder", "Type here");
+  expect(await value.evaluate((element) => getComputedStyle(element, "::placeholder").color)).toBe(
+    "rgb(140, 145, 171)",
+  );
+  const b = await box.boundingBox();
+  const o = await operator.boundingBox();
+  const v = await frame.boundingBox();
+  const s = await panel.getByRole("textbox", { name: "Search field filter choices" }).boundingBox();
+  if (!b || !o || !v || !s) throw new Error("Missing filter geometry");
+  // Filter operator dropdown: the observed text "contains" selector is 79px wide.
+  nearOperatorWidth(o.width, 79);
+  // Coordinate differences in the same four spec rows: 354→377, 527→535, 559→566, right edge 521.
+  near(o.x - b.x, 23);
+  near(o.y - (b.y + b.height), 8);
+  near(v.y - (o.y + o.height), 7);
+  near(v.width, 144);
+  near(v.x + v.width, s.x + s.width);
+  await operator.click();
+  const list = page.getByRole("listbox", { name: /Sample text operator$/ });
+  const popover = list.locator("..");
+  // Open operator list: 146 wide, 220px maximum, rows 27, selected fill #F0F4FC.
+  await expect(popover).toHaveCSS("width", "146px");
+  await expect(popover).toHaveCSS("max-height", "220px");
+  await expect(popover).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  const row = list.getByRole("option", { name: "contains", exact: true });
+  await expect(row).toHaveCSS("height", "27px");
+  await expect(row).toHaveCSS("background-color", "rgb(240, 244, 252)");
+  await expect(row).toHaveCSS("color", "rgb(49, 57, 73)");
+  await expectType(page, row, "--text-sm", "--font-weight-normal");
+  const popup = await popover.boundingBox();
+  const anchor = await operator.boundingBox();
+  if (!popup || !anchor) throw new Error("Missing dropdown");
+  near(popup.height, 220);
+  nearPopoverGap(popup.y - (anchor.y + anchor.height), 1);
+  const measurementPath = testInfo.outputPath("field-filter-measurements.json");
+  await writeFile(
+    measurementPath,
+    JSON.stringify({ checkbox: b, operator: o, value: v, search: s, popup, anchor }),
+  );
+  await testInfo.attach("field-filter-measurements", {
+    path: measurementPath,
+    contentType: "application/json",
+  });
+  await expect(list.getByRole("option")).toHaveText([
+    "is",
+    "isn't",
+    "contains",
+    "doesn't contain",
+    "starts with",
+    "ends with",
+    "is empty",
+    "is not empty",
+  ]);
+  // ADR 0003 §8: measured placeholder ink #8C91AB on white is 3.11:1.
+  // Exclude only empty text spans (including the two multi-select placeholders)
+  // and the other measured gallery placeholders; their triggers stay scanned.
+  await expectNoA11yViolations(page, { exclude: DEV_UI_A11Y_EXCLUDE });
+  const screenshotPath = testInfo.outputPath("field-filter-editors.png");
+  await page.screenshot({ path: screenshotPath });
+  await testInfo.attach("field-filter-editors", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Enter");
+  const equality = await operator.boundingBox();
+  if (!equality) throw new Error("Missing equality selector");
+  nearOperatorWidth(equality.width, 36);
+  await page.keyboard.press("Tab");
+  await expect(value).toBeFocused();
+  await page.keyboard.press("Escape");
+  const footer = panel.getByRole("button", { name: "Apply Filter" });
+  await expect(footer).toBeDisabled();
+  const before = await footer.boundingBox();
+  const scrollTop = await panel.locator(".filter-panel-content").evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+    return element.scrollTop;
+  });
+  expect(scrollTop).toBeGreaterThan(0);
+  const after = await footer.boundingBox();
+  if (!before || !after) throw new Error("Missing footer");
+  near(after.y, before.y);
+  await expect(footer).toBeVisible();
+  await panel.getByRole("button", { name: "Clear" }).click();
+  await expect(panel.getByRole("checkbox", { checked: true })).toHaveCount(0);
+  await panel.getByText("Sample text", { exact: true }).click();
+  await value.fill("sample");
+  await panel.getByText("Sample boolean", { exact: true }).click();
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await expect(demo.getByRole("status")).toContainText('"value":"sample"');
+  await expect(demo.getByRole("status")).toContainText('"value":true');
+  // The closed-popup scan includes the other gallery demos. Their empty-list
+  // #8B9AB9 and empty-selection #8C91AB inks on white retain the measured
+  // contrast exceptions from ADR 0003 §8, as in the gallery smoke test.
+  // Only those text elements are excluded; filter triggers and selected values remain included.
+  await expectNoA11yViolations(page, {
+    exclude: DEV_UI_A11Y_EXCLUDE,
+  });
+  expect(errors).toEqual([]);
+});
+
+test("filter multi-select placeholders use measured ink until an option is selected", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  const measurements = [];
+  for (const [field, placeholder] of [
+    ["picklist", "None"],
+    ["ownerlookup", "Click to Select Users."],
+  ] as const) {
+    const trigger = panel.getByRole("button", { name: `Sample ${field} value`, exact: true });
+    const label = trigger.locator("span");
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(label).toHaveText(placeholder);
+    await expect(trigger).toHaveAttribute("data-empty");
+    // list-views.md > Visual layout > Filter value input: placeholder #8C91AB.
+    await expect(label).toHaveCSS("color", "rgb(140, 145, 171)");
+    await expect(label).toHaveAttribute("data-part", "empty-value");
+    // The decorative arrow retains the normal control ink.
+    await expect(trigger.locator("svg")).toHaveCSS("color", "rgb(49, 57, 73)");
+    const emptyColor = await label.evaluate((element) => getComputedStyle(element).color);
+    const screenshotPath = testInfo.outputPath(`filter-${field}-placeholder.png`);
+    await page.screenshot({ path: screenshotPath });
+    await testInfo.attach(`filter-${field}-placeholder`, {
+      path: screenshotPath,
+      contentType: "image/png",
+    });
+    await trigger.click();
+    const option = page
+      .getByRole("listbox", { name: `Sample ${field} value`, exact: true })
+      .getByRole("option", { name: /^Sample One/ });
+    await option.click();
+    await page.keyboard.press("Escape");
+    await expect(label).toHaveText("Sample One");
+    await expect(trigger).not.toHaveAttribute("data-empty");
+    await expect(label).not.toHaveAttribute("data-part", "empty-value");
+    // Same spec row: completed selection text #313949.
+    await expect(label).toHaveCSS("color", "rgb(49, 57, 73)");
+    const selectedColor = await label.evaluate((element) => getComputedStyle(element).color);
+    await trigger.click();
+    await option.click();
+    await page.keyboard.press("Escape");
+    await expect(label).toHaveText(placeholder);
+    await expect(label).toHaveCSS("color", "rgb(140, 145, 171)");
+    measurements.push({ field, placeholder, emptyColor, selectedColor });
+  }
+  const measurementPath = testInfo.outputPath("filter-placeholder-colors.json");
+  await writeFile(measurementPath, JSON.stringify(measurements, null, 2));
+  await testInfo.attach("filter-placeholder-colors", {
+    path: measurementPath,
+    contentType: "application/json",
+  });
+});
+
+test("observed value lists and currency range use measured dimensions", async ({ page }) => {
+  await page.goto("/dev/ui");
+  const demo = page.getByRole("region", { name: "filter editors", exact: true });
+  const panel = demo.getByRole("region", { name: "Field filter editors", exact: true });
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample boolean", { exact: true }).click();
+  const state = panel.getByRole("button", { name: /Sample boolean value$/ });
+  const stateBox = await state.boundingBox();
+  if (!stateBox) throw new Error("Missing state");
+  near(stateBox.width, 81);
+  near(stateBox.height, 24);
+  await state.click();
+  const stateList = page.getByRole("listbox", { name: /Sample boolean value$/ });
+  await expect(stateList.getByRole("option")).toHaveText(["Selected", "Not Selected"]);
+  await stateList.getByRole("option", { name: "Not Selected", exact: true }).click();
+  await panel.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(demo.getByRole("status")).toContainText('"value":false');
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample picklist", { exact: true }).click();
+  await panel.getByRole("button", { name: "Sample picklist value", exact: true }).click();
+  const choices = page.locator(".filter-choice-popover");
+  const choiceBox = await choices.boundingBox();
+  if (!choiceBox) throw new Error("Missing choice list");
+  near(choiceBox.width, 170);
+  near(choiceBox.height, 220);
+  await expect(choices.getByRole("option")).toHaveCount(16);
+  const choice = await choices.getByRole("option").first().boundingBox();
+  if (!choice) throw new Error("Missing choice row");
+  near(choice.width, 158);
+  near(choice.height, 28);
+  await page.keyboard.press("Escape");
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample ownerlookup", { exact: true }).click();
+  await panel.getByRole("button", { name: "Sample ownerlookup value", exact: true }).click();
+  const users = page.locator(".filter-user-popover");
+  for (const [selector, width, height] of [
+    [".filter-user-header .filter-operator-control", 77, 28],
+    [".filter-user-search", 229, 28],
+    [".filter-user-body", 327, 174],
+    [".filter-user-body [role=option]", 315, 41],
+  ] as const) {
+    const box = await users.locator(selector).first().boundingBox();
+    if (!box) throw new Error(`Missing ${selector}`);
+    near(box.width, width);
+    near(box.height, height);
+  }
+  await expect(users.getByText("Logged in User", { exact: true })).toBeVisible();
+  await expect(users.getByText("two@example.test", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+  await panel.getByText("Sample currency", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample currency operator$/ }).click();
+  await page.getByRole("option", { name: "between", exact: true }).click();
+  for (const bound of ["lower", "upper"]) {
+    const box = await panel
+      .getByRole("textbox", { name: `Sample currency ${bound} value` })
+      .locator("..")
+      .boundingBox();
+    if (!box) throw new Error("Missing range");
+    near(box.width, 100);
+    near(box.height, 25);
+  }
+});
+
+test("observed operator value editors cover date, range, days unit, role search and blocked fields", async ({
+  page,
+}) => {
+  await page.goto("/dev/ui");
+  const panel = page
+    .getByRole("region", { name: "filter editors", exact: true })
+    .getByRole("region", { name: "Field filter editors", exact: true });
+  await panel.getByRole("button", { name: "Clear", exact: true }).click();
+
+  await panel.getByText("Sample datetime", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "On", exact: true }).click();
+  const singleDate = panel.getByRole("textbox", { name: "Sample datetime value" }).locator("..");
+  const singleBox = await singleDate.boundingBox();
+  if (!singleBox) throw new Error("Missing single date");
+  near(singleBox.height, 24);
+
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "between", exact: true }).click();
+  const from = panel.getByRole("textbox", { name: "Sample datetime from date" }).locator("..");
+  const to = panel.getByRole("textbox", { name: "Sample datetime to date" }).locator("..");
+  const fromBox = await from.boundingBox();
+  const toBox = await to.boundingBox();
+  if (!fromBox || !toBox) throw new Error("Missing date range");
+  near(fromBox.width, 100);
+  near(fromBox.height, 24);
+  near(toBox.width, 100);
+  near(toBox.height, 24);
+  near(toBox.y - (fromBox.y + fromBox.height), 3);
+  const separator = panel.locator(".filter-date-range-separator");
+  await expect(separator).toHaveText("-");
+  const sepBox = await separator.boundingBox();
+  if (!sepBox) throw new Error("Missing date range separator");
+  expect(sepBox.x).toBeGreaterThan(fromBox.x + fromBox.width - 0.5);
+  nearOnePx(sepBox.y + sepBox.height / 2, fromBox.y + fromBox.height / 2);
+
+  await panel.getByRole("button", { name: /Sample datetime operator$/ }).click();
+  await page.getByRole("option", { name: "age in", exact: true }).click();
+  const unit = panel.getByRole("button", { name: /Sample datetime unit$/ });
+  const unitBox = await unit.boundingBox();
+  if (!unitBox) throw new Error("Missing unit");
+  near(unitBox.width, 80);
+  near(unitBox.height, 24);
+
+  await panel.getByText("Sample ownerlookup", { exact: true }).click();
+  await panel.getByRole("button", { name: /Sample ownerlookup operator$/ }).click();
+  await page.getByRole("option", { name: "belongs to Role", exact: true }).click();
+  const role = panel.locator(".filter-role-group");
+  const roleBox = await role.boundingBox();
+  if (!roleBox) throw new Error("Missing role search");
+  near(roleBox.width, 141);
+  near(roleBox.height, 25);
+  const roleSearch = panel.getByRole("textbox", { name: /role or group search/ }).locator("..");
+  const roleSearchBox = await roleSearch.boundingBox();
+  if (!roleSearchBox) throw new Error("Missing role search input");
+  near(roleSearchBox.width, 112);
+  near(roleSearchBox.height, 16);
+  await expect(panel.getByRole("textbox", { name: /role or group search/ })).toHaveAttribute(
+    "placeholder",
+    "None",
+  );
+
+  await panel.getByText("Sample compound_address", { exact: true }).click();
+  const location = panel
+    .getByRole("textbox", { name: "Sample compound_address location" })
+    .locator("..");
+  const locationBox = await location.boundingBox();
+  if (!locationBox) throw new Error("Missing address location");
+  near(locationBox.width, 144);
+  near(locationBox.height, 25);
+  const radius = panel.getByRole("button", { name: /Sample compound_address radius$/ });
+  const radiusBox = await radius.boundingBox();
+  if (!radiusBox) throw new Error("Missing address radius");
+  near(radiusBox.width, 144);
+  near(radiusBox.height, 54);
+  await expect(
+    panel.getByRole("textbox", { name: "Sample compound_address location" }),
+  ).toHaveAttribute("placeholder", "Choose Location");
+  await panel.getByText("Sample multilookup", { exact: true }).click();
+  await expect(panel.getByRole("button", { name: /Sample multilookup module$/ })).toContainText(
+    "Contacts",
+  );
+  await panel.getByText("Sample tag", { exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
+});
+
+test("datetime filter value editors emit expected list request bodies", async ({ page }) => {
+  test.setTimeout(180_000);
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+  const panel = page.getByRole("region", { name: "Filter Leads by" });
+  const createdTimeCheckbox = panel.getByRole("checkbox", { name: "Created Time", exact: true });
+  await createdTimeCheckbox.scrollIntoViewIfNeeded();
+  await expect(createdTimeCheckbox).toBeEnabled({ timeout: 30_000 });
+  if (!(await panel.getByRole("button", { name: /Created Time operator$/ }).count())) {
+    await createdTimeCheckbox.focus();
+    await page.keyboard.press("Space");
+  }
+  await expect(panel.getByRole("button", { name: /Created Time operator$/ })).toBeVisible();
+
+  let lastBulkBody: unknown;
+  page.on("request", (request) => {
+    if (request.method() !== "POST") return;
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.endsWith("/Leads/bulk")) {
+      lastBulkBody = request.postDataJSON();
+    }
+  });
+
+  const cases: { operator: string; fill: () => Promise<void>; body: unknown }[] = [
+    {
+      operator: "On",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "On", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("15.03.2024");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "equal",
+          value: "2024-03-15",
+        },
+      },
+    },
+    {
+      operator: "before",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "before", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time value" }).fill("01.01.2025");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "less_than",
+          value: "2025-01-01",
+        },
+      },
+    },
+    {
+      operator: "between",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "between", exact: true }).click();
+        await panel.getByRole("textbox", { name: "Created Time from date" }).fill("01.01.2024");
+        await panel.getByRole("textbox", { name: "Created Time to date" }).fill("31.01.2024");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "between",
+          value: ["2024-01-01", "2024-01-31"],
+        },
+      },
+    },
+    {
+      operator: "age in weeks",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "age in", exact: true }).click();
+        await fillCreatedTimeDayCount(panel, "2");
+        await panel.getByRole("button", { name: /Created Time unit$/ }).click();
+        await page.getByRole("option", { name: "weeks", exact: true }).click();
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "less_equal",
+          value: "$" + "{AGEINWEEKS}+2",
+        },
+      },
+    },
+    {
+      operator: "Previous",
+      fill: async () => {
+        await panel.getByRole("button", { name: /Created Time operator$/ }).click();
+        await page.getByRole("option", { name: "Previous", exact: true }).click();
+        await fillCreatedTimeDayCount(panel, "3");
+      },
+      body: {
+        filters: {
+          field: { api_name: "Created_Time" },
+          comparator: "equal",
+          value: "$" + "{PREVIOUS.DAYS}+3",
+        },
+      },
+    },
+  ];
+
+  for (const { operator, fill, body } of cases) {
+    lastBulkBody = undefined;
+    await fill();
+    const apply = panel.getByRole("button", { name: "Apply Filter" });
+    await expect(apply).toBeEnabled();
+    const bulkResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname.endsWith("/Leads/bulk"),
+    );
+    await apply.click();
+    await bulkResponse;
+    expect(lastBulkBody).toEqual(body);
+    void operator;
+  }
+});

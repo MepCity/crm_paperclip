@@ -1,22 +1,11 @@
 import { expectNoA11yViolations } from "./support/a11y";
-import { signIn, signUpNewUser } from "./support/auth";
-import { expect, test } from "./support/test";
+import { AUTH_NAVIGATION_TIMEOUT_MS, signIn, signUpNewUser } from "./support/auth";
+import { expect, ignoreFailedResponses, test } from "./support/test";
 
-/**
- * Chromium reports a failed auth response as a console error.
- * The screen does not call console.error; drop only that status line.
- */
-function ignoreFailedResponses(errors: string[], statuses: readonly number[]) {
-  const next = errors.filter(
-    (error) => !statuses.some((status) => error.includes(`status of ${status}`)),
-  );
-  errors.splice(0, errors.length, ...next);
-}
-
-test("sign up opens home with the user's name", async ({ page }) => {
-  const user = await signUpNewUser(page, { name: "Ada Lovelace" });
-  await expect(page).toHaveURL("/");
-  await expect(page.getByText(`Signed in as ${user.name} (${user.email})`)).toBeVisible();
+test("sign up opens organization creation", async ({ page }) => {
+  await signUpNewUser(page, { name: "Ada Lovelace" });
+  await expect(page).toHaveURL("/orgs/new");
+  await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });
 
 test("sign out returns to sign in and home redirects there", async ({ page }) => {
@@ -54,13 +43,13 @@ test("a wrong password shows a general error and stays on sign in", async ({
   ignoreFailedResponses(pageErrors, [401]);
 });
 
-test("the correct password opens home", async ({ page }) => {
+test("the correct password opens organization creation", async ({ page }) => {
   const user = await signUpNewUser(page);
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user);
-  await expect(page).toHaveURL("/");
-  await expect(page.getByText(`Signed in as ${user.name} (${user.email})`)).toBeVisible();
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
+  await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });
 
 test("signing up again with the same email shows an error", async ({ page, pageErrors }) => {
@@ -83,7 +72,7 @@ test("sign in follows a safe next path", async ({ page }) => {
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await signIn(page, user, { next: "/dev/ui" });
-  await expect(page).toHaveURL("/dev/ui");
+  await expect(page).toHaveURL("/dev/ui", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
 });
 
 test("sign in ignores a protocol-relative next path", async ({ page }) => {
@@ -95,7 +84,7 @@ test("sign in ignores a protocol-relative next path", async ({ page }) => {
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
@@ -108,11 +97,11 @@ test("sign in ignores a next path that hides a host behind a tab", async ({ page
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 
   await page.goto("/sign-in?next=/%09/example.org");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new");
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
@@ -125,11 +114,11 @@ test("sign in ignores a next path that resolves to a protocol-relative URL", asy
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 
   await page.goto("/sign-in?next=/.//example.org");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new");
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
@@ -142,14 +131,14 @@ test("sign in ignores an absolute next URL", async ({ page }) => {
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   expect(new URL(page.url()).hostname).toBe("127.0.0.1");
 });
 
-test("a signed-in visitor is sent from sign in to home", async ({ page }) => {
+test("a signed-in visitor is sent from sign in to organization creation", async ({ page }) => {
   await signUpNewUser(page);
   await page.goto("/sign-in");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/orgs/new");
 });
 
 test("auth screens have no accessibility violations", async ({ page }) => {
@@ -182,6 +171,6 @@ test("sign up can be completed from the keyboard", async ({ page }) => {
   await page.keyboard.press("Tab");
   await page.keyboard.press("Enter");
 
-  await expect(page).toHaveURL("/");
-  await expect(page.getByText(`Signed in as Keyboard User (${email})`)).toBeVisible();
+  await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
+  await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });

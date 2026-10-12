@@ -42,7 +42,7 @@ export function Alert({
     <div className={`${alertBase} ${alertStyles[variant]}`} role="alert">
       <Icon className={`${alertIconBase} ${alertIconStyles[variant]}`} aria-hidden="true" />
       <div>
-        {title && <h3 className="font-medium mb-1">{title}</h3>}
+        {title && <h3 className="font-semibold mb-1">{title}</h3>}
         <div className="text-sm">{children}</div>
       </div>
     </div>

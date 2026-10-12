@@ -1,0 +1,23 @@
+.table-radio {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: var(--size-select-user-radio);
+  width: var(--size-select-user-radio);
+  cursor: default;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: var(--size-select-user-radio-ring-unselected) solid var(--color-control-border);
+  background-color: var(--color-surface);
+  outline: none;
+}
+
+.table-radio[data-selected] {
+  border-width: var(--size-select-user-radio-ring-selected);
+  border-color: var(--color-primary);
+}
+
+.table-radio[data-focus-visible] {
+  outline: 1px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}

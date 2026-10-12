@@ -5,6 +5,7 @@ import { join } from "node:path";
 import pg from "pg";
 import { ensureDatabase, startLocalPostgres } from "./local-postgres";
 import { defaultMigrationsDir, runMigrations } from "./migrate";
+import { startWithSignalShutdown } from "./signal-shutdown";
 
 export const TEMPLATE_DATABASE = "crm_template";
 
@@ -35,7 +36,11 @@ export type TestPostgres = {
 };
 
 /** Starts a throwaway PostgreSQL in a temporary directory on a free port. */
-export async function startTestPostgres(): Promise<TestPostgres> {
+export function startTestPostgres(): Promise<TestPostgres> {
+  return startWithSignalShutdown(startUnmanagedTestPostgres);
+}
+
+async function startUnmanagedTestPostgres(): Promise<TestPostgres> {
   const dataDir = await mkdtemp(join(tmpdir(), "crm-pg-"));
   let server: Awaited<ReturnType<typeof startLocalPostgres>>;
   try {

@@ -3,12 +3,18 @@ import { defineConfig } from "vitest/config";
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
 
+// Several agents run verify on this one machine at the same time. Without a cap each run
+// starts a worker per core and the machine stalls. Override with MEP_TEST_WORKERS.
+const maxWorkers = Number(process.env.MEP_TEST_WORKERS ?? 2);
+
 export default defineConfig({
   test: {
+    maxWorkers,
     projects: [
       {
         test: {
           name: "unit",
+          alias: { "@": path.resolve(__dirname, "./apps/web/src") },
           include: ["{apps,packages,scripts}/**/*.test.ts"],
           exclude: [...exclude, "**/*.int.test.ts"],
         },
@@ -19,6 +25,9 @@ export default defineConfig({
           include: ["apps/web/**/*.test.tsx"],
           exclude,
           environment: "jsdom",
+          // Keyboard flows in jsdom sit just over the 5s default when the full
+          // suite runs in parallel. A short overrun was failing verify.
+          testTimeout: 15_000,
           alias: {
             "@": path.resolve(__dirname, "./apps/web/src"),
           },
@@ -27,6 +36,7 @@ export default defineConfig({
       {
         test: {
           name: "integration",
+          alias: { "@": path.resolve(__dirname, "./apps/web/src") },
           include: ["{apps,packages,scripts}/**/*.int.test.ts"],
           exclude,
           globalSetup: ["./packages/db/src/vitest-global-setup.ts"],

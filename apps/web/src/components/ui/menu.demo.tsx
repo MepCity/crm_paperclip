@@ -12,11 +12,31 @@ export default function MenuDemo() {
         </MenuButton>
         <Menu onAction={(key) => setAction(`Selected: ${key}`)}>
           <MenuItem id="edit">Edit</MenuItem>
+          <MenuItem id="later" laterModule="M3">
+            Later module
+          </MenuItem>
           <MenuItem id="delete" variant="danger">
             Delete
           </MenuItem>
           <MenuItem id="unavailable" isDisabled>
             Unavailable
+          </MenuItem>
+        </Menu>
+      </MenuTrigger>
+      <MenuTrigger>
+        <MenuButton>Measured menu</MenuButton>
+        <Menu
+          appearance="measured"
+          aria-label="Measured options"
+          selectionMode="single"
+          selectedKeys={["current"]}
+          header={<p>Example identity</p>}
+        >
+          <MenuItem appearance="measured" id="current">
+            Current organization
+          </MenuItem>
+          <MenuItem appearance="measured" id="other">
+            Another organization
           </MenuItem>
         </Menu>
       </MenuTrigger>

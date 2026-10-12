@@ -22,7 +22,7 @@ export const requireOrgContext = cache(async (orgSlug: string) => {
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     if (error instanceof UnauthenticatedError) {
-      redirect(`/sign-in?next=${encodeURIComponent(`/o/${orgSlug}`)}`);
+      redirect(`/sign-in?next=${encodeURIComponent(`/crm/${orgSlug}`)}`);
     }
     throw error;
   }

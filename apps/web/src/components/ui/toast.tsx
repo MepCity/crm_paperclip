@@ -58,7 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
               <ToastContent className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
-                <Text slot="title" className="font-medium">
+                <Text slot="title" className="font-semibold">
                   {item.content.title}
                 </Text>
                 {item.content.message ? (
