@@ -4,10 +4,7 @@ import {
   buildContactsBusinessCardFields,
   buildContactsDetailSections,
 } from "./contacts-detail-sections";
-import {
-  CONTACTS_FORM_INFORMATION_COLUMNS,
-  contactsFormRules,
-} from "./contacts-form-rules";
+import { CONTACTS_FORM_INFORMATION_COLUMNS, contactsFormRules } from "./contacts-form-rules";
 import { isContactInlineEditable } from "./contacts-inline-edit";
 import { formatContactsLastUpdateLabel } from "./contacts-last-update";
 import { contactsRecordHeaderIdentity } from "./contacts-record-header";

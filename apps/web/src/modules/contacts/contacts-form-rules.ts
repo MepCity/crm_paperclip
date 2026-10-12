@@ -31,7 +31,10 @@ export const contactsFormRules: FormRules = {
   })),
 };
 
-/** Only used when service layout columns are unavailable; metadata always wins. */
+/**
+ * Spec column order for Contact Information. Wired through `form.fallbackColumns` and
+ * `applySectionColumnOverrides` so metadata layout columns are replaced on the form screen.
+ */
 export const CONTACTS_FORM_INFORMATION_COLUMNS = [
   ["Owner", "First_Name", "Account_Name", "Email", "Phone", "Other_Phone", "Mobile", "Assistant"],
   [

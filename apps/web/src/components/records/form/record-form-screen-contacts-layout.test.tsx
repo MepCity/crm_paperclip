@@ -3,6 +3,10 @@ import { cleanup, screen, within } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
+import {
+  CONTACTS_FORM_ADDRESS_CHILD_ORDER,
+  CONTACTS_FORM_INFORMATION_COLUMNS,
+} from "@/modules/contacts/contacts-form-rules";
 import { contactsScreenDefinition } from "@/modules/contacts/definition";
 import { render } from "@/test/render";
 import { RecordFormScreen } from "./record-form-screen";
@@ -61,10 +65,12 @@ test("Contact Information uses spec column placement from fallback columns", asy
   const left = grid?.querySelector('[data-record-form-column="left"]');
   const right = grid?.querySelector('[data-record-form-column="right"]');
   expect(left && right).toBeTruthy();
-  expect(fieldOrderInColumn(left as HTMLElement)[0]).toBe("Owner");
-  expect(fieldOrderInColumn(left as HTMLElement)).toContain("First_Name");
-  expect(fieldOrderInColumn(right as HTMLElement)[0]).toBe("Lead_Source");
-  expect(fieldOrderInColumn(right as HTMLElement)).toContain("Last_Name");
+  expect(fieldOrderInColumn(left as HTMLElement)).toEqual([
+    ...CONTACTS_FORM_INFORMATION_COLUMNS[0],
+  ]);
+  expect(fieldOrderInColumn(right as HTMLElement)).toEqual([
+    ...CONTACTS_FORM_INFORMATION_COLUMNS[1],
+  ]);
 });
 
 test("address groups order children and omit readonly coordinates textarea", async () => {
@@ -85,6 +91,13 @@ test("address groups order children and omit readonly coordinates textarea", asy
   ]);
   expect(mailing.querySelector("[data-form-field=Mailing_Coordinates]")).toBeNull();
   expect(within(mailing).getByRole("group", { name: "Coordinates" })).toBeTruthy();
+
+  const other = groups[1] as HTMLElement;
+  const otherOrder = fieldOrderInColumn(other);
+  const expectedOtherOrder = CONTACTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Other_${suffix}`);
+  expect(otherOrder).toEqual(expectedOtherOrder);
+  expect(other.querySelector("[data-form-field=Other_Coordinates]")).toBeNull();
+  expect(within(other).getByRole("group", { name: "Coordinates" })).toBeTruthy();
 });
 
 test("contact image is a focusable later-module control", async () => {

@@ -1,4 +1,8 @@
 import type { Page } from "@playwright/test";
+import {
+  CONTACTS_FORM_ADDRESS_CHILD_ORDER,
+  CONTACTS_FORM_INFORMATION_COLUMNS,
+} from "../src/modules/contacts/contacts-form-rules";
 import { signUpNewUser } from "./support/auth";
 import {
   moduleCreatePath,
@@ -156,27 +160,29 @@ test("Contact Information and address groups follow spec field order", async ({ 
   const leftOrder = await contactInfo
     .locator('[data-record-form-column="left"] [data-form-field]')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
-  expect(leftOrder[0]).toBe("Owner");
-  expect(leftOrder).toContain("First_Name");
+  expect(leftOrder).toEqual([...CONTACTS_FORM_INFORMATION_COLUMNS[0]]);
   const rightOrder = await contactInfo
     .locator('[data-record-form-column="right"] [data-form-field]')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
-  expect(rightOrder[0]).toBe("Lead_Source");
-  expect(rightOrder).toContain("Last_Name");
+  expect(rightOrder).toEqual([...CONTACTS_FORM_INFORMATION_COLUMNS[1]]);
 
   const mailing = page.locator("[data-record-form-field-group]").first();
   const mailingOrder = await mailing
     .locator("[data-form-field]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
-  expect(mailingOrder).toEqual([
-    "Mailing_Country",
-    "Mailing_Flat_House_No_Building_Apartment_Name",
-    "Mailing_Street",
-    "Mailing_City",
-    "Mailing_State",
-    "Mailing_Zip",
-    "Mailing_Latitude",
-  ]);
+  const expectedMailingOrder = CONTACTS_FORM_ADDRESS_CHILD_ORDER.map(
+    (suffix) => `Mailing_${suffix}`,
+  );
+  expect(mailingOrder).toEqual(expectedMailingOrder);
+  expect(await mailing.locator('[data-form-field="Mailing_Coordinates"]').count()).toBe(0);
+
+  const other = page.locator("[data-record-form-field-group]").nth(1);
+  const otherOrder = await other
+    .locator("[data-form-field]")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
+  const expectedOtherOrder = CONTACTS_FORM_ADDRESS_CHILD_ORDER.map((suffix) => `Other_${suffix}`);
+  expect(otherOrder).toEqual(expectedOtherOrder);
+  expect(await other.locator('[data-form-field="Other_Coordinates"]').count()).toBe(0);
 });
 
 test("creates with common field types", async ({ page }) => {
