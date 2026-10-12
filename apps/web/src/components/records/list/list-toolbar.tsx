@@ -14,7 +14,7 @@ export interface ListToolbarProps {
   onRefresh: () => void;
   fields: SortPopoverProps["fields"];
   sort: SortSpec | null;
-  onSortApply: (sort: SortSpec) => void;
+  onSortApply: (sort: SortSpec | null) => void;
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
 }

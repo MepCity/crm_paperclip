@@ -309,6 +309,67 @@ describe("operation routes", () => {
       expect((await count.json()).count).toBeGreaterThan(0);
     }
   });
+  it("rejects unknown reference keys on every reference write path", async () => {
+    const service = getRecordService(a.ctx);
+    const record = await service.create("Leads", { Company: "Wire Bounds", Last_Name: "Example" });
+    for (const op of [
+      operations.create,
+      operations.update,
+      operations.massUpdate,
+      operations.changeOwner,
+    ]) {
+      const owner = { id: a.ctx.userId, unexpected: true };
+      const response = await call(op, a, {
+        recordId: record.id,
+        body:
+          op === operations.changeOwner
+            ? { ids: [record.id], owner }
+            : {
+                ids: [record.id],
+                data: [{ Company: "Wire Bounds", Last_Name: "Example", Owner: owner }],
+              },
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        code: "INVALID_DATA",
+        status: "error",
+        message: "Check the highlighted fields.",
+        details: { fields: { Owner: ["Unknown reference key."] } },
+      });
+    }
+  });
+  it("retains search and group boundaries on bulk and count with the existing error envelope", async () => {
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value: "Example" };
+    const group = (size: number) => ({
+      group_operator: "AND",
+      group: Array.from({ length: size }, () => leaf),
+    });
+    for (const op of [operations.bulk, operations.count]) {
+      for (const [body, key, message] of [
+        [{ search: "x".repeat(2001) }, "search", "Send at most 2000 characters."],
+        [{ filters: group(501) }, "filters", "Send at most 500 criteria per group."],
+        [
+          { filters: { group_operator: "OR", group: [group(501)] } },
+          "filters",
+          "Send at most 500 criteria per group.",
+        ],
+      ] as const) {
+        const response = await call(op, a, { body });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({
+          code: "INVALID_DATA",
+          status: "error",
+          message: "Check the highlighted fields.",
+          details: { fields: { [key]: [message] } },
+        });
+      }
+      for (const body of [{ search: "x".repeat(2000) }, { filters: group(500) }, { search: "" }]) {
+        expect((await call(op, a, { body })).status).toBe(
+          op === operations.count || ("search" in body && body.search === "") ? 200 : 204,
+        );
+      }
+    }
+  });
   it("answers unknown comparators with a filters-keyed 400", async () => {
     for (const op of [operations.bulk, operations.count]) {
       const response = await call(op, a, {
