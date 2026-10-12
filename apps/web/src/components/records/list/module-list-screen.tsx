@@ -10,6 +10,7 @@ import type {
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { MenuAction } from "@/components/ui/menu";
@@ -37,7 +38,7 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { withSearchParams } from "@/lib/crm-paths";
+import { moduleDeduplicatePath, withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -79,6 +80,11 @@ export interface ModuleListScreenConfig {
     actions: readonly Omit<MenuAction, "onAction">[];
     createItems?: readonly MenuAction[];
   };
+  /**
+   * Toolbar Actions menu of a screen that carries no other inventory, as the original Leads
+   * list does; `inventory.actions` wins when both are given.
+   */
+  toolbarActions?: readonly Omit<MenuAction, "onAction">[];
 }
 
 export interface ModuleListScreenProps {
@@ -151,6 +157,7 @@ function ModuleListScreenLoaded({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [massUpdateOpen, setMassUpdateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
+  const [dedupOpen, setDedupOpen] = useState(false);
   const deleteRecords = useDeleteRecords(config.module);
 
   const viewsQuery = useViews(config.module);
@@ -494,6 +501,15 @@ function ModuleListScreenLoaded({
     }
   }
 
+  function openToolbarAction(action: string) {
+    // The module-wide cleanup works on the whole module, so it never needs a row selection.
+    if (action === "deduplicate") {
+      setDedupOpen(true);
+      return;
+    }
+    openSelectedMassAction(action);
+  }
+
   function openSelectedMassAction(action: string) {
     if (!["mass-transfer", "mass-update", "mass-delete"].includes(action)) return;
     if (!selectionActive) return;
@@ -524,6 +540,7 @@ function ModuleListScreenLoaded({
       : null;
 
   const inert = () => {};
+  const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const selectionActions: MenuAction[] = [
     { id: "run-macro", label: "Run Macro", onAction: inert },
     { id: "create-task", label: "Create Task", onAction: inert },
@@ -571,9 +588,9 @@ function ModuleListScreenLoaded({
               sortOrder: next?.order ?? null,
             });
           }}
-          actions={config.inventory?.actions.map((item) => ({
+          actions={toolbarActions?.map((item) => ({
             ...item,
-            onAction: () => openSelectedMassAction(item.id),
+            onAction: () => openToolbarAction(item.id),
           }))}
           create={{
             label: config.createLabel,
@@ -603,6 +620,15 @@ function ModuleListScreenLoaded({
           ownerField={ownerField}
           users={ownerOptions}
           onSuccess={clearSelection}
+        />
+      ) : null}
+      {dedupOpen && moduleQuery.data ? (
+        <DeduplicateJob
+          module={config.module}
+          pluralLabel={config.pluralLabel}
+          fields={moduleQuery.data.fields}
+          conflictGroupsHref={(fields) => moduleDeduplicatePath(orgSlug, config.module, fields)}
+          onClose={() => setDedupOpen(false)}
         />
       ) : null}
       {deleteOpen ? (
