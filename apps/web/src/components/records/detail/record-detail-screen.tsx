@@ -46,6 +46,7 @@ export type RecordDetailPaths = {
   record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   edit: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   clone: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  merge: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
 };
 
 export type RecordDetailScreenProps = {
@@ -237,6 +238,7 @@ export function RecordDetailScreen({
   const moreMenuGroups = rules.moreOptions({
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
+    onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
   });
 
   // Module rules supply the optional status ribbon after the update label.
