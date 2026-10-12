@@ -294,7 +294,8 @@ describe("ModuleListScreen", () => {
     });
     const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
-    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("textbox", { name: "Company value" }));
+    await user.paste("Example");
     await user.click(rowSelectCheckboxForRecordName(selectedName));
     await waitFor(() => {
       expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
@@ -338,7 +339,8 @@ describe("ModuleListScreen", () => {
     const baselineIds = await fixturePageRecordIds(records, listSpy);
     const { selectedName } = await firstFixtureRecordOnCurrentListPage(records, listSpy);
     await user.click(screen.getByRole("checkbox", { name: "Company" }));
-    await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+    await user.click(screen.getByRole("textbox", { name: "Company value" }));
+    await user.paste("Example");
     await user.click(rowSelectCheckboxForRecordName(selectedName));
     await waitFor(() => {
       expect((rowSelectCheckboxForRecordName(selectedName) as HTMLInputElement).checked).toBe(true);
