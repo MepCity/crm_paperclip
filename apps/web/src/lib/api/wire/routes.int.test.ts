@@ -111,8 +111,8 @@ describe("operation routes", () => {
   it.each([operations.bulk, operations.count])(
     "bounds criteria arrays and total nodes on $path",
     async (op) => {
-      const values = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, () => "Synthetic Company");
-      const leaf = { field: { api_name: "Company" }, comparator: "equal", value: values };
+      const values = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, () => "Synthetic Status");
+      const leaf = { field: { api_name: "Lead_Status" }, comparator: "equal", value: values };
       for (const [accepted, rejected] of [
         [leaf, { ...leaf, value: [...values, "extra"] }],
         [criteriaTree(MAX_CRITERIA_NODES), criteriaTree(MAX_CRITERIA_NODES + 1)],
@@ -225,7 +225,7 @@ describe("operation routes", () => {
       data: [encodeInput(fields, metadata)],
     });
     const response = await call(operations.create, a, {
-      body: body({ Last_Name: "Owner Test", Company: "Synthetic Company", Owner: member.user.id }),
+      body: body({ Last_Name: "Owner Test", Company: "Synthetic Status", Owner: member.user.id }),
     });
     expect(response.status).toBe(200);
     const id = (await response.json()).data[0].details.id as string;
@@ -244,7 +244,7 @@ describe("operation routes", () => {
     await removeMember(a.ctx, { userId: member.user.id });
     for (const Owner of [member.user.id, b.ctx.userId]) {
       for (const [op, fields] of [
-        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Company", Owner }],
+        [operations.create, { Last_Name: "Owner Test", Company: "Synthetic Status", Owner }],
         [operations.update, { Owner, Company: "Rejected Change" }],
       ] as const) {
         const rejected = await call(op, a, { recordId: id, body: body(fields) });
@@ -256,7 +256,7 @@ describe("operation routes", () => {
     }
     expect((await service.get("Leads", id)).fields).toMatchObject({
       Owner: a.ctx.userId,
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
   });
   it("passes every operation through session authentication", async () => {
@@ -481,7 +481,7 @@ describe("operation routes", () => {
     if (!locked) throw new Error("Expected a locked seed lead.");
     const unlocked = await service.create("Leads", {
       Last_Name: "Unlocked",
-      Company: "Synthetic Company",
+      Company: "Synthetic Status",
     });
     const ids = [unlocked.id, locked.id];
     for (const [op, body] of [
