@@ -278,3 +278,43 @@ export const accountsRecordServiceContractModule: RecordServiceContractModuleDef
     },
   },
 };
+
+export const dealsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Deals",
+  singularLabel: "Deal",
+  pluralLabel: "Deals",
+  expectedFieldCount: 29,
+  buildMinimalValidInput: (extra = {}) => ({
+    Deal_Name: "Contract Deal",
+    Stage: "Qualification",
+    Closing_Date: "2026-12-15",
+    Account_Name: { module: "Accounts", id: "500000000000000000" },
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Next_Step",
+    sample: "Contract Step",
+    updated: "Updated Step",
+    tenantOther: "Other Step",
+  },
+  sortFields: ["Next_Step", "Amount"],
+  duplicatePermittedField: "Deal_Name",
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Deal_Name", 3],
+    ["Probability", 1.5],
+    ["Amount", "3"],
+    ["Account_Name", "account"],
+  ],
+  optional: {
+    date: { field: "Closing_Date" },
+    lockedRecords: { field: "Locked__s" },
+    lengthValidationField: "Deal_Name",
+    singleModuleLookup: {
+      field: "Account_Name",
+      reference: { module: "Accounts", id: "500000000000000000" },
+      expectedName: "Account 001",
+    },
+  },
+};
