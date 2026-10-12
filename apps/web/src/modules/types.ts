@@ -28,6 +28,7 @@ export interface RelatedListControlDefinition {
   label: string;
   type: RelatedListControlType;
   moduleKey?: ModuleKey | "M2";
+  moreModuleKey?: ModuleKey | "M2";
   icon?: Icon | ((props: import("react").SVGProps<SVGSVGElement>) => import("react").ReactNode);
   position?: "right" | "after-title";
   options?: readonly { id: string; label: string; onAction?: () => void }[];

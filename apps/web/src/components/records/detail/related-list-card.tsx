@@ -37,12 +37,19 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
 
   function renderControl(ctrl: RelatedListControlDefinition) {
     const laterMod = ctrl.moduleKey === "M2" ? undefined : ctrl.moduleKey;
+    const moreLaterMod =
+      ctrl.moreModuleKey !== undefined
+        ? ctrl.moreModuleKey === "M2"
+          ? undefined
+          : ctrl.moreModuleKey
+        : laterMod;
     if (ctrl.type === "split-button") {
       return (
         <SplitButton
           key={ctrl.id}
           label={ctrl.label}
           laterModule={laterMod}
+          moreLaterModule={moreLaterMod}
           items={
             ctrl.options
               ? ctrl.options.map((opt) => ({
@@ -54,8 +61,8 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
               : [
                   {
                     id: `${ctrl.id}-more`,
-                    label: "More",
-                    laterModule: laterMod,
+                    label: ctrl.label,
+                    laterModule: moreLaterMod,
                     onAction: () => {},
                   },
                 ]

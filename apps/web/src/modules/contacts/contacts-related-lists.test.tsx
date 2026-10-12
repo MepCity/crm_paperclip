@@ -69,13 +69,26 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     }
   });
 
-  it("renders upper controls and verifies laterModule attributes", () => {
+  it("renders upper controls and verifies laterModule attributes", async () => {
+    const user = userEvent.setup();
     render(<RelatedCardsContainer relatedLists={contactsRelatedLists} />);
 
     // D-54 Attach (M6)
-    const attachBtn = screen.getByRole("button", { name: /^attach$/i });
+    const attachmentsSection = screen.getByRole("region", { name: "Attachments" });
+    const attachBtn = within(attachmentsSection).getByRole("button", { name: /^attach$/i });
     expect(attachBtn.getAttribute("data-later-module")).toBe("M6");
     expect(attachBtn.getAttribute("aria-disabled")).toBe("true");
+
+    const attachMoreBtn = within(attachmentsSection).getByRole("button", { name: "More" });
+    expect(attachMoreBtn.getAttribute("data-later-module")).toBe("M6");
+    expect(attachMoreBtn.getAttribute("aria-disabled")).toBe("true");
+    await user.click(attachMoreBtn);
+    expect(screen.queryByRole("menu")).toBeNull();
+    attachMoreBtn.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.queryByRole("menu")).toBeNull();
+    await user.keyboard(" ");
+    expect(screen.queryByRole("menu")).toBeNull();
 
     // D-55 Enroll (P3)
     const enrollBtn = screen.getByRole("button", { name: "Enroll" });
@@ -86,8 +99,23 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     expect(newDealBtn.getAttribute("data-later-module")).toBe("M4");
 
     // D-57 to D-60 Open Activities controls (M5, M11)
-    const addNewBtn = screen.getByRole("button", { name: /^add new$/i });
+    const openActivitiesSection = screen.getByRole("region", { name: "Open Activities" });
+    const addNewBtn = within(openActivitiesSection).getByRole("button", { name: /^add new$/i });
     expect(addNewBtn.getAttribute("data-later-module")).toBe("M5");
+
+    const addNewMoreBtn = within(openActivitiesSection).getByRole("button", { name: "More" });
+    expect(addNewMoreBtn.getAttribute("data-later-module")).toBe("M5");
+    expect(addNewMoreBtn.getAttribute("aria-disabled")).toBe("true");
+    await user.click(addNewMoreBtn);
+    expect(screen.queryByRole("menu")).toBeNull();
+    addNewMoreBtn.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.queryByRole("menu")).toBeNull();
+    await user.keyboard(" ");
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    expect(screen.queryByRole("menuitem")).toBeNull();
+    expect(screen.queryByText("More")).toBeNull();
 
     const [openColumnView] = screen.getAllByRole("button", { name: "Column View" });
     expect(openColumnView).toBeDefined();
