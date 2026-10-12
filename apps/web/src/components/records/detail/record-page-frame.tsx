@@ -190,6 +190,28 @@ export function RecordPageFrame({
             <div className="flex flex-col gap-(--size-rail-nested-row-gap)">
               {relatedEntries.map((entry) => {
                 const isSelected = activeSelectedId === entry.id;
+                const hasExtra = Boolean(entry.countBadge !== undefined || entry.railAction);
+                if (!hasExtra) {
+                  return (
+                    <Link
+                      key={entry.id}
+                      href={`#${entry.targetId}`}
+                      variant="body"
+                      aria-current={isSelected ? "page" : undefined}
+                      laterModule={entry.laterModule}
+                      onPress={() => selectRelated(entry)}
+                      onClick={(event) => event.preventDefault()}
+                      className={`flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal rounded-(--radius-md) ${
+                        isSelected ? "bg-(--color-surface-active)" : ""
+                      }`}
+                    >
+                      <span className="truncate" title={entry.label}>
+                        {entry.label}
+                      </span>
+                    </Link>
+                  );
+                }
+
                 return (
                   <div
                     key={entry.id}
