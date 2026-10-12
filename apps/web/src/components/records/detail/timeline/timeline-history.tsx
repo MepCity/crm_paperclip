@@ -2,7 +2,9 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { TimelineEventTrack } from "./timeline-event-track";
 import {
   TimelineHistoryFilterPanel,
@@ -17,6 +19,7 @@ export interface TimelineHistoryProps extends TimelineHistoryFilterProps {
   events: readonly TimelineEvent[];
   format: FormatOptions;
   initialFilterExpanded?: boolean;
+  upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
 }
 
 export function TimelineHistory({
@@ -25,6 +28,7 @@ export function TimelineHistory({
   events,
   format,
   initialFilterExpanded = false,
+  upcomingAutomatedActions,
   ...filterProps
 }: TimelineHistoryProps) {
   const [filterExpanded, setFilterExpanded] = useState(initialFilterExpanded);
@@ -32,6 +36,12 @@ export function TimelineHistory({
     <div className="timeline-history" data-timeline-history>
       <div className="timeline-history-header">
         <h3 className="timeline-history-title">{heading}</h3>
+        <span className="flex-1" aria-hidden />
+        {upcomingAutomatedActions ? (
+          <Button variant="ghost" size="compact" laterModule={upcomingAutomatedActions.laterModule}>
+            {upcomingAutomatedActions.label}
+          </Button>
+        ) : null}
         <button
           type="button"
           className="timeline-history-filter-button"

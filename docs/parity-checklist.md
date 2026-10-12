@@ -204,6 +204,18 @@ Print View retains its visual submenu arrow without opening a submenu. Unknown s
 columns have a read-only text rendering fallback; service-provided column lists
 remain authoritative.
 
+### Contacts record detail — implemented; QA pending (MEP-320)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| D-01–D-09, D-32–D-35 | Shared record header and tab row; Contacts add-tags row, Send Email (M10), prev/next from list context | `e2e/contacts-detail.spec.ts` |
+| D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
+| D-36–D-51 | Business card, details, Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e |
+| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
+| D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
+
+Share, Print Preview and Find and Merge Duplicates are drawn without handlers (separate tasks). Connected Records (`?`) uses `laterModule="P3"`. Lower Contact Information field order follows layout metadata (interim rule).
+
 ### Assigned to Module 2 at the Module 1 gate
 
 | Capability | Spec section |

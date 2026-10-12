@@ -1,5 +1,6 @@
 "use client";
 
+import type { RecordData, RecordId } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
@@ -7,6 +8,7 @@ import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/u
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
+import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
 
 function controlLaterModule(
   cardModuleKey: RelatedListDefinition["moduleKey"],
@@ -20,9 +22,14 @@ function controlLaterModule(
 
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
+  reportingContacts?: {
+    managerRecord: RecordData;
+    orgSlug: string;
+    recordPath: (recordId: RecordId) => string;
+  };
 }
 
-export function RelatedListCard({ definition }: RelatedListCardProps) {
+export function RelatedListCard({ definition, reportingContacts }: RelatedListCardProps) {
   const {
     id,
     title,
@@ -362,6 +369,12 @@ export function RelatedListCard({ definition }: RelatedListCardProps) {
             </Button>
           )}
         </div>
+      ) : id === "reporting-contacts" && reportingContacts ? (
+        <ReportingContactsCardBody
+          managerRecord={reportingContacts.managerRecord}
+          orgSlug={reportingContacts.orgSlug}
+          recordPath={reportingContacts.recordPath}
+        />
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
           {emptyStateText}
