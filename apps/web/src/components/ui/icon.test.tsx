@@ -5,6 +5,9 @@ import { Icons } from "./icon";
 afterEach(cleanup);
 
 const expectedIcons = [
+  "activity",
+  "messageSquare",
+  "phone",
   "recordUser",
   "avatarPerson",
   "recordPortraitSilhouette",
