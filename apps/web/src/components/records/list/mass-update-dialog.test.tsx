@@ -1,7 +1,7 @@
 import { ValidationError } from "@crm/core/errors";
 import type { FieldDefinition } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -40,6 +40,7 @@ function wrapper(service: ReturnType<typeof createClientRecordService>) {
 }
 
 afterEach(() => {
+  fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
   cleanup();
   vi.restoreAllMocks();
 });
@@ -96,10 +97,10 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(await screen.findByRole("option", { name: leadSource.label }));
     expect(screen.getByRole("button", { name: "Update" }).getAttribute("data-disabled")).toBeNull();
     await user.click(screen.getByRole("button", { name: leadSource.label }));
-    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(await screen.findByRole("option", { name: "Advertisement" }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(massSpy).toHaveBeenCalledWith("Leads", ids, { Lead_Source: "Advertisement" });
@@ -127,7 +128,7 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: requiredField.label }));
+    await user.click(await screen.findByRole("option", { name: requiredField.label }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(screen.getByText(`${requiredField.label} cannot be empty.`)).toBeTruthy();
@@ -155,7 +156,7 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: titleField.label }));
+    await user.click(await screen.findByRole("option", { name: titleField.label }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     expect(massSpy).not.toHaveBeenCalled();
     expect(screen.getByText(`${titleField.label} cannot be empty.`)).toBeTruthy();
@@ -180,9 +181,9 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(await screen.findByRole("option", { name: leadSource.label }));
     await user.click(screen.getByRole("button", { name: leadSource.label }));
-    await user.click(screen.getByRole("option", { name: "-None-" }));
+    await user.click(await screen.findByRole("option", { name: "-None-" }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     expect(massSpy).not.toHaveBeenCalled();
     expect(screen.getByText(`${leadSource.label} cannot be empty.`)).toBeTruthy();
@@ -209,7 +210,7 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: booleanField.label }));
+    await user.click(await screen.findByRole("option", { name: booleanField.label }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(massSpy).toHaveBeenCalledWith("Leads", ["a", "b"], {
@@ -239,9 +240,9 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(await screen.findByRole("option", { name: leadSource.label }));
     await user.click(screen.getByRole("button", { name: leadSource.label }));
-    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(await screen.findByRole("option", { name: "Advertisement" }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(screen.getByText("Invalid lead source.")).toBeTruthy();
@@ -269,9 +270,9 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(await screen.findByRole("option", { name: leadSource.label }));
     await user.click(screen.getByRole("button", { name: leadSource.label }));
-    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(await screen.findByRole("option", { name: "Advertisement" }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toContain(longMessage);
@@ -303,9 +304,9 @@ describe("MassUpdateDialog", () => {
       { wrapper: wrapper(service) },
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: leadSource.label }));
+    await user.click(await screen.findByRole("option", { name: leadSource.label }));
     await user.click(screen.getByRole("button", { name: leadSource.label }));
-    await user.click(screen.getByRole("option", { name: "Advertisement" }));
+    await user.click(await screen.findByRole("option", { name: "Advertisement" }));
     await user.click(screen.getByRole("button", { name: "Update" }));
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toContain("Network failed.");
