@@ -52,15 +52,29 @@ export const accountsContactsTablePreviewRows: readonly RelatedListTableRowDefin
   },
 ];
 
+export type AccountsRelatedListBadges = {
+  notes?: number;
+  contacts?: number;
+  openActivities?: number;
+  closedActivities?: number;
+};
+
 export type CreateAccountsRelatedListsOptions = {
   handlers?: AccountsRelatedListHandlers;
+  badges?: AccountsRelatedListBadges;
   includeContactsPreview?: boolean;
 };
+
+function badgeValue(count: number | undefined): number | undefined {
+  return count !== undefined && count > 0 ? count : undefined;
+}
 
 export function createAccountsRelatedLists(
   options: CreateAccountsRelatedListsOptions = {},
 ): readonly RelatedListDefinition[] {
-  const { handlers = {}, includeContactsPreview = false } = options;
+  const { handlers = {}, badges = {}, includeContactsPreview = false } = options;
+  const notesBadge = badges.notes !== undefined ? badgeValue(badges.notes) : badgeValue(1);
+  const contactsBadge = badges.contacts !== undefined ? badgeValue(badges.contacts) : badgeValue(1);
 
   return [
     {
@@ -69,7 +83,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M6",
       order: 1,
       targetId: "related-list-notes",
-      countBadge: 1,
+      countBadge: notesBadge,
       railAction: {
         id: "notes-add",
         label: "Add",
@@ -135,7 +149,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M2",
       order: 5,
       targetId: "related-list-contacts",
-      countBadge: 1,
+      countBadge: contactsBadge,
       upperControls: [
         {
           id: "hierarchy-view",
@@ -218,7 +232,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-open-activities",
-      countBadge: 1,
+      countBadge: badgeValue(badges.openActivities ?? 1),
       upperControls: [
         {
           id: "add-new",
@@ -270,7 +284,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 8,
       targetId: "related-list-closed-activities",
-      countBadge: 1,
+      countBadge: badgeValue(badges.closedActivities ?? 1),
       upperControls: [
         {
           id: "column-view-closed",
@@ -403,6 +417,12 @@ export function createAccountsRelatedLists(
       moduleKey: "M3",
       order: 13,
       targetId: "related-list-member-accounts",
+      railAction: {
+        id: "member-accounts-add",
+        label: "Add",
+        moduleKey: "M3",
+        onAction: handlers.onMemberAccountNew,
+      },
       upperControls: [
         {
           id: "new-member-account",

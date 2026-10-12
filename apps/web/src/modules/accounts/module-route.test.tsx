@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
 }));
 vi.mock("@/lib/session", () => ({
   requireOrgContext: vi.fn(async () => ({ userId: "route-author" })),
@@ -44,18 +45,9 @@ vi.mock("../module-list-client", () => ({
     </p>
   ),
 }));
-vi.mock("@/components/records/detail/record-detail-screen", () => ({
-  RecordDetailScreen: ({
-    definition,
-    recordId,
-  }: {
-    definition: ModuleScreenDefinition;
-    recordId: string;
-  }) => (
-    <p>
-      {definition.apiName}:detail:{recordId}:
-      {definition.detail.statusRibbon ? "ribbon" : "no ribbon"}
-    </p>
+vi.mock("./account-record-screen", () => ({
+  AccountRecordScreen: ({ recordId }: { recordId: string }) => (
+    <p>Accounts:detail:{recordId}:no ribbon</p>
   ),
 }));
 vi.mock("../module-form-client", () => ({
