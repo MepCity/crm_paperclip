@@ -1,7 +1,7 @@
 import { ConflictError, ForbiddenError } from "@crm/core/errors";
-import type { FieldDefinition } from "@crm/core/records";
+import type { DeduplicateResult, FieldDefinition } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearToasts, ToastProvider } from "@/components/ui/toast";
@@ -9,6 +9,8 @@ import { createClientRecordService } from "@/lib/api/client/client-record-servic
 import { ApiProvider } from "@/lib/api/client/provider";
 import { render } from "@/test/render";
 import { DeduplicateJob, type DeduplicateJobProps } from "./dedup-job";
+
+type DedupOutcome = DeduplicateResult;
 
 const ctx = {
   orgId: "org-1",
@@ -171,9 +173,35 @@ describe("DeduplicateJob run", () => {
     await records.create("Leads", input);
 
     await startRun(user);
+    // The cleanup already finished, but its result waits for the acknowledged notice.
+    const notice = await screen.findByRole("dialog", { name: "Deduplication started" });
+    await user.click(within(notice).getByRole("button", { name: "OK" }));
     await waitFor(() => expect(props.onClose).toHaveBeenCalled());
     expect(screen.getByRole("alert").textContent).toContain(
       "1 duplicate group merged and 1 record removed.",
+    );
+  });
+
+  it("shows the result of a cleanup that finishes after the notice was acknowledged", async () => {
+    const user = userEvent.setup();
+    const props = renderJob();
+    const deferred: { resolve?: (value: DedupOutcome) => void } = {};
+    vi.spyOn(records, "deduplicate").mockReturnValue(
+      new Promise<DedupOutcome>((resolve) => {
+        deferred.resolve = resolve;
+      }),
+    );
+    await startRun(user);
+    const notice = screen.getByRole("dialog", { name: "Deduplication started" });
+    await user.click(within(notice).getByRole("button", { name: "OK" }));
+    expect(props.onClose).not.toHaveBeenCalled();
+
+    await act(async () => {
+      deferred.resolve?.({ mergedGroups: 2, removedRecords: 3, conflicts: [] });
+    });
+    await waitFor(() => expect(props.onClose).toHaveBeenCalled());
+    expect(screen.getByRole("alert").textContent).toContain(
+      "2 duplicate groups merged and 3 records removed.",
     );
   });
 

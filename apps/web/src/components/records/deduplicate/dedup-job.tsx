@@ -2,7 +2,7 @@
 
 import type { FieldDefinition, ModuleApiName } from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { useDeduplicate } from "@/lib/api/client/hooks";
 import {
@@ -19,11 +19,12 @@ import {
   DedupProgressDialog,
 } from "./dedup-dialogs";
 
-type JobPhase = "fields" | "confirm" | "progress" | "conflict";
+type JobPhase = "fields" | "confirm" | "progress" | "waiting" | "conflict";
 
 type JobOutcome = {
   mergedGroups: number;
   removedRecords: number;
+  conflictCount: number;
 };
 
 export interface DeduplicateJobProps {
@@ -55,6 +56,25 @@ export function DeduplicateJob({
   const [phase, setPhase] = useState<JobPhase>("fields");
   const [outcome, setOutcome] = useState<JobOutcome | null>(null);
   const settled = useRef(false);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+
+  /** Shows what the cleanup achieved once the running notice has been acknowledged. */
+  const present = useCallback(
+    (next: JobOutcome) => {
+      if (next.conflictCount > 0) {
+        setPhase("conflict");
+        return;
+      }
+      toast({
+        variant: "success",
+        title: `Deduplicate ${pluralLabel}`,
+        message: dedupResultSummaryMessage(next.mergedGroups, next.removedRecords),
+      });
+      onClose();
+    },
+    [pluralLabel, onClose],
+  );
 
   useEffect(() => {
     if (dedupMutation.status === "pending") {
@@ -65,21 +85,15 @@ export function DeduplicateJob({
     if (dedupMutation.status === "success") {
       settled.current = true;
       const result = dedupMutation.data;
-      if (result.conflicts.length === 0) {
-        toast({
-          variant: "success",
-          title: `Deduplicate ${pluralLabel}`,
-          message: dedupResultSummaryMessage(result.mergedGroups, result.removedRecords),
-        });
-        onClose();
-        return;
-      }
-      setOutcome({
+      const next: JobOutcome = {
         mergedGroups: result.mergedGroups,
         removedRecords: result.removedRecords,
-      });
-      // The running notice keeps the result until the user acknowledges it with OK.
-      setPhase((current) => (current === "progress" ? current : "conflict"));
+        conflictCount: result.conflicts.length,
+      };
+      setOutcome(next);
+      // The notice keeps the result until the user acknowledges it with OK, so the
+      // acknowledgment is never swallowed by a cleanup that finishes first.
+      if (phaseRef.current !== "progress") present(next);
       return;
     }
     if (dedupMutation.status === "error") {
@@ -94,11 +108,11 @@ export function DeduplicateJob({
       });
       setPhase("fields");
     }
-  }, [dedupMutation.status, dedupMutation.data, dedupMutation.error, pluralLabel, onClose]);
+  }, [dedupMutation.status, dedupMutation.data, dedupMutation.error, present]);
 
   function dismissNotice() {
-    if (outcome) setPhase("conflict");
-    else onClose();
+    if (outcome) present(outcome);
+    else setPhase("waiting");
   }
 
   if (phase === "confirm") {
@@ -117,6 +131,9 @@ export function DeduplicateJob({
   if (phase === "progress") {
     return <DedupProgressDialog onDismiss={dismissNotice} />;
   }
+
+  // Acknowledged before the cleanup finished: the result is shown as soon as it lands.
+  if (phase === "waiting") return null;
 
   if (phase === "conflict" && outcome) {
     return (
