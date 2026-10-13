@@ -82,8 +82,8 @@ export function createAccountsRelatedLists(
   options: CreateAccountsRelatedListsOptions = {},
 ): readonly RelatedListDefinition[] {
   const { handlers = {}, badges = {}, includeContactsPreview = false } = options;
-  const notesBadge = badgeValue(badges.notes);
-  const contactsBadge = badgeValue(badges.contacts);
+  const notesBadge = badges.notes !== undefined ? badgeValue(badges.notes) : badgeValue(1);
+  const contactsBadge = badges.contacts !== undefined ? badgeValue(badges.contacts) : badgeValue(1);
   const openActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
     {
       id: "open-tasks",

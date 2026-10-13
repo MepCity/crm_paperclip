@@ -11,6 +11,7 @@ export type DetailFieldEntry = {
   value: FieldValue;
   auditTimestamp?: string | null;
   column: "left" | "right" | "full";
+  callAction?: boolean;
 };
 
 export type DetailSection = {
@@ -57,7 +58,11 @@ export function DetailsCard({
       {expanded ? (
         <div className="detail-details-sections" data-detail-sections>
           {sections.map((section) => (
-            <div key={section.title} className="detail-details-section-block">
+            <div
+              key={section.title}
+              className="detail-details-section-block"
+              data-detail-section={section.title}
+            >
               <h3 className="detail-section-title">{section.title}</h3>
               <SectionFields
                 fields={section.fields}
@@ -151,6 +156,7 @@ function FieldEntry({
       field={entry.field}
       value={entry.value}
       auditTimestamp={entry.auditTimestamp}
+      callAction={entry.callAction}
       ownerNames={ownerNames}
       format={format}
       layout={layout}

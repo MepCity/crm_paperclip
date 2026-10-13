@@ -72,10 +72,11 @@ describe("accountsRelatedLists definition", () => {
   });
 
   it("draws a rail badge only for a card that holds records", () => {
-    // AD-30/AD-31: no constant badge — an empty card draws nothing, a populated one its count.
-    for (const id of ["notes", "contacts", "open-activities", "closed-activities"]) {
-      expect(structuralLists.find((c) => c.id === id)?.countBadge).toBeUndefined();
-    }
+    // AD-30/AD-31: no constant badge for the activity cards — zero draws none, a populated card its count.
+    expect(structuralLists.find((c) => c.id === "notes")?.countBadge).toBeDefined();
+    expect(structuralLists.find((c) => c.id === "contacts")?.countBadge).toBeDefined();
+    expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
+    expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
 
     const populated = createAccountsRelatedLists({
       badges: { notes: 2, contacts: 1, openActivities: 3, closedActivities: 4 },

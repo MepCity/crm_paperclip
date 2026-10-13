@@ -43,6 +43,13 @@ describe("contactsRelatedLists definition", () => {
       expect(actual.title).toBe(expected.title);
       expect(actual.moduleKey).toBe(expected.moduleKey);
     });
+
+    expect(
+      contactsRelatedLists.find((c) => c.id === "open-activities")?.countBadge,
+    ).toBeUndefined();
+    expect(
+      contactsRelatedLists.find((c) => c.id === "closed-activities")?.countBadge,
+    ).toBeUndefined();
   });
 
   it("assigns laterModule to all non-M2 cards and leaves M2 for Reporting Contacts", () => {
@@ -459,8 +466,10 @@ describe("RecordPageFrame with Contacts rail", () => {
     scrollToCard("related-list-closed-activities");
     expect(onSelect).toHaveBeenCalledWith("closed-activities");
     // D-31: the card holds no records, so the rail draws a bare link row without a badge.
-    const closedActivities = within(rail).getByRole("link", { name: "Closed Activities" });
-    expect(closedActivities.closest("div[class*='flex items-center']")).toBeNull();
+    const closedLink = within(rail).getByRole("link", { name: "Closed Activities" });
+    const closedRow = closedLink.closest("div[class*='flex items-center']") ?? closedLink;
+    expect(closedRow.querySelector("button")).toBeNull();
+    expect(closedRow.querySelector("span[class*='rounded-full']")).toBeNull();
     expect(invoicesRow?.querySelector("button")).toBeNull();
 
     // 4. Scroll to Notes -> D-53 appears with laterModule M6

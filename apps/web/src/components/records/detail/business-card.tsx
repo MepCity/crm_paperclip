@@ -8,6 +8,7 @@ import { DetailFieldRow } from "./detail-field-row";
 export type BusinessCardField = {
   field: FieldDefinition;
   value: FieldValue;
+  callAction?: boolean;
 };
 
 export interface BusinessCardProps {
@@ -19,11 +20,12 @@ export interface BusinessCardProps {
 export function BusinessCard({ fields, ownerNames, format }: BusinessCardProps) {
   return (
     <section className="detail-card detail-business-card" aria-label="Business card">
-      {fields.map(({ field, value }) => (
+      {fields.map(({ field, value, callAction }) => (
         <DetailFieldRow
           key={field.apiName}
           field={field}
           value={value}
+          callAction={callAction}
           ownerNames={ownerNames}
           format={format}
           layout="business"

@@ -59,7 +59,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     header: contactsRecordHeaderIdentity,
     addTags: { label: "Add Tags", laterModule: "M6" },
     headerCommands: [
-      { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
+      { id: "send-email", label: "Send Email", laterModule: "M10", variant: "primary" },
     ],
     businessCard: buildContactsBusinessCardFields,
     sections: buildContactsDetailSections,
