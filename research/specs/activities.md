@@ -267,7 +267,7 @@ numbers 89, including image-only SH-46. Screenshot opened as an image.
 
 Calls opens as a populated table with All Calls active; no presentation or preference was changed. Total Records is 890; the displayed range is 1 to 30. Subject, Call Type, Call Start Time and Call Duration are visible. Call Type is plain text, without a direction pictogram. Call Start Time shows date and time; duration cells show a time-like value or are blank. The reason for blank duration was not tested. Related To, Contact Name and Call Owner are outside the visible right edge; their row links are not counted as seen controls.
 
-Compared with Tasks, Timeline and the Locked system filter are absent. Four view icons and the dropdown remain. The ten visible field filters below replace the Tasks catalog. A highlighted row paints pencil, note bubble and three dots; none was activated. No handset, dialling link, status badge or completion control is painted in the visible cells. Empty state and other hover-only controls remain not observed. View-selector contents come from the Views metadata table, not a newly opened selector.
+Compared with Tasks, Timeline and the Locked system filter are absent. Four view icons and the dropdown remain. The ten visible field filters below replace the Tasks catalog. A highlighted row paints pencil, note bubble and three dots; none was activated. Actions repeats the six Tasks rows. Create-menu entries remain not observed because the tool skipped the trigger. No handset, dialling link, status badge or completion control is painted in the visible cells. Empty state and other hover-only controls remain not observed. View-selector contents come from the Views metadata table, not a newly opened selector.
 
 ### Control inventory — m5l-calls-list-base
 
@@ -430,15 +430,47 @@ Source items 655; mapped source items 185; exclusions 470; distinct inventory nu
 
 ### Control inventory — m5l-calls-create-menu
 
-Pending permitted capture.
+One requested click on the uniquely validated attached down arrow was skipped by the capture tool's dangerous-attribute guard; zero clicks executed. No alternative selector or override was used. Scheduling/logging entries, labels and order remain not observed.
+
+Rest: as in m5l-calls-list-base; covered by the overlay: none.
+Absent: CL-39–CL-41 (highlighted-row affordances).
+
+### Calls source reconciliation — m5l-calls-create-menu
+
+Base source ordinals 292–295 (pencil, note wrappers and row three dots) are absent. Ordinals 1–291 retain their base destinations/exclusions. Each base ordinal 296–655 maps to this capture's ordinal 292–651 (subtract four), with the same destination/exclusion. Source items 651; mapped source items 181; exclusions 470; distinct inventory numbers 88, including image-only SH-46. Screenshot opened as an image.
 
 ### Control inventory — m5l-calls-actions
 
-Pending permitted capture.
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CL-12.1 | Actions menu | Mass Transfer | menu item | popup, row 1 | same | seen (m5l-calls-actions) | M5 | TL-14.1 |
+| CL-12.2 | Actions menu | Mass Delete | menu item | popup, row 2 | same | seen (m5l-calls-actions) | M5 | TL-14.2 |
+| CL-12.3 | Actions menu | Mass Update | menu item | popup, row 3 | same | seen (m5l-calls-actions) | M5 | TL-14.3 |
+| CL-12.4 | Actions menu | Manage Tags | menu item | popup, row 4 | same | seen (m5l-calls-actions) | M6 | TL-14.4 |
+| CL-12.5 | Actions menu | Export Calls | menu item | popup, row 5 | same | seen (m5l-calls-actions) | M6 | TL-14.5 |
+| CL-12.6 | Actions menu | Print View | menu item | popup, row 6 | same | seen (m5l-calls-actions) | M5 | TL-14.6 |
+| CL-46 | Toolbar | Refresh icon | icon button | after view-group down chevron | same | seen (m5l-calls-actions) | M5 | TL-65 |
+
+Rest: as in m5l-calls-list-base; covered by the overlay: part of CL-36 and first four rows' duration cells, CL-30. Absent: CL-39–CL-41 (highlighted-row affordances).
+Print View is image-only; its sparkle and submenu arrow belong to the row. No submenu or action was activated. All six rows match Tasks in order.
+
+### Calls source reconciliation — m5l-calls-actions
+
+Use the create-menu reconciliation for ordinals 1–638, except 127–128 map to CL-46 (Refresh is now painted). Ordinals 639, 641, 643, 645 are excluded zero-area nested links. Ordinals 640 → CL-12.1, 642 → CL-12.2, 644 → CL-12.3, 646 → CL-12.4, 647 → CL-12.5. Actions ordinals 648–660 map to create-menu ordinals 639–651 (subtract nine), retaining the same destination/exclusion. Image-only CL-12.6 is added.
+Source items 660; mapped source items 188; exclusions 472; distinct inventory numbers 95, including image-only SH-46 and CL-12.6. Screenshot opened as an image.
+
 
 ### Control inventory — m5l-calls-list-after
 
-Pending permitted capture.
+Total Records remains 890; range remains 1 to 30. All twelve visibly painted record-link positions remain present. The highlighted row and CL-39–CL-41 controls are absent; no overlay is open. No record/status action was activated.
+
+Rest: as in m5l-calls-list-base; covered by the overlay: none.
+Absent: CL-39–CL-41 (highlighted-row affordances).
+
+### Calls source reconciliation — m5l-calls-list-after
+
+Use create-menu destinations/exclusions for ordinals 1–641. After ordinals 642–643 are excluded: late DOM-only Channels and Threads footer entries are not painted in screenshot.png. The footer wrapper at 639 contains those labels but remains an excluded non-control wrapper. After ordinals 644–653 map to create-menu ordinals 642–651 (subtract two), with the same destination/exclusion. The screenshot still paints the existing three left footer controls; no new shell control is observed.
+Source items 653; mapped source items 181; exclusions 472; distinct inventory numbers 88, including image-only SH-46. Screenshot opened as an image.
 
 ## Module family
 
@@ -1653,7 +1685,7 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 | Tags / export | TL-14.4–TL-14.5 | M6 | Reused entries; execution not observed |
 | Print View | TL-14.6 | M5 | Reused entry; submenu not observed |
 | Task reminder / repeat / completion fields | Tasks fields and layout; Picklists; ALARM / RRULE | M5 | Activities-specific metadata; transitions not observed |
-| Calls list | CL-01–CL-45; Calls source reconciliation | M5; notes M6; settings M11 | Table with call-type/start/duration columns and call-field filters; row pencil/note/more controls |
+| Calls list | CL-01–CL-46; CL-12.1–CL-12.6; Calls source reconciliation | M5; notes M6; settings M11 | Table with call-type/start/duration columns and call-field filters; row pencil/note/more controls |
 | Meetings list | ML-01–ML-46; ML-12.1–ML-12.6; Meetings source reconciliation | M5; note/export M6; column settings M11 | All-day/check-in filters, From/To and related links; six Actions rows reused; Create menu not observed |
 | Meeting scheduling / participants / check-in | Meetings fields and layout; multireminder | M5 | Activities-specific metadata; UI belongs to later research |
 | Call logging / scheduling / CTI | Calls fields and layout; Picklists | M5 | Activities-specific metadata; type/status conditions not supplied |
@@ -1666,8 +1698,9 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 - m5l-meetings-create-menu — requested attached-arrow click skipped; painted base remains.
 - m5l-meetings-actions — one executed click; six menu rows and painted Refresh.
 - m5l-calls-list-base — renewed, painted table, no clicks, 890 total records; displayed range 1 to 30.
-- m5l-calls-list-after — pending renewed comparison.
-- m5l-calls-create-menu / m5l-calls-actions — pending permitted capture.
+- m5l-calls-list-after — no clicks; 890 total and range 1 to 30 unchanged, twelve painted record links remain.
+- m5l-calls-create-menu — one requested click, skipped by guard; no menu opened.
+- m5l-calls-actions — one executed click; six visible Actions rows and painted Refresh.
 
 - m5-tasks-list-base — full, table opening, no clicks, 12 total records.
 - m5-tasks-view-selector — one requested/completed click; public-view menu only.
@@ -1675,11 +1708,11 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 - m5-tasks-actions — one requested/completed click; six visible Actions rows.
 - m5-tasks-list-after — no clicks; comparison below in inventory.
 
-All screenshots were opened as images. Raw files stay in the local research workspace; only slugs are recorded here. Tasks traffic matched its permitted reads. Renewed Meetings initially exceeded the one-bulk-read limit; the board then explicitly authorized the same two reads per list capture. No write or preference action was executed. Counts and exclusion accounting are in the reconciliation and issue comments.
+All screenshots were opened as images. Raw files stay in the local research workspace; only slugs are recorded here. Tasks traffic matched its permitted reads. Renewed Meetings initially exceeded the former one-bulk-read limit; the board authorized the same two baseline reads per list capture. Calls uses one baseline read in all four captures. No write or preference action was executed. Counts and exclusion accounting are in the reconciliation and issue comments.
 
 ## Open questions
 
-- Create-menu contents are not observed because the tool rejected its trigger. Do not infer import/create rows.
+- All three activity Create-menu contents are not observed because the tool rejected the attached-arrow trigger. Calls scheduling/logging entry labels and order remain not observed; do not infer them from metadata.
 - Empty state, completion affordances on hover, and other hover-only row actions remain not observed. No completion action was clicked.
 - Related To export has only `se_module`, not a complete enumerated target list. Who_Id exports Contacts only; alternative person targets and mutual constraints are not established by metadata.
 - ALARM / RRULE / multireminder supply JSON container types, without nested schema; Participants supplies bigint / jsonarray without item structure. Public-documentation flow research must resolve these before implementation tasks.
