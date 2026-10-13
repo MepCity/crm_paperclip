@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ForbiddenError, ValidationError } from "../../../errors";
 import type { RecordInput } from "../../contract";
 import { createFixtureRecordService } from "../index";
+import { dealsMetadata } from "./metadata";
 import { dealsPicklists } from "./picklists";
 
 function setup() {
@@ -65,12 +66,20 @@ describe("Deals stage rules", () => {
     expect((await create({ Stage: "Closed Won", Probability: 0 })).fields.Probability).toBe(0);
     expect((await create()).fields.Expected_Revenue).toBeNull();
     expect((await create({ Amount: 1.005, Probability: 100 })).fields.Expected_Revenue).toBe(1.01);
-    for (const Probability of [-1, 101, 1.5, null]) {
+    for (const Probability of [-1, 101, 1.5]) {
       await expect(create({ Probability })).rejects.toBeInstanceOf(ValidationError);
       await expect(service.update("Deals", deal.id, { Probability })).rejects.toBeInstanceOf(
         ValidationError,
       );
     }
+    expect((await create({ Probability: null })).fields.Probability).toBe(10);
+    expect(
+      (await service.update("Deals", deal.id, { Stage: "Needs Analysis", Probability: null }))
+        .fields,
+    ).toMatchObject({ Stage: "Needs Analysis", Probability: 20 });
+    expect((await service.update("Deals", deal.id, { Probability: null })).fields.Probability).toBe(
+      20,
+    );
     await expect(create({ Expected_Revenue: 12 })).rejects.toBeInstanceOf(ValidationError);
     await expect(service.update("Deals", deal.id, { Expected_Revenue: 12 })).rejects.toBeInstanceOf(
       ValidationError,
@@ -78,6 +87,10 @@ describe("Deals stage rules", () => {
   });
   it("accepts loss reasons only for either lost category and clears them when reopening", async () => {
     const { service, create } = setup();
+    expect(
+      (await create({ Stage: "Qualification", Reason_For_Loss__s: null })).fields
+        .Reason_For_Loss__s,
+    ).toBeNull();
     await expect(create({ Reason_For_Loss__s: "Price" })).rejects.toBeInstanceOf(ValidationError);
     const deal = await create({ Stage: "Closed Lost", Reason_For_Loss__s: "Price" });
     expect(
@@ -88,6 +101,14 @@ describe("Deals stage rules", () => {
         })
       ).fields.Reason_For_Loss__s,
     ).toBe("Competition");
+    expect(
+      (
+        await service.update("Deals", deal.id, {
+          Stage: "Qualification",
+          Reason_For_Loss__s: null,
+        })
+      ).fields.Reason_For_Loss__s,
+    ).toBeNull();
     expect(
       (await service.update("Deals", deal.id, { Stage: "Qualification" })).fields
         .Reason_For_Loss__s,
@@ -193,6 +214,26 @@ describe("Deals stage rules", () => {
     expect(merged.fields).toMatchObject({ Probability: 100, Expected_Revenue: 100 });
     expect((await history(master.id)).records).toHaveLength(2);
     expect((await history(duplicate.id)).records).toHaveLength(0);
+  });
+  it("creates when every create-visible writable field is null except required values", async () => {
+    const { service } = setup();
+    const nullables = Object.fromEntries(
+      dealsMetadata.fields
+        .filter(
+          (field) =>
+            field.views.create && !field.readOnly && !field.required && field.apiName !== "Owner",
+        )
+        .map((field) => [field.apiName, null]),
+    );
+    const deal = await service.create("Deals", {
+      Deal_Name: "Form-shaped create",
+      Account_Name: { module: "Accounts", id: "500000000000000000" },
+      Closing_Date: "2026-12-15",
+      Stage: "Qualification",
+      ...nullables,
+    });
+    expect(deal.fields.Reason_For_Loss__s).toBeNull();
+    expect(deal.fields.Probability).toBe(10);
   });
   it("seeds coherent derived fields and multiple-stage history", async () => {
     const { service, history } = setup();

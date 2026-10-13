@@ -448,8 +448,11 @@ Interim rules fixed for this implementation, because writes in the reference CRM
 are forbidden and these outcomes have not been observed:
 
 - When automatic stage probability is applied; explicit probability preservation.
-- Probability integer range 0–100.
-- Expected revenue formula and two-decimal rounding.
+- `Probability: null` in the input means not provided: stage default on create or
+  stage change, otherwise the existing probability is kept.
+- Probability integer range 0–100 applies only to non-null provided values.
+- Expected revenue formula and two-decimal rounding; `summarize` sums use the same
+  two-decimal rounding for currency and numeric amount fields.
 - Reopening a closed deal without additional validation.
 - Initial history creation and appending only when the stage actually changes.
 - History calendar-day differences use UTC dates, independent of elapsed hours.

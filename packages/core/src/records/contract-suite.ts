@@ -15,6 +15,7 @@ import type {
   RecordService,
 } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
+import { roundMoneyTwoDecimals } from "./fixture/deals/rules";
 
 type ContractFactory = (
   ctx: OrgContext,
@@ -151,9 +152,11 @@ export function describeRecordServiceContract(
         );
         expect(group.sum).toBe(
           sumField
-            ? all.records
-                .filter((row) => (row.fields[field.apiName] ?? null) === group.value)
-                .reduce((total, row) => total + Number(row.fields[sumField.apiName] ?? 0), 0)
+            ? roundMoneyTwoDecimals(
+                all.records
+                  .filter((row) => (row.fields[field.apiName] ?? null) === group.value)
+                  .reduce((total, row) => total + Number(row.fields[sumField.apiName] ?? 0), 0),
+              )
             : null,
         );
       }

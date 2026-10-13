@@ -16,7 +16,7 @@ import type {
   RecordService,
 } from "../contract";
 import { calendarDays, historyRow } from "./deals/history";
-import { applyDealRules } from "./deals/rules";
+import { applyDealRules, roundMoneyTwoDecimals } from "./deals/rules";
 import {
   automaticMaster,
   duplicateGroups,
@@ -586,9 +586,11 @@ export function createFixtureRecordService(
           sum:
             query.sum === undefined
               ? null
-              : members.reduce(
-                  (total, row) => total + Number(row.fields[query.sum as string] ?? 0),
-                  0,
+              : roundMoneyTwoDecimals(
+                  members.reduce(
+                    (total, row) => total + Number(row.fields[query.sum as string] ?? 0),
+                    0,
+                  ),
                 ),
         };
       });

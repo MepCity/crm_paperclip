@@ -44,3 +44,38 @@ it("appends only a matching null group, includes zero sums, search and tenant is
   );
   expect(await make().summarize("Leads", query)).toEqual(empty);
 });
+
+it("rounds currency sums to two decimals", async () => {
+  const service = createFixtureRecordService({
+    orgId: randomUUID(),
+    orgSlug: "summary-round",
+    orgName: "Summary round",
+    userId: "summary-round-user",
+    role: "admin",
+  });
+  const marker = "Summary fraction rounding";
+  await service.create("Deals", {
+    Deal_Name: "Fraction A",
+    Next_Step: marker,
+    Account_Name: { module: "Accounts", id: "500000000000000000" },
+    Closing_Date: "2026-12-15",
+    Stage: "Qualification",
+    Amount: 0.1,
+  });
+  await service.create("Deals", {
+    Deal_Name: "Fraction B",
+    Next_Step: marker,
+    Account_Name: { module: "Accounts", id: "500000000000000000" },
+    Closing_Date: "2026-12-15",
+    Stage: "Qualification",
+    Amount: 0.2,
+  });
+  const groups = await service.summarize("Deals", {
+    viewId: "all-deals",
+    groupBy: "Stage",
+    sum: "Amount",
+    filters: { field: "Next_Step", comparator: "equal", value: marker },
+  });
+  const qualification = groups.find((group) => group.value === "Qualification");
+  expect(qualification?.sum).toBe(0.3);
+});
