@@ -37,6 +37,8 @@ export interface FilterPanelProps {
   groups: readonly FilterGroup[];
   selectedIds: readonly string[];
   onSelectionChange: (selectedIds: string[]) => void;
+  /** Applied values used to seed editors when the panel mounts. */
+  initialFilters?: readonly AppliedFilter[];
   onApply?: (filters: AppliedFilter[]) => void;
   onClear?: () => void;
   /** Shown above the footer actions when a server-side filter validation fails. */
@@ -50,12 +52,15 @@ export function FilterPanel({
   groups,
   selectedIds,
   onSelectionChange,
+  initialFilters = [],
   onApply,
   onClear,
   applyErrorMessage,
 }: FilterPanelProps) {
   const titleId = useId();
-  const [drafts, setDrafts] = useState<Record<string, FilterDraft>>({});
+  const [drafts, setDrafts] = useState<Record<string, FilterDraft>>(() =>
+    Object.fromEntries(initialFilters.map(({ itemId, ...draft }) => [itemId, draft])),
+  );
   // External deselection (including page-level reset) must discard drafts too.
   useEffect(() => {
     setDrafts((current) => {

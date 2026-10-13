@@ -5,6 +5,11 @@ export interface ContactsRelatedListHandlers {
   onHierarchyView?: () => void;
   onNewReportingContact?: () => void;
   onAddReportingContact?: () => void;
+  onDealsNew?: () => void;
+}
+
+export interface ContactsRelatedListBadges {
+  deals?: number;
 }
 
 /** D-30/D-31: the rail badge is the number of records the card holds; zero draws no badge. */
@@ -17,7 +22,9 @@ function activityBadge(
 
 export function createContactsRelatedLists(
   handlers: ContactsRelatedListHandlers = {},
+  badges: ContactsRelatedListBadges = {},
 ): readonly RelatedListDefinition[] {
+  const dealsBadge = badges.deals !== undefined && badges.deals > 0 ? badges.deals : undefined;
   const openActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
     {
       id: "open-tasks",
@@ -110,12 +117,15 @@ export function createContactsRelatedLists(
       moduleKey: "M4",
       order: 5,
       targetId: "related-list-deals",
+      countBadge: dealsBadge,
+      recordFilterField: "Contact_Name",
       upperControls: [
         {
           id: "new-deal",
           label: "New Deal",
           type: "button",
           moduleKey: "M4",
+          onAction: handlers.onDealsNew,
         },
       ],
       emptyStateText: "No records found",

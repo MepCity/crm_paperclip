@@ -1159,6 +1159,30 @@ test.describe("Leads list page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("reopens the filter panel with the applied operator and value", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    await openFilterRow(page, panel, "Company");
+    await panel.getByRole("button", { name: /Company operator$/ }).click();
+    await page.getByRole("option", { name: "is", exact: true }).click();
+    await panel.getByRole("textbox", { name: "Company value" }).fill("Example");
+    const responses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulk, count] = await responses;
+    expect(bulk.ok()).toBe(true);
+    expect(count.ok()).toBe(true);
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    await expect(panel).toBeHidden();
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    await expect(panel.getByRole("checkbox", { name: "Company", exact: true })).toBeChecked();
+    await expect(panel.getByRole("button", { name: /Company operator$/ })).toHaveText("is");
+    await expect(panel.getByRole("textbox", { name: "Company value" })).toHaveValue("Example");
+    await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeEnabled();
+  });
+
   test("applies field filters to list data and count requests", async ({ page }) => {
     test.setTimeout(180_000);
     await signUpNewUser(page);

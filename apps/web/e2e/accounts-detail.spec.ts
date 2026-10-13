@@ -9,15 +9,17 @@ import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 
 const ACCOUNTS_TAB = "Accounts";
+const DEALS_TAB = "Deals";
 const PRIMARY_ACCOUNT_ID = "500000000000000000";
 const CHILD_ACCOUNT_ID = "500000000000000006";
 const PARENT_ACCOUNT_ID = "500000000000000005";
 const DELETE_ACCOUNT_ID = "500000000000000001";
 const EMPTY_RELATED_ACCOUNT_ID = "500000000000000249";
+const DEAL_RECORD_ID = "700000000000000000";
 
 function waitForModuleBulkList(
   page: import("@playwright/test").Page,
-  module: "Contacts" | "Accounts",
+  module: "Contacts" | "Accounts" | "Deals",
 ) {
   return page.waitForResponse((response) => {
     const url = new URL(response.url());
@@ -357,6 +359,78 @@ test.describe("Accounts record detail", () => {
     }
 
     ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card lists the account deals and Deal Name opens Deal detail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    const dealLink = deals.getByRole("link", { name: "Deal 001" });
+    await expect(dealLink).toHaveAttribute("href", /\/tab\/Deals\/700000000000000000$/);
+    await dealLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, DEALS_TAB, DEAL_RECORD_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card New Deal opens the create form with Account Name filled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    await expect(deals.getByRole("button", { name: "Assign" })).toBeVisible();
+    await deals.getByRole("button", { name: "New Deal" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, DEALS_TAB));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals rail plus opens the create form with Account Name filled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const dealsRailLink = rail.getByRole("link", { name: "Deals" });
+    await expect(dealsRailLink).not.toHaveAttribute("data-later-module");
+    await dealsRailLink.click();
+    const addButton = rail.getByRole("button", { name: "Add" });
+    await expect(addButton).not.toHaveAttribute("data-later-module");
+    await addButton.click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, DEALS_TAB));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card empty state", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const dealsListDone = waitForModuleBulkList(page, "Deals");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const dealsList = await dealsListDone;
+    expect(dealsList.ok()).toBe(true);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByText("No records found")).toBeVisible();
+    await expect(deals.getByRole("table")).toHaveCount(0);
   });
 });
 
