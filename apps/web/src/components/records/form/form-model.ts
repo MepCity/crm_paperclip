@@ -92,6 +92,8 @@ function sameValue(left: FieldValue, right: FieldValue): boolean {
     left !== null &&
     typeof right === "object" &&
     right !== null &&
+    "module" in left &&
+    "module" in right &&
     left.module === right.module &&
     left.id === right.id
   );

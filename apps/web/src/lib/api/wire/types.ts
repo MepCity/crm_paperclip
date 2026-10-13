@@ -10,6 +10,7 @@ export type WireCriteria =
   | { field: { api_name: string }; comparator: Comparator; value: WireCriteriaValue }
   | { group_operator: "AND" | "OR"; group: readonly WireCriteria[] };
 export type WireField = {
+  accepts_json_array?: boolean;
   api_name: string;
   field_label: string;
   data_type: FieldDataType;

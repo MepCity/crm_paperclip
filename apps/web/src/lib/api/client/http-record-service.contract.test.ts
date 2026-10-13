@@ -1,11 +1,15 @@
+import { randomUUID } from "node:crypto";
+import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext } from "@crm/core/records";
 import { describeRecordServiceContract } from "@crm/core/records/contract-suite";
 import {
+  eventsRecordServiceContractModule,
   leadsRecordServiceContractModule,
   tasksRecordServiceContractModule,
 } from "@crm/core/records/contract-suite-module";
 import { describeDiscoveryContract } from "@crm/core/records/discovery-contract-suite";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
+import { describe, expect, it } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
 import type { Operation, OperationDeps } from "@/lib/api/wire/operations";
 import { operations } from "@/lib/api/wire/operations";
@@ -126,3 +130,76 @@ describeRecordServiceContract(
   },
   tasksRecordServiceContractModule,
 );
+
+describeRecordServiceContract(
+  "http Events",
+  (ctx: OrgContext, options) => {
+    const deps = operationDeps(ctx, options);
+    return createHttpRecordService({
+      orgSlug: ctx.orgSlug,
+      fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
+    });
+  },
+  eventsRecordServiceContractModule,
+);
+
+describe("Events HTTP opaque arrays", () => {
+  it("round trips field opt-ins, arbitrary arrays and CURRENTTIME through generic endpoints", async () => {
+    const ctx: OrgContext = {
+      orgId: randomUUID(),
+      orgSlug: "http-events",
+      orgName: "HTTP Events",
+      userId: "http-event-member",
+      role: "admin",
+    };
+    const deps = operationDeps(ctx, { now: () => new Date("2026-01-15T12:00:00.000Z") });
+    const service = createHttpRecordService({
+      orgSlug: ctx.orgSlug,
+      fetch: (path, options) => operationApiFetch(deps, path, options),
+    });
+    const metadata = await service.getModule("Events");
+    expect(metadata.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
+      "Remind_At",
+      "Participants",
+      "Remind_Participants",
+    ]);
+    const arrays = {
+      Remind_At: [{ arbitrary: [true, null, 2] }],
+      Remind_Participants: [],
+      Participants: [null, { id: "opaque", module: "opaque", token: "opaque" }],
+    };
+    const created = await service.create(
+      "Events",
+      eventsRecordServiceContractModule.buildMinimalValidInput(arrays),
+    );
+    expect(created.fields).toMatchObject(arrays);
+    expect((await service.get("Events", created.id)).fields).toMatchObject(arrays);
+    expect(
+      (
+        await service.update("Events", created.id, {
+          Participants: [{ another: false }],
+          Remind_At: [],
+        })
+      ).fields,
+    ).toMatchObject({ Participants: [{ another: false }], Remind_At: [] });
+    const filters = {
+      field: "End_DateTime",
+      comparator: "greater_equal",
+      value: { token: "CURRENTTIME" },
+    } as const;
+    const list = await service.list("Events", {
+      viewId: "all-meetings",
+      page: 1,
+      perPage: 100,
+      filters,
+    });
+    expect(list.records.some((r) => r.id === created.id)).toBe(true);
+    const views = await service.listViews("Events");
+    expect(views.find((v) => v.id === "upcoming-meetings")?.criteria).toEqual(filters);
+    await expect(service.update("Events", created.id, { Tag: [] })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    await service.delete("Events", [created.id]);
+    await expect(service.get("Events", created.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
