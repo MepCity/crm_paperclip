@@ -48,6 +48,7 @@ const expectedIcons = [
   "info",
   "warning",
   "calendar",
+  "clock",
   "chevronDown",
   "arrowLeft",
   "chevronLeft",

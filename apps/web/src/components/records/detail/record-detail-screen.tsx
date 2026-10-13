@@ -253,9 +253,11 @@ export function RecordDetailScreen({
   });
 
   // Module rules supply the optional status ribbon after the update label.
+  // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
+  const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
     <>
-      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
+      {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField && StatusSection ? (
         <StatusSection
           module={moduleApiName}
@@ -431,6 +433,11 @@ export function RecordDetailScreen({
         onRelatedSelectionChange={setSelectedRelatedId}
         relatedRailHeaderAction={relatedRailHeaderAction}
         relatedRailFooter={relatedRailFooter}
+        tabRowEnd={
+          lastUpdateInTabRow && lastUpdate ? (
+            <LastUpdateLabel text={lastUpdate} inTabRow />
+          ) : undefined
+        }
         tabsLabel="Record detail"
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}

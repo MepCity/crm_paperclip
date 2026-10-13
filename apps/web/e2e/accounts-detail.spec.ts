@@ -202,7 +202,67 @@ test.describe("Accounts record detail", () => {
     expect(page.url()).toBe(before);
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("primary command, tab-row update indicator and empty activity badges", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // AD-05: Send Email draws the filled primary command; Edit keeps the secondary one.
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
+    await expect(sendEmail).toHaveCSS(
+      "background-image",
+      /rgb\(87, 103, 246\).*rgb\(19, 77, 196\)/,
+    );
+    await expect(sendEmail).toHaveCSS("color", "rgb(255, 255, 255)");
+    const edit = page.locator("[data-record-header]").getByRole("link", { name: "Edit" });
+    await expect(edit).toHaveCSS("background-image", /rgb\(253, 253, 254\).*rgb\(241, 240, 247\)/);
+
+    // AD-35: the indicator shares the Overview/Timeline row at its right end, clock first.
+    const tabRow = page.locator("[data-record-tab-row]");
+    const lastUpdate = tabRow.locator(".detail-last-update");
+    await expect(lastUpdate).toBeVisible();
+    await expect(lastUpdate.locator("svg")).toHaveCount(1);
+    const row = requireBox(await tabRow.boundingBox(), "tab row");
+    const label = requireBox(await lastUpdate.boundingBox(), "Last Update indicator");
+    expect(label.y).toBeGreaterThanOrEqual(row.y);
+    expect(label.y + label.height).toBeLessThanOrEqual(row.y + row.height);
+    expect(row.x + row.width - (label.x + label.width)).toBeLessThanOrEqual(16);
+    await expect(page.locator("[data-record-scroller] .detail-last-update")).toHaveCount(0);
+
+    // AD-30/AD-31: the card holds no tasks, meetings or calls, so the rail draws no badge.
+    const badgeRows = await page.evaluate(() => {
+      const rail = document.querySelector("#record-related-rail");
+      return Array.from(rail?.querySelectorAll("div[class*='justify-between']") ?? []).map(
+        (entry) => ({
+          label: entry.querySelector("a")?.textContent?.trim() ?? "",
+          badge: entry.querySelector("span[class*='rounded-full']")?.textContent?.trim() ?? null,
+        }),
+      );
+    });
+    for (const title of ["Open Activities", "Closed Activities"]) {
+      expect(badgeRows.filter((entry) => entry.label === title)).toEqual([]);
+    }
+    if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+      await page.screenshot({
+        path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/mep394-account-detail.png`,
+      });
+    }
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
+
+type Box = { x: number; y: number; width: number; height: number };
+
+function requireBox(box: Box | null, label: string): Box {
+  if (!box) throw new Error(`Missing ${label}`);
+  return box;
+}
 
 function headerTitle(page: import("@playwright/test").Page) {
   return page.locator("[data-record-header]").getByRole("heading", { level: 1 });
