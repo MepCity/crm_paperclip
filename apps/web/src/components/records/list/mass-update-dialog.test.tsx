@@ -96,6 +96,9 @@ describe("MassUpdateDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: leadSource.label }));
     expect(screen.getByRole("button", { name: "Update" }).getAttribute("data-disabled")).toBeNull();
@@ -127,6 +130,9 @@ describe("MassUpdateDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: requiredField.label }));
     await user.click(screen.getByRole("button", { name: "Update" }));
@@ -155,6 +161,9 @@ describe("MassUpdateDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: titleField.label }));
     await user.click(screen.getByRole("button", { name: "Update" }));
@@ -179,6 +188,9 @@ describe("MassUpdateDialog", () => {
         onSuccess={() => {}}
       />,
       { wrapper: wrapper(service) },
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: leadSource.label }));
@@ -208,6 +220,9 @@ describe("MassUpdateDialog", () => {
         onSuccess={() => {}}
       />,
       { wrapper: wrapper(service) },
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: booleanField.label }));
@@ -239,6 +254,9 @@ describe("MassUpdateDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: leadSource.label }));
     await user.click(screen.getByRole("button", { name: leadSource.label }));
@@ -268,6 +286,9 @@ describe("MassUpdateDialog", () => {
         onSuccess={() => {}}
       />,
       { wrapper: wrapper(service) },
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: leadSource.label }));
@@ -302,6 +323,9 @@ describe("MassUpdateDialog", () => {
         onSuccess={() => {}}
       />,
       { wrapper: wrapper(service) },
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
     );
     await user.click(screen.getByRole("button", { name: "Field" }));
     await user.click(await screen.findByRole("option", { name: leadSource.label }));
