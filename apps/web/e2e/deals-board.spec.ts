@@ -284,10 +284,11 @@ test("Drag-and-drop card to Closed Won opens Verify Details dialog and updates o
   // Drag from Negotiation/Review to Closed Won
   await card.dragTo(wonCol);
 
-  // Verify Details dialog appears
+  // Verify Details dialog appears with TL currency prefix
   const dialog = page.getByRole("dialog", { name: "Verify Details" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Closed Won")).toBeVisible();
+  await expect(dialog.locator(".record-currency-prefix")).toContainText("TL");
 
   // Save the dialog
   await dialog.getByRole("button", { name: "Save" }).click();
