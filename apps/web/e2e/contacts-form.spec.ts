@@ -143,13 +143,17 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   const url = page.url();
   await page.getByRole("button", { name: "Edit Page Layout", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
-  // The Account Name lookup targets Accounts, which ships in Module 3, so the still-unshipped
-  // Vendor Name lookup (P2) carries the inert-later-module check instead.
   await page
-    .getByRole("button", { name: "Open Vendor Name lookup", exact: true })
+    .getByRole("button", { name: "Open Account Name lookup", exact: true })
     .click({ force: true });
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
+  // The Vendor Name lookup targets a module that does not ship yet, so it stays inert: no
+  // dialog and no navigation. Account Name ships with Module 3 and opens Choose Account.
+  await page
+    .getByRole("button", { name: "Open Vendor Name lookup", exact: true })
+    .click({ force: true });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));
