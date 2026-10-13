@@ -16,7 +16,7 @@ export const users = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => [uniqueIndex("users_email_unique").on(table.email)],
+  (table) => [uniqueIndex("users_email_unique").on(sql`lower(${table.email})`)],
 );
 
 export const sessions = pgTable(
@@ -55,7 +55,10 @@ export const accounts = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => [index("accounts_user_id_idx").on(table.userId)],
+  (table) => [
+    index("accounts_user_id_idx").on(table.userId),
+    uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
+  ],
 );
 
 export const verifications = pgTable(
