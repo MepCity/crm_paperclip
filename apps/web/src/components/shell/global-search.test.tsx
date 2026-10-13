@@ -104,10 +104,14 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
 
-  const deals = within(menu).getByRole("button", { name: "Deals" });
-  expect(deals.getAttribute("data-later-module")).toBe("M4");
-  await user.click(deals);
+  const tasks = within(menu).getByRole("button", { name: "Tasks" });
+  expect(tasks.getAttribute("data-later-module")).toBe("M5");
+  await user.click(tasks);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
+
+  // Deals is registered now, so its row carries no later-module mark.
+  const deals = within(menu).getByRole("button", { name: "Deals" });
+  expect(deals.getAttribute("data-later-module")).toBeNull();
 
   const accounts = within(menu).getByRole("button", { name: "Accounts" });
   expect(accounts.getAttribute("data-later-module")).toBeNull();

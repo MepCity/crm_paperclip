@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { moduleScreens, resolveModuleScreen } from "../registry";
 import { dealsScreenDefinition } from "./definition";
 
@@ -39,8 +40,10 @@ test("exports a complete Deals module screen definition", () => {
     Lead_Source: "-None-",
   });
 
-  // Verify Deals is not registered in the shared registry yet (kept isolated for MEP-407)
-  expect(resolveModuleScreen("Deals")).toBeUndefined();
-  expect(moduleScreens.some((definition) => definition.apiName === "Deals")).toBe(false);
-  expect(moduleScreens.some((definition) => definition.tab === "Deals")).toBe(false);
+  // Deals is registered with the form screen; its module key stays out of the live list until
+  // the "Deals links in earlier modules" task moves LIVE_MODULE_KEYS.
+  expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);
+  expect(moduleScreens.some((definition) => definition.apiName === "Deals")).toBe(true);
+  expect(moduleScreens.some((definition) => definition.tab === "Deals")).toBe(true);
+  expect(resolveLaterModule("M4")).toBe("M4");
 });
