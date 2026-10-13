@@ -13,6 +13,7 @@ import { moduleRecordPath } from "@/lib/crm-paths";
 import {
   openAccountCreateWithParentAccount,
   openContactCreateWithAccountName,
+  openDealCreateWithAccountName,
 } from "./accounts-record-create";
 import { createAccountsRelatedLists } from "./accounts-related-lists";
 export type AccountRecordScreenProps = Omit<RecordDetailScreenProps, "buildRelatedLists">;
@@ -23,16 +24,26 @@ function useAccountRelatedBadges(accountId: string) {
     () => contactsViews.data?.find((view) => view.isDefault)?.id ?? null,
     [contactsViews.data],
   );
+  const dealsViews = useViews("Deals");
+  const dealsViewId = useMemo(
+    () => dealsViews.data?.find((view) => view.isDefault)?.id ?? "all-deals",
+    [dealsViews.data],
+  );
   const contactsCountQuery = useRecordCount("Contacts", {
     viewId: contactsViewId ?? "all-contacts",
+    filters: { field: "Account_Name", comparator: "equal", value: accountId },
+  });
+  const dealsCountQuery = useRecordCount("Deals", {
+    viewId: dealsViewId,
     filters: { field: "Account_Name", comparator: "equal", value: accountId },
   });
   return useMemo(
     () => ({
       notes: 0,
       contacts: contactsCountQuery.data ?? 0,
+      deals: dealsCountQuery.data ?? 0,
     }),
-    [contactsCountQuery.data],
+    [contactsCountQuery.data, dealsCountQuery.data],
   );
 }
 
@@ -57,6 +68,8 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
             openContactCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
           onMemberAccountNew: () =>
             openAccountCreateWithParentAccount(props.orgSlug, record, (path) => router.push(path)),
+          onDealsNew: () =>
+            openDealCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
         },
       }),
     [badges, props.orgSlug, router],

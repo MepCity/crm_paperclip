@@ -177,10 +177,10 @@ reference captures.
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
 | SH-27 | Search records is first in the top bar right controls on every shell screen | Shell and global-search component tests; global-search e2e |
-| S-10, S-10.1–S-10.7, S-13 | Module selector and module search; registry supplies shipped modules; Accounts M3, Deals M4, Tasks/Meetings M5 remain inert | Selector filtering, future-module no-op and module-scoped request tests |
+| S-10, S-10.1–S-10.7, S-13 | Module selector and module search; registry supplies shipped modules; Leads, Contacts, Accounts and Deals are selectable (MEP-415); Tasks/Meetings M5 remain inert | Selector filtering, future-module no-op and module-scoped request tests |
 | S-11, S-14 | Empty focused query; three-character minimum; 300 ms debounce; hash prefix selects nameOrTags and shows Record Name badge | Component request tests |
 | S-12.1–S-12.15 | Record history per organization/user; newest first, unique module/id, capped at 15; absent when empty | History storage and record navigation tests |
-| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module; Deals layer row titles use record ids until M4 (known gap) | Component tests; global-search e2e; MEP-355 re-walk (short query and `Deal` layer group) |
+| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module; Deals layer rows use the Deals screen header and open Deal detail (MEP-415) | Component tests; global-search e2e; MEP-355 re-walk (short query and `Deal` layer group) |
 
 Interim rules: localStorage history, substring module filtering, debounce and group cap,
 shared no-records copy and error Alert; Escape/outside dismissal and focus restoration.
@@ -235,8 +235,9 @@ remain authoritative.
 | D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row; Send Email as primary later-module command (M10); prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
 | D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
-| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
+| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card; Deals rail row active (D-14, MEP-415) | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View opens Contact Hierarchy modal (D-90, MEP-421) | Contacts detail e2e |
+| D-14, D-56 | Deals card lists the Deals whose Contact Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Contact Name, and Account Name when the contact has an account (MEP-415) | `e2e/contacts-detail.spec.ts`; `contacts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
 | AD-163–AD-164 | Contact Hierarchy modal Close Modal button (AD-163) and indented contact links (AD-164, MEP-421) | `contact-hierarchy-modal.test.tsx`, `e2e/contacts-detail.spec.ts` |
 
 Share (M11) and Print Preview (M6) are later-module controls in More Options (Module
@@ -284,8 +285,8 @@ A failed deduplicate job returns to the field panel with a danger toast (MEP-354
 | S-19, S-20, S-21, S-22 | Top bar with search input, close icon, filter toggle button, and Sort By selector (defaulting to Modified Time desc) | Component tests; `e2e/advanced-search.spec.ts` |
 | S-23.<Module>, S-24.<Module>.1–.4, S-25.<Module>.* | Result cards for Leads, Contacts, Accounts, and Notes (M6); module count badges, pagination arrows, Manage columns icon button (Icons.columns), record link (Accounts with M3 inert link), and column headers | Component tests; `e2e/advanced-search.spec.ts` |
 | S-26, S-27.*, S-28, S-29 | Manage Columns dialog with column search, 10-column selection limit, Cancel, and Save | Component tests; `e2e/advanced-search.spec.ts` |
-| S-30, S-31.1–.8, S-32.1–.5, S-33, S-34, S-35.1–.2, S-36, S-37 | Filter panel: module checkboxes (Contacts, Accounts, Leads active; Tasks M5, Deals M4, Meetings M5, Calls M5, Products P2 inert), system field filters with operator and user picker, Apply Filter, and Clear | Component tests; `e2e/advanced-search.spec.ts` |
-| S-38, S-39, S-40, S-41, S-42, S-43.* | Row actions button, phone call icon (M5 inert), email link (M10 inert), related record links, stage badge (M4 inert), column values with list cell formatting and user display names | Component tests |
+| S-30, S-31.1–.8, S-32.1–.5, S-33, S-34, S-35.1–.2, S-36, S-37 | Filter panel: module checkboxes (Contacts, Accounts, Leads and Deals active — MEP-415; Tasks M5, Meetings M5, Calls M5, Products P2 inert), system field filters with operator and user picker, Apply Filter, and Clear | Component tests; `e2e/advanced-search.spec.ts` |
+| S-38, S-39, S-40, S-41, S-42, S-43.* | Row actions button, phone call icon (M5 inert), email link (M10 inert), related record links, stage badge (display chip, handler-less since MEP-415), column values with list cell formatting and user display names | Component tests |
 | S-46 | Bottom link "Search across applications" (P3 inert) | Component tests; `e2e/advanced-search.spec.ts` |
 
 Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
@@ -358,6 +359,7 @@ and the reference captures.
 | AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: not walked** (seed record has no history) |
 | AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
 | AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View opens Contact Hierarchy modal (AD-115, MEP-421) | Accounts detail e2e |
+| AD-112–AD-114 | Deals rail plus and Deals card: the Deals whose Account Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Account Name prefilled; Assign is handler-less like the Contacts card Assign (MEP-415) | `e2e/accounts-detail.spec.ts`; `accounts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
 | AD-163–AD-164 | Contact Hierarchy modal Close Modal button (AD-163) and indented contact links (AD-164, MEP-421) | `contact-hierarchy-modal.test.tsx`, `e2e/accounts-detail.spec.ts` |
 
 Share (M11) and Print Preview (M6) are later-module controls in More Options (same as
@@ -440,9 +442,10 @@ merged since).
 
 **Known gaps**
 
-- **Later-module controls (M4+):** Deals, activity, note, attachment, and email / product card
+- **Later-module controls (M5+):** activity, note, attachment, and email / product card
   behaviour; tags, export, page layout, Cadences, and Sheet view remain drawn in place and
-  inert when clicked.
+  inert when clicked. The Deals card and its rail row are active since MEP-415; Assign stays
+  handler-less, same as the Contacts card Assign.
 - **Not observed open in reference captures (same state as Contacts):** Share, Print Preview,
   Drafts, Print View, the five system filters (Locked, Record Action, Related Records Action,
   Touched Records, Untouched Records), and non-list view type icons.
@@ -551,3 +554,22 @@ Interim rules:
 - Filter panel, views, and sort apply to board cards. Pagination, row selection, and selection bar are omitted in board presentation.
 - Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
 - Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
+
+### Deals links in earlier modules — implemented (MEP-415)
+
+`LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
+card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
+Deals entries in global and advanced search.
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AD-112–AD-114 | Accounts Deals card data (Account Name filter), rail plus and New Deal prefill; Assign handler-less | `e2e/accounts-detail.spec.ts`, `accounts-related-lists.test.tsx` |
+| D-14, D-56 | Contacts Deals card data (Contact Name filter) and New Deal prefill with Contact Name plus the person's Account Name | `e2e/contacts-detail.spec.ts`, `contacts-related-lists.test.tsx` |
+| Card body | Shared `RelatedDealsCardBody`: default-view columns, Deal Name detail link, values through the shared field display | `related-deals-card-body.test.tsx` |
+| S-10, S-15–S-18, S-30/S-31, S-42 | Deals is selectable in the module selector, its filter checkbox is active, its search rows link to Deal detail, and the stage chip draws unlocked | `global-search.test.tsx`, `advanced-search-*` tests |
+| Leads Converted Deal | Generic lookup display resolves the registered Deals route; no Deals-keyed control is drawn in Leads | `field-value.test.tsx` (registered Deals lookup) |
+
+Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card Assign),
+advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
+itself is untouched; the seeded Leads records carry no converted references, so the
+converted-deal link has no fixture to exercise.

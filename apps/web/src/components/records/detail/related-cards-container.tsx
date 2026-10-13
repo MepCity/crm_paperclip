@@ -11,6 +11,7 @@ export interface RelatedCardsContainerProps {
   managerRecord?: RecordData;
   recordPath?: (recordId: RecordId) => string;
   contactRecordPath?: (recordId: RecordId) => string;
+  dealRecordPath?: (recordId: RecordId) => string;
 }
 
 export function RelatedCardsContainer({
@@ -19,6 +20,7 @@ export function RelatedCardsContainer({
   managerRecord,
   recordPath,
   contactRecordPath,
+  dealRecordPath,
 }: RelatedCardsContainerProps) {
   if (!relatedLists || relatedLists.length === 0) return null;
 
@@ -49,6 +51,15 @@ export function RelatedCardsContainer({
           }
           dealStageHistory={
             def.id === "stage-history" && managerRecord ? { dealId: managerRecord.id } : undefined
+          }
+          managerDeals={
+            def.id === "deals" && managerRecord && def.recordFilterField && dealRecordPath
+              ? {
+                  managerRecord,
+                  filterField: def.recordFilterField,
+                  dealRecordPath,
+                }
+              : undefined
           }
         />
       ))}

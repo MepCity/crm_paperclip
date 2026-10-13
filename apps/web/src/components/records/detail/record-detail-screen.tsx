@@ -359,6 +359,7 @@ export function RecordDetailScreen({
             managerRecord={record}
             recordPath={(id) => paths.record(orgSlug, definition.tab, id)}
             contactRecordPath={(id) => paths.record(orgSlug, "Contacts", id)}
+            dealRecordPath={(id) => paths.record(orgSlug, "Deals", id)}
           />
         ) : null}
       </InlineEditProvider>

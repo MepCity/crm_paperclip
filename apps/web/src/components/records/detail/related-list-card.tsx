@@ -11,6 +11,7 @@ import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modu
 import { AccountContactsCardBody } from "./account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
 import { DealStageHistoryCardBody } from "./deal-stage-history-card-body";
+import { RelatedDealsCardBody } from "./related-deals-card-body";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
 
 export interface RelatedListCardProps {
@@ -33,6 +34,11 @@ export interface RelatedListCardProps {
   dealStageHistory?: {
     dealId: RecordId;
   };
+  managerDeals?: {
+    managerRecord: RecordData;
+    filterField: string;
+    dealRecordPath: (recordId: RecordId) => string;
+  };
 }
 
 export function RelatedListCard({
@@ -41,6 +47,7 @@ export function RelatedListCard({
   accountContacts,
   memberAccounts,
   dealStageHistory,
+  managerDeals,
 }: RelatedListCardProps) {
   const {
     id,
@@ -396,6 +403,12 @@ export function RelatedListCard({
         />
       ) : id === "stage-history" && dealStageHistory ? (
         <DealStageHistoryCardBody dealId={dealStageHistory.dealId} />
+      ) : id === "deals" && managerDeals ? (
+        <RelatedDealsCardBody
+          managerRecord={managerDeals.managerRecord}
+          filterField={managerDeals.filterField}
+          dealRecordPath={managerDeals.dealRecordPath}
+        />
       ) : id === "contact-roles" && tableColumns && tableColumns.length > 0 ? (
         <div className="overflow-x-auto py-2">
           <table className="w-full text-left text-md">

@@ -119,14 +119,74 @@ describe("AccountRecordScreen with real RecordDetailScreen", () => {
       id: "500000000000000000",
     });
 
-    // 5. Later module rail links (Deals M4, Products P2) remain locked with data-later-module
+    // 5. Deals is live (MEP-415); Products is a later module and stays locked
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
-    expect(dealsLink.getAttribute("data-later-module")).toBe("M4");
-    expect(dealsLink.getAttribute("aria-disabled")).toBe("true");
+    expect(dealsLink.getAttribute("data-later-module")).toBeNull();
+    expect(dealsLink.getAttribute("aria-disabled")).toBeNull();
 
     const productsLink = within(rail).getByRole("link", { name: "Products" });
     expect(productsLink.getAttribute("data-later-module")).toBe("P2");
     expect(productsLink.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("lists the account deals in the card and opens the prefilled create form", async () => {
+    const user = userEvent.setup();
+    const service = createService();
+    renderScreen(service, "500000000000000000");
+
+    await waitFor(() => {
+      expect(screen.getByRole("navigation", { name: "Related List" })).toBeTruthy();
+    });
+
+    // AD-114: the card lists the Deals whose Account Name is this account, Deal Name links to detail
+    const dealsCard = screen.getByRole("region", { name: "Deals" });
+    await waitFor(() => {
+      expect(within(dealsCard).getByRole("link", { name: "Deal 001" })).toBeTruthy();
+    });
+    expect(within(dealsCard).getByRole("columnheader", { name: "Deal Name" })).toBeTruthy();
+    const dealLink = within(dealsCard).getByRole("link", { name: "Deal 001" });
+    expect(dealLink.getAttribute("href")).toBe(
+      "/crm/account-screen-org/tab/Deals/700000000000000000",
+    );
+
+    // New Deal opens the Deal create route with Account Name prefilled
+    await user.click(within(dealsCard).getByRole("button", { name: "New Deal" }));
+    expect(navigation.push).toHaveBeenCalledWith("/crm/account-screen-org/tab/Deals/create");
+    const prefill = readRecordCreatePrefill(ctx.orgSlug, "Deals");
+    expect(prefill?.fields.Account_Name).toMatchObject({
+      module: "Accounts",
+      id: "500000000000000000",
+    });
+
+    // AD-112: the rail plus for the selected Deals row opens the same form
+    navigation.push.mockClear();
+    const rail = screen.getByRole("navigation", { name: "Related List" });
+    const dealsRailLink = within(rail).getByRole("link", { name: "Deals" });
+    await user.click(dealsRailLink);
+    const dealsRow = dealsRailLink.closest("div[class*='flex items-center']");
+    const addButton = dealsRow?.querySelector("button");
+    expect(addButton).toBeTruthy();
+    if (!addButton) throw new Error("Deals rail plus missing");
+    await user.click(addButton);
+    expect(navigation.push).toHaveBeenCalledWith("/crm/account-screen-org/tab/Deals/create");
+  });
+
+  it("shows the Deals card empty state for an account without deals", async () => {
+    const service = createService();
+    renderScreen(service, "500000000000000249");
+
+    await waitFor(() => {
+      expect(screen.getByRole("navigation", { name: "Related List" })).toBeTruthy();
+    });
+
+    const dealsCard = screen.getByRole("region", { name: "Deals" });
+    await waitFor(() => {
+      expect(within(dealsCard).getByText("No records found")).toBeTruthy();
+    });
+    expect(within(dealsCard).queryByRole("table")).toBeNull();
+    // Zero records draw no rail badge.
+    const rail = screen.getByRole("navigation", { name: "Related List" });
+    expect(within(rail).getByRole("link", { name: "Deals" })).toBeTruthy();
   });
 
   it("does not mount ContactHierarchyModal when closed, mounts on Hierarchy View click, and unmounts on close", async () => {
