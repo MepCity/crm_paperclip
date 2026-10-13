@@ -104,10 +104,13 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
 
-  const deals = within(menu).getByRole("button", { name: "Deals" });
-  expect(deals.getAttribute("data-later-module")).toBe("M4");
-  await user.click(deals);
+  const products = within(menu).getByRole("button", { name: "Products" });
+  expect(products.getAttribute("data-later-module")).toBe("P2");
+  await user.click(products);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
+
+  const deals = within(menu).getByRole("button", { name: "Deals" });
+  expect(deals.getAttribute("data-later-module")).toBeNull();
 
   const accounts = within(menu).getByRole("button", { name: "Accounts" });
   expect(accounts.getAttribute("data-later-module")).toBeNull();
@@ -261,19 +264,19 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Deals",
+      module: "Tasks",
       total: 1,
       records: [
-        { id: "deal-1", fields: { Deal_Name: "Future Deal", Email: "hidden@example.test" } },
+        { id: "task-1", fields: { Subject: "Hidden task", Email: "hidden@example.test" } },
       ],
     },
   ]);
   const user = userEvent.setup();
   mount();
   await open(user);
-  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
-  const link = await screen.findByRole("link", { name: "deal-1" });
-  expect(link.textContent).toBe("deal-1");
+  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Hidden");
+  const link = await screen.findByRole("link", { name: "task-1" });
+  expect(link.textContent).toBe("task-1");
 });
 
 test("search errors use the shared error notice", async () => {

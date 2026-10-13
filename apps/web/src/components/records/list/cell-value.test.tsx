@@ -219,10 +219,21 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Big Deal" });
+  const dealsLink = screen.getByRole("link", { name: "Big Deal" });
+  expect(dealsLink.getAttribute("href")).toBe("/tab/Deals/deal-1");
+  expect(dealsLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Vendors" } })}
+      value={{ module: "Vendors", id: "vendor-1", name: "Supply Co" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Supply Co" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("M4");
+  expect(laterLink.getAttribute("data-later-module")).toBe("P2");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(

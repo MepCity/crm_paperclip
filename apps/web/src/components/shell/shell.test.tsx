@@ -136,9 +136,9 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation renders Leads, Contacts and Accounts under Sales and omits empty groups", () => {
+test("Default navigation renders shipped modules under Sales and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(4);
+  expect(screen.getAllByRole("link")).toHaveLength(5);
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
     "/crm/example/tab/Leads/list",
   );
@@ -147,6 +147,9 @@ test("Default navigation renders Leads, Contacts and Accounts under Sales and om
   );
   expect(screen.getByRole("link", { name: "Accounts" }).getAttribute("href")).toBe(
     "/crm/example/tab/Accounts/list",
+  );
+  expect(screen.getByRole("link", { name: "Deals" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Deals/list",
   );
   expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
 });
