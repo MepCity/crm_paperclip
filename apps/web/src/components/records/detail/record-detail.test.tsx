@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
+import { LastUpdateLabel } from "./last-update-label";
 import { RecordHeader, type RecordHeaderProps } from "./record-header";
 import { RecordPageFrame } from "./record-page-frame";
 import { RecordRailToggle } from "./record-rail-toggle";
@@ -108,9 +109,11 @@ test("grouped menu opens by keyboard, skips disabled entries, dispatches and res
 function Frame({
   entries = true,
   railVisible = true,
+  tabRowEnd,
 }: {
   entries?: boolean;
   railVisible?: boolean;
+  tabRowEnd?: import("react").ReactNode;
 }) {
   const [selected, setSelected] = useState("one");
   const [tab, setTab] = useState("overview");
@@ -134,6 +137,7 @@ function Frame({
       onTabChange={setTab}
       relatedRailVisible={rail}
       railControl={<RecordRailToggle railVisible={rail} onRailVisibleChange={setRail} />}
+      tabRowEnd={tabRowEnd}
       scrollTopLabel="Scroll To Top"
       tabs={[
         {
@@ -259,4 +263,57 @@ test("custom portrait icon renders in portrait container", () => {
   }
   render(<RecordHeader {...base} portraitIcon={CustomIcon} />);
   expect(screen.getByTestId("custom-portrait")).toBeTruthy();
+});
+
+test("primary header command draws the filled command, secondary stays plain", () => {
+  render(
+    <RecordHeader
+      {...base}
+      commands={[
+        { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
+        { id: "edit", label: "Edit", variant: "secondary", href: "/dev/ui?edit" },
+      ]}
+    />,
+  );
+  const send = screen.getByRole("button", { name: "Send Email" });
+  const edit = screen.getByRole("link", { name: "Edit" });
+  expect(send.className).toContain("bg-primary");
+  expect(send.className).not.toContain("bg-surface");
+  expect(edit.className).toContain("bg-surface");
+  expect(edit.className).not.toContain("bg-primary");
+});
+
+test("the tab row keeps its right end empty until a module supplies one", () => {
+  const { rerender } = render(<Frame />);
+  const row = document.querySelector("[data-record-tab-row]");
+  expect(row?.textContent).toContain("Overview");
+  expect(row?.querySelector(".detail-last-update")).toBeNull();
+  rerender(<Frame tabRowEnd={<LastUpdateLabel text="Last Update : 2 day(s) ago" inTabRow />} />);
+  const label = document.querySelector("[data-record-tab-row] .detail-last-update");
+  expect(label?.textContent).toBe("Last Update : 2 day(s) ago");
+  expect(label?.querySelector("svg")).toBeTruthy();
+  // The panels keep the label out of the overview flow.
+  expect(document.querySelector("[data-record-scroller] .detail-last-update")).toBeNull();
+});
+
+test("rail badges follow the record count; an empty card draws none", () => {
+  render(
+    <RecordPageFrame
+      header={<RecordHeader {...base} />}
+      relatedListLabel="Related List"
+      relatedEntries={[
+        { id: "notes", label: "Notes", targetId: "target-notes", countBadge: 2 },
+        { id: "open", label: "Open Activities", targetId: "target-open", countBadge: undefined },
+      ]}
+      tabsLabel="Record views"
+      selectedTabId="overview"
+      onTabChange={() => {}}
+      scrollTopLabel="Scroll To Top"
+      tabs={[{ id: "overview", label: "Overview", content: <article id="target-notes" /> }]}
+    />,
+  );
+  const rail = screen.getByRole("navigation", { name: "Related List" });
+  expect(within(rail).getByText("2")).toBeTruthy();
+  expect(within(rail).queryByText("1")).toBeNull();
+  expect(rail.querySelectorAll("[class*='rounded-full']")).toHaveLength(1);
 });

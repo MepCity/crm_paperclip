@@ -71,12 +71,41 @@ describe("accountsRelatedLists definition", () => {
     });
   });
 
-  it("exposes rail badges, plus actions, and Links group metadata", () => {
+  it("draws a rail badge only for a card that holds records", () => {
+    // AD-30/AD-31: no constant badge for the activity cards — zero draws none, a populated card its count.
     expect(structuralLists.find((c) => c.id === "notes")?.countBadge).toBeDefined();
     expect(structuralLists.find((c) => c.id === "contacts")?.countBadge).toBeDefined();
     expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
     expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
 
+    const populated = createAccountsRelatedLists({
+      badges: { notes: 2, contacts: 1, openActivities: 3, closedActivities: 4 },
+    });
+    expect(populated.find((c) => c.id === "notes")?.countBadge).toBe(2);
+    expect(populated.find((c) => c.id === "contacts")?.countBadge).toBe(1);
+    expect(populated.find((c) => c.id === "open-activities")?.countBadge).toBe(3);
+    expect(populated.find((c) => c.id === "closed-activities")?.countBadge).toBe(4);
+
+    const empty = createAccountsRelatedLists({
+      badges: { notes: 0, contacts: 0, openActivities: 0, closedActivities: 0 },
+    });
+    for (const id of ["notes", "contacts", "open-activities", "closed-activities"]) {
+      expect(empty.find((c) => c.id === id)?.countBadge).toBeUndefined();
+    }
+
+    // The activity badge is the number of records the card itself holds.
+    const withActivities = createAccountsRelatedLists({
+      badges: {
+        notes: 0,
+        contacts: 0,
+        openActivities: 2,
+      },
+    });
+    expect(withActivities.find((c) => c.id === "open-activities")?.countBadge).toBe(2);
+    expect(withActivities.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
+  });
+
+  it("exposes rail plus actions and Links group metadata", () => {
     expect(structuralLists.find((c) => c.id === "notes")?.railAction?.moduleKey).toBe("M6");
     expect(structuralLists.find((c) => c.id === "deals")?.railAction?.moduleKey).toBe("M4");
     expect(structuralLists.find((c) => c.id === "invoices")?.railAction?.moduleKey).toBe("P2");

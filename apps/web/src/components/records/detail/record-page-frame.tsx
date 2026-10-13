@@ -39,6 +39,8 @@ export interface RecordPageFrameProps {
   onTabChange: (id: string) => void;
   relatedRailVisible?: boolean;
   railControl?: ReactNode;
+  /** AD-35 / D-35: right end of the tab row, on the same line as the tabs. */
+  tabRowEnd?: ReactNode;
   scrollTopLabel: string;
   relatedRailHeaderAction?: ReactNode;
   relatedRailFooter?: ReactNode;
@@ -131,6 +133,7 @@ export function RecordPageFrame({
   onTabChange,
   relatedRailVisible = true,
   railControl,
+  tabRowEnd,
   scrollTopLabel,
   relatedRailHeaderAction,
   relatedRailFooter,
@@ -281,6 +284,11 @@ export function RecordPageFrame({
                 </Tab>
               ))}
             </TabList>
+            {tabRowEnd ? (
+              <div className="ml-auto flex h-(--size-record-tab-height) shrink-0 items-center">
+                {tabRowEnd}
+              </div>
+            ) : null}
           </div>
           <div
             ref={scrollRef}
