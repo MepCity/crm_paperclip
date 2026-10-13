@@ -32,7 +32,7 @@ two horizontal bars) and a down chevron; the Timeline icon is absent.
 The Locked system filter is absent. Ten visible field filters are listed
 below. Later filter fields are clipped below the panel and are not promoted
 to seen controls. The captured highlighted row paints a pencil and note
-bubble; neither was clicked. Create and Actions triggers are seen, but their
+bubble; neither was clicked. Create and Actions triggers are seen. The
 Actions menu matches Tasks; Create menu remains unobserved because its trigger was skipped by the capture tool.
 
 ### Control inventory — m5l-meetings-list-base
@@ -265,26 +265,180 @@ numbers 89, including image-only SH-46. Screenshot opened as an image.
 
 ## Calls list
 
-Not yet renewed in this run: the Meetings read-count stop initially postponed
-further captures; continuation now waits for the unchanged load gate. Earlier loading-only Calls files are invalid evidence. No CL number
-is assigned. Type/direction, handset controls, scheduling/logging menu rows,
-filters, columns, view modes, empty state and footer remain not observed.
+Calls opens as a populated table with All Calls active; no presentation or preference was changed. Total Records is 890; the displayed range is 1 to 30. Subject, Call Type, Call Start Time and Call Duration are visible. Call Type is plain text, without a direction pictogram. Call Start Time shows date and time; duration cells show a time-like value or are blank. The reason for blank duration was not tested. Related To, Contact Name and Call Owner are outside the visible right edge; their row links are not counted as seen controls.
+
+Compared with Tasks, Timeline and the Locked system filter are absent. Four view icons and the dropdown remain. The ten visible field filters below replace the Tasks catalog. A highlighted row paints pencil, note bubble and three dots; none was activated. No handset, dialling link, status badge or completion control is painted in the visible cells. Empty state and other hover-only controls remain not observed. View-selector contents come from the Views metadata table, not a newly opened selector.
 
 ### Control inventory — m5l-calls-list-base
 
-Not observed; previous loading-only file is invalid. No table is inferred.
+Shell: SH-01–SH-46 as in contacts.md. Calls (SH-22) is active; Tasks, Meetings and Contacts are inactive. SH-08 is shortened to MCP; SH-46 is image-only. Shell controls missing from app-shell.md: reuse contacts.md; no new shell control.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CL-01 | View strip | All Calls | tab | left, first | same | seen (m5l-calls-list-base) | M5 | TL-01 |
+| CL-02 | View strip | Three dots icon | icon button | after current view tab | same | seen (m5l-calls-list-base) | M5 | TL-02 |
+| CL-03 | Toolbar | Filter | button | left group, first | same | seen (m5l-calls-list-base) | M5 | TL-03 |
+| CL-04 | Toolbar | Sort | button | left group, second | same | seen (m5l-calls-list-base) | M5 | TL-04 |
+| CL-05 | Toolbar | List view icon (active) | icon button | view group, first | same | seen (m5l-calls-list-base) | M5 | TL-05 |
+| CL-06 | Toolbar | Kanban view icon | icon button | view group, second | same | seen (m5l-calls-list-base) | M5 | TL-06 |
+| CL-07 | Toolbar | Chart view icon | icon button | view group, third | same | seen (m5l-calls-list-base) | M5 | TL-08 |
+| CL-08 | Toolbar | Two horizontal bars icon | icon button | view group, fourth | same | seen (m5l-calls-list-base) | M5 | TL-10 moved |
+| CL-09 | Toolbar | Down chevron | icon button | view group, fifth | same | seen (m5l-calls-list-base) | M5 | TL-11 moved |
+| CL-10 | Toolbar | Create Call | button | right group, first | same | seen (m5l-calls-list-base) | M5 | TL-12 |
+| CL-11 | Toolbar | Down arrow / More | icon button | attached to Create Call | same | seen (m5l-calls-list-base) | M6 | TL-13 |
+| CL-12 | Toolbar | Three dots / Actions | icon button | right group, far right | same | seen (m5l-calls-list-base) | M5 | TL-14 |
+| CL-13 | Filter panel | Search | input | below Filter Calls by heading | same | seen (m5l-calls-list-base) | M5 | TL-15 |
+| CL-14 | Filter panel | System Defined Filters | toggle | first section heading | same | seen (m5l-calls-list-base) | M5 | TL-16 |
+| CL-15 | Filter panel | Record Action | checkbox | system-defined section, Record Action | same | seen (m5l-calls-list-base) | M5 | TL-21 |
+| CL-16 | Filter panel | Related Records Action | checkbox | system-defined section, Related Records Action | same | seen (m5l-calls-list-base) | M5 | TL-22 |
+| CL-17 | Filter panel | Touched Records | checkbox | system-defined section, Touched Records | same | seen (m5l-calls-list-base) | M5 | TL-23 |
+| CL-18 | Filter panel | Untouched Records | checkbox | system-defined section, Untouched Records | same | seen (m5l-calls-list-base) | M5 | TL-24 |
+| CL-19 | Filter panel | Filter By Fields | toggle | second section heading | same | seen (m5l-calls-list-base) | M5 | TL-26 |
+| CL-20 | Filter panel | Call Agenda | checkbox | field section, row 1 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-21 | Filter panel | Call Duration | checkbox | field section, row 2 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-22 | Filter panel | Call Duration (in seconds) | checkbox | field section, row 3 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-23 | Filter panel | Call Owner | checkbox | field section, row 4 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-24 | Filter panel | Call Purpose | checkbox | field section, row 5 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-25 | Filter panel | Call Result | checkbox | field section, row 6 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-26 | Filter panel | Call Start Time | checkbox | field section, row 7 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-27 | Filter panel | Call Type | checkbox | field section, row 8 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-28 | Filter panel | Caller ID | checkbox | field section, row 9 | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-29 | Filter panel | Contact Name | checkbox | field section, row 10 | same | seen (m5l-calls-list-base) | M5 | TL-54 moved |
+| CL-30 | Table | Sliders icon | icon button | header, far right overlay | same | seen (m5l-calls-list-base) | M11 | TL-33 |
+| CL-31 | Table | Select all checkbox | checkbox | header, before Subject | same | seen (m5l-calls-list-base) | M5 | TL-34 |
+| CL-32 | Table | Subject | column header | first text column | same | seen (m5l-calls-list-base) | M5 | TL-35 |
+| CL-33 | Table | All with down arrow | select | within Subject header, right | same | seen (m5l-calls-list-base) | M5 | TL-36 |
+| CL-34 | Table | Call Type | column header | second text column | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-35 | Table | Call Start Time | column header | third text column | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-36 | Table | Call Duration | column header | fourth text column | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-37 | Table | Record selection checkbox | checkbox | each visible row, before Subject | same | seen (m5l-calls-list-base) | M5 | TL-40 |
+| CL-38 | Table | Call record link | link | Subject cells | same | seen (m5l-calls-list-base) | M5 | TL-42 |
+| CL-39 | Table | Pencil icon | icon button | highlighted row, first control | not observed | seen (m5l-calls-list-base) | M5 | new |
+| CL-40 | Table | Note bubble icon | icon button | highlighted row, after pencil | same | seen (m5l-calls-list-base) | M6 | AL-46 moved |
+| CL-41 | Table | Row three dots icon | icon button | highlighted row, after note bubble | same | seen (m5l-calls-list-base) | M5 | AL-45 moved |
+| CL-42 | List footer | Total Records | badge | left | same | seen (m5l-calls-list-base) | M5 | TL-48 |
+| CL-43 | List footer | Displayed record range | badge | right group, between arrows | same | seen (m5l-calls-list-base) | M5 | TL-49 |
+| CL-44 | List footer | Previous | icon button | before range | same | seen (m5l-calls-list-base) | M5 | TL-50 |
+| CL-45 | List footer | Next | icon button | after range | same | seen (m5l-calls-list-base) | M5 | TL-51 |
+
+Absent here: TL-09 (Timeline), TL-20 (Locked), TL-53, TL-55–TL-61, TL-66 (Tasks field catalog), TL-62–TL-64 (Tasks non-subject columns); TL-65 is not painted in the base. CL-20–CL-28 and CL-34–CL-36 replace the activity-specific filters and columns. No type/direction or handset icon is observed; do not infer one from Call Type metadata.
+
+### Calls source reconciliation — m5l-calls-list-base
+
+One-based source ordinals are evidence indexes, never selectors. Repeated row controls and nested wrappers reuse the same number; they do not increase the distinct total. Screenshot opened as an image; SH-46 is image-only. Source boxes beyond the table right edge and beneath its footer are excluded.
+
+| Source ordinals | Destination / exclusion |
+| --- | --- |
+| 1, 37, 51, 59, 62, 65–80, 84, 88, 112, 120, 134, 139, 149, 199, 203–208, 644 | Excluded: non-control wrapper / static text |
+| 2–4 | SH-01 |
+| 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 83, 85, 92–93, 95–96, 98–99, 102–103, 108–111, 133, 137, 196–197, 201–202, 615–623, 628–643 | Excluded: zero-area / invisible |
+| 10 | SH-02 |
+| 11, 13 | SH-03 |
+| 14, 16 | SH-04 |
+| 17, 19 | SH-05 |
+| 20, 22 | SH-06 |
+| 23, 25 | SH-07 |
+| 26, 28 | SH-08 |
+| 29–31 | SH-09 |
+| 33 | SH-10 |
+| 34–35 | SH-11 |
+| 36 | SH-12 |
+| 38–39 | SH-13 |
+| 40–41 | SH-14 |
+| 42–43 | SH-15 |
+| 44–45 | SH-16 |
+| 46–47 | SH-17 |
+| 48–49 | SH-18 |
+| 50 | SH-19 |
+| 52–53 | SH-20 |
+| 54–55 | SH-21 |
+| 56–57 | SH-22 |
+| 58 | SH-23 |
+| 60–61 | SH-24 |
+| 63–64 | SH-25 |
+| 82, 198 | Excluded: unpainted resize affordance |
+| 86 | SH-26 |
+| 87 | SH-27 |
+| 89 | SH-28 |
+| 90 | SH-29 |
+| 91 | SH-30 |
+| 94 | SH-31 |
+| 97 | SH-32 |
+| 100–101 | SH-33 |
+| 104–107 | SH-34 |
+| 113 | CL-01 |
+| 114–117 | CL-02 |
+| 118 | CL-03 |
+| 119 | CL-04 |
+| 121 | CL-05 |
+| 122 | CL-06 |
+| 123 | CL-07 |
+| 124 | CL-08 |
+| 125–126 | CL-09 |
+| 127–128 | Excluded: refresh not painted |
+| 129 | CL-10 |
+| 130–131 | CL-11 |
+| 132 | CL-12 |
+| 135–136 | CL-13 |
+| 138 | CL-14 |
+| 140–141 | CL-15 |
+| 142–143 | CL-16 |
+| 144–145 | CL-17 |
+| 146–147 | CL-18 |
+| 148 | CL-19 |
+| 150–151 | CL-20 |
+| 152–153 | CL-21 |
+| 154–155 | CL-22 |
+| 156–157 | CL-23 |
+| 158–159 | CL-24 |
+| 160–161 | CL-25 |
+| 162–163 | CL-26 |
+| 164–165 | CL-27 |
+| 166–167 | CL-28 |
+| 168–169 | CL-29 |
+| 170–195, 217–220, 233–238, 250–255, 267–272, 284–289, 305–310, 322–327, 339–344, 356–361, 373–378, 390–395, 407–412, 424–614 | Excluded: outside visible viewport / clipped filter continuation |
+| 200 | CL-30 |
+| 209–210 | CL-31 |
+| 211 | CL-32 |
+| 212–213 | CL-33 |
+| 214 | CL-34 |
+| 215 | CL-35 |
+| 216 | CL-36 |
+| 221–224, 227, 230–232, 239–241, 244, 247–249, 256–258, 261, 264–266, 273–275, 278, 281–283, 290–291, 296, 299, 302–304, 311–313, 316, 319–321, 328–330, 333, 336–338, 345–347, 350, 353–355, 362–364, 367, 370–372, 379–381, 384, 387–389, 396–398, 401, 404–406, 413–415, 418, 421–423 | Excluded: record row data / non-control wrapper |
+| 225–226, 242–243, 259–260, 276–277, 297–298, 314–315, 331–332, 348–349, 365–366, 382–383, 399–400, 416–417 | CL-37 |
+| 228–229, 245–246, 262–263, 279–280, 300–301, 317–318, 334–335, 351–352, 368–369, 385–386, 402–403, 419–420 | CL-38 |
+| 292 | CL-39 |
+| 293, 295 | CL-40 |
+| 294 | CL-41 |
+| 624 | CL-42 |
+| 625 | CL-43 |
+| 626 | CL-44 |
+| 627 | CL-45 |
+| 645 | SH-35 |
+| 646 | SH-36 |
+| 647 | SH-37 |
+| 648 | SH-38 |
+| 649 | SH-39 |
+| 650 | SH-40 |
+| 651 | SH-41 |
+| 652 | SH-42 |
+| 653 | SH-43 |
+| 654 | SH-44 |
+| 655 | SH-45 |
+
+Source items 655; mapped source items 185; exclusions 470; distinct inventory numbers 91, including image-only SH-46.
 
 ### Control inventory — m5l-calls-create-menu
 
-Not yet captured; continuation is behind the Meetings retry load gate.
+Pending permitted capture.
 
 ### Control inventory — m5l-calls-actions
 
-Not yet captured; continuation is behind the Meetings retry load gate.
+Pending permitted capture.
 
 ### Control inventory — m5l-calls-list-after
 
-Not renewed; previous file is invalid and provides no comparison.
+Pending permitted capture.
 
 ## Module family
 
@@ -1458,9 +1612,9 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 
 ## Differences from Tasks list — Meetings and Calls
 
-- Meetings: table with Title, From, To and Related To; date-time or date-only From/To cells. Timeline and Locked are absent; all-day/check-in field filters replace the Tasks catalog. Pencil and note bubble are painted on the highlighted row. Menus, participants and empty state remain not observed. See ML inventory above.
+- Meetings: table with Title, From, To and Related To; date-time or date-only From/To cells. Timeline and Locked are absent; all-day/check-in field filters replace the Tasks catalog. Pencil and note bubble are painted on the highlighted row. Actions repeats the Tasks six-row menu; Create menu, participants and empty state remain not observed. See ML inventory above.
 
-- Calls: not yet renewed after the preceding Meetings stop and resumed load gate. Previous loading files are invalid; all Calls list differences remain not observed.
+- Calls: table with Subject, Call Type, Call Start Time and Call Duration. Timeline and Locked are absent; ten visible call-field filters replace the Tasks catalog. Call Type is plain text without direction icons; no handset is painted. Highlighted row shows pencil, note and three dots. See CL inventory above.
 
 ## Differences from Accounts list
 
@@ -1499,20 +1653,21 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 | Tags / export | TL-14.4–TL-14.5 | M6 | Reused entries; execution not observed |
 | Print View | TL-14.6 | M5 | Reused entry; submenu not observed |
 | Task reminder / repeat / completion fields | Tasks fields and layout; Picklists; ALARM / RRULE | M5 | Activities-specific metadata; transitions not observed |
-| Calls list | Calls list | M5 | Not renewed; prior evidence invalid |
-| Meetings list | ML-01–ML-45; Meetings source reconciliation | M5; note M6; column settings M11 | Painted table; all-day/check-in filters, From/To and polymorphic related links; menus pending stop decision |
+| Calls list | CL-01–CL-45; Calls source reconciliation | M5; notes M6; settings M11 | Table with call-type/start/duration columns and call-field filters; row pencil/note/more controls |
+| Meetings list | ML-01–ML-46; ML-12.1–ML-12.6; Meetings source reconciliation | M5; note/export M6; column settings M11 | All-day/check-in filters, From/To and related links; six Actions rows reused; Create menu not observed |
 | Meeting scheduling / participants / check-in | Meetings fields and layout; multireminder | M5 | Activities-specific metadata; UI belongs to later research |
 | Call logging / scheduling / CTI | Calls fields and layout; Picklists | M5 | Activities-specific metadata; type/status conditions not supplied |
 | Who / What and incoming activity relations | Lookups and relations | M5 and source-module key | Existing lookup primitive; polymorphic targets and activity relation catalogs |
 
 ## Capture refs
 
-- m5l-meetings-list-base — renewed, painted table, no clicks, nine records; two bulk reads triggered stop.
+- m5l-meetings-list-base — painted table, no clicks, nine records; two authorized baseline reads.
 - m5l-meetings-list-after — permitted click-free stop comparison; painted, nine records unchanged; highlighted-row pencil/note absent.
 - m5l-meetings-create-menu — requested attached-arrow click skipped; painted base remains.
 - m5l-meetings-actions — one executed click; six menu rows and painted Refresh.
-- m5l-calls-list-base / m5l-calls-list-after — not renewed; earlier files invalid.
-- m5l-calls-create-menu / m5l-calls-actions — not taken after Meetings stop.
+- m5l-calls-list-base — renewed, painted table, no clicks, 890 total records; displayed range 1 to 30.
+- m5l-calls-list-after — pending renewed comparison.
+- m5l-calls-create-menu / m5l-calls-actions — pending permitted capture.
 
 - m5-tasks-list-base — full, table opening, no clicks, 12 total records.
 - m5-tasks-view-selector — one requested/completed click; public-view menu only.
@@ -1533,7 +1688,7 @@ All screenshots were opened as images. Raw files stay in the local research work
 - Shared shell module assignments with `?` remain as in contacts.md; no additional Tasks-specific unknown assignment was introduced.
 - Meetings two-read baseline is authorized by board decision; CTO task-text update is recorded separately. No local exception was defined.
 - Meetings Create menu was blocked by the capture guard; Print View submenu remains not observed; participants, empty state, other presentations and unpainted hover actions remain not observed. The visible pencil/note bubble were not activated.
-- Calls list evidence remains not observed; previous loading-only files are invalid.
+- Calls empty state, other presentations, dialling controls, status-specific row actions and controls outside the captured viewport remain not observed. No status or dialling action was activated.
 - Forms and all record details remain outside this list task.
 
 No board decision is requested by this spec. Unknown behaviour is explicitly preserved for the follow-on research and lead review.
