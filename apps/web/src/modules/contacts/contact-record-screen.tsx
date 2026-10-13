@@ -9,14 +9,10 @@ import {
 } from "@/components/records/detail/record-detail-screen";
 import { openContactCreateWithReportingTo } from "./contacts-record-create";
 import { createContactsRelatedLists } from "./contacts-related-lists";
-import { contactsScreenDefinition } from "./definition";
 
-export type ContactRecordScreenProps = Omit<
-  RecordDetailScreenProps,
-  "definition" | "buildRelatedLists"
->;
+export type ContactRecordScreenProps = Omit<RecordDetailScreenProps, "buildRelatedLists">;
 
-export function ContactRecordScreen(props: ContactRecordScreenProps) {
+export function ContactRecordScreen({ definition, ...props }: ContactRecordScreenProps) {
   const router = useRouter();
   const buildRelatedLists = useCallback(
     (record: RecordData) =>
@@ -30,10 +26,6 @@ export function ContactRecordScreen(props: ContactRecordScreenProps) {
   );
 
   return (
-    <RecordDetailScreen
-      {...props}
-      definition={contactsScreenDefinition}
-      buildRelatedLists={buildRelatedLists}
-    />
+    <RecordDetailScreen {...props} definition={definition} buildRelatedLists={buildRelatedLists} />
   );
 }
