@@ -22,7 +22,7 @@ export interface BoardColumn {
   cards: readonly BoardCard[];
 }
 // biome-ignore lint/suspicious/noConfusingVoidType: mutation callbacks may resolve without an explicit result
-export type BoardMoveResult = "moved" | "cancelled" | void;
+export type BoardMoveResult = "moved" | "cancelled" | { to: string } | void;
 export interface RecordBoardProps {
   columns: readonly BoardColumn[];
   toolbar?: ReactNode;
@@ -30,6 +30,7 @@ export interface RecordBoardProps {
   onCreate: (columnKey: string) => void;
   onMove: (cardId: string, fromKey: string, toKey: string) => Promise<BoardMoveResult>;
   loading?: boolean;
+  children?: ReactNode;
 }
 
 /** Service-free board. Optimistic moves remain until incoming data acknowledges them. */
@@ -40,6 +41,7 @@ export function RecordBoard({
   onCreate,
   onMove,
   loading,
+  children,
 }: RecordBoardProps) {
   const [moves, setMoves] = useState<Record<string, { from: string; to: string; card: BoardCard }>>(
     {},
@@ -52,15 +54,18 @@ export function RecordBoard({
       const next = { ...current };
       let changed = false;
       for (const [id, movement] of Object.entries(current)) {
-        if (
-          !pending.current.has(id) &&
-          (columns
+        if (!pending.current.has(id)) {
+          const inTarget = columns
             .find((column) => column.key === movement.to)
-            ?.cards.some((card) => card.id === id) ||
-            !columns.some((column) => column.cards.some((card) => card.id === id)))
-        ) {
-          delete next[id];
-          changed = true;
+            ?.cards.some((card) => card.id === id);
+          const inSource = columns
+            .find((column) => column.key === movement.from)
+            ?.cards.some((card) => card.id === id);
+          const inAny = columns.some((column) => column.cards.some((card) => card.id === id));
+          if (inTarget || (!inSource && inAny) || !inAny) {
+            delete next[id];
+            changed = true;
+          }
         }
       }
       return changed ? next : current;
@@ -70,16 +75,40 @@ export function RecordBoard({
   async function move(id: string, from: string, to: string) {
     if (from === to || pending.current.has(id)) return;
     const previous = moves[id];
-    const card =
+    const originalCard =
       previous?.card ??
       columns.find((column) => column.key === from)?.cards.find((item) => item.id === id);
-    if (!card) return;
+    if (!originalCard) return;
+    const targetColumn = columns.find((column) => column.key === to);
+    const card =
+      targetColumn && originalCard.rows.length > 1
+        ? {
+            ...originalCard,
+            rows: originalCard.rows.map((row, index) =>
+              index === 1 ? { ...row, text: targetColumn.label } : row,
+            ),
+          }
+        : originalCard;
     pending.current.add(id);
     setMoves((current) => ({ ...current, [id]: { from, to, card } }));
     try {
       const result = await onMove(id, from, to);
       if (result !== "cancelled") {
-        setMoves((current) => ({ ...current }));
+        const finalTo = typeof result === "object" && result && "to" in result ? result.to : to;
+        const finalTargetColumn = columns.find((column) => column.key === finalTo);
+        const finalCard =
+          finalTargetColumn && originalCard.rows.length > 1
+            ? {
+                ...originalCard,
+                rows: originalCard.rows.map((row, index) =>
+                  index === 1 ? { ...row, text: finalTargetColumn.label } : row,
+                ),
+              }
+            : card;
+        setMoves((current) => ({
+          ...current,
+          [id]: { from, to: finalTo, card: finalCard },
+        }));
         return;
       }
     } catch {
@@ -137,7 +166,7 @@ export function RecordBoard({
                   ) : null}
                 </div>
                 {column.totalText !== undefined ? (
-                  <div className="font-semibold">{column.totalText}</div>
+                  <div className="font-semibold record-board-total">{column.totalText}</div>
                 ) : null}
                 <div className="record-board-checkbox">
                   <Checkbox label={`Select ${column.label}`} hideLabel />
@@ -199,6 +228,7 @@ export function RecordBoard({
               <footer className="record-board-footer">
                 <Button
                   variant="ghost"
+                  data-board-footer-create
                   onPress={() => onCreate(column.key)}
                   className="text-primary flex-1 justify-start"
                 >
@@ -222,6 +252,7 @@ export function RecordBoard({
           );
         })}
       </div>
+      {children}
     </div>
   );
 }
