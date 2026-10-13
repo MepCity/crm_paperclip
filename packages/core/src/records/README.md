@@ -487,3 +487,56 @@ the response is `{ groups: GroupSummary[] }`. Sum may be omitted. This local DTO
 and query shape are interim; no reference write or saved preference is required.
 The HTTP adapter implements the same port, and the shared module contract suite
 checks summary/list/count parity for Leads, Contacts, Accounts and Deals.
+
+## Tasks preparation and activity contract gate
+
+`fixture/tasks/metadata.ts`, `picklists.ts` and `views.ts` preserve sanitized
+Tasks export definitions. `seed.ts` prepares 250 deterministic synthetic tasks
+linked to existing Leads, Contacts, Accounts and Deals fixture records, with
+all status/priority values and both one-sided and two-sided references. These
+links implement the requested seed topology; they are not evidence of allowed
+reference modules. Registration still requires the approved target lists.
+Tasks is **not registered yet**: the source definitions
+are deliberately separate from `ModuleMetadata` and `ListView` until the CTO's
+contract decision. The export contains 20 fields and 17 saved views. No source
+account, field or view identifiers are retained.
+
+Pending decisions and source gaps:
+
+- `Remind_At` is `ALARM/jsonobject`; `Recurring_Activity` is `RRULE/jsonobject`.
+  The export supplies no inner key names or types. The current `FieldValue`
+  cannot represent these objects. Preserve the field types rather than treating
+  them as strings or record references. Reminder delivery and recurrence
+  execution remain outside this module definition.
+- The public lookup definition currently carries one `module`. The activity
+  fields require an allowed target list. The export supplies `Contacts` for
+  `Who_Id` and the unresolved `se_module` marker for `What_Id`, with no list of
+  allowed modules. Do not interpret that marker as an actual target module or
+  invent a target list. The existing `{ module, id, name? }` record reference
+  value itself can already carry the selected target.
+- Several personal views include `BEST_TIME`, absent from the 20 exported
+  fields. Keep this discrepancy visible; registration/projection behavior needs
+  a decision rather than silently dropping the column or adding a 21st field.
+- Source criteria retain `TODAYANDOVERDUE`, `YESTERDAYMINUS`, `NEXT7DAYS`,
+  `TODAY`, `TOMORROW`, and `CURRENTUSER` literals. Convert them to equivalent
+  domain criteria during registration. `NEXT7DAYS` includes overdue tasks;
+  the existing `DUEINDAYS` window excludes overdue dates and is not equivalent.
+- Every exported view has null sort: use the existing Leads default ordering.
+- Closed views explicitly use stored Status `Completed`; open views exclude it.
+  Use this boundary for related list/count reads pending activity flow research.
+
+Once the contract gate is resolved, add Events and Calls using this pattern:
+
+1. Read each module's fields, layout, picklists and detailed saved views. Copy
+   structure only, replacing identifiers with local fixture identifiers.
+2. Supply the approved multi-target lists in field metadata. Shared validation
+   must reject disallowed modules and missing records in registered modules,
+   resolve names from their targets, retain allowed unregistered references,
+   and return null for deleted targets on reads.
+3. Add deterministic synthetic seeds referencing existing fixture records, then
+   register a module bundle with its display name, managed fields and defaults.
+4. Convert saved-view criteria without changing their boundaries or column order.
+   Reuse list/count filters for Who_Id/What_Id and open/closed related reads.
+5. Run the reusable module contract suite, field/picklist table comparison,
+   lookup lifecycle/related-read tests and generic CRUD endpoint tests.
+   No reminder or recurrence execution belongs in these module definitions.
