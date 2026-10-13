@@ -6,7 +6,9 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { useRecordList, useViews } from "@/lib/api/client/hooks";
 
-const LIST_PAGE_SIZE = 1;
+// Only the first related contact is drawn, but the record service accepts page sizes 10, 20,
+// 30, 40, 50 and 100: asking for one row is rejected as an unsupported page size.
+const LIST_PAGE_SIZE = 10;
 
 export interface AccountsLinkedContactSummaryProps {
   accountRecord: RecordData;
