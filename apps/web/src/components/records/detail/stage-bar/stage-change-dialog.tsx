@@ -182,7 +182,7 @@ export function StageChangeDialog({
             options={stagePicklist}
             searchable
           />
-          {showReasonForLoss ? (
+          {showReasonForLoss || stages.find((s) => s.value === values.stage)?.kind === "lost" ? (
             <FieldInput
               field={reasonField}
               value={values.reasonForLoss}
