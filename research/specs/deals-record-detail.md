@@ -1,10 +1,10 @@
 # Deals — record detail
 
-Status: upper detail observed; lower-detail research not observed because its list baseline remained a loading skeleton. Submitted for independent inventory review. Module 4 / MEP-346 and MEP-347.
+Status: upper detail and two related-card viewports observed. Further card navigation stopped under the capture network rule; incomplete scope is explicit. Submitted for independent inventory and safety review. Module 4 / MEP-346 and MEP-347.
 
 ## Purpose
 
-Describe the observed upper Deals detail, stage bar, More Options and Timeline. Reuse [accounts-record-detail.md](accounts-record-detail.md), then [contacts-record-detail.md](contacts-record-detail.md) and [record-detail.md](record-detail.md) for shared behaviour. Exported fields, stages and relations remain in [deals.md](deals.md). Lower field sections and related-card interiors were attempted in MEP-347 but remain not observed; stage-changing flows belong to MEP-353. No write was attempted.
+Describe the observed upper Deals detail, stage bar, More Options and Timeline. Reuse [accounts-record-detail.md](accounts-record-detail.md), then [contacts-record-detail.md](contacts-record-detail.md) and [record-detail.md](record-detail.md) for shared behaviour. Exported fields, stages and relations remain in [deals.md](deals.md). MEP-347 observes Notes through Competitors and Cadences through the Products header; lower field sections and remaining cards remain not observed; stage-changing flows belong to MEP-353. No write was attempted.
 
 ## Layout
 
@@ -132,23 +132,80 @@ Rest: as in m4d-list-base; covered by the overlay: none.
 
 ### Control inventory — m4c-list-base
 
-Shell: not observed in this capture; the shell is replaced by a loading skeleton. The whole image, right edge and bottom corners were inspected.
+Shell: SH-01–SH-46 as in contacts.md; Deals active. The refreshed image is painted, replacing the earlier loading evidence.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DD-L01 | Board | Stage selection checkbox | checkbox | first stage header, upper right | not observed | seen (m4c-list-base) | M4 | DD-L01 in m4d-list-after |
+| DD-L02 | Board | Create Deal | button | below first column, left footer segment | not observed | seen (m4c-list-base) | M4 | DL-12 moved |
+| DD-L03 | Board | Opposing arrows icon | icon button | below first column, right footer segment | not observed | seen (m4c-list-base) | M4 | DD-L03 in m4d-list-after |
+
+Rest: as in m4-list-base; covered by the overlay: none. The later first-column selection/footer controls are as in m4d-list-after. Four record links are painted across three columns. Column counters do not establish the total count. Record-link identities are excluded.
+
+### Control inventory — m4c-detail-base
+
+Shell: SH-01–SH-46 as in contacts.md. Entire screenshot inspected, including utility strip and edges.
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-No painted interactive control. Loading shapes and the central Loading indicator are static placeholders, not buttons. The prior task's record selector matches zero source items; no alternative record link exists in this capture. Detail/card captures were not attempted under the unique-selector rule.
+No changed painted control relative to m4d-detail-main. Existing DD-01, DD-04–DD-07, DD-10–DD-13, DD-15–DD-16, DD-18–DD-21, DD-23–DD-24, DD-29–DD-35, DD-54–DD-58, DD-60–DD-69, DD-61.1–DD-61.5 and DD-90–DD-92 retain their IDs. Related-card navigation selectors originate from this capture.
 
-Rest: as in m4-list-base only for the intended route; its populated screen is not painted here; covered by the overlay: none. Absent here: all painted SH and DL controls from that baseline, because the page is loading; this is not module-wide absence.
+Rest: as in m4d-detail-main; covered by the overlay: none. Absent here: same as that baseline. No named control for scrolling to lower Deal Information or Description is painted; no substitute navigation was attempted.
+
+### Control inventory — m4c-card-notes
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DD-93 | Related-list rail | Organize Deal Details | icon button | after Related List heading | same | seen (m4c-card-notes) | M11 | AD-105 |
+| DD-94 | Related-list rail | Plus icon | icon button | Notes row, right end | same | seen (m4c-card-notes) | M6 | AD-106 |
+| DD-95 | Notes card | Recent Last | select | header, right | same | seen (m4c-card-notes) | M6 | AD-107 |
+| DD-96 | Notes card | Add a note | input | body, below header | same | seen (m4c-card-notes) | M6 | AD-108 moved |
+| DD-97 | Attachments card | Attach / down arrow | button | header, right | same | seen (m4c-card-notes) | M6 | AD-110 |
+| DD-98 | Record content | Scroll To Top | icon button | floating at lower right | same | seen (m4c-card-notes) | M4 | AD-111 |
+| DD-99 | Stage History card | Table with plus icon | icon button | header, right | not observed | seen (m4c-card-notes) | M11 | new |
+| DD-100 | Stage History card | Stage | column header | table header, visible column 1 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-101 | Stage History card | Amount | column header | table header, visible column 2 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-102 | Stage History card | Probability (%) | column header | table header, visible column 3 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-103 | Stage History card | Expected Revenue | column header | table header, visible column 4 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-104 | Stage History card | Closing Date | column header | table header, visible column 5 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-105 | Stage History card | Stage Duration (Calendar Days) | column header | table header, visible column 6 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-106 | Stage History card | Modified Time (clipped) | column header | table header, visible column 7 | not observed | seen (m4c-card-notes) | M4 | new |
+| DD-107 | Competitors card | New | button | header, right | not observed | seen (m4c-card-notes) | ? | new |
+
+Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by the overlay: none. Overview stage/business/summary content DD-60–DD-69, DD-61.1–DD-61.5, DD-91–DD-92 is scrolled out. Notes is selected; its plus and the rail organize icon are newly painted. Notes, Connected Records, Attachments and Stage History have complete headings and upper controls; no separate capture is needed for them. Competitors has a complete heading/New action and readable empty state. No Show More, card-header counter, Stage History row-end control or collapse icon is painted. Modified Time is clipped at the right; Modified By is outside the screenshot. Scroll To Top partly overlaps the Competitors header area but its New action remains visible. Absent here: AD-109 (Show More), Notes rail badge AD-101; this record has no note rows.
+
+### Control inventory — m4c-card-cadences
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DD-93 | Related-list rail | Organize Deal Details | icon button | after Related List heading | same | seen (m4c-card-cadences) | M11 | AD-105 |
+| DD-108 | Related-list rail | Plus icon | icon button | Cadences row, right end | not observed | seen (m4c-card-cadences) | P3 | new |
+| DD-109 | Cadences card | Enroll | button | header, right | same | seen (m4c-card-cadences) | P3 | D-55 |
+| DD-110 | Open Activities card | Add New / down arrow | button | header, right group, first | same | seen (m4c-card-cadences) | M5 | AD-135 |
+| DD-111 | Open Activities card | Untranslated column-view label | select | header, right group, second | not observed | seen (m4c-card-cadences) | M5 | new |
+| DD-112 | Open Activities card | Table with plus icon | icon button | header, right group, third | same | seen (m4c-card-cadences) | M11 | AD-137 |
+| DD-113 | Open Activities card | Diagonal expand arrows | icon button | header, right group, fourth | same | seen (m4c-card-cadences) | M5 | AD-138 |
+| DD-114 | Open Activities card | Open Tasks count | badge | first visible activity column, after title | same | seen (m4c-card-cadences) | M5 | AD-139 |
+| DD-115 | Open Activities card | Open Meetings count | badge | second visible activity column, after title | same | seen (m4c-card-cadences) | M5 | AD-140 |
+| DD-116 | Closed Activities card | Column View | select | header, right group, first | same | seen (m4c-card-cadences) | M5 | AD-141 |
+| DD-117 | Closed Activities card | Table with plus icon | icon button | header, right group, second | same | seen (m4c-card-cadences) | M11 | AD-142 |
+| DD-118 | Closed Activities card | Diagonal expand arrows | icon button | header, right group, third | same | seen (m4c-card-cadences) | M5 | AD-143 |
+| DD-119 | Closed Activities card | Closed Tasks count | badge | first visible activity column, after title | same | seen (m4c-card-cadences) | M5 | AD-144 |
+| DD-120 | Closed Activities card | Closed Meetings count | badge | second visible activity column, after title | same | seen (m4c-card-cadences) | M5 | AD-145 |
+| DD-121 | Products card | Add Products | button | header, right | same | seen (m4c-card-cadences) | P2 | AD-146 |
+| DD-98 | Record content | Scroll To Top | icon button | floating at lower right | same | seen (m4c-card-cadences) | M4 | AD-111 |
+
+Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by the overlay: none. Overview content is scrolled out as in m4c-card-notes. Cadences is selected and its plus is painted. Open Activities displays the untranslated selector label recorded above, rather than Accounts Column View; no option was opened. Open/Closed Tasks and Meetings form two visible columns; Calls is outside the horizontal viewport. Activity record links are row data and excluded from the inventory. Products heading and Add Products are visible at the bottom; its body is below the utility boundary. No card action, preference or row link was operated.
 
 ### Control inventory — m4c-list-after
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-No changed painted control. The central loading animation differs in phase; it is not interactive. No record count or record link is painted in either list capture.
+The required after capture produced a loading skeleton despite the extended wait. No painted interactive control; the central Loading indicator and skeleton shapes are placeholders. Shell, edges and bottom corners were inspected as an image.
 
-Rest: as in m4c-list-base; covered by the overlay: none. Absent here: same loading-state absence as m4c-list-base.
+Rest: intended route as in m4c-list-base, but its painted SH/DL controls are absent during loading; covered by the overlay: none. This is not module-wide absence. No count comparison is possible.
 
 ### Shell controls missing from app-shell.md
 
@@ -239,19 +296,19 @@ Exported visible Checklists (23) and Locking Information (25) are not painted in
 
 ## Related-list cards
 
-The first fifteen rows follow the rail observed in m4d-detail-main, not a newly observed card order. Checklists and Locking Information follow exported relations only and have no observed rail position. MEP-347 did not reach any card. Shared references identify earlier documentation, **not** confirmed Deals equivalence; every Deals interior remains not observed. No row data is reproduced.
+The first fifteen rows follow the observed rail. Checklists and Locking Information have no observed rail position. Shared rows below cite Accounts first, then Contacts; only observed differences are expanded. No record values or activity contents are reproduced. Counts indicate presence only, not customer-specific values.
 
 | Order | Card title | Module | Counter | Upper controls | Column headers | Empty state | Ref | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Notes | M6 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Notes; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 2 | Connected Records | ? | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Connected Records; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 3 | Attachments | M6 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Attachments; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 4 | Stage History | M4 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 5 | Competitors | ? | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 6 | Cadences | P3 | not observed | not observed | not observed | not observed | [contacts-record-detail.md](contacts-record-detail.md#related-list-cards) › Related-list cards › Cadences; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 7 | Open Activities | M5 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Open Activities; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 8 | Closed Activities | M5 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Closed Activities; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 9 | Products | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Products; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 1 | Notes | M6 | No card-header counter | Recent Last DD-95; Add a note DD-96 | None painted | Input only; no note rows | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Notes: same header controls; no Show More; input directly below header | seen (m4c-card-notes) |
+| 2 | Connected Records | ? | None painted | None painted | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Connected Records: same empty card | seen (m4c-card-notes) |
+| 3 | Attachments | M6 | None painted | Attach / down arrow DD-97 | None painted | No Attachment | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Attachments: same | seen (m4c-card-notes) |
+| 4 | Stage History | M4 | No card-header counter; rail badge DD-57 | Table with plus DD-99 | Stage; Amount; Probability (%); Expected Revenue; Closing Date; Stage Duration (Calendar Days); Modified Time (clipped) | Populated; empty state not observed | new | seen (m4c-card-notes) |
+| 5 | Competitors | ? | None painted | New DD-107 | None painted | No records found | new | seen (m4c-card-notes) |
+| 6 | Cadences | P3 | None painted | Enroll DD-109 | None painted | No records found | [contacts-record-detail.md](contacts-record-detail.md#related-list-cards) › Contacts Related-list cards › Cadences: same; Accounts has no Cadences card | seen (m4c-card-cadences) |
+| 7 | Open Activities | M5 | Tasks/Meetings badges DD-114–DD-115 | DD-110–DD-113 | Open Tasks; Open Meetings; Calls not painted | Meetings: No records found; Tasks populated | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Open Activities: same layout; selector label differs (DD-111) | seen (m4c-card-cadences) |
+| 8 | Closed Activities | M5 | Tasks/Meetings badges DD-119–DD-120 | DD-116–DD-118 | Closed Tasks; Closed Meetings; Calls not painted | Populated; empty state not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Closed Activities: same visible controls | seen (m4c-card-cadences) |
+| 9 | Products | P2 | not observed | Add Products DD-121 | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Products: same header action; body not observed | seen header (m4c-card-cadences) |
 | 10 | Quotes | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Quotes; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
 | 11 | Sales Orders | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Sales Orders; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
 | 12 | Contact Roles | M2 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
@@ -263,13 +320,21 @@ The first fifteen rows follow the rail observed in m4d-detail-main, not a newly 
 
 Stage History, Contact Roles and Competitors have observed rail links (DD-54–DD-56), but no observed card headings, counters, upper buttons, columns, empty states or row-end controls. Connected Records also remains not observed at card level despite its shared rail reference. Stage History columns cannot be compared with [deals.md](deals.md#stage-history-module) without a painted card; metadata is not substituted for screen evidence. No new DD number is assigned to an unobserved control.
 
+## Stage History column comparison
+
+Compare [deals.md](deals.md#stage-history-module), metadata only, with m4c-card-notes. Painted columns are Stage, Amount, Probability (%), Expected Revenue, Closing Date, Stage Duration (Calendar Days), then partially visible Modified Time. All seven labels correspond to exported fields, but their screen order differs from exported field order. Modified By exists in offscreen source only and is not asserted as painted. Deal Name, Record Id, Last Activity Time and Moved To are not painted; their metadata presence does not imply a visible column. The rightmost structure and row-end actions remain not observed. No table customization was opened.
+
 ## Record-page footer and edges
 
-The upper-detail right edge and utility strip retain the existing shell references. The record-page footer, lower Deal Information fields and description were not reached in MEP-347. Its two list images contain only shell/content skeletons and a central loading indicator, with no painted footer, edge icon or corner control. No named section-navigation control was available because no detail capture could be opened. This does not establish the absence of lower record controls.
+The fixed header, tabs, rail, full right edge and utility strip were inspected in the two card images. Floating Scroll To Top DD-98 is newly painted and reuses Accounts AD-111. The lower Deal Information fields, Description, Add Link and record customization footer remain unreachable with a permitted named section control in the baseline. No free scrolling or alternate control was invented. Checklists and Locking Information have no observed rail entry.
 
 ## Differences from earlier modules
 
-No lower-detail or card difference can be established from the loading captures. Accounts and Contacts remain the nearest shared-card documentation; their controls are not asserted as present in Deals until observed. The Deals-specific upper-detail differences above remain unchanged.
+- Notes has no populated row, Show More or rail count; Add a note follows the header directly.
+- Stage History and Competitors introduce Deals-specific card regions and controls DD-99–DD-107.
+- Cadences reuses Contacts rather than Accounts; its selected rail row paints a plus DD-108.
+- Open Activities paints an untranslated selector label DD-111 in the same position as Accounts Column View. Other observed activity-card controls match Accounts.
+- Remaining cards and lower fields are unobserved after the mandatory network stop; no equivalence is asserted for them.
 
 ## Capability table
 
@@ -284,7 +349,8 @@ No lower-detail or card difference can be established from the loading captures.
 | Contact Person and Next Action links | M2/M3/M10/M5 | Accounts contact/email links moved; added activity summary | Links unoperated; card interiors deferred |
 | More Options | Per menu inventory | Accounts plus Contacts Run Macro / Enroll to Cadence | Fifteen rows; outcomes not observed |
 | Timeline History toolbar | M4/M12 | Accounts AD-159–AD-161 | Empty state observed; filter unopened |
-| Lower details, related cards and record-page footer | Per related-card table | Shared candidates plus Deals-specific card scope | not observed in MEP-347; loading baseline prevents verified navigation |
+| Related cards | Per card inventory | Shared Accounts/Contacts controls plus Stage History and Competitors | Two viewports observed; actions unoperated; remaining scope stopped |
+| Lower details and record-page footer | M4/M11 | Shared candidates | No permitted named section navigation; not observed |
 | Populated stage-change Timeline rows | M4 | Deals-specific, not observed | No rows in this record |
 
 ## Capture refs
@@ -298,12 +364,15 @@ Only neutral slugs identify local evidence; raw images and customer values are n
 | m4d-detail-more | 2 | 0 | Fifteen-row menu |
 | m4d-detail-timeline | 2 | 0 | History, empty log region |
 | m4d-list-after | 0 | 0 | Same four links/columns; late column controls |
-| m4c-list-base | 0 | 0 | Loading skeleton; no record links/count |
-| m4c-list-after | 0 | 0 | Loading skeleton; no record links/count |
+| m4c-list-base | 0 | 0 | Refreshed with extended wait; four record links, total count not painted |
+| m4c-detail-base | 1 | 0 | Preserved Overview baseline, three related reads |
+| m4c-card-notes | 2 | 0 | Preserved Notes through Competitors viewport |
+| m4c-card-cadences | 2 | 0 | Cadences, Open/Closed Activities, Products header; mandatory network stop |
+| m4c-list-after | 0 | 0 | Final click-free capture after profile-error retry; loading skeleton, no count |
 
 The first detail establishes three related reads; both subsequent detail captures retain that count. All captures satisfy the amended expected-call limits, including one blocked navigation read per detail capture. The menu and Timeline have no skipped click. No successful record write or telemetry request was observed. The base and main captures were not repeated. No stage, terminal action, persisted preference, menu row or unsafe card control was clicked.
 
-MEP-347: both preserved list captures have nine GET calls, no non-GET call, no blocked request and no skipped click. Their record counts cannot be compared because neither is painted. No detail baseline or related-read count was established. Detail, card and section captures were omitted because no unique record link could be validated in m4c-list-base. The loading-race retry rule applies to a skipped first click in a click-containing capture; neither capture has a click, so it was not invoked. No write or preference action was attempted.
+MEP-347: extended-wait list and detail captures from the interrupted run are preserved. Notes was also completed in that run; its file timestamp distinguishes it from the failed new invocation. Cadences first produced an empty directory; the single same-command retry succeeded. List/detail expected non-GET calls remain within their stated limits; detail and both cards have three related reads. Cadences includes one blocked POST /murphy/:id/clientmetricslog without a telemetry annotation. Because the task explicitly identifies telemetry-tagged paths as expected, this unannotated path triggers the conservative mandatory stop; no exception is inferred from its name. Further card/section navigation was cancelled. No successful record write or persisted preference was observed. Only the required click-free after capture was attempted afterward; the first attempt failed with profile in use, and the single delayed same-command retry produced a loading skeleton. It has nine GET reads, no successful non-GET call, one blocked telemetry request and no click. No total-record equality can be established.
 
 ## Open questions
 
@@ -313,8 +382,10 @@ MEP-347: both preserved list captures have nine GET calls, no non-GET call, no b
 - Hover-only inline-edit, rail and card controls remain not observed. No hover or unsafe alternate selector was attempted.
 - Competitors and Checklists retain unknown module ownership (`?`) from deals.md. Connected Records retains shared unknown ownership from Accounts; a lead decision is needed to assign it.
 - No Deals-specific shell ownership decision was introduced. Unknown SH ownership remains in contacts.md.
-- MEP-347 could not open detail: its list baseline has no record link. Lower Deal Information fields, description, Add Link and every card interior remain not observed. The final list also remained a loading skeleton, so total-record equality cannot be verified. No alternate selector, direct record path or extra capture was attempted.
-- Stage History column comparison with deals.md › Stage History module remains not observed; exported field definitions are not evidence of painted column headings.
+- The unannotated blocked clientmetricslog request requires a lead assessment under the task network rule before any further card navigation. This research does not grant an exception.
+- Lower Deal Information, Description, Add Link, Contact Roles and remaining card bodies are not observed. The baseline provides no permitted named section-navigation control; remaining card navigation stopped under rule 5.
+- Total-record equality cannot be verified: the initial painted board has four visible links but no total count; column counts are not reliable totals.
+- Stage History rightmost columns and row-end controls remain not observed; Modified Time is only partially painted and Modified By is offscreen. No horizontal scrolling was attempted.
 - Checklists and Locking Information remain exported relations only; neither their rail controls nor card interiors were observed. Hover-only card controls remain not observed. No board decision is requested by this research.
 
 ## Reconciliation of controls.json
@@ -830,13 +901,410 @@ Every source ordinal is accounted for exactly once below. Repeated wrappers can 
 
 320 source items; 89 inventory IDs represented; 161 excluded items.
 
-### m4c-list-base and m4c-list-after
+### m4c-list-base
 
-Each capture has the same three source items; every item is excluded, with no represented inventory ID. Both screenshots were opened as images and inspected over the entire viewport; no image-only interactive control exists.
-
-| Inventory number / exclusion reason | controls.json item ordinals, each capture |
+| Inventory number / exclusion reason | controls.json item ordinals |
 | --- | --- |
-| excluded: structural navigation wrapper around the skeleton; no painted control | 1 |
+| excluded: structural wrapper, static heading or duplicate; no separate painted control | 1, 35, 37, 51, 59, 62, 65–66, 82–83, 87, 111, 116, 118–119, 127–129, 139, 144, 162, 175, 239–240, 246, 255, 261, 268, 270, 277, 280, 287, 310 |
+| SH-01 | 2–3 |
+| DL-02 | 4, 113–115 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 84, 91–92, 94–95, 97–98, 101–102, 107–110, 138, 142, 237–238, 241, 295–309, 322 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: record-row or static display data | 67 |
+| excluded: outside viewport or clipped content boundary | 68–80, 177–236, 288–294 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99–100 |
+| SH-34 | 103–106 |
+| DL-01 | 112 |
+| DL-03 | 117 |
+| DL-05 | 120 |
+| DL-06 | 121 |
+| DL-07 | 122 |
+| DL-08 | 123 |
+| DL-09 | 124 |
+| DL-10 | 125 |
+| DL-11 | 126 |
+| DL-12 | 130 |
+| DL-13 | 131–132 |
+| DL-14 | 133 |
+| DL-70 | 134–136 |
+| DL-71 | 137 |
+| DL-15 | 140–141 |
+| DL-16 | 143 |
+| DL-17 | 145 |
+| DD-L01 | 146, 148, 150, 152, 154, 156, 158, 160, 164, 166, 168, 170, 172, 174, 176, 243–244, 247–248 |
+| DL-19 | 147 |
+| DL-20 | 149 |
+| DL-21 | 151 |
+| DL-22 | 153 |
+| DL-23 | 155 |
+| DL-24 | 157 |
+| DL-25 | 159 |
+| DL-26 | 161 |
+| DL-27 | 163 |
+| DL-65 | 165 |
+| DL-66 | 167 |
+| DL-67 | 169 |
+| DL-68 | 171 |
+| DL-69 | 173 |
+| DL-72 | 242 |
+| DL-77 | 245, 260, 279 |
+| DL-78 | 249–250, 262–263, 271–272, 281–282 |
+| DL-79 | 251–252, 264–265, 273–274, 283–284 |
+| DL-80 | 253–254, 266–267, 275–276, 285–286 |
+| DL-81 | 256, 269 |
+| DD-L02 | 257 |
+| DD-L03 | 258 |
+| DL-73 | 259 |
+| DL-74 | 278 |
+| SH-35 | 311 |
+| SH-36 | 312 |
+| SH-37 | 313 |
+| SH-38 | 314 |
+| SH-39 | 315 |
+| SH-40 | 316 |
+| SH-41 | 317 |
+| SH-42 | 318 |
+| SH-43 | 319 |
+| SH-44 | 320 |
+| SH-45 | 321 |
+
+322 source items; 88 inventory IDs represented; 161 excluded items. Image-only IDs: SH-46, DL-75–DL-76.
+
+### m4c-detail-base
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural wrapper, static heading or duplicate; no separate painted control | 1, 37, 51, 59, 62, 65–66, 82–83, 86, 106, 109, 122, 169–171, 174, 178, 185–186, 194–212, 214–218, 220, 222–226, 228, 494 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 112, 114, 121, 125, 128, 131, 137, 140, 149, 152, 155, 161, 164, 167, 192–193, 213, 219, 221, 227, 252, 262, 266, 279, 285, 298, 302, 311, 314–315, 318, 321–324, 328, 336, 348–349, 358, 361, 377, 379, 382, 387, 390, 415, 425–426, 451–452, 465–466, 474–493 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: record-row or static display data | 67 |
+| excluded: outside viewport or clipped content boundary | 68–80, 172, 187–188, 233–251, 253–261, 263–265, 267–278, 280–284, 286–297, 299–301, 303–310, 312–313, 316–317, 319–320, 325–327, 329–335, 337–347, 350–357, 359–360, 362–376, 378, 380–381, 383–386, 388–389, 391–414, 416–424, 427–450, 453–464, 467–473, 506 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| DD-01 | 107–108 |
+| DD-90 | 110–111 |
+| DD-04 | 113 |
+| DD-05 | 115–116 |
+| DD-06 | 117–118 |
+| DD-07 | 119–120 |
+| DD-10 | 123–124 |
+| DD-11 | 126–127 |
+| DD-12 | 129–130 |
+| DD-54 | 132–133 |
+| DD-57 | 134 |
+| DD-55 | 135–136 |
+| DD-13 | 138–139 |
+| DD-15 | 141–142 |
+| DD-30 | 143 |
+| DD-16 | 144–145 |
+| DD-31 | 146 |
+| DD-18 | 147–148 |
+| DD-20 | 150–151 |
+| DD-21 | 153–154 |
+| DD-56 | 156–157 |
+| DD-58 | 158 |
+| DD-23 | 159–160 |
+| DD-19 | 162–163 |
+| DD-24 | 165–166 |
+| DD-29 | 168 |
+| DD-32 | 173 |
+| DD-33 | 175 |
+| DD-34 | 176 |
+| DD-35 | 177 |
+| DD-60 | 179 |
+| DD-61.1 | 180 |
+| DD-61.2 | 181 |
+| DD-61.3 | 182 |
+| DD-61.4 | 183 |
+| DD-61.5 | 184 |
+| DD-63 | 189 |
+| DD-64 | 190 |
+| DD-65 | 191 |
+| DD-66 | 229 |
+| DD-67 | 230 |
+| DD-68 | 231 |
+| DD-69 | 232 |
+| SH-35 | 495 |
+| SH-36 | 496 |
+| SH-37 | 497 |
+| SH-38 | 498 |
+| SH-39 | 499 |
+| SH-40 | 500 |
+| SH-41 | 501 |
+| SH-42 | 502 |
+| SH-43 | 503 |
+| SH-44 | 504 |
+| SH-45 | 505 |
+
+506 source items; 88 inventory IDs represented; 372 excluded items. Image-only IDs: SH-46, DD-62, DD-91–DD-92.
+
+### m4c-card-notes
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural wrapper, static heading or duplicate; no separate painted control | 1, 37, 51, 59, 62, 65–66, 82–83, 86, 106, 109, 121, 123, 172–174, 177, 317, 329–331, 333–334, 337–338, 341–343, 355, 358, 360, 368–369, 372, 374–375, 503 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 112, 114, 122, 127, 131, 134, 140, 143, 152, 155, 158, 164, 167, 170, 195–196, 216, 222, 224, 230, 255, 265, 269, 283, 289, 302, 306, 315, 318–319, 322, 325–328, 332, 340, 352–353, 362, 365, 381, 383, 386, 390, 393, 421, 431–432, 457–458, 475–476, 485–502, 515 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: record-row or static display data | 67, 354, 356–357, 359, 361, 363–364, 366 |
+| excluded: outside viewport or clipped content boundary | 68–80, 175, 181–194, 197–215, 217–221, 223, 225–229, 231–235, 237–238, 241–254, 256–264, 266–268, 270–273, 279–282, 284–288, 290–301, 303–305, 307–310, 351, 367, 373, 376–380, 382, 384–385, 387–389, 391–392, 394–420, 422–430, 433–456, 459–474, 477–483, 516 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| DD-01 | 107–108 |
+| DD-90 | 110–111 |
+| DD-04 | 113 |
+| DD-05 | 115–116 |
+| DD-06 | 117–118 |
+| DD-07 | 119–120 |
+| DD-93 | 124 |
+| DD-10 | 125–126 |
+| DD-94 | 128 |
+| DD-11 | 129–130 |
+| DD-12 | 132–133 |
+| DD-54 | 135–136 |
+| DD-57 | 137 |
+| DD-55 | 138–139 |
+| DD-13 | 141–142 |
+| DD-15 | 144–145 |
+| DD-30 | 146 |
+| DD-16 | 147–148 |
+| DD-31 | 149 |
+| DD-18 | 150–151 |
+| DD-20 | 153–154 |
+| DD-21 | 156–157 |
+| DD-56 | 159–160 |
+| DD-58 | 161 |
+| DD-23 | 162–163 |
+| DD-19 | 165–166 |
+| DD-24 | 168–169 |
+| DD-29 | 171 |
+| DD-32 | 176 |
+| DD-33 | 178 |
+| DD-34 | 179 |
+| DD-35 | 180 |
+| excluded: scrolled content behind fixed tab boundary | 236, 239–240, 274–278, 311–314, 316 |
+| DD-95 | 320–321 |
+| DD-96 | 323–324 |
+| DD-97 | 335–336 |
+| DD-99 | 339 |
+| DD-100 | 344 |
+| DD-101 | 345 |
+| DD-102 | 346 |
+| DD-103 | 347 |
+| DD-104 | 348 |
+| DD-105 | 349 |
+| DD-106 | 350 |
+| DD-107 | 370–371 |
+| DD-98 | 484 |
+| SH-35 | 504 |
+| SH-36 | 505 |
+| SH-37 | 506 |
+| SH-38 | 507 |
+| SH-39 | 508 |
+| SH-40 | 509 |
+| SH-41 | 510 |
+| SH-42 | 511 |
+| SH-43 | 512 |
+| SH-44 | 513 |
+| SH-45 | 514 |
+
+516 source items; 90 inventory IDs represented; 376 excluded items. Image-only IDs: SH-46.
+
+### m4c-card-cadences
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural wrapper, static heading or duplicate; no separate painted control | 1, 37, 51, 59, 62, 65–66, 82–83, 86, 106, 109, 121, 123, 172–174, 177, 371–372, 375–376, 387–389, 391–396, 400–401, 407–408, 415–417, 419–421, 425–427, 429–430, 435, 438–439, 539 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 112, 114, 122, 127, 130, 133, 139, 142, 152, 155, 158, 164, 167, 170, 195–196, 216, 222, 224, 230, 255, 265, 269, 282, 288, 301, 305, 314, 317–318, 321, 324–327, 331, 339, 351–352, 361, 364, 380, 382, 385, 397–399, 402–403, 405–406, 410, 413, 422–424, 431–433, 436–437, 461, 471–472, 497–498, 511–512, 521–538, 551 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: record-row or static display data | 67, 390, 418, 428 |
+| excluded: outside viewport or clipped content boundary | 68–80, 175, 181–194, 197–215, 217–221, 223, 225–229, 231–254, 256–264, 266–268, 270–281, 283–287, 289–300, 302–304, 306–313, 315–316, 319–320, 322–323, 328–330, 332–335, 337–338, 350, 366, 404, 434, 442–460, 462–470, 473–496, 499–510, 513–519, 552 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| DD-01 | 107–108 |
+| DD-90 | 110–111 |
+| DD-04 | 113 |
+| DD-05 | 115–116 |
+| DD-06 | 117–118 |
+| DD-07 | 119–120 |
+| DD-93 | 124 |
+| DD-10 | 125–126 |
+| DD-11 | 128–129 |
+| DD-12 | 131–132 |
+| DD-54 | 134–135 |
+| DD-57 | 136 |
+| DD-55 | 137–138 |
+| DD-13 | 140–141 |
+| DD-108 | 143 |
+| DD-15 | 144–145 |
+| DD-30 | 146 |
+| DD-16 | 147–148 |
+| DD-31 | 149 |
+| DD-18 | 150–151 |
+| DD-20 | 153–154 |
+| DD-21 | 156–157 |
+| DD-56 | 159–160 |
+| DD-58 | 161 |
+| DD-23 | 162–163 |
+| DD-19 | 165–166 |
+| DD-24 | 168–169 |
+| DD-29 | 171 |
+| DD-32 | 176 |
+| DD-33 | 178 |
+| DD-34 | 179 |
+| DD-35 | 180 |
+| excluded: scrolled content behind fixed tab boundary | 336, 340–349, 353–360, 362–363, 365, 367–370 |
+| DD-109 | 373–374 |
+| DD-110 | 377–379 |
+| DD-111 | 381 |
+| DD-112 | 383–384 |
+| DD-113 | 386 |
+| DD-116 | 409 |
+| DD-117 | 411–412 |
+| DD-118 | 414 |
+| DD-121 | 440–441 |
+| DD-98 | 520 |
+| SH-35 | 540 |
+| SH-36 | 541 |
+| SH-37 | 542 |
+| SH-38 | 543 |
+| SH-39 | 544 |
+| SH-40 | 545 |
+| SH-41 | 546 |
+| SH-42 | 547 |
+| SH-43 | 548 |
+| SH-44 | 549 |
+| SH-45 | 550 |
+
+552 source items; 87 inventory IDs represented; 413 excluded items. Image-only IDs: SH-46, DD-114–DD-115, DD-119–DD-120.
+
+### m4c-list-after
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural navigation wrapper around loading skeleton | 1 |
 | excluded: invisible zero-area element | 2–3 |
 
-Each: 3 source items; 0 inventory IDs represented; 3 excluded items. No shell ID is claimed from unpainted skeleton shapes.
+3 source items; 0 inventory IDs represented; 3 excluded items. No image-only control painted.
