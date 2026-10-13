@@ -50,9 +50,11 @@ describe("leads-record-more-options", () => {
     expect(groups).toHaveLength(2);
     expect(groups[0]?.items).toEqual([
       { id: "clone", label: "Clone", onAction: onClone },
+      { id: "share", label: "Share", laterModule: "M11" },
       { id: "delete", label: "Delete", onAction: onDelete },
     ]);
     expect(groups[1]?.items).toEqual([
+      { id: "print-preview", label: "Print Preview", laterModule: "M6" },
       {
         id: "find-merge-duplicates",
         label: "Find and Merge Duplicates",

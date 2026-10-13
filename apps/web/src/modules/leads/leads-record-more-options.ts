@@ -1,4 +1,5 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import type { ModuleKey } from "@/components/ui/later-module";
 
 /** Interim copy for single-record delete (leads-write-behaviour.md › A1, not documented in UI). */
 export const LEADS_DELETE_CONFIRM_TITLE = "Delete Lead";
@@ -14,6 +15,7 @@ type SpecMenuItem = {
   id: string;
   label: string;
   handlerKey?: keyof LeadsRecordMoreOptionsHandlers;
+  laterModule?: ModuleKey;
 };
 
 export type LeadsMoreOptionsDeviation = {
@@ -33,14 +35,14 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
     id: "leads-more-primary",
     items: [
       { id: "clone", label: "Clone", handlerKey: "onClone" },
-      { id: "share", label: "Share" },
+      { id: "share", label: "Share", laterModule: "M11" },
       { id: "delete", label: "Delete", handlerKey: "onDelete" },
     ],
   },
   {
     id: "leads-more-print",
     items: [
-      { id: "print-preview", label: "Print Preview" },
+      { id: "print-preview", label: "Print Preview", laterModule: "M6" },
       {
         id: "find-merge-duplicates",
         label: "Find and Merge Duplicates",
@@ -90,14 +92,14 @@ export function buildLeadsRecordMoreMenuGroups(
   const groups: RecordMenuGroup[] = [];
   for (const group of LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS) {
     const items = group.items
-      .filter((item) => item.handlerKey !== undefined)
+      .filter((item) => item.handlerKey !== undefined || item.laterModule !== undefined)
       .map((item) => {
         const key = item.handlerKey;
-        if (!key) throw new Error("Filtered item missing handlerKey.");
         return {
           id: item.id,
           label: item.label,
-          onAction: handlers[key],
+          ...(key ? { onAction: handlers[key] } : {}),
+          ...(item.laterModule ? { laterModule: item.laterModule } : {}),
         };
       });
     if (items.length > 0) {

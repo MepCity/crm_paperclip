@@ -29,6 +29,13 @@ test("Accounts More Options menu inventory", () => {
   expect(labels).not.toContain("Enroll to Cadence");
 });
 
+test("Share and Print Preview use shared later-module keys", () => {
+  const groups = buildAccountsRecordMoreMenuGroups({ onClone: () => {}, onDelete: () => {} });
+  const items = groups.flatMap((group) => group.items);
+  expect(items.find((item) => item.id === "share")?.laterModule).toBe("M11");
+  expect(items.find((item) => item.id === "print-preview")?.laterModule).toBe("M6");
+});
+
 test("buildAccountsRecordMoreMenuGroups wires clone and delete", () => {
   const onClone = () => {};
   const onDelete = () => {};

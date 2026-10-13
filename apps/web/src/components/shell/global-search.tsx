@@ -3,6 +3,7 @@
 import type { SearchQuery } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DOCUMENTED_MODULE_FILTER_ITEMS } from "@/components/records/search/constants";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { TextField } from "@/components/ui/text-field";
 import { useGlobalSearch } from "@/lib/api/client/hooks";
 import { ApiProvider, type ClientRecordService } from "@/lib/api/client/provider";
+import { formatModuleSearchSecondaryLine } from "@/modules/global-search-format";
 import {
   moduleScreens,
   resolveModuleLaterKey,
@@ -173,9 +175,10 @@ function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string })
                     {screen?.pluralLabel ?? group.module}
                   </h2>
                   {group.records.slice(0, 5).map((record) => {
-                    const name =
-                      screen?.detail.header(record).title ??
-                      String(record.fields.Full_Name ?? record.id);
+                    const name = screen?.detail.header(record).title ?? record.id;
+                    const secondary = screen
+                      ? formatModuleSearchSecondaryLine(record, screen)
+                      : null;
                     const entry = { module: group.module, id: record.id, name };
                     return (
                       <div
@@ -190,11 +193,9 @@ function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string })
                           className="min-w-0 flex-1"
                         >
                           <span className="block">{name}</span>
-                          <span className="block text-sm text-text-muted">
-                            {[record.fields.Email, record.fields.Phone]
-                              .filter((value) => typeof value === "string" && value)
-                              .join(" · ")}
-                          </span>
+                          {secondary && (
+                            <span className="block text-sm text-text-muted">{secondary}</span>
+                          )}
                         </Link>
                         <Button
                           variant="icon"
@@ -256,9 +257,10 @@ function ModuleChooser({
   const entries = [
     { apiName: "", pluralLabel: "All Modules" },
     ...moduleScreens,
-    ...["Accounts", "Deals", "Tasks", "Meetings"]
-      .filter((name) => !resolveModuleScreenByApiName(name))
-      .map((apiName) => ({ apiName, pluralLabel: apiName })),
+    ...DOCUMENTED_MODULE_FILTER_ITEMS.filter((item) => !item.isRegistered).map((item) => ({
+      apiName: item.moduleApiName,
+      pluralLabel: item.label,
+    })),
   ];
   return (
     <PopoverTrigger

@@ -28,6 +28,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   pluralLabel: "Leads",
   pageTitle: "Leads",
   navigation: { id: "leads", icon: Icons.building },
+  search: { secondaryFields: ["Email", "Phone"] },
   list: leadsListPageConfig,
   listCurrencyCode: LEADS_LIST_CURRENCY_CODE,
   buildFilterGroups: buildLeadsFilterGroups,
