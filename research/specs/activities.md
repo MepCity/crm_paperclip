@@ -1,10 +1,74 @@
-# Activities — module metadata and Tasks list
+# Activities — module metadata and list screens
 
 Status: research for Grok QA inventory review and UI Lead metadata approval. MEP-23 / Module 5.
 
 ## Purpose
 
-Define the Tasks baseline and the Meetings/Calls metadata differences. Reuse existing specs for shared controls. Meetings/Calls lists, all record details, forms and write flows are separate research tasks. Tables below are generated from exported metadata; they contain configuration, never record values.
+Define the Tasks baseline and the Meetings/Calls metadata differences. Reuse existing specs for shared controls. Meetings/Calls list evidence is recorded below; all record details, forms and write flows are separate research tasks. Tables below are generated from exported metadata; they contain configuration, never record values.
+
+## Meetings list
+
+The two permitted click-free captures show a loading skeleton, not a populated or empty list. The module heading, view selector, toolbar, filter panel, table/calendar presentation and footer are **not observed**. A loading skeleton does not establish an empty state. No list/calendar preference was changed. The existing Meetings Views table remains metadata evidence only.
+
+Create-menu and Actions captures were not taken: neither trigger exists in the task's base controls.json, so a unique selector could not be validated. No alternative selector or navigation was attempted. No ML number is assigned to an unseen control.
+
+### Control inventory — m5l-meetings-list-base
+
+Shell: not observed; skeleton placeholders do not establish SH-01–SH-46. No shell-control difference can be assessed.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No painted interactive control. Loading text and decorative placeholders are not controls. Absent here: the rendered Tasks list baseline (TL controls) and shell (SH controls); absence during loading does not establish a Meetings feature difference.
+
+### Control inventory — m5l-meetings-list-after
+
+No changed interactive controls; the loading skeleton remains. Record links remain zero; total record count is not observed. This comparison does not verify persisted record counts.
+
+Rest: as in m5l-meetings-list-base; covered by the overlay: none.
+
+### Meetings source reconciliation
+
+| Capture | Source ordinals | Destination / exclusion |
+| --- | --- | --- |
+| m5l-meetings-list-base | 1 | Excluded: navigation container without painted controls |
+| m5l-meetings-list-base | 2–3 | Excluded: zero-area notification/message containers |
+| m5l-meetings-list-after | 1 | Excluded: navigation container without painted controls |
+| m5l-meetings-list-after | 2–3 | Excluded: zero-area notification/message containers |
+
+Each capture: source items 3; mapped items 0; exclusions 3; distinct inventory numbers 0. Both screenshots were opened as images; no image-only interactive controls were visible.
+
+## Calls list
+
+Both permitted click-free captures show a loading skeleton. Title, view selector, toolbar, filter fields, table, footer, call type/direction indicators and handset actions are **not observed**. This is not an observed empty state. The Calls Views table remains metadata evidence; no view selector or view-type preference was exercised.
+
+Create-menu and Actions captures were not taken: their triggers are absent from this task's base controls.json. No unique selector could be validated; no alternative was attempted. The distinction, labels and order of scheduling versus logging menu rows remain not observed. No CL number is assigned to an unseen control.
+
+### Control inventory — m5l-calls-list-base
+
+Shell: not observed; skeleton placeholders do not establish SH-01–SH-46. No shell-control difference can be assessed.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No painted interactive control. Loading text and decorative placeholders are not controls. Absent here: the rendered Tasks list baseline (TL controls) and shell (SH controls); absence during loading does not establish a Calls feature difference.
+
+### Control inventory — m5l-calls-list-after
+
+No changed interactive controls; the loading skeleton remains. Record links remain zero; total record count is not observed. This comparison does not verify persisted record counts.
+
+Rest: as in m5l-calls-list-base; covered by the overlay: none.
+
+### Calls source reconciliation
+
+| Capture | Source ordinals | Destination / exclusion |
+| --- | --- | --- |
+| m5l-calls-list-base | 1 | Excluded: navigation container without painted controls |
+| m5l-calls-list-base | 2–3 | Excluded: zero-area notification/message containers |
+| m5l-calls-list-after | 1 | Excluded: navigation container without painted controls |
+| m5l-calls-list-after | 2–3 | Excluded: zero-area notification/message containers |
+
+Each capture: source items 3; mapped items 0; exclusions 3; distinct inventory numbers 0. Both screenshots were opened as images; no image-only interactive control was visible.
 
 ## Module family
 
@@ -1176,6 +1240,12 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 | Dialled_Number | read_only | read_only | True / False / False / False |
 | Voice_Recording__s | RW | RW | True / True / True / False |
 
+## Differences from Tasks list — Meetings and Calls
+
+- Meetings: list differences cannot be established from the loading-only captures. Metadata differences remain in the module-specific tables. Create menu, Actions rows, filters, visible columns, time/participant presentation, view icons and empty state are not observed.
+
+- Calls: list differences cannot be established from the loading-only captures. Type/direction and handset icons, scheduling/logging menu rows, Actions, filters, columns, view icons and empty state remain not observed.
+
 ## Differences from Accounts list
 
 - One view tab (All Tasks) instead of All Accounts plus All Locked Accounts. The public-view menu adds Search and activity due-date/open/closed views; it has no recently-created/modified or unread views in the observed list.
@@ -1213,11 +1283,22 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 | Tags / export | TL-14.4–TL-14.5 | M6 | Reused entries; execution not observed |
 | Print View | TL-14.6 | M5 | Reused entry; submenu not observed |
 | Task reminder / repeat / completion fields | Tasks fields and layout; Picklists; ALARM / RRULE | M5 | Activities-specific metadata; transitions not observed |
+| Calls list | Calls list / source reconciliation | M5 | Loading-only evidence; rendered controls not observed |
+| Meetings list | Meetings list / source reconciliation | M5 | Loading-only evidence; rendered controls and list presentation not observed |
 | Meeting scheduling / participants / check-in | Meetings fields and layout; multireminder | M5 | Activities-specific metadata; UI belongs to later research |
 | Call logging / scheduling / CTI | Calls fields and layout; Picklists | M5 | Activities-specific metadata; type/status conditions not supplied |
 | Who / What and incoming activity relations | Lookups and relations | M5 and source-module key | Existing lookup primitive; polymorphic targets and activity relation catalogs |
 
 ## Capture refs
+
+- m5l-calls-list-base — no clicks; loading skeleton, no record links.
+- m5l-calls-list-after — no clicks, 12-second wait; loading skeleton, no record links.
+- m5l-calls-create-menu / m5l-calls-actions — not captured; triggers absent from base controls.json.
+
+- m5l-meetings-list-base — no clicks; loading skeleton, no record links.
+- m5l-meetings-list-after — no clicks, 12-second wait; loading skeleton, no record links.
+- m5l-meetings-create-menu / m5l-meetings-actions — not captured; triggers absent from base controls.json.
+
 
 - m5-tasks-list-base — full, table opening, no clicks, 12 total records.
 - m5-tasks-view-selector — one requested/completed click; public-view menu only.
@@ -1236,6 +1317,9 @@ All screenshots were opened as images. Raw files stay in the local research work
 - Provider has no exported options. Checked In Status is text with no status catalog. Check-In / call-type / call-status visibility rules and transition effects are not supplied.
 - Sort field/order in exported custom views are null. Observed Tasks opening sorts by id descending; this does not establish every view's default.
 - Shared shell module assignments with `?` remain as in contacts.md; no additional Tasks-specific unknown assignment was introduced.
-- Meetings/Calls list states, forms and all record details are deliberately outside this task and follow in the activity research chain.
+- Meetings rendered list and shell controls, presentation, record count, start/end and participant display remain not observed because both captures stayed in loading. Create-menu and Actions triggers could not be validated; their contents remain not observed.
+- Meetings after capture started above the load threshold because the load check was not conditional. This process deviation is recorded in the issue; no click occurred.
+- Calls rendered controls, call indicators and handset icons, scheduling/logging menu labels/order and empty state remain not observed because both captures stayed in loading. No unseen control is inferred from metadata.
+- Forms and all record details remain outside this list task.
 
 No board decision is requested by this spec. Unknown behaviour is explicitly preserved for the follow-on research and lead review.
