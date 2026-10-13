@@ -71,10 +71,20 @@ test("status ribbon matches measured geometry at both rail widths", async ({ pag
       await expect
         .poll(() => card.locator(".status-viewport").evaluate((el) => el.scrollLeft))
         .toBeGreaterThan(0);
+      await expect
+        .poll(async () => {
+          const viewport = card.locator(".status-viewport");
+          const left = await viewport.evaluate((el) => el.scrollLeft);
+          await page.waitForTimeout(100);
+          const settled = await viewport.evaluate((el) => el.scrollLeft);
+          return left > 0 && left === settled;
+        })
+        .toBe(true);
       await expect(card.getByRole("button", { name: "Scroll previous stages" })).toBeEnabled();
     }
     await current.getByRole("button").click();
-    const panel = page.locator(".picklist-stage");
+    const panel = page.locator(".picklist-popover.picklist-stage").filter({ visible: true });
+    await expect(panel).toBeVisible();
     await box(`${state}: Stage dropdown panel`, panel, 207, 244);
     await expect(panel).toHaveCSS("border-color", "rgb(206, 208, 225)");
     await expect(panel).toHaveCSS("border-bottom-left-radius", "4px");
@@ -110,7 +120,7 @@ test("status ribbon matches measured geometry at both rail widths", async ({ pag
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
     await terminal.click();
-    const popover = page.locator(".picklist-terminal");
+    const popover = page.locator(".picklist-popover.picklist-terminal").filter({ visible: true });
     await box(`${state}: Terminal popover`, popover, 215.5, 178);
     await expect(popover).toHaveCSS("border-width", "0px");
     await expect(popover).toHaveCSS("border-radius", "4px");
