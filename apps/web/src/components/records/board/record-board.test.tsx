@@ -166,3 +166,39 @@ it("optimistically redirects to selected stage and reconciles when server data a
   expect(document.querySelector('[data-board-column="a"] article')).toBeNull();
   expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
 });
+
+it("rolls back optimistic move when onMove returns cancelled", async () => {
+  let resolve!: (res: BoardMoveResult) => void;
+  const move = vi.fn(
+    () =>
+      new Promise<BoardMoveResult>((yes) => {
+        resolve = yes;
+      }),
+  );
+  render(<RecordBoard columns={columns} createLabel="Create" onCreate={vi.fn()} onMove={move} />);
+  drop("a", "b");
+  expect(document.querySelector('[data-board-column="b"] article')).toBeTruthy();
+  resolve("cancelled");
+  await waitFor(() => {
+    expect(document.querySelector('[data-board-column="a"] article')).toBeTruthy();
+    expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
+  });
+});
+
+it("rolls back optimistic move when onMove rejects with an error", async () => {
+  let reject!: (err: unknown) => void;
+  const move = vi.fn(
+    () =>
+      new Promise<BoardMoveResult>((_, no) => {
+        reject = no;
+      }),
+  );
+  render(<RecordBoard columns={columns} createLabel="Create" onCreate={vi.fn()} onMove={move} />);
+  drop("a", "b");
+  expect(document.querySelector('[data-board-column="b"] article')).toBeTruthy();
+  reject(new Error("Network failure"));
+  await waitFor(() => {
+    expect(document.querySelector('[data-board-column="a"] article')).toBeTruthy();
+    expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
+  });
+});
