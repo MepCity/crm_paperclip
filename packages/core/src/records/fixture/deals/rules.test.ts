@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { ForbiddenError, ValidationError } from "../../../errors";
-import type { RecordInput } from "../../contract";
+import type { FieldValue, RecordInput } from "../../contract";
 import { createFixtureRecordService } from "../index";
 import { dealsMetadata } from "./metadata";
 import { dealsPicklists } from "./picklists";
+import { applyDealRules } from "./rules";
 
 function setup() {
   let now = new Date("2026-01-15T23:55:00Z");
@@ -44,6 +45,21 @@ function setup() {
 }
 
 describe("Deals stage rules", () => {
+  it("restores stage probability when an unchanged previous stage has no probability", () => {
+    const previousRecords: Record<string, FieldValue>[] = [
+      { Stage: "Qualification" },
+      { Stage: "Qualification", Probability: null },
+    ];
+    for (const previous of previousRecords) {
+      const fields: Record<string, FieldValue> = {
+        Stage: "Qualification",
+        Probability: null,
+        Amount: 100,
+      };
+      applyDealRules(fields, { Probability: null }, previous);
+      expect(fields).toMatchObject({ Probability: 10, Expected_Revenue: 10 });
+    }
+  });
   it("defaults stage probability, preserves explicit probability and derives revenue on every write", async () => {
     const { service, create } = setup();
     const deal = await create({ Amount: 123.45 });

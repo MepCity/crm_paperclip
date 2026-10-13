@@ -1,10 +1,7 @@
 import { ValidationError } from "../../../errors";
 import type { FieldValue, RecordInput } from "../../contract";
+import { roundMoneyTwoDecimals } from "../../rounding";
 import { dealsPicklists } from "./picklists";
-
-export function roundMoneyTwoDecimals(value: number): number {
-  return Math.round((value + Number.EPSILON * Math.max(1, Math.abs(value))) * 100) / 100;
-}
 
 function probabilityProvided(input: RecordInput): boolean {
   return Object.hasOwn(input, "Probability") && input.Probability !== null;
@@ -19,7 +16,7 @@ export function applyDealRules(
   if (!probabilityProvided(input) && (!previous || previous.Stage !== fields.Stage))
     fields.Probability = stage?.stage?.probability ?? 0;
   if (!probabilityProvided(input) && previous && previous.Stage === fields.Stage)
-    fields.Probability = previous.Probability;
+    fields.Probability = previous.Probability ?? stage?.stage?.probability ?? 0;
   if (
     probabilityProvided(input) &&
     (typeof input.Probability !== "number" ||

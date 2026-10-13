@@ -15,7 +15,7 @@ import type {
   RecordService,
 } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
-import { roundMoneyTwoDecimals } from "./fixture/deals/rules";
+import { roundMoneyTwoDecimals } from "./rounding";
 
 type ContractFactory = (
   ctx: OrgContext,

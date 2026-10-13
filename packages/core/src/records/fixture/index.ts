@@ -15,8 +15,9 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
+import { roundMoneyTwoDecimals } from "../rounding";
 import { calendarDays, historyRow } from "./deals/history";
-import { applyDealRules, roundMoneyTwoDecimals } from "./deals/rules";
+import { applyDealRules } from "./deals/rules";
 import {
   automaticMaster,
   duplicateGroups,
