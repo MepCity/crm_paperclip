@@ -36,7 +36,27 @@ const groups: SearchGroup[] = [
     records: [
       {
         id: "contact-1",
-        fields: { Full_Name: "Search Contact", First_Name: "Search", Last_Name: "Contact" },
+        fields: {
+          Full_Name: "Search Contact",
+          First_Name: "Search",
+          Last_Name: "Contact",
+          Email: "contact@example.test",
+          Phone: "456",
+        },
+      },
+    ],
+  },
+  {
+    module: "Accounts",
+    total: 1,
+    records: [
+      {
+        id: "account-1",
+        fields: {
+          Account_Name: "Search Account",
+          Phone: "789",
+          Website: "https://account.example",
+        },
       },
     ],
   },
@@ -122,9 +142,14 @@ test("short queries make no request; debounce calls once and groups lead/contact
   expect(search).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("region", { name: "Contacts" })).toBeTruthy();
   expect(lead.getAttribute("href")).toBe("/crm/example/tab/Leads/lead-1");
-  expect(screen.getByRole("link", { name: "Search Contact" }).getAttribute("href")).toBe(
-    "/crm/example/tab/Contacts/contact-1",
+  expect(screen.getByRole("link", { name: /Search Lead/ }).textContent).toContain(
+    "lead@example.test · 123",
   );
+  const contactLink = screen.getByRole("link", { name: /Search Contact/ });
+  expect(contactLink.getAttribute("href")).toBe("/crm/example/tab/Contacts/contact-1");
+  expect(contactLink.textContent).toContain("contact@example.test · 456");
+  const accountLink = screen.getByRole("link", { name: /Search Account/ });
+  expect(accountLink.textContent).toContain("789 · https://account.example");
   await user.click(screen.getByRole("button", { name: "Email Search Lead" }));
   expect(screen.getByRole("dialog", { name: "Search records" })).toBeTruthy();
   expect(
@@ -231,6 +256,24 @@ test("keeps at most five visible results per group and ignores a late previous q
   expect(within(region).getAllByRole("link")).toHaveLength(5);
   resolveOld(groups);
   await waitFor(() => expect(screen.queryByRole("link", { name: /Search Lead/ })).toBeNull());
+});
+
+test("omits secondary line for modules without search field config", async () => {
+  search.mockResolvedValueOnce([
+    {
+      module: "Deals",
+      total: 1,
+      records: [
+        { id: "deal-1", fields: { Deal_Name: "Future Deal", Email: "hidden@example.test" } },
+      ],
+    },
+  ]);
+  const user = userEvent.setup();
+  mount();
+  await open(user);
+  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
+  const link = await screen.findByRole("link", { name: "deal-1" });
+  expect(link.textContent).toBe("deal-1");
 });
 
 test("search errors use the shared error notice", async () => {

@@ -15,6 +15,16 @@ const PARENT_ACCOUNT_ID = "500000000000000005";
 const DELETE_ACCOUNT_ID = "500000000000000001";
 const EMPTY_RELATED_ACCOUNT_ID = "500000000000000249";
 
+function waitForModuleBulkList(
+  page: import("@playwright/test").Page,
+  module: "Contacts" | "Accounts",
+) {
+  return page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return response.request().method() === "POST" && url.pathname.endsWith(`/${module}/bulk`);
+  });
+}
+
 async function openAccountDetail(
   page: import("@playwright/test").Page,
   orgSlug: string,
@@ -144,13 +154,19 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Contacts card empty state", async ({ page, pageErrors }) => {
+  test("Contacts card empty state", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
-    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const contactsListDone = waitForModuleBulkList(page, "Contacts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const contactsList = await contactsListDone;
+    expect(contactsList.ok()).toBe(true);
     const contacts = page.getByRole("region", { name: "Contacts" });
     await expect(contacts.getByText("No records found")).toBeVisible();
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Member Accounts card lists children and supports New", async ({ page, pageErrors }) => {
@@ -184,13 +200,19 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Member Accounts card empty state", async ({ page, pageErrors }) => {
+  test("Member Accounts card empty state", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
-    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const memberListDone = waitForModuleBulkList(page, "Accounts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const memberList = await memberListDone;
+    expect(memberList.ok()).toBe(true);
     const members = page.getByRole("region", { name: "Member Accounts" });
     await expect(members.getByText("No records found")).toBeVisible();
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Parent Account link opens parent record", async ({ page, pageErrors }) => {
@@ -220,7 +242,67 @@ test.describe("Accounts record detail", () => {
     expect(page.url()).toBe(before);
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("primary command, tab-row update indicator and empty activity badges", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // AD-05: Send Email draws the filled primary command; Edit keeps the secondary one.
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
+    await expect(sendEmail).toHaveCSS(
+      "background-image",
+      /rgb\(87, 103, 246\).*rgb\(19, 77, 196\)/,
+    );
+    await expect(sendEmail).toHaveCSS("color", "rgb(255, 255, 255)");
+    const edit = page.locator("[data-record-header]").getByRole("link", { name: "Edit" });
+    await expect(edit).toHaveCSS("background-image", /rgb\(253, 253, 254\).*rgb\(241, 240, 247\)/);
+
+    // AD-35: the indicator shares the Overview/Timeline row at its right end, clock first.
+    const tabRow = page.locator("[data-record-tab-row]");
+    const lastUpdate = tabRow.locator(".detail-last-update");
+    await expect(lastUpdate).toBeVisible();
+    await expect(lastUpdate.locator("svg")).toHaveCount(1);
+    const row = requireBox(await tabRow.boundingBox(), "tab row");
+    const label = requireBox(await lastUpdate.boundingBox(), "Last Update indicator");
+    expect(label.y).toBeGreaterThanOrEqual(row.y);
+    expect(label.y + label.height).toBeLessThanOrEqual(row.y + row.height);
+    expect(row.x + row.width - (label.x + label.width)).toBeLessThanOrEqual(16);
+    await expect(page.locator("[data-record-scroller] .detail-last-update")).toHaveCount(0);
+
+    // AD-30/AD-31: the card holds no tasks, meetings or calls, so the rail draws no badge.
+    const badgeRows = await page.evaluate(() => {
+      const rail = document.querySelector("#record-related-rail");
+      return Array.from(rail?.querySelectorAll("div[class*='justify-between']") ?? []).map(
+        (entry) => ({
+          label: entry.querySelector("a")?.textContent?.trim() ?? "",
+          badge: entry.querySelector("span[class*='rounded-full']")?.textContent?.trim() ?? null,
+        }),
+      );
+    });
+    for (const title of ["Open Activities", "Closed Activities"]) {
+      expect(badgeRows.filter((entry) => entry.label === title)).toEqual([]);
+    }
+    if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+      await page.screenshot({
+        path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/mep394-account-detail.png`,
+      });
+    }
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
+
+type Box = { x: number; y: number; width: number; height: number };
+
+function requireBox(box: Box | null, label: string): Box {
+  if (!box) throw new Error(`Missing ${label}`);
+  return box;
+}
 
 function headerTitle(page: import("@playwright/test").Page) {
   return page.locator("[data-record-header]").getByRole("heading", { level: 1 });

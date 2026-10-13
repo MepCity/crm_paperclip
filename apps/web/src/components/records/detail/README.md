@@ -29,7 +29,7 @@ The route `app/crm/[orgSlug]/tab/[moduleTab]/[recordId]/page.tsx` calls
 | `FieldValueView` | Read-only field value for detail rows; empty values use an em dash. |
 | `BusinessCard` | Five (or fewer) label/value rows with right-aligned labels. |
 | `DetailsCard` | `Hide Details` control, divider, and titled sections with one or two columns. |
-| `LastUpdateLabel` | `Last Update` relative-age text supplied by the parent. |
+| `LastUpdateLabel` | `Last Update` relative-age text supplied by the parent. `inTabRow` draws the Accounts/Contacts indicator (AD-35 / D-35) at the right end of the tab row with its clock glyph; Leads keeps it above the overview content. |
 | `DetailFieldRow` | Internal row layout for business and details cards. |
 
 Shared formatting with list `CellValue` lives in `../field-format.ts`.

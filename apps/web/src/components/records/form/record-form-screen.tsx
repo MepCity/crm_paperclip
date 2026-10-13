@@ -374,7 +374,7 @@ function LoadedRecordForm({
           </div>
         );
       }
-      const ProfileIcon = config.profileImageIcon ?? Icons.recordPortraitSilhouette;
+      const ModuleIcon = config.profileImageIcon;
       return (
         <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
           <Button
@@ -385,7 +385,16 @@ function LoadedRecordForm({
             className="record-form-profile-image"
             aria-label={field.label}
           >
-            <ProfileIcon aria-hidden className="record-profile-silhouette h-full w-full" />
+            {ModuleIcon ? (
+              <ModuleIcon aria-hidden className="record-form-profile-image__glyph" />
+            ) : (
+              <span className="record-profile">
+                <Icons.recordPortraitSilhouette
+                  aria-hidden
+                  className="record-profile-silhouette h-full w-full"
+                />
+              </span>
+            )}
           </Button>
         </div>
       );
