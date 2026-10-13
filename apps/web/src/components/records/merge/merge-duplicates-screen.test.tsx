@@ -160,11 +160,15 @@ describe("MergeDuplicatesScreen", () => {
     if (!accountId) throw new Error("Missing fixture account.");
 
     const listSpy = vi.spyOn(service, "list");
+    const definitionWithoutMerge: ModuleScreenDefinition = {
+      ...accountsScreenDefinition,
+      merge: undefined,
+    };
     render(
       <MergeDuplicatesScreen
         orgSlug={ctx.orgSlug}
         recordId={accountId}
-        definition={accountsScreenDefinition}
+        definition={definitionWithoutMerge}
         paths={paths}
       />,
       { wrapper: wrapper(service) },
