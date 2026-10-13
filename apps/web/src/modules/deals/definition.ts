@@ -49,6 +49,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
   detail: {
     Screen: DealRecordScreen,
     header: dealsRecordHeaderIdentity,
+    headerCurrency: true,
     hasPortrait: false,
     recordNavigation: false,
     addTags: { label: "Add Tags", laterModule: "M6" },
