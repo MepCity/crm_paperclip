@@ -47,6 +47,9 @@ export function RelatedCardsContainer({
                 }
               : undefined
           }
+          dealStageHistory={
+            def.id === "stage-history" && managerRecord ? { dealId: managerRecord.id } : undefined
+          }
         />
       ))}
       <RecordPageFooter />

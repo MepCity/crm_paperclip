@@ -44,7 +44,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
-import { resolveModuleScreenByApiName } from "@/modules/registry";
+import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type { ModuleScreenDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
@@ -188,24 +188,27 @@ export function RecordDetailScreen({
   }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
+    const selfModuleKey = resolveModuleLaterKey(moduleApiName);
+    const railLaterModule = (key?: (typeof relatedLists)[number]["moduleKey"]) =>
+      key === selfModuleKey ? undefined : resolveLaterModule(key);
     return relatedLists.map((item) => ({
       id: item.id,
       label: item.title,
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: resolveLaterModule(item.moduleKey),
+      laterModule: railLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: resolveLaterModule(item.railAction.moduleKey),
+            laterModule: railLaterModule(item.railAction.moduleKey),
             onAction: item.railAction.onAction,
           }
         : undefined,
     }));
-  }, [relatedLists]);
+  }, [moduleApiName, relatedLists]);
 
   const loading =
     moduleQuery.isLoading ||

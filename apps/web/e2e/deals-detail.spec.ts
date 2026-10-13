@@ -9,6 +9,7 @@ import { expect, ignoreFailedResponses, test } from "./support/test";
 
 const DEALS_TAB = "Deals";
 const PRIMARY_DEAL_ID = "700000000000000000";
+const MULTI_HISTORY_DEAL_ID = "700000000000000010";
 const DELETE_DEAL_ID = "700000000000000001";
 
 async function openDealDetail(
@@ -156,6 +157,54 @@ test.describe("Deals record detail", () => {
     await expect(summary).toBeVisible({ timeout: 15_000 });
     await summary.getByRole("link", { name: /Sample 001 Contact 001/ }).click();
     await expect(page).toHaveURL(moduleRecordPath(org.slug, "Contacts", "300000000000000000"));
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("stage history card lists rows and grows after stage change", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const stageHistory = page.getByRole("region", { name: "Stage History" });
+    await stageHistory.scrollIntoViewIfNeeded();
+    await expect(stageHistory.locator("tbody tr")).toHaveCount(1, { timeout: 30_000 });
+    await page.locator("[data-stage-bar]").getByRole("button", { name: "Needs Analysis" }).click();
+    await expect(stageHistory.locator("tbody tr")).toHaveCount(2);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("multi-row stage history seed deal", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, MULTI_HISTORY_DEAL_ID);
+    const stageHistory = page.getByRole("region", { name: "Stage History" });
+    await stageHistory.scrollIntoViewIfNeeded();
+    await expect(stageHistory.locator("tbody tr")).toHaveCount(2);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("rail scrolls to stage history card", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const rail = page.locator("[data-record-rail]");
+    await rail.getByRole("link", { name: "Stage History" }).click();
+    const stageHistory = page.getByRole("region", { name: "Stage History" });
+    await expect(stageHistory).toBeInViewport();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("laterModule related card control does not navigate", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const url = page.url();
+    const products = page.getByRole("region", { name: "Products" });
+    await products.scrollIntoViewIfNeeded();
+    await products.getByRole("button", { name: "Add Products" }).click({ force: true });
+    await expect(page).toHaveURL(url);
     ignoreFailedResponses(pageErrors, [400]);
   });
 
