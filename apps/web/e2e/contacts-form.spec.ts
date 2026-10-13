@@ -148,7 +148,8 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   await page
     .getByRole("button", { name: "Open Vendor Name lookup", exact: true })
     .click({ force: true });
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));

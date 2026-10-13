@@ -151,6 +151,17 @@ test("lookup field links to registered target module detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
+test("lookup field links to registered Accounts detail page", () => {
+  show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
+    module: "Accounts",
+    id: "acc-123",
+    name: "Acme Corp",
+  });
+  const link = screen.getByRole("link", { name: "Acme Corp" });
+  expect(link.getAttribute("href")).toBe("/tab/Accounts/acc-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
 test("lookup field attaches laterModule to unregistered target link", () => {
   show(field("Deal_Name", "lookup", { lookup: { module: "Deals" } }), {
     module: "Deals",

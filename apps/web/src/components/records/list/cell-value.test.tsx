@@ -203,12 +203,23 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Deals" } })}
-      value={{ module: "Deals", id: "deal-1", name: "Acme Corp" }}
+      field={field("lookup", { lookup: { module: "Accounts" } })}
+      value={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Acme Corp" });
+  const accountsLink = screen.getByRole("link", { name: "Acme Corp" });
+  expect(accountsLink.getAttribute("href")).toBe("/tab/Accounts/acc-1");
+  expect(accountsLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Deals" } })}
+      value={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Big Deal" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
   expect(laterLink.getAttribute("data-later-module")).toBe("M4");
@@ -216,7 +227,7 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Deals" } })}
+      field={field("lookup", { lookup: { module: "Accounts" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
@@ -224,7 +235,7 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
   expect(screen.queryByRole("link")).toBeNull();
 });
 
-test("Contacts Account Name links to the Account record now that Accounts ships", () => {
+test("Contacts Account Name links to registered Accounts detail page", () => {
   render(
     <CellValue
       field={field("lookup", {
@@ -236,8 +247,8 @@ test("Contacts Account Name links to the Account record now that Accounts ships"
       format={DEFAULT_FORMAT}
     />,
   );
-  const account = screen.getByRole("link", { name: "Synthetic Account" });
-  expect(account.getAttribute("href")).toBe("/tab/Accounts/synthetic-account");
-  expect(account.getAttribute("data-later-module")).toBeNull();
+  const link = screen.getByRole("link", { name: "Synthetic Account" });
+  expect(link.getAttribute("href")).toBe("/tab/Accounts/synthetic-account");
+  expect(link.getAttribute("data-later-module")).toBeNull();
   expect(screen.queryByText("synthetic-account")).toBeNull();
 });

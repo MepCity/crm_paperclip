@@ -435,13 +435,13 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Deals", id: "deal-1", name: "Acme Corp" }}
+      initial={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
       onChange={change}
     />,
   );
 
   const input = screen.getByRole("textbox", { name: "Deal Name" }) as HTMLInputElement;
-  expect(input.value).toBe("Acme Corp");
+  expect(input.value).toBe("Big Deal");
   expect(input.readOnly).toBe(true);
   expect(input.getAttribute("data-later-module")).toBe("M4");
   expect(input.getAttribute("aria-disabled")).toBe("true");

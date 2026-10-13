@@ -256,6 +256,23 @@ Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
 
 Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
 
+## Module 3 — Accounts
+
+Specs: `accounts.md`, `accounts-record-detail.md`, `accounts-form.md`.
+
+### Accounts record detail — implemented; QA pending (MEP-342)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link, prev/next from list context | `e2e/accounts-detail.spec.ts` |
+| AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete | Accounts detail e2e; module tests |
+| AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e |
+| AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; service counts for Contacts badge | Related-list tests; accounts detail e2e |
+| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card and New prefill; hierarchy/assign/edit/expand inert | Accounts detail e2e |
+
+Account hierarchy opening (AD-115) and separate hierarchy view remain unimplemented (CTO follow-up). Notes rail badge omitted when count is zero. Billing/Shipping and lower detail field order follow Contacts address interim rules.
+
 ### Assigned to Module 2 at the Module 1 gate
 
 | Capability | Spec section |

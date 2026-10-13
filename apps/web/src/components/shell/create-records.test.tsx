@@ -35,9 +35,10 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByRole("dialog", { name: "Create Records" });
 }
 
-test("The registry holds a create entry for every shipped module", () => {
+test("The registry holds Lead, Contact and Account entries pointing at their create pages", () => {
   expect(createRecordsNav.map((entry) => entry.label)).toEqual(["Lead", "Contact", "Account"]);
   expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
+  expect(createRecordsNav[2]?.path("example")).toBe("/crm/example/tab/Accounts/create");
 });
 
 test("The toolbar control is named Create Records and opens an empty search box", async () => {

@@ -1,16 +1,4 @@
 import { Icons } from "@/components/ui/icon";
-import {
-  buildContactsRecordMoreMenuGroups,
-  CONTACTS_DELETE_CONFIRM_MESSAGE,
-  CONTACTS_DELETE_CONFIRM_TITLE,
-} from "../contacts/contacts-record-more-options";
-import {
-  CONTACTS_TIMELINE_EMPTY_EVENTS,
-  CONTACTS_TIMELINE_MODULE_OPTIONS,
-  CONTACTS_TIMELINE_SOURCE_OPTIONS,
-  CONTACTS_TIMELINE_SUBTABS,
-  normalizeContactsEventKind,
-} from "../contacts/contacts-timeline";
 import type { ModuleScreenDefinition } from "../types";
 import {
   buildAccountsBusinessCardFields,
@@ -20,6 +8,19 @@ import { ACCOUNTS_FORM_INFORMATION_COLUMNS, accountsFormRules } from "./accounts
 import { isAccountInlineEditable } from "./accounts-inline-edit";
 import { formatAccountsLastUpdateLabel } from "./accounts-last-update";
 import { AccountBuildingPlaceholder, accountsRecordHeaderIdentity } from "./accounts-record-header";
+import {
+  ACCOUNTS_DELETE_CONFIRM_MESSAGE,
+  ACCOUNTS_DELETE_CONFIRM_TITLE,
+  buildAccountsRecordMoreMenuGroups,
+} from "./accounts-record-more-options";
+import { accountsRelatedListRail } from "./accounts-related-lists";
+import {
+  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
+  ACCOUNTS_TIMELINE_MODULE_OPTIONS,
+  ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
+  ACCOUNTS_TIMELINE_SUBTABS,
+  normalizeAccountsEventKind,
+} from "./accounts-timeline";
 import { ACCOUNTS_LIST_CURRENCY_CODE, accountsListPageConfig } from "./list-config";
 import { buildAccountsFilterGroups } from "./list-filters";
 
@@ -50,18 +51,18 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     sections: buildAccountsDetailSections,
     inlineEditable: isAccountInlineEditable,
     lastUpdate: formatAccountsLastUpdateLabel,
-    // Interim: More Options menu, delete messages and timeline are borrowed from Contacts
-    // until Accounts-specific record detail tasks (MEP-332 etc.) implement them.
-    moreOptions: buildContactsRecordMoreMenuGroups,
-    deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
-    deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
+    moreOptions: buildAccountsRecordMoreMenuGroups,
+    deleteTitle: ACCOUNTS_DELETE_CONFIRM_TITLE,
+    deleteMessage: ACCOUNTS_DELETE_CONFIRM_MESSAGE,
     loadingAttributes: { "data-account-record-loading": true },
+    linkedContactSummary: true,
+    relatedListRail: accountsRelatedListRail,
     timeline: {
-      subtabs: CONTACTS_TIMELINE_SUBTABS,
-      modules: CONTACTS_TIMELINE_MODULE_OPTIONS,
-      sources: CONTACTS_TIMELINE_SOURCE_OPTIONS,
-      events: CONTACTS_TIMELINE_EMPTY_EVENTS,
-      normalizeEventKind: normalizeContactsEventKind,
+      subtabs: ACCOUNTS_TIMELINE_SUBTABS,
+      modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
+      sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
+      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
+      normalizeEventKind: normalizeAccountsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",
         laterModule: "M12",
