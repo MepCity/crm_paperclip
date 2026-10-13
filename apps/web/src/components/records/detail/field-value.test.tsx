@@ -162,6 +162,19 @@ test("lookup field links to registered Accounts detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
+test("lookup field attaches laterModule to unregistered target link", () => {
+  show(field("Deal_Name", "lookup", { lookup: { module: "Deals" } }), {
+    module: "Deals",
+    id: "deal-123",
+    name: "Acme Corp",
+  });
+  const link = screen.getByRole("link", { name: "Acme Corp" });
+  expect(link.tagName).toBe("SPAN");
+  expect(link.hasAttribute("href")).toBe(false);
+  expect(link.getAttribute("aria-disabled")).toBe("true");
+  expect(link.getAttribute("data-later-module")).toBe("M4");
+});
+
 test("empty lookup field renders an em dash", () => {
   show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), null);
   expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();

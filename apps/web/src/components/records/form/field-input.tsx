@@ -21,7 +21,11 @@ import {
   DATE_MASK_PLACEHOLDER,
   displayDateToCalendarShape,
 } from "@/lib/records/calendar-date";
-import { isModuleRegistered, resolveModuleLaterKey } from "@/modules/registry";
+import {
+  isModuleRegistered,
+  resolveModuleLaterKey,
+  resolveModuleScreenByApiName,
+} from "@/modules/registry";
 import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
@@ -50,6 +54,10 @@ export interface FieldInputProps {
   hideLabel?: boolean;
   inline?: boolean;
   recordService?: RecordService | ClientRecordService;
+  /** Record address for the name-cell links of an observed record picker. */
+  lookupRecordHref?: (id: string) => string;
+  /** Owner id to display name, forwarded to the record picker's owner columns. */
+  lookupOwnerNames?: Readonly<Record<string, string>>;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -125,6 +133,8 @@ export function FieldInput({
   hideLabel,
   inline,
   recordService,
+  lookupRecordHref,
+  lookupOwnerNames,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -144,6 +154,7 @@ export function FieldInput({
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
     isLookup && !isTargetRegistered ? resolveModuleLaterKey(targetModule) : undefined;
+  const lookupChrome = resolveModuleScreenByApiName(targetModule)?.form.recordPickerChrome;
   const lookupButtonRef = useLaterModule<HTMLButtonElement>(targetLaterModule);
   const [lookupOpen, setLookupOpen] = useState(false);
   const reference =
@@ -194,7 +205,10 @@ export function FieldInput({
       return (
         <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
+    // A `bigint` field is drawn as the same single-line numeric entry as `integer`: the reference
+    // Accounts form shows Account Number without any long-number widget.
     case "integer":
+    case "bigint":
     case "double":
     case "currency":
       return (
@@ -342,6 +356,9 @@ export function FieldInput({
               module={targetModule}
               selectedId={reference?.id}
               recordService={recordService}
+              chrome={lookupChrome ?? "interim"}
+              recordHref={lookupRecordHref}
+              ownerNames={lookupOwnerNames}
               onDone={(selected) => {
                 onChange(selected);
                 setLookupOpen(false);
@@ -354,7 +371,6 @@ export function FieldInput({
     }
     case "multi_module_lookup":
     case "datetime":
-    case "bigint":
       return null;
   }
 }

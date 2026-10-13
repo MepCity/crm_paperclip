@@ -36,6 +36,8 @@ export const accountsFormRules: FormRules = {
     Billing_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
     Shipping_Flat_House_No_Building_Apartment_Name: buildingLabelLines,
   },
+  // AF-13.1: the Account Type panel paints a search field above its options.
+  searchablePicklists: ["Account_Type"],
   addresses: ACCOUNTS_FORM_ADDRESS_GROUPS,
 };
 

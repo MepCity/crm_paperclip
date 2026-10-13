@@ -27,4 +27,6 @@ test("exports a complete Accounts module screen definition", () => {
   expect(accountsScreenDefinition.detail.relatedListRail?.linksGroup.title).toBe("Links");
   expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.apiName === "Accounts")).toBe(true);
+  // Lookups that target Accounts draw the picker captured in m3f-create-parent.
+  expect(accountsScreenDefinition.form.recordPickerChrome).toBe("observed");
 });

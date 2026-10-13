@@ -83,6 +83,7 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await open(user);
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
+
   const deals = within(menu).getByRole("button", { name: "Deals" });
   expect(deals.getAttribute("data-later-module")).toBe("M4");
   await user.click(deals);

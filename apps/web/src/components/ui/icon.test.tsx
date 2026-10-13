@@ -74,6 +74,7 @@ const expectedIcons = [
   "timelinePencil",
   "recordLookup",
   "tablePlus",
+  "tableChevronDown",
   "diagonalExpand",
   "recordTag",
 ] as const;

@@ -70,6 +70,20 @@ test("whole numbers and empty optional integers pass", () => {
   }
 });
 
+test("bigint validates as a whole number and reports a decimal", () => {
+  const optional = [field("Account_Number", "Account Number", "bigint", false)];
+  for (const value of [1234567890, 0, null]) {
+    expect(validateRecordForm(optional, { Account_Number: value }, (f) => f.label)).toEqual({});
+  }
+  expect(validateRecordForm(optional, { Account_Number: 12.5 }, (f) => f.label)).toEqual({
+    Account_Number: "Please enter a valid Account Number.",
+  });
+  const required = [field("Account_Number", "Account Number", "bigint", true)];
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Account_Number: "Account Number cannot be empty.",
+  });
+});
+
 test("isEmailFormatValid accepts common addresses", () => {
   expect(isEmailFormatValid("user@example.test")).toBe(true);
   expect(isEmailFormatValid("bad")).toBe(false);

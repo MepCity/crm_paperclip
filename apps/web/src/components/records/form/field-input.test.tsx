@@ -273,11 +273,26 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["multi_module_lookup", "datetime"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
   }
+});
+
+test("bigint renders the same single-line numeric entry as integer", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="bigint" initial={1234567890} onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("1234567890");
+  await user.clear(input);
+  await user.type(input, "42");
+  await user.tab();
+  expect(change).toHaveBeenLastCalledWith(42);
+  await user.clear(input);
+  await user.tab();
+  expect(change).toHaveBeenLastCalledWith(null);
 });
 
 test("lookup input with registered target displays value and opens selector dialog", async () => {
