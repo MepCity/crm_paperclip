@@ -9,6 +9,10 @@ test("defines Deals identity labels and routes using the Deal_Name link column",
   expect(dealsListPageConfig.pinnedViews).toEqual(["All Deals"]);
   expect(dealsListPageConfig.badgeColumn).toBe(false);
   expect(dealsListPageConfig.paths.create("sample-org", "Deals")).toContain("/tab/Deals/create");
+  expect(dealsListPageConfig.defaultPresentation).toBe("board");
+  expect(dealsListPageConfig.board).toBeDefined();
+  expect(dealsListPageConfig.boardComponent).toBeDefined();
+  expect(dealsListPageConfig.boardToolbar).toBeDefined();
   expect(DEALS_SORT_FIELD_LABELS).toContain("Deal Name");
   expect(DEALS_SORT_FIELD_LABELS).toContain("Amount");
   expect(DEALS_SORT_FIELD_LABELS).toContain("Stage");

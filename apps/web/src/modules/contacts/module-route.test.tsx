@@ -59,6 +59,20 @@ vi.mock("@/components/records/detail/record-detail-screen", () => ({
     </p>
   ),
 }));
+vi.mock("./contact-record-screen", () => ({
+  ContactRecordScreen: ({
+    definition,
+    recordId,
+  }: {
+    definition: ModuleScreenDefinition;
+    recordId: string;
+  }) => (
+    <p>
+      {definition.apiName}:detail:{recordId}:
+      {definition.detail.statusRibbon ? "ribbon" : "no ribbon"}
+    </p>
+  ),
+}));
 vi.mock("../module-form-client", () => ({
   ModuleFormClient: ({
     definition,

@@ -10,6 +10,7 @@ import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountContactsCardBody } from "./account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
+import { RelatedDealsCardBody } from "./related-deals-card-body";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
 
 export interface RelatedListCardProps {
@@ -29,6 +30,11 @@ export interface RelatedListCardProps {
     orgSlug: string;
     accountRecordPath: (recordId: RecordId) => string;
   };
+  managerDeals?: {
+    managerRecord: RecordData;
+    filterField: string;
+    dealRecordPath: (recordId: RecordId) => string;
+  };
 }
 
 export function RelatedListCard({
@@ -36,6 +42,7 @@ export function RelatedListCard({
   reportingContacts,
   accountContacts,
   memberAccounts,
+  managerDeals,
 }: RelatedListCardProps) {
   const {
     id,
@@ -388,6 +395,12 @@ export function RelatedListCard({
           parentRecord={memberAccounts.parentRecord}
           orgSlug={memberAccounts.orgSlug}
           accountRecordPath={memberAccounts.accountRecordPath}
+        />
+      ) : id === "deals" && managerDeals ? (
+        <RelatedDealsCardBody
+          managerRecord={managerDeals.managerRecord}
+          filterField={managerDeals.filterField}
+          dealRecordPath={managerDeals.dealRecordPath}
         />
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">

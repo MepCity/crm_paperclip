@@ -274,7 +274,8 @@ export function AdvancedSearchCard({
                     );
                   }
 
-                  // S-42: Stage value badge with laterModule="M4"
+                  // S-42: Stage value badge; Deals is live, so the chip draws unlocked and only
+                  // displays the stage (the reference never showed an activation for it).
                   if (col === "Stage") {
                     const stageText = val ? String(val) : "";
                     return (
@@ -283,7 +284,6 @@ export function AdvancedSearchCard({
                           <Button
                             variant="secondary"
                             size="compact"
-                            laterModule="M4"
                             className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                           >
                             {stageText}

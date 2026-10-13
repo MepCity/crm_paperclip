@@ -11,7 +11,7 @@ import type {
   SortSpec,
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
@@ -68,6 +68,17 @@ export interface ModuleListPaths {
   create: (orgSlug: string, module: ModuleApiName) => string;
 }
 
+export interface ModuleListBoardProps {
+  metadata: ModuleMetadata;
+  orgSlug: string;
+  ownerNames: Readonly<Record<string, string>>;
+  viewId: string;
+  filters?: Criteria;
+  search?: string;
+  sort?: SortSpec;
+  perPage: number;
+}
+
 export interface ModuleListScreenConfig {
   module: ModuleApiName;
   defaultPresentation?: "table" | "board";
@@ -77,6 +88,8 @@ export interface ModuleListScreenConfig {
     orgSlug: string;
     ownerNames: Readonly<Record<string, string>>;
   }) => RecordBoardProps;
+  boardComponent?: React.ComponentType<ModuleListBoardProps>;
+  boardToolbar?: ReactNode;
   linkField: string;
   pluralLabel: string;
   singularLabel: string;
@@ -158,7 +171,8 @@ function ModuleListScreenLoaded({
     [searchParams, storedPerPage],
   );
   const requestedPresentation = searchParams.get("presentation");
-  const presentation = config.board
+  const hasBoard = Boolean(config.board || config.boardComponent);
+  const presentation = hasBoard
     ? requestedPresentation === "table" || requestedPresentation === "board"
       ? requestedPresentation
       : (config.defaultPresentation ?? "table")
@@ -166,6 +180,7 @@ function ModuleListScreenLoaded({
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<AppliedFilter[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
@@ -200,6 +215,7 @@ function ModuleListScreenLoaded({
   useEffect(() => {
     if (priorViewId.current === viewId) return;
     priorViewId.current = viewId;
+    setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setLetter(null);
     setFilterSelection([]);
@@ -333,9 +349,9 @@ function ModuleListScreenLoaded({
   const listHrefForContext = useMemo(() => {
     if (!listBasePath) return null;
     const params = searchParamsFromListState(searchState);
-    if (config.board && requestedPresentation) params.set("presentation", presentation);
+    if (hasBoard && requestedPresentation) params.set("presentation", presentation);
     return withSearchParams(listBasePath, params);
-  }, [listBasePath, searchState, config.board, requestedPresentation, presentation]);
+  }, [listBasePath, searchState, hasBoard, requestedPresentation, presentation]);
 
   useEffect(() => {
     const pageData = list.data;
@@ -361,7 +377,7 @@ function ModuleListScreenLoaded({
   function navigate(next: ListSearchState) {
     if (!listBasePath) return;
     const params = searchParamsFromListState(next);
-    if (config.board && requestedPresentation) params.set("presentation", presentation);
+    if (hasBoard && requestedPresentation) params.set("presentation", presentation);
     const href = withSearchParams(listBasePath, params);
     router.push(href);
   }
@@ -410,6 +426,7 @@ function ModuleListScreenLoaded({
       daysUnit: row.daysUnit,
     }));
     setFilterApplyError(null);
+    setAppliedFilters(applied);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -418,6 +435,7 @@ function ModuleListScreenLoaded({
   }
 
   function clearPanelFilters() {
+    setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setFilterApplyError(null);
     setSelectedIds([]);
@@ -557,7 +575,7 @@ function ModuleListScreenLoaded({
 
   const previousParams = searchParamsFromListState(previousState);
   const nextParams = searchParamsFromListState(nextState);
-  if (config.board && requestedPresentation) {
+  if (hasBoard && requestedPresentation) {
     previousParams.set("presentation", presentation);
     nextParams.set("presentation", presentation);
   }
@@ -597,7 +615,7 @@ function ModuleListScreenLoaded({
         pinnedViews={config.pinnedViews}
         onViewChange={(id) => {
           const params = new URLSearchParams();
-          if (config.board && requestedPresentation) params.set("presentation", presentation);
+          if (hasBoard && requestedPresentation) params.set("presentation", presentation);
           router.push(
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
@@ -613,9 +631,9 @@ function ModuleListScreenLoaded({
         />
       ) : (
         <ListToolbar
-          presentation={config.board ? presentation : undefined}
+          presentation={hasBoard ? presentation : undefined}
           onPresentationChange={
-            config.board
+            hasBoard
               ? (next) => {
                   const params = searchParamsFromListState(searchState);
                   params.set("presentation", next);
@@ -625,7 +643,10 @@ function ModuleListScreenLoaded({
               : undefined
           }
           filterOpen={filterOpen}
-          onFilterChange={setFilterOpen}
+          onFilterChange={(open) => {
+            setFilterSelection(appliedFilters.map((filter) => filter.itemId));
+            setFilterOpen(open);
+          }}
           onRefresh={refreshView}
           fields={sortFields}
           sort={appliedSort}
@@ -648,8 +669,10 @@ function ModuleListScreenLoaded({
           }}
         />
       )}
-      {boardProps?.toolbar ? (
-        <div className="module-list-board-toolbar">{boardProps.toolbar}</div>
+      {presentation === "board" && (config.boardToolbar || boardProps?.toolbar) ? (
+        <div className="module-list-board-toolbar">
+          {config.boardToolbar ?? boardProps?.toolbar}
+        </div>
       ) : null}
       {massUpdateOpen && massUpdateFields.length > 0 ? (
         <MassUpdateDialog
@@ -706,6 +729,7 @@ function ModuleListScreenLoaded({
             searchLabel="Search filter choices"
             searchPlaceholder="Search"
             groups={config.filterGroups}
+            initialFilters={appliedFilters}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
@@ -714,7 +738,18 @@ function ModuleListScreenLoaded({
           />
         ) : null}
         <div className="module-list-table-host">
-          {boardProps ? (
+          {presentation === "board" && config.boardComponent && moduleQuery.data ? (
+            <config.boardComponent
+              metadata={moduleQuery.data}
+              orgSlug={orgSlug}
+              ownerNames={ownerNames}
+              viewId={viewId}
+              filters={listCriteria}
+              search={searchParams.get("search") ?? undefined}
+              sort={appliedSort ?? undefined}
+              perPage={searchState.perPage}
+            />
+          ) : boardProps ? (
             <RecordBoard {...boardProps} toolbar={undefined} />
           ) : (
             <RecordTable

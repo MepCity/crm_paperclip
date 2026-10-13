@@ -3,6 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RelatedCardsContainer } from "@/components/records/detail/related-cards-container";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { render } from "@/test/render";
 import { contactsRelatedLists, createContactsRelatedLists } from "./contacts-related-lists";
 
@@ -72,6 +73,20 @@ describe("contactsRelatedLists definition", () => {
     expect(lists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
     expect(lists.find((c) => c.id === "open-activities")?.activityColumns).toHaveLength(2);
   });
+
+  it("keeps the Deals card live and filtered on Contact Name (D-14, MEP-415)", () => {
+    const deals = createContactsRelatedLists().find((c) => c.id === "deals");
+    expect(deals?.moduleKey).toBe("M4");
+    expect(resolveLaterModule(deals?.moduleKey)).toBeUndefined();
+    expect(deals?.recordFilterField).toBe("Contact_Name");
+    expect(deals?.countBadge).toBeUndefined();
+
+    const withDeals = createContactsRelatedLists({}, { deals: 2 });
+    expect(withDeals.find((c) => c.id === "deals")?.countBadge).toBe(2);
+    expect(
+      createContactsRelatedLists({}, { deals: 0 }).find((c) => c.id === "deals")?.countBadge,
+    ).toBeUndefined();
+  });
 });
 
 describe("RelatedCardsContainer with Contacts card set", () => {
@@ -82,6 +97,18 @@ describe("RelatedCardsContainer with Contacts card set", () => {
       const section = screen.getByRole("region", { name: card.title });
       expect(section).toBeTruthy();
     }
+  });
+
+  it("opens the Deals create form from the Deals card New Deal (D-56)", async () => {
+    const user = userEvent.setup();
+    const onDealsNew = vi.fn();
+    render(<RelatedCardsContainer relatedLists={createContactsRelatedLists({ onDealsNew })} />);
+
+    const dealsSection = screen.getByRole("region", { name: "Deals" });
+    const newDealBtn = within(dealsSection).getByRole("button", { name: "New Deal" });
+    await user.click(newDealBtn);
+    expect(onDealsNew).toHaveBeenCalledTimes(1);
+    expect(within(dealsSection).getByText("No records found")).toBeTruthy();
   });
 
   it("renders upper controls and verifies laterModule attributes", async () => {
@@ -109,9 +136,10 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const enrollBtn = screen.getByRole("button", { name: "Enroll" });
     expect(enrollBtn.getAttribute("data-later-module")).toBe("P3");
 
-    // D-56 New Deal (M4)
+    // D-56 New Deal (M4): live since MEP-415, so it draws without the later-module lock
     const newDealBtn = screen.getByRole("button", { name: "New Deal" });
-    expect(newDealBtn.getAttribute("data-later-module")).toBe("M4");
+    expect(newDealBtn.getAttribute("data-later-module")).toBeNull();
+    expect(newDealBtn.getAttribute("aria-disabled")).toBeNull();
 
     // D-57 to D-60 Open Activities controls (M5, M11)
     const openActivitiesSection = screen.getByRole("region", { name: "Open Activities" });
@@ -253,13 +281,13 @@ describe("RecordPageFrame with Contacts rail", () => {
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: resolveLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: resolveLaterModule(item.railAction.moduleKey),
             onAction: item.id === "reporting-contacts" ? onAddReporting : undefined,
           }
         : undefined,
@@ -301,11 +329,12 @@ describe("RecordPageFrame with Contacts rail", () => {
       const link = within(rail).getByRole("link", { name: item.title });
       expect(link).toBeTruthy();
 
-      if (item.moduleKey === "M2") {
+      const laterModule = resolveLaterModule(item.moduleKey);
+      if (laterModule === undefined) {
         expect(link.hasAttribute("data-later-module")).toBe(false);
         expect(link.getAttribute("href")).toBe(`#${item.targetId}`);
       } else {
-        expect(link.getAttribute("data-later-module")).toBe(item.moduleKey);
+        expect(link.getAttribute("data-later-module")).toBe(laterModule);
       }
     }
 
@@ -337,11 +366,12 @@ describe("RecordPageFrame with Contacts rail", () => {
     // Notes is now no longer selected, so its plus button is gone
     expect(notesRow?.querySelector("button")).toBeNull();
 
-    // Verify laterModule rail link does NOT trigger onRelatedSelectionChange
+    // D-14 (MEP-415): the Deals rail link is live, so selecting it triggers the callback
     onSelect.mockClear();
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
+    expect(dealsLink.hasAttribute("data-later-module")).toBe(false);
     await user.click(dealsLink);
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith("deals");
   });
 
   it("tracks the visible card when scrolling and displays the corresponding plus action", () => {
@@ -354,13 +384,13 @@ describe("RecordPageFrame with Contacts rail", () => {
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: resolveLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: resolveLaterModule(item.railAction.moduleKey),
             onAction: item.id === "reporting-contacts" ? onAddReporting : undefined,
           }
         : undefined,

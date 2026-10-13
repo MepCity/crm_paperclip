@@ -99,6 +99,11 @@ export interface RelatedListDefinition {
   subtabRowEndControl?: RelatedListControlDefinition;
   tableColumns?: readonly RelatedListTableColumnDefinition[];
   tablePreviewRows?: readonly RelatedListTableRowDefinition[];
+  /**
+   * Lookup field on the related module that points back to the record owning this card.
+   * Set on a data-loaded card (Deals) so the shared card body can filter the record service.
+   */
+  recordFilterField?: string;
   notesShowMore?: boolean;
   socialLinks?: readonly { id: string; label: string; moduleKey?: ModuleKey | "M2" }[];
   socialGuidance?: string;

@@ -12,6 +12,7 @@ import type {
   RecordId,
   RecordInput,
   SearchQuery,
+  SummaryQuery,
 } from "@crm/core/records";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { OrgMember } from "./http-record-service";
@@ -21,6 +22,7 @@ import {
   countQueriesPrefix,
   duplicateGroupsPrefix,
   listQueriesPrefix,
+  summarizeQueriesPrefix,
 } from "./query-keys";
 
 export function useHomeCurrency(options?: { enabled?: boolean }) {
@@ -92,6 +94,20 @@ export function useRecordCount(
   });
 }
 
+export function useRecordSummary(
+  module: ModuleApiName,
+  query: SummaryQuery,
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.summarize(orgSlug, module, query),
+    queryFn: () => service.summarize(module, query),
+    enabled: options?.enabled ?? (Boolean(query.viewId) && Boolean(query.groupBy)),
+  });
+}
+
 export function useRecord(module: ModuleApiName, id: RecordId) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
@@ -111,7 +127,7 @@ export function useUsers() {
   });
 }
 
-function invalidateModuleLists(
+export function invalidateModuleLists(
   queryClient: ReturnType<typeof useQueryClient>,
   orgSlug: string,
   module: ModuleApiName,
@@ -119,6 +135,7 @@ function invalidateModuleLists(
 ) {
   void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
+  void queryClient.invalidateQueries({ queryKey: summarizeQueriesPrefix(orgSlug, module) });
   if (recordId)
     void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, recordId) });
 }

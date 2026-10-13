@@ -18,6 +18,29 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
   await expect(list.locator("[data-view-pill]")).toHaveText("All Deals");
   await expect(list.locator("[data-view-pill]")).toHaveCount(1);
 
+  // View type switcher DL-05–DL-11: Deals defaults to Board presentation (DP-06)
+  const switcher = list.locator("[data-view-type-switcher]");
+  await expect(switcher).toBeVisible();
+  await expect(switcher.getByRole("button", { name: "Board presentation" })).toHaveAttribute(
+    "data-active",
+    "true",
+  );
+  await expect(switcher.getByRole("button", { name: "Grid presentation" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await expect(switcher.getByRole("button", { name: "More presentations" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+
+  // Switch to List presentation (table)
+  await switcher.getByRole("button", { name: "List presentation" }).click();
+  await expect(switcher.getByRole("button", { name: "List presentation" })).toHaveAttribute(
+    "data-active",
+    "true",
+  );
+
   // Column headers in reference order
   await expect(list.getByRole("columnheader", { name: "Deal Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Amount", exact: true })).toBeVisible();
@@ -31,36 +54,20 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
     /\/tab\/Deals\/create$/,
   );
 
-  // View type switcher DL-05–DL-11
-  const switcher = list.locator("[data-view-type-switcher]");
-  await expect(switcher).toBeVisible();
-  await expect(switcher.getByRole("button", { name: "List presentation" })).toHaveAttribute(
-    "data-active",
-    "true",
-  );
-  await expect(switcher.getByRole("button", { name: "Split presentation" })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  );
-  await expect(switcher.getByRole("button", { name: "More presentations" })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  );
-
   // Ellipsis menu DL-02 (11 stock views + 4 menu controls = 15 items)
   await list.getByRole("button", { name: "Custom views" }).click();
   await expect(page.getByRole("menuitem")).toHaveCount(15);
 
   // Switch to "My Deals" (DL-02.5: Owner column is omitted)
   await page.getByRole("menuitem", { name: "My Deals", exact: true }).click();
-  await expect(page).toHaveURL(/\/custom-view\/my-deals\/list$/);
+  await expect(page).toHaveURL(/\/custom-view\/my-deals\/list/);
   await expect(list.locator("[data-view-pill]")).toHaveText("My Deals");
   await expect(list.getByRole("columnheader", { name: "Deal Owner", exact: true })).toHaveCount(0);
 
   // Switch back to "All Deals" (Owner column restored)
   await list.getByRole("button", { name: "Custom views" }).click();
   await page.getByRole("menuitem", { name: "All Deals", exact: true }).click();
-  await expect(page).toHaveURL(/\/custom-view\/all-deals\/list$/);
+  await expect(page).toHaveURL(/\/custom-view\/all-deals\/list/);
   await expect(list.locator("[data-view-pill]")).toHaveText("All Deals");
   await expect(list.getByRole("columnheader", { name: "Deal Owner", exact: true })).toBeVisible();
 
@@ -73,7 +80,7 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
 test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
-  await page.goto(moduleListDefaultPath(org.slug, "Deals"));
+  await page.goto(`${moduleListDefaultPath(org.slug, "Deals")}?presentation=table`);
   const list = page.locator(".module-list-page");
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
@@ -151,7 +158,7 @@ test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   await expect(page.locator("[data-record-frame]")).toBeVisible();
   await expect(page.locator("[data-record-header]")).toContainText(accountName);
 
-  await page.goto(moduleListDefaultPath(org.slug, "Deals"));
+  await page.goto(`${moduleListDefaultPath(org.slug, "Deals")}?presentation=table`);
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // Paging
@@ -173,7 +180,7 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
 }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
-  await page.goto(moduleListDefaultPath(org.slug, "Deals"));
+  await page.goto(`${moduleListDefaultPath(org.slug, "Deals")}?presentation=table`);
   const list = page.locator(".module-list-page");
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();

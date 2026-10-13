@@ -40,3 +40,17 @@ export function openAccountCreateWithParentAccount(
   });
   navigate(moduleCreatePath(orgSlug, "Accounts"));
 }
+
+export function openDealCreateWithAccountName(
+  orgSlug: string,
+  account: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Deals",
+    fields: {
+      Account_Name: accountNameLookupFromRecord(account.id, account.fields),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Deals"));
+}

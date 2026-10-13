@@ -79,17 +79,18 @@ describe("accountsRelatedLists definition", () => {
     expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
 
     const populated = createAccountsRelatedLists({
-      badges: { notes: 2, contacts: 1, openActivities: 3, closedActivities: 4 },
+      badges: { notes: 2, contacts: 1, deals: 3, openActivities: 3, closedActivities: 4 },
     });
     expect(populated.find((c) => c.id === "notes")?.countBadge).toBe(2);
     expect(populated.find((c) => c.id === "contacts")?.countBadge).toBe(1);
+    expect(populated.find((c) => c.id === "deals")?.countBadge).toBe(3);
     expect(populated.find((c) => c.id === "open-activities")?.countBadge).toBe(3);
     expect(populated.find((c) => c.id === "closed-activities")?.countBadge).toBe(4);
 
     const empty = createAccountsRelatedLists({
-      badges: { notes: 0, contacts: 0, openActivities: 0, closedActivities: 0 },
+      badges: { notes: 0, contacts: 0, deals: 0, openActivities: 0, closedActivities: 0 },
     });
-    for (const id of ["notes", "contacts", "open-activities", "closed-activities"]) {
+    for (const id of ["notes", "contacts", "deals", "open-activities", "closed-activities"]) {
       expect(empty.find((c) => c.id === id)?.countBadge).toBeUndefined();
     }
 
@@ -109,6 +110,12 @@ describe("accountsRelatedLists definition", () => {
     expect(structuralLists.find((c) => c.id === "notes")?.railAction?.moduleKey).toBe("M6");
     expect(structuralLists.find((c) => c.id === "deals")?.railAction?.moduleKey).toBe("M4");
     expect(structuralLists.find((c) => c.id === "invoices")?.railAction?.moduleKey).toBe("P2");
+
+    // MEP-415: M4 is a live module, so the Deals card and its rail plus draw active.
+    const deals = structuralLists.find((c) => c.id === "deals");
+    expect(resolveLaterModule(deals?.moduleKey)).toBeUndefined();
+    expect(resolveLaterModule(deals?.railAction?.moduleKey)).toBeUndefined();
+    expect(deals?.recordFilterField).toBe("Account_Name");
 
     expect(accountsRelatedListRail.organizeAriaLabel).toBe("Organize Accounts Details");
     expect(accountsRelatedListRail.linksGroup.title).toBe("Links");
@@ -181,23 +188,48 @@ describe("RelatedCardsContainer with Accounts card set", () => {
     ).toBe("M5");
   });
 
-  it("renders Deals Assign before New Deal and Emails sent-mail selector", () => {
+  it("renders Deals Assign before New Deal and Emails sent-mail selector", async () => {
+    const user = userEvent.setup();
     render(<RelatedCardsContainer relatedLists={accountsRelatedLists} />);
 
     const dealsSection = screen.getByRole("region", { name: "Deals" });
     const dealButtons = within(dealsSection).getAllByRole("button");
     const dealLabels = dealButtons.map((btn) => btn.textContent?.trim());
     expect(dealLabels.indexOf("Assign")).toBeLessThan(dealLabels.indexOf("New Deal"));
+
+    // AD-113 / AD-114 draw active: M4 ships with this module. Assign is handler-less,
+    // same state as the Contacts card Assign (AD-116).
+    const assignBtn = within(dealsSection).getByRole("button", { name: "Assign" });
+    expect(assignBtn.hasAttribute("data-later-module")).toBe(false);
+    expect(assignBtn.getAttribute("aria-disabled")).toBeNull();
+    await user.click(assignBtn);
+    expect(dealLabels.indexOf("Assign")).toBeLessThan(dealLabels.indexOf("New Deal"));
     expect(
       within(dealsSection)
-        .getByRole("button", { name: "Assign" })
-        .getAttribute("data-later-module"),
-    ).toBe("M4");
+        .getByRole("button", { name: "New Deal" })
+        .hasAttribute("data-later-module"),
+    ).toBe(false);
 
     const emailsSection = screen.getByRole("region", { name: "Emails" });
     expect(
       within(emailsSection).getByRole("button", { name: "Sent" }).getAttribute("data-later-module"),
     ).toBe("M10");
+  });
+
+  it("opens the Deals create form from New Deal and the rail plus", async () => {
+    const user = userEvent.setup();
+    const onDealsNew = vi.fn();
+    const lists = createAccountsRelatedLists({
+      includeContactsPreview: false,
+      handlers: { onDealsNew },
+    });
+
+    render(<RelatedCardsContainer relatedLists={lists} />);
+
+    const dealsSection = screen.getByRole("region", { name: "Deals" });
+    await user.click(within(dealsSection).getByRole("button", { name: "New Deal" }));
+    expect(onDealsNew).toHaveBeenCalledTimes(1);
+    expect(lists.find((c) => c.id === "deals")?.railAction?.onAction).toBe(onDealsNew);
   });
 
   it("renders Member Accounts New as an active M3 control and record page footer", async () => {
@@ -302,16 +334,21 @@ describe("RecordPageFrame with Accounts rail metadata", () => {
       .closest("div[class*='flex items-center']");
     expect(notesRow?.querySelector("button")).not.toBeNull();
 
-    const dealsLink = within(rail).getByRole("link", { name: "Deals" });
-    await user.click(dealsLink);
-    expect(onSelect).not.toHaveBeenCalled();
-
-    const dealsRow = dealsLink.closest("div[class*='flex items-center']");
-    expect(dealsRow?.querySelector("button")).toBeNull();
-
     await user.click(within(rail).getByRole("link", { name: "Notes" }));
     expect(notesRow?.querySelector("button")).not.toBeNull();
     expect(notesRow?.querySelector("button")?.getAttribute("data-later-module")).toBe("M6");
+
+    const dealsLink = within(rail).getByRole("link", { name: "Deals" });
+    expect(dealsLink.getAttribute("data-later-module")).toBeNull();
+    expect(dealsLink.getAttribute("aria-disabled")).toBeNull();
+    await user.click(dealsLink);
+    expect(onSelect).toHaveBeenCalledWith("deals");
+
+    // AD-112: selecting the live Deals row paints its unlocked plus
+    const dealsRow = dealsLink.closest("div[class*='flex items-center']");
+    const dealsPlus = dealsRow?.querySelector("button");
+    expect(dealsPlus).not.toBeNull();
+    expect(dealsPlus?.hasAttribute("data-later-module")).toBe(false);
   });
 
   it("keeps Member Accounts rail link and Add action unlocked while later modules stay locked", async () => {
@@ -371,10 +408,10 @@ describe("RecordPageFrame with Accounts rail metadata", () => {
     await user.click(addButton);
     expect(onMemberAccountNew).toHaveBeenCalledOnce();
 
-    // 3. Later module rail rows (M4 deals, P2 products) remain locked
+    // 3. The Deals rail row is unlocked (MEP-415); later modules such as Products stay locked
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
-    expect(dealsLink.getAttribute("data-later-module")).toBe("M4");
-    expect(dealsLink.getAttribute("aria-disabled")).toBe("true");
+    expect(dealsLink.getAttribute("data-later-module")).toBeNull();
+    expect(dealsLink.getAttribute("aria-disabled")).toBeNull();
 
     const productsLink = within(rail).getByRole("link", { name: "Products" });
     expect(productsLink.getAttribute("data-later-module")).toBe("P2");
