@@ -1,23 +1,24 @@
 import { Icons } from "@/components/ui/icon";
-import {
-  ACCOUNTS_DELETE_CONFIRM_MESSAGE,
-  ACCOUNTS_DELETE_CONFIRM_TITLE,
-  buildAccountsRecordMoreMenuGroups,
-} from "../accounts/accounts-record-more-options";
-import { accountsRelatedListRail } from "../accounts/accounts-related-lists";
-import {
-  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
-  ACCOUNTS_TIMELINE_MODULE_OPTIONS,
-  ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-  ACCOUNTS_TIMELINE_SUBTABS,
-  normalizeAccountsEventKind,
-} from "../accounts/accounts-timeline";
 import type { ModuleScreenDefinition } from "../types";
+import { DealRecordScreen } from "./deal-record-screen";
 import { buildDealsBusinessCardFields, buildDealsDetailSections } from "./deals-detail-sections";
 import { DEALS_FORM_INFORMATION_COLUMNS, dealsFormRules } from "./deals-form-rules";
 import { isDealInlineEditable } from "./deals-inline-edit";
 import { formatDealsLastUpdateLabel } from "./deals-last-update";
 import { dealsRecordHeaderIdentity } from "./deals-record-header";
+import {
+  buildDealsRecordMoreMenuGroups,
+  DEALS_DELETE_CONFIRM_MESSAGE,
+  DEALS_DELETE_CONFIRM_TITLE,
+} from "./deals-record-more-options";
+import { dealsRelatedListRail } from "./deals-related-lists";
+import {
+  DEALS_TIMELINE_EMPTY_EVENTS,
+  DEALS_TIMELINE_MODULE_OPTIONS,
+  DEALS_TIMELINE_SOURCE_OPTIONS,
+  DEALS_TIMELINE_SUBTABS,
+  normalizeDealsEventKind,
+} from "./deals-timeline";
 import { DEALS_LIST_CURRENCY_CODE, dealsListPageConfig } from "./list-config";
 import { buildDealsFilterGroups } from "./list-filters";
 
@@ -46,6 +47,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
     inventoryChrome: true,
   },
   detail: {
+    Screen: DealRecordScreen,
     header: dealsRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: false,
@@ -58,18 +60,17 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
     inlineEditable: isDealInlineEditable,
     lastUpdate: formatDealsLastUpdateLabel,
     lastUpdatePlacement: "tab-row",
-    // Temporary wiring from Accounts package (interim until dedicated Deals record detail tasks)
-    moreOptions: buildAccountsRecordMoreMenuGroups,
-    deleteTitle: ACCOUNTS_DELETE_CONFIRM_TITLE,
-    deleteMessage: ACCOUNTS_DELETE_CONFIRM_MESSAGE,
+    moreOptions: buildDealsRecordMoreMenuGroups,
+    deleteTitle: DEALS_DELETE_CONFIRM_TITLE,
+    deleteMessage: DEALS_DELETE_CONFIRM_MESSAGE,
     loadingAttributes: { "data-deal-record-loading": true },
-    relatedListRail: accountsRelatedListRail,
+    relatedListRail: dealsRelatedListRail,
     timeline: {
-      subtabs: ACCOUNTS_TIMELINE_SUBTABS,
-      modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
-      sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
-      normalizeEventKind: normalizeAccountsEventKind,
+      subtabs: DEALS_TIMELINE_SUBTABS,
+      modules: DEALS_TIMELINE_MODULE_OPTIONS,
+      sources: DEALS_TIMELINE_SOURCE_OPTIONS,
+      events: DEALS_TIMELINE_EMPTY_EVENTS,
+      normalizeEventKind: normalizeDealsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",
         laterModule: "M12",

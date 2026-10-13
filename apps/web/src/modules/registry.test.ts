@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { accountsScreenDefinition } from "./accounts/definition";
+import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { getModuleScreens, resolveModuleScreen } from "./registry";
 
@@ -8,9 +9,11 @@ test("the shipped modules is registered", () => {
     "Leads",
     "Contacts",
     "Accounts",
+    "Deals",
   ]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
   expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
+  expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });
 

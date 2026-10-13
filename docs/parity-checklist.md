@@ -417,3 +417,24 @@ Export Accounts M6; Create Client Script M11; Sheet view P3.
 Absent from Contacts: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47 (no row activity pulse or badge column space; selection checkbox is immediately before Account Name).
 Mass action flows (Mass Update, Change Owner, Delete Account) wire to selection bar dialogs.
 Contacts Account Name lookup cells now link to `/tab/Accounts/:id` active record routes.
+
+## Module 4 — Deals
+
+Specs: `deals-record-detail.md`, `deals-pipeline.md` (stage transitions), shared `record-detail.md` and `accounts-record-detail.md` behaviour.
+
+### Deals record detail — implemented; QA pending (MEP-412)
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Header, tags, actions | DD-01, DD-04–DD-07, DD-90 | `deals-detail.spec.ts` |
+| Related-list rail | DD-10–DD-31 (Deals entries), DD-54–DD-58 (badges per spec) | `deals-detail.spec.ts`, `deals-related-lists.test.tsx` |
+| Tabs and last update | DD-32–DD-35 | `deals-detail.spec.ts` |
+| Stage bar and verify dialog | DD-60–DD-65, DD-91–DD-92 | `deals-detail.spec.ts`, `stage-bar.test.tsx` |
+| Business card | DD-66 (card fields) | `deals-detail.spec.ts`, `deals-detail-sections.test.ts` |
+| Contact Person summary | DD-66–DD-68 | `deals-detail.spec.ts` |
+| Details and inline edit | Deal Information, Description Information | `deals-detail.spec.ts` |
+| More Options | DD-07.1–DD-07.15 | `deals-record-more-options.test.ts`, `deals-detail.spec.ts` |
+| Timeline | DD-70–DD-72 | `deals-detail.spec.ts`, `deals-timeline.test.ts` |
+| SALES SUMMARY rail section | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
+
+Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.

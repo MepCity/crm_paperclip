@@ -39,8 +39,10 @@ test("exports a complete Deals module screen definition", () => {
     Lead_Source: "-None-",
   });
 
-  // Verify Deals is not registered in the shared registry yet (kept isolated for MEP-407)
-  expect(resolveModuleScreen("Deals")).toBeUndefined();
-  expect(moduleScreens.some((definition) => definition.apiName === "Deals")).toBe(false);
-  expect(moduleScreens.some((definition) => definition.tab === "Deals")).toBe(false);
+  expect(dealsScreenDefinition.detail.Screen).toBeDefined();
+  expect(dealsScreenDefinition.detail.relatedListRail?.organizeAriaLabel).toBe(
+    "Organize Deal Details",
+  );
+  expect(resolveModuleScreen("Deals")?.apiName).toBe("Deals");
+  expect(moduleScreens.some((definition) => definition.apiName === "Deals")).toBe(true);
 });
