@@ -111,6 +111,83 @@ export function describeRecordServiceContract(
       await expect(promise).rejects.toBeInstanceOf(ValidationError);
       await expect(promise).rejects.toMatchObject({ fieldErrors: { [field]: expect.any(Array) } });
     };
+    it("summarizes ordered picklist options with view and filter count parity", async () => {
+      const field = metadata.fields.find(
+        (candidate) => candidate.dataType === "picklist" && candidate.picklist?.length,
+      );
+      if (!field) throw new Error("Contract module needs a picklist");
+      const sumField = metadata.fields.find((candidate) => candidate.dataType === "currency");
+      const view =
+        views.find((candidate) => candidate.name === `My ${modulePluralLabel}`) ?? defaultView;
+      const filters: Criteria = { field: markerField, comparator: "equal", value: markerSample };
+      await service.create(moduleApiName, forView(view, { [markerField]: markerSample }));
+      const query = {
+        viewId: view.id,
+        filters,
+        groupBy: field.apiName,
+        ...(sumField ? { sum: sumField.apiName } : {}),
+      };
+      const groups = await service.summarize(moduleApiName, query);
+      expect(groups.slice(0, field.picklist?.length).map((group) => group.value)).toEqual(
+        field.picklist?.map((option) => option.storedValue),
+      );
+      const all = await service.list(moduleApiName, { ...query, page: 1, perPage: 100 });
+      expect(all.records).toHaveLength(1);
+      expect(groups.reduce((total, group) => total + group.count, 0)).toBe(all.records.length);
+      for (const group of groups) {
+        const combined: Criteria = {
+          groupOperator: "and",
+          group: [
+            filters,
+            {
+              field: field.apiName,
+              comparator: group.value === null ? "is_empty" : "equal",
+              value: group.value,
+            },
+          ],
+        };
+        expect(group.count).toBe(
+          await service.count(moduleApiName, { viewId: view.id, filters: combined }),
+        );
+        expect(group.sum).toBe(
+          sumField
+            ? all.records
+                .filter((row) => (row.fields[field.apiName] ?? null) === group.value)
+                .reduce((total, row) => total + Number(row.fields[sumField.apiName] ?? 0), 0)
+            : null,
+        );
+      }
+      expect(groups.some((group) => group.count === 0)).toBe(true);
+      expect(
+        (
+          await service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: field.apiName })
+        ).every((group) => group.sum === null),
+      ).toBe(true);
+      await validation(
+        service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: "Unknown" }),
+        "groupBy",
+      );
+      await validation(
+        service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: markerField }),
+        "groupBy",
+      );
+      await validation(
+        service.summarize(moduleApiName, {
+          viewId: defaultView.id,
+          groupBy: field.apiName,
+          sum: "Unknown",
+        }),
+        "sum",
+      );
+      await validation(
+        service.summarize(moduleApiName, {
+          viewId: defaultView.id,
+          groupBy: field.apiName,
+          sum: markerField,
+        }),
+        "sum",
+      );
+    });
     if (moduleOptional?.date) {
       const dateField = moduleOptional.date.field;
       it("validates, reads, sorts and filters a calendar date", async () => {

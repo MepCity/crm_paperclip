@@ -15,6 +15,8 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
+import { calendarDays, historyRow } from "./deals/history";
+import { applyDealRules } from "./deals/rules";
 import {
   automaticMaster,
   duplicateGroups,
@@ -124,6 +126,27 @@ export function createFixtureRecordService(
       memberIds: new Set(),
       deduplicating: new Set(),
     };
+    const histories = store.modules.get("DealHistory") as ModuleStore;
+    let seedIndex = 0;
+    for (const deal of store.modules.get("Deals")?.records.values() ?? []) {
+      if (seedIndex++ % 10 === 0 && deal.fields.Stage !== "Qualification") {
+        const stamp = new Date(
+          Date.parse(String(deal.fields.Created_Time)) - 2 * 86_400_000,
+        ).toISOString();
+        const fields = { ...deal.fields, Stage: "Qualification", Modified_Time: stamp };
+        applyDealRules(fields, {});
+        const first = historyRow({ id: deal.id, fields }, String(histories.nextId++));
+        first.fields = {
+          ...first.fields,
+          Moved_To__s: deal.fields.Stage ?? null,
+          Stage_Duration_Calendar_Days: 2,
+        };
+        histories.records.set(first.id, first);
+        deal.fields = { ...deal.fields, Created_Time: stamp };
+      }
+      const row = historyRow(deal, String(histories.nextId++));
+      histories.records.set(row.id, row);
+    }
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -183,6 +206,38 @@ export function createFixtureRecordService(
     if (typeof input.Owner !== "string" || !members.includes(input.Owner))
       throw new ValidationError({ Owner: ["Choose a member of this organization."] });
   };
+  const assertModuleWritable = (module: string) => {
+    if (bundleFor(module).readOnly) throw new ForbiddenError("This module is read-only.");
+  };
+  const appendHistory = (module: string, record: RecordData, previous?: RecordData) => {
+    if (module !== "Deals" || previous?.fields.Stage === record.fields.Stage) return;
+    const history = moduleStore("DealHistory");
+    const prior = [...history.records.values()]
+      .filter((row) => {
+        const reference = row.fields.Potential_Name;
+        return typeof reference === "object" && reference?.id === record.id;
+      })
+      .at(-1);
+    if (prior)
+      prior.fields = {
+        ...prior.fields,
+        Moved_To__s: record.fields.Stage ?? null,
+        Stage_Duration_Calendar_Days: calendarDays(
+          String(prior.fields.Modified_Time),
+          String(record.fields.Modified_Time),
+        ),
+      };
+    const row = historyRow(record, String(history.nextId++));
+    history.records.set(row.id, row);
+  };
+  const removeHistory = (ids: readonly string[]) => {
+    const history = moduleStore("DealHistory");
+    for (const row of history.records.values()) {
+      const reference = row.fields.Potential_Name;
+      if (typeof reference === "object" && reference && ids.includes(reference.id))
+        history.records.delete(row.id);
+    }
+  };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
     if (record.fields.Locked__s === true)
       throw new RecordLockedError(
@@ -201,7 +256,9 @@ export function createFixtureRecordService(
     const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
     if (query.filters) validateCriteria(query.filters, fieldMap);
     const runtimeCtx = { userId: ctx.userId, now: clock() };
-    return [...moduleStore(module).records.values()]
+    const storedRows = [...moduleStore(module).records.values()];
+    if (module === "DealHistory") storedRows.reverse();
+    return storedRows
       .map((record) => resolveRead(module, record))
       .filter(
         (record) =>
@@ -217,7 +274,7 @@ export function createFixtureRecordService(
   const writeBatch = (module: string, ids: readonly string[], input: RecordInput) => {
     // Resolve every target after asynchronous membership checks, before any write.
     const bundle = bundleFor(module);
-    const records = ids.map((id) => recordFor(module, id));
+    const records = [...new Set(ids)].map((id) => recordFor(module, id));
     for (const record of records) assertWritable(record);
     const stamp = clock().toISOString();
     const moduleState = moduleStore(module);
@@ -229,6 +286,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: stamp,
       };
+      if (module === "Deals") applyDealRules(fields, input, record.fields);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       overrides.set(record.id, fields);
       return { id: record.id, fields };
@@ -237,10 +295,14 @@ export function createFixtureRecordService(
       bundle.metadata.fields,
       projectRecordsWithOverrides(moduleState.records, overrides),
     );
-    for (const record of updates) moduleState.records.set(record.id, record);
+    for (const record of updates) {
+      appendHistory(module, record, moduleState.records.get(record.id));
+      moduleState.records.set(record.id, record);
+    }
   };
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
+    assertModuleWritable(module);
     const bundle = bundleFor(module);
     const ids = [...input.duplicateIds];
     if (
@@ -274,6 +336,7 @@ export function createFixtureRecordService(
       Modified_By: ctx.userId,
       Modified_Time: clock().toISOString(),
     };
+    if (module === "Deals") applyDealRules(fields, normalized, master.fields);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
@@ -282,6 +345,12 @@ export function createFixtureRecordService(
       const next = new Map<string, RecordData>();
       for (const record of moduleState.records.values()) {
         if (name === module && removed.has(record.id)) continue;
+        if (
+          module === "Deals" &&
+          name === "DealHistory" &&
+          pointsAtGroupMember(record.fields.Potential_Name, module, removed)
+        )
+          continue;
         const source = name === module && record.id === master.id ? updated : record;
         const nextFields = { ...source.fields };
         for (const field of bundleFor(name).metadata.fields) {
@@ -308,6 +377,9 @@ export function createFixtureRecordService(
       projected.set(name, next);
     }
     for (const [name, records] of projected) moduleStore(name).records = records;
+    if (module === "Deals") {
+      appendHistory(module, updated, master);
+    }
     return copy(resolveRead(module, recordFor(module, master.id)));
   };
   const findDuplicateGroups = async (
@@ -329,6 +401,7 @@ export function createFixtureRecordService(
     merge,
     findDuplicateGroups,
     async deduplicate(module, fields) {
+      assertModuleWritable(module);
       moduleExists(module);
       if (ctx.role !== "admin") throw new ForbiddenError();
       if (state.deduplicating.has(module))
@@ -393,7 +466,9 @@ export function createFixtureRecordService(
       if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(perPage) || perPage < 1)
         throw new ValidationError({ page: ["Choose positive integer paging values."] });
       const groups = [];
-      for (const module of new Set(query.modules ?? Object.keys(fixtureModules))) {
+      for (const module of new Set(
+        query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
+      )) {
         const bundle = bundleFor(module);
         if (
           query.fields?.some(
@@ -487,10 +562,42 @@ export function createFixtureRecordService(
     async count(module, query) {
       return matching(module, query).length;
     },
+    async summarize(module, query) {
+      const metadata = bundleFor(module).metadata;
+      const groupField = metadata.fields.find((field) => field.apiName === query.groupBy);
+      if (groupField?.dataType !== "picklist")
+        throw new ValidationError({ groupBy: ["Choose a known picklist field."] });
+      const sumField = metadata.fields.find((field) => field.apiName === query.sum);
+      if (
+        query.sum !== undefined &&
+        (!sumField || !["currency", "integer", "double"].includes(sumField.dataType))
+      )
+        throw new ValidationError({ sum: ["Choose a known numeric field."] });
+      const rows = matching(module, query);
+      const values: (string | null)[] = (groupField.picklist ?? []).map(
+        (option) => option.storedValue,
+      );
+      if (rows.some((row) => row.fields[query.groupBy] == null)) values.push(null);
+      return values.map((value) => {
+        const members = rows.filter((row) => (row.fields[query.groupBy] ?? null) === value);
+        return {
+          value,
+          count: members.length,
+          sum:
+            query.sum === undefined
+              ? null
+              : members.reduce(
+                  (total, row) => total + Number(row.fields[query.sum as string] ?? 0),
+                  0,
+                ),
+        };
+      });
+    },
     async get(module, id) {
       return copy(resolveRead(module, recordFor(module, id)));
     },
     async create(module, input) {
+      assertModuleWritable(module);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields);
@@ -509,6 +616,7 @@ export function createFixtureRecordService(
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
+      if (module === "Deals") applyDealRules(fields, normalized);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const record = { id, fields };
       assertUniqueFieldValues(
@@ -516,9 +624,11 @@ export function createFixtureRecordService(
         projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
       );
       moduleState.records.set(id, record);
+      appendHistory(module, record);
       return copy(resolveRead(module, record));
     },
     async update(module, id, input) {
+      assertModuleWritable(module);
       const bundle = bundleFor(module);
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
@@ -535,6 +645,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: clock().toISOString(),
       };
+      if (module === "Deals") applyDealRules(fields, normalized, record.fields);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const updated = { id, fields };
       const moduleState = moduleStore(module);
@@ -542,10 +653,12 @@ export function createFixtureRecordService(
         bundle.metadata.fields,
         projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
       );
+      appendHistory(module, updated, record);
       moduleState.records.set(id, updated);
       return copy(resolveRead(module, updated));
     },
     async massUpdate(module, ids, input) {
+      assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
@@ -563,6 +676,7 @@ export function createFixtureRecordService(
       writeBatch(module, targets, normalized);
     },
     async changeOwner(module, ids, ownerId) {
+      assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
@@ -572,12 +686,14 @@ export function createFixtureRecordService(
       writeBatch(module, targets, input);
     },
     async delete(module, ids) {
+      assertModuleWritable(module);
       moduleExists(module);
       validateIds(ids);
-      const records = ids.map((id) => recordFor(module, id));
+      const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
       const moduleState = moduleStore(module);
       for (const id of ids) moduleState.records.delete(id);
+      if (module === "Deals") removeHistory(ids);
     },
   };
 }
