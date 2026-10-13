@@ -4,23 +4,13 @@ import type { RecordData, RecordId } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
+import { laterModuleProps, resolveLaterModule, useLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountContactsCardBody } from "./account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
-
-function controlLaterModule(
-  cardModuleKey: RelatedListDefinition["moduleKey"],
-  ctrlModuleKey?: ModuleKey | "M2",
-): ModuleKey | undefined {
-  if (!ctrlModuleKey) return undefined;
-  if (ctrlModuleKey === "M2") return undefined;
-  if (ctrlModuleKey === "M3" && cardModuleKey === "M3") return undefined;
-  return ctrlModuleKey;
-}
 
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
@@ -74,11 +64,9 @@ export function RelatedListCard({
   const rightControls = upperControls.filter((c) => c.position !== "after-title");
 
   function renderControl(ctrl: RelatedListControlDefinition) {
-    const laterMod = controlLaterModule(moduleKey, ctrl.moduleKey);
+    const laterMod = resolveLaterModule(ctrl.moduleKey);
     const moreLaterMod =
-      ctrl.moreModuleKey !== undefined
-        ? controlLaterModule(moduleKey, ctrl.moreModuleKey)
-        : laterMod;
+      ctrl.moreModuleKey !== undefined ? resolveLaterModule(ctrl.moreModuleKey) : laterMod;
     if (ctrl.type === "split-button") {
       return (
         <SplitButton
@@ -319,7 +307,7 @@ export function RelatedListCard({
           <div className="flex items-center justify-between gap-4 border-b border-panel-border pt-2">
             <div role="tablist" className="flex gap-4">
               {subtabs.map((tab) => {
-                const tabLater = moduleKey === "M2" ? undefined : moduleKey;
+                const tabLater = resolveLaterModule(moduleKey);
                 const isSelected = activeSubtab === tab.id;
                 return (
                   <button
@@ -356,7 +344,7 @@ export function RelatedListCard({
                 key={link.id}
                 href={`#${link.id}`}
                 variant="body"
-                laterModule={link.moduleKey === "M2" ? undefined : link.moduleKey}
+                laterModule={resolveLaterModule(link.moduleKey)}
                 className="text-primary hover:underline font-normal text-md"
               >
                 {link.label}
@@ -376,7 +364,7 @@ export function RelatedListCard({
             <Button
               variant="secondary"
               size="compact"
-              laterModule={bodyAction.moduleKey === "M2" ? undefined : bodyAction.moduleKey}
+              laterModule={resolveLaterModule(bodyAction.moduleKey)}
               onPress={bodyAction.onAction}
             >
               {bodyAction.label}
