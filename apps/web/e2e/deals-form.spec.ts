@@ -65,14 +65,17 @@ async function saveDeal(page: Page, name: string) {
 }
 
 /**
- * The Deals record detail inventory belongs to a later task, so arrival after a save is proven by
- * the record route and by the create form being gone.
+ * The full Deals detail inventory belongs to a later task, so arrival after a save is proven by the
+ * record route, by the create form being gone and by the record header carrying the saved name.
  */
-async function expectRecordRoute(page: Page, orgSlug: string) {
+async function expectRecordRoute(page: Page, orgSlug: string, name: string) {
   await expect(page).toHaveURL(new RegExp(`/crm/${orgSlug}/tab/Deals/\\d+$`), {
     timeout: 60_000,
   });
   await expect(page.getByRole("heading", { name: "Create Deal" })).toHaveCount(0);
+  await expect(
+    page.locator("[data-record-header]").getByRole("heading", { level: 1 }),
+  ).toContainText(name);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -151,7 +154,7 @@ test("changing the stage fills probability, and a manual value then survives", a
 test("creates with required fields only and arrives at the record route", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveDeal(page, "Minimal Deal");
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Minimal Deal");
 });
 
 test("creates with every field type through the Account and Contact pickers", async ({ page }) => {
@@ -256,7 +259,7 @@ test("Cancel returns to the list without saving", async ({ page }) => {
 test("edit keeps the create layout and preserves stored values", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveDeal(page, "Edit Me");
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Edit Me");
   const id = dealRecordIdFromPath(new URL(page.url()).pathname);
 
   await page.goto(moduleRecordEditPath(org.slug, DEALS_TAB, id));
@@ -280,7 +283,7 @@ test("edit keeps the create layout and preserves stored values", async ({ page }
   const body = (await updateRequest).postDataJSON().data[0];
   expect(body.Deal_Name).toBe("Edited Deal");
   expect(body.Next_Step).toBe("Edited step");
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Edited Deal");
 });
 
 test("an edit on a lost stage paints Reason For Loss under Stage", async ({ page }) => {
@@ -289,7 +292,7 @@ test("an edit on a lost stage paints Reason For Loss under Stage", async ({ page
   await page.getByRole("button", { name: "Stage", exact: true }).click();
   await page.getByRole("option", { name: "Closed Lost", exact: true }).click();
   await saveWithoutRequiredNoise(page);
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Lost Deal");
   const id = dealRecordIdFromPath(new URL(page.url()).pathname);
 
   await page.goto(moduleRecordEditPath(org.slug, DEALS_TAB, id));
@@ -315,7 +318,7 @@ async function saveWithoutRequiredNoise(page: Page) {
 test("clone copies the source record into a new deal", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveDeal(page, "Clone Source");
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Clone Source");
   const sourceId = dealRecordIdFromPath(new URL(page.url()).pathname);
 
   await page.goto(moduleRecordClonePath(org.slug, DEALS_TAB, sourceId));
@@ -329,7 +332,7 @@ test("clone copies the source record into a new deal", async ({ page }) => {
   );
   await page.getByRole("button", { name: "Save", exact: true }).click();
   expect((await createRequest).postDataJSON().data[0].Deal_Name).toBe("Clone Saved");
-  await expectRecordRoute(page, org.slug);
+  await expectRecordRoute(page, org.slug, "Clone Saved");
 });
 
 test("the create route opens with pre-filled stage and account", async ({ page }) => {
