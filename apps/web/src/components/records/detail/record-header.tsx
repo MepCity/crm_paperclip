@@ -43,6 +43,8 @@ export interface RecordHeaderProps {
   previousHref?: string;
   nextHref?: string;
   addTags?: { label: string; laterModule: ModuleKey };
+  showPortrait?: boolean;
+  showRecordNavigation?: boolean;
 }
 
 export function RecordHeader({
@@ -51,6 +53,8 @@ export function RecordHeader({
   subtitleLaterModule,
   subtitleHref,
   portraitIcon: PortraitIcon,
+  showPortrait = true,
+  showRecordNavigation = true,
   back,
   commands = [],
   menuGroups = [],
@@ -85,18 +89,20 @@ export function RecordHeader({
           </Button>
         )}
       </div>
-      <div
-        data-record-portrait
-        aria-hidden
-        className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
-      >
-        {PortraitIcon ? (
-          <PortraitIcon className="h-full w-full" />
-        ) : (
-          <Icons.recordPortrait className="h-full w-full" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1 ml-(--size-record-title-gap) mr-3">
+      {showPortrait ? (
+        <div
+          data-record-portrait
+          aria-hidden
+          className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
+        >
+          {PortraitIcon ? (
+            <PortraitIcon className="h-full w-full" />
+          ) : (
+            <Icons.recordPortrait className="h-full w-full" />
+          )}
+        </div>
+      ) : null}
+      <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
         <h1
           className="min-w-0 truncate text-text"
           title={accessibleTitle}
@@ -189,8 +195,12 @@ export function RecordHeader({
             </Menu>
           </MenuTrigger>
         )}
-        <RecordArrow href={previousHref} label={previousLabel} direction="previous" />
-        <RecordArrow href={nextHref} label={nextLabel} direction="next" />
+        {showRecordNavigation ? (
+          <>
+            <RecordArrow href={previousHref} label={previousLabel} direction="previous" />
+            <RecordArrow href={nextHref} label={nextLabel} direction="next" />
+          </>
+        ) : null}
       </div>
     </header>
   );
