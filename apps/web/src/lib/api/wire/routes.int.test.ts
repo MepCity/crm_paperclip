@@ -23,6 +23,7 @@ const handlers = [
   [operations.views, () => import("@/app/crm/v9/settings/custom_views/route")],
   [operations.view, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
   [operations.bulk, () => import("@/app/crm/v2.2/[module]/bulk/route")],
+  [operations.summarize, () => import("@/app/crm/v2.2/[module]/actions/grouped_counts/route")],
   [operations.count, () => import("@/app/crm/v2.2/[module]/actions/count/route")],
   [operations.record, () => import("@/app/crm/v2.2/[module]/[recordId]/route")],
   [operations.users, () => import("@/app/crm/v9/users/route")],
@@ -73,6 +74,7 @@ async function call(
   for (const [key, value] of Object.entries({
     module: moduleName,
     cvid: options.viewId ?? (moduleName === "Contacts" ? "all-contacts" : "all-leads"),
+    ...(op === operations.summarize ? { group_by: "Lead_Status" } : {}),
     ...options.query,
   }))
     url.searchParams.set(key, value);
@@ -115,7 +117,7 @@ function criteriaTree(nodes: number) {
 }
 
 describe("operation routes", () => {
-  it.each([operations.bulk, operations.count])(
+  it.each([operations.bulk, operations.count, operations.summarize])(
     "bounds criteria arrays and total nodes on $path",
     async (op) => {
       const values = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, () => "Synthetic Status");

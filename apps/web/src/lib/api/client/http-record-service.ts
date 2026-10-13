@@ -1,6 +1,7 @@
 import type {
   DeduplicateResult,
   DuplicateGroup,
+  GroupSummary,
   ListQuery,
   ListResult,
   ListView,
@@ -277,6 +278,17 @@ export function createHttpRecordService({
         );
       }
       return projectList(decodeList(body.data, body.info, metadata), query);
+    },
+
+    async summarize(module, query) {
+      const body = (await request(
+        `${operationPath(operations.summarize, { module })}${queryString({ cvid: query.viewId, group_by: query.groupBy, sum: query.sum })}`,
+        {
+          method: operations.summarize.method,
+          body: listBody(query),
+        },
+      )) as { groups: readonly GroupSummary[] };
+      return body.groups;
     },
 
     async count(

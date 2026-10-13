@@ -283,6 +283,21 @@ export const operations = {
       });
     },
   },
+  summarize: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/actions/grouped_counts",
+    async run({ records }, input) {
+      const groupBy = input.query.group_by || invalid("groupBy");
+      return ok({
+        groups: await records.summarize(moduleOf(input), {
+          viewId: viewIdOf(input),
+          groupBy,
+          ...(input.query.sum === undefined ? {} : { sum: input.query.sum }),
+          ...(await restrictions(input)),
+        }),
+      });
+    },
+  },
   count: {
     method: "POST",
     path: "/crm/v2.2/{module}/actions/count",
