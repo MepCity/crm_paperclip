@@ -15,6 +15,16 @@ const PARENT_ACCOUNT_ID = "500000000000000005";
 const DELETE_ACCOUNT_ID = "500000000000000001";
 const EMPTY_RELATED_ACCOUNT_ID = "500000000000000249";
 
+function waitForModuleBulkList(
+  page: import("@playwright/test").Page,
+  module: "Contacts" | "Accounts",
+) {
+  return page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return response.request().method() === "POST" && url.pathname.endsWith(`/${module}/bulk`);
+  });
+}
+
 async function openAccountDetail(
   page: import("@playwright/test").Page,
   orgSlug: string,
@@ -144,13 +154,19 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Contacts card empty state", async ({ page, pageErrors }) => {
+  test("Contacts card empty state", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
-    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const contactsListDone = waitForModuleBulkList(page, "Contacts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const contactsList = await contactsListDone;
+    expect(contactsList.ok()).toBe(true);
     const contacts = page.getByRole("region", { name: "Contacts" });
     await expect(contacts.getByText("No records found")).toBeVisible();
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Member Accounts card lists children and supports New", async ({ page, pageErrors }) => {
@@ -166,13 +182,19 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Member Accounts card empty state", async ({ page, pageErrors }) => {
+  test("Member Accounts card empty state", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
-    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const memberListDone = waitForModuleBulkList(page, "Accounts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const memberList = await memberListDone;
+    expect(memberList.ok()).toBe(true);
     const members = page.getByRole("region", { name: "Member Accounts" });
     await expect(members.getByText("No records found")).toBeVisible();
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Parent Account link opens parent record", async ({ page, pageErrors }) => {
