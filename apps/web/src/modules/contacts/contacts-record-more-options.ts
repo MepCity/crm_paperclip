@@ -17,14 +17,14 @@ export const CONTACTS_RECORD_MORE_OPTIONS_GROUPS: readonly { id: string; items: 
       id: "contacts-more-primary",
       items: [
         { id: "clone", label: "Clone", handler: "onClone" },
-        { id: "share", label: "Share" },
+        { id: "share", label: "Share", laterModule: "M11" },
         { id: "delete", label: "Delete", handler: "onDelete" },
       ],
     },
     {
       id: "contacts-more-print",
       items: [
-        { id: "print-preview", label: "Print Preview" },
+        { id: "print-preview", label: "Print Preview", laterModule: "M6" },
         {
           id: "find-merge-duplicates",
           label: "Find and Merge Duplicates",

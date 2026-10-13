@@ -8,6 +8,7 @@ import type { ClientRecordService } from "@/lib/api/client/http-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { readRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { AccountRecordScreen } from "./account-record-screen";
+import { accountsScreenDefinition } from "./definition";
 
 const navigation = vi.hoisted(() => ({
   push: vi.fn(),
@@ -55,7 +56,12 @@ function renderScreen(service: ClientRecordService, recordId: string) {
   }
   return render(
     <div>
-      <AccountRecordScreen orgSlug={ctx.orgSlug} recordId={recordId} paths={paths} />
+      <AccountRecordScreen
+        definition={accountsScreenDefinition}
+        orgSlug={ctx.orgSlug}
+        recordId={recordId}
+        paths={paths}
+      />
     </div>,
     { wrapper: Wrapper },
   );

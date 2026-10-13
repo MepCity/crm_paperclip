@@ -14,12 +14,7 @@ import {
   openContactCreateWithAccountName,
 } from "./accounts-record-create";
 import { createAccountsRelatedLists } from "./accounts-related-lists";
-import { accountsScreenDefinition } from "./definition";
-
-export type AccountRecordScreenProps = Omit<
-  RecordDetailScreenProps,
-  "definition" | "buildRelatedLists"
->;
+export type AccountRecordScreenProps = Omit<RecordDetailScreenProps, "buildRelatedLists">;
 
 function useAccountRelatedBadges(accountId: string) {
   const contactsViews = useViews("Contacts");
@@ -40,7 +35,7 @@ function useAccountRelatedBadges(accountId: string) {
   );
 }
 
-export function AccountRecordScreen(props: AccountRecordScreenProps) {
+export function AccountRecordScreen({ definition, ...props }: AccountRecordScreenProps) {
   const router = useRouter();
   const badges = useAccountRelatedBadges(props.recordId);
 
@@ -66,7 +61,7 @@ export function AccountRecordScreen(props: AccountRecordScreenProps) {
   return (
     <RecordDetailScreen
       {...props}
-      definition={accountsScreenDefinition}
+      definition={definition}
       buildRelatedLists={buildRelatedLists}
       linkedContactSummaryPath={contactRecordPath}
     />
