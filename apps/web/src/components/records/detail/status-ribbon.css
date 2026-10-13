@@ -95,6 +95,12 @@
 .status-ribbon .status-current {
   color: var(--color-primary);
 }
+/* leads-write-behaviour.md › Not documented A9: with an empty value the open stage labels become
+   buttons. The Button base centers its content, so the span's label alignment has to stay. */
+.status-ribbon button.status-label {
+  justify-content: flex-start;
+  cursor: pointer;
+}
 .status-caret {
   width: var(--size-list-filter-chevron-width);
   height: var(--size-list-filter-chevron-height);

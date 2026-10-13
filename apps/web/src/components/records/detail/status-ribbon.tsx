@@ -139,6 +139,15 @@ export function StatusRibbon({
                         </Button>
                       }
                     />
+                  ) : value === null && !terminal.has(stage.value) ? (
+                    <Button
+                      variant="ghost"
+                      className="status-label"
+                      isDisabled={isDisabled}
+                      onPress={() => onSelect(stage.value)}
+                    >
+                      {stage.label}
+                    </Button>
                   ) : (
                     <span className="status-label">
                       {terminal.has(stage.value) && (
