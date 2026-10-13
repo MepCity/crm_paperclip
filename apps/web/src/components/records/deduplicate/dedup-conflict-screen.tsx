@@ -21,6 +21,7 @@ import {
   fieldValueKey,
 } from "@/components/records/merge/merge-field-selection";
 import { MergeMatchingTable } from "@/components/records/merge/merge-matching-table";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
@@ -78,12 +79,13 @@ export function DedupConflictGroups({
     () => (groupsQuery.data ?? []).filter(isDedupConflictGroup),
     [groupsQuery.data],
   );
-  const groupsSettled = !groupsQuery.isLoading && !groupsQuery.isFetching;
 
+  // Only an answered lookup may send the user back; a rejected one keeps the screen on the
+  // error notice, so unresolved groups are never hidden behind a network failure.
   useEffect(() => {
-    if (step !== "groups" || !groupsSettled) return;
+    if (step !== "groups" || !groupsQuery.isSuccess) return;
     if (conflictGroups.length === 0) router.replace(listHref);
-  }, [step, groupsSettled, conflictGroups.length, router, listHref]);
+  }, [step, groupsQuery.isSuccess, conflictGroups.length, router, listHref]);
 
   const ownerNames = useMemo(() => {
     const map: Record<string, string> = {};
@@ -282,89 +284,102 @@ export function DedupConflictGroups({
         </Button>
       </header>
       <div className="dedup-conflict-body min-h-0 flex-1 overflow-auto bg-surface-muted p-6">
-        <div className="rounded-(--radius-create-menu) border border-panel-border bg-surface p-6">
-          <p className="mb-4 text-sm text-text">
-            {dedupConflictIntro(panelFields.map((field) => field.label))}
-          </p>
-          <Tabs
-            selectedKey={activePanelField?.apiName}
-            onSelectionChange={(key) => {
-              if (typeof key === "string") setActiveField(key);
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <TabList appearance="record" className="w-auto" aria-label="Duplicate match fields">
-                {panelFields.map((field) => (
-                  <Tab key={field.apiName} id={field.apiName} appearance="record">
-                    {field.label}
-                  </Tab>
-                ))}
-              </TabList>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-text">
-                  {rangeStart} - {rangeEnd}
-                </span>
-                <Button
-                  variant="icon"
-                  size="compact"
-                  aria-label="Previous page"
-                  isDisabled={page <= 1}
-                  onPress={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  <Icons.chevronLeft aria-hidden className="size-4" />
-                </Button>
-                <Button
-                  variant="icon"
-                  size="compact"
-                  aria-label="Next page"
-                  isDisabled={page >= pageCount}
-                  onPress={() => setPage((current) => Math.min(pageCount, current + 1))}
-                >
-                  <Icons.chevronRight aria-hidden className="size-4" />
-                </Button>
+        {groupsQuery.isError ? (
+          <div className="dedup-conflict-error flex flex-col gap-4">
+            <Alert variant="danger">The page could not be loaded. Please try again.</Alert>
+            <Button
+              variant="secondary"
+              className="self-start"
+              onPress={() => void groupsQuery.refetch()}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-(--radius-create-menu) border border-panel-border bg-surface p-6">
+            <p className="mb-4 text-sm text-text">
+              {dedupConflictIntro(panelFields.map((field) => field.label))}
+            </p>
+            <Tabs
+              selectedKey={activePanelField?.apiName}
+              onSelectionChange={(key) => {
+                if (typeof key === "string") setActiveField(key);
+              }}
+            >
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <TabList appearance="record" className="w-auto" aria-label="Duplicate match fields">
+                  {panelFields.map((field) => (
+                    <Tab key={field.apiName} id={field.apiName} appearance="record">
+                      {field.label}
+                    </Tab>
+                  ))}
+                </TabList>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-text">
+                    {rangeStart} - {rangeEnd}
+                  </span>
+                  <Button
+                    variant="icon"
+                    size="compact"
+                    aria-label="Previous page"
+                    isDisabled={page <= 1}
+                    onPress={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <Icons.chevronLeft aria-hidden className="size-4" />
+                  </Button>
+                  <Button
+                    variant="icon"
+                    size="compact"
+                    aria-label="Next page"
+                    isDisabled={page >= pageCount}
+                    onPress={() => setPage((current) => Math.min(pageCount, current + 1))}
+                  >
+                    <Icons.chevronRight aria-hidden className="size-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <TabPanel id={activePanelField?.apiName}>
-              <div className="overflow-hidden border border-panel-border">
-                <table
-                  className="w-full border-collapse text-sm"
-                  aria-label="Duplicate groups with conflicts"
-                >
-                  <thead>
-                    <tr className="border-b border-panel-border bg-surface-muted text-left">
-                      <th scope="col" className="px-4 py-3 font-semibold text-text">
-                        {activePanelField?.label ?? ""}
-                      </th>
-                      <th scope="col" className="px-4 py-3 font-semibold text-text">
-                        Duplicates
-                      </th>
-                      <th scope="col" className="w-24 px-4 py-3">
-                        {" "}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageRows.map((row) => (
-                      <tr key={row.key} className="border-b border-row-separator">
-                        <td className="px-4 py-3 text-text">{row.value}</td>
-                        <td className="px-4 py-3 text-text">{row.count}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Button
-                            variant="secondary"
-                            size="record"
-                            onPress={() => openGroup(row.records)}
-                          >
-                            View
-                          </Button>
-                        </td>
+              <TabPanel id={activePanelField?.apiName}>
+                <div className="overflow-hidden border border-panel-border">
+                  <table
+                    className="w-full border-collapse text-sm"
+                    aria-label="Duplicate groups with conflicts"
+                  >
+                    <thead>
+                      <tr className="border-b border-panel-border bg-surface-muted text-left">
+                        <th scope="col" className="px-4 py-3 font-semibold text-text">
+                          {activePanelField?.label ?? ""}
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-semibold text-text">
+                          Duplicates
+                        </th>
+                        <th scope="col" className="w-24 px-4 py-3">
+                          {" "}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabPanel>
-          </Tabs>
-        </div>
+                    </thead>
+                    <tbody>
+                      {pageRows.map((row) => (
+                        <tr key={row.key} className="border-b border-row-separator">
+                          <td className="px-4 py-3 text-text">{row.value}</td>
+                          <td className="px-4 py-3 text-text">{row.count}</td>
+                          <td className="px-4 py-3 text-right">
+                            <Button
+                              variant="secondary"
+                              size="record"
+                              onPress={() => openGroup(row.records)}
+                            >
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabPanel>
+            </Tabs>
+          </div>
+        )}
       </div>
     </div>
   );
