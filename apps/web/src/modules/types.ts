@@ -5,6 +5,7 @@ import type {
   ModuleApiName,
   ModuleMetadata,
   RecordData,
+  RecordId,
 } from "@crm/core/records";
 import type { ComponentType } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
@@ -116,6 +117,21 @@ export interface StatusRibbonSectionProps {
   onValueChange: (value: string | null | undefined) => void;
 }
 
+export type ModuleRecordDetailPaths = {
+  defaultList: (orgSlug: string, module: ModuleApiName) => string;
+  record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  edit: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  clone: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  merge: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+};
+
+export type ModuleRecordDetailScreenProps = {
+  orgSlug: string;
+  recordId: RecordId;
+  paths: ModuleRecordDetailPaths;
+  definition: ModuleScreenDefinition;
+};
+
 /** Only presentation rules absent from service metadata belong here. */
 export interface ModuleScreenDefinition {
   apiName: ModuleApiName;
@@ -124,6 +140,7 @@ export interface ModuleScreenDefinition {
   pluralLabel: string;
   pageTitle: string;
   navigation: { id: string; icon: Icon };
+  search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
   searchColumns?: readonly string[];
@@ -148,6 +165,7 @@ export interface ModuleScreenDefinition {
     recordPickerChrome?: "observed";
   };
   detail: {
+    Screen?: ComponentType<ModuleRecordDetailScreenProps>;
     header: (
       record: RecordData,
       context?: { orgSlug?: string },
@@ -165,6 +183,11 @@ export interface ModuleScreenDefinition {
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
     lastUpdate: (record: RecordData, now: Date, format: FormatOptions) => string | null;
+    /**
+     * AD-35 / D-35: `tab-row` draws the update label at the far right of the Overview/Timeline row
+     * with its clock glyph. Omitted keeps it at the top of the overview (Module 1).
+     */
+    lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
       onClone: () => void;
       onDelete: () => void;

@@ -85,16 +85,25 @@ afterEach(() => {
 });
 
 test("Pinned links without an icon accent token keep the previous icon class rules", () => {
-  const link = config.links[0]!;
+  const link = config.links[0];
+  const section = config.sections[0];
+  const group = section?.groups[0];
+  const leads = group?.links[0];
+  const shellHome = shellNav.links[0];
+  expect(link).toBeDefined();
+  expect(leads).toBeDefined();
+  expect(shellHome).toBeDefined();
+  if (!link || !leads || !shellHome) {
+    return;
+  }
   expect(navLinkIconClassName(link, { nested: false, active: true })).toBe(
     "size-(--size-rail-icon) shrink-0",
   );
-  const leads = config.sections[0]!.groups[0]!.links[0]!;
   expect(navLinkIconClassName(leads, { nested: true, active: false })).toContain("text-rail-icon");
   expect(navLinkIconClassName(leads, { nested: true, active: true })).toBe(
     "size-(--size-rail-icon) shrink-0",
   );
-  expect(navLinkIconClassName(shellNav.links[0]!, { nested: false, active: true })).toContain(
+  expect(navLinkIconClassName(shellHome, { nested: false, active: true })).toContain(
     "text-accent-blue",
   );
 });

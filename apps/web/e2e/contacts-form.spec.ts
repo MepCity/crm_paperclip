@@ -381,3 +381,30 @@ test("creates with common field types", async ({ page }) => {
   expect(body.Lead_Source).toBe("Advertisement");
   expect(body.Email_Opt_Out).toBe(true);
 });
+
+test("Edit Page Layout shares the title row and the portrait keeps its ring", async ({ page }) => {
+  await openCreate(page);
+  const strip = page.locator("[data-record-form-strip]");
+  const title = await strip.locator("[data-record-form-title]").boundingBox();
+  const layout = await strip
+    .getByRole("button", { name: "Edit Page Layout", exact: true })
+    .boundingBox();
+  if (!title || !layout) throw new Error("Missing title strip row");
+  // F-01: the link sits on the title row, immediately right of "Create Contact".
+  expect(layout.x).toBeGreaterThan(title.x + title.width);
+  expect(layout.y).toBeGreaterThanOrEqual(title.y);
+  expect(layout.y + layout.height).toBeLessThanOrEqual(title.y + title.height + 1);
+
+  // F-05: the placeholder stays the ringed portrait inside the control, below its label.
+  const label = await page
+    .locator("[data-record-form-section-title]")
+    .filter({ hasText: "Contact Image" })
+    .boundingBox();
+  const image = page.getByRole("button", { name: "Contact Image", exact: true });
+  const imageBox = await image.boundingBox();
+  if (!label || !imageBox) throw new Error("Missing Contact Image field");
+  expect(imageBox.y).toBeGreaterThan(label.y + label.height);
+  expect(Math.abs(imageBox.width - 48)).toBeLessThanOrEqual(1);
+  expect(Math.abs(imageBox.height - 48)).toBeLessThanOrEqual(1);
+  await expect(image.locator(".record-profile .record-profile-silhouette")).toHaveCount(1);
+});
