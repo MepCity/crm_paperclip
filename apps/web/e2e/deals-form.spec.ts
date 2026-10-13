@@ -83,7 +83,9 @@ test("empty save reports every required field that can be left blank", async ({ 
   await openCreate(page);
   // All four fields carry the required mark (DF-07, DF-08, DF-18, DF-19).
   for (const apiName of ["Deal_Name", "Account_Name", "Closing_Date", "Stage"]) {
-    await expect(page.locator(`[data-form-field=${apiName}] [data-required]`).first()).toBeVisible();
+    await expect(
+      page.locator(`[data-form-field=${apiName}] [data-required]`).first(),
+    ).toBeVisible();
   }
   await page.getByRole("button", { name: "Save", exact: true }).click();
   // Stage opens on the first metadata stage, so an untouched create form cannot leave it blank.
