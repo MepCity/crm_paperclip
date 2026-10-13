@@ -2,9 +2,9 @@ import { NotFoundError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { Component, type ErrorInfo, type ReactNode as RN } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
+import * as hooks from "@/lib/api/client/hooks";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { LeadsListClient } from "./leads-list-client";
 
@@ -22,32 +22,21 @@ const navigation = vi.hoisted(() => ({
   params: new URLSearchParams(),
 }));
 
+const minimalListField = {
+  apiName: "Full_Name",
+  label: "Full Name",
+  dataType: "text" as const,
+  required: false,
+  readOnly: false,
+  massUpdate: false,
+  unique: false,
+  views: { view: true, create: true, edit: true, quickCreate: false },
+};
+
 vi.mock("next/navigation", () => ({
   useRouter: () => navigation,
   useSearchParams: () => navigation.params,
 }));
-
-class ThrowCapture extends Component<
-  { children: RN; onError: (error: Error) => void },
-  { error: Error | null }
-> {
-  override state = { error: null as Error | null };
-
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-
-  override componentDidCatch(error: Error, _info: ErrorInfo) {
-    this.props.onError(error);
-  }
-
-  override render() {
-    if (this.state.error) {
-      return null;
-    }
-    return this.props.children;
-  }
-}
 
 function wrapper(service: ReturnType<typeof createClientRecordService>) {
   return function Provider({ children }: { children: ReactNode }) {
@@ -66,48 +55,46 @@ afterEach(() => {
 });
 
 describe("LeadsListClient", () => {
-  it("throws when module metadata fails to load", async () => {
-    const records = createFixtureRecordService(ctx);
-    const broken = {
-      ...records,
-      getModule: async () => {
-        throw new NotFoundError();
-      },
-    };
-    const service = createClientRecordService(broken, {
-      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
-    });
-    const errors: Error[] = [];
-    render(
-      <ThrowCapture onError={(error) => errors.push(error)}>
-        <LeadsListClient orgSlug={ctx.orgSlug} />
-      </ThrowCapture>,
-      { wrapper: wrapper(service) },
-    );
-    await waitFor(() => {
-      expect(errors.length).toBeGreaterThan(0);
-    });
-    expect(errors[0]).toBeInstanceOf(NotFoundError);
-  });
-
-  it("throws when users fail to load", async () => {
+  it("throws when module metadata fails to load", () => {
     const records = createFixtureRecordService(ctx);
     const service = createClientRecordService(records, {
-      listUsers: async () => {
-        throw new NotFoundError();
-      },
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
-    const errors: Error[] = [];
-    render(
-      <ThrowCapture onError={(error) => errors.push(error)}>
-        <LeadsListClient orgSlug={ctx.orgSlug} />
-      </ThrowCapture>,
-      { wrapper: wrapper(service) },
-    );
-    await waitFor(() => {
-      expect(errors.length).toBeGreaterThan(0);
+    vi.spyOn(hooks, "useModule").mockReturnValue({
+      isError: true,
+      error: new NotFoundError(),
+      isLoading: false,
+      data: undefined,
+    } as unknown as ReturnType<typeof hooks.useModule>);
+    vi.spyOn(hooks, "useUsers").mockReturnValue({
+      isError: false,
+      isLoading: false,
+      data: [],
+    } as unknown as ReturnType<typeof hooks.useUsers>);
+    expect(() =>
+      render(<LeadsListClient orgSlug={ctx.orgSlug} />, { wrapper: wrapper(service) }),
+    ).toThrow(NotFoundError);
+  });
+
+  it("throws when users fail to load", () => {
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
-    expect(errors[0]).toBeInstanceOf(NotFoundError);
+    vi.spyOn(hooks, "useModule").mockReturnValue({
+      isError: false,
+      isLoading: false,
+      data: { fields: [minimalListField] },
+    } as unknown as ReturnType<typeof hooks.useModule>);
+    vi.spyOn(hooks, "useUsers").mockReturnValue({
+      isError: true,
+      error: new NotFoundError(),
+      isLoading: false,
+      data: undefined,
+    } as unknown as ReturnType<typeof hooks.useUsers>);
+    expect(() =>
+      render(<LeadsListClient orgSlug={ctx.orgSlug} />, { wrapper: wrapper(service) }),
+    ).toThrow(NotFoundError);
   });
 
   it("renders the list when metadata and users load", async () => {
