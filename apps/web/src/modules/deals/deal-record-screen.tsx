@@ -12,7 +12,7 @@ import { StageChangeDialog } from "@/components/records/detail/stage-bar";
 import type { StageChangeFormValues } from "@/components/records/detail/stage-bar/types";
 import { useHomeCurrency, useRecordCount, useUpdateRecord } from "@/lib/api/client/hooks";
 import { useOrgSlug } from "@/lib/api/client/provider";
-import { countQueriesPrefix } from "@/lib/api/client/query-keys";
+import { countQueriesPrefix, listQueriesPrefix } from "@/lib/api/client/query-keys";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { DealsContactPersonSummary } from "./deals-contact-person-summary";
 import { createDealsRelatedLists } from "./deals-related-lists";
@@ -66,6 +66,9 @@ export function DealRecordScreen({
   const invalidateHistory = useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: countQueriesPrefix(resolvedOrgSlug, "DealHistory"),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: listQueriesPrefix(resolvedOrgSlug, "DealHistory"),
     });
   }, [queryClient, resolvedOrgSlug]);
 

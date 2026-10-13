@@ -506,25 +506,6 @@ Temporary table rules (not painted in the Deals capture; Accounts table behaviou
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
 
-### Deals links in earlier modules — implemented (MEP-415)
-
-`LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
-card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
-Deals entries in global and advanced search.
-
-| Inventory | Implementation | Verification |
-| --- | --- | --- |
-| AD-112–AD-114 | Accounts Deals card data (Account Name filter), rail plus and New Deal prefill; Assign handler-less | `e2e/accounts-detail.spec.ts`, `accounts-related-lists.test.tsx` |
-| D-14, D-56 | Contacts Deals card data (Contact Name filter) and New Deal prefill with Contact Name plus the person's Account Name | `e2e/contacts-detail.spec.ts`, `contacts-related-lists.test.tsx` |
-| Card body | Shared `RelatedDealsCardBody`: default-view columns, Deal Name detail link, values through the shared field display | `related-deals-card-body.test.tsx` |
-| S-10, S-15–S-18, S-30/S-31, S-42 | Deals is selectable in the module selector, its filter checkbox is active, its search rows link to Deal detail, and the stage chip draws unlocked | `global-search.test.tsx`, `advanced-search-*` tests |
-| Leads Converted Deal | Generic lookup display resolves the registered Deals route; no Deals-keyed control is drawn in Leads | `field-value.test.tsx` (registered Deals lookup) |
-
-Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card Assign),
-advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
-itself is untouched; the seeded Leads records carry no converted references, so the
-converted-deal link has no fixture to exercise.
-
 ### Deals record detail — implemented; QA pending (MEP-412)
 
 | Area | Inventory | Tests |
@@ -542,24 +523,18 @@ converted-deal link has no fixture to exercise.
 
 Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
 
-### Deals stage board — implemented; QA pending (MEP-413)
+### Deals record detail — related cards and lower half (MEP-414)
 
-Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
-
-| Inventory | Implementation | Verification |
+| Area | Inventory | Tests |
 | --- | --- | --- |
-| DP-05, DP-06 | Default presentation is `"board"` (DP-06 active). View switcher switches between board and list (table, DP-05) | `deals-board.spec.ts`, `deals-list.spec.ts`, `list-config.test.ts` |
-| DP-70, DP-71 | Board toolbar: STAGEVIEW select (DP-70) and pencil settings icon button (DP-71) rendered inert | `deals-board.test.tsx`, `deals-board.spec.ts` |
-| DP-72–DP-77 | All 9 metadata stages in order left to right. Column headers: Stage label (DP-72–74), count (DP-75), probability percentage (DP-76), Amount sum formatted as currency (DP-77) from `summarize({ groupBy: "Stage", sum: "Amount" })` | `deals-board.test.tsx`, `deals-board.spec.ts` |
-| DP-78–DP-80 | Card rows in order: Deal Name link (DP-78), Stage text, Account Name link (DP-79), Deal Owner text, Contact Name link (DP-80), Amount currency, Closing Date (`dd.MM.yyyy`). Empty fields omitted. Column limit: list page size | `deals-board.test.tsx`, `deals-board.spec.ts` |
-| DP-81 | Task icon (M5) omitted until activity module lands | CTO decision; deferred to M5 |
-| DD-L01–DD-L03 | Column header selection checkbox (DD-L01), opposing arrow collapse/expand (DD-L03), and footer Create Deal button (DD-L02) with stage pre-selected (`writeRecordCreatePrefill`) | `record-board.tsx`, `deals-board.spec.ts` |
-| Board drag & drop | Dragging card updates Stage. Moving into Closed Won / Closed Lost opens Verify Details dialog (`StageChangeDialog`: Amount, Closing Date, Stage, Reason for Loss for Lost). Save writes, Cancel rolls back. Service error rolls back card and shows danger toast | `deals-board.spec.ts`, `deals-board.tsx` |
+| Related-list card set | DD-93–DD-149 (card headers, controls, columns, footer DD-147–DD-149) | `deals-related-lists.test.tsx`, `deals-detail.spec.ts` |
+| Stage History data | DD-99–DD-106, DD-57 rail badge | `deal-stage-history-card-body.tsx`, `deals-detail.spec.ts` |
+| Contact Roles empty shell | DD-125–DD-132 (no DD-58 badge; service follow-up) | `deals-related-lists.test.tsx` |
+| Scroll To Top | DD-98 | `deals-detail.spec.ts`, shared record detail e2e |
+| Lower detail sections | Deal Information, Description Information | `deals-detail-sections.test.ts`, `deals-detail.spec.ts` |
+| SALES SUMMARY | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
-Interim rules:
-- Filter panel, views, and sort apply to board cards. Pagination, row selection, and selection bar are omitted in board presentation.
-- Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
-- Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
+**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
 
 ### Deals create / edit / clone form — implemented; QA pending (MEP-440)
 
@@ -596,3 +571,41 @@ DF-23 and DF-24 to Campaigns (M7) — drawn in place, inert. The Amount informat
 icon is drawn without a handler because the capture never opened it. Expected
 Revenue stays empty after a save: the write service produces no value for it, and
 the formula is pipeline research (MEP-353), not this capture.
+
+### Deals stage board — implemented; QA pending (MEP-413)
+
+Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| DP-05, DP-06 | Default presentation is `"board"` (DP-06 active). View switcher switches between board and list (table, DP-05) | `deals-board.spec.ts`, `deals-list.spec.ts`, `list-config.test.ts` |
+| DP-70, DP-71 | Board toolbar: STAGEVIEW select (DP-70) and pencil settings icon button (DP-71) rendered inert | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-72–DP-77 | All 9 metadata stages in order left to right. Column headers: Stage label (DP-72–74), count (DP-75), probability percentage (DP-76), Amount sum formatted as currency (DP-77) from `summarize({ groupBy: "Stage", sum: "Amount" })` | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-78–DP-80 | Card rows in order: Deal Name link (DP-78), Stage text, Account Name link (DP-79), Deal Owner text, Contact Name link (DP-80), Amount currency, Closing Date (`dd.MM.yyyy`). Empty fields omitted. Column limit: list page size | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-81 | Task icon (M5) omitted until activity module lands | CTO decision; deferred to M5 |
+| DD-L01–DD-L03 | Column header selection checkbox (DD-L01), opposing arrow collapse/expand (DD-L03), and footer Create Deal button (DD-L02) with stage pre-selected (`writeRecordCreatePrefill`) | `record-board.tsx`, `deals-board.spec.ts` |
+| Board drag & drop | Dragging card updates Stage. Moving into Closed Won / Closed Lost opens Verify Details dialog (`StageChangeDialog`: Amount, Closing Date, Stage, Reason for Loss for Lost). Save writes, Cancel rolls back. Service error rolls back card and shows danger toast | `deals-board.spec.ts`, `deals-board.tsx` |
+
+Interim rules:
+- Filter panel, views, and sort apply to board cards. Pagination, row selection, and selection bar are omitted in board presentation.
+- Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
+- Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
+
+### Deals links in earlier modules — implemented (MEP-415)
+
+`LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
+card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
+Deals entries in global and advanced search.
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AD-112–AD-114 | Accounts Deals card data (Account Name filter), rail plus and New Deal prefill; Assign handler-less | `e2e/accounts-detail.spec.ts`, `accounts-related-lists.test.tsx` |
+| D-14, D-56 | Contacts Deals card data (Contact Name filter) and New Deal prefill with Contact Name plus the person's Account Name | `e2e/contacts-detail.spec.ts`, `contacts-related-lists.test.tsx` |
+| Card body | Shared `RelatedDealsCardBody`: default-view columns, Deal Name detail link, values through the shared field display | `related-deals-card-body.test.tsx` |
+| S-10, S-15–S-18, S-30/S-31, S-42 | Deals is selectable in the module selector, its filter checkbox is active, its search rows link to Deal detail, and the stage chip draws unlocked | `global-search.test.tsx`, `advanced-search-*` tests |
+| Leads Converted Deal | Generic lookup display resolves the registered Deals route; no Deals-keyed control is drawn in Leads | `field-value.test.tsx` (registered Deals lookup) |
+
+Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card Assign),
+advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
+itself is untouched; the seeded Leads records carry no converted references, so the
+converted-deal link has no fixture to exercise.
