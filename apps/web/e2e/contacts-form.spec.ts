@@ -241,12 +241,11 @@ async function expectContactImagePortrait(page: Page) {
   if (!title || !control || !glyph) {
     throw new Error("Contact Image title, portrait or silhouette is not laid out");
   }
-  const boxesIntersect =
-    title.x < control.x + control.width &&
-    title.x + title.width > control.x &&
-    title.y < control.y + control.height &&
-    title.y + title.height > control.y;
-  expect(boxesIntersect).toBe(false);
+  type Box = { x: number; y: number; width: number; height: number };
+  const boxesIntersect = (a: Box, b: Box) =>
+    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+  expect(boxesIntersect(title, control)).toBe(false);
+  expect(boxesIntersect(title, glyph)).toBe(false);
   expect(glyph.x).toBeGreaterThanOrEqual(control.x - 1);
   expect(glyph.y).toBeGreaterThanOrEqual(control.y - 1);
   expect(glyph.x + glyph.width).toBeLessThanOrEqual(control.x + control.width + 1);
