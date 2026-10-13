@@ -41,6 +41,10 @@ test("exports a complete Deals module screen definition", () => {
     Lead_Source: "-None-",
   });
 
+  expect(dealsScreenDefinition.detail.Screen).toBeDefined();
+  expect(dealsScreenDefinition.detail.relatedListRail?.organizeAriaLabel).toBe(
+    "Organize Deal Details",
+  );
   // Deals is registered with the form screen; its module key stays out of the live list until
   // the "Deals links in earlier modules" task moves LIVE_MODULE_KEYS.
   expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);

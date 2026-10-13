@@ -26,7 +26,7 @@ test("exports a complete Accounts module screen definition", () => {
   expect(accountsScreenDefinition.detail.portraitIcon).toBeDefined();
   expect(accountsScreenDefinition.form.rules.addresses).toHaveLength(2);
   expect(accountsScreenDefinition.detail.linkedContactSummary).toBe(true);
-  expect(accountsScreenDefinition.detail.relatedListRail?.linksGroup.title).toBe("Links");
+  expect(accountsScreenDefinition.detail.relatedListRail?.linksGroup?.title).toBe("Links");
   expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
   expect(getModuleScreens().some((definition) => definition.apiName === "Accounts")).toBe(true);
   // Lookups that target Accounts draw the picker captured in m3f-create-parent.

@@ -108,6 +108,47 @@ test.each([false, true])("choice keeps one selected marker with inline=%s", (inl
   expect(empty.querySelector(".record-inline-choice-check") !== null).toBe(inline);
 });
 
+test("inline list closes on outside pointer while focus stays on an option", async () => {
+  const user = userEvent.setup();
+  render(
+    <div>
+      <button type="button">Outside</button>
+      <RecordChoice
+        label="Choice"
+        value="a"
+        onChange={() => {}}
+        options={options}
+        defaultOpen
+        inline
+      />
+    </div>,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  selected.focus();
+  expect(screen.getByRole("listbox", { name: "Choice choices" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+});
+
+test("inline list closes on Escape while focus stays on an option", async () => {
+  const user = userEvent.setup();
+  render(
+    <RecordChoice
+      label="Choice"
+      value="a"
+      onChange={() => {}}
+      options={options}
+      defaultOpen
+      inline
+    />,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  selected.focus();
+  expect(screen.getByRole("listbox", { name: "Choice choices" })).toBeTruthy();
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+});
+
 test("inline list stays open when focused selection scrolls its ancestor", async () => {
   render(
     <RecordChoice

@@ -23,6 +23,7 @@ export interface StageChangeDialogProps {
   showReasonForLoss: boolean;
   onSubmit: (values: StageChangeFormValues) => Promise<void>;
   isPending?: boolean;
+  currencyPrefix?: string;
 }
 
 function field(
@@ -62,6 +63,7 @@ export function StageChangeDialog({
   showReasonForLoss,
   onSubmit,
   isPending = false,
+  currencyPrefix = "$",
 }: StageChangeDialogProps) {
   const titleId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -162,7 +164,7 @@ export function StageChangeDialog({
             onChange={(next) => patch("amount", next)}
             errorMessage={fieldErrors.amount}
             disabled={busy}
-            currencyPrefix="$"
+            currencyPrefix={currencyPrefix}
           />
           <FieldInput
             field={closingDateField}

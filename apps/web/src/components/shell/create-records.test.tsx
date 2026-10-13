@@ -118,7 +118,7 @@ test("The search box filters rows by label and leaves the list empty on no match
   expect(within(dialog).queryByRole("link", { name: "Account" })).toBeNull();
   expect(within(dialog).queryByRole("link", { name: "Deal" })).toBeNull();
   await user.clear(search);
-  await user.type(search, "unknown");
+  await user.type(search, "vendor");
   expect(within(dialog).queryAllByRole("link")).toHaveLength(0);
 });
 
