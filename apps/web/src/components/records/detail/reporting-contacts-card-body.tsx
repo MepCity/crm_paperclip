@@ -16,12 +16,8 @@ export interface ReportingContactsCardBodyProps {
 }
 
 function reportingToFilter(manager: RecordData): Criteria | null {
-  const name =
-    typeof manager.fields.Full_Name === "string" && manager.fields.Full_Name.length > 0
-      ? manager.fields.Full_Name
-      : null;
-  if (!name) return null;
-  return { field: "Reporting_To", comparator: "equal", value: name };
+  if (!manager.id) return null;
+  return { field: "Reporting_To", comparator: "equal", value: manager.id };
 }
 
 export function ReportingContactsCardBody({
@@ -35,19 +31,20 @@ export function ReportingContactsCardBody({
     [viewsQuery.data],
   );
   const reportingFilter = useMemo(() => reportingToFilter(managerRecord), [managerRecord]);
+  const listReady = defaultViewId !== null && reportingFilter !== null;
   const listQuery = useMemo(
     () =>
-      defaultViewId
+      listReady
         ? {
             viewId: defaultViewId,
             page: 1,
             perPage: LIST_PAGE_SIZE,
-            ...(reportingFilter ? { filters: reportingFilter } : {}),
+            filters: reportingFilter,
           }
         : { viewId: "pending", page: 1, perPage: LIST_PAGE_SIZE },
-    [defaultViewId, reportingFilter],
+    [defaultViewId, reportingFilter, listReady],
   );
-  const list = useRecordList("Contacts", listQuery, { enabled: defaultViewId !== null });
+  const list = useRecordList("Contacts", listQuery, { enabled: listReady });
   const columnApiNames = useMemo(() => {
     const fromView = ["Full_Name", "Account_Name", "Email", "Phone"];
     const withoutName = fromView.filter((name) => name !== "Full_Name");
