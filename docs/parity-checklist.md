@@ -482,7 +482,7 @@ merged since).
 
 Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md` (stage transitions), shared `record-detail.md` and `accounts-record-detail.md` behaviour.
 
-### Deals list — implemented; QA passed (MEP-410)
+### Deals list — done; QA MEP-451 (MEP-410)
 
 Inventory is SH-16 and DL-01–DL-27, DL-65–DL-69. Board controls DL-70–DL-81 are a later task.
 DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
@@ -542,7 +542,7 @@ converted-deal link has no fixture to exercise.
 
 Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
 
-### Deals stage board — implemented; QA pending (MEP-413)
+### Deals stage board — done; QA MEP-451 (MEP-413)
 
 Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
 
