@@ -1900,7 +1900,7 @@ test.describe("Leads list page", () => {
     const funnel = requireBox(await filter.locator("svg").boundingBox(), "funnel ink");
     expect(Math.abs(funnel.width - 15)).toBeLessThanOrEqual(0.5);
     expect(Math.abs(funnel.height - 16)).toBeLessThanOrEqual(0.5);
-    await expect(filter.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
+    await expect(filter.locator("svg")).toHaveCSS("color", "rgb(97, 110, 136)");
 
     // View type switcher: seven controls on a 6 px gap, the first tile on the measured edge,
     // the unimplemented presentations aria-disabled (Interim).
