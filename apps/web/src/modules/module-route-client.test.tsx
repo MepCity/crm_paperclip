@@ -5,9 +5,13 @@ import type { ModuleScreenDefinition } from "./types";
 
 const resolveModuleScreen = vi.fn<(tab: string) => ModuleScreenDefinition | undefined>();
 
-vi.mock("./registry", () => ({
-  resolveModuleScreen: (tab: string) => resolveModuleScreen(tab),
-}));
+vi.mock("./registry", async (importOriginal) => {
+  const original = await importOriginal<typeof import("./registry")>();
+  return {
+    ...original,
+    resolveModuleScreen: (tab: string) => resolveModuleScreen(tab),
+  };
+});
 vi.mock("./module-list-client", () => ({
   ModuleListClient: () => <p>list</p>,
 }));

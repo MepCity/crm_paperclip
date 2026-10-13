@@ -30,30 +30,37 @@ export function resolveModuleLaterKey(moduleApiName: string): ModuleKey {
   return MODULE_LATER_KEYS[moduleApiName] ?? "P3";
 }
 
+let cachedModuleScreens: readonly ModuleScreenDefinition[] | undefined;
+
 /** Add a shipped module here to enable its routes and shell entries together. */
-export const moduleScreens: readonly ModuleScreenDefinition[] = [
-  leadsScreenDefinition,
-  contactsScreenDefinition,
-  accountsScreenDefinition,
-];
+export function getModuleScreens(): readonly ModuleScreenDefinition[] {
+  if (!cachedModuleScreens) {
+    cachedModuleScreens = [
+      leadsScreenDefinition,
+      contactsScreenDefinition,
+      accountsScreenDefinition,
+    ];
+  }
+  return cachedModuleScreens;
+}
 
 export function resolveModuleScreen(
   tab: string,
-  definitions: readonly ModuleScreenDefinition[] = moduleScreens,
+  definitions: readonly ModuleScreenDefinition[] = getModuleScreens(),
 ): ModuleScreenDefinition | undefined {
   return definitions.find((definition) => definition.tab === tab);
 }
 
 export function resolveModuleScreenByApiName(
   apiName: string,
-  definitions: readonly ModuleScreenDefinition[] = moduleScreens,
+  definitions: readonly ModuleScreenDefinition[] = getModuleScreens(),
 ): ModuleScreenDefinition | undefined {
-  return definitions.find((definition) => definition.apiName === apiName);
+  return definitions.find((definition) => definition?.apiName === apiName);
 }
 
 export function isModuleRegistered(
   moduleApiName: string,
-  definitions: readonly ModuleScreenDefinition[] = moduleScreens,
+  definitions: readonly ModuleScreenDefinition[] = getModuleScreens(),
 ): boolean {
-  return definitions.some((definition) => definition.apiName === moduleApiName);
+  return definitions.some((definition) => definition?.apiName === moduleApiName);
 }

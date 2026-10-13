@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { moduleScreens, resolveModuleScreen } from "../registry";
+import { getModuleScreens, resolveModuleScreen } from "../registry";
 import { contactsScreenDefinition } from "./definition";
 
 test("exports a complete definition and registers Contacts in production", () => {
@@ -14,5 +14,5 @@ test("exports a complete definition and registers Contacts in production", () =>
   expect(contactsScreenDefinition.detail.statusRibbon).toBeUndefined();
   expect(contactsScreenDefinition.form.rules.addresses).toHaveLength(2);
   expect(resolveModuleScreen("Contacts")).toBe(contactsScreenDefinition);
-  expect(moduleScreens.some((definition) => definition.apiName === "Contacts")).toBe(true);
+  expect(getModuleScreens().some((definition) => definition.apiName === "Contacts")).toBe(true);
 });

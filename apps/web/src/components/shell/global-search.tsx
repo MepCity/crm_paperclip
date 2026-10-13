@@ -17,7 +17,7 @@ import { useGlobalSearch } from "@/lib/api/client/hooks";
 import { ApiProvider, type ClientRecordService } from "@/lib/api/client/provider";
 import { formatModuleSearchSecondaryLine } from "@/modules/global-search-format";
 import {
-  moduleScreens,
+  getModuleScreens,
   resolveModuleLaterKey,
   resolveModuleScreenByApiName,
 } from "@/modules/registry";
@@ -256,7 +256,7 @@ function ModuleChooser({
   const [query, setQuery] = useState("");
   const entries = [
     { apiName: "", pluralLabel: "All Modules" },
-    ...moduleScreens,
+    ...getModuleScreens(),
     ...DOCUMENTED_MODULE_FILTER_ITEMS.filter((item) => !item.isRegistered).map((item) => ({
       apiName: item.moduleApiName,
       pluralLabel: item.label,
