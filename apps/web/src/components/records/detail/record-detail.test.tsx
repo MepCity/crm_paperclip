@@ -228,12 +228,12 @@ test("later-module header menu actions keep the menu open without dispatching", 
   expect(screen.queryByRole("menu")).toBeNull();
 });
 
-test("later-module account subtitle is a focusable inert link", async () => {
+test("later-module subtitle is a focusable inert link", async () => {
   const user = userEvent.setup();
   const location = window.location.href;
-  render(<RecordHeader {...base} subtitleLaterModule="M3" />);
+  render(<RecordHeader {...base} subtitleLaterModule="M4" />);
   const link = screen.getByRole("link", { name: "Example Company" });
-  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.getAttribute("data-later-module")).toBe("M4");
   expect(link.getAttribute("aria-disabled")).toBe("true");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.hasAttribute("title")).toBe(false);
