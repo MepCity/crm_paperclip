@@ -2,6 +2,7 @@ import RecordBoardDemo from "@/components/records/board/record-board.demo";
 import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import StageBarDemo from "@/components/records/detail/stage-bar/stage-bar.demo";
 import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
@@ -87,6 +88,7 @@ export const demos: Record<string, React.ComponentType> = {
   table: TableDemo,
   "record-table": RecordTableDemo,
   "record-detail-cards": RecordDetailCardsDemo,
+  "stage-bar": StageBarDemo,
   spinner: SpinnerDemo,
   tabs: TabsDemo,
   tooltip: TooltipDemo,

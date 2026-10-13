@@ -179,7 +179,7 @@ what the "no colour constants" rule forbids.
 | `--color-popover-sort-border` | `#ced0e1` | list-views.md › Sort popover › "1 px `#CED0E1` border" | from spec |
 | `--color-surface-selected` | `#f0f4fc` | list-views.md › Header and tab strip › "with 6 px corners and `#F0F4FC` fill" | from spec |
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
-| `--color-list-filter-toggle-icon` | `#000000` | list-views.md › Filter toggle, panel open › the funnel "solid glyph ink" | from spec |
+| `--color-list-filter-toggle-icon` | `#616e88` | list-views.md › View type switcher › glyph color "#616E88" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › All Modules and All Sources placeholders `#8B9AB9` | from spec |

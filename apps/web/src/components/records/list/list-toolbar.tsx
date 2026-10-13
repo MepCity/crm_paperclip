@@ -65,7 +65,10 @@ export function ListToolbar({
           aria-label="Refresh Custom View"
           onPress={onRefresh}
         >
-          <Icons.refresh aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <Icons.refresh
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 text-(--color-text-muted)"
+          />
         </Button>
       </div>
       <div className="flex items-center gap-(--size-button-gap)">

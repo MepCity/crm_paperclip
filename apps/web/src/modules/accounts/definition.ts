@@ -25,6 +25,19 @@ import {
 import { ACCOUNTS_LIST_CURRENCY_CODE, accountsListPageConfig } from "./list-config";
 import { buildAccountsFilterGroups } from "./list-filters";
 
+export const accountsMergeDefinition = {
+  criterionFields: ["Account_Name", "Phone", "Website", "Account_Number"],
+  matchingColumns: [
+    "Account_Name",
+    "Phone",
+    "Website",
+    "Account_Number",
+    "Created_Time",
+    "Modified_Time",
+    "Owner",
+  ],
+} as const;
+
 export const accountsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Accounts",
   tab: "Accounts",
@@ -36,6 +49,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
   list: accountsListPageConfig,
   listCurrencyCode: ACCOUNTS_LIST_CURRENCY_CODE,
   searchColumns: ["Account_Name", "Phone", "Website", "Owner"],
+  merge: accountsMergeDefinition,
   buildFilterGroups: buildAccountsFilterGroups,
   form: {
     rules: accountsFormRules,

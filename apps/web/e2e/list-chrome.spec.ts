@@ -55,7 +55,7 @@ test("list chrome matches the measured tab, toolbar and button rows", async ({ p
   await expect(list).toHaveCSS("color", "rgb(84, 100, 242)");
   await expect(list).toHaveCSS("border-radius", "3.5px");
   await box("Filter icon", filter.locator("svg"), 15, 16);
-  await expect(filter.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(filter.locator("svg")).toHaveCSS("color", "rgb(97, 110, 136)");
   await box(
     "Refresh icon",
     chrome.getByRole("button", { name: "Refresh Custom View" }).locator("svg"),

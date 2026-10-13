@@ -87,3 +87,13 @@ test("Actions opens, invokes the enabled menu item and closes with the keyboard"
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("menu")).toBeNull();
 });
+
+test("every toolbar icon svg has fill='none' and a stroke", () => {
+  const { container } = render(<ListToolbar {...base} />);
+  const svgs = container.querySelectorAll("svg");
+  expect(svgs.length).toBeGreaterThanOrEqual(9);
+  for (const svg of svgs) {
+    expect(svg.getAttribute("fill")).toBe("none");
+    expect(svg.getAttribute("stroke")).toBe("currentColor");
+  }
+});
