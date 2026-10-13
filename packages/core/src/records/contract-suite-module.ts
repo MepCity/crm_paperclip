@@ -271,6 +271,10 @@ export const accountsRecordServiceContractModule: RecordServiceContractModuleDef
     massUpdateClearablePhone: "Phone",
     massUpdateInvalidNumeric: "Employees",
     lengthValidationField: "Account_Name",
+    sortWithNumeric: {
+      isolateField: "Account_Name",
+      numericField: "Employees",
+    },
     singleModuleLookup: {
       field: "Parent_Account",
       reference: { module: "Accounts", id: "500000000000000000" },
