@@ -66,7 +66,7 @@ export default function RecordBoardDemo() {
               <option>STAGEVIEW</option>
             </select>
             <Button variant="ghost" aria-label="Board settings">
-              <Icons.fieldEdit className="h-4 w-4" />
+              <Icons.fieldEdit aria-hidden className="h-4 w-4" />
             </Button>
           </>
         }
