@@ -54,8 +54,15 @@ function validateField(
       return validationFormatMessage(label);
   }
 
-  if (field.dataType === "integer" || field.dataType === "bigint") {
+  if (field.dataType === "integer") {
     if (typeof value === "number" && !Number.isInteger(value))
+      return validationFormatMessage(label);
+  }
+
+  // A long integer stays digit text in the form, so anything else that was typed — a letter, a
+  // decimal separator, an inner space — is reported here instead of reaching the service.
+  if (field.dataType === "bigint") {
+    if (typeof normalized !== "string" || !/^\d+$/.test(normalized))
       return validationFormatMessage(label);
   }
 

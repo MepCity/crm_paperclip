@@ -273,24 +273,30 @@ test("owner searches name/email, selects opaque id and invokes the adjacent pick
   await user.click(screen.getByRole("button", { name: "Open owner picker" }));
   expect(picker).toHaveBeenCalledOnce();
 });
-test.each(["text", "textarea", "date", "integer", "picklist", "ownerlookup", "boolean"] as const)(
-  "%s disabled rejects interaction and errors are associated",
-  async (type) => {
-    const user = userEvent.setup();
-    const change = vi.fn();
-    render(<Controlled type={type} disabled errorMessage="Invalid example" onChange={change} />);
-    const input = screen.getByLabelText("Example");
-    expect(input.getAttribute("aria-invalid")).toBe("true");
-    const ids = input.getAttribute("aria-describedby")?.split(" ") ?? [];
-    expect(ids.some((id) => document.getElementById(id)?.textContent === "Invalid example")).toBe(
-      true,
-    );
-    await user.click(input);
-    await user.keyboard("changed");
-    expect(change).not.toHaveBeenCalled();
-    expect(screen.queryByRole("listbox")).toBeNull();
-  },
-);
+test.each([
+  "text",
+  "textarea",
+  "date",
+  "integer",
+  "bigint",
+  "picklist",
+  "ownerlookup",
+  "boolean",
+] as const)("%s disabled rejects interaction and errors are associated", async (type) => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type={type} disabled errorMessage="Invalid example" onChange={change} />);
+  const input = screen.getByLabelText("Example");
+  expect(input.getAttribute("aria-invalid")).toBe("true");
+  const ids = input.getAttribute("aria-describedby")?.split(" ") ?? [];
+  expect(ids.some((id) => document.getElementById(id)?.textContent === "Invalid example")).toBe(
+    true,
+  );
+  await user.click(input);
+  await user.keyboard("changed");
+  expect(change).not.toHaveBeenCalled();
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
 test("profile placeholder is noninteractive and unsupported types render nothing", () => {
   render(<Controlled type="profileimage" />);
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
@@ -303,19 +309,51 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   }
 });
 
-test("bigint renders the same single-line numeric entry as integer", async () => {
+test("bigint keeps a long integer as digit text instead of a number", async () => {
   const user = userEvent.setup();
   const change = vi.fn();
-  render(<Controlled type="bigint" initial={1234567890} onChange={change} />);
+  render(<Controlled type="bigint" initial={null} onChange={change} />);
   const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
-  expect(input.value).toBe("1234567890");
+  await user.type(input, "9007199254740993");
+  expect(change).toHaveBeenLastCalledWith("9007199254740993");
+  expect(input.getAttribute("inputmode")).toBe("numeric");
   await user.clear(input);
-  await user.type(input, "42");
-  await user.tab();
-  expect(change).toHaveBeenLastCalledWith(42);
-  await user.clear(input);
-  await user.tab();
   expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test("bigint shows the digit text stored by the service", () => {
+  render(<FieldInput field={field("bigint")} value="123456789012345678" onChange={() => {}} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("123456789012345678");
+});
+
+test("bigint caps the entry at the field's own length limit", () => {
+  render(
+    <FieldInput
+      field={{ ...field("bigint"), maxLength: 18 }}
+      value="123456789012345678"
+      onChange={() => {}}
+    />,
+  );
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.maxLength).toBe(18);
+});
+
+test("bigint is drawn in the same frame as the numeric entries", () => {
+  const { container: bigintContainer } = render(
+    <FieldInput field={field("bigint")} value="42" onChange={() => {}} />,
+  );
+  const bigintInput = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  const bigintFrame = bigintContainer.querySelector(".record-input-frame")?.className;
+  const bigintAria = bigintInput.getAttribute("aria-invalid");
+  cleanup();
+  const { container: numberContainer } = render(
+    <FieldInput field={field("integer")} value={42} onChange={() => {}} />,
+  );
+  const numberInput = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(numberContainer.querySelector(".record-input-frame")?.className).toBe(bigintFrame);
+  expect(numberInput.className).toBe(bigintInput.className);
+  expect(numberInput.getAttribute("aria-invalid")).toBe(bigintAria);
 });
 
 test("lookup input with registered target displays value and opens selector dialog", async () => {
