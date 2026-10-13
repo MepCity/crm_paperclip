@@ -232,7 +232,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-open-activities",
-      countBadge: badgeValue(badges.openActivities ?? 1),
+      countBadge: badgeValue(badges.openActivities),
       upperControls: [
         {
           id: "add-new",
@@ -284,7 +284,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 8,
       targetId: "related-list-closed-activities",
-      countBadge: badgeValue(badges.closedActivities ?? 1),
+      countBadge: badgeValue(badges.closedActivities),
       upperControls: [
         {
           id: "column-view-closed",

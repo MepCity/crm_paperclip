@@ -76,8 +76,8 @@ describe("accountsRelatedLists definition", () => {
   it("exposes rail badges, plus actions, and Links group metadata", () => {
     expect(structuralLists.find((c) => c.id === "notes")?.countBadge).toBeDefined();
     expect(structuralLists.find((c) => c.id === "contacts")?.countBadge).toBeDefined();
-    expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeDefined();
-    expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeDefined();
+    expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
+    expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
 
     expect(structuralLists.find((c) => c.id === "notes")?.railAction?.moduleKey).toBe("M6");
     expect(structuralLists.find((c) => c.id === "deals")?.railAction?.moduleKey).toBe("M4");
