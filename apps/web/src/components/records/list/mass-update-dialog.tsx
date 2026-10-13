@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FieldInput, type OwnerOption } from "@/components/records/form/field-input";
 import { normalizeFormValue } from "@/components/records/form/form-model";
 import { Button } from "@/components/ui/button";
+import { claimOpeningFocus } from "@/components/ui/opening-focus";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useMassUpdate } from "@/lib/api/client/hooks";
@@ -59,7 +60,7 @@ export function MassUpdateDialog({
     setValue(undefined);
     setFieldError(null);
     setGeneralError(null);
-    const frame = requestAnimationFrame(() => cancelRef.current?.focus());
+    const frame = requestAnimationFrame(() => claimOpeningFocus(cancelRef.current));
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
