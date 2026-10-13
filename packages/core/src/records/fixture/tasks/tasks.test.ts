@@ -173,7 +173,13 @@ describe("Tasks activity foundation", () => {
       const list = await service.list("Tasks", { ...query, filters });
       const expected = generateFixtureTasks(68, now).filter((task) => {
         const ref = task.fields[field];
-        return typeof ref === "object" && ref !== null && ref.module === module && ref.id === id;
+        return (
+          typeof ref === "object" &&
+          ref !== null &&
+          "module" in ref &&
+          ref.module === module &&
+          ref.id === id
+        );
       });
       expect(list.records.map((record) => record.id).sort()).toEqual(
         expected.map((record) => record.id).sort(),

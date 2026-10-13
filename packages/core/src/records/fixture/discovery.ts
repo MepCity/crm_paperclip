@@ -32,6 +32,7 @@ export function matchesGlobalSearch(
 ): boolean {
   return fields.some(
     (field) =>
+      !field.acceptsJsonArray &&
       (nameField ? field.apiName === nameField : searchableTypes.has(field.dataType)) &&
       searchableText(record.fields[field.apiName]).toLowerCase().includes(text),
   );
@@ -45,6 +46,23 @@ export function duplicateKey(value: unknown): string | null {
   return String(value).toLowerCase();
 }
 
+/** Opaque JSON equality keeps array order and scalar types, ignoring object key order. */
+export function fieldValueKey(value: unknown, field: FieldDefinition): string | null {
+  if (!field.acceptsJsonArray && field.dataType !== "ALARM" && field.dataType !== "RRULE")
+    return duplicateKey(value);
+  if (value == null) return null;
+  const canonical = (item: unknown): unknown => {
+    if (Array.isArray(item)) return item.map(canonical);
+    if (item !== null && typeof item === "object")
+      return Object.fromEntries(
+        Object.entries(item)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, child]) => [key, canonical(child)]),
+      );
+    return item;
+  };
+  return JSON.stringify(canonical(value));
+}
 // Identity and the write lock are never values a caller can choose during a merge.
 const neverConflictFields = new Set(["id", "Locked__s"]);
 
@@ -63,7 +81,12 @@ export function duplicateGroups(
     throw new ValidationError({ fields: ["Choose between one and three distinct known fields."] });
   const groups = new Map<string, RecordData[]>();
   for (const record of records) {
-    const parts = fields.map((name) => duplicateKey(record.fields[name]));
+    const parts = fields.map((name) =>
+      fieldValueKey(
+        record.fields[name],
+        metadata.find((field) => field.apiName === name) as FieldDefinition,
+      ),
+    );
     if (parts.some((part) => part === null)) continue;
     const key = JSON.stringify(parts);
     const group = groups.get(key) ?? [];
@@ -83,7 +106,7 @@ export function duplicateGroups(
             !managed.has(field.apiName) &&
             new Set(
               group
-                .map((record) => duplicateKey(record.fields[field.apiName]))
+                .map((record) => fieldValueKey(record.fields[field.apiName], field))
                 .filter((key) => key !== null),
             ).size > 1,
         )

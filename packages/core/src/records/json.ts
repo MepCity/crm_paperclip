@@ -1,7 +1,7 @@
-import type { JsonObject } from "./contract";
+import type { JsonObject, JsonValue } from "./contract";
 
 /** Plain JSON only, with finite numbers and no cycles or non-JSON members. */
-export function isJsonObject(value: unknown): value is JsonObject {
+function isJsonContainer(value: unknown): boolean {
   const ancestors = new Set<object>();
   function valid(item: unknown): boolean {
     if (item === null || typeof item === "string" || typeof item === "boolean") return true;
@@ -28,5 +28,12 @@ export function isJsonObject(value: unknown): value is JsonObject {
     ancestors.delete(item);
     return result;
   }
-  return value !== null && typeof value === "object" && !Array.isArray(value) && valid(value);
+  return value !== null && typeof value === "object" && valid(value);
+}
+
+export function isJsonObject(value: unknown): value is JsonObject {
+  return !Array.isArray(value) && isJsonContainer(value);
+}
+export function isJsonArray(value: unknown): value is readonly JsonValue[] {
+  return Array.isArray(value) && isJsonContainer(value);
 }

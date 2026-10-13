@@ -51,6 +51,7 @@ export function CellValue({
     field.dataType === "lookup" &&
     typeof value === "object" &&
     value &&
+    "id" in value &&
     typeof value.id === "string" &&
     (typeof value.name !== "string" || !value.name.trim())
   ) {
