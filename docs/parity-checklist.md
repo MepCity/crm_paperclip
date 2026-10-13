@@ -417,3 +417,34 @@ Export Accounts M6; Create Client Script M11; Sheet view P3.
 Absent from Contacts: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47 (no row activity pulse or badge column space; selection checkbox is immediately before Account Name).
 Mass action flows (Mass Update, Change Owner, Delete Account) wire to selection bar dialogs.
 Contacts Account Name lookup cells now link to `/tab/Accounts/:id` active record routes.
+
+## Module 4 — Deals
+
+Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md`.
+
+### Deals list — implemented; QA pending (MEP-410)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-16 | Registered in registry.ts beneath Accounts; list and detail routes resolve Deals definition | `registry.test.ts`, `definition.test.ts`, `deals-list.spec.ts` |
+| DL-01 | Single pinned tab strip with "All Deals" (no second tab unlike Accounts) | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-02 | View ellipsis menu with 11 stock views in reference CRM order; custom view switching; "My Deals" omits Owner column | `deals.test.ts`, `deals-list.spec.ts` |
+| DL-03, DL-64 | Filter toggle button, list refresh button | `deals-list.spec.ts` |
+| DL-04 | Sort popover by Deal Name and field dictionary labels | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-05–DL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | `view-type-switcher.test.tsx`, `deals-list.spec.ts` |
+| DL-12, DL-13 | Create Deal primary button; attached arrow dropdown (M6, inert) | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-14 | 10 Actions menu items in reference order (Mass Transfer, Mass Delete, Mass Update, Manage Tags M6, Drafts, Deduplicate Deals, Create Client Script M11, Export Deals M6, Sheet view P3, Print View) | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-15–DL-25 | System defined filters (Activities M5, Latest Email Status M10, Locked, Record Action, Related Records Action, Touched Records, Untouched Records, Cadences P3) | `list-filters.test.ts`, `deals-list.spec.ts` |
+| DL-26, DL-27, DL-65–DL-69 | Field filters with visible rows: Account Name, Amount, Campaign Source (M7), Closing Date, Connected To, Contact Name | `list-filters.test.ts`, `deals-list.spec.ts` |
+| DL-34, DL-40 | Header and row-level selection checkboxes; selection bar integration | `deals-list.spec.ts` |
+| DL-35, DL-39 | Columns: Deal Name, Amount, Stage, Closing Date, Account Name, Contact Name, Deal Owner (Owner omitted in My Deals) | `deals.test.ts`, `deals-list.spec.ts` |
+| DL-36 | Alphabet filter (A-Z, All) on Deal Name link column | `deals-list.spec.ts` |
+| DL-42 / DL-78 | Deal Name row link navigates to Deals record detail route | `deals-list.spec.ts` |
+| DL-79, DL-80 | Account Name and Contact Name lookup cells link to registered Accounts and Contacts record routes | `cell-value.test.tsx`, `deals-list.spec.ts` |
+| DL-48–DL-51 | Pagination: count, page size, next/previous links | `deals-list.spec.ts` |
+
+Later-module controls: Create Deal arrow M6; Activities M5; Latest Email Status M10;
+Cadences P3; Campaign Source M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3.
+Badge column is absent (badgeColumn: false matching Accounts).
+Mass action flows (Mass Update, Change Owner, Delete Deal) wire to selection bar dialogs.
+
