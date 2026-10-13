@@ -360,3 +360,156 @@ test("the alphabetical control works alongside linkFieldLabel", () => {
   expect(within(header).getByRole("button", { name: "Filter by first letter" })).toBeTruthy();
   expect(header.getAttribute("aria-label")).toBe("Lead Name");
 });
+
+test("renders handset icon for populated phone cells when phoneLaterModule is provided", () => {
+  const phoneColumn: FieldDefinition = {
+    apiName: "Phone",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Phone",
+    dataType: "phone",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  render(
+    <RecordTable
+      columns={[phoneColumn]}
+      records={[{ id: "rec-1", fields: { Phone: "555-0100" } }]}
+      linkField="Phone"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      phoneLaterModule="M5"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  const callBtn = screen.getByRole("button", { name: "Call" });
+  expect(callBtn.getAttribute("data-later-module")).toBe("M5");
+  expect(callBtn.getAttribute("aria-disabled")).toBe("true");
+});
+
+test("renders website cells as links only when linkWebsite is true", () => {
+  const websiteColumn: FieldDefinition = {
+    apiName: "Website",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Website",
+    dataType: "website",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  const { unmount } = render(
+    <RecordTable
+      linkWebsite={true}
+      columns={[websiteColumn]}
+      records={[{ id: "rec-1", fields: { Website: "https://example.org" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  const link = screen.getByRole("link", { name: "https://example.org" });
+  expect(link.getAttribute("href")).toBe("https://example.org");
+  unmount();
+
+  render(
+    <RecordTable
+      linkWebsite={false}
+      columns={[websiteColumn]}
+      records={[{ id: "rec-1", fields: { Website: "https://example.org" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  expect(screen.queryByRole("link", { name: "https://example.org" })).toBeNull();
+  expect(screen.getByText("https://example.org")).toBeTruthy();
+});
+
+test("omits badge column and pulse button when badgeColumn is false", () => {
+  const nameColumn: FieldDefinition = {
+    apiName: "Account_Name",
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    label: "Account Name",
+    dataType: "text",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+  };
+  render(
+    <RecordTable
+      laterInventory={true}
+      badgeColumn={false}
+      columns={[nameColumn]}
+      records={[{ id: "rec-1", fields: { Account_Name: "Acme Corp" } }]}
+      linkField="Account_Name"
+      rowHref={() => "/records/rec-1"}
+      selectedIds={[]}
+      onSelectedIdsChange={vi.fn()}
+      sortableFields={new Set()}
+      onSortChange={vi.fn()}
+      wrapText={false}
+      emptyMessage="No records"
+      format={DEFAULT_FORMAT}
+      footer={{
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        recordCount: 1,
+        moreRecords: false,
+        previousHref: null,
+        nextHref: null,
+      }}
+    />,
+  );
+  expect(document.querySelector("[data-part=badge]")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Record activity" })).toBeNull();
+  expect(screen.getByRole("checkbox", { name: "Select Acme Corp" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Acme Corp" })).toBeTruthy();
+});

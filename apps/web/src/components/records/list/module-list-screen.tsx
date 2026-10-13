@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
 import {
   combineCriteriaAnd,
@@ -74,6 +75,10 @@ export interface ModuleListScreenConfig {
   sortFieldLabels: readonly string[];
   linkFieldLabel: string;
   paths: ModuleListPaths;
+  pinnedViews?: readonly string[];
+  phoneLaterModule?: ModuleKey;
+  linkWebsite?: boolean;
+  badgeColumn?: boolean;
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -547,6 +552,7 @@ function ModuleListScreenLoaded({
       <ViewTabStrip
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
+        pinnedViews={config.pinnedViews}
         onViewChange={(id) => router.push(config.paths.customList(orgSlug, config.module, id))}
       />
       {selectionActive ? (
@@ -639,6 +645,9 @@ function ModuleListScreenLoaded({
         <div className="module-list-table-host">
           <RecordTable
             laterInventory={Boolean(config.inventory)}
+            badgeColumn={config.badgeColumn}
+            phoneLaterModule={config.phoneLaterModule}
+            linkWebsite={config.linkWebsite}
             columns={columns}
             records={records}
             linkField={config.linkField}

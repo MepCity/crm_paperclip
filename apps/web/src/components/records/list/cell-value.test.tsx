@@ -227,7 +227,7 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Accounts" } })}
+      field={field("lookup", { lookup: { module: "Deals" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
