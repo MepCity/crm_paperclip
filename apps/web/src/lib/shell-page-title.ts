@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { moduleScreens } from "@/modules/registry";
+import { getModuleScreens } from "@/modules/registry";
 
 /** Toolbar titles shared by PageTitle and route metadata. */
 export const shellPageTitle = {
   home: "Home",
   settings: "Settings",
   ...Object.fromEntries(
-    moduleScreens.map((definition) => [definition.navigation.id, definition.pageTitle]),
+    getModuleScreens().map((definition) => [definition.navigation.id, definition.pageTitle]),
   ),
   loading: "Loading",
   pageNotFound: "Page not found",

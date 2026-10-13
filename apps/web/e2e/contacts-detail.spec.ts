@@ -230,6 +230,52 @@ test.describe("Contacts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("primary command, tab-row update indicator and empty activity badges", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+
+    // D-05: Send Email draws the filled primary command.
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
+    await expect(sendEmail).toHaveCSS(
+      "background-image",
+      /rgb\(87, 103, 246\).*rgb\(19, 77, 196\)/,
+    );
+
+    // D-35: the indicator shares the Overview/Timeline row at its right end, clock first.
+    const tabRow = page.locator("[data-record-tab-row]");
+    const lastUpdate = tabRow.locator(".detail-last-update");
+    await expect(lastUpdate).toBeVisible();
+    await expect(lastUpdate.locator("svg")).toHaveCount(1);
+    const row = await tabRow.boundingBox();
+    const label = await lastUpdate.boundingBox();
+    if (!row || !label) throw new Error("Missing tab row or Last Update indicator");
+    expect(label.y).toBeGreaterThanOrEqual(row.y);
+    expect(label.y + label.height).toBeLessThanOrEqual(row.y + row.height);
+    expect(row.x + row.width - (label.x + label.width)).toBeLessThanOrEqual(16);
+    await expect(page.locator("[data-record-scroller] .detail-last-update")).toHaveCount(0);
+
+    // D-30/D-31: no tasks, meetings or calls means no rail badge.
+    const badgeRows = await page.evaluate(() => {
+      const rail = document.querySelector("#record-related-rail");
+      return Array.from(rail?.querySelectorAll("div[class*='justify-between']") ?? []).map(
+        (entry) => ({
+          label: entry.querySelector("a")?.textContent?.trim() ?? "",
+          badge: entry.querySelector("span[class*='rounded-full']")?.textContent?.trim() ?? null,
+        }),
+      );
+    });
+    for (const title of ["Open Activities", "Closed Activities"]) {
+      expect(badgeRows.filter((entry) => entry.label === title)).toEqual([]);
+    }
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Phone field renders call icon button in business card and details card (D-37, D-41)", async ({
     page,
     pageErrors,

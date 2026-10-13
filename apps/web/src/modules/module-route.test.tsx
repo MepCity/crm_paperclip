@@ -24,7 +24,7 @@ vi.mock("@/components/shell/page-title", () => ({
 }));
 vi.mock("./registry", async (importOriginal) => {
   const original = await importOriginal<typeof import("./registry")>();
-  const base = original.moduleScreens[0];
+  const base = original.getModuleScreens()[0];
   if (!base) throw new Error("Missing shipped module.");
   const fake: ModuleScreenDefinition = {
     ...base,
@@ -43,7 +43,7 @@ vi.mock("./registry", async (importOriginal) => {
     },
     detail: { ...base.detail, statusRibbon: undefined },
   };
-  const definitions = [...original.moduleScreens, fake];
+  const definitions = [...original.getModuleScreens(), fake];
   return {
     ...original,
     resolveModuleScreen: (tab: string) => original.resolveModuleScreen(tab, definitions),

@@ -30,11 +30,10 @@ test("keeps all fifteen menu rows in the three observed groups and connects only
   expect(handlers.onDelete).toHaveBeenCalledOnce();
   items[4]?.onAction?.();
   expect(handlers.onFindMergeDuplicates).toHaveBeenCalledOnce();
-  for (const index of [1, 3]) {
-    expect(items[index]?.laterModule).toBeUndefined();
-    expect(items[index]?.isDisabled).toBeUndefined();
-    expect(items[index]?.onAction).toBeUndefined();
-  }
+  expect(items[1]?.laterModule).toBe("M11");
+  expect(items[1]?.onAction).toBeUndefined();
+  expect(items[3]?.laterModule).toBe("M6");
+  expect(items[3]?.onAction).toBeUndefined();
   expect(items.slice(5).map((item) => item.laterModule)).toEqual([
     "M9",
     "M12",

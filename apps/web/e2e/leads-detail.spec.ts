@@ -437,8 +437,8 @@ test.describe("Lead record detail page", () => {
     expectEdge(itemBox.height, 30);
     expect(Math.abs(itemBox.width - 203.5)).toBeLessThanOrEqual(1);
     expect(Math.abs(itemBox.x - popBox.x - 6.5)).toBeLessThanOrEqual(1);
-    // Clone is the first actionable row (y 6); Delete is the second (30 px pitch).
-    expect(itemBox.y - popBox.y).toBe(36);
+    // Clone (y 6), Share (36), Delete (66) — 30 px row pitch.
+    expect(itemBox.y - popBox.y).toBe(66);
     await item.focus();
     await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
     await expect(item).toHaveCSS("padding-left", "10.25px");

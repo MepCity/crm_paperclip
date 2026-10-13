@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import type { ModuleScreenDefinition } from "../types";
+import { ContactRecordScreen } from "./contact-record-screen";
 import {
   buildContactsBusinessCardFields,
   buildContactsDetailSections,
@@ -44,6 +45,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   pluralLabel: "Contacts",
   pageTitle: "Contacts",
   navigation: { id: "contacts", icon: Icons.users },
+  search: { secondaryFields: ["Email", "Phone"] },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,
   searchColumns: ["Full_Name", "Account_Name", "Email", "Phone", "Owner"],
@@ -56,6 +58,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     profileImageLaterModule: "M6",
   },
   detail: {
+    Screen: ContactRecordScreen,
     header: contactsRecordHeaderIdentity,
     addTags: { label: "Add Tags", laterModule: "M6" },
     headerCommands: [
@@ -65,6 +68,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     sections: buildContactsDetailSections,
     inlineEditable: isContactInlineEditable,
     lastUpdate: formatContactsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildContactsRecordMoreMenuGroups,
     deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
     deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
