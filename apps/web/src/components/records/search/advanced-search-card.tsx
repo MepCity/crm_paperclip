@@ -7,12 +7,14 @@ import { Link } from "@/components/ui/link";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
+import type { ModuleScreenDefinition } from "@/modules/types";
 import { formatFieldValue } from "../field-format";
 import { NOTES_CARD_COLUMNS } from "./constants";
 
 export interface AdvancedSearchCardProps {
   module: ModuleApiName;
   moduleLabel: string;
+  definition?: ModuleScreenDefinition;
   total: number;
   records: readonly RecordData[];
   page: number;
@@ -28,6 +30,7 @@ export interface AdvancedSearchCardProps {
 export function AdvancedSearchCard({
   module,
   moduleLabel,
+  definition: propsDefinition,
   total,
   records,
   page,
@@ -44,17 +47,15 @@ export function AdvancedSearchCard({
   const hasPrev = page > 1;
   const hasNext = page * perPage < total;
 
-  const definition = resolveModuleScreenByApiName(module);
+  const definition = propsDefinition ?? resolveModuleScreenByApiName(module);
   const tabName = definition?.tab ?? module;
-  const linkFieldName =
-    definition?.list?.linkField ?? (module === "Accounts" ? "Account_Name" : "Full_Name");
+  const linkFieldName = definition?.list?.linkField ?? "Full_Name";
 
   function getColumnLabel(colApiName: string): string {
     const field = fieldsByApiName[colApiName];
     if (field?.label) return field.label;
     if (colApiName === "Owner") return `${moduleLabel} Owner`;
     if (colApiName === "Full_Name") return `${moduleLabel} Name`;
-    if (colApiName === "Account_Name" && module === "Accounts") return "Account Name";
     return colApiName.replace(/_/g, " ");
   }
 

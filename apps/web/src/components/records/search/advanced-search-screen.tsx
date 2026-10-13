@@ -1,25 +1,21 @@
 "use client";
 
-import type {
-  Criteria,
-  FieldDefinition,
-  ModuleApiName,
-  SearchGroup,
-  SortSpec,
-} from "@crm/core/records";
+import type { Criteria, ModuleApiName, SearchGroup, SortSpec } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FilterDraft } from "@/components/records/list/filter-editor";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Select, SelectItem } from "@/components/ui/select";
 import { useModule, useUsers, useView, useViews } from "@/lib/api/client/hooks";
 import { useClientRecordService, useOrgSlug } from "@/lib/api/client/provider";
+import { moduleScreens, resolveModuleScreenByApiName } from "@/modules/registry";
+import type { ModuleScreenDefinition } from "@/modules/types";
 import { AdvancedSearchCard, NotesSearchCard } from "./advanced-search-card";
 import { AdvancedSearchFilterPanel } from "./advanced-search-filter-panel";
 import {
   DEFAULT_PAGE_SIZE,
-  DOCUMENTED_MODULE_FILTER_ITEMS,
-  REGISTERED_SEARCH_MODULES,
+  getDocumentedModuleFilterItems,
   SORT_OPTIONS,
   SYSTEM_FILTER_FIELDS,
 } from "./constants";
@@ -28,15 +24,130 @@ import { ManageColumnsDialog } from "./manage-columns-dialog";
 export interface AdvancedSearchScreenProps {
   initialQuery?: string;
   initialModule?: string;
+  moduleDefinitions?: readonly ModuleScreenDefinition[];
+}
+
+/** Preload module metadata and view list in parallel from screen mount. */
+function ModulePrefetcher({ module }: { module: ModuleApiName }) {
+  useModule(module);
+  useViews(module);
+  return null;
+}
+
+interface AdvancedSearchModuleCardProps {
+  module: ModuleApiName;
+  moduleLabel: string;
+  definition?: ModuleScreenDefinition;
+  total: number;
+  records: SearchGroup["records"];
+  page: number;
+  perPage: number;
+  selectedColumns?: readonly string[];
+  onColumnsChange: (columns: string[]) => void;
+  ownerNames: Readonly<Record<string, string>>;
+  onPageChange: (newPage: number) => void;
+  orgSlug: string;
+}
+
+function AdvancedSearchModuleCard({
+  module,
+  moduleLabel,
+  definition,
+  total,
+  records,
+  page,
+  perPage,
+  selectedColumns,
+  onColumnsChange,
+  ownerNames,
+  onPageChange,
+  orgSlug,
+}: AdvancedSearchModuleCardProps) {
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
+
+  const moduleData = useModule(module);
+  const viewsData = useViews(module);
+
+  const defaultViewId =
+    viewsData.data?.find((v) => v.isDefault)?.id ?? viewsData.data?.[0]?.id ?? "";
+  const defaultView = useView(module, defaultViewId);
+  const viewColumns = defaultView.data?.columns;
+
+  const allFields = moduleData.data?.fields ?? [];
+  const fieldsByApiName = useMemo(() => {
+    return Object.fromEntries(allFields.map((f) => [f.apiName, f]));
+  }, [allFields]);
+
+  const defaultColumns = useMemo(() => {
+    if (viewColumns && viewColumns.length > 0) {
+      return viewColumns.slice(0, 5);
+    }
+    if (definition?.searchColumns && definition.searchColumns.length > 0) {
+      return definition.searchColumns.slice(0, 5);
+    }
+    if (allFields.length > 0) {
+      const linkField = definition?.list?.linkField;
+      const names = allFields.map((f) => f.apiName);
+      if (linkField && names.includes(linkField)) {
+        return [linkField, ...names.filter((n) => n !== linkField)].slice(0, 5);
+      }
+      return names.slice(0, 5);
+    }
+    const linkField = definition?.list?.linkField;
+    return linkField ? [linkField] : [];
+  }, [viewColumns, definition?.searchColumns, definition?.list?.linkField, allFields]);
+
+  const activeColumns = selectedColumns ?? defaultColumns;
+
+  return (
+    <>
+      <AdvancedSearchCard
+        module={module}
+        moduleLabel={moduleLabel}
+        definition={definition}
+        total={total}
+        records={records}
+        page={page}
+        perPage={perPage}
+        columns={activeColumns}
+        fieldsByApiName={fieldsByApiName}
+        ownerNames={ownerNames}
+        onPageChange={onPageChange}
+        onOpenManageColumns={() => setIsManageColumnsOpen(true)}
+        orgSlug={orgSlug}
+      />
+      {isManageColumnsOpen && (
+        <ManageColumnsDialog
+          isOpen={true}
+          onClose={() => setIsManageColumnsOpen(false)}
+          moduleLabel={moduleLabel}
+          allFields={allFields}
+          selectedColumns={activeColumns}
+          onSave={onColumnsChange}
+        />
+      )}
+    </>
+  );
 }
 
 export function AdvancedSearchScreen({
   initialQuery = "",
   initialModule,
+  moduleDefinitions = moduleScreens,
 }: AdvancedSearchScreenProps) {
   const router = useRouter();
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
+
+  const documentedItems = useMemo(
+    () => getDocumentedModuleFilterItems(moduleDefinitions),
+    [moduleDefinitions],
+  );
+
+  const registeredModules = useMemo(
+    () => documentedItems.filter((item) => item.isRegistered).map((item) => item.moduleApiName),
+    [documentedItems],
+  );
 
   const [queryText, setQueryText] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
@@ -45,15 +156,17 @@ export function AdvancedSearchScreen({
 
   // Selected modules in filter
   const [appliedModules, setAppliedModules] = useState<ModuleApiName[]>(() => {
-    if (initialModule && REGISTERED_SEARCH_MODULES.includes(initialModule)) {
+    if (initialModule && registeredModules.includes(initialModule)) {
       return [initialModule];
     }
-    return [...REGISTERED_SEARCH_MODULES];
+    return [...registeredModules];
   });
 
   // Applied field criteria
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
   const [appliedFilterNames, setAppliedFilterNames] = useState<string[]>([]);
+  const [appliedSelectedFields, setAppliedSelectedFields] = useState<string[]>([]);
+  const [appliedDrafts, setAppliedDrafts] = useState<Record<string, FilterDraft>>({});
 
   // Card pagination: module -> page
   const [cardPages, setCardPages] = useState<Record<string, number>>({});
@@ -63,25 +176,9 @@ export function AdvancedSearchScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState<unknown | null>(null);
 
-  // Metadata for Leads, Contacts, Accounts
-  const leadsModule = useModule("Leads");
-  const contactsModule = useModule("Contacts");
-  const accountsModule = useModule("Accounts");
-
-  const leadsViews = useViews("Leads");
-  const contactsViews = useViews("Contacts");
-  const accountsViews = useViews("Accounts");
-
-  const leadsDefaultViewId =
-    leadsViews.data?.find((v) => v.isDefault)?.id ?? leadsViews.data?.[0]?.id ?? "";
-  const contactsDefaultViewId =
-    contactsViews.data?.find((v) => v.isDefault)?.id ?? contactsViews.data?.[0]?.id ?? "";
-  const accountsDefaultViewId =
-    accountsViews.data?.find((v) => v.isDefault)?.id ?? accountsViews.data?.[0]?.id ?? "";
-
-  const leadsDefaultView = useView("Leads", leadsDefaultViewId);
-  const contactsDefaultView = useView("Contacts", contactsDefaultViewId);
-  const accountsDefaultView = useView("Accounts", accountsDefaultViewId);
+  // Request generation trackers
+  const searchRequestIdRef = useRef(0);
+  const cardPageRequestIdRef = useRef<Record<string, number>>({});
 
   const users = useUsers();
 
@@ -93,54 +190,8 @@ export function AdvancedSearchScreen({
     return map;
   }, [users.data]);
 
-  const fieldsByModule = useMemo(() => {
-    const map: Record<string, Record<string, FieldDefinition>> = {};
-    if (leadsModule.data?.fields) {
-      map.Leads = Object.fromEntries(leadsModule.data.fields.map((f) => [f.apiName, f]));
-    }
-    if (contactsModule.data?.fields) {
-      map.Contacts = Object.fromEntries(contactsModule.data.fields.map((f) => [f.apiName, f]));
-    }
-    if (accountsModule.data?.fields) {
-      map.Accounts = Object.fromEntries(accountsModule.data.fields.map((f) => [f.apiName, f]));
-    }
-    return map;
-  }, [leadsModule.data?.fields, contactsModule.data?.fields, accountsModule.data?.fields]);
-
   // Selected columns per module card (temporary, per page session)
   const [moduleColumns, setModuleColumns] = useState<Record<string, string[]>>({});
-
-  const defaultColumnsByModule = useMemo(() => {
-    return {
-      Leads: leadsDefaultView.data?.columns?.slice(0, 5) ?? [
-        "Full_Name",
-        "Company",
-        "Email",
-        "Phone",
-        "Lead_Source",
-      ],
-      Contacts: contactsDefaultView.data?.columns?.slice(0, 5) ?? [
-        "Full_Name",
-        "Account_Name",
-        "Email",
-        "Phone",
-        "Owner",
-      ],
-      Accounts: accountsDefaultView.data?.columns?.slice(0, 5) ?? [
-        "Account_Name",
-        "Phone",
-        "Website",
-        "Owner",
-      ],
-    };
-  }, [
-    leadsDefaultView.data?.columns,
-    contactsDefaultView.data?.columns,
-    accountsDefaultView.data?.columns,
-  ]);
-
-  // Manage columns modal state
-  const [managingModule, setManagingModule] = useState<ModuleApiName | null>(null);
 
   const activeSortSpec: SortSpec = useMemo(() => {
     const found = SORT_OPTIONS.find((opt) => opt.id === selectedSortId);
@@ -155,6 +206,7 @@ export function AdvancedSearchScreen({
       criteria?: Criteria,
       sortSpec: SortSpec = activeSortSpec,
     ) => {
+      const requestId = ++searchRequestIdRef.current;
       const trimmed = text.trim();
       if (trimmed.length < 3) {
         setSearchGroups([]);
@@ -175,13 +227,19 @@ export function AdvancedSearchScreen({
           perPage: DEFAULT_PAGE_SIZE,
           page: 1,
         });
+        if (searchRequestIdRef.current !== requestId) {
+          return;
+        }
         setSearchGroups(results);
         // Reset card pages to 1
         setCardPages({});
+        setIsLoading(false);
       } catch (err) {
+        if (searchRequestIdRef.current !== requestId) {
+          return;
+        }
         setSearchError(err);
         setSearchGroups([]);
-      } finally {
         setIsLoading(false);
       }
     },
@@ -204,6 +262,10 @@ export function AdvancedSearchScreen({
     const trimmed = submittedQuery.trim();
     if (trimmed.length < 3) return;
 
+    const baseSearchId = searchRequestIdRef.current;
+    const pageRequestId = (cardPageRequestIdRef.current[module] ?? 0) + 1;
+    cardPageRequestIdRef.current[module] = pageRequestId;
+
     try {
       const results = await service.search({
         text: trimmed,
@@ -213,6 +275,13 @@ export function AdvancedSearchScreen({
         page: newPage,
         perPage: DEFAULT_PAGE_SIZE,
       });
+
+      if (searchRequestIdRef.current !== baseSearchId) {
+        return;
+      }
+      if (cardPageRequestIdRef.current[module] !== pageRequestId) {
+        return;
+      }
 
       const updatedGroup = results.find((g) => g.module === module);
       if (updatedGroup) {
@@ -253,16 +322,22 @@ export function AdvancedSearchScreen({
   function handleFilterApply({
     modules,
     criteria,
+    selectedFields,
+    drafts,
   }: {
     modules: ModuleApiName[];
     criteria?: Criteria;
+    selectedFields: string[];
+    drafts: Record<string, FilterDraft>;
   }) {
     setAppliedModules(modules);
     setAppliedCriteria(criteria);
+    setAppliedSelectedFields(selectedFields);
+    setAppliedDrafts(drafts);
 
     // Compute active filter names for summary
     const names: string[] = [];
-    if (modules.length < REGISTERED_SEARCH_MODULES.length) {
+    if (modules.length < registeredModules.length) {
       names.push(...modules);
     }
     if (criteria) {
@@ -284,10 +359,12 @@ export function AdvancedSearchScreen({
   }
 
   function handleFilterClear() {
-    setAppliedModules([...REGISTERED_SEARCH_MODULES]);
+    setAppliedModules([...registeredModules]);
     setAppliedCriteria(undefined);
     setAppliedFilterNames([]);
-    void performSearch(submittedQuery, [...REGISTERED_SEARCH_MODULES], undefined, activeSortSpec);
+    setAppliedSelectedFields([]);
+    setAppliedDrafts({});
+    void performSearch(submittedQuery, [...registeredModules], undefined, activeSortSpec);
   }
 
   const filterSummary = useMemo(() => {
@@ -301,6 +378,11 @@ export function AdvancedSearchScreen({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-bg overflow-y-auto">
+      {/* Prefetch metadata & views for all registered modules */}
+      {registeredModules.map((mod) => (
+        <ModulePrefetcher key={mod} module={mod} />
+      ))}
+
       {/* Top Header Bar (Dark) */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 bg-rail-surface px-6 text-white shadow-md">
         <h1 className="text-lg font-bold tracking-tight text-white">Search</h1>
@@ -378,9 +460,13 @@ export function AdvancedSearchScreen({
         {isFilterPanelOpen && (
           <AdvancedSearchFilterPanel
             appliedModules={appliedModules}
+            appliedSelectedFields={appliedSelectedFields}
+            appliedDrafts={appliedDrafts}
             onApply={handleFilterApply}
             onClear={handleFilterClear}
             users={users.data ?? []}
+            registeredModules={registeredModules}
+            moduleDefinitions={moduleDefinitions}
           />
         )}
 
@@ -396,32 +482,30 @@ export function AdvancedSearchScreen({
           {!isLoading &&
             submittedQuery.trim().length >= 3 &&
             searchGroups.map((group) => {
-              const activeColumns = moduleColumns[group.module] ??
-                defaultColumnsByModule[group.module as keyof typeof defaultColumnsByModule] ?? [
-                  "Full_Name",
-                  "Company",
-                  "Email",
-                  "Phone",
-                  "Lead_Source",
-                ];
+              const definition =
+                resolveModuleScreenByApiName(group.module, moduleDefinitions) ??
+                resolveModuleScreenByApiName(group.module);
               const moduleLabel =
-                DOCUMENTED_MODULE_FILTER_ITEMS.find((m) => m.moduleApiName === group.module)
-                  ?.label ?? group.module;
+                definition?.pluralLabel ??
+                documentedItems.find((m) => m.moduleApiName === group.module)?.label ??
+                group.module;
 
               return (
-                <AdvancedSearchCard
+                <AdvancedSearchModuleCard
                   key={group.module}
                   module={group.module}
                   moduleLabel={moduleLabel}
+                  definition={definition}
                   total={group.total}
                   records={group.records}
                   page={cardPages[group.module] ?? 1}
                   perPage={DEFAULT_PAGE_SIZE}
-                  columns={activeColumns}
-                  fieldsByApiName={fieldsByModule[group.module] ?? {}}
+                  selectedColumns={moduleColumns[group.module]}
+                  onColumnsChange={(cols) =>
+                    setModuleColumns((prev) => ({ ...prev, [group.module]: cols }))
+                  }
                   ownerNames={ownerNames}
                   onPageChange={(newPage) => handleCardPageChange(group.module, newPage)}
-                  onOpenManageColumns={() => setManagingModule(group.module)}
                   orgSlug={orgSlug}
                 />
               );
@@ -445,29 +529,6 @@ export function AdvancedSearchScreen({
           )}
         </div>
       </main>
-
-      {/* Manage Columns Dialog */}
-      {managingModule && (
-        <ManageColumnsDialog
-          isOpen={true}
-          onClose={() => setManagingModule(null)}
-          moduleLabel={
-            DOCUMENTED_MODULE_FILTER_ITEMS.find((m) => m.moduleApiName === managingModule)?.label ??
-            managingModule
-          }
-          allFields={
-            fieldsByModule[managingModule] ? Object.values(fieldsByModule[managingModule]) : []
-          }
-          selectedColumns={
-            moduleColumns[managingModule] ??
-            defaultColumnsByModule[managingModule as keyof typeof defaultColumnsByModule] ??
-            []
-          }
-          onSave={(cols) => {
-            setModuleColumns((prev) => ({ ...prev, [managingModule]: cols }));
-          }}
-        />
-      )}
     </div>
   );
 }

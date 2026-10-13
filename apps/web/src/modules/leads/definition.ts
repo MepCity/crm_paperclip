@@ -45,6 +45,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   navigation: { id: "leads", icon: Icons.building },
   list: leadsListPageConfig,
   listCurrencyCode: LEADS_LIST_CURRENCY_CODE,
+  searchColumns: ["Full_Name", "Company", "Email", "Phone", "Lead_Source"],
   merge: leadsMergeDefinition,
   buildFilterGroups: buildLeadsFilterGroups,
   form: { rules: leadsFormRules },
