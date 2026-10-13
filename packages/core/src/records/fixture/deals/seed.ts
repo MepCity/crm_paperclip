@@ -2,6 +2,7 @@ import type { FieldValue, RecordData } from "../../contract";
 import { fixtureAccountId } from "../accounts/seed";
 import { dealsMetadata } from "./metadata";
 import { dealsPicklists } from "./picklists";
+import { applyDealRules } from "./rules";
 
 export function fullName(fields: Readonly<Record<string, FieldValue>>): string {
   return typeof fields.Deal_Name === "string" ? fields.Deal_Name : "";
@@ -37,6 +38,8 @@ export function generateFixtureDeals(
       Created_Time: stamp,
       Modified_Time: stamp,
     });
+    applyDealRules(fields, {});
+    if (stage?.stage?.category === "Closed Lost") fields.Reason_For_Loss__s = "Competition";
     return { id, fields };
   });
 }

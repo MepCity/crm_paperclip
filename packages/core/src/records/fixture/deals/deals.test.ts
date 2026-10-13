@@ -189,7 +189,7 @@ describe("Deals export and fixture", () => {
       }),
     ).toBe(0);
   });
-  it("keeps unregistered campaign references and does not auto-fill probability", async () => {
+  it("keeps unregistered campaign references and applies changed-stage probability", async () => {
     const service = make();
     const campaign = { module: "Campaigns", id: "synthetic-campaign", name: "Synthetic campaign" };
     const deal = await service.create(
@@ -199,7 +199,7 @@ describe("Deals export and fixture", () => {
     expect(deal.fields.Campaign_Source).toEqual(campaign);
     expect(
       (await service.update("Deals", deal.id, { Stage: "Closed Won" })).fields.Probability,
-    ).toBe(17);
+    ).toBe(100);
   });
   it("seeds deterministic records covering all stages and registered references", async () => {
     const now = new Date("2026-01-15T12:00:00Z");

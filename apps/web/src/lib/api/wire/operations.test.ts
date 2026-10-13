@@ -350,7 +350,7 @@ describe("wire operations", () => {
       await expect(
         op.run(deps, {
           ...input(
-            { ids: "missing" },
+            { ids: "missing", group_by: "Stage" },
             {
               data: [{ Company: "Example", Last_Name: "Example" }],
               ids: ["missing"],
