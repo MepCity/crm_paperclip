@@ -650,3 +650,40 @@ test("clearing an optional date completely saves null", async () => {
     expect(update).toHaveBeenCalledWith("Contacts", "saved-contact", { Date_of_Birth: null }),
   );
 });
+
+test("omits sections listed in omittedSections or having no fields", async () => {
+  const { service, fixture } = harness(undefined, {
+    rules: {
+      ...leadsFormRules,
+      omittedSections: ["Lead Image", "Empty Section"],
+    },
+  });
+  vi.spyOn(service, "getModule").mockImplementation(async (moduleName) => {
+    const meta = await fixture.getModule(moduleName);
+    return {
+      ...meta,
+      layout: [
+        ...meta.layout,
+        { label: "Lead Image", columnCount: 1, columns: [[]], fields: [] },
+        { label: "Empty Section", columnCount: 1, columns: [[]], fields: [] },
+      ],
+    };
+  });
+  await ready(/^Create Lead$/);
+  expect(screen.queryByText("Lead Image")).toBeNull();
+  expect(screen.queryByText("Empty Section")).toBeNull();
+});
+
+test("populates initial values using function defaultValues reading metadata", async () => {
+  harness(undefined, {
+    rules: {
+      ...leadsFormRules,
+      defaultValues: (meta) => ({
+        Designation: `Dynamic Title for ${meta?.singularLabel ?? "Lead"}`,
+      }),
+    },
+  });
+  await ready(/^Create Lead$/);
+  const input = screen.getByRole("textbox", { name: "Title" }) as HTMLInputElement;
+  expect(input.value).toBe("Dynamic Title for Lead");
+});
