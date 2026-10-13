@@ -10,6 +10,7 @@ import {
   moduleRecordMergePath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { AccountRecordScreen } from "./accounts/account-record-screen";
 import { ContactRecordScreen } from "./contacts/contact-record-screen";
 import { ModuleFormClient } from "./module-form-client";
 import { ModuleListClient } from "./module-list-client";
@@ -69,6 +70,9 @@ export function ModuleRouteClient({
     };
     if (definition.apiName === "Contacts") {
       return <ContactRecordScreen orgSlug={orgSlug} recordId={recordId} paths={paths} />;
+    }
+    if (definition.apiName === "Accounts") {
+      return <AccountRecordScreen orgSlug={orgSlug} recordId={recordId} paths={paths} />;
     }
     return (
       <RecordDetailScreen

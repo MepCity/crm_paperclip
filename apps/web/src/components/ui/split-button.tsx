@@ -26,7 +26,7 @@ export function SplitButton({
   moreLaterModule,
 }: SplitButtonProps) {
   const primaryLater = primaryLaterModule ?? laterModule;
-  const joined = items.length > 0;
+  const joined = items.length > 0 || Boolean(moreLaterModule);
   const primaryClass = joined ? "rounded-r-none" : undefined;
   return (
     <div className="inline-flex shrink-0 items-center" data-split-button>
@@ -57,7 +57,35 @@ export function SplitButton({
             className="h-(--size-button-split-height) w-px bg-(--color-primary-divider)"
             data-split-divider
           />
-          <MenuTrigger>
+          {items.length > 0 ? (
+            <MenuTrigger>
+              <Button
+                aria-label="More"
+                size="splitArrow"
+                className="rounded-l-none"
+                laterModule={moreLaterModule}
+              >
+                <Icons.chevronDown aria-hidden="true" className="h-4 w-4" />
+              </Button>
+              <Menu
+                width="create"
+                items={items}
+                onAction={(key) =>
+                  items.find((item) => item.id === key && !item.laterModule)?.onAction()
+                }
+              >
+                {(item) => (
+                  <MenuItem
+                    id={item.id}
+                    isDisabled={item.isDisabled}
+                    laterModule={item.laterModule}
+                  >
+                    {item.label}
+                  </MenuItem>
+                )}
+              </Menu>
+            </MenuTrigger>
+          ) : (
             <Button
               aria-label="More"
               size="splitArrow"
@@ -66,20 +94,7 @@ export function SplitButton({
             >
               <Icons.chevronDown aria-hidden="true" className="h-4 w-4" />
             </Button>
-            <Menu
-              width="create"
-              items={items}
-              onAction={(key) =>
-                items.find((item) => item.id === key && !item.laterModule)?.onAction()
-              }
-            >
-              {(item) => (
-                <MenuItem id={item.id} isDisabled={item.isDisabled} laterModule={item.laterModule}>
-                  {item.label}
-                </MenuItem>
-              )}
-            </Menu>
-          </MenuTrigger>
+          )}
         </>
       )}
     </div>

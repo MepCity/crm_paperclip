@@ -40,7 +40,7 @@ test.describe("Find and merge duplicates", () => {
     await valueInputs.nth(4).fill("");
     await valueInputs.nth(5).fill("");
 
-    await page.getByRole("button", { name: "Search" }).click();
+    await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page.getByRole("table", { name: "Matching records" })).toBeVisible();
 
     // Select second record row to reach 2 selected records

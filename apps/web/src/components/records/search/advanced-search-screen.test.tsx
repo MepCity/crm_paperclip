@@ -103,7 +103,7 @@ describe("AdvancedSearchScreen", () => {
     });
   });
 
-  it("handles Accounts as working filter item and renders Accounts card with laterModule M3 link", async () => {
+  it("handles Accounts as working filter item and renders Accounts card with active record link", async () => {
     const user = userEvent.setup();
     const service = createTestService();
 
@@ -117,10 +117,10 @@ describe("AdvancedSearchScreen", () => {
     const accountsCard = screen.getByRole("region", { name: "Accounts search results" });
     expect(accountsCard).toBeTruthy();
 
-    // Accounts record name link has laterModule="M3"
     const accountLinks = within(accountsCard).getAllByRole("link");
-    const recordLink = accountLinks.find((l) => l.getAttribute("data-later-module") === "M3");
+    const recordLink = accountLinks.find((l) => l.getAttribute("href")?.includes("/tab/Accounts/"));
     expect(recordLink).toBeDefined();
+    expect(recordLink?.getAttribute("data-later-module")).toBeNull();
 
     // Open filter panel
     await user.click(screen.getByRole("button", { name: "Filter" }));

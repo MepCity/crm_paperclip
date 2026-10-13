@@ -10,6 +10,7 @@ export interface RelatedCardsContainerProps {
   orgSlug?: string;
   managerRecord?: RecordData;
   recordPath?: (recordId: RecordId) => string;
+  contactRecordPath?: (recordId: RecordId) => string;
 }
 
 export function RelatedCardsContainer({
@@ -17,6 +18,7 @@ export function RelatedCardsContainer({
   orgSlug,
   managerRecord,
   recordPath,
+  contactRecordPath,
 }: RelatedCardsContainerProps) {
   if (!relatedLists || relatedLists.length === 0) return null;
 
@@ -29,6 +31,20 @@ export function RelatedCardsContainer({
           reportingContacts={
             def.id === "reporting-contacts" && managerRecord && recordPath
               ? { managerRecord, orgSlug: orgSlug ?? "", recordPath }
+              : undefined
+          }
+          accountContacts={
+            def.id === "contacts" && managerRecord && contactRecordPath
+              ? { accountRecord: managerRecord, orgSlug: orgSlug ?? "", contactRecordPath }
+              : undefined
+          }
+          memberAccounts={
+            def.id === "member-accounts" && managerRecord && recordPath
+              ? {
+                  parentRecord: managerRecord,
+                  orgSlug: orgSlug ?? "",
+                  accountRecordPath: recordPath,
+                }
               : undefined
           }
         />
