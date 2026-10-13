@@ -1,0 +1,62 @@
+[
+  {
+    "sourceModule": "Accounts",
+    "module": "Calls",
+    "href": "Accounts/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Campaigns",
+    "module": "Calls",
+    "href": "Campaigns/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Cases",
+    "module": "Calls",
+    "href": "Cases/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Contacts",
+    "module": "Calls",
+    "href": "Contacts/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Deals",
+    "module": "Calls",
+    "href": "Deals/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Invoices",
+    "module": "Calls",
+    "href": "Invoices/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Leads",
+    "module": "Calls",
+    "href": "Leads/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Products",
+    "module": "Calls",
+    "href": "Products/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Purchase_Orders",
+    "module": "Calls",
+    "href": "Purchase_Orders/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Quotes",
+    "module": "Calls",
+    "href": "Quotes/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Sales_Orders",
+    "module": "Calls",
+    "href": "Sales_Orders/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Vendors",
+    "module": "Calls",
+    "href": "Vendors/{ENTITYID}/Calls"
+  }
+]

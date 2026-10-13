@@ -19,6 +19,7 @@ export interface ListToolbarProps {
   onSortApply: (sort: SortSpec | null) => void;
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
+  viewTypeTileIds?: readonly string[];
 }
 
 export function ListToolbar({
@@ -32,6 +33,7 @@ export function ListToolbar({
   onSortApply,
   create,
   actions = [],
+  viewTypeTileIds,
 }: ListToolbarProps) {
   return (
     <div
@@ -57,6 +59,7 @@ export function ListToolbar({
           <ViewTypeSwitcher
             presentation={presentation}
             onPresentationChange={onPresentationChange}
+            tileIds={viewTypeTileIds}
           />
         </span>
         <Button
