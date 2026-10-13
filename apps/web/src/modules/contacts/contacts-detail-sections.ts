@@ -14,9 +14,17 @@ export function buildContactsBusinessCardFields(
 ): BusinessCardField[] {
   return module.businessCardFields.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record)
-      ? [{ field: label(field), value: record.fields[name] ?? null }]
-      : [];
+    if (!field || !visible(field, record)) return [];
+    const value = record.fields[name] ?? null;
+    const isPhone = name === "Phone";
+    const hasValue = value !== null && value !== undefined && value !== "";
+    return [
+      {
+        field: label(field),
+        value,
+        ...(isPhone && hasValue ? { callAction: true } : {}),
+      },
+    ];
   });
 }
 
@@ -52,14 +60,19 @@ export function buildContactsDetailSections(
               : name === "Modified_By"
                 ? record.fields.Modified_Time
                 : undefined;
+          const value = prefix
+            ? formatContactsAddress(record, prefix) || null
+            : (record.fields[name] ?? null);
+          const isPhone =
+            section.label === "Contact Information" && name === "Phone" && index === 0;
+          const hasValue = value !== null && value !== undefined && value !== "";
           fields.push({
             column:
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field: label(field),
-            value: prefix
-              ? formatContactsAddress(record, prefix) || null
-              : (record.fields[name] ?? null),
+            value,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
+            ...(isPhone && hasValue ? { callAction: true } : {}),
           });
         }
       });

@@ -163,6 +163,7 @@ test.describe("Contacts record detail", () => {
       .locator("[data-record-header]")
       .getByRole("button", { name: "Send Email" });
     await expect(sendEmail).toHaveAttribute("data-later-module", "M10");
+    await expect(sendEmail).toHaveClass(/bg-primary/);
     await sendEmail.click({ force: true });
     expect(page.url()).toBe(before);
     ignoreFailedResponses(pageErrors, [400]);
@@ -226,6 +227,99 @@ test.describe("Contacts record detail", () => {
     await expect(accountRow).toContainText(chosenName);
     await expect(accountRow.getByRole("link", { name: chosenName })).toBeVisible();
     await expect(page.locator("[data-record-header]")).toContainText(chosenName);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Phone field renders call icon button in business card and details card (D-37, D-41)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+
+    // Business card Phone call icon
+    const businessCard = page.getByRole("region", { name: "Business card" });
+    const businessPhoneRow = businessCard.locator('[data-detail-field="Phone"]');
+    await expect(businessPhoneRow).toContainText("100-001");
+    const businessCallButton = businessPhoneRow.getByRole("button", { name: "Call" });
+    await expect(businessCallButton).toBeVisible();
+    await expect(businessCallButton).toHaveAttribute("data-later-module", "M5");
+
+    // Details card Contact Information Phone call icon
+    const detailsSection = page.locator('[data-detail-section="Contact Information"]');
+    const detailsPhoneRow = detailsSection.locator('[data-detail-field="Phone"]');
+    await expect(detailsPhoneRow).toContainText("100-001");
+    const detailsCallButton = detailsPhoneRow.getByRole("button", { name: "Call" });
+    await expect(detailsCallButton).toBeVisible();
+    await expect(detailsCallButton).toHaveAttribute("data-later-module", "M5");
+
+    // Clicking call button stays inert
+    const beforeUrl = page.url();
+    await detailsCallButton.click({ force: true });
+    expect(page.url()).toBe(beforeUrl);
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Contact Information section renders balanced columns with specified fields", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+
+    const detailsSection = page.locator('[data-detail-section="Contact Information"]');
+    await expect(detailsSection).toBeVisible();
+    const columns = detailsSection.locator("[data-detail-column]");
+    await expect(columns).toHaveCount(2);
+
+    const leftFields = columns.nth(0).locator("[data-detail-field]");
+    const leftNames = await leftFields.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-detail-field")),
+    );
+    expect(leftNames).toEqual([
+      "Owner",
+      "Account_Name",
+      "Email",
+      "Phone",
+      "Other_Phone",
+      "Mobile",
+      "Assistant",
+    ]);
+
+    const rightFields = columns.nth(1).locator("[data-detail-field]");
+    const rightNames = await rightFields.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-detail-field")),
+    );
+    expect(rightNames).toEqual([
+      "Lead_Source",
+      "Full_Name",
+      "Vendor_Name",
+      "Title",
+      "Department",
+      "Home_Phone",
+      "Fax",
+      "Date_of_Birth",
+      "Asst_Phone",
+      "Email_Opt_Out",
+      "Skype_ID",
+      "Secondary_Email",
+      "Twitter",
+      "Reporting_To",
+      "Tag",
+      "Created_By",
+      "Modified_By",
+      "Created_Time",
+      "Modified_Time",
+      "Last_Activity_Time",
+      "Unsubscribed_Mode",
+      "Unsubscribed_Time",
+      "id",
+      "Connected_To__s",
+    ]);
+
     ignoreFailedResponses(pageErrors, [400]);
   });
 });

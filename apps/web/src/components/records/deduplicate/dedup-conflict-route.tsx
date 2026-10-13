@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useModule } from "@/lib/api/client/hooks";
 import { moduleListDefaultPath } from "@/lib/crm-paths";
 import type { ModuleScreenDefinition } from "@/modules/types";
@@ -36,9 +38,26 @@ export function DedupConflictRoute({
   const knownNames = apiNames.filter((apiName) => panelNames.includes(apiName));
 
   useEffect(() => {
-    if (moduleQuery.isLoading) return;
+    if (!moduleQuery.isSuccess) return;
     if (knownNames.length === 0) router.replace(listHref);
-  }, [moduleQuery.isLoading, knownNames.length, router, listHref]);
+  }, [moduleQuery.isSuccess, knownNames.length, router, listHref]);
+
+  // A rejected metadata lookup leaves no field panel to show, but it is an error the user has
+  // to see and retry, not a reason to drop them back on the list.
+  if (moduleQuery.isError) {
+    return (
+      <div className="dedup-conflict flex flex-col gap-4 p-6">
+        <Alert variant="danger">The page could not be loaded. Please try again.</Alert>
+        <Button
+          variant="secondary"
+          className="self-start"
+          onPress={() => void moduleQuery.refetch()}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
 
   if (moduleQuery.isLoading || !moduleQuery.data || knownNames.length === 0) {
     return <div className="dedup-conflict p-6" aria-busy="true" />;
