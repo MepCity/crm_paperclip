@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearToasts, ToastProvider } from "@/components/ui/toast";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
+import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import { render } from "@/test/render";
 import { DedupConflictGroups } from "./dedup-conflict-screen";
 
@@ -199,5 +200,46 @@ describe("DedupConflictGroups", () => {
     await waitFor(() => expect(within(groupTable()).getByText(email)).toBeTruthy());
     await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
     expect(navigation.push).toHaveBeenCalledWith(LIST_HREF);
+  });
+
+  it("shows the error notice with a retry when the group lookup is rejected", async () => {
+    const user = userEvent.setup();
+    const email = "rejected-lookup@example.test";
+    await createLead({
+      First_Name: "Ada",
+      Last_Name: "Lovelace",
+      Company: "Analytical Engine",
+      Email: email,
+      Phone: "111-000",
+    });
+    await createLead({
+      First_Name: "Ada",
+      Last_Name: "Lovelace",
+      Company: "Analytical Engine",
+      Email: email,
+      Phone: "222-000",
+    });
+    const lookup = vi
+      .spyOn(service, "findDuplicateGroups")
+      .mockRejectedValueOnce(new UnexpectedApiError(400));
+    renderScreen(["Email"]);
+
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "The page could not be loaded. Please try again.",
+    );
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(screen.queryByRole("table", { name: "Duplicate groups with conflicts" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+
+    await waitFor(() => expect(within(groupTable()).getByText(email)).toBeTruthy());
+    expect(lookup).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(navigation.replace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the module list when the lookup succeeds with no conflict", async () => {
+    renderScreen(["Email"]);
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith(LIST_HREF));
   });
 });
