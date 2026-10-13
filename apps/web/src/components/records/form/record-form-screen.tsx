@@ -176,10 +176,14 @@ function LoadedRecordForm({
   );
   const fields = formFields(metadata, sections, mode, config.rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
+  const ruleDefaults =
+    typeof config.rules.defaultValues === "function"
+      ? config.rules.defaultValues(metadata)
+      : config.rules.defaultValues;
   const emptyValues = () =>
     initialFormValues(fields, {
       [config.rules.owner]: currentUserId,
-      ...config.rules.defaultValues,
+      ...ruleDefaults,
       ...config.createPrefill,
     });
   const cloneSeed =
@@ -575,6 +579,7 @@ function LoadedRecordForm({
         }}
       >
         {sections.map((section) => {
+          if (config.rules.omittedSections?.includes(section.label)) return null;
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );
@@ -591,6 +596,7 @@ function LoadedRecordForm({
             );
             return [{ parent, rule, subfieldApiNames }];
           });
+          if (sectionFields.length === 0 && groupsInSection.length === 0) return null;
           if (groupsInSection.length > 0) {
             const copyGroups = groupsInSection.map((group) => ({
               id: group.parent.apiName,

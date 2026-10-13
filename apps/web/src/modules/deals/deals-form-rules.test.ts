@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { buildFormModel, formFields } from "@/components/records/form/form-model";
 import {
+  buildDealsFormDefaults,
   DEALS_FORM_CREATE_TITLE,
   DEALS_FORM_DEFAULTS,
   DEALS_FORM_EDIT_TITLE,
@@ -20,11 +21,49 @@ test("preserves Deals form titles, owner key, currencies and default values", ()
   expect(dealsFormRules.currency).toBe("Amount");
   expect(dealsFormRules.currencies).toEqual(["Amount", "Expected_Revenue"]);
   expect(dealsFormRules.omitted).toEqual(["Connected_To__s", "Reason_For_Loss__s"]);
+  expect(dealsFormRules.omittedSections).toEqual(["Deal Image"]);
 
   expect(DEALS_FORM_STAGE_DEFAULT).toBe("Qualification");
   expect(DEALS_FORM_PROBABILITY_DEFAULT).toBe(10);
   expect(DEALS_FORM_PICKLIST_NONE).toBe("-None-");
-  expect(dealsFormRules.defaultValues).toEqual(DEALS_FORM_DEFAULTS);
+  expect(buildDealsFormDefaults()).toEqual(DEALS_FORM_DEFAULTS);
+  expect(typeof dealsFormRules.defaultValues).toBe("function");
+});
+
+test("reads Stage and Probability defaults from metadata picklist (PicklistOption.stage.probability)", () => {
+  const customMetadata = dealMetadata([
+    dealField("Stage", {
+      dataType: "picklist",
+      picklist: [
+        {
+          storedValue: "Needs Analysis",
+          displayValue: "Needs Analysis",
+          stage: {
+            probability: 20,
+            forecastCategory: "Pipeline",
+            category: "Open",
+          },
+        },
+        {
+          storedValue: "Value Proposition",
+          displayValue: "Value Proposition",
+          stage: {
+            probability: 40,
+            forecastCategory: "Pipeline",
+            category: "Open",
+          },
+        },
+      ],
+    }),
+  ]);
+
+  const defaults = buildDealsFormDefaults(customMetadata);
+  expect(defaults).toEqual({
+    Stage: "Needs Analysis",
+    Probability: 20,
+    Type: "-None-",
+    Lead_Source: "-None-",
+  });
 });
 
 test("marks required fields and currency types in form fields model", () => {

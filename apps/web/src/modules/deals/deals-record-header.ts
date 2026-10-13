@@ -1,22 +1,32 @@
-import { type FormatOptions, formatCurrency } from "@crm/core/format";
-import type { RecordData } from "@crm/core/records";
+import { type FormatOptions, formatNumber } from "@crm/core/format";
+import type { CurrencyDefinition, RecordData } from "@crm/core/records";
 import { DEFAULT_FORMAT } from "@/lib/locale";
-import { DEALS_LIST_CURRENCY_CODE } from "./list-config";
 
 /**
  * Formats deal header amount with currency prefix and locale options (DD-90).
+ * Uses the service's home currency symbol (default "TL"), matching the form prefix.
  * Returns undefined when amount is empty, null, or undefined so no dash or amount is rendered.
  */
 export function formatDealHeaderAmount(
   amount: unknown,
-  currencyCode = DEALS_LIST_CURRENCY_CODE,
+  currency: string | CurrencyDefinition | { symbol?: string; prefixSymbol?: boolean } = "TL",
   format: FormatOptions = DEFAULT_FORMAT,
 ): string | undefined {
   if (amount === null || amount === undefined || amount === "") return undefined;
   const num =
     typeof amount === "number" ? amount : typeof amount === "string" ? Number(amount) : NaN;
   if (Number.isNaN(num)) return undefined;
-  return formatCurrency(num, currencyCode, format);
+  const symbol = typeof currency === "string" ? currency : (currency.symbol ?? "TL");
+  const prefix =
+    typeof currency === "object" && currency.prefixSymbol !== undefined
+      ? currency.prefixSymbol
+      : true;
+  const formatted = formatNumber(num, {
+    ...format,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return prefix ? `${symbol} ${formatted}` : `${formatted} ${symbol}`;
 }
 
 /**
@@ -27,7 +37,11 @@ export function formatDealHeaderAmount(
  */
 export function dealsRecordHeaderIdentity(
   record: RecordData,
-  _context?: { orgSlug?: string },
+  context?: {
+    orgSlug?: string;
+    currency?: CurrencyDefinition | { symbol?: string; prefixSymbol?: boolean } | string;
+    currencySymbol?: string;
+  },
 ): {
   title: string;
   subtitle?: string;
@@ -36,7 +50,8 @@ export function dealsRecordHeaderIdentity(
 } {
   const title =
     typeof record.fields.Deal_Name === "string" ? (record.fields.Deal_Name as string) : "";
-  const subtitle = formatDealHeaderAmount(record.fields.Amount);
+  const currency = context?.currency ?? context?.currencySymbol ?? "TL";
+  const subtitle = formatDealHeaderAmount(record.fields.Amount, currency);
 
   return {
     title,

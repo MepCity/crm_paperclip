@@ -148,10 +148,13 @@ export interface FormRules {
   currencies?: readonly string[];
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
+  omittedSections?: readonly string[];
   labelLines?: Readonly<Record<string, readonly string[]>>;
   /** Picklists whose reference panel paints a search field above the options (AF-13.1). */
   searchablePicklists?: readonly string[];
-  defaultValues?: Readonly<Record<string, FieldValue>>;
+  defaultValues?:
+    | Readonly<Record<string, FieldValue>>
+    | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);
 }
 
 export function formFields(
@@ -160,8 +163,11 @@ export function formFields(
   mode: FormMode,
   rules: FormRules,
 ): FieldDefinition[] {
+  const visibleSections = rules.omittedSections?.length
+    ? sections.filter((section) => !rules.omittedSections?.includes(section.label))
+    : sections;
   const names = new Set(
-    sections.flatMap((section) => section.columns.flat().map((f) => f.apiName)),
+    visibleSections.flatMap((section) => section.columns.flat().map((f) => f.apiName)),
   );
   if (rules.prefix && names.has(rules.prefix.field)) names.add(rules.prefix.prefix);
   for (const address of addressRulesList(rules)) {

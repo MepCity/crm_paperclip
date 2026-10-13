@@ -1,3 +1,4 @@
+import type { FieldValue, ModuleMetadata } from "@crm/core/records";
 import type { FormRules } from "@/components/records/form/form-model";
 
 export const DEALS_FORM_CREATE_TITLE = "Create Deal";
@@ -7,19 +8,35 @@ export const DEALS_FORM_STAGE_DEFAULT = "Qualification";
 export const DEALS_FORM_PROBABILITY_DEFAULT = 10;
 export const DEALS_FORM_PICKLIST_NONE = "-None-";
 
-export const DEALS_FORM_DEFAULTS = {
-  Stage: DEALS_FORM_STAGE_DEFAULT,
-  Probability: DEALS_FORM_PROBABILITY_DEFAULT,
-  Type: DEALS_FORM_PICKLIST_NONE,
-  Lead_Source: DEALS_FORM_PICKLIST_NONE,
-} as const;
+/**
+ * Builds creation default values for Deals:
+ * Stage defaults to the first stage option in metadata picklist.
+ * Probability defaults to that stage's metadata probability (PicklistOption.stage.probability).
+ * Type and Lead Source default to "-None-".
+ */
+export function buildDealsFormDefaults(metadata?: ModuleMetadata): Record<string, FieldValue> {
+  const stageField = metadata?.fields.find((f) => f.apiName === "Stage");
+  const firstStage = stageField?.picklist?.[0];
+  const stage = firstStage ? firstStage.storedValue : DEALS_FORM_STAGE_DEFAULT;
+  const probability = firstStage?.stage?.probability ?? DEALS_FORM_PROBABILITY_DEFAULT;
+
+  return {
+    Stage: stage,
+    Probability: probability,
+    Type: DEALS_FORM_PICKLIST_NONE,
+    Lead_Source: DEALS_FORM_PICKLIST_NONE,
+  };
+}
+
+export const DEALS_FORM_DEFAULTS = buildDealsFormDefaults();
 
 export const dealsFormRules: FormRules = {
   owner: "Owner",
   currency: "Amount",
   currencies: ["Amount", "Expected_Revenue"],
   omitted: ["Connected_To__s", "Reason_For_Loss__s"],
-  defaultValues: DEALS_FORM_DEFAULTS,
+  omittedSections: ["Deal Image"],
+  defaultValues: buildDealsFormDefaults,
 };
 
 /**

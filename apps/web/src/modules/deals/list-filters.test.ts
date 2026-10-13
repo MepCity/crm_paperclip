@@ -24,12 +24,12 @@ test("preserves initial field rows with inventory module keys (DL-26, DL-27, DL-
   expect(
     dealsFilterGroups[1]?.items.slice(0, 6).map((row) => [row.label, row.laterModule]),
   ).toEqual([
-    ["Account Name", "M3"],
+    ["Account Name", undefined],
     ["Amount", undefined],
     ["Campaign Source", "M7"],
     ["Closing Date", undefined],
     ["Connected To", undefined],
-    ["Contact Name", "M2"],
+    ["Contact Name", undefined],
   ]);
 });
 

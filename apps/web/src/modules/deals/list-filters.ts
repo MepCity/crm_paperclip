@@ -29,11 +29,9 @@ const initialFieldLabels = [
   "Contact Name",
 ];
 
-/** Module keys from inventory for Filter By Fields (DL-27, DL-66, DL-69). */
+/** Module keys from inventory for Filter By Fields (DL-66). M2 and M3 are live modules. */
 const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {
-  "Account Name": "M3",
   "Campaign Source": "M7",
-  "Contact Name": "M2",
 };
 
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {

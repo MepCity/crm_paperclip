@@ -20,6 +20,7 @@ import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import {
   useDeleteRecords,
+  useHomeCurrency,
   useModule,
   useRecord,
   useRecordList,
@@ -119,6 +120,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const homeCurrencyQuery = useHomeCurrency();
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
@@ -224,7 +226,11 @@ export function RecordDetailScreen({
     portraitIcon,
     hasPortrait,
     recordNavigation,
-  } = rules.header(record, { orgSlug });
+  } = rules.header(record, {
+    orgSlug,
+    currency: homeCurrencyQuery.data,
+    currencySymbol: homeCurrencyQuery.data?.symbol,
+  });
   const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);

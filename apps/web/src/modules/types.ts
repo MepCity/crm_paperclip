@@ -1,5 +1,6 @@
 import type { FormatOptions } from "@crm/core/format";
 import type {
+  CurrencyDefinition,
   FieldDefinition,
   FieldValue,
   ModuleApiName,
@@ -168,7 +169,11 @@ export interface ModuleScreenDefinition {
     Screen?: ComponentType<ModuleRecordDetailScreenProps>;
     header: (
       record: RecordData,
-      context?: { orgSlug?: string },
+      context?: {
+        orgSlug?: string;
+        currency?: CurrencyDefinition;
+        currencySymbol?: string;
+      },
     ) => {
       title: string;
       subtitle?: string;

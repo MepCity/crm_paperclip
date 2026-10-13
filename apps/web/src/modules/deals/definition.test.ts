@@ -27,7 +27,12 @@ test("exports a complete Deals module screen definition", () => {
   expect(dealsScreenDefinition.listCurrencyCode).toBe("TRY");
   expect(dealsScreenDefinition.form.inventoryChrome).toBe(true);
   expect(dealsScreenDefinition.form.rules.currencies).toEqual(["Amount", "Expected_Revenue"]);
-  expect(dealsScreenDefinition.form.rules.defaultValues).toEqual({
+  expect(dealsScreenDefinition.form.rules.omittedSections).toEqual(["Deal Image"]);
+  const defaultValues =
+    typeof dealsScreenDefinition.form.rules.defaultValues === "function"
+      ? dealsScreenDefinition.form.rules.defaultValues()
+      : dealsScreenDefinition.form.rules.defaultValues;
+  expect(defaultValues).toEqual({
     Stage: "Qualification",
     Probability: 10,
     Type: "-None-",
