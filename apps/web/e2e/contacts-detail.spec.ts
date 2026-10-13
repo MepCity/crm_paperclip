@@ -368,6 +368,57 @@ test.describe("Contacts record detail", () => {
 
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("Hierarchy View on Reporting Contacts card opens Contact Hierarchy modal (D-90, AD-163, AD-164)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+
+    // 1. Contact with account (MANAGER_RECORD_ID): opens account's tree
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+    const reporting = page.getByRole("region", { name: "Reporting Contacts" });
+    const hierarchyBtn = reporting.getByRole("button", { name: "Hierarchy View" });
+    await expect(hierarchyBtn).toBeVisible();
+
+    await hierarchyBtn.click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("heading", { name: "Contact Hierarchy" })).toBeVisible();
+    await expect(modal.locator("[data-part='account-root']")).toBeVisible();
+    await expect(modal.getByRole("link").first()).toBeVisible();
+
+    // Screenshot of opened modal for Contacts entry
+    const scratchDir = process.env.PAPERCLIP_RUN_SCRATCH_DIR || process.env.PAPERCLIP_SCRATCH_DIR;
+    if (scratchDir) {
+      await page.screenshot({ path: `${scratchDir}/contacts-contact-hierarchy-open.png` });
+    }
+
+    // Close via Close Modal button
+    await modal.getByRole("button", { name: "Close Modal" }).click();
+    await expect(modal).not.toBeVisible();
+
+    // 2. Contact without account (REPORT_ONLY_RECORD_ID): manager -> contact (Rule 5)
+    await openContactDetail(page, org.slug, REPORT_ONLY_RECORD_ID);
+    const reporting2 = page.getByRole("region", { name: "Reporting Contacts" });
+    const hierarchyBtn2 = reporting2.getByRole("button", { name: "Hierarchy View" });
+    await expect(hierarchyBtn2).toBeVisible();
+
+    await hierarchyBtn2.click();
+    const modal2 = page.getByRole("dialog");
+    await expect(modal2).toBeVisible();
+    // No account root row
+    await expect(modal2.locator("[data-part='account-root']")).toHaveCount(0);
+    // Manager and contact links visible
+    await expect(modal2.getByRole("link")).toHaveCount(2);
+
+    // Close via Escape
+    await page.keyboard.press("Escape");
+    await expect(modal2).not.toBeVisible();
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
 
 function headerTitle(page: import("@playwright/test").Page) {
