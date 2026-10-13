@@ -37,6 +37,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
 
 test("The registry holds Lead, Contact and Account entries pointing at their create pages", () => {
   expect(createRecordsNav.map((entry) => entry.label)).toEqual(["Lead", "Contact", "Account"]);
+  expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
   expect(createRecordsNav[1]?.path("example")).toBe("/crm/example/tab/Contacts/create");
   expect(createRecordsNav[2]?.path("example")).toBe("/crm/example/tab/Accounts/create");
 });
