@@ -21,6 +21,21 @@ import {
 import { LEADS_LIST_CURRENCY_CODE, LEADS_MODULE, leadsListPageConfig } from "./list-config";
 import { buildLeadsFilterGroups } from "./list-filters";
 
+/** Interim criterion field order (MEP-352); rows missing from metadata are skipped. */
+export const leadsMergeDefinition = {
+  criterionFields: ["First_Name", "Last_Name", "Email", "Phone", "Mobile", "Company"],
+  matchingColumns: [
+    "Full_Name",
+    "Company",
+    "Email",
+    "Phone",
+    "Mobile",
+    "Created_Time",
+    "Modified_Time",
+    "Owner",
+  ],
+} as const;
+
 export const leadsScreenDefinition: ModuleScreenDefinition = {
   apiName: LEADS_MODULE,
   tab: "Leads",
@@ -30,6 +45,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   navigation: { id: "leads", icon: Icons.building },
   list: leadsListPageConfig,
   listCurrencyCode: LEADS_LIST_CURRENCY_CODE,
+  merge: leadsMergeDefinition,
   buildFilterGroups: buildLeadsFilterGroups,
   form: { rules: leadsFormRules },
   detail: {

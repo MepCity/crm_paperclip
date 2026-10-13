@@ -24,7 +24,6 @@ export const ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS: readonly {
     id: "accounts-more-print",
     items: [
       { id: "print-preview", label: "Print Preview" },
-      { id: "find-merge-duplicates", label: "Find and Merge Duplicates" },
       { id: "mail-merge", label: "Mail Merge", laterModule: "M9" },
     ],
   },
