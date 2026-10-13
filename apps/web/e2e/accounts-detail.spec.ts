@@ -103,6 +103,11 @@ test.describe("Accounts record detail", () => {
     const recordId = DELETE_ACCOUNT_ID;
     const header = page.locator("[data-record-header]");
     await header.getByRole("button", { name: "More Options" }).click();
+    await page.getByRole("menuitem", { name: "Find and Merge Duplicates" }).click();
+    await expect(page.getByRole("heading", { name: "Find and Merge Duplicates" })).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await header.getByRole("button", { name: "More Options" }).click();
     await page.getByRole("menuitem", { name: "Clone" }).click();
     await expect(page).toHaveURL(moduleRecordClonePath(org.slug, ACCOUNTS_TAB, recordId));
     await page.goBack();
@@ -170,12 +175,15 @@ test.describe("Accounts record detail", () => {
   });
 
   test("Member Accounts card lists children and supports New", async ({ page, pageErrors }) => {
-    await signUpNewUser(page);
+    const credentials = await signUpNewUser(page);
     const org = await createOrganization(page);
     await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
     const members = page.getByRole("region", { name: "Member Accounts" });
     await expect(members.getByRole("table")).toBeVisible();
     await expect(members.getByRole("link").first()).toBeVisible();
+    await expect(members.getByRole("cell", { name: credentials.name }).first()).toBeVisible();
+    const membersTableText = await members.getByRole("table").innerText();
+    expect(membersTableText).not.toMatch(/usr_[a-zA-Z0-9]+/);
     await members.getByRole("button", { name: "New" }).click();
     await expect(page).toHaveURL(moduleCreatePath(org.slug, ACCOUNTS_TAB));
     await expect(page.getByRole("button", { name: "Open Parent Account lookup" })).toBeVisible();
