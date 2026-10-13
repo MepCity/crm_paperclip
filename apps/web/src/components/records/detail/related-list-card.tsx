@@ -10,6 +10,7 @@ import { SplitButton } from "@/components/ui/split-button";
 import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountContactsCardBody } from "./account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
+import { DealStageHistoryCardBody } from "./deal-stage-history-card-body";
 import { RelatedDealsCardBody } from "./related-deals-card-body";
 import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
 
@@ -30,6 +31,9 @@ export interface RelatedListCardProps {
     orgSlug: string;
     accountRecordPath: (recordId: RecordId) => string;
   };
+  dealStageHistory?: {
+    dealId: RecordId;
+  };
   managerDeals?: {
     managerRecord: RecordData;
     filterField: string;
@@ -42,6 +46,7 @@ export function RelatedListCard({
   reportingContacts,
   accountContacts,
   memberAccounts,
+  dealStageHistory,
   managerDeals,
 }: RelatedListCardProps) {
   const {
@@ -396,12 +401,34 @@ export function RelatedListCard({
           orgSlug={memberAccounts.orgSlug}
           accountRecordPath={memberAccounts.accountRecordPath}
         />
+      ) : id === "stage-history" && dealStageHistory ? (
+        <DealStageHistoryCardBody dealId={dealStageHistory.dealId} />
       ) : id === "deals" && managerDeals ? (
         <RelatedDealsCardBody
           managerRecord={managerDeals.managerRecord}
           filterField={managerDeals.filterField}
           dealRecordPath={managerDeals.dealRecordPath}
         />
+      ) : id === "contact-roles" && tableColumns && tableColumns.length > 0 ? (
+        <div className="overflow-x-auto py-2">
+          <table className="w-full text-left text-md">
+            <thead>
+              <tr className="border-b border-panel-border text-text-muted">
+                <th scope="col" className="w-8 px-2 py-2">
+                  <span className="sr-only">Selection</span>
+                </th>
+                {tableColumns.map((col) => (
+                  <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          </table>
+          <div data-part="empty" className="py-8 text-center text-md text-text-empty">
+            {emptyStateText}
+          </div>
+        </div>
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
           {emptyStateText}
