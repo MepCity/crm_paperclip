@@ -33,6 +33,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
   navigation: { id: "accounts", icon: Icons.building },
   list: accountsListPageConfig,
   listCurrencyCode: ACCOUNTS_LIST_CURRENCY_CODE,
+  searchColumns: ["Account_Name", "Phone", "Website", "Owner"],
   buildFilterGroups: buildAccountsFilterGroups,
   form: {
     rules: accountsFormRules,

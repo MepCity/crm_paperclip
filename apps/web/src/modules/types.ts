@@ -121,6 +121,7 @@ export interface ModuleScreenDefinition {
   navigation: { id: string; icon: Icon };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
+  searchColumns?: readonly string[];
   buildFilterGroups: (input: {
     fields: readonly FieldDefinition[];
     users: readonly { userId: string; name: string; email?: string }[];
