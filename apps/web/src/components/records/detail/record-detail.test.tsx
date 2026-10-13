@@ -317,3 +317,200 @@ test("rail badges follow the record count; an empty card draws none", () => {
   expect(within(rail).queryByText("1")).toBeNull();
   expect(rail.querySelectorAll("[class*='rounded-full']")).toHaveLength(1);
 });
+
+test("clicking rail link on alternate tab calls onTabChange, scrolls target, and selects entry", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function TwoTabFrame() {
+    const [selected, setSelected] = useState<string | undefined>("timeline-item");
+    const [tab, setTab] = useState("timeline");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "one", label: "Section One", targetId: "target-one" },
+          {
+            id: "timeline-item",
+            label: "Timeline Item",
+            targetId: "target-timeline",
+            tabId: "timeline",
+          },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={(nextTab) => {
+          onTabChangeSpy(nextTab);
+          setTab(nextTab);
+        }}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <article
+                id="target-one"
+                ref={(el) => {
+                  if (el)
+                    Object.defineProperty(el, "offsetTop", {
+                      value: 160,
+                      configurable: true,
+                    });
+                }}
+              >
+                First section
+              </article>
+            ),
+          },
+          {
+            id: "timeline",
+            label: "Timeline",
+            content: <article id="target-timeline">Timeline content</article>,
+          },
+        ]}
+      />
+    );
+  }
+
+  const { container } = render(<TwoTabFrame />);
+  const scroller = container.querySelector("[data-record-scroller]") as HTMLDivElement;
+  expect(scroller.scrollTop).toBe(0);
+
+  const one = screen.getByRole("link", { name: "Section One" });
+  expect(one.hasAttribute("aria-current")).toBe(false);
+
+  await user.click(one);
+
+  expect(onTabChangeSpy).toHaveBeenCalledWith("overview");
+  expect(one.getAttribute("aria-current")).toBe("page");
+  expect(scroller.scrollTop).toBe(160);
+});
+
+test("clicking rail link when target is in selected tab scrolls without calling onTabChange", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function OverviewFrame() {
+    const [selected, setSelected] = useState<string | undefined>("one");
+    const [tab, setTab] = useState("overview");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "one", label: "Section One", targetId: "target-one" },
+          { id: "two", label: "Section Two", targetId: "target-two" },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={(nextTab) => {
+          onTabChangeSpy(nextTab);
+          setTab(nextTab);
+        }}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <>
+                <article
+                  id="target-one"
+                  ref={(el) => {
+                    if (el)
+                      Object.defineProperty(el, "offsetTop", {
+                        value: 50,
+                        configurable: true,
+                      });
+                  }}
+                >
+                  First section
+                </article>
+                <article
+                  id="target-two"
+                  ref={(el) => {
+                    if (el)
+                      Object.defineProperty(el, "offsetTop", {
+                        value: 250,
+                        configurable: true,
+                      });
+                  }}
+                >
+                  Second section
+                </article>
+              </>
+            ),
+          },
+          {
+            id: "timeline",
+            label: "Timeline",
+            content: "Alternate content",
+          },
+        ]}
+      />
+    );
+  }
+
+  const { container } = render(<OverviewFrame />);
+  const scroller = container.querySelector("[data-record-scroller]") as HTMLDivElement;
+
+  const two = screen.getByRole("link", { name: "Section Two" });
+  await user.click(two);
+
+  expect(onTabChangeSpy).not.toHaveBeenCalled();
+  expect(two.getAttribute("aria-current")).toBe("page");
+  expect(scroller.scrollTop).toBe(250);
+});
+
+test("rail link does not become selected if target cannot be found in any tab", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function MissingTargetFrame() {
+    const [selected, setSelected] = useState<string | undefined>(undefined);
+    const [tab] = useState("overview");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "first", label: "First Section", targetId: "target-one" },
+          { id: "missing", label: "Missing Section", targetId: "nonexistent" },
+          { id: "invalid-tab", label: "Invalid Tab", targetId: "target-two", tabId: "unknown-tab" },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={onTabChangeSpy}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: <article id="target-one">First section</article>,
+          },
+        ]}
+      />
+    );
+  }
+
+  render(<MissingTargetFrame />);
+  const missing = screen.getByRole("link", { name: "Missing Section" });
+  await user.click(missing);
+  expect(missing.hasAttribute("aria-current")).toBe(false);
+
+  const invalidTab = screen.getByRole("link", { name: "Invalid Tab" });
+  await user.click(invalidTab);
+  expect(invalidTab.hasAttribute("aria-current")).toBe(false);
+  expect(onTabChangeSpy).not.toHaveBeenCalled();
+});
