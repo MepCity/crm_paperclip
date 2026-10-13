@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page, Request } from "@playwright/test";
 import {
   CONTACTS_FORM_ADDRESS_CHILD_ORDER,
   CONTACTS_FORM_INFORMATION_COLUMNS,
@@ -123,6 +123,81 @@ test("edit preserves values and saves changes", async ({ page }) => {
   await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Edited Contact");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("[data-record-header]")).toContainText("Edited Contact");
+});
+
+const isContactUpdate = (request: Request) =>
+  request.method() === "PUT" &&
+  /\/crm\/v2\.2\/Contacts\/[^/]+$/.test(new URL(request.url()).pathname);
+
+function contactWrites(page: Page): string[] {
+  const writes: string[] = [];
+  page.on("request", (request) => {
+    if (isContactUpdate(request)) writes.push(request.url());
+  });
+  return writes;
+}
+
+async function openEdit(page: Page) {
+  await page.getByRole("link", { name: "Edit", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+}
+
+/** Focusing an input in Chromium puts the caret in front of the text, so the mask needs it at the end. */
+async function putCaretAtEnd(date: Locator) {
+  await date.evaluate((element) => {
+    if (!(element instanceof HTMLInputElement)) return;
+    element.focus();
+    element.setSelectionRange(element.value.length, element.value.length);
+  });
+}
+
+/** The stored record the half-entry tests need: an optional date field that already has a day. */
+async function createContactWithDateOfBirth(page: Page, lastName: string) {
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill(lastName);
+  await page.getByRole("textbox", { name: "Date of Birth", exact: true }).fill("15.03.1990");
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Contacts",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await createRequest).postDataJSON().data[0].Date_of_Birth).toBe("1990-03-15");
+  await expect(page.locator("[data-record-header]")).toContainText(lastName);
+}
+
+test("a half-typed date blocks the write and keeps the stored day", async ({ page }) => {
+  await openCreate(page);
+  await createContactWithDateOfBirth(page, "Half Date Contact");
+  await openEdit(page);
+  const date = page.getByRole("textbox", { name: "Date of Birth", exact: true });
+  const writes = contactWrites(page);
+  await expect(date).toHaveValue("15.03.1990");
+  await putCaretAtEnd(date);
+  await page.keyboard.press("Backspace");
+  await expect(date).toHaveValue("15.03.199");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Please enter a valid Date of Birth.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+  expect(writes).toEqual([]);
+  await expect(date).toHaveValue("15.03.199");
+  // Completing the entry stores the corrected day.
+  await putCaretAtEnd(date);
+  await page.keyboard.press("6");
+  await expect(date).toHaveValue("15.03.1996");
+  const update = page.waitForRequest(isContactUpdate);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await update).postDataJSON()).toEqual({ data: [{ Date_of_Birth: "1996-03-15" }] });
+  expect(writes).toHaveLength(1);
+});
+
+test("clearing a stored date completely writes null", async ({ page }) => {
+  await openCreate(page);
+  await createContactWithDateOfBirth(page, "Cleared Date Contact");
+  await openEdit(page);
+  await page.getByRole("textbox", { name: "Date of Birth", exact: true }).fill("");
+  const update = page.waitForRequest(isContactUpdate);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await update).postDataJSON()).toEqual({ data: [{ Date_of_Birth: null }] });
+  await expect(page.locator("[data-record-header]")).toContainText("Cleared Date Contact");
 });
 
 test("clone saves a new record from the source", async ({ page }) => {
