@@ -2,7 +2,7 @@
 
 import "./record-input.css";
 import type { ReactNode } from "react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Button,
   Dialog,
@@ -67,6 +67,16 @@ export function RecordChoice({
   const [open, setOpen] = useState(defaultOpen && !disabled);
   const [query, setQuery] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const suppressScrollCloseRef = useRef(false);
+
+  useEffect(() => {
+    if (!open || !inline) return;
+    const markScrollClose = () => {
+      suppressScrollCloseRef.current = true;
+    };
+    window.addEventListener("scroll", markScrollClose, true);
+    return () => window.removeEventListener("scroll", markScrollClose, true);
+  }, [open, inline]);
   const selected = options.find((option) => option.value === value);
   const items = options.map((option, index) => ({ ...option, id: String(index) }));
   const selectedId = items.find((option) => option.value === value)?.id;
@@ -99,7 +109,12 @@ export function RecordChoice({
         onOpenChange={(next) => {
           // Non-modal focus can scroll an ancestor, which requests overlay closure.
           // Keep the list open while its option still holds focus.
-          if (inline && !next && listRef.current?.contains(document.activeElement)) return;
+          if (inline && !next && listRef.current?.contains(document.activeElement)) {
+            if (suppressScrollCloseRef.current) {
+              suppressScrollCloseRef.current = false;
+              return;
+            }
+          }
           setOpen(next);
           setQuery("");
         }}

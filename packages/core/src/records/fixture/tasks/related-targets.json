@@ -1,0 +1,62 @@
+[
+  {
+    "sourceModule": "Accounts",
+    "module": "Tasks",
+    "href": "Accounts/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Campaigns",
+    "module": "Tasks",
+    "href": "Campaigns/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Cases",
+    "module": "Tasks",
+    "href": "Cases/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Contacts",
+    "module": "Tasks",
+    "href": "Contacts/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Deals",
+    "module": "Tasks",
+    "href": "Deals/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Invoices",
+    "module": "Tasks",
+    "href": "Invoices/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Leads",
+    "module": "Tasks",
+    "href": "Leads/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Products",
+    "module": "Tasks",
+    "href": "Products/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Purchase_Orders",
+    "module": "Tasks",
+    "href": "Purchase_Orders/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Quotes",
+    "module": "Tasks",
+    "href": "Quotes/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Sales_Orders",
+    "module": "Tasks",
+    "href": "Sales_Orders/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Vendors",
+    "module": "Tasks",
+    "href": "Vendors/{ENTITYID}/Tasks"
+  }
+]

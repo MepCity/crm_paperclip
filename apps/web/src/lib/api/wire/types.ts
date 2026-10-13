@@ -26,7 +26,7 @@ export type WireField = {
     forecast_category?: { name: string };
     deal_category?: string;
   }[];
-  lookup?: { module: { api_name: string } };
+  lookup?: { module: { api_name: string }; modules?: readonly { api_name: string }[] };
 };
 export type WireModule = {
   api_name: string;

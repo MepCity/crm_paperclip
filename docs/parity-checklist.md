@@ -477,7 +477,7 @@ merged since).
 
 ## Module 4 — Deals
 
-Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md`.
+Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md` (stage transitions), shared `record-detail.md` and `accounts-record-detail.md` behaviour.
 
 ### Deals list — implemented; QA passed (MEP-410)
 
@@ -503,3 +503,19 @@ Temporary table rules (not painted in the Deals capture; Accounts table behaviou
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
 
+### Deals record detail — implemented; QA pending (MEP-412)
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Header, tags, actions | DD-01, DD-04–DD-07, DD-90 | `deals-detail.spec.ts` |
+| Related-list rail | DD-10–DD-31 (Deals entries), DD-54–DD-58 (badges per spec) | `deals-detail.spec.ts`, `deals-related-lists.test.tsx` |
+| Tabs and last update | DD-32–DD-35 | `deals-detail.spec.ts` |
+| Stage bar and verify dialog | DD-60–DD-65, DD-91–DD-92 | `deals-detail.spec.ts`, `stage-bar.test.tsx` |
+| Business card | DD-66 (card fields) | `deals-detail.spec.ts`, `deals-detail-sections.test.ts` |
+| Contact Person summary | DD-66–DD-68 | `deals-detail.spec.ts` |
+| Details and inline edit | Deal Information, Description Information | `deals-detail.spec.ts` |
+| More Options | DD-07.1–DD-07.15 | `deals-record-more-options.test.ts`, `deals-detail.spec.ts` |
+| Timeline | DD-70–DD-72 | `deals-detail.spec.ts`, `deals-timeline.test.ts` |
+| SALES SUMMARY rail section | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
+
+Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.

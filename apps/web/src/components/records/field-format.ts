@@ -32,7 +32,7 @@ export function isFieldValueEmpty(field: FieldDefinition, value: FieldValue): bo
   if (field.dataType === "picklist" && typeof value === "string" && value === "") return true;
   if (field.dataType === "lookup") {
     if (typeof value !== "object" || value === null || !("id" in value)) return true;
-    if (!value.name || value.name.trim() === "") return true;
+    if (typeof value.name !== "string" || value.name.trim() === "") return true;
     return false;
   }
   return false;
@@ -148,7 +148,7 @@ function valueText(
 
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (typeof value === "object" && value !== null && "id" in value) {
+  if (typeof value === "object" && value !== null && typeof value.id === "string") {
     return "name" in value && typeof value.name === "string" && value.name ? value.name : value.id;
   }
   return null;
