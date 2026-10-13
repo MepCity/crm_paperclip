@@ -366,11 +366,11 @@ Only labels and order are compared. Exported sequence is from deals.md › Relat
 | 8 | Closed Activities | 12–14 | Combined Tasks/Meetings/Calls rail entry |
 | 9 | Products | 17 | Same relative order |
 | 10 | Quotes | 18 | Same relative order |
-| 11 | Sales Orders | P2 | No card-header counter | Assign DD-123; New DD-124 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Sales Orders: same | seen (m4c-card-sales-orders) |
-| 12 | Contact Roles | M2 | No card-header counter; rail badge DD-58 | Add Contacts Roles DD-125; Edit All DD-126; table with plus DD-127 | Contact Name; Account Name; Phone; Email; Role Name | Populated; empty state not observed | new | seen (m4c-card-sales-orders) |
-| 13 | Emails | M10 | No card-header counter | Compose Email DD-138; Mails/Drafts/Scheduled DD-139–DD-141; scope selector DD-137 | None painted | Mails: No records found; other tabs not opened | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Emails: same except scope selector | seen (m4c-card-sales-orders) |
-| 14 | Cases | M8 | No card-header counter | Assign DD-142; New DD-143 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Cases: same | seen (m4c-card-sales-orders) |
-| 15 | Invoices | P2 | No card-header counter | Assign DD-144; New DD-145 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Invoices: same | seen (m4c-card-invoices); partly covered in m4c-card-sales-orders |
+| 11 | Sales Orders | 19 | Same relative order |
+| 12 | Contact Roles | 20 | Same relative order |
+| 13 | Emails | 21 | Same relative order |
+| 14 | Cases | 22 | Same relative order |
+| 15 | Invoices | 24 | Same relative order |
 
 Exported visible Checklists (23) and Locking Information (25) are not painted in this rail. Hidden Review Summary/Field History, Email Sentiment and Email Drafts are also not painted. Add Related List is a utility link, not an exported relation. SALES SUMMARY is a static section, not another related list. The rail's Stage History and Contact Roles badges are Deals-specific; Activities counts reuse Accounts.
 
@@ -390,15 +390,15 @@ The first fifteen rows follow the observed rail. Checklists and Locking Informat
 | 8 | Closed Activities | M5 | Tasks/Meetings badges DD-119–DD-120 | DD-116–DD-118 | Closed Tasks; Closed Meetings; Calls not painted | Populated; empty state not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Closed Activities: same visible controls | seen (m4c-card-cadences) |
 | 9 | Products | P2 | not observed | Add Products DD-121 | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Products: same header action; body not observed | seen header (m4c-card-cadences) |
 | 10 | Quotes | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Quotes; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 11 | Sales Orders | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Sales Orders; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 12 | Contact Roles | M2 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 13 | Emails | M10 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Emails; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 14 | Cases | M8 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Cases; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
-| 15 | Invoices | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Invoices; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 11 | Sales Orders | P2 | No card-header counter | Assign DD-123; New DD-124 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Sales Orders: same | seen (m4c-card-sales-orders) |
+| 12 | Contact Roles | M2 | No card-header counter; rail badge DD-58 | Add Contacts Roles DD-125; Edit All DD-126; table with plus DD-127 | Contact Name; Account Name; Phone; Email; Role Name | Populated; empty state not observed | new | seen (m4c-card-sales-orders) |
+| 13 | Emails | M10 | No card-header counter | Compose Email DD-138; Mails/Drafts/Scheduled DD-139–DD-141; scope selector DD-137 | None painted | Mails: No records found; other tabs not opened | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Emails: same except scope selector | seen (m4c-card-sales-orders) |
+| 14 | Cases | M8 | No card-header counter | Assign DD-142; New DD-143 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Cases: same | seen (m4c-card-sales-orders) |
+| 15 | Invoices | P2 | No card-header counter | Assign DD-144; New DD-145 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Invoices: same | seen (m4c-card-invoices); partly covered in m4c-card-sales-orders |
 | not observed | Checklists | ? | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
 | not observed | Locking Information | M11 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
 
-Stage History, Competitors and Connected Records have painted card evidence in m4c-card-notes, as recorded above. Stage History exposes its upper icon and seven visible or clipped column headers; Competitors exposes New and its empty state; Connected Records exposes its empty state without upper controls. Contact Roles is painted in m4c-card-sales-orders, including its upper actions and five named columns. Stage History is compared with metadata in the following section; unseen columns and row-end actions are not inferred. No new DD number is assigned to an unobserved control.
+Stage History, Competitors and Connected Records have painted card evidence in m4c-card-notes, as recorded above. Stage History exposes its upper icon and seven visible or clipped column headers; Competitors exposes New and its empty state; Connected Records exposes its empty state without upper controls. Sales Orders, Contact Roles, Emails and Cases are painted in m4c-card-sales-orders; Invoices upper controls are fully visible in m4c-card-invoices. Contact Roles includes its upper actions and five named columns. Quotes, Checklists, Locking Information and the lower detail fields remain unobserved. Stage History is compared with metadata in the following section; unseen columns and row-end actions are not inferred. No new DD number is assigned to an unobserved control.
 
 ## Stage History column comparison
 
