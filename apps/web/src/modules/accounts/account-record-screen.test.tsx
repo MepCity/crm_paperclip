@@ -128,4 +128,37 @@ describe("AccountRecordScreen with real RecordDetailScreen", () => {
     expect(productsLink.getAttribute("data-later-module")).toBe("P2");
     expect(productsLink.getAttribute("aria-disabled")).toBe("true");
   });
+
+  it("does not mount ContactHierarchyModal when closed, mounts on Hierarchy View click, and unmounts on close", async () => {
+    const user = userEvent.setup();
+    const service = createService();
+    renderScreen(service, "500000000000000000");
+
+    await waitFor(() => {
+      expect(screen.getByRole("navigation", { name: "Related List" })).toBeTruthy();
+    });
+
+    // 1. Modal is not mounted when closed
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByText("Contact Hierarchy")).toBeNull();
+
+    // 2. Click Hierarchy View in Contacts card
+    const hierarchyButton = screen.getByRole("button", { name: "Hierarchy View" });
+    await user.click(hierarchyButton);
+
+    // 3. Modal is now mounted
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeTruthy();
+    });
+    expect(screen.getByText("Contact Hierarchy")).toBeTruthy();
+
+    // 4. Close modal
+    const closeButton = screen.getByRole("button", { name: "Close Modal" });
+    await user.click(closeButton);
+
+    // 5. Modal is unmounted
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+  });
 });

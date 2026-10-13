@@ -139,6 +139,34 @@ describe("AdvancedSearchScreen", () => {
     expect(accountsCb.getAttribute("data-later-module")).toBeNull();
   });
 
+  it("handles Deals as working filter item and renders Deals card with active record link", async () => {
+    const user = userEvent.setup();
+    const service = createTestService();
+
+    // Search for Deal
+    renderSearch(service, "Deal");
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Deals search results" })).toBeTruthy();
+    });
+
+    const dealsCard = screen.getByRole("region", { name: "Deals search results" });
+    expect(dealsCard).toBeTruthy();
+
+    const dealLinks = within(dealsCard).getAllByRole("link");
+    const recordLink = dealLinks.find((l) => l.getAttribute("href")?.includes("/tab/Deals/"));
+    expect(recordLink).toBeDefined();
+    expect(recordLink?.getAttribute("data-later-module")).toBeNull();
+
+    // Open filter panel
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
+
+    // Deals is a working checkbox (no laterModule on the checkbox)
+    const dealsCb = within(filterPanel).getByRole("checkbox", { name: "Deals" });
+    expect(dealsCb.getAttribute("data-later-module")).toBeNull();
+  });
+
   it("keeps module checkbox changes as draft until Apply Filter is clicked", async () => {
     const user = userEvent.setup();
     const service = createTestService();
@@ -166,7 +194,7 @@ describe("AdvancedSearchScreen", () => {
     const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
     await user.click(createdTimeOption);
 
-    // The sort triggered search should STILL have the unapplied modules (all working)
+    // The sort triggered search should STILL have the unapplied modules (all 4)
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({

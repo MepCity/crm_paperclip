@@ -53,6 +53,7 @@ export const dealsListPageConfig: ModuleListScreenConfig = {
   filterGroups: dealsFilterGroups,
   sortFieldLabels: DEALS_SORT_FIELD_LABELS,
   pinnedViews: ["All Deals"],
+  badgeColumn: false,
   inventory: {
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },

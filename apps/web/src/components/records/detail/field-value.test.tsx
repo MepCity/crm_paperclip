@@ -162,28 +162,28 @@ test("lookup field links to registered Accounts detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
-test("lookup field links registered Deals module", () => {
+test("lookup field links to registered Deals detail page", () => {
   show(field("Deal_Name", "lookup", { lookup: { module: "Deals" } }), {
     module: "Deals",
     id: "deal-123",
-    name: "Acme Corp",
+    name: "Big Deal",
   });
-  const link = screen.getByRole("link", { name: "Acme Corp" });
-  expect(link.tagName).toBe("A");
-  expect(link.getAttribute("href")).toContain("/Deals/deal-123");
+  const link = screen.getByRole("link", { name: "Big Deal" });
+  expect(link.getAttribute("href")).toBe("/tab/Deals/deal-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
-  show(field("Vendor_Name", "lookup", { lookup: { module: "Vendors" } }), {
-    module: "Vendors",
-    id: "vendor-123",
-    name: "Supply Co",
+  show(field("Campaign_Source", "lookup", { lookup: { module: "Campaigns" } }), {
+    module: "Campaigns",
+    id: "camp-123",
+    name: "Acme Campaign",
   });
-  const link = screen.getByRole("link", { name: "Supply Co" });
+  const link = screen.getByRole("link", { name: "Acme Campaign" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("P2");
+  expect(link.getAttribute("data-later-module")).toBe("M7");
 });
 
 test("empty lookup field renders an em dash", () => {
