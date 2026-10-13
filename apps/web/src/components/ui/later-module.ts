@@ -24,14 +24,14 @@ export interface LaterModuleProp {
   laterModule?: ModuleKey;
 }
 
-export const LIVE_MODULE_KEYS = ["M2", "M3"] as const;
+export const LIVE_MODULE_KEYS = ["M2", "M3", "M4"] as const;
 export type LiveModuleKey = (typeof LIVE_MODULE_KEYS)[number];
 
 const LIVE_MODULE_SET: ReadonlySet<string> = new Set(LIVE_MODULE_KEYS);
 
 /**
  * Resolves a module key against live modules.
- * Returns undefined if key is undefined, empty, or currently live (e.g. M2, M3).
+ * Returns undefined if key is undefined, empty, or currently live (e.g. M2, M3, M4).
  * Otherwise returns the key itself so later-module controls remain locked/inert.
  */
 export function resolveLaterModule<T extends string = ModuleKey>(

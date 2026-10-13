@@ -168,7 +168,7 @@ export default function FieldInputDemo() {
       </div>
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-text-muted">
-          Lookup fields (Registered: Leads and Accounts, Unregistered: Deals M4, Vendors P2)
+          Lookup fields (Registered: Leads and Accounts, Unregistered: Vendors P2)
         </h3>
         <div className="grid grid-cols-2 gap-4">
           {(["empty", "filled", "required", "disabled"] as const).map((state) => (
