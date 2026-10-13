@@ -1,9 +1,16 @@
 import { type FieldErrors, ValidationError } from "../../errors";
-import type { FieldDefinition, FieldValue, RecordInput } from "../contract";
+import {
+  type FieldDefinition,
+  type FieldValue,
+  lookupTargetModules,
+  type RecordInput,
+} from "../contract";
+import { isJsonObject } from "../json";
 
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
-  if (typeof value === "object" && value !== null) return value.id.length;
+  if (typeof value === "object" && value !== null)
+    return typeof value.id === "string" ? value.id.length : undefined;
   if (typeof value !== "number") return undefined;
   // Count numeric digits, excluding sign/decimal separator; expand exponent notation.
   const [coefficient = "", exponentText] = Math.abs(value).toString().split("e");
@@ -24,6 +31,9 @@ export function isValidDateOnly(value: string): boolean {
 export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): boolean {
   if (value === null) return true;
   switch (field.dataType) {
+    case "ALARM":
+    case "RRULE":
+      return isJsonObject(value);
     case "integer":
       return typeof value === "number" && Number.isSafeInteger(value);
     case "currency":
@@ -47,7 +57,7 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
         typeof value === "object" &&
         typeof value.id === "string" &&
         typeof value.module === "string" &&
-        (field.dataType !== "lookup" || value.module === field.lookup?.module) &&
+        (field.dataType !== "lookup" || lookupTargetModules(field).includes(value.module)) &&
         (value.name === undefined || typeof value.name === "string") &&
         Object.keys(value).every((key) => key === "id" || key === "module" || key === "name")
       );
@@ -83,7 +93,12 @@ export function validateInput(
     } else if (present) {
       if (value === undefined || !acceptsFieldValue(field, value))
         errors[field.apiName] = ["Invalid field type."];
-      else if (field.maxLength !== undefined && (valueLength(value) ?? 0) > field.maxLength)
+      else if (
+        field.dataType !== "ALARM" &&
+        field.dataType !== "RRULE" &&
+        field.maxLength !== undefined &&
+        (valueLength(value) ?? 0) > field.maxLength
+      )
         errors[field.apiName] = ["Value is too long."];
       else if (
         field.picklist &&

@@ -172,7 +172,13 @@ function isCriteriaToken(value: CriteriaValue): value is CriteriaToken {
     return false;
   const record = value as unknown as Record<string, unknown>;
   const keys = Object.keys(record);
-  if (record.token === "CURRENTUSER" || record.token === "TODAY") return keys.length === 1;
+  if (
+    record.token === "CURRENTUSER" ||
+    record.token === "TODAY" ||
+    record.token === "NEXT7DAYS" ||
+    record.token === "TODAYANDOVERDUE"
+  )
+    return keys.length === 1;
   if (record.token === "AGEINDAYS" || record.token === "DUEINDAYS") return validAgeDueToken(record);
   if (record.token === "RELATIVE")
     return (
@@ -195,13 +201,24 @@ function comparatorFits(
   comparator: Comparator,
   value: CriteriaValue,
 ): boolean {
+  if (field.dataType === "ALARM" || field.dataType === "RRULE") return false;
+  if (
+    field.dataType === "lookup" &&
+    (comparator === "equal" || comparator === "not_equal") &&
+    typeof value === "object" &&
+    value !== null
+  )
+    return acceptsFieldValue(field, value as FieldValue);
   if (comparator === "is_empty" || comparator === "is_not_empty") return value === null;
   if (["contains", "not_contains", "starts_with", "ends_with"].includes(comparator))
     return TEXT_TYPES.has(field.dataType) && typeof value === "string";
   if (field.dataType === "multi_module_lookup") return false;
   if (["date", "datetime"].includes(field.dataType)) {
     if (comparator === "less_equal") {
-      return isCriteriaToken(value) && isAgeOrDueToken(value);
+      return (
+        isCriteriaToken(value) &&
+        (isAgeOrDueToken(value) || value.token === "NEXT7DAYS" || value.token === "TODAYANDOVERDUE")
+      );
     }
     if (comparator === "equal") {
       if (isCriteriaToken(value)) {
@@ -249,7 +266,8 @@ function comparatorFits(
     if (isValueList(value))
       return value.length > 0 && value.every((item) => typeof item === "string");
     // Retain existing scalar equality and saved-view tokens.
-    if (comparator !== "equal") return false;
+    if (comparator !== "equal")
+      return field.dataType === "picklist" && (typeof value === "string" || value === null);
     if (isCriteriaToken(value))
       return field.dataType === "picklist"
         ? value.token === "CATEGORY"
@@ -295,6 +313,8 @@ function periodBounds(expected: CriteriaToken, now: Date): readonly [number, num
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth();
+  if (expected.token === "NEXT7DAYS") return [-Infinity, start + 8 * DAY_MS];
+  if (expected.token === "TODAYANDOVERDUE") return [-Infinity, start + DAY_MS];
   if (expected.token === "TODAY") return [start, start + DAY_MS];
   if (expected.token !== "PERIOD") return null;
   const week = start - ((now.getUTCDay() + 6) % 7) * DAY_MS;
@@ -334,7 +354,12 @@ function matchesEqual(
   if (isValueList(expected)) return expected.some((option) => equalValues(value, option));
   if (isCriteriaToken(expected)) {
     if (expected.token === "CURRENTUSER") return value === runtime.userId;
-    if (expected.token === "TODAY" || expected.token === "PERIOD") {
+    if (
+      expected.token === "TODAY" ||
+      expected.token === "PERIOD" ||
+      expected.token === "NEXT7DAYS" ||
+      expected.token === "TODAYANDOVERDUE"
+    ) {
       const bounds = periodBounds(expected, runtime.now);
       const parsed = typeof value === "string" ? Date.parse(value) : NaN;
       return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
@@ -373,6 +398,14 @@ function matchesContains(value: FieldValue, expected: CriteriaValue): boolean {
 }
 
 function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: CriteriaRuntime): boolean {
+  if (
+    isCriteriaToken(expected) &&
+    (expected.token === "NEXT7DAYS" || expected.token === "TODAYANDOVERDUE")
+  ) {
+    const bounds = periodBounds(expected, runtime.now);
+    const parsed = typeof value === "string" ? Date.parse(value) : NaN;
+    return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
+  }
   if (
     !isCriteriaToken(expected) ||
     (expected.token !== "AGEINDAYS" && expected.token !== "DUEINDAYS") ||
@@ -418,9 +451,21 @@ export function matches(
     raw.id === criteria.value
   )
     return criteria.comparator === "equal";
+  if (
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    typeof criteria.value === "object" &&
+    criteria.value !== null &&
+    !Array.isArray(criteria.value) &&
+    (criteria.comparator === "equal" || criteria.comparator === "not_equal")
+  ) {
+    const equal = equalValues(raw, criteria.value as FieldValue);
+    return criteria.comparator === "equal" ? equal : !equal;
+  }
   const value =
     fields.get(criteria.field)?.dataType === "lookup" && typeof raw === "object" && raw !== null
-      ? (raw.name ?? null)
+      ? typeof raw.name === "string"
+        ? raw.name
+        : null
       : raw;
   const dayRuntime =
     fields.get(criteria.field)?.dataType === "date"
@@ -547,15 +592,20 @@ export function sortRecords(
     return copy;
   }
   const field = fields.get(sort.field);
-  if (!field) throw new ValidationError({ sort: ["Unknown sort field or order."] });
+  if (!field || field.dataType === "ALARM" || field.dataType === "RRULE")
+    throw new ValidationError({ sort: ["Unknown sort field or order."] });
   // Ties keep the default id-descending order. Array.sort is stable.
   copy.sort((a, b) => compareDecimal(b.id, a.id));
   const normalize = (value: FieldValue): string | number | boolean | null => {
     if (value === null || value === "") return null;
     if (typeof value === "object")
       return field.dataType === "lookup"
-        ? value.name?.toLowerCase() || null
-        : value.id.toLowerCase();
+        ? typeof value.name === "string"
+          ? value.name.toLowerCase() || null
+          : null
+        : typeof value.id === "string"
+          ? value.id.toLowerCase()
+          : null;
     if (["date", "datetime"].includes(field.dataType) && typeof value === "string")
       return Date.parse(value);
     return typeof value === "string" ? value.toLowerCase() : value;

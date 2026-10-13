@@ -82,6 +82,7 @@ export type RecordServiceContractOptionalScenarios = {
   connectedLookup?: RecordServiceContractConnectedLookupScenario;
   /** Invalid Owner payload shaped as a connected-module reference (module-specific). */
   ownerInvalidConnectedReference?: { module: string; id: string };
+  massUpdateScenario?: { field: string; value: FieldValue };
   massUpdateClearablePhone?: string;
   massUpdateInvalidNumeric?: string;
   lengthValidationField?: string;
@@ -319,6 +320,44 @@ export const dealsRecordServiceContractModule: RecordServiceContractModuleDefini
       field: "Account_Name",
       reference: { module: "Accounts", id: "500000000000000000" },
       expectedName: "Account 001",
+    },
+  },
+};
+
+export const tasksRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Tasks",
+  singularLabel: "Task",
+  pluralLabel: "Tasks",
+  expectedFieldCount: 20,
+  buildMinimalValidInput: (extra = {}) => ({ Subject: "Contract Task", ...extra }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Description",
+    sample: "Contract marker",
+    updated: "Updated marker",
+    tenantOther: "Other marker",
+  },
+  sortFields: ["Subject", "Due_Date"],
+  duplicatePermittedField: "Subject",
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 3],
+    ["Due_Date", false],
+    ["Send_Notification_Email", "false"],
+    ["Who_Id", "contact"],
+    ["Remind_At", "alarm"],
+    ["Recurring_Activity", 3],
+  ],
+  optional: {
+    date: { field: "Due_Date" },
+    lockedRecords: { field: "Locked__s" },
+    lengthValidationField: "Subject",
+    massUpdateScenario: { field: "Priority", value: "High" },
+    massUpdateInvalidPicklist: { field: "Priority", value: "Unknown" },
+    singleModuleLookup: {
+      field: "Who_Id",
+      reference: { module: "Contacts", id: "300000000000000000" },
+      expectedName: "Sample 001 Contact 001",
     },
   },
 };

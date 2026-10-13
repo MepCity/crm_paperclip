@@ -57,7 +57,11 @@ interface ColumnInfo {
 function formatCellText(value: FieldValue | undefined): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "object") {
-    return "name" in value && typeof value.name === "string" ? value.name : value.id;
+    return "name" in value && typeof value.name === "string"
+      ? value.name
+      : typeof value.id === "string"
+        ? value.id
+        : "";
   }
   return String(value);
 }
