@@ -27,11 +27,24 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => navigation.params,
 }));
 
-class ThrowCapture extends Component<{ children: RN; onError: (error: Error) => void }> {
+class ThrowCapture extends Component<
+  { children: RN; onError: (error: Error) => void },
+  { error: Error | null }
+> {
+  override state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
   override componentDidCatch(error: Error, _info: ErrorInfo) {
     this.props.onError(error);
   }
+
   override render() {
+    if (this.state.error) {
+      return null;
+    }
     return this.props.children;
   }
 }
