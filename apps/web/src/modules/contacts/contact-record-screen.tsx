@@ -2,7 +2,8 @@
 
 import type { RecordData } from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
+import { ContactHierarchyModal } from "@/components/records/detail/contact-hierarchy-modal";
 import {
   RecordDetailScreen,
   type RecordDetailScreenProps,
@@ -14,9 +15,18 @@ export type ContactRecordScreenProps = Omit<RecordDetailScreenProps, "buildRelat
 
 export function ContactRecordScreen({ definition, ...props }: ContactRecordScreenProps) {
   const router = useRouter();
+  const [hierarchyOpen, setHierarchyOpen] = useState(false);
+  const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
   const buildRelatedLists = useCallback(
     (record: RecordData) =>
       createContactsRelatedLists({
+        onHierarchyView: () => {
+          triggerRef.current = document.activeElement as HTMLElement | null;
+          setActiveRecord(record);
+          setHierarchyOpen(true);
+        },
         onNewReportingContact: () =>
           openContactCreateWithReportingTo(props.orgSlug, record, (path) => router.push(path)),
         onAddReportingContact: () =>
@@ -26,6 +36,25 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
   );
 
   return (
-    <RecordDetailScreen {...props} definition={definition} buildRelatedLists={buildRelatedLists} />
+    <>
+      <RecordDetailScreen
+        {...props}
+        definition={definition}
+        buildRelatedLists={buildRelatedLists}
+      />
+      <ContactHierarchyModal
+        isOpen={hierarchyOpen}
+        onClose={() => {
+          setHierarchyOpen(false);
+          triggerRef.current?.focus?.();
+        }}
+        orgSlug={props.orgSlug}
+        contact={{
+          id: props.recordId,
+          record: activeRecord,
+        }}
+        triggerElement={triggerRef.current}
+      />
+    </>
   );
 }

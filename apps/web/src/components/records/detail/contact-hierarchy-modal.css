@@ -1,0 +1,100 @@
+.contact-hierarchy-overlay {
+  background-color: color-mix(in srgb, var(--color-overlay) 50%, transparent);
+}
+
+.contact-hierarchy-panel {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 550px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background-color: var(--color-surface);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--radius-select-user-dialog-bottom, 16px);
+  border-bottom-right-radius: var(--radius-select-user-dialog-bottom, 16px);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  outline: none;
+}
+
+.contact-hierarchy-tree {
+  margin-top: 16px;
+  font-size: var(--text-md);
+}
+
+.contact-hierarchy-account-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-weight: 500;
+  color: var(--color-text-strong);
+}
+
+.contact-hierarchy-children {
+  position: relative;
+  /* Left edge aligns with the center of the 16px parent icon (8px from parent left) */
+  margin-left: 8px;
+  padding-left: 18px;
+}
+
+.contact-hierarchy-item {
+  position: relative;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  min-height: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vertical dashed trunk */
+.contact-hierarchy-item::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--color-border);
+}
+
+/* For the last child, the vertical line stops at the horizontal branch */
+.contact-hierarchy-item:last-child::before {
+  height: 16px;
+  bottom: auto;
+}
+
+/* Horizontal dashed branch turning to child */
+.contact-hierarchy-item::after {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 16px;
+  width: 14px;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.contact-hierarchy-item-content {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+}
+
+.contact-hierarchy-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-hierarchy-link:hover {
+  text-decoration: underline;
+}
+
+.contact-hierarchy-root-item {
+  position: relative;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
