@@ -106,4 +106,6 @@ test("contact image is a focusable later-module control", async () => {
   const image = screen.getByRole("button", { name: "Contact Image" });
   expect(image.getAttribute("data-later-module")).toBe("M6");
   expect(image.getAttribute("aria-disabled")).toBe("true");
+  // F-05: the title and the portrait stay separate because the glyph belongs to the control.
+  expect(image.querySelector(".record-profile-silhouette")).not.toBeNull();
 });
