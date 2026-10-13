@@ -213,7 +213,13 @@ describe("Deals export and fixture", () => {
     for (const row of seed.slice(0, 125)) {
       for (const field of ["Account_Name", "Contact_Name"]) {
         const ref = row.fields[field];
-        if (!ref || typeof ref !== "object") throw new Error("Missing reference");
+        if (
+          !ref ||
+          typeof ref !== "object" ||
+          typeof ref.module !== "string" ||
+          typeof ref.id !== "string"
+        )
+          throw new Error("Missing reference");
         await expect(service.get(ref.module, ref.id)).resolves.toBeDefined();
       }
     }

@@ -737,6 +737,100 @@ describe("operation routes", () => {
       404,
     );
   });
+  it("runs Tasks CRUD, JSON objects and module-qualified related queries through existing handlers", async () => {
+    const reminder = { opaque: ["synthetic", null, 3, { enabled: true }] };
+    const recurrence = { opaque: { nested: [false, 2] } };
+    const ref = { module: "Leads", id: "100000000000000000" };
+    const create = await call(operations.create, a, {
+      module: "Tasks",
+      body: {
+        data: [
+          {
+            Subject: "Route Task",
+            Who_Id: ref,
+            Remind_At: reminder,
+            Recurring_Activity: recurrence,
+          },
+        ],
+      },
+    });
+    expect(create.status).toBe(200);
+    const id = (await create.json()).data[0].details.id;
+    const read = await call(operations.record, a, { module: "Tasks", recordId: id });
+    expect(read.status).toBe(200);
+    expect((await read.json()).data[0]).toMatchObject({
+      Subject: "Route Task",
+      Who_Id: { ...ref, name: "Sample 001 Lead 001" },
+      Remind_At: reminder,
+      Recurring_Activity: recurrence,
+    });
+    const list = await call(operations.bulk, a, {
+      module: "Tasks",
+      viewId: "all-tasks",
+      body: { filters: { field: { api_name: "id" }, comparator: "equal", value: id } },
+    });
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.map((row: { id: string }) => row.id)).toEqual([id]);
+    const update = await call(operations.update, a, {
+      module: "Tasks",
+      recordId: id,
+      body: {
+        data: [
+          {
+            Subject: "Updated Task",
+            Remind_At: { replacement: true },
+            What_Id: { module: "Vendors", id: "synthetic-vendor" },
+          },
+        ],
+      },
+    });
+    expect(update.status).toBe(200);
+    expect(
+      (await (await call(operations.record, a, { module: "Tasks", recordId: id })).json()).data[0],
+    ).toMatchObject({
+      Subject: "Updated Task",
+      Remind_At: { replacement: true },
+      What_Id: { module: "Vendors", id: "synthetic-vendor" },
+    });
+    const related = await call(operations.count, a, {
+      module: "Tasks",
+      viewId: "all-tasks",
+      body: { filters: { field: { api_name: "Who_Id" }, comparator: "equal", value: ref } },
+    });
+    expect(related.status).toBe(200);
+    for (const data of [
+      { Who_Id: { module: "Accounts", id: "500000000000000000" } },
+      { Remind_At: [] },
+      { Recurring_Activity: "text" },
+    ]) {
+      expect(
+        (
+          await call(operations.update, a, {
+            module: "Tasks",
+            recordId: id,
+            body: { data: [data] },
+          })
+        ).status,
+      ).toBe(400);
+    }
+    expect((await call(operations.delete, a, { module: "Tasks", recordId: id })).status).toBe(200);
+    expect((await call(operations.record, a, { module: "Tasks", recordId: id })).status).toBe(404);
+  });
+  it("publishes Tasks multi-target metadata and all translated saved views", async () => {
+    const settings = await call(operations.fields, a, { module: "Tasks" });
+    expect(settings.status).toBe(200);
+    const fields = (await settings.json()).fields;
+    expect(fields).toHaveLength(20);
+    expect(
+      fields.find((field: { api_name: string }) => field.api_name === "Who_Id").lookup,
+    ).toEqual({
+      module: { api_name: "Contacts" },
+      modules: [{ api_name: "Contacts" }, { api_name: "Leads" }],
+    });
+    const views = await call(operations.views, a, { module: "Tasks", viewId: "all-tasks" });
+    expect(views.status).toBe(200);
+    expect((await views.json()).custom_views).toHaveLength(17);
+  });
   it("runs Deals create, list, read, update and delete handlers", async () => {
     const create = await call(operations.create, a, {
       module: "Deals",

@@ -20,7 +20,12 @@ export function resolveRecordReferences(
     if (field.dataType !== "lookup") continue;
     const value = resolved[field.apiName];
     if (value == null) continue;
-    if (typeof value !== "object" || !acceptsFieldValue(field, value))
+    if (
+      typeof value !== "object" ||
+      typeof value.module !== "string" ||
+      typeof value.id !== "string" ||
+      !acceptsFieldValue(field, value)
+    )
       throw new ValidationError({ [field.apiName]: ["Invalid record reference."] });
     const targetModule = modules.get(value.module);
     if (!targetModule) continue;

@@ -879,3 +879,52 @@ describe("wire input bounds", () => {
     }
   });
 });
+
+describe("activity field codec", () => {
+  const metadata: ModuleMetadata = {
+    apiName: "Tasks",
+    singularLabel: "Task",
+    pluralLabel: "Tasks",
+    businessCardFields: [],
+    layout: [],
+    fields: [
+      field("id", "bigint"),
+      field("Remind_At", "ALARM"),
+      field("Recurring_Activity", "RRULE"),
+      {
+        ...field("Who_Id", "lookup"),
+        lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
+      },
+    ],
+  };
+  it("keeps JSON objects opaque even with reference-shaped or token-shaped keys", () => {
+    const input = {
+      Remind_At: { module: "opaque", id: "opaque", token: "opaque", nested: [null, 2, true] },
+      Recurring_Activity: { nested: { rules: ["synthetic"] } },
+      Who_Id: { module: "Leads", id: "synthetic-lead", name: "Synthetic Lead" },
+    };
+    expect(decodeInput(json(encodeInput(input, metadata)), metadata)).toEqual(input);
+    const record = { id: "123", fields: { ...input, id: "123" } };
+    expect(decodeRecord(json(encodeRecord(record, metadata)), metadata)).toEqual(record);
+    for (const definition of metadata.fields)
+      expect(decodeField(json(encodeField(definition)))).toEqual(definition);
+  });
+  it("rejects malformed objects and disallowed reference modules", () => {
+    for (const input of [
+      { Remind_At: [] },
+      { Remind_At: "text" },
+      { Recurring_Activity: 1 },
+      { Who_Id: { module: "Accounts", id: "synthetic" } },
+      { Who_Id: { id: "synthetic" } },
+    ]) {
+      expect(() => decodeInput(input, metadata)).toThrow(ValidationError);
+    }
+  });
+  it.each(["NEXT7DAYS", "TODAYANDOVERDUE"] as const)("round trips exact %s tokens", (token) => {
+    const criteria: Criteria = { field: "Due_Date", comparator: "less_equal", value: { token } };
+    const wire = encodeCriteria(criteria);
+    if (!wire || "group" in wire) throw new Error("Expected a leaf criterion");
+    expect(wire.value).toBe(`\${${token}}`);
+    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+  });
+});
