@@ -162,6 +162,15 @@ describe("Calls activity foundation", () => {
     );
   });
 
+  it("returns at least one seed record for every exported view", async () => {
+    const service = make();
+    const empty: string[] = [];
+    for (const view of callsViews) {
+      if ((await service.count("Calls", { viewId: view.id })) === 0) empty.push(view.id);
+    }
+    expect(empty).toEqual([]);
+  });
+
   it("registers a bundle with a distinct id range", () => {
     const ranges = Object.values(fixtureModules).map((bundle) => bundle.initialNextId);
     expect(new Set(ranges).size).toBe(ranges.length);

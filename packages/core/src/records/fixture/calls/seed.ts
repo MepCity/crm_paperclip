@@ -28,7 +28,11 @@ export function generateFixtureCalls(
       callsMetadataSource.fields.map((field) => [field.apiName, null]),
     );
     const type = pick("Call_Type", index);
-    const seconds = type === "Missed" || index % 5 === 0 ? 0 : 60 * ((index % 12) + 1);
+    const outgoing = type === "Outbound" ? pick("Outgoing_Call_Status", index, 3) : null;
+    const seconds =
+      type === "Missed" || index % 5 === 0 || (outgoing === "Completed" && index % 2 === 0)
+        ? 0
+        : 60 * ((index % 12) + 1);
     Object.assign(fields, {
       id,
       Subject: `Call ${String(index + 1).padStart(3, "0")}`,
@@ -39,7 +43,7 @@ export function generateFixtureCalls(
       Call_Duration: `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`,
       Call_Duration_in_seconds: seconds,
       Reminder: pick("Reminder", index, 2),
-      Outgoing_Call_Status: type === "Outbound" ? pick("Outgoing_Call_Status", index, 3) : null,
+      Outgoing_Call_Status: outgoing,
       Scheduled_In_CRM: pick("Scheduled_In_CRM", index, 4),
       Description: index % 3 === 0 ? `Synthetic call notes ${index + 1}` : null,
       CTI_Entry: false,

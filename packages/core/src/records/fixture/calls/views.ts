@@ -320,7 +320,7 @@ export const callsViewSource = [
   },
   {
     id: "my-todays-scheduled-overdue-calls",
-    name: "My Todays Scheduled+Overdue Calls",
+    name: "My Scheduled+Overdue Calls for Today",
     systemDefined: true,
     isDefault: false,
     columns: ["Subject", "What_Id", "Call_Start_Time"],
@@ -365,7 +365,7 @@ export const callsViewSource = [
   },
   {
     id: "my-todays-scheduled-calls",
-    name: "My Todays Scheduled Calls",
+    name: "My Today's Scheduled Calls",
     systemDefined: true,
     isDefault: false,
     columns: ["Subject", "What_Id", "Call_Start_Time"],
@@ -473,7 +473,7 @@ export const callsViewSource = [
   },
   {
     id: "todays-scheduled-calls",
-    name: "Todays Scheduled Calls",
+    name: "Today's Scheduled Calls",
     systemDefined: true,
     isDefault: false,
     columns: ["Subject", "What_Id", "Call_Start_Time"],
@@ -497,7 +497,7 @@ export const callsViewSource = [
   },
   {
     id: "todays-scheduled-overdue-calls",
-    name: "Todays Scheduled+Overdue Calls",
+    name: "Today's Scheduled+Overdue Calls",
     systemDefined: true,
     isDefault: false,
     columns: ["Subject", "What_Id", "Call_Start_Time"],

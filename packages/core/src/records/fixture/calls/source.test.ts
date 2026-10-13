@@ -164,14 +164,14 @@ describe("Calls sanitized metadata source", () => {
       "My Outgoing Calls",
       "My Overdue Calls",
       "My Scheduled Calls",
-      "My Todays Scheduled+Overdue Calls",
-      "My Todays Scheduled Calls",
+      "My Scheduled+Overdue Calls for Today",
+      "My Today's Scheduled Calls",
       "My Unattended Calls",
       "Outgoing Calls",
       "Overdue Calls",
       "Scheduled Calls",
-      "Todays Scheduled Calls",
-      "Todays Scheduled+Overdue Calls",
+      "Today's Scheduled Calls",
+      "Today's Scheduled+Overdue Calls",
       "Unattended Calls",
     ]);
     expect(callsViews.filter((v) => v.isDefault).map((v) => v.id)).toEqual(["all-calls"]);
