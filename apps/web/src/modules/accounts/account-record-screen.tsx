@@ -77,19 +77,21 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
         buildRelatedLists={buildRelatedLists}
         linkedContactSummaryPath={contactRecordPath}
       />
-      <ContactHierarchyModal
-        isOpen={hierarchyOpen}
-        onClose={() => {
-          setHierarchyOpen(false);
-          triggerRef.current?.focus?.();
-        }}
-        orgSlug={props.orgSlug}
-        account={{
-          id: props.recordId,
-          name: accountName,
-        }}
-        triggerElement={triggerRef.current}
-      />
+      {hierarchyOpen ? (
+        <ContactHierarchyModal
+          isOpen={hierarchyOpen}
+          onClose={() => {
+            setHierarchyOpen(false);
+            triggerRef.current?.focus?.();
+          }}
+          orgSlug={props.orgSlug}
+          account={{
+            id: props.recordId,
+            name: accountName,
+          }}
+          triggerElement={triggerRef.current}
+        />
+      ) : null}
     </>
   );
 }

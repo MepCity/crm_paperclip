@@ -130,11 +130,14 @@ export function ContactHierarchyModal({
   // Determine query parameters
   const isAccountMode = Boolean(effectiveAccountId);
 
-  // Focus restoration on close
+  // Focus restoration on close or unmount
   useEffect(() => {
     if (!isOpen && triggerElement) {
       triggerElement.focus();
     }
+    return () => {
+      triggerElement?.focus();
+    };
   }, [isOpen, triggerElement]);
 
   // Query contacts up to 500 in pages of 100

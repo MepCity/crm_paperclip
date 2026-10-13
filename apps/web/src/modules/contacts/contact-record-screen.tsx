@@ -42,19 +42,21 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
         definition={definition}
         buildRelatedLists={buildRelatedLists}
       />
-      <ContactHierarchyModal
-        isOpen={hierarchyOpen}
-        onClose={() => {
-          setHierarchyOpen(false);
-          triggerRef.current?.focus?.();
-        }}
-        orgSlug={props.orgSlug}
-        contact={{
-          id: props.recordId,
-          record: activeRecord,
-        }}
-        triggerElement={triggerRef.current}
-      />
+      {hierarchyOpen ? (
+        <ContactHierarchyModal
+          isOpen={hierarchyOpen}
+          onClose={() => {
+            setHierarchyOpen(false);
+            triggerRef.current?.focus?.();
+          }}
+          orgSlug={props.orgSlug}
+          contact={{
+            id: props.recordId,
+            record: activeRecord,
+          }}
+          triggerElement={triggerRef.current}
+        />
+      ) : null}
     </>
   );
 }
