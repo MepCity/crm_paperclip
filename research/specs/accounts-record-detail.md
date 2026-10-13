@@ -1,6 +1,6 @@
 # Accounts — record detail
 
-Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. Hierarchy opening was not attempted; its documented structure and remaining observation gaps are recorded below.
+Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. The Contacts-card hierarchy modal is observed in m3h-hierarchy-open; its documentation and remaining observation gaps are recorded below. Closure comparison is pending.
 
 ## Purpose
 
@@ -193,13 +193,34 @@ More Options opens a thirteen-row action menu in m3m-detail-more. Its labels and
 
 Timeline (AD-34) opens a populated History region in m3m-detail-timeline. Unlike Contacts, no Interactions tab is painted. Timeline History, its filter icon and Show Upcoming Automated Actions with a downward chevron match the Contacts toolbar. The history is grouped by date, with a vertical connector, event-type glyphs, times, descriptions and author/date lines. Visible event structures include account-field changes and call added/updated entries; call descriptions link to activity records (AD-162). Date headers and event glyphs are static display, not editable controls. No event text, values or names are reproduced. The empty-history state is not observed. The filter panel was not reopened; its shared Contacts inventory D-47–D-51 remains the comparison source, without asserting Accounts panel contents. No event link or automated-action control was activated.
 
+### Control inventory — m3h-hierarchy-open
+
+Difference inventory against m3d-detail-main. The underlying scrolled card region matches m3c-card-deals; no new shared-shell control is painted.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AD-163 | Contact Hierarchy modal | Close Modal | icon button | modal upper right | Close affordance; activation and outcome not observed | seen (m3h-hierarchy-open) | M2 | new |
+| AD-164 | Contact Hierarchy modal | Contact record link | link | indented child row below account row | Contact navigation affordance; destination and outcome not observed | seen (m3h-hierarchy-open) | M2 | new |
+
+Rest: as in m3d-detail-main for fixed shell/header/rail/tab controls and m3c-card-deals for the scrolled card region; covered by the overlay: part of the account identity/Add Tags, upper rail and Overview/Timeline area, and left portion of the Deals header. The backdrop dims the page, including the Contacts card, without obscuring its six column headings. Business-card/detail controls are scrolled out. The modal title, building glyph, account label and dashed connector are static structure, not additional controls. Source controls 544 and 546–551 are container/tree wrappers; 545 is AD-163; 552–553 represent the single AD-164 link.
+
 ## Account hierarchy
 
-AD-115 is the Hierarchy View button in the **Contacts card**, after its title, already seen in m3c-card-deals and inventoried by the related-card continuation. It was not clicked here. Its card location does not establish an account-company tree.
+AD-115 is the Hierarchy View button in the **Contacts card**, after its title, already seen in m3c-card-deals and inventoried by the related-card continuation. Its single authorized opening is seen in m3h-hierarchy-open. It opens the Contact Hierarchy modal described below, not evidence of a multilevel account-company tree.
 
-The public help describes the Contacts-card hierarchy as the contact reporting structure, available inside Accounts and Contacts records (`documented`, D-H1). The Reporting to lookup links a contact to another contact associated with an account (`documented`, D-H1). The documented structure includes direct reports and the overall reporting hierarchy; the Accounts entry point is its Contacts related list (`documented`, D-H1). The document does not establish the exact modern opened container, depth limit, empty state or row controls: these remain `not observed` (D-H1 documentation gap).
+The public help describes the Contacts-card hierarchy as the contact reporting structure, available inside Accounts and Contacts records (`documented`, D-H1). The Reporting to lookup links a contact to another contact associated with an account (`documented`, D-H1). The documented structure includes direct reports and the overall reporting hierarchy; the Accounts entry point is its Contacts related list (`documented`, D-H1). The document does not establish the exact modern container or row controls; those are described from the capture below. Depth limit and empty state remain `not observed` (D-H1 documentation gap).
 
 Separately, Member Accounts represents secondary divisions or subsidiaries associated with a parent account (`documented`, D-H2). Its documented list supports Account Name, Phone, Website, Account Type, Industry and Annual Revenue sorting links, Edit/Del row links and New (`documented`, D-H2); these are documentation evidence, not additional painted AD controls. A multilevel account-company tree, its depth and its controls remain `not observed`; the document describes parent/member relationships without specifying that tree (D-H2 documentation gap).
+
+### Observed opened state
+
+- Container: white modal at the upper horizontal centre over a dimmed record page, with rounded lower corners and shadow; title **Contact Hierarchy** at upper left (`seen (m3h-hierarchy-open)`).
+- Structure: two visible levels, a building glyph and plain account label followed by one indented blue contact link. A dashed vertical line turns right into an L connector to the child (`seen (m3h-hierarchy-open)`). No field headings, email, phone, title or owner fields are painted inside the modal. No separate selected/current-record badge is painted; the account occupies the root row.
+- Controls: only the child contact link AD-164 and upper-right X / Close Modal AD-163 are painted inside the modal (`seen (m3h-hierarchy-open)`). No row menu, expand/collapse arrow, search, zoom, view selector, footer action or other corner control is painted in this state. These absence statements apply only to this captured structure.
+- Closing affordance is `seen (m3h-hierarchy-open)`; its activation, Escape/backdrop dismissal and navigation outcome are `not observed`. Nothing inside the modal was clicked, hovered or filled; the close icon was not used.
+- Empty state, further reporting levels, depth limit, hover-only controls and child-link destination remain `not observed`. The reporting-manager relationship remains `documented` (D-H1), not inferred from the single child.
+
+Safety evidence: m3h-hierarchy-open and m3h2-detail-base have the same non-GET paths and counts, including blocked requests apart from time-dependent background polls/telemetry; only an additional hierarchy GET was observed. The single hierarchy click is spent. A painted post-click detail comparison is still pending; persistent-view equality is not claimed. The valid opening/closing list captures m3h2-list-base-r3 and m3h2-list-after-r3 have equal totals.
 
 ### Documentation keys
 
@@ -217,6 +238,7 @@ Public help was read on 2026-10-12. Locators below are article paths on the refe
 - Account Information replaces Contact Information. Its visible field arrangement is described in Layout. Parent Account is visible here, but empty. Website is linked in the right column (AD-100); no email link is painted.
 - Contacts and Member Accounts are additional rail entries; Add Link follows the Links heading. Notes and Contacts have visible count badges (AD-101–AD-102). Badge values are not reproduced.
 - The shortened rail lacks Cadences, Invited Meetings, Purchase Orders, Campaigns, Reporting Contacts and Voice of the Customer. Several shared entries move; see inventory positions.
+- Contacts-card Hierarchy View opens the Contact Hierarchy modal in Accounts (m3h-hierarchy-open); Contacts D-90 was not activated, so its opened state is not independently established.
 - Header action labels and order match Contacts. More Options has 13 rows instead of 15: Run Macro and Enroll to Cadence are absent, Organize Account Details substitutes the module name, and later rows move up. Accounts Timeline paints History alone, whereas Contacts also paints Interactions; the history toolbar and activity-link structure are shared.
 
 ## Related-list rail vs metadata
@@ -252,7 +274,7 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | Website links | M3 | Accounts-specific | AD-99–AD-100; links not followed |
 | Overview business card and Account Information | M3 | Accounts-specific fields, shared structure | visible upper fields only |
 | Parent Account / Member Accounts | M3 | Accounts-specific | parent display/rail/cards seen; documented relationship D-H2; no hierarchy opened |
-| Contacts hierarchy entry point | M2 | Shared contact reporting structure | AD-115 in Contacts card; documented D-H1; opened controls not observed |
+| Contacts hierarchy entry point | M2 | Shared contact reporting structure | AD-115 opens Contact Hierarchy modal; AD-163–AD-164 seen in m3h-hierarchy-open; reporting relationship documented D-H1 |
 | Related-list rail / activity badges | Mixed as inventoried | Reused from Contacts, with moved entries | Notes, Deals, Closed Activities and Sales Orders rail jumps observed in this continuation |
 | Contacts rail and Notes/Contacts badges | M2 / M6 | Accounts-specific relative to Contacts detail | AD-96 / AD-101–AD-102; Contacts summary links AD-103–AD-104 |
 | Links / Add Link | M11 | Accounts-specific observed addition | AD-98; not activated |
@@ -275,6 +297,21 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | m3m-detail-more | 2 | 0 | Thirteen-row action menu |
 | m3m-detail-timeline | 2 | 0 | Populated History, filter and automated-actions control; no Interactions tab |
 | m3m-list-after | 0 | 0 | Closing list; total 373 |
+| m3h-list-base | 0 | 0 | Opening list |
+| m3h-detail-base | 2 requested, 0 executed | 2 | Loading |
+| m3h-detail-after | 2 | 0 | Painted pre-hierarchy Contacts card |
+| m3h-list-after | 0 | 0 | Loading |
+| m3h2-list-base | 0 | 0 | Loading |
+| m3h2-list-base-r2 | 0 | 0 | Loading |
+| m3h2-list-base-r3 | 0 | 0 | Valid opening list |
+| m3h2-detail-base | 2 | 0 | Painted Contacts card and six columns |
+| m3h-hierarchy-open | 3 | 0 | Contact Hierarchy modal; single hierarchy click |
+| m3h2-detail-after | 2 requested, 1 executed | 1 | List; detail did not paint |
+| m3h2-list-after | 0 | 0 | Loading |
+| m3h2-list-after-r2 | 0 | 0 | Loading |
+| m3h2-list-after-r3 | 0 | 0 | Valid closing list; same total |
+| m3h2-detail-after-r2 | 2 requested, 0 executed | 2 | Loading |
+| m3h2-detail-after-r3 | unknown | unknown | Tool error; empty evidence directory |
 
 m3d-detail-more and m3d-detail-timeline are evidence of loading/blank states only, not their intended opened states. m3d-detail-hierarchy was not attempted because the named entry was outside the upper viewport and safe activation was not established and is not an evidence slug. All five successful screenshots were opened as images and inspected. Opening and the renewed closing totals are equal (373); no record selection is painted. The original record selector was reused and matched exactly one entry in m3d-list-base offline. More Options and Timeline selectors each matched exactly one expected entry in m3d-detail-main offline, but neither matched at capture time. No alternative selector or open/toggle override was used.
 
@@ -687,7 +724,7 @@ Ordinals below are one-based local evidence positions, never click selectors. Ev
 
 ## Open questions
 
-1. Hierarchy View opens the contact reporting structure according to D-H1; its exact opened container, depth, row controls and empty state remain not observed. D-H2 does not document a multilevel account-company tree or its controls. No hierarchy activation or preference-write experiment is authorized.
+1. The Contact Hierarchy modal and its two controls are observed from Accounts in m3h-hierarchy-open. Empty state, further depth/depth limit, hover controls, dismissal outcome and contact-link destination remain not observed. D-H2 does not establish a multilevel account-company tree. No further hierarchy click is authorized.
 2. Parent Account populated presentation remains not observed; no alternate record was opened. Contacts summary links, menu actions/submenus, Interactions and automated-action outcomes remain not observed.
 3. Why are Checklists and Locking Information absent from the painted rail despite visible metadata flags? No hidden rail control or persistent preference was exercised.
 4. Field pencils, portrait hover controls and selected-rail plus actions were not observed. Their existence/activation must not be inferred from Contacts or hidden DOM.
@@ -750,7 +787,7 @@ Rest: as in m3d-detail-main for the shell, fixed header, rail and tab row; cover
 | AD-112 | Related-list rail | Plus icon | icon button | Deals row, right end | same | seen (m3c-card-deals) | M4 | D-53 moved |
 | AD-113 | Deals card | Assign | button | header, right group, first | not observed | seen (m3c-card-deals) | M4 | new |
 | AD-114 | Deals card | New Deal | button | header, right group, second | same | seen (m3c-card-deals) | M4 | D-56 |
-| AD-115 | Contacts card | Hierarchy View | button | header, after title | same | seen (m3c-card-deals) | M2 | D-90 moved |
+| AD-115 | Contacts card | Hierarchy View | button | header, after title | Opens Contact Hierarchy modal; see Account hierarchy | seen (m3c-card-deals) | M2 | D-90 moved |
 | AD-116 | Contacts card | Assign | button | header, right group, first | not observed | seen (m3c-card-deals) | M2 | new |
 | AD-117 | Contacts card | New | button | header, right group, second | not observed | seen (m3c-card-deals) | M2 | new |
 | AD-118 | Contacts card | Edit | button | header, right group, third | not observed | seen (m3c-card-deals) | M2 | new |
@@ -777,7 +814,7 @@ Rest: as in m3d-detail-main for the shell, fixed header, rail and tab row; cover
 | AD-139 | Open Activities card | Open Tasks count | badge | first visible activity column, after title | same | seen (m3c-card-deals) | M5 | D-61 |
 | AD-140 | Open Activities card | Open Meetings count | badge | second visible activity column, after title | same | seen (m3c-card-deals) | M5 | D-62 |
 
-Rest: as in m3d-detail-main for the shell, fixed header, rail and tab row; covered by the overlay: none. Scrolled out: AD-37, AD-38, AD-41, AD-100, AD-103–AD-104. The selected rail row changes as named above; other rail entries retain the baseline order. Deals is selected; its plus is AD-112. Deals adds Assign before New Deal compared with Contacts. Contacts is a populated table with six named headers and a blank leading cell column; that blank column contains no painted checkbox, column control or row action. Contact-row values are outside scope; only the two link controls and green call icon are inventoried. The Contacts title has no counter badge. Hierarchy View and all upper actions were only viewed. Emails additionally paints its Accounts sent-mail selector; none of its tabs or selector options was opened. Open Tasks/Open Meetings counters are image-only; Calls is outside the horizontal viewport. The next Closed Activities header is below the readable boundary and is not inventoried from this screenshot.
+Rest: as in m3d-detail-main for the shell, fixed header, rail and tab row; covered by the overlay: none. Scrolled out: AD-37, AD-38, AD-41, AD-100, AD-103–AD-104. The selected rail row changes as named above; other rail entries retain the baseline order. Deals is selected; its plus is AD-112. Deals adds Assign before New Deal compared with Contacts. Contacts is a populated table with six named headers and a blank leading cell column; that blank column contains no painted checkbox, column control or row action. Contact-row values are outside scope; only the two link controls and green call icon are inventoried. The Contacts title has no counter badge. Hierarchy View was only viewed in this earlier capture; its single later activation is described in Account hierarchy. Other upper actions were only viewed. Emails additionally paints its Accounts sent-mail selector; none of its tabs or selector options was opened. Open Tasks/Open Meetings counters are image-only; Calls is outside the horizontal viewport. The next Closed Activities header is below the readable boundary and is not inventoried from this screenshot.
 
 ### Control inventory — m3c-card-closed-activities
 
@@ -1534,7 +1571,7 @@ The source array has 601 entries. Entries 1–588 retain the m3c-list-base inven
 3. Populated Deals/Member Accounts columns, counters and row ends, Contacts empty state, Notes empty state and any hover-only row/field/rail controls remain unobserved. No additional record was opened.
 4. Open/Closed Calls columns and counters remain outside the horizontal activity viewport. No horizontal scroll or activity preference action was used.
 5. Connected Records ownership (`?`) and shared-shell ownership questions remain inherited from Contacts. UI Lead should confirm the M11 assignment for Contacts table customization and Organize Accounts Details.
-6. Hierarchy View is visible on the Contacts relationship card, but was not activated because card upper buttons are outside permitted clicks. It does not establish the Accounts parent/member hierarchy screen. More Options and Timeline are now observed in the m3m continuation above; hierarchy activation remains outside the permitted clicks.
+6. The single authorized Contacts-card Hierarchy View opening is observed in m3h-hierarchy-open; see Account hierarchy. It does not establish the Accounts parent/member tree. Post-click Contacts-card equality awaits the authorized closure capture; no further hierarchy activation is allowed.
 
 ### Shell controls missing from app-shell.md — lower-detail continuation
 
