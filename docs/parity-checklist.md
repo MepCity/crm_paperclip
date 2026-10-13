@@ -482,9 +482,9 @@ merged since).
 
 Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md` (stage transitions), shared `record-detail.md` and `accounts-record-detail.md` behaviour.
 
-### Deals list — implemented; QA passed (MEP-410)
+### Deals list — done; QA MEP-451 (MEP-410)
 
-Inventory is SH-16 and DL-01–DL-27, DL-65–DL-69. Board controls DL-70–DL-81 are a later task.
+Inventory is SH-16 and DL-01–DL-27, DL-65–DL-69. Board controls DL-70–DL-81 are covered under Deals stage board (DP-70–DP-81).
 DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
 
 | Inventory | Implementation | Verification |
@@ -502,9 +502,11 @@ DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
 | DL-17, DL-19–DL-25 | System rows in capture order. Activities M5, Latest Email Status M10, Cadences P3 are inert. Locked, Record Action, Related Records Action, Touched Records and Untouched Records stay disabled like Accounts | `list-filters.test.ts`, `deals-list.spec.ts` |
 | DL-26, DL-27, DL-65–DL-69 | Field rows: Account Name, Amount, Campaign Source (M7, inert), Closing Date, Connected To, Contact Name, then remaining metadata fields | `list-filters.test.ts`, `deals-list.spec.ts` |
 
-Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount through the shared currency cell, Closing Date through the shared date cell, Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
+Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount through the shared field formatter as plain number without currency code or decimals (e.g. 31,800), Closing Date through the shared date cell, Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
+
+Open defects (QA MEP-451): Amount column renders as plain number without currency code or decimals (31,800), inconsistent with stage board TRY formatting.
 
 ### Deals record detail — implemented; QA pending (MEP-412)
 
@@ -536,7 +538,7 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 
 **Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
 
-### Deals stage board — implemented; QA pending (MEP-413)
+### Deals stage board — done; QA MEP-451 (MEP-413)
 
 Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
 
@@ -554,6 +556,11 @@ Interim rules:
 - Filter panel, views, and sort apply to board cards. Pagination, row selection, and selection bar are omitted in board presentation.
 - Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
 - Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
+
+Open defects (QA MEP-451):
+- Verify Details dialog on board defaults Amount currency prefix to `$` instead of TRY / home currency (DP-99).
+- Overdue Closing Date on board cards in open stages does not render with red / danger tone (DP-80).
+- Board toolbar renders refresh icon button not present in reference pipeline capture.
 
 ### Deals links in earlier modules — implemented (MEP-415)
 
