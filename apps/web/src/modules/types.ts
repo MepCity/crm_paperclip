@@ -74,7 +74,8 @@ export interface RelatedListRailLinksGroupDefinition {
 
 export interface RelatedListRailChromeDefinition {
   organizeAriaLabel: string;
-  linksGroup: RelatedListRailLinksGroupDefinition;
+  /** Omitted on Deals detail (Add Link is not painted in the reference viewport). */
+  linksGroup?: RelatedListRailLinksGroupDefinition;
 }
 
 export interface RelatedListDefinition {

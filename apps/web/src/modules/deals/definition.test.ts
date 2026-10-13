@@ -40,6 +40,10 @@ test("exports a complete Deals module screen definition", () => {
     Lead_Source: "-None-",
   });
 
+  expect(dealsScreenDefinition.detail.Screen).toBeDefined();
+  expect(dealsScreenDefinition.detail.relatedListRail?.organizeAriaLabel).toBe(
+    "Organize Deal Details",
+  );
   expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.apiName === "Deals")).toBe(true);
   expect(moduleScreens.some((definition) => definition.tab === "Deals")).toBe(true);
