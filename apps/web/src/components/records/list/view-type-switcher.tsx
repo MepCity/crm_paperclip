@@ -69,7 +69,13 @@ const TILE_BASE =
  * the arrow are visible with `aria-disabled="true"` and do nothing when activated. Their names are
  * ours; the reference exposes no accessible names for these controls.
  */
-export function ViewTypeSwitcher() {
+export function ViewTypeSwitcher({
+  presentation,
+  onPresentationChange,
+}: {
+  presentation?: "table" | "board";
+  onPresentationChange?: (presentation: "table" | "board") => void;
+} = {}) {
   return (
     <div
       className="flex items-center gap-(--size-list-view-switcher-gap)"
@@ -77,15 +83,18 @@ export function ViewTypeSwitcher() {
       data-part="view-type-switcher"
     >
       {TILES.map((tile) => {
-        const active = tile.id === "list";
+        const target = tile.id === "list" ? "table" : tile.id === "split" ? "board" : null;
+        const enabled = Boolean(presentation && target);
+        const active = presentation ? target === presentation : tile.id === "list";
         const Icon = tile.icon;
         return (
           <button
             key={tile.id}
             type="button"
-            aria-label={tile.label}
+            aria-label={presentation && tile.id === "split" ? "Board presentation" : tile.label}
             aria-pressed={active}
-            aria-disabled={active ? undefined : true}
+            aria-disabled={enabled || active ? undefined : true}
+            onClick={enabled && target ? () => onPresentationChange?.(target) : undefined}
             data-active={active}
             className={TILE_BASE}
           >
