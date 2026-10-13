@@ -648,6 +648,7 @@ export function describeRecordServiceContract(
       const massUpdateSecondFieldKey =
         massUpdateClearablePhone ??
         metadata.fields.find((field) => field.massUpdate && field.apiName !== massField)?.apiName ??
+        metadata.fields.find((field) => field.apiName !== massField)?.apiName ??
         "Second_Mass_Update_Field";
       await validation(
         service.massUpdate(moduleApiName, ids, {

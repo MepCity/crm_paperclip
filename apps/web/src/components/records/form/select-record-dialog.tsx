@@ -59,7 +59,7 @@ function formatCellText(value: FieldValue | undefined): string {
   if (typeof value === "object") {
     return "name" in value && typeof value.name === "string"
       ? value.name
-      : typeof value.id === "string"
+      : "id" in value && typeof value.id === "string"
         ? value.id
         : "";
   }
