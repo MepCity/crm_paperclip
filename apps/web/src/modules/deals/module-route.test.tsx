@@ -26,7 +26,7 @@ vi.mock("@/components/shell/page-title", () => ({
 vi.mock("../registry", async (importOriginal) => {
   const original = await importOriginal<typeof import("../registry")>();
   const { dealsScreenDefinition } = await import("./definition");
-  const definitions = [...original.moduleScreens, dealsScreenDefinition];
+  const definitions = [...original.getModuleScreens(), dealsScreenDefinition];
   return {
     ...original,
     resolveModuleScreen: (tab: string) => original.resolveModuleScreen(tab, definitions),
