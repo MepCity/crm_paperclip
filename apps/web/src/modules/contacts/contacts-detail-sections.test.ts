@@ -114,6 +114,7 @@ test("Contact Information balances two columns matching reference CRM with phone
   const { createFixtureRecordService } = await import("@crm/core/records/fixture");
   const metadata = await createFixtureRecordService(testCtx).getModule("Contacts");
   const record = contactRecord({
+    ...Object.fromEntries(metadata.fields.map((f) => [f.apiName, null])),
     Owner: "user-1",
     First_Name: "Sample",
     Last_Name: "Person",
@@ -137,6 +138,8 @@ test("Contact Information balances two columns matching reference CRM with phone
     Secondary_Email: "sec@example.com",
     Twitter: "@sample",
     Reporting_To: null,
+    Created_Time: "2026-01-01T00:00:00.000Z",
+    Modified_Time: "2026-01-02T00:00:00.000Z",
   });
 
   const sections = buildContactsDetailSections(metadata, record);
@@ -167,9 +170,8 @@ test("Contact Information balances two columns matching reference CRM with phone
     "Assistant",
   ]);
 
-  // Right column order and labels (first nine fields matching reference CRM):
-  // Lead Source, Contact Name, Vendor Name, Title, Department, Home Phone, Fax, Date of Birth, Asst Phone
-  expect(rightFields.slice(0, 9).map((f) => f.field.label)).toEqual([
+  // Right column order and labels across full section:
+  expect(rightFields.map((f) => f.field.label)).toEqual([
     "Lead Source",
     "Contact Name",
     "Vendor Name",
@@ -179,8 +181,23 @@ test("Contact Information balances two columns matching reference CRM with phone
     "Fax",
     "Date of Birth",
     "Asst Phone",
+    "Email Opt Out",
+    "Skype ID",
+    "Secondary Email",
+    "Twitter",
+    "Reporting To",
+    "Tag",
+    "Created By",
+    "Modified By",
+    "Created Time",
+    "Modified Time",
+    "Last Activity Time",
+    "Unsubscribed Mode",
+    "Unsubscribed Time",
+    "Record Id",
+    "Connected To",
   ]);
-  expect(rightFields.slice(0, 9).map((f) => f.field.apiName)).toEqual([
+  expect(rightFields.map((f) => f.field.apiName)).toEqual([
     "Lead_Source",
     "Full_Name",
     "Vendor_Name",
@@ -190,6 +207,21 @@ test("Contact Information balances two columns matching reference CRM with phone
     "Fax",
     "Date_of_Birth",
     "Asst_Phone",
+    "Email_Opt_Out",
+    "Skype_ID",
+    "Secondary_Email",
+    "Twitter",
+    "Reporting_To",
+    "Tag",
+    "Created_By",
+    "Modified_By",
+    "Created_Time",
+    "Modified_Time",
+    "Last_Activity_Time",
+    "Unsubscribed_Mode",
+    "Unsubscribed_Time",
+    "id",
+    "Connected_To__s",
   ]);
 
   // Phone on left column has callAction when Phone is populated

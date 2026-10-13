@@ -293,7 +293,7 @@ test.describe("Contacts record detail", () => {
     const rightNames = await rightFields.evaluateAll((els) =>
       els.map((el) => el.getAttribute("data-detail-field")),
     );
-    expect(rightNames.slice(0, 9)).toEqual([
+    expect(rightNames).toEqual([
       "Lead_Source",
       "Full_Name",
       "Vendor_Name",
@@ -303,6 +303,21 @@ test.describe("Contacts record detail", () => {
       "Fax",
       "Date_of_Birth",
       "Asst_Phone",
+      "Email_Opt_Out",
+      "Skype_ID",
+      "Secondary_Email",
+      "Twitter",
+      "Reporting_To",
+      "Tag",
+      "Created_By",
+      "Modified_By",
+      "Created_Time",
+      "Modified_Time",
+      "Last_Activity_Time",
+      "Unsubscribed_Mode",
+      "Unsubscribed_Time",
+      "id",
+      "Connected_To__s",
     ]);
 
     ignoreFailedResponses(pageErrors, [400]);
