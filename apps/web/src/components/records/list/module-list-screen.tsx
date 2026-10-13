@@ -180,6 +180,7 @@ function ModuleListScreenLoaded({
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<AppliedFilter[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
@@ -214,6 +215,7 @@ function ModuleListScreenLoaded({
   useEffect(() => {
     if (priorViewId.current === viewId) return;
     priorViewId.current = viewId;
+    setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setLetter(null);
     setFilterSelection([]);
@@ -424,6 +426,7 @@ function ModuleListScreenLoaded({
       daysUnit: row.daysUnit,
     }));
     setFilterApplyError(null);
+    setAppliedFilters(applied);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -432,6 +435,7 @@ function ModuleListScreenLoaded({
   }
 
   function clearPanelFilters() {
+    setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setFilterApplyError(null);
     setSelectedIds([]);
@@ -639,7 +643,10 @@ function ModuleListScreenLoaded({
               : undefined
           }
           filterOpen={filterOpen}
-          onFilterChange={setFilterOpen}
+          onFilterChange={(open) => {
+            setFilterSelection(appliedFilters.map((filter) => filter.itemId));
+            setFilterOpen(open);
+          }}
           onRefresh={refreshView}
           fields={sortFields}
           sort={appliedSort}
@@ -722,6 +729,7 @@ function ModuleListScreenLoaded({
             searchLabel="Search filter choices"
             searchPlaceholder="Search"
             groups={config.filterGroups}
+            initialFilters={appliedFilters}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
