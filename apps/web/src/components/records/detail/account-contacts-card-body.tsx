@@ -3,6 +3,7 @@
 import type { Criteria, RecordData, RecordId } from "@crm/core/records";
 import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
+import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
@@ -48,12 +49,16 @@ export function AccountContactsCardBody({
   );
   const rows = list.data?.records ?? [];
 
-  if (list.isLoading || moduleQuery.isLoading) {
+  if (list.isLoading || moduleQuery.isLoading || viewsQuery.isLoading) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
         Loading...
       </div>
     );
+  }
+
+  if (list.isError || moduleQuery.isError || viewsQuery.isError) {
+    return <RelatedRecordsListError />;
   }
 
   if (rows.length === 0) {
