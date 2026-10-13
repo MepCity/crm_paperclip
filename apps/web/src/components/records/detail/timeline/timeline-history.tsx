@@ -54,7 +54,11 @@ export function TimelineHistory({
         </button>
       </div>
       {filterExpanded && <TimelineHistoryFilterPanel {...filterProps} />}
-      <TimelineEventTrack events={events} format={format} />
+      {events.length === 0 ? (
+        <p className="timeline-history-empty text-md text-text-muted px-3 py-4">No logs found</p>
+      ) : (
+        <TimelineEventTrack events={events} format={format} />
+      )}
     </div>
   );
 }

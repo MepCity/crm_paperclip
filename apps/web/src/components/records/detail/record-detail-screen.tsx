@@ -1,9 +1,16 @@
 "use client";
 
 import { NotFoundError } from "@crm/core/errors";
-import type { ListQuery, ModuleApiName, RecordData, RecordId } from "@crm/core/records";
+import type {
+  ListQuery,
+  ModuleApiName,
+  ModuleMetadata,
+  RecordData,
+  RecordId,
+  RecordInput,
+} from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
@@ -53,6 +60,19 @@ export type RecordDetailPaths = {
   merge: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
 };
 
+export type RecordDetailSlotsContext = {
+  module: ModuleMetadata;
+  record: RecordData;
+  orgSlug: string;
+  saveRecord: (input: RecordInput) => Promise<void>;
+};
+
+export type RecordDetailSlots = {
+  overviewPrefix?: ReactNode;
+  contactSummary?: ReactNode;
+  relatedRailBeforeFooter?: ReactNode;
+};
+
 export type RecordDetailScreenProps = {
   orgSlug: string;
   recordId: RecordId;
@@ -61,6 +81,8 @@ export type RecordDetailScreenProps = {
   now?: Date;
   buildRelatedLists?: (record: RecordData) => readonly RelatedListDefinition[];
   linkedContactSummaryPath?: (recordId: RecordId) => string;
+  buildDetailSlots?: (context: RecordDetailSlotsContext) => RecordDetailSlots;
+  saveRecord?: (input: RecordInput) => Promise<void>;
 };
 
 function useModuleListContext(
@@ -100,6 +122,8 @@ export function RecordDetailScreen({
   now = new Date(),
   buildRelatedLists,
   linkedContactSummaryPath,
+  buildDetailSlots,
+  saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
@@ -235,6 +259,22 @@ export function RecordDetailScreen({
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);
 
+  async function persistRecord(input: RecordInput) {
+    if (saveRecordOverride) {
+      await saveRecordOverride(input);
+      return;
+    }
+    await updateRecord.mutateAsync({ id: recordId, input });
+    await recordQuery.refetch();
+  }
+
+  const detailSlots = buildDetailSlots?.({
+    module,
+    record: displayRecord,
+    orgSlug,
+    saveRecord: persistRecord,
+  });
+
   function openDeleteDialog() {
     setDeleteError(null);
     setDeleteOpen(true);
@@ -292,18 +332,17 @@ export function RecordDetailScreen({
           const targetDef = resolveModuleScreenByApiName(targetModule);
           return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
         }}
-        save={async (input) => {
-          await updateRecord.mutateAsync({ id: recordId, input });
-          await recordQuery.refetch();
-        }}
+        save={persistRecord}
       >
+        {detailSlots?.overviewPrefix}
         <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-        {rules.linkedContactSummary && linkedContactSummaryPath ? (
-          <AccountsLinkedContactSummary
-            accountRecord={displayRecord}
-            contactRecordPath={linkedContactSummaryPath}
-          />
-        ) : null}
+        {detailSlots?.contactSummary ??
+          (rules.linkedContactSummary && linkedContactSummaryPath ? (
+            <AccountsLinkedContactSummary
+              accountRecord={displayRecord}
+              contactRecordPath={linkedContactSummaryPath}
+            />
+          ) : null)}
         <DetailsCard
           sections={detailSections}
           ownerNames={ownerNames}
@@ -367,6 +406,7 @@ export function RecordDetailScreen({
 
   const relatedRailFooter = hasRelatedLists ? (
     <div className="pt-2 border-t border-border mt-2 flex flex-col gap-1">
+      {detailSlots?.relatedRailBeforeFooter}
       <Link
         href="#add-related-list"
         variant="body"
@@ -375,7 +415,7 @@ export function RecordDetailScreen({
       >
         Add Related List
       </Link>
-      {railChrome ? (
+      {railChrome?.linksGroup ? (
         <>
           <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
             {railChrome.linksGroup.title}

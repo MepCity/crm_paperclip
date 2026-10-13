@@ -438,9 +438,11 @@ The following functional behaviors, presentation details, and UI feedback mechan
 - **A6**: Mass delete confirmation modal title, warning text, button labels, and result notification message.
 - **A7**: All post-action UI feedback for `Save` and `Save and New` (redirect target, toast notification text, form reset behavior).
 - **A8**: Inline editing hover affordance, cancel button, field-specific inline editor controls, and failure/error states.
-- **A9**: Interactive click behavior of stage chevrons in the lead status ribbon (confirmation dialog, additional fields, notification).
+- **A9**: Interactive click behavior of stage chevrons in the lead status ribbon (confirmation dialog, additional fields, notification). A ribbon with an empty field value was never observed either; as an interim rule (MEP-436) our ribbon renders every non-terminal stage label as a button that selects that stage while the value is empty.
 - **A10**: Web UI display and styling of server-side errors on form submission (outside duplicate alert).
 - **A11**: Sample error response body (none on the pages read); the `status` value of an error response; position and types of the keys `api_name`, `json_path`, `expected_fields` and `ambiguity_due_to`; HTTP status, message and body of `MULTIPLE_OR_MULTI_ERRORS`.
+- **A12**: Unsaved-input warning on leave paths other than `Cancel` (browser back, shell navigation links, tab close): only the `Cancel` path was observed in the reference; our form warns only there until this is observed.
+- **A13**: Options of the user type dropdown in the user filter popover: only the closed control was observed; ours offers the single option `Users` until the list is observed.
 - **B1**: Placement of alphabet search bar and field targeting (`Last_Name`).
 - **B2**: UI filter panel operators and criteria by field type.
 - **B3**: Sort By dialog/dropdown field list.

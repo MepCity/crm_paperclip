@@ -45,8 +45,8 @@ vi.mock("../module-list-client", () => ({
     </p>
   ),
 }));
-vi.mock("@/components/records/detail/record-detail-screen", () => ({
-  RecordDetailScreen: ({
+vi.mock("./deal-record-screen", () => ({
+  DealRecordScreen: ({
     definition,
     recordId,
   }: {
