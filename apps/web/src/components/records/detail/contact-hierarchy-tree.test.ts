@@ -134,6 +134,26 @@ describe("contact-hierarchy-tree", () => {
     expect(treeSelf.children[0]?.children).toEqual([]);
   });
 
+  it("preserves non-cycle child under a manager who is in a cycle", () => {
+    // 2-node cycle between Alice and Bob; Cara reports to Alice
+    const contacts: RecordData[] = [
+      makeContact("c1", "Alice", "c2"),
+      makeContact("c2", "Bob", "c1"),
+      makeContact("c3", "Cara", "c1"),
+    ];
+
+    const tree = buildAccountContactTree(testAccount, contacts);
+
+    // Root level has Alice and Bob
+    expect(tree.children.map((c) => c.name)).toEqual(["Alice", "Bob"]);
+    const alice = tree.children.find((c) => c.id === "c1");
+    // Cara is nested under Alice
+    expect(alice?.children.map((c) => c.name)).toEqual(["Cara"]);
+    expect(alice?.children[0]?.children).toEqual([]);
+    const bob = tree.children.find((c) => c.id === "c2");
+    expect(bob?.children).toEqual([]);
+  });
+
   it("handles empty list: only rootAccount rendered, empty children", () => {
     const tree = buildAccountContactTree(testAccount, []);
 

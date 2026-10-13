@@ -105,7 +105,7 @@ export function buildAccountContactTree(
     let parentId: string | null = null;
     if (!cycleNodes.has(id)) {
       const reportingTo = getContactReportingToId(contact);
-      if (reportingTo && contactMap.has(reportingTo) && !cycleNodes.has(reportingTo)) {
+      if (reportingTo && contactMap.has(reportingTo)) {
         parentId = reportingTo;
       }
     }
