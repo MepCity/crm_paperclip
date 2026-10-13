@@ -207,7 +207,10 @@ test.describe("Contacts record detail", () => {
     await expect(dialog).toBeVisible();
     const firstDataRow = dialog.locator("tbody tr").first();
     await expect(firstDataRow).toBeVisible();
-    const chosenName = (await firstDataRow.locator("td").nth(1).innerText()).trim();
+    const nameLink = firstDataRow.locator("td").nth(1).getByRole("link");
+    await expect(nameLink).toBeVisible();
+    await expect(nameLink).toHaveAttribute("href", /\/tab\/Accounts\//);
+    const chosenName = (await nameLink.innerText()).trim();
     await firstDataRow.click();
     await expect(dialog).toHaveCount(0);
 
