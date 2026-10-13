@@ -1,6 +1,6 @@
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
-import { moduleScreens } from "@/modules/registry";
+import { getModuleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
 export type NavLinkIconAccentToken = "--color-accent-blue";
@@ -73,7 +73,7 @@ export const shellNav: NavConfig = {
           id: "sales",
           label: "Sales",
           icon: Icons.folder,
-          links: moduleScreens.map((definition) => ({
+          links: getModuleScreens().map((definition) => ({
             id: definition.navigation.id,
             label: definition.pluralLabel,
             icon: definition.navigation.icon,
@@ -115,11 +115,13 @@ export interface CreateRecordEntry {
   path: (orgSlug: string) => string;
 }
 
-export const createRecordsNav: readonly CreateRecordEntry[] = moduleScreens.map((definition) => ({
-  id: definition.apiName,
-  label: definition.singularLabel,
-  path: (slug) => moduleCreatePath(slug, definition.tab),
-}));
+export const createRecordsNav: readonly CreateRecordEntry[] = getModuleScreens().map(
+  (definition) => ({
+    id: definition.apiName,
+    label: definition.singularLabel,
+    path: (slug) => moduleCreatePath(slug, definition.tab),
+  }),
+);
 
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
   const href = link.href(orgSlug);
