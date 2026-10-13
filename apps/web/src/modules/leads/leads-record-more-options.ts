@@ -7,7 +7,7 @@ export const LEADS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete thi
 export type LeadsRecordMoreOptionsHandlers = {
   onClone: () => void;
   onDelete: () => void;
-  onFindMergeDuplicates: () => void;
+  onFindMergeDuplicates?: () => void;
 };
 
 type SpecMenuItem = {
@@ -91,6 +91,11 @@ export function buildLeadsRecordMoreMenuGroups(
   for (const group of LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS) {
     const items = group.items
       .filter((item) => item.handlerKey !== undefined)
+      .filter(
+        (item) =>
+          item.handlerKey !== "onFindMergeDuplicates" ||
+          handlers.onFindMergeDuplicates !== undefined,
+      )
       .map((item) => {
         const key = item.handlerKey;
         if (!key) throw new Error("Filtered item missing handlerKey.");

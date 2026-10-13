@@ -19,6 +19,7 @@ import {
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
+import { useClientRecordService } from "@/lib/api/client/provider";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import {
@@ -68,7 +69,9 @@ export function MergeDuplicatesScreen({
   paths,
 }: MergeDuplicatesScreenProps) {
   const module = definition.apiName;
+  const mergeDefinition = definition.merge;
   const router = useRouter();
+  const recordService = useClientRecordService();
   const moduleQuery = useModule(module);
   const sourceQuery = useRecord(module, recordId);
   const viewsQuery = useViews(module);
@@ -90,12 +93,28 @@ export function MergeDuplicatesScreen({
   const [conflictsOnly, setConflictsOnly] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [mergeError, setMergeError] = useState<string | null>(null);
+  const [compareLoadError, setCompareLoadError] = useState<string | null>(null);
+  const [selectedRecordCache, setSelectedRecordCache] = useState<Map<RecordId, RecordData>>(
+    () => new Map(),
+  );
 
   const defaultViewId = viewsQuery.data?.find((view) => view.isDefault)?.id ?? "";
   const criterionFields = useMemo(
-    () => (moduleQuery.data ? resolveMergeCriterionFields(module, moduleQuery.data.fields) : []),
-    [module, moduleQuery.data],
+    () =>
+      moduleQuery.data && mergeDefinition
+        ? resolveMergeCriterionFields(mergeDefinition, moduleQuery.data.fields)
+        : [],
+    [mergeDefinition, moduleQuery.data],
   );
+
+  useEffect(() => {
+    if (!sourceQuery.data) return;
+    setSelectedRecordCache((current) => {
+      const next = new Map(current);
+      next.set(recordId, sourceQuery.data);
+      return next;
+    });
+  }, [sourceQuery.data, recordId]);
 
   useEffect(() => {
     if (!sourceQuery.data || criterionFields.length === 0) return;
@@ -112,12 +131,16 @@ export function MergeDuplicatesScreen({
     [defaultViewId, searchPage, appliedCriteria],
   );
 
-  const listQueryEnabled = Boolean(defaultViewId) && hasSearched;
+  const listQueryEnabled =
+    Boolean(defaultViewId) && hasSearched && Boolean(mergeDefinition) && criterionFields.length > 0;
   const listResult = useRecordList(module, listQuery, { enabled: listQueryEnabled });
 
   const matchingColumns = useMemo(
-    () => (moduleQuery.data ? resolveMatchingTableColumns(module, moduleQuery.data.fields) : []),
-    [module, moduleQuery.data],
+    () =>
+      moduleQuery.data && mergeDefinition
+        ? resolveMatchingTableColumns(mergeDefinition, moduleQuery.data.fields)
+        : [],
+    [mergeDefinition, moduleQuery.data],
   );
 
   const ownerNames = useMemo(() => {
@@ -140,15 +163,26 @@ export function MergeDuplicatesScreen({
   const canProceed = selectedCount === 2 || selectedCount === 3;
 
   const runSearch = useCallback(() => {
+    if (!mergeDefinition || criterionFields.length === 0) return;
     const criteria = buildMergeSearchCriteria(criteriaRows, groupOperator);
     setAppliedCriteria(criteria);
     setHasSearched(true);
     setSearchPage(1);
     setSelectedIds(new Set([recordId]));
-  }, [criteriaRows, groupOperator, recordId]);
+    setSelectedRecordCache(sourceQuery.data ? new Map([[recordId, sourceQuery.data]]) : new Map());
+    setCompareLoadError(null);
+  }, [
+    criteriaRows,
+    groupOperator,
+    recordId,
+    mergeDefinition,
+    criterionFields.length,
+    sourceQuery.data,
+  ]);
 
   const toggleRow = useCallback(
     (id: RecordId, checked: boolean) => {
+      setCompareLoadError(null);
       setSelectedIds((current) => {
         const next = new Set(current);
         if (checked) {
@@ -159,30 +193,67 @@ export function MergeDuplicatesScreen({
         }
         return next;
       });
+      if (checked) {
+        const row = displayRecords.find((item) => item.id === id);
+        if (row) {
+          setSelectedRecordCache((current) => {
+            const next = new Map(current);
+            next.set(id, row);
+            return next;
+          });
+        }
+      } else if (id !== recordId) {
+        setSelectedRecordCache((current) => {
+          const next = new Map(current);
+          next.delete(id);
+          return next;
+        });
+      }
     },
-    [recordId],
+    [recordId, displayRecords],
   );
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set([recordId]));
-  }, [recordId]);
+    setSelectedRecordCache(sourceQuery.data ? new Map([[recordId, sourceQuery.data]]) : new Map());
+    setCompareLoadError(null);
+  }, [recordId, sourceQuery.data]);
 
   const goToCompare = useCallback(async () => {
+    setCompareLoadError(null);
     const ids = [...selectedIds];
-    const records: RecordData[] = [];
+    const byId = new Map<RecordId, RecordData>();
+    const missingIds: RecordId[] = [];
     for (const id of ids) {
-      const fromList = displayRecords.find((row) => row.id === id);
-      if (fromList) records.push(fromList);
-      else if (id === recordId && sourceQuery.data) records.push(sourceQuery.data);
+      const cached = selectedRecordCache.get(id);
+      if (cached) byId.set(id, cached);
+      else missingIds.push(id);
     }
-    if (records.length < 2) return;
+    try {
+      for (const id of missingIds) {
+        const row = await recordService.get(module, id);
+        byId.set(id, row);
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not load the selected records.";
+      setCompareLoadError(message);
+      return;
+    }
+    const records = ids
+      .map((id) => byId.get(id))
+      .filter((row): row is RecordData => row !== undefined);
+    if (records.length < 2) {
+      setCompareLoadError("Could not load the selected records.");
+      return;
+    }
     setCompareRecords(records);
     setMasterId(recordId);
     const fields = moduleQuery.data?.fields ?? [];
     setFieldChoices(defaultFieldChoices(fields, records, recordId));
     setConflictsOnly(false);
     setStep("compare");
-  }, [selectedIds, displayRecords, recordId, sourceQuery.data, moduleQuery.data?.fields]);
+  }, [selectedIds, selectedRecordCache, recordService, module, recordId, moduleQuery.data?.fields]);
 
   const duplicateIds = useMemo(
     () => [...selectedIds].filter((id) => id !== masterId),
@@ -248,6 +319,12 @@ export function MergeDuplicatesScreen({
   }
   if (!moduleQuery.data || !sourceQuery.data) {
     return <div className="p-6 text-md text-text">Record not found.</div>;
+  }
+
+  if (!mergeDefinition) {
+    return (
+      <div className="p-6 text-md text-text">Find and merge is not available for this module.</div>
+    );
   }
 
   const displayNameField = definition.list.linkField;
@@ -435,7 +512,12 @@ export function MergeDuplicatesScreen({
             >
               <Icons.plus aria-hidden className="size-4" />
             </Button>
-            <Button variant="primary" onPress={runSearch} aria-label="Search">
+            <Button
+              variant="primary"
+              onPress={runSearch}
+              aria-label="Search"
+              isDisabled={criterionFields.length === 0}
+            >
               Search
             </Button>
           </div>
@@ -453,6 +535,11 @@ export function MergeDuplicatesScreen({
               <Button variant="primary" isDisabled={!canProceed} onPress={() => void goToCompare()}>
                 Next
               </Button>
+              {compareLoadError ? (
+                <p className="text-sm text-danger" role="alert">
+                  {compareLoadError}
+                </p>
+              ) : null}
               <Button
                 variant="icon"
                 size="compact"

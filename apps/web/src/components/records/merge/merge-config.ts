@@ -1,52 +1,22 @@
-import type { FieldDefinition, ModuleApiName } from "@crm/core/records";
-
-/** Interim criterion field order (MEP-352); rows missing from metadata are skipped. */
-export const MERGE_CRITERION_FIELDS: Readonly<Record<ModuleApiName, readonly string[]>> = {
-  Contacts: ["First_Name", "Last_Name", "Email", "Phone", "Mobile", "Account_Name"],
-  Leads: ["First_Name", "Last_Name", "Email", "Phone", "Mobile", "Company"],
-};
-
-export const MERGE_MATCHING_COLUMNS: Readonly<Record<ModuleApiName, readonly string[]>> = {
-  Leads: [
-    "Full_Name",
-    "Company",
-    "Email",
-    "Phone",
-    "Mobile",
-    "Created_Time",
-    "Modified_Time",
-    "Owner",
-  ],
-  Contacts: [
-    "Full_Name",
-    "Account_Name",
-    "Email",
-    "Phone",
-    "Mobile",
-    "Created_Time",
-    "Modified_Time",
-    "Owner",
-  ],
-};
+import type { FieldDefinition } from "@crm/core/records";
+import type { ModuleMergeDefinition } from "@/modules/types";
 
 export function resolveMergeCriterionFields(
-  module: ModuleApiName,
+  merge: ModuleMergeDefinition,
   fields: readonly FieldDefinition[],
 ): FieldDefinition[] {
   const byName = new Map(fields.map((field) => [field.apiName, field]));
-  const names = MERGE_CRITERION_FIELDS[module] ?? [];
-  return names
+  return merge.criterionFields
     .map((apiName) => byName.get(apiName))
     .filter((field): field is FieldDefinition => field !== undefined);
 }
 
 export function resolveMatchingTableColumns(
-  module: ModuleApiName,
+  merge: ModuleMergeDefinition,
   fields: readonly FieldDefinition[],
 ): FieldDefinition[] {
   const byName = new Map(fields.map((field) => [field.apiName, field]));
-  const names = MERGE_MATCHING_COLUMNS[module] ?? [];
-  const resolved = names
+  const resolved = merge.matchingColumns
     .map((apiName) => byName.get(apiName))
     .filter((field): field is FieldDefinition => field !== undefined);
   if (resolved.length > 0) return resolved;
