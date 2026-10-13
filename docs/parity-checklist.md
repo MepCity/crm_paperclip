@@ -234,8 +234,8 @@ remain authoritative.
 | --- | --- | --- |
 | D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row; Send Email as primary later-module command (M10); prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
-| D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e |
-| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
+| D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
+| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
 
 Share (M11) and Print Preview (M6) are later-module controls in More Options (Module
@@ -272,9 +272,9 @@ comparison); "Do it later" only closes the popup and the groups are found again 
 the same fields, because no emailed link or three-day token exists (M10); the merged
 and removed counts in the popup are our own wording, as the reference documents no
 result copy; the list refreshes through the existing query invalidation. A rejected
-module metadata load on the conflict-groups route shows a danger alert with Try again
-instead of returning to the list (MEP-395); a failed deduplicate job mutation returns
-to the field panel with a danger toast (MEP-395).
+module metadata load on the conflict-groups route and a failed conflict-groups query
+each show a danger alert with Try again instead of returning to the list (MEP-395).
+A failed deduplicate job returns to the field panel with a danger toast (MEP-354).
 
 ### Advanced search results page — done; QA MEP-355 (MEP-351)
 
@@ -292,7 +292,8 @@ Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage
 ### Module 2 gate
 
 Closing QA: MEP-355 (re-walk and CTO approval). Milestone code reviews: MEP-356,
-MEP-357. Baseline on `main` at `fd25861`.
+MEP-357. Baseline on `main` at `fd25861`. Closing fixes MEP-388, MEP-390 and MEP-395
+landed after the MEP-355 walk and were verified in their own QA.
 
 **Known gaps**
 
@@ -310,8 +311,8 @@ MEP-357. Baseline on `main` at `fd25861`.
   behaviour unknown; drawn inert.
 - **Shell:** only Home, Leads, Contacts, and Accounts; other tabs arrive with
   their modules.
-- **Database adapter** is not wired (ADR 0002); Contacts runs on the fixture
-  record service.
+- **Database adapter** is not wired (ADR 0002 measurement pending); Contacts runs on
+  the fixture record service.
 
 **Interim rules**
 
@@ -329,7 +330,8 @@ MEP-357. Baseline on `main` at `fd25861`.
 
 **Open items**
 
-- Route and search module constants follow-up: **closed (MEP-383)**.
+- Route and search module constants, and the Share / Print Preview rows closing the
+  menu when clicked: **closed (MEP-383)**.
 - Shared-component visual differences with Leads (Last Update placement, portrait
   initials vs silhouette, Edit Page Layout placement, Client Script tab colour):
   end-of-project batch in MEP-281.
