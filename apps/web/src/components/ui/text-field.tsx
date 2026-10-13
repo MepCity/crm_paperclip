@@ -2,7 +2,7 @@
 
 import "./record-input.css";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps,
@@ -29,6 +29,11 @@ export interface TextFieldProps extends AriaTextFieldProps {
   description?: string;
   errorMessage?: string | ((v: import("react-aria-components").ValidationResult) => string);
   laterModule?: ModuleKey;
+  /**
+   * On-screen keyboard hint for the native input. React Aria does not read this prop, so it is
+   * forwarded to `Input` here rather than left in the spread.
+   */
+  inputMode?: ComponentProps<"input">["inputMode"];
 }
 
 export function TextField({
@@ -44,6 +49,7 @@ export function TextField({
   description,
   errorMessage,
   laterModule,
+  inputMode,
   ...props
 }: TextFieldProps) {
   const laterRef = useLaterModule<HTMLInputElement>(laterModule);
@@ -69,6 +75,7 @@ export function TextField({
           <Input
             ref={laterRef}
             placeholder={placeholder}
+            inputMode={inputMode}
             className="min-w-0 flex-1 bg-transparent py-1 text-md text-text outline-none placeholder:text-text-muted"
             readOnly={Boolean(laterModule) || props.isReadOnly}
             {...(laterModule ? laterModuleProps(laterModule) : {})}
@@ -90,6 +97,7 @@ export function TextField({
           />
           <Input
             placeholder={placeholder}
+            inputMode={inputMode}
             className="h-(--size-list-filter-search-height) w-full min-w-0 rounded-md border border-control-border bg-surface pr-3 pl-(--size-list-filter-search-padding) text-md font-normal text-text outline-none placeholder:text-md placeholder:font-normal placeholder:text-text-placeholder data-disabled:bg-surface-hover data-disabled:opacity-50 data-focused:border-primary data-focused:ring-2 data-focused:ring-focus-ring data-focus-visible:border-primary data-focus-visible:ring-2 data-focus-visible:ring-focus-ring data-invalid:border-danger"
           />
         </div>
@@ -103,6 +111,7 @@ export function TextField({
           <Input
             ref={laterRef}
             placeholder={placeholder}
+            inputMode={inputMode}
             className="record-control"
             readOnly={Boolean(laterModule) || props.isReadOnly}
             {...(laterModule ? laterModuleProps(laterModule) : {})}
