@@ -1,5 +1,8 @@
 import type { OrgContext } from "@crm/core/records";
-import { describeRecordServiceContract } from "@crm/core/records/contract-suite";
+import {
+  describeActivityReadContract,
+  describeRecordServiceContract,
+} from "@crm/core/records/contract-suite";
 import {
   leadsRecordServiceContractModule,
   tasksRecordServiceContractModule,
@@ -126,3 +129,11 @@ describeRecordServiceContract(
   },
   tasksRecordServiceContractModule,
 );
+
+describeActivityReadContract("http", (ctx, options) => {
+  const deps = operationDeps(ctx, options);
+  return createHttpRecordService({
+    orgSlug: ctx.orgSlug,
+    fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
+  });
+});
