@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 const id = () => uuid("id").primaryKey().default(sql`uuidv7()`);
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -16,7 +25,10 @@ export const users = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => [uniqueIndex("users_email_unique").on(sql`lower(${table.email})`)],
+  (table) => [
+    uniqueIndex("users_email_unique").on(table.email),
+    check("users_email_lower_check", sql`${table.email} = lower(${table.email})`),
+  ],
 );
 
 export const sessions = pgTable(
