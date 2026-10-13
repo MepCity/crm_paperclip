@@ -266,9 +266,7 @@ test("omits secondary line for modules without search field config", async () =>
     {
       module: "Tasks",
       total: 1,
-      records: [
-        { id: "task-1", fields: { Subject: "Hidden task", Email: "hidden@example.test" } },
-      ],
+      records: [{ id: "task-1", fields: { Subject: "Hidden task", Email: "hidden@example.test" } }],
     },
   ]);
   const user = userEvent.setup();
