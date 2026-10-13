@@ -103,6 +103,28 @@ test("date rejects a day that never happened", () => {
   });
 });
 
+test("date rejects a half-typed entry instead of reading it as empty", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  for (const value of ["1", "15.", "15.02", "15.02.202", "1.2.2024"]) {
+    expect(validateRecordForm(fields, { Date_of_Birth: value }, (f) => f.label)).toEqual({
+      Date_of_Birth: "Please enter a valid Date of Birth.",
+    });
+  }
+});
+
+test("an optional date stays valid when the entry is really cleared", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  expect(validateRecordForm(fields, { Date_of_Birth: null }, (f) => f.label)).toEqual({});
+  const requiredFields = [field("Date_of_Birth", "Date of Birth", "date", true)];
+  expect(validateRecordForm(requiredFields, { Date_of_Birth: null }, (f) => f.label)).toEqual({
+    Date_of_Birth: "Date of Birth cannot be empty.",
+  });
+  // Half an entry is not empty, so a required field reports the format, not the empty message.
+  expect(
+    validateRecordForm(requiredFields, { Date_of_Birth: "15.02.202" }, (f) => f.label),
+  ).toEqual({ Date_of_Birth: "Please enter a valid Date of Birth." });
+});
+
 test("date rejects anything outside the contract shape", () => {
   const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
   for (const value of ["15.02.2026", "2026-2-15", "2026-13-01", 20260215, true]) {

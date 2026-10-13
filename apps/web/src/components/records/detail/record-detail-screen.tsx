@@ -241,7 +241,11 @@ export function RecordDetailScreen({
   const moreMenuGroups = rules.moreOptions({
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
-    onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
+    ...(definition.merge
+      ? {
+          onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
+        }
+      : {}),
   });
 
   // Module rules supply the optional status ribbon after the update label.
