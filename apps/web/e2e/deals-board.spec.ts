@@ -33,6 +33,9 @@ test("Deals opens in board presentation by default with toolbar and view switche
   const board = list.locator("[data-record-board]");
   await expect(board).toBeVisible();
 
+  // Board presentation draws no refresh button
+  await expect(list.getByRole("button", { name: "Refresh Custom View" })).toHaveCount(0);
+
   // DP-70, DP-71: Board toolbar controls
   const stageviewSelect = list.getByRole("combobox", { name: "Board grouping" });
   await expect(stageviewSelect).toBeVisible();

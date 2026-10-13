@@ -128,6 +128,18 @@ test("date uses the shared formatter and shows no clock", () => {
   expect(screen.queryByText("2026-02-15")).toBeNull();
 });
 
+test("currency cell carries the supplied currency code", () => {
+  const { container } = render(
+    <CellValue
+      field={field("currency")}
+      value={31800}
+      format={DEFAULT_FORMAT}
+      currencyCode="TRY"
+    />,
+  );
+  expect(container.textContent).toBe("TRY\u00A031,800.00");
+});
+
 test("integer, boolean, currency and Created_By match shared field formatting", () => {
   const { rerender } = show("integer", 12_345);
   expect(screen.getByText("12345")).toBeTruthy();

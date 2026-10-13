@@ -23,7 +23,7 @@ import type { ModuleListBoardProps } from "@/components/records/list/module-list
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { toast } from "@/components/ui/toast";
-import { invalidateModuleLists, useRecordSummary } from "@/lib/api/client/hooks";
+import { invalidateModuleLists, useHomeCurrency, useRecordSummary } from "@/lib/api/client/hooks";
 import { useClientRecordService } from "@/lib/api/client/provider";
 import { apiKeys, summarizeQueriesPrefix } from "@/lib/api/client/query-keys";
 import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
@@ -58,13 +58,37 @@ export function formatClosingDate(value: string): string {
   return trimmed;
 }
 
+/** Stored values of the terminal stages (Closed Won, Closed Lost, Closed Lost to Competition). */
+function closedStageKeys(
+  options: readonly { storedValue: string; stage?: { category?: string } }[],
+): ReadonlySet<string> {
+  return new Set(options.filter((o) => o.stage?.category !== "Open").map((o) => o.storedValue));
+}
+
+function localIsoDate(now: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Open stage = not a terminal stage; a Closing Date before `now` (local day) is overdue. */
+export function isOverdueClosingDate(
+  closingDate: string,
+  closedStage: boolean,
+  now: Date,
+): boolean {
+  if (closedStage) return false;
+  const match = closingDate.trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? (match[1] as string) < localIsoDate(now) : false;
+}
+
 export function buildDealCardRows(
   deal: RecordData,
   stageDisplayMap: Readonly<Record<string, string>>,
   ownerNames: Readonly<Record<string, string>>,
   orgSlug: string,
-): readonly { text: string; href?: string }[] {
-  const rows: { text: string; href?: string }[] = [];
+  options: { closedStages?: ReadonlySet<string>; now?: Date } = {},
+): readonly { text: string; href?: string; tone?: "danger"; strong?: boolean }[] {
+  const rows: { text: string; href?: string; tone?: "danger"; strong?: boolean }[] = [];
 
   // 1. Deal Name (link to detail)
   const dealName = typeof deal.fields.Deal_Name === "string" ? deal.fields.Deal_Name.trim() : "";
@@ -72,6 +96,7 @@ export function buildDealCardRows(
     rows.push({
       text: dealName,
       href: moduleRecordPath(orgSlug, "Deals", deal.id),
+      strong: true,
     });
   }
 
@@ -138,7 +163,13 @@ export function buildDealCardRows(
   if (closingDate) {
     const formatted = formatClosingDate(closingDate);
     if (formatted) {
-      rows.push({ text: formatted });
+      const stageKey = typeof deal.fields.Stage === "string" ? deal.fields.Stage : "";
+      const overdue = isOverdueClosingDate(
+        closingDate,
+        options.closedStages?.has(stageKey) ?? false,
+        options.now ?? new Date(),
+      );
+      rows.push(overdue ? { text: formatted, tone: "danger" } : { text: formatted });
     }
   }
 
@@ -154,6 +185,7 @@ export function buildDealsBoardProps(input: {
   const { records, metadata, orgSlug, ownerNames } = input;
   const stageField = metadata.fields.find((f) => f.apiName === "Stage");
   const stageOptions = stageField?.picklist ?? [];
+  const closedStages = closedStageKeys(stageOptions);
   const stageDisplayMap: Record<string, string> = {};
   for (const opt of stageOptions) {
     stageDisplayMap[opt.storedValue] = opt.displayValue;
@@ -167,7 +199,7 @@ export function buildDealsBoardProps(input: {
     );
     const cards: BoardCard[] = stageRecords.map((r) => ({
       id: r.id,
-      rows: buildDealCardRows(r, stageDisplayMap, ownerNames, orgSlug),
+      rows: buildDealCardRows(r, stageDisplayMap, ownerNames, orgSlug, { closedStages }),
     }));
     return {
       key: opt.storedValue,
@@ -239,6 +271,9 @@ export function DealsBoard({
     [stageOptions],
   );
 
+  const closedStages = useMemo(() => closedStageKeys(stageOptions), [stageOptions]);
+  const homeCurrency = useHomeCurrency();
+
   const reasonForLossOptions = useMemo(() => {
     const reasonField = metadata.fields.find((f) => f.apiName === "Reason_For_Loss__s");
     return (reasonField?.picklist ?? [])
@@ -302,7 +337,7 @@ export function DealsBoard({
 
       const cards: BoardCard[] = records.map((deal) => ({
         id: deal.id,
-        rows: buildDealCardRows(deal, stageDisplayMap, ownerNames, orgSlug),
+        rows: buildDealCardRows(deal, stageDisplayMap, ownerNames, orgSlug, { closedStages }),
       }));
 
       return {
@@ -314,7 +349,7 @@ export function DealsBoard({
         cards,
       };
     });
-  }, [stageOptions, stageQueries, summaryMap, stageDisplayMap, ownerNames, orgSlug]);
+  }, [stageOptions, stageQueries, summaryMap, stageDisplayMap, ownerNames, orgSlug, closedStages]);
 
   const handleCreate = useCallback(
     (stageKey: string) => {
@@ -450,6 +485,7 @@ export function DealsBoard({
           reasonForLossOptions={reasonForLossOptions}
           showReasonForLoss={pendingMove.showReasonForLoss}
           onSubmit={handleDialogSubmit}
+          currencyPrefix={homeCurrency.data?.symbol ?? "TL"}
         />
       ) : null}
     </>

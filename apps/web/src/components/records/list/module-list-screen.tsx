@@ -102,6 +102,8 @@ export interface ModuleListScreenConfig {
   pinnedViews?: readonly string[];
   phoneLaterModule?: ModuleKey;
   linkWebsite?: boolean;
+  /** ISO 4217 code for currency cells of the table; plain number when omitted. */
+  cellCurrencyCode?: string;
   badgeColumn?: boolean;
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
@@ -647,7 +649,7 @@ function ModuleListScreenLoaded({
             setFilterSelection(appliedFilters.map((filter) => filter.itemId));
             setFilterOpen(open);
           }}
-          onRefresh={refreshView}
+          onRefresh={presentation === "board" ? undefined : refreshView}
           fields={sortFields}
           sort={appliedSort}
           onSortApply={(next: SortSpec | null) => {
@@ -757,6 +759,7 @@ function ModuleListScreenLoaded({
               badgeColumn={config.badgeColumn}
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
+              currencyCode={config.cellCurrencyCode}
               columns={columns}
               records={records}
               linkField={config.linkField}
