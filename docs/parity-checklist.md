@@ -160,11 +160,19 @@ assigned to M2 moved to "Module 2 — Contacts".
 
 ## Module 2 — Contacts
 
-Specs (being written): `contacts.md`, `contacts-record-detail.md`,
-`contacts-form.md`, `global-search.md`, `duplicates.md`. The numbered rows
-are added from their capability tables when the specs are approved.
+Specs: `contacts.md`, `contacts-record-detail.md`, `contacts-form.md`,
+`global-search.md`, `duplicates.md`. Closing QA in MEP-355 walked the seven
+implementation areas below against the cited spec inventories and the
+reference captures.
 
-### Global search layer — implemented; QA pending (MEP-349)
+### Assigned to Module 2 at the Module 1 gate
+
+| Capability | Spec section |
+| --- | --- |
+| Global search across modules | `app-shell.md` › Actions; `global-search.md` |
+| Find and Merge Duplicates; Deduplicate, for Leads and Contacts | `leads.md` › Actions; `duplicates.md` |
+
+### Global search layer — done; QA MEP-355 (MEP-349)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -172,19 +180,19 @@ are added from their capability tables when the specs are approved.
 | S-10, S-10.1–S-10.7, S-13 | Module selector and module search; registry supplies shipped modules; Accounts M3, Deals M4, Tasks/Meetings M5 remain inert | Selector filtering, future-module no-op and module-scoped request tests |
 | S-11, S-14 | Empty focused query; three-character minimum; 300 ms debounce; hash prefix selects nameOrTags and shows Record Name badge | Component request tests |
 | S-12.1–S-12.15 | Record history per organization/user; newest first, unique module/id, capped at 15; absent when empty | History storage and record navigation tests |
-| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module | Component tests; global-search e2e |
+| S-15–S-18 | Module groups, first five records, detail navigation; email M10 and call M5 inert; advanced route preserves query/module; Deals layer row titles use record ids until M4 (known gap) | Component tests; global-search e2e; MEP-355 re-walk (short query and `Deal` layer group) |
 
 Interim rules: localStorage history, substring module filtering, debounce and group cap,
 shared no-records copy and error Alert; Escape/outside dismissal and focus restoration.
 Assistant and cross-application links use neutral labels and remain inert (P3).
 Unavailable storage does not prevent record navigation. No tokens are changed.
 
-### Contacts create / edit / clone form — implemented; QA pending (MEP-321)
+### Contacts create / edit / clone form — done; QA MEP-355 (MEP-321); fixes MEP-390
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
 | F-01–F-04, F-57 | Shared form strip; Edit Page Layout and Client Script tab (M11, inert) | Contacts form e2e; inventory chrome component tests via screen |
-| F-05 | Contact Image placeholder (M6, inert) | `profileImageLaterModule` on create form |
+| F-05 | Contact Image (M6, inert): silhouette inside the control; title and portrait stay separate | `record-form-screen-contacts-layout.test.tsx`; contacts form e2e |
 | F-06–F-32, F-17.1–F-17.8 | Metadata Standard layout; owner picker, salutation prefix, lookups, date, Twitter `@`, picklists | Module definition and shared form tests; contacts form e2e |
 | F-33–F-34.8 | Mailing and Other address groups; Copy Address; Clear All per group | Dual-address rendering; contacts form e2e |
 | F-54 | Description Information textarea | Shared form section |
@@ -192,7 +200,7 @@ Unavailable storage does not prevent record navigation. No tokens are changed.
 
 Connected To is omitted on create (metadata-enabled but not shown in reference captures). Validation, save destinations, Save and New, unsaved cancel and clone follow interim Leads rules. Account Name (M3) lookup uses the Choose Account record picker (MEP-343, interim rule shared with Accounts); Vendor Name (P2) lookup remains inert; Reporting To uses the Contacts record picker.
 
-### Contacts list — implemented; QA pending (MEP-319)
+### Contacts list — done; QA MEP-355 (MEP-319)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -220,22 +228,22 @@ Print View retains its visual submenu arrow without opening a submenu. Unknown s
 columns have a read-only text rendering fallback; service-provided column lists
 remain authoritative.
 
-### Contacts record detail — implemented; QA pending (MEP-320)
+### Contacts record detail — done; QA MEP-355 (MEP-320); fixes MEP-388
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row, Send Email (M10), prev/next from list context | `e2e/contacts-detail.spec.ts` |
+| D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row; Send Email as primary later-module command (M10); prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
-| D-36–D-51 | Business card, details card with active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343), Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e |
-| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
+| D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
+| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
 
-Share and Print Preview are drawn without handlers (separate tasks). Find and Merge
-Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
-`laterModule="P3"`. Lower Contact Information field order follows layout metadata
-(interim rule).
+Share (M11) and Print Preview (M6) are later-module controls in More Options (Module
+1 gate assignment). Find and Merge Duplicates opens the shared merge flow (MEP-352).
+Connected Records (`?`) uses `laterModule="P3"`. Lower Contact Information field order
+follows layout metadata (interim rule).
 
-### Find and Merge Duplicates (record detail) — implemented; QA pending (MEP-352)
+### Find and Merge Duplicates (record detail) — done; QA MEP-355 (MEP-352)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -244,7 +252,7 @@ Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
 | D-07.5 / Leads More Options | Menu handler → `/merge` route | Contacts/Leads more-options tests; e2e |
 | SH-49 (documentary shell) | Not drawn on merge screens | N/A (out of scope per task) |
 
-### Deduplicate (list Actions) — implemented; QA pending (MEP-354)
+### Deduplicate (list Actions) — done; QA MEP-355 (MEP-354); fixes MEP-395
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -252,7 +260,7 @@ Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
 | X-45.1 – X-45.4, X-46, X-47 | Select Field panel: unique fields first, then the documented order, then the module's other text, email and phone fields; Email preselected; a fourth field is refused | `dedup-config.test.ts`, `dedup-job.test.tsx` |
 | X-48 – X-50 | Deduplicate confirmation with the Auto-Merge and Resolve Conflicts notes and Learn More | `dedup-job.test.tsx`; e2e |
 | X-51 | Running notice with OK; the result waits for it | `dedup-job.test.tsx`; e2e |
-| X-52 – X-54 | Conflict popup: merged groups and removed records, Do it later, Resolve Now | `dedup-job.test.tsx`; e2e |
+| X-52 – X-54 | Conflict popup: merged groups and removed records, Do it later, Resolve Now | `dedup-job.test.tsx`; e2e (Resolve Now walked in MEP-355; **Do it later: not walked**, test-only) |
 | X-55 – X-60 | Conflict groups page: field tabs, range with arrows, match value and Duplicates columns, View; groups over three ask for three records first; the shared comparison merges | `dedup-conflict-screen.test.tsx`; e2e |
 
 Later-module controls: none on these screens; the Leads menu rows of later modules
@@ -263,9 +271,12 @@ in the automatic path, while conflict resolution offers the master radio (MEP-35
 comparison); "Do it later" only closes the popup and the groups are found again from
 the same fields, because no emailed link or three-day token exists (M10); the merged
 and removed counts in the popup are our own wording, as the reference documents no
-result copy; the list refreshes through the existing query invalidation.
+result copy; the list refreshes through the existing query invalidation. A rejected
+module metadata load on the conflict-groups route and a failed conflict-groups query
+each show a danger alert with Try again instead of returning to the list (MEP-395).
+A failed deduplicate job returns to the field panel with a danger toast (MEP-354).
 
-### Advanced search results page — implemented; QA pending (MEP-351)
+### Advanced search results page — done; QA MEP-355 (MEP-351)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -278,49 +289,101 @@ result copy; the list refreshes through the existing query invalidation.
 
 Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
 
+### Module 2 gate
+
+Closing QA: MEP-355 (re-walk and CTO approval). Milestone code reviews: MEP-356,
+MEP-357. Baseline on `main` at `fd25861`. Closing fixes MEP-388, MEP-390 and MEP-395
+landed after the MEP-355 walk and were verified in their own QA.
+
+**Known gaps**
+
+- **Later-module controls:** drawn in place and do nothing when clicked (board
+  decision, MEP-292): tags, email, call icon, campaign, note / attachment /
+  activity cards, Share (M11), Print Preview (M6), Contact Image (M6), Edit Page
+  Layout, Client Script, Vendor lookup.
+- **Activity badges:** Open / Closed Activities counts and the list activity badge
+  appear when activity data arrives in M5.
+- **Deals rows in search:** layer group titles show record ids instead of deal
+  names until the Deals screen definition ships in M4.
+- **Merge:** no note, attachment, or activity transfer and no email notification
+  (each belongs to its module).
+- **Hierarchy View, Drafts, Approve Contacts:** not observed in reference captures;
+  behaviour unknown; drawn inert.
+- **Shell:** only Home, Leads, Contacts, and Accounts; other tabs arrive with
+  their modules.
+- **Database adapter** is not wired (ADR 0002 measurement pending); Contacts runs on
+  the fixture record service.
+
+**Interim rules**
+
+- Manual merge: the user picks the master record; bulk cleanup picks the record
+  with the most recent activity as master.
+- Merged-record creation metadata comes from the oldest record in the group (spec
+  text overrides the conflicting screenshot).
+- An empty value is not a merge conflict. "Do it later" only closes the popup;
+  merged / removed count wording is ours.
+- Search history lives in the browser; queries need at least three characters and
+  a 300 ms debounce; advanced search shows ten records per card and keeps default
+  columns for the session.
+- Form validation, Save and New, cancel, and clone; list selection bar, page size,
+  and empty state follow the Leads patterns.
+
+**Open items**
+
+- Route and search module constants, and the Share / Print Preview rows closing the
+  menu when clicked: **closed (MEP-383)**.
+- Shared-component visual differences with Leads (Last Update placement, portrait
+  initials vs silhouette, Edit Page Layout placement, Client Script tab colour):
+  end-of-project batch in MEP-281.
+- **Do it later** on the deduplicate conflict popup was not clicked in the closing
+  walk; covered by automated tests only.
+- When the database adapter lands, search and merge contract tests will run against
+  it; no rework is expected.
+
 ## Module 3 — Accounts
 
-Specs: `accounts.md`, `accounts-record-detail.md`, `accounts-form.md`.
+Specs: `accounts.md`, `accounts-record-detail.md`, `accounts-form.md`. Closing QA in
+MEP-384 walked the three implementation areas below against the cited spec inventories
+and the reference captures.
 
-### Accounts record detail — implemented; QA pending (MEP-342)
+### Accounts record detail — done; QA MEP-384 (MEP-342); fixes MEP-391, MEP-393, MEP-394
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link, prev/next from list context | `e2e/accounts-detail.spec.ts` |
-| AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete | Accounts detail e2e; module tests |
+| AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link; Send Email as primary later-module command (M10, MEP-394); Last Update on the tab row with clock icon (MEP-394); prev/next from list context | `e2e/accounts-detail.spec.ts`; `accounts-last-update.test.ts` |
+| AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete; Find and Merge Duplicates opens the shared merge flow (MEP-393, after MEP-384 walk) | Accounts detail e2e; `accounts-record-more-options.test.ts` |
 | AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
-| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e |
-| AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; service counts for Contacts badge | Related-list tests; accounts detail e2e |
-| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card and New prefill; hierarchy/assign/edit/expand inert | Accounts detail e2e |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: not walked** (seed record has no history) |
+| AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
+| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View drawn without handler | Accounts detail e2e |
 
-Account hierarchy opening (AD-115) and separate hierarchy view remain unimplemented (CTO follow-up). Notes rail badge omitted when count is zero. Billing/Shipping and lower detail field order follow Contacts address interim rules.
+Share (M11) and Print Preview (M6) are later-module controls in More Options (same as
+Contacts; open states not observed in reference captures). **Hierarchy View (AD-115):**
+drawn inert; open behaviour not observed (Module 3 gate known gap). Notes rail badge
+omitted when count is zero. Billing/Shipping and lower detail field order follow Contacts
+address interim rules. Contacts detail Account subtitle and Account Name links to Accounts
+detail were walked in MEP-384 (L-43 / D-03 / D-39 cross-check).
 
-### Assigned to Module 2 at the Module 1 gate
-
-| Capability | Spec section |
-| --- | --- |
-| Global search across modules | `app-shell.md` › Actions; `global-search.md` |
-| Find and Merge Duplicates; Deduplicate, for Leads and Contacts | `leads.md` › Actions; `duplicates.md` |
-
-### Accounts create / edit / clone form — implemented; QA pending (MEP-341)
+### Accounts create / edit / clone form — done; QA MEP-384 (MEP-341); fixes MEP-389, MEP-394
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| AF-01–AF-04, AF-47 | Shared form strip with `Create Account`; Edit Page Layout and Client Script tab (M11, inert) | `e2e/accounts-form.spec.ts`; inventory chrome tests |
-| AF-05 | Account Image building placeholder (M6, inert) | `profileImageLaterModule` + `profileImageIcon` on the Accounts definition |
-| AF-06–AF-24 | Spec eight-row Account Information grid; owner picker, Parent Account lookup, four picklists, currency prefix and passive information icon, numeric and bigint entries | Module definition, shared form tests; accounts form e2e |
+| AF-01–AF-04, AF-47 | Shared form strip with `Create Account`; Edit Page Layout beside the title and Client Script tab (M11, inert, MEP-394) | `e2e/accounts-form.spec.ts`; inventory chrome tests |
+| AF-05 | Account Image building placeholder above the title (M6, inert; silhouette separate from label, MEP-394) | `profileImageLaterModule` + `profileImageIcon` on the Accounts definition; accounts form e2e |
+| AF-06–AF-24 | Spec eight-row Account Information grid; owner picker, Parent Account lookup, four picklists, currency prefix and passive information icon, numeric and bigint entries; Account Number loads and saves on edit (MEP-389) | Module definition, shared form tests; accounts form e2e |
 | AF-11.1–AF-11.18 | Observed record-picker chrome on the Parent Account dialog | `select-record-dialog.test.tsx`; accounts form e2e |
 | AF-13.1–AF-13.8 | Searchable Account Type panel (`searchablePicklists` form rule) | accounts form e2e |
 | AF-25–AF-43 | Billing and Shipping address groups; Copy Address; Clear All per group | Dual-address rendering; accounts form e2e |
 | AF-30.1, AF-35.1–AF-35.8 | State list with only `-None-` while Country is unset; country panel search and options | Shared composite input tests |
 | AF-44 | Description Information textarea | Shared form section |
-| AF-45–AF-46 | Form footer view controls (M11, inert) | Inventory footer on the Accounts form |
+| AF-45–AF-46 | Form footer view controls (M11, inert) | Inventory footer on the Accounts form. **AF-45 – AF-46: not walked** in MEP-384 (below the fold) |
 
 Connected To is omitted on create (metadata-enabled but absent from the reference form captures).
 Registering Accounts retires the transitional inert state of Account Name references: the Contacts
-form lookup, the Contacts list cell and the Contacts detail now resolve to Account record links.
-Account Number (`bigint`) draws the single-line numeric entry with the integer validation rule and
-is written as decimal text, the only shape the service accepts for a long integer.
+form lookup, the Contacts list cell and the Contacts detail now resolve to Account record links
+(MEP-384 Contacts cross-check). Account Number (`bigint`) draws the single-line numeric entry
+with the integer validation rule and is written as decimal text, the only shape the service
+accepts for a long integer.
 
 `laterModule`: AF-05 image (M6), AF-11.16 picker handset (M5), AF-01/AF-45/AF-46/AF-47 customization
 and automation (M11). Drawn without handlers (never exercised in the capture): AF-11.3 New Account,
@@ -331,20 +394,20 @@ Interim rules (behaviour not observed in the reference, taken from the Contacts 
 direction labels, error copy and focus order, unsaved-changes confirmation, save destination,
 Save and New reset, the whole Edit Account form and the clone rule.
 
-### Accounts list — implemented; QA pending (MEP-340)
+### Accounts list — done; QA MEP-384 (MEP-340)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
 | SH-15 | Registered in registry.ts beneath Contacts; list and detail routes resolve Accounts definition | `registry.test.ts`, `definition.test.ts`, `accounts-list.spec.ts` |
 | AL-01, AL-52 | Pinned view tab strip supporting "All Accounts" and "All Locked Accounts" tabs alongside view pill | `view-tab-strip.test.tsx`, `accounts-list.spec.ts` |
 | AL-02, AL-02.2–AL-02.9 | View ellipsis menu with 8 stock views in reference CRM order; custom view switching | `view-tab-strip.test.tsx`, `accounts-list.spec.ts` |
-| AL-02.10–AL-02.12 | Customization items in view menu: Dropdown toggle, New Custom View (M11), Manage Custom View (M11) | `view-tab-strip.test.tsx` |
+| AL-02.10–AL-02.12 | Customization items in view menu: Dropdown toggle, New Custom View (M11), Manage Custom View (M11) | `view-tab-strip.test.tsx`. **AL-02.10: not walked** (strip did not return to dropdown in this pass) |
 | AL-03, AL-64 | Filter toggle button, list refresh button | `accounts-list.spec.ts` |
 | AL-04 | Sort popover by Account Name and field dictionary labels | `accounts-list.spec.ts`, `list-config.test.ts` |
-| AL-05–AL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | Shared component tests |
+| AL-05–AL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | Shared component tests. AL-06 – AL-11: drawn inert; only list presentation is active (interim rule) |
 | AL-12, AL-13 | Create Account primary button; attached arrow dropdown (M6, inert) | `accounts-list.spec.ts` |
-| AL-14.1–AL-14.10 | 10 Actions menu items in reference order (Mass Transfer, Mass Delete, Mass Update, Manage Tags M6, Drafts, Deduplicate Accounts, Create Client Script M11, Export Accounts M6, Sheet view P3, Print View) | `accounts-list.spec.ts` |
-| AL-15, AL-16, AL-20–AL-25 | System defined filters (Locked, Record Action, Related Records Action, Touched Records, Untouched Records, Cadences P3); no Activities/Campaigns/Latest Email Status (L-17–L-19 absent) | `list-filters.test.ts`, `accounts-list.spec.ts` |
+| AL-14.1–AL-14.10 | 10 Actions menu items in reference order; Mass Update and Deduplicate Accounts dialogs open from Actions | `accounts-list.spec.ts`. Drafts and Print View close the menu without navigation (not observed open in reference; same as Contacts) |
+| AL-15, AL-16, AL-20–AL-25 | System defined filter rows including Locked, Record Action, Related Records Action, Touched Records, Untouched Records, and Cadences (P3); no Activities/Campaigns/Latest Email Status (L-17–L-19 absent) | `list-filters.test.ts`, `accounts-list.spec.ts`. AL-20 – AL-24: rows drawn disabled; open filter behaviour not observed (same as Contacts) |
 | AL-26, AL-27, AL-53–AL-59 | Field filters with search and visible field rows (Account Name, Account Number, Account Owner, Account Site, Account Type, Annual Revenue, Billing Address, Billing Address - City; L-28–L-31 absent); no "Filter By Related Modules" | `list-filters.test.ts`, `accounts-list.spec.ts` |
 | AL-33 | View Settings gear button (M11, inert) | `accounts-list.spec.ts` |
 | AL-34, AL-40 | Header and row-level selection checkboxes; selection bar integration | `accounts-list.spec.ts` |
@@ -361,4 +424,52 @@ Cadences P3; View Settings M11; handset icon M5; notes M6; Manage Tags M6;
 Export Accounts M6; Create Client Script M11; Sheet view P3.
 Absent from Contacts: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47 (no row activity pulse or badge column space; selection checkbox is immediately before Account Name).
 Mass action flows (Mass Update, Change Owner, Delete Account) wire to selection bar dialogs.
-Contacts Account Name lookup cells now link to `/tab/Accounts/:id` active record routes.
+Contacts Account Name lookup cells link to `/tab/Accounts/:id` active record routes (MEP-384
+Contacts cross-check). Global search with Accounts selected navigates to detail (MEP-384).
+
+### Module 3 gate
+
+Closing QA: MEP-384 (walk and CTO approval). Milestone code reviews: MEP-385, MEP-386.
+Baseline on `main` at `4a8a014`. Closing fixes MEP-387, MEP-389, MEP-391, MEP-393, MEP-394,
+and MEP-392 landed after the MEP-384 walk and were verified in their own QA (MEP-393 and
+MEP-394 were approved but not yet on `main` when the gate summary was written; both have
+merged since).
+
+**Known gaps**
+
+- **Later-module controls (M4+):** Deals, activity, note, attachment, and email / product card
+  behaviour; tags, export, page layout, Cadences, and Sheet view remain drawn in place and
+  inert when clicked.
+- **Not observed open in reference captures (same state as Contacts):** Share, Print Preview,
+  Drafts, Print View, the five system filters (Locked, Record Action, Related Records Action,
+  Touched Records, Untouched Records), and non-list view type icons.
+- **Hierarchy View** on the Contacts card: drawn inert; open state not observed; no
+  implementation task was opened.
+- Connected To is omitted on the create form; synthetic seed data has no populated Timeline
+  history (empty shell was walked).
+- **Not walked in closing QA:** show custom views as a dropdown (AL-02.10) and form footer
+  view controls below the fold (AF-45 – AF-46).
+
+**Interim rules**
+
+- More Options, delete confirmation, Timeline shell, record page footer, and form error copy,
+  focus order, unsaved-changes handling, post-save destination, Save and New, and Copy Address
+  directions follow the Contacts patterns.
+- Billing and Shipping addresses use the Contacts address component; Choose Account uses the
+  same record picker as Parent Account.
+- Member Accounts columns come from the All Accounts view; the Contacts summary shows the first
+  contact; the email card uses the `Sent` label; sort labels come from the field dictionary.
+
+**Open items**
+
+- **Board question (gate card):** whether clicking Hierarchy View in the reference CRM to see
+  its open state counts as read-only research; if yes, CRM Analyst captures it and a task opens;
+  if no, whether to build it from the public documentation's description or leave it inert.
+- Assigning a parent account to itself or into a cycle is not blocked; the reference rule was
+  not observed and none was invented.
+- Related-list cards cap at 100 records with no pagination; reference behaviour above that cap
+  was not captured; the same cap applies to the Contacts card.
+- Closing QA screenshots predate the fix tasks; corrected rows were verified in fix QA, not in
+  a full Module 3 re-walk.
+- The database adapter is not wired (ADR 0002, MEP-40); Accounts runs on the fixture record
+  service.

@@ -2521,7 +2521,7 @@ Screenshot-only controls: SH-46.
 | D-52 | Related-list rail | List with lines icon | icon button | after Related List heading | not observed | seen (m2d2-card-reporting-contacts) | M11 |
 | D-63 | Record content | Scroll To Top | icon button | floating at lower right | not observed | seen (m2d2-card-reporting-contacts) | M2 |
 | D-89 | Related-list rail | Plus icon | icon button | Reporting Contacts row, right end | not observed | seen (m2d2-card-reporting-contacts) | M2 |
-| D-90 | Reporting Contacts card | Hierarchy View | button | header, after title | not observed | seen (m2d2-card-reporting-contacts) | M2 |
+| D-90 | Reporting Contacts card | Hierarchy View | button | header, after title | See [Account hierarchy](accounts-record-detail.md#account-hierarchy): observed from the Accounts entry point; not opened from this card | seen (m2d2-card-reporting-contacts) | M2 |
 | D-91 | Reporting Contacts card | New | button | header, right | not observed | seen (m2d2-card-reporting-contacts) | M2 |
 | D-92 | Voice of the Customer card | Enable feature | button | body, below introductory text | not observed | seen (m2d2-card-reporting-contacts) | P3 |
 | D-93 | Record-page footer | Add Related List | button | footer, left | not observed | seen (m2d2-card-reporting-contacts) | M11 |
@@ -2952,7 +2952,7 @@ Safety: the CTO decision of 2026-10-11 treats baseline detail-opening non-GET ca
 ## Open questions
 
 1. Notes card title, counter, upper controls and empty state remain not observed: its authorized rail jump painted the following card region. No repeat or alternate selector was used to recover that state.
-2. Lower Contact Information (including Reporting To), Address and Description remain not observed. No separately named permitted section-jump control was identified, and the first card capture did not paint preceding details. Their field presentation is not inferred from metadata or offscreen DOM controls.
+2. Hierarchy View opened state is observed from the Accounts entry point only; see [Account hierarchy](accounts-record-detail.md#account-hierarchy). D-90 was not opened from this card; its outcome here remains unobserved. Lower Contact Information (including Reporting To), Address and Description remain not observed. No separately named permitted section-jump control was identified, and the first card capture did not paint preceding details. Their field presentation is not inferred from metadata or offscreen DOM controls.
 3. Connected Records remained in a loading state in both captures. Its settled state, actions, counter and module ownership (`?`) remain open. The initial screenshot shows no header action; this does not establish settled-state absence.
 4. Open and Closed Calls columns fall outside the horizontal activity viewport; their counters and card controls are not observed. No horizontal scrolling or preference action was attempted. Card contents/record-row data remain outside scope.
 5. Interactions content, upcoming automated actions, filter-dropdown options, applied filter results, all menu-item outcomes and unclicked navigation remain not observed. Write success/error states are not observable without a write in this capture workflow.

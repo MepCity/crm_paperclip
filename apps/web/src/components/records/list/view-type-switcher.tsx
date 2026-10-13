@@ -12,7 +12,7 @@ interface ViewTypeTile {
    */
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
-  /** The row's ink box for this glyph; the svg box is the ink box because the glyphs are filled. */
+  /** The row's ink box for this glyph; the svg box is the ink box for the outline glyphs. */
   sizeClass: string;
 }
 
