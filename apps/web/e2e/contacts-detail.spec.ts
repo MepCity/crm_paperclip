@@ -147,6 +147,43 @@ test.describe("Contacts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Reporting Contacts filters by manager id, not by a shared Full Name", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const suffix = crypto.randomUUID().slice(0, 8);
+    const sharedLastName = `Twin Manager ${suffix}`;
+    const createContact = async (data: Record<string, unknown>): Promise<string> => {
+      const response = await page.request.post("/crm/v2.2/Contacts", {
+        headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+        data: { data: [data] },
+      });
+      expect(response.ok(), `${response.status()} ${await response.text()}`).toBe(true);
+      const body = await response.json();
+      const id = body.data?.[0]?.details?.id;
+      expect(id).toBeTruthy();
+      return String(id);
+    };
+    const managerA = await createContact({ First_Name: "Same", Last_Name: sharedLastName });
+    const managerB = await createContact({ First_Name: "Same", Last_Name: sharedLastName });
+    const reportA = `Report Alpha ${suffix}`;
+    const reportB = `Report Beta ${suffix}`;
+    await createContact({ Last_Name: reportA, Reporting_To: { id: managerA } });
+    await createContact({ Last_Name: reportB, Reporting_To: { id: managerB } });
+
+    const expectOnly = async (managerId: string, own: string, other: string) => {
+      await openContactDetail(page, org.slug, managerId);
+      const reporting = page.getByRole("region", { name: "Reporting Contacts" });
+      await expect(reporting.getByRole("link", { name: own })).toBeVisible();
+      await expect(reporting.getByText(other)).toHaveCount(0);
+    };
+    await expectOnly(managerA, reportA, reportB);
+    await expectOnly(managerB, reportB, reportA);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Reporting Contacts empty state", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
