@@ -1,5 +1,7 @@
 import type { FieldDataType, ModuleApiName, SortSpec } from "@crm/core/records";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { isModuleRegistered, moduleScreens, resolveModuleLaterKey } from "@/modules/registry";
+import type { ModuleScreenDefinition } from "@/modules/types";
 
 export interface DocumentedModuleFilterItem {
   id: string;
@@ -9,33 +11,55 @@ export interface DocumentedModuleFilterItem {
   laterModule?: ModuleKey;
 }
 
-export const DOCUMENTED_MODULE_FILTER_ITEMS: readonly DocumentedModuleFilterItem[] = [
-  { id: "S-31.1", moduleApiName: "Contacts", label: "Contacts", isRegistered: true },
-  {
-    id: "S-31.2",
-    moduleApiName: "Accounts",
-    label: "Accounts",
-    isRegistered: true,
-  },
-  { id: "S-31.3", moduleApiName: "Tasks", label: "Tasks", isRegistered: false, laterModule: "M5" },
-  { id: "S-31.4", moduleApiName: "Leads", label: "Leads", isRegistered: true },
-  { id: "S-31.5", moduleApiName: "Deals", label: "Deals", isRegistered: false, laterModule: "M4" },
-  {
-    id: "S-31.6",
-    moduleApiName: "Meetings",
-    label: "Meetings",
-    isRegistered: false,
-    laterModule: "M5",
-  },
-  { id: "S-31.7", moduleApiName: "Calls", label: "Calls", isRegistered: false, laterModule: "M5" },
-  {
-    id: "S-31.8",
-    moduleApiName: "Products",
-    label: "Products",
-    isRegistered: false,
-    laterModule: "P2",
-  },
+export interface DocumentedModuleFilterSpec {
+  id: string;
+  moduleApiName: ModuleApiName;
+  label: string;
+}
+
+export const DOCUMENTED_MODULE_FILTER_SPECS: readonly DocumentedModuleFilterSpec[] = [
+  { id: "S-31.1", moduleApiName: "Contacts", label: "Contacts" },
+  { id: "S-31.2", moduleApiName: "Accounts", label: "Accounts" },
+  { id: "S-31.3", moduleApiName: "Tasks", label: "Tasks" },
+  { id: "S-31.4", moduleApiName: "Leads", label: "Leads" },
+  { id: "S-31.5", moduleApiName: "Deals", label: "Deals" },
+  { id: "S-31.6", moduleApiName: "Meetings", label: "Meetings" },
+  { id: "S-31.7", moduleApiName: "Calls", label: "Calls" },
+  { id: "S-31.8", moduleApiName: "Products", label: "Products" },
 ];
+
+export function getDocumentedModuleFilterItems(
+  definitions: readonly ModuleScreenDefinition[] = moduleScreens,
+): readonly DocumentedModuleFilterItem[] {
+  const documented = DOCUMENTED_MODULE_FILTER_SPECS.map((item) => {
+    const isRegistered = isModuleRegistered(item.moduleApiName, definitions);
+    return {
+      ...item,
+      isRegistered,
+      laterModule: isRegistered ? undefined : resolveModuleLaterKey(item.moduleApiName),
+    };
+  });
+
+  const documentedApiNames = new Set<string>(
+    DOCUMENTED_MODULE_FILTER_SPECS.map((s) => s.moduleApiName),
+  );
+  const extraItems: DocumentedModuleFilterItem[] = [];
+  for (const def of definitions) {
+    if (!documentedApiNames.has(def.apiName)) {
+      extraItems.push({
+        id: `custom-${def.apiName}`,
+        moduleApiName: def.apiName,
+        label: def.pluralLabel ?? def.apiName,
+        isRegistered: true,
+      });
+    }
+  }
+
+  return [...documented, ...extraItems];
+}
+
+export const DOCUMENTED_MODULE_FILTER_ITEMS: readonly DocumentedModuleFilterItem[] =
+  getDocumentedModuleFilterItems();
 
 export interface SystemFilterField {
   id: string;
@@ -75,8 +99,3 @@ export const NOTES_CARD_COLUMNS = [
 
 export const DEFAULT_PAGE_SIZE = 10;
 export const MAX_SELECTED_COLUMNS = 10;
-export const REGISTERED_SEARCH_MODULES: readonly ModuleApiName[] = [
-  "Contacts",
-  "Accounts",
-  "Leads",
-];
