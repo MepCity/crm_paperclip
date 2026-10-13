@@ -130,9 +130,31 @@ describe("auth uniqueness constraints (0002)", () => {
       await insertUser(client, `${local}@example.test`);
       await expect(insertUser(client, `${local.toUpperCase()}@example.test`)).rejects.toMatchObject(
         {
-          code: "23505",
+          code: "23514",
         },
       );
+    });
+  });
+
+  it("rejects a user row when email contains uppercase letters", async () => {
+    await withMigratedDb(async (client) => {
+      const local = `upper-${randomBytes(4).toString("hex")}`;
+      await expect(insertUser(client, `${local.toUpperCase()}@example.test`)).rejects.toMatchObject(
+        { code: "23514" },
+      );
+    });
+  });
+
+  it("defines users_email_unique on the plain email column without lower()", async () => {
+    await withMigratedDb(async (client) => {
+      const rows = await client.query<{ indexdef: string }>(
+        `select indexdef from pg_indexes where indexname = 'users_email_unique'`,
+      );
+      expect(rows.rows).toHaveLength(1);
+      const def = rows.rows[0]?.indexdef ?? "";
+      expect(def.toLowerCase()).toContain("unique");
+      expect(def.toLowerCase()).not.toContain("lower(");
+      expect(def).toMatch(/\(email\)/i);
     });
   });
 });
