@@ -14,5 +14,17 @@ test("retains shared writable-field policy and excludes Contacts composites", ()
   ])
     expect(isContactInlineEditable(contactField(name))).toBe(false);
   expect(isContactInlineEditable(contactField("Reporting_To", { dataType: "lookup" }))).toBe(false);
+  expect(isContactInlineEditable(contactField("Account_Name", { dataType: "lookup" }))).toBe(true);
+  expect(
+    isContactInlineEditable(contactField("Account_Name", { dataType: "lookup", readOnly: true })),
+  ).toBe(false);
+  expect(
+    isContactInlineEditable(
+      contactField("Account_Name", {
+        dataType: "lookup",
+        views: { view: true, create: true, edit: false, quickCreate: true },
+      }),
+    ),
+  ).toBe(false);
   expect(isContactInlineEditable(contactField("Email", { readOnly: true }))).toBe(false);
 });

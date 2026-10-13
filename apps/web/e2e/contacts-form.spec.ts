@@ -218,11 +218,6 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   const url = page.url();
   await page.getByRole("button", { name: "Edit Page Layout", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
-  await page
-    .getByRole("button", { name: "Open Account Name lookup", exact: true })
-    .click({ force: true });
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.keyboard.press("Escape");
   // The Vendor Name lookup targets a module that does not ship yet, so it stays inert: no
   // dialog and no navigation. Account Name ships with Module 3 and opens Choose Account.
   await page
@@ -232,6 +227,51 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));
+});
+
+test("creates contact with Account Name chosen via lookup dialog and reflects account on detail", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Account Contact");
+  await page.getByRole("button", { name: "Open Account Name lookup", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose Account" });
+  await expect(dialog).toBeVisible();
+  const firstDataRow = dialog.locator("tbody tr").first();
+  await expect(firstDataRow).toBeVisible();
+  const nameLink = firstDataRow.locator("td").nth(1).getByRole("link");
+  await expect(nameLink).toBeVisible();
+  await expect(nameLink).toHaveAttribute("href", /\/tab\/Accounts\//);
+  const chosenName = (await nameLink.innerText()).trim();
+  await firstDataRow.click();
+  await expect(dialog).toHaveCount(0);
+
+  await expect(page.locator('[data-form-field="Account_Name"] input[type="text"]')).toHaveValue(
+    chosenName,
+  );
+
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Contacts",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await createRequest;
+  const body = request.postDataJSON().data[0];
+  expect(body.Last_Name).toBe("Account Contact");
+  expect(body.Account_Name).toMatchObject({
+    name: chosenName,
+  });
+  expect(typeof body.Account_Name.id).toBe("string");
+
+  const header = page.locator("[data-record-header]");
+  await expect(header).toBeVisible();
+  await expect(header).toContainText("Account Contact");
+  await expect(header.getByRole("link", { name: chosenName })).toBeVisible();
+
+  const detailsAccountLink = page
+    .locator('[data-detail-field="Account_Name"]')
+    .getByRole("link", { name: chosenName });
+  await expect(detailsAccountLink).toBeVisible();
 });
 
 test("Contact Information and address groups follow spec field order", async ({ page }) => {

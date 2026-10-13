@@ -112,6 +112,15 @@ export function DetailFieldRow({
             field={field}
             value={value}
             users={inline.users}
+            lookupOwnerNames={inline.ownerNames ?? ownerNames}
+            lookupRecordHref={
+              field.dataType === "lookup" && inline.recordPath && field.lookup?.module
+                ? (id) =>
+                    inline.recordPath && field.lookup
+                      ? inline.recordPath(field.lookup.module, id)
+                      : ""
+                : undefined
+            }
             onSave={inline.save}
             onCancel={close}
             onComplete={close}

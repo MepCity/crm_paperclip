@@ -7,6 +7,7 @@ import { Icons } from "@/components/ui/icon";
 import { FieldInput, type OwnerOption } from "../form/field-input";
 import { formPayload } from "../form/form-model";
 import { validateRecordForm } from "../form/form-validation";
+import { useInlineEdit } from "./inline-edit-context";
 import "./inline-field-editor.css";
 
 export interface InlineFieldEditorProps {
@@ -19,6 +20,8 @@ export interface InlineFieldEditorProps {
   initialError?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  lookupRecordHref?: (id: string, module?: string) => string;
+  lookupOwnerNames?: Readonly<Record<string, string>>;
 }
 
 export function InlineFieldEditor({
@@ -31,7 +34,21 @@ export function InlineFieldEditor({
   initialError,
   disabled,
   autoFocus = true,
+  lookupRecordHref,
+  lookupOwnerNames,
 }: InlineFieldEditorProps) {
+  const inline = useInlineEdit();
+  const effectiveOwnerNames =
+    lookupOwnerNames ??
+    inline?.ownerNames ??
+    (users ? Object.fromEntries(users.map((u) => [u.id, u.name])) : undefined);
+  const recordPath = inline?.recordPath;
+  const lookupModule = field.lookup?.module;
+  const effectiveLookupHref =
+    lookupRecordHref ??
+    (field.dataType === "lookup" && recordPath && lookupModule
+      ? (id: string, module?: string) => recordPath(module ?? lookupModule, id)
+      : undefined);
   const [draft, setDraft] = useState(value);
   const [error, setError] = useState(initialError);
   const [saving, setSaving] = useState(false);
@@ -140,6 +157,8 @@ export function InlineFieldEditor({
           defaultOpen={field.dataType === "picklist"}
           errorMessage={error}
           disabled={busy}
+          lookupRecordHref={effectiveLookupHref}
+          lookupOwnerNames={effectiveOwnerNames}
         />
       </div>
       <div className="detail-inline-actions">
