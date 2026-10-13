@@ -476,7 +476,7 @@ merged since).
 
 ## Module 4 — Deals
 
-### Deals create / edit / clone form — implemented; QA pending (MEP-411)
+### Deals create / edit / clone form — implemented; QA pending (MEP-440)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -489,7 +489,7 @@ merged since).
 | DF-13, DF-14 | Contact Name lookup entry with the same picker shape, titled Choose Contact and searched by Contact Name | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
 | DF-15, DF-16, DF-17 | Amount with the home-currency prefix and the information icon (icon drawn without a handler) | `e2e/deals-form.spec.ts` |
 | DF-18 | Closing Date on the shared masked date entry (DD.MM.YYYY) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
-| DF-19 | Stage select holding the nine metadata stages in order | `e2e/deals-form.spec.ts`, `deals.test.ts` |
+| DF-19 | Stage select holding the nine metadata stages in order | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
 | DF-20 | Probability (%) as a bounded integer entry, refilled by the selected stage's metadata probability and still editable by hand | `deals-form-rules.test.ts`, `form-model.test.ts`, `field-input.test.tsx`, `e2e/deals-form.spec.ts` |
 | DF-21, DF-21.1, DF-21.2 | Expected Revenue read-only with its own currency prefix and lock; never computed in the form | `e2e/deals-form.spec.ts` |
 | DF-23, DF-24 | Campaign Source entry and lookup icon drawn in place, inert (M7 `laterModule`) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
