@@ -431,3 +431,59 @@ the groups that really merged, so one rejected group never aborts the call or
 leaves earlier merges unreported. Any other merge failure is a bug and still
 rejects the call. Notes, attachments, activities, automation and queued large
 merges remain outside this adapter.
+
+## Deals stage rules — interim
+
+The single pipeline uses Stage picklist order and its exported stage probabilities
+and categories. Create without Probability, or a changed Stage without Probability
+in the same input, applies the stage probability. An explicit Probability wins and
+must be an integer from 0 through 100. Expected_Revenue is read-only: supplying it
+raises the existing field ValidationError. Every Deals write derives it as
+Amount × Probability / 100, rounded to two decimals; empty Amount yields null.
+Reason_For_Loss__s can only be supplied for a target stage in the Closed Lost
+category (including Closed Lost to Competition). It is optional and cleared when
+leaving that category. Closed deals can be reopened without extra validation.
+
+Interim rules fixed for this implementation, because writes in the reference CRM
+are forbidden and these outcomes have not been observed:
+
+- When automatic stage probability is applied; explicit probability preservation.
+- `Probability: null` in the input means not provided: stage default on create or
+  stage change, otherwise the existing probability is kept.
+- Probability integer range 0–100 applies only to non-null provided values.
+- Expected revenue formula and two-decimal rounding; `summarize` sums use the same
+  two-decimal rounding for currency and numeric amount fields.
+- Reopening a closed deal without additional validation.
+- Initial history creation and appending only when the stage actually changes.
+- History calendar-day differences use UTC dates, independent of elapsed hours.
+
+DealHistory is a read-only module with the twelve exported fields. All public
+mutation methods reject it with ForbiddenError. Creating a deal adds its first
+snapshot; changing Stage adds a snapshot of Stage, Amount, Probability,
+Expected_Revenue, Closing_Date, Modified_By and Modified_Time, updates
+Stage_Modified_Time, and closes the previous snapshot with Moved_To__s and
+Stage_Duration_Calendar_Days. The active snapshot has null duration/moved-to.
+Other writes derive revenue without appending history. Deleting a deal removes
+its history. Synthetic seeds include several two-stage histories.
+Read with list/count, view `all-deal-history`, and a Potential_Name equality
+criterion containing the deal ID string; the default sort is
+Modified_Time descending. Global search defaults retain the writable CRM modules;
+DealHistory can be searched explicitly.
+
+## Group summaries
+
+`RecordService.summarize(module, query)` accepts `viewId`, optional `filters` and
+`search`, required `groupBy` (picklist API name), and optional `sum` (currency,
+integer or double API name). It uses the same matching rules as list/count and
+has no sorting or pagination. It returns `readonly GroupSummary[]`, one
+`{ value, count, sum }` per stored picklist option in metadata order, including
+empty groups. A null-value group is appended only when matching rows have an
+empty grouping field. Without sum, sum is null; with sum, an empty group sums to
+zero. Unknown or incompatible fields raise ValidationError.
+
+HTTP: `POST /crm/v2.2/{module}/actions/grouped_counts?cvid=<view>&group_by=<field>&sum=<field>`.
+The optional JSON body carries the same `filters` and `search` as actions/count;
+the response is `{ groups: GroupSummary[] }`. Sum may be omitted. This local DTO
+and query shape are interim; no reference write or saved preference is required.
+The HTTP adapter implements the same port, and the shared module contract suite
+checks summary/list/count parity for Leads, Contacts, Accounts and Deals.
