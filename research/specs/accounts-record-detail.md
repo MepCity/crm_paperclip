@@ -1,6 +1,6 @@
 # Accounts — record detail
 
-Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. The Contacts-card hierarchy modal is observed in m3h-hierarchy-open; its documentation and remaining observation gaps are recorded below. Closure comparison is pending.
+Status: researched related-card inventory; lower field display and record-page footer remain unobserved. The earlier safety-count gate was resolved by the CTO in MEP-330. More Options and Timeline are observed in the m3m continuation; the earlier m3d attempts remain loading-state evidence only. The Contacts-card hierarchy modal is observed in m3h-hierarchy-open; its documentation and remaining observation gaps are recorded below. The post-click Contacts card matches the pre-click card in the closure capture.
 
 ## Purpose
 
@@ -220,7 +220,7 @@ Separately, Member Accounts represents secondary divisions or subsidiaries assoc
 - Closing affordance is `seen (m3h-hierarchy-open)`; its activation, Escape/backdrop dismissal and navigation outcome are `not observed`. Nothing inside the modal was clicked, hovered or filled; the close icon was not used.
 - Empty state, further reporting levels, depth limit, hover-only controls and child-link destination remain `not observed`. The reporting-manager relationship remains `documented` (D-H1), not inferred from the single child.
 
-Safety evidence: m3h-hierarchy-open and m3h2-detail-base have the same non-GET paths and counts, including blocked requests apart from time-dependent background polls/telemetry; only an additional hierarchy GET was observed. The single hierarchy click is spent. A painted post-click detail comparison is still pending; persistent-view equality is not claimed. The valid opening/closing list captures m3h2-list-base-r3 and m3h2-list-after-r3 have equal totals.
+Safety evidence: m3h-hierarchy-open and m3h2-detail-base have the same non-GET paths and counts, including blocked requests apart from time-dependent background polls/telemetry; only an additional hierarchy GET was observed. The single hierarchy click is spent. The Contacts card and page layout in m3h2-detail-base and m3h2-detail-after-r4 match in the images and ARIA card region (title, Hierarchy View, upper actions, six column headings and table); no modal remains, providing evidence that the single opening left no persistent view change. The valid opening/closing list captures m3h2-list-base-r3 and m3h2-list-after-r3 have equal totals.
 
 ### Documentation keys
 
@@ -312,6 +312,7 @@ Checklists (24) and Locking Information (25) are marked visible in metadata but 
 | m3h2-list-after-r3 | 0 | 0 | Valid closing list; same total |
 | m3h2-detail-after-r2 | 2 requested, 0 executed | 2 | Loading |
 | m3h2-detail-after-r3 | unknown | unknown | Tool error; empty evidence directory |
+| m3h2-detail-after-r4 | 2 | 0 | Valid painted closure; Contacts card matches m3h2-detail-base |
 
 m3d-detail-more and m3d-detail-timeline are evidence of loading/blank states only, not their intended opened states. m3d-detail-hierarchy was not attempted because the named entry was outside the upper viewport and safe activation was not established and is not an evidence slug. All five successful screenshots were opened as images and inspected. Opening and the renewed closing totals are equal (373); no record selection is painted. The original record selector was reused and matched exactly one entry in m3d-list-base offline. More Options and Timeline selectors each matched exactly one expected entry in m3d-detail-main offline, but neither matched at capture time. No alternative selector or open/toggle override was used.
 
@@ -1571,7 +1572,7 @@ The source array has 601 entries. Entries 1–588 retain the m3c-list-base inven
 3. Populated Deals/Member Accounts columns, counters and row ends, Contacts empty state, Notes empty state and any hover-only row/field/rail controls remain unobserved. No additional record was opened.
 4. Open/Closed Calls columns and counters remain outside the horizontal activity viewport. No horizontal scroll or activity preference action was used.
 5. Connected Records ownership (`?`) and shared-shell ownership questions remain inherited from Contacts. UI Lead should confirm the M11 assignment for Contacts table customization and Organize Accounts Details.
-6. The single authorized Contacts-card Hierarchy View opening is observed in m3h-hierarchy-open; see Account hierarchy. It does not establish the Accounts parent/member tree. Post-click Contacts-card equality awaits the authorized closure capture; no further hierarchy activation is allowed.
+6. The single authorized Contacts-card Hierarchy View opening is observed in m3h-hierarchy-open; see Account hierarchy. It does not establish the Accounts parent/member tree. Post-click Contacts-card equality is verified against m3h2-detail-after-r4; no further hierarchy activation is allowed.
 
 ### Shell controls missing from app-shell.md — lower-detail continuation
 
