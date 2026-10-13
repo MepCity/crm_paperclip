@@ -190,7 +190,7 @@ Unavailable storage does not prevent record navigation. No tokens are changed.
 | F-54 | Description Information textarea | Shared form section |
 | F-55–F-56 | Form footer view controls (M11, inert) | Inventory footer on Contacts form |
 
-Connected To is omitted on create (metadata-enabled but not shown in reference captures). Validation, save destinations, Save and New, unsaved cancel and clone follow interim Leads rules. Account Name (M3) and Vendor Name (P2) lookups are inert; Reporting To uses the Contacts record picker.
+Connected To is omitted on create (metadata-enabled but not shown in reference captures). Validation, save destinations, Save and New, unsaved cancel and clone follow interim Leads rules. Account Name (M3) lookup uses the Choose Account record picker (MEP-343, interim rule shared with Accounts); Vendor Name (P2) lookup remains inert; Reporting To uses the Contacts record picker.
 
 ### Contacts list — implemented; QA pending (MEP-319)
 
@@ -198,12 +198,12 @@ Connected To is omitted on create (metadata-enabled but not shown in reference c
 | --- | --- | --- |
 | SH-14 | Registered beneath Leads; list, create and detail routes resolve the Contacts definition | Registry, shell and route tests |
 | L-01–L-14, L-02.1–L-02.14 | Service views; shared sort/presentation/refresh; create split button and ordered Actions menu | Component tests; Contacts e2e passed on merged service |
-| L-15–L-32 | Metadata-driven filter panel, with later-module checkbox assignments | Shared panel tests; field-filter e2e passed |
-| L-33–L-40, L-42–L-53; L-04.1–L-04.4; L-36.1–L-36.18 | Shared table, alphabet, row selection, pagination and detail link; row controls and email later-module handling | Shared table tests; Contacts and unchanged Leads e2e passed |
+| L-15–L-32 | Metadata-driven filter panel, with later-module checkbox assignments; Account Name filter active (MEP-343) | Shared panel tests; field-filter e2e passed |
+| L-33–L-40, L-42–L-53; L-04.1–L-04.4; L-36.1–L-36.18 | Shared table, alphabet, row selection, pagination and detail link; row controls, Account Name link to Account detail (L-43, MEP-343) and email later-module handling | Shared table tests; Contacts and unchanged Leads e2e passed |
 | L-41 | M5: rendered when activity data arrives; no badge is drawn now. Contact Name aligns with rows without activity. | CTO decision; activity-summary contract deferred to M5 |
 
 Later-module controls: create arrow M6; view customization M11; Activities M5,
-Campaigns M7, Latest Email Status M10, Cadences P3, Account Name filter M3;
+Campaigns M7, Latest Email Status M10, Cadences P3;
 View Settings M11; email M10, notes M6, row pulse P3. Actions preserve the
 reference order; Manage Tags/Export M6, Mass Email M10, campaigns M7,
 client script M11 and the unresolved Sheet view P3 remain inert.
@@ -213,7 +213,8 @@ unobserved create-menu items, filter operators, empty state and additional
 header options. Drafts, Approve Contacts, Print View,
 Show custom views as Dropdown and row ellipsis have no handler, following the
 existing shared screen boundary or the explicit delivery scope. Account cells
-use the merged lookup display: names are shown and later-module links remain inert.
+use the merged lookup display: names are shown and link to the active Account
+record detail route (L-43, MEP-343).
 Mass menu actions never create selection; dialogs act only on selected rows.
 Print View retains its visual submenu arrow without opening a submenu. Unknown saved-view
 columns have a read-only text rendering fallback; service-provided column lists
@@ -223,9 +224,9 @@ remain authoritative.
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| D-01–D-09, D-32–D-35 | Shared record header and tab row; Contacts add-tags row, Send Email (M10), prev/next from list context | `e2e/contacts-detail.spec.ts` |
+| D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row, Send Email (M10), prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
-| D-36–D-51 | Business card, details, Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e |
+| D-36–D-51 | Business card, details card with active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343), Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e |
 | D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
 

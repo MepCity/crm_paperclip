@@ -214,7 +214,10 @@ export function RecordDetailScreen({
   const displayRecord = rules.statusRibbon
     ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
     : record;
-  const { title, subtitle, subtitleLaterModule, subtitleHref, portraitIcon } = rules.header(record);
+  const { title, subtitle, subtitleLaterModule, subtitleHref, portraitIcon } = rules.header(
+    record,
+    { orgSlug },
+  );
   const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);

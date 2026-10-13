@@ -141,7 +141,10 @@ export interface ModuleScreenDefinition {
     recordPickerChrome?: "observed";
   };
   detail: {
-    header: (record: RecordData) => {
+    header: (
+      record: RecordData,
+      context?: { orgSlug?: string },
+    ) => {
       title: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
