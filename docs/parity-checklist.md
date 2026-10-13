@@ -229,7 +229,49 @@ remain authoritative.
 | D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
 
-Share, Print Preview and Find and Merge Duplicates are drawn without handlers (separate tasks). Connected Records (`?`) uses `laterModule="P3"`. Lower Contact Information field order follows layout metadata (interim rule).
+Share and Print Preview are drawn without handlers (separate tasks). Find and Merge
+Duplicates opens the shared merge flow (MEP-352). Connected Records (`?`) uses
+`laterModule="P3"`. Lower Contact Information field order follows layout metadata
+(interim rule).
+
+### Find and Merge Duplicates (record detail) — implemented; QA pending (MEP-352)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| X-27 – X-37.5 | Criteria, matching table, selection (2–3), Search / Next / Clear | `merge-criteria.test.ts`, `merge-field-selection.test.ts`, `merge-matching-table.test.tsx`, `e2e/merge-duplicates.spec.ts` |
+| X-38 – X-44.13.3 | Comparison header, conflicts-only, per-field and column selection, merge confirm | `merge-field-selection.test.ts`; `merge-comparison.test.tsx`; `e2e/merge-duplicates.spec.ts` |
+| D-07.5 / Leads More Options | Menu handler → `/merge` route | Contacts/Leads more-options tests; e2e |
+| SH-49 (documentary shell) | Not drawn on merge screens | N/A (out of scope per task) |
+
+### Advanced search results page — implemented; QA pending (MEP-351)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| S-19, S-20, S-21, S-22 | Top bar with search input, close icon, filter toggle button, and Sort By selector (defaulting to Modified Time desc) | Component tests; `e2e/advanced-search.spec.ts` |
+| S-23.<Module>, S-24.<Module>.1–.4, S-25.<Module>.* | Result cards for Leads, Contacts, Accounts, and Notes (M6); module count badges, pagination arrows, Manage columns icon button (Icons.columns), record link (Accounts with M3 inert link), and column headers | Component tests; `e2e/advanced-search.spec.ts` |
+| S-26, S-27.*, S-28, S-29 | Manage Columns dialog with column search, 10-column selection limit, Cancel, and Save | Component tests; `e2e/advanced-search.spec.ts` |
+| S-30, S-31.1–.8, S-32.1–.5, S-33, S-34, S-35.1–.2, S-36, S-37 | Filter panel: module checkboxes (Contacts, Accounts, Leads active; Tasks M5, Deals M4, Meetings M5, Calls M5, Products P2 inert), system field filters with operator and user picker, Apply Filter, and Clear | Component tests; `e2e/advanced-search.spec.ts` |
+| S-38, S-39, S-40, S-41, S-42, S-43.* | Row actions button, phone call icon (M5 inert), email link (M10 inert), related record links, stage badge (M4 inert), column values with list cell formatting and user display names | Component tests |
+| S-46 | Bottom link "Search across applications" (P3 inert) | Component tests; `e2e/advanced-search.spec.ts` |
+
+Notes card (M6) is rendered with count 0, pagination controls (M6 inert), Manage columns button (M6 inert), and empty table body. S-47 is unobserved in reference captures; short query (< 3 chars) shows empty state without executing search requests. Interim rules: default columns are first 5 columns from default list view, persisting in memory for current page session; 10 records per card; Sort By defaults to Modified Time desc with common system fields; field filter operators match list filter operators; empty query and loading show blank space, unexpected errors bubble to boundary.
+
+## Module 3 — Accounts
+
+Specs: `accounts.md`, `accounts-record-detail.md`, `accounts-form.md`.
+
+### Accounts record detail — implemented; QA pending (MEP-342)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link, prev/next from list context | `e2e/accounts-detail.spec.ts` |
+| AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete | Accounts detail e2e; module tests |
+| AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e |
+| AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; service counts for Contacts badge | Related-list tests; accounts detail e2e |
+| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card and New prefill; hierarchy/assign/edit/expand inert | Accounts detail e2e |
+
+Account hierarchy opening (AD-115) and separate hierarchy view remain unimplemented (CTO follow-up). Notes rail badge omitted when count is zero. Billing/Shipping and lower detail field order follow Contacts address interim rules.
 
 ### Assigned to Module 2 at the Module 1 gate
 

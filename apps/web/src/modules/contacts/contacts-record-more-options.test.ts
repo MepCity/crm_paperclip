@@ -6,7 +6,7 @@ import {
 } from "./contacts-record-more-options";
 
 test("keeps all fifteen menu rows in the three observed groups and connects only clone/delete", () => {
-  const handlers = { onClone: vi.fn(), onDelete: vi.fn() };
+  const handlers = { onClone: vi.fn(), onDelete: vi.fn(), onFindMergeDuplicates: vi.fn() };
   const groups = buildContactsRecordMoreMenuGroups(handlers);
   expect(groups.map((group) => group.items.map((item) => item.label))).toEqual([
     ["Clone", "Share", "Delete"],
@@ -28,7 +28,9 @@ test("keeps all fifteen menu rows in the three observed groups and connects only
   items[2]?.onAction?.();
   expect(handlers.onClone).toHaveBeenCalledOnce();
   expect(handlers.onDelete).toHaveBeenCalledOnce();
-  for (const index of [1, 3, 4]) {
+  items[4]?.onAction?.();
+  expect(handlers.onFindMergeDuplicates).toHaveBeenCalledOnce();
+  for (const index of [1, 3]) {
     expect(items[index]?.laterModule).toBeUndefined();
     expect(items[index]?.isDisabled).toBeUndefined();
     expect(items[index]?.onAction).toBeUndefined();

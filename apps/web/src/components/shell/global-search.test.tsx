@@ -87,9 +87,17 @@ test("module search filters choices, future modules stay inert and Contacts rest
   expect(deals.getAttribute("data-later-module")).toBe("M4");
   await user.click(deals);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
-  await user.type(within(menu).getByRole("textbox"), "cont");
-  expect(within(menu).queryByRole("button", { name: "Leads" })).toBeNull();
-  await user.click(within(menu).getByRole("button", { name: "Contacts" }));
+
+  const accounts = within(menu).getByRole("button", { name: "Accounts" });
+  expect(accounts.getAttribute("data-later-module")).toBeNull();
+  await user.click(accounts);
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Search Modules" })).toBeNull());
+
+  await user.click(screen.getByRole("button", { name: "Search module" }));
+  const moduleMenu = await screen.findByRole("dialog", { name: "Search Modules" });
+  await user.type(within(moduleMenu).getByRole("textbox"), "cont");
+  expect(within(moduleMenu).queryByRole("button", { name: "Leads" })).toBeNull();
+  await user.click(within(moduleMenu).getByRole("button", { name: "Contacts" }));
   await user.type(screen.getByRole("textbox", { name: "Search records" }), "Search");
   await waitFor(() =>
     expect(search).toHaveBeenCalledWith(
