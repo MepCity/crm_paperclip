@@ -109,7 +109,6 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await user.click(tasks);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
 
-  // Deals is registered now, so its row carries no later-module mark.
   const deals = within(menu).getByRole("button", { name: "Deals" });
   expect(deals.getAttribute("data-later-module")).toBeNull();
 
@@ -265,17 +264,22 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Tasks",
+      module: "Campaigns",
       total: 1,
-      records: [{ id: "task-1", fields: { Subject: "Hidden task", Email: "hidden@example.test" } }],
+      records: [
+        {
+          id: "campaign-1",
+          fields: { Campaign_Name: "Future Campaign", Email: "hidden@example.test" },
+        },
+      ],
     },
   ]);
   const user = userEvent.setup();
   mount();
   await open(user);
-  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Hidden");
-  const link = await screen.findByRole("link", { name: "task-1" });
-  expect(link.textContent).toBe("task-1");
+  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
+  const link = await screen.findByRole("link", { name: "campaign-1" });
+  expect(link.textContent).toBe("campaign-1");
 });
 
 test("search errors use the shared error notice", async () => {
