@@ -165,6 +165,11 @@ export interface ModuleScreenDefinition {
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
     lastUpdate: (record: RecordData, now: Date, format: FormatOptions) => string | null;
+    /**
+     * AD-35 / D-35: `tab-row` draws the update label at the far right of the Overview/Timeline row
+     * with its clock glyph. Omitted keeps it at the top of the overview (Module 1).
+     */
+    lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
       onClone: () => void;
       onDelete: () => void;
