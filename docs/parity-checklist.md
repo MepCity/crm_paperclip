@@ -506,25 +506,6 @@ Temporary table rules (not painted in the Deals capture; Accounts table behaviou
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
 
-### Deals links in earlier modules — implemented (MEP-415)
-
-`LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
-card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
-Deals entries in global and advanced search.
-
-| Inventory | Implementation | Verification |
-| --- | --- | --- |
-| AD-112–AD-114 | Accounts Deals card data (Account Name filter), rail plus and New Deal prefill; Assign handler-less | `e2e/accounts-detail.spec.ts`, `accounts-related-lists.test.tsx` |
-| D-14, D-56 | Contacts Deals card data (Contact Name filter) and New Deal prefill with Contact Name plus the person's Account Name | `e2e/contacts-detail.spec.ts`, `contacts-related-lists.test.tsx` |
-| Card body | Shared `RelatedDealsCardBody`: default-view columns, Deal Name detail link, values through the shared field display | `related-deals-card-body.test.tsx` |
-| S-10, S-15–S-18, S-30/S-31, S-42 | Deals is selectable in the module selector, its filter checkbox is active, its search rows link to Deal detail, and the stage chip draws unlocked | `global-search.test.tsx`, `advanced-search-*` tests |
-| Leads Converted Deal | Generic lookup display resolves the registered Deals route; no Deals-keyed control is drawn in Leads | `field-value.test.tsx` (registered Deals lookup) |
-
-Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card Assign),
-advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
-itself is untouched; the seeded Leads records carry no converted references, so the
-converted-deal link has no fixture to exercise.
-
 ### Deals record detail — implemented; QA pending (MEP-412)
 
 | Area | Inventory | Tests |
@@ -541,6 +522,19 @@ converted-deal link has no fixture to exercise.
 | SALES SUMMARY rail section | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
 Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
+
+### Deals record detail — related cards and lower half (MEP-414)
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Related-list card set | DD-93–DD-149 (card headers, controls, columns, footer DD-147–DD-149) | `deals-related-lists.test.tsx`, `deals-detail.spec.ts` |
+| Stage History data | DD-99–DD-106, DD-57 rail badge | `deal-stage-history-card-body.tsx`, `deals-detail.spec.ts` |
+| Contact Roles empty shell | DD-125–DD-132 (no DD-58 badge; service follow-up) | `deals-related-lists.test.tsx` |
+| Scroll To Top | DD-98 | `deals-detail.spec.ts`, shared record detail e2e |
+| Lower detail sections | Deal Information, Description Information | `deals-detail-sections.test.ts`, `deals-detail.spec.ts` |
+| SALES SUMMARY | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
+
+**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
 
 ### Deals stage board — implemented; QA pending (MEP-413)
 
@@ -561,6 +555,25 @@ Interim rules:
 - Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
 - Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
 
+### Deals links in earlier modules — implemented (MEP-415)
+
+`LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
+card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
+Deals entries in global and advanced search.
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| AD-112–AD-114 | Accounts Deals card data (Account Name filter), rail plus and New Deal prefill; Assign handler-less | `e2e/accounts-detail.spec.ts`, `accounts-related-lists.test.tsx` |
+| D-14, D-56 | Contacts Deals card data (Contact Name filter) and New Deal prefill with Contact Name plus the person's Account Name | `e2e/contacts-detail.spec.ts`, `contacts-related-lists.test.tsx` |
+| Card body | Shared `RelatedDealsCardBody`: default-view columns, Deal Name detail link, values through the shared field display | `related-deals-card-body.test.tsx` |
+| S-10, S-15–S-18, S-30/S-31, S-42 | Deals is selectable in the module selector, its filter checkbox is active, its search rows link to Deal detail, and the stage chip draws unlocked | `global-search.test.tsx`, `advanced-search-*` tests |
+| Leads Converted Deal | Generic lookup display resolves the registered Deals route; no Deals-keyed control is drawn in Leads | `field-value.test.tsx` (registered Deals lookup) |
+
+Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card Assign),
+advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
+itself is untouched; the seeded Leads records carry no converted references, so the
+converted-deal link has no fixture to exercise.
+
 ## Module 5 — Activities
 
 ### Tasks list — implemented; QA pending (MEP-459)
@@ -580,3 +593,4 @@ Interim rules: selection bar, page size, empty state and row actions follow Acco
 Related To and Contact Name link to the related record when the target module is registered.
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
+
