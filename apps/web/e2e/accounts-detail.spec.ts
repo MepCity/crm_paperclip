@@ -174,6 +174,24 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Member Accounts rail link and Add action are active", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const memberAccountsLink = rail.getByRole("link", { name: "Member Accounts" });
+    await expect(memberAccountsLink).toBeVisible();
+    await expect(memberAccountsLink).not.toHaveAttribute("data-later-module");
+    await memberAccountsLink.click();
+    const addButton = rail.getByRole("button", { name: "Add" });
+    await expect(addButton).toBeVisible();
+    await expect(addButton).not.toHaveAttribute("data-later-module");
+    await addButton.click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, ACCOUNTS_TAB));
+    await expect(page.getByRole("button", { name: "Open Parent Account lookup" })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Member Accounts card empty state", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
