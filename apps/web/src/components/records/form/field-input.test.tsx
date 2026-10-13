@@ -97,6 +97,31 @@ test("integer keeps a typed decimal so Save can report it", async () => {
   expect((input as HTMLInputElement).value).toBe("12.5");
   expect(change).toHaveBeenLastCalledWith(12.5);
 });
+test("number limits stop the entry at the business bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} numberLimits={{ min: 0, max: 100 }} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.clear(input);
+  await user.type(input, "1");
+  input.focus();
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+});
+test("an entry without limits keeps stepping past the Deals bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}{ArrowUp}");
+  expect(input.value).toBe("101");
+});
 test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form model", async () => {
   const user = userEvent.setup();
   const change = vi.fn();
@@ -481,10 +506,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Deal_Name",
-    label: "Deal Name",
+    apiName: "Campaign_Source",
+    label: "Campaign Source",
     dataType: "lookup",
-    lookup: { module: "Deals" },
+    lookup: { module: "Campaigns" },
     required: false,
     readOnly: false,
     unique: false,
@@ -496,19 +521,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
+      initial={{ module: "Campaigns", id: "campaign-1", name: "Spring Drive" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Deal Name" }) as HTMLInputElement;
-  expect(input.value).toBe("Big Deal");
+  const input = screen.getByRole("textbox", { name: "Campaign Source" }) as HTMLInputElement;
+  expect(input.value).toBe("Spring Drive");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M4");
+  expect(input.getAttribute("data-later-module")).toBe("M7");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Deal Name lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M4");
+  const btn = screen.getByRole("button", { name: "Open Campaign Source lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M7");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog
