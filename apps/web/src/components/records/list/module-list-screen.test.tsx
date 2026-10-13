@@ -321,6 +321,80 @@ describe("ModuleListScreen", () => {
     expect(navigation.push).toHaveBeenCalled();
   });
 
+  it.each([false, true])(
+    "restores the applied operator and value after reopening (discard draft: %s)",
+    async (changeDraft) => {
+      const records = createFixtureRecordService(ctx);
+      const config = await leadsConfigWithFilters(records);
+      const listSpy = vi.spyOn(records, "list");
+      const service = createClientRecordService(records, {
+        listUsers: async () => [],
+      });
+      const user = userEvent.setup();
+      render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+        wrapper: wrapper(service),
+      });
+      await screen.findByRole("table", { name: "Records" });
+      await user.click(screen.getByRole("checkbox", { name: "Company" }));
+      await user.click(screen.getByRole("button", { name: /Company operator$/ }));
+      await user.click(screen.getByRole("option", { name: "is" }));
+      await user.type(screen.getByRole("textbox", { name: "Company value" }), "Example");
+      await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+      await waitFor(() => {
+        expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+          field: "Company",
+          comparator: "equal",
+          value: "Example",
+        });
+      });
+      if (changeDraft) {
+        await user.clear(screen.getByRole("textbox", { name: "Company value" }));
+        await user.type(screen.getByRole("textbox", { name: "Company value" }), "Draft");
+        await user.click(screen.getByRole("button", { name: /Company operator$/ }));
+        await user.click(screen.getByRole("option", { name: "contains" }));
+        await user.click(screen.getByRole("checkbox", { name: "Email" }));
+      }
+      await user.click(screen.getByRole("button", { name: "Filter" }));
+      expect(screen.queryByRole("region", { name: "Filter Leads by" })).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Filter" }));
+      expect((screen.getByRole("checkbox", { name: "Company" }) as HTMLInputElement).checked).toBe(
+        true,
+      );
+      expect((screen.getByRole("checkbox", { name: "Email" }) as HTMLInputElement).checked).toBe(
+        false,
+      );
+      expect(
+        (screen.getByRole("textbox", { name: "Company value" }) as HTMLInputElement).value,
+      ).toBe("Example");
+      expect(screen.getByRole("button", { name: /Company operator$/ }).textContent).toBe("is");
+      expect(listSpy.mock.calls.at(-1)?.[1]?.filters).toEqual({
+        field: "Company",
+        comparator: "equal",
+        value: "Example",
+      });
+    },
+  );
+
+  it("discards an unapplied field selection when the filter panel closes", async () => {
+    const records = createFixtureRecordService(ctx);
+    const config = await leadsConfigWithFilters(records);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [],
+    });
+    const user = userEvent.setup();
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await screen.findByRole("table", { name: "Records" });
+    await user.click(screen.getByRole("checkbox", { name: "Company" }));
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    expect((screen.getByRole("checkbox", { name: "Company" }) as HTMLInputElement).checked).toBe(
+      false,
+    );
+    expect(screen.queryByRole("textbox", { name: "Company value" })).toBeNull();
+  });
+
   it("clears applied filters from list and count queries", async () => {
     const records = createFixtureRecordService(ctx);
     const config = await leadsConfigWithFilters(records);
