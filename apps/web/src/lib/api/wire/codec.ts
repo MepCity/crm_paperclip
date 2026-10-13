@@ -3,6 +3,7 @@ import type {
   Comparator,
   Criteria,
   CriteriaPeriod,
+  CriteriaToken,
   CriteriaValue,
   CurrencyDefinition,
   FieldDefinition,
@@ -13,6 +14,7 @@ import type {
   RecordData,
   RecordInput,
 } from "@crm/core/records";
+import { isJsonObject, lookupTargetModules } from "@crm/core/records";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -63,8 +65,20 @@ function encodeValue(
   }
   if (field.dataType === "lookup") {
     const ref = object(value, field.apiName);
-    if (typeof ref.id !== "string" || ref.module !== field.lookup?.module) invalid(field.apiName);
-    return { id: ref.id, ...referenceName(ref, field.apiName) };
+    if (
+      typeof ref.id !== "string" ||
+      typeof ref.module !== "string" ||
+      !lookupTargetModules(field).includes(ref.module)
+    )
+      invalid(field.apiName);
+    return {
+      id: ref.id,
+      ...(field.lookup?.modules ? { module: ref.module as string } : {}),
+      ...referenceName(ref, field.apiName),
+    };
+  }
+  if (field.dataType === "ALARM" || field.dataType === "RRULE") {
+    if (!isJsonObject(value)) invalid(field.apiName);
   }
   return structuredClone(value);
 }
@@ -77,9 +91,20 @@ function decodeValue(field: FieldDefinition, value: unknown): FieldValue {
   }
   if (field.dataType === "lookup") {
     const ref = object(value, field.apiName);
-    referenceKeys(ref, ["id", "name"], field.apiName);
+    referenceKeys(
+      ref,
+      field.lookup?.modules ? ["module", "id", "name"] : ["id", "name"],
+      field.apiName,
+    );
     if (typeof ref.id !== "string" || !field.lookup) invalid(field.apiName);
-    return { module: field.lookup.module, id: ref.id, ...referenceName(ref, field.apiName) };
+    const module = field.lookup.modules ? ref.module : field.lookup.module;
+    if (typeof module !== "string" || !lookupTargetModules(field).includes(module))
+      invalid(field.apiName);
+    return { module, id: ref.id, ...referenceName(ref, field.apiName) };
+  }
+  if (field.dataType === "ALARM" || field.dataType === "RRULE") {
+    if (!isJsonObject(value)) invalid(field.apiName);
+    return structuredClone(value);
   }
   return readFieldValue(value, field.apiName);
 }
@@ -164,7 +189,14 @@ export function encodeField(field: FieldDefinition): WireField {
         }),
     ...(field.lookup === undefined
       ? {}
-      : { lookup: { module: { api_name: field.lookup.module } } }),
+      : {
+          lookup: {
+            module: { api_name: field.lookup.module },
+            ...(field.lookup.modules
+              ? { modules: field.lookup.modules.map((api_name) => ({ api_name })) }
+              : {}),
+          },
+        }),
   };
 }
 function decodeStage(option: NonNullable<WireField["pick_list_values"]>[number]): {
@@ -221,7 +253,16 @@ export function decodeField(field: WireField): FieldDefinition {
             ...decodeStage(option),
           })),
         }),
-    ...(field.lookup === undefined ? {} : { lookup: { module: field.lookup.module.api_name } }),
+    ...(field.lookup === undefined
+      ? {}
+      : {
+          lookup: {
+            module: field.lookup.module.api_name,
+            ...(field.lookup.modules
+              ? { modules: field.lookup.modules.map((module) => module.api_name) }
+              : {}),
+          },
+        }),
   };
 }
 export function encodeModule(metadata: ModuleMetadata): WireModule {
@@ -292,10 +333,15 @@ function ageDueWirePrefix(token: "AGEINDAYS" | "DUEINDAYS", unit: string): strin
 
 function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
   if (typeof value === "object" && value !== null && "token" in value) {
-    switch (value.token) {
+    const token = value as CriteriaToken;
+    switch (token.token) {
       case "CURRENTUSER":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return { name: `\${CURRENTUSER}` };
+      case "NEXT7DAYS":
+      case "TODAYANDOVERDUE":
+        if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
+        return `\${${token.token}}`;
       case "TODAY":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return `\${TODAY}`;
@@ -303,33 +349,33 @@ function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
       case "DUEINDAYS": {
         const keys = Object.keys(value);
         if (keys.length < 2 || keys.length > 3) return invalid("filters", "Invalid token shape.");
-        if (!Number.isInteger(value.offset) || value.offset < 0)
+        if (!Number.isInteger(token.offset) || token.offset < 0)
           return invalid("filters", "Invalid day offset.");
-        const unit = value.unit ?? "days";
-        if (value.unit !== undefined && !criteriaUnits.has(value.unit))
+        const unit = token.unit ?? "days";
+        if (token.unit !== undefined && !criteriaUnits.has(token.unit))
           return invalid("filters", "Unknown unit.");
-        return `\${${ageDueWirePrefix(value.token, unit)}}+${value.offset}`;
+        return `\${${ageDueWirePrefix(token.token, unit)}}+${token.offset}`;
       }
       case "CATEGORY":
         if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
-        if (typeof value.name !== "string") return invalid("filters", "Invalid category token.");
-        return `\${CATEGORY.${value.name}}`;
+        if (typeof token.name !== "string") return invalid("filters", "Invalid category token.");
+        return `\${CATEGORY.${token.name}}`;
       case "RELATIVE": {
         if (Object.keys(value).length !== 4) return invalid("filters", "Invalid token shape.");
-        if (value.direction !== "previous" && value.direction !== "next")
+        if (token.direction !== "previous" && token.direction !== "next")
           return invalid("filters", "Unknown direction.");
-        if (!Number.isInteger(value.count) || value.count < 1)
+        if (!Number.isInteger(token.count) || token.count < 1)
           return invalid("filters", "Invalid relative count.");
-        if (!criteriaUnits.has(value.unit)) return invalid("filters", "Unknown unit.");
-        const segment = value.direction === "previous" ? "PREVIOUS" : "NEXT";
+        if (!criteriaUnits.has(token.unit)) return invalid("filters", "Unknown unit.");
+        const segment = token.direction === "previous" ? "PREVIOUS" : "NEXT";
         const unitWire =
-          value.unit === "days" ? "DAYS" : value.unit === "weeks" ? "WEEKS" : "MONTHS";
-        return `\${${segment}.${unitWire}}+${value.count}`;
+          token.unit === "days" ? "DAYS" : token.unit === "weeks" ? "WEEKS" : "MONTHS";
+        return `\${${segment}.${unitWire}}+${token.count}`;
       }
       case "PERIOD":
         if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
-        if (!criteriaPeriods.has(value.name)) return invalid("filters", "Unknown period.");
-        return `\${PERIOD.${value.name}}`;
+        if (!criteriaPeriods.has(token.name)) return invalid("filters", "Unknown period.");
+        return `\${PERIOD.${token.name}}`;
       default:
         return invalid("filters", "Unknown token.");
     }
@@ -338,6 +384,8 @@ function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
 }
 function decodeCriteriaValue(value: unknown): CriteriaValue {
   if (typeof value === "string") {
+    if (value === `\${NEXT7DAYS}`) return { token: "NEXT7DAYS" };
+    if (value === `\${TODAYANDOVERDUE}`) return { token: "TODAYANDOVERDUE" };
     if (value === `\${TODAY}`) return { token: "TODAY" };
     const age = /^\$\{AGEINDAYS\}([+-]\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/.exec(value);
     if (age?.[0] === value && Number.isFinite(Number(age[1])))

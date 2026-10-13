@@ -518,7 +518,7 @@ Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage
 | Timeline | DD-70–DD-72 | `deals-detail.spec.ts`, `deals-timeline.test.ts` |
 | SALES SUMMARY rail section | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
-Next Action summary (DD-69) omitted until Activities (M5).
+Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
 
 ### Deals record detail — related cards and lower half (MEP-414)
 

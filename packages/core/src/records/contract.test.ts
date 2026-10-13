@@ -12,12 +12,12 @@ const invalidValues: [IsFieldValue<Date>, IsFieldValue<bigint>, IsFieldValue<und
   false,
 ];
 
-// A client-facing import must have no runtime exports or service dependencies.
+// Client-facing helpers must not load a runtime service.
 import * as records from "@crm/core/records";
 
 describe("record port type boundary", () => {
   it("exports types without loading a runtime service", () => {
-    expect(Object.keys(records)).toEqual([]);
+    expect(Object.keys(records).sort()).toEqual(["isJsonObject", "lookupTargetModules"]);
   });
 
   it("uses an explicit organization context and JSON-compatible field values", () => {
