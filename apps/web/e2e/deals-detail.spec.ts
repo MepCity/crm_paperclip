@@ -18,7 +18,9 @@ async function openDealDetail(
 ) {
   const listUrl = moduleListDefaultPath(orgSlug, DEALS_TAB);
   await page.goto(listUrl);
-  await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("[data-record-board], table[aria-label='Records']")).toBeVisible({
+    timeout: 15_000,
+  });
   await page.goto(moduleRecordPath(orgSlug, DEALS_TAB, recordId));
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 }
@@ -139,7 +141,7 @@ test.describe("Deals record detail", () => {
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
     await deleteDone;
-    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expect(page.locator("[data-record-board], table[aria-label='Records']")).toBeVisible();
     ignoreFailedResponses(pageErrors, [400, 404]);
   });
 
