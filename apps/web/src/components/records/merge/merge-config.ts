@@ -12,11 +12,12 @@ export function resolveMergeCriterionFields(
 }
 
 export function resolveMatchingTableColumns(
-  merge: ModuleMergeDefinition,
+  merge: ModuleMergeDefinition | undefined,
   fields: readonly FieldDefinition[],
 ): FieldDefinition[] {
   const byName = new Map(fields.map((field) => [field.apiName, field]));
-  const resolved = merge.matchingColumns
+  const names = merge?.matchingColumns ?? [];
+  const resolved = names
     .map((apiName) => byName.get(apiName))
     .filter((field): field is FieldDefinition => field !== undefined);
   if (resolved.length > 0) return resolved;

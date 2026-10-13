@@ -175,4 +175,50 @@ describe("MergeDuplicatesScreen", () => {
     );
     expect(listSpy).not.toHaveBeenCalled();
   });
+
+  it("resets selection to source record on Clear and new Search", async () => {
+    const extraRecord = {
+      id: "merge-reset-extra",
+      fields: { Full_Name: "Reset Extra", Email: "reset@test", Company: "Acme" },
+    };
+    const realList = service.list.bind(service);
+    vi.spyOn(service, "list").mockImplementation(async (module, query) => {
+      const base = await realList(module, query);
+      return { ...base, records: [extraRecord], moreRecords: false };
+    });
+
+    const user = userEvent.setup();
+    render(
+      <MergeDuplicatesScreen
+        orgSlug={ctx.orgSlug}
+        recordId={sourceId}
+        definition={leadsScreenDefinition}
+        paths={paths}
+      />,
+      { wrapper: wrapper(service) },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Find and Merge Duplicates" })).toBeTruthy(),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    const matchingTable = await screen.findByRole("table", { name: "Matching records" });
+
+    const nextButton = screen.getByRole("button", { name: /^Next$/ });
+    expect(nextButton.hasAttribute("disabled")).toBe(true);
+
+    await user.click(within(matchingTable).getByRole("checkbox", { name: "Reset Extra" }));
+    expect(nextButton.hasAttribute("disabled")).toBe(false);
+
+    await user.click(screen.getByRole("link", { name: "Clear" }));
+    expect(nextButton.hasAttribute("disabled")).toBe(true);
+
+    // Select again, then click Search to verify search resets selection
+    await user.click(within(matchingTable).getByRole("checkbox", { name: "Reset Extra" }));
+    expect(nextButton.hasAttribute("disabled")).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    expect(nextButton.hasAttribute("disabled")).toBe(true);
+  });
 });
