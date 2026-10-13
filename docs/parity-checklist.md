@@ -417,3 +417,39 @@ Export Accounts M6; Create Client Script M11; Sheet view P3.
 Absent from Contacts: L-17–L-19, L-28–L-31, L-37–L-38, L-41, L-43–L-44, L-47 (no row activity pulse or badge column space; selection checkbox is immediately before Account Name).
 Mass action flows (Mass Update, Change Owner, Delete Account) wire to selection bar dialogs.
 Contacts Account Name lookup cells now link to `/tab/Accounts/:id` active record routes.
+
+## Module 4 — Deals
+
+### Deals create / edit / clone form — implemented; QA pending (MEP-411)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| DF-01 | Edit Page Layout beside the form title (M11, inert) | shared form chrome, `e2e/deals-form.spec.ts` |
+| DF-02–DF-04 | Cancel, Save and New, Save in the title strip's right group | `e2e/deals-form.spec.ts` |
+| DF-05, DF-06 | Deal Owner field with the Select User dialog behind its lookup icon | `e2e/deals-form.spec.ts`, `select-user-dialog.spec.ts` |
+| DF-07 | Deal Name input with its required marker | `e2e/deals-form.spec.ts` |
+| DF-08, DF-09 | Account Name lookup entry plus the Choose Account picker re-used from the Accounts form | `e2e/deals-form.spec.ts` |
+| DF-10, DF-11, DF-12 | Type, Next Step and Lead Source in the spec's left column | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-13, DF-14 | Contact Name lookup entry with the same picker shape, titled Choose Contact and searched by Contact Name | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-15, DF-16, DF-17 | Amount with the home-currency prefix and the information icon (icon drawn without a handler) | `e2e/deals-form.spec.ts` |
+| DF-18 | Closing Date on the shared masked date entry (DD.MM.YYYY) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
+| DF-19 | Stage select holding the nine metadata stages in order | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-20 | Probability (%) as a 0–100 integer entry, refilled by the selected stage's metadata probability and still editable by hand | `deals-form-rules.test.ts`, `form-model.test.ts`, `field-input.test.tsx`, `e2e/deals-form.spec.ts` |
+| DF-21, DF-21.1, DF-21.2 | Expected Revenue read-only with its own currency prefix and lock; never computed in the form | `e2e/deals-form.spec.ts` |
+| DF-23, DF-24 | Campaign Source entry and lookup icon drawn in place, inert (M7 `laterModule`) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
+| DF-25, DF-29 | Description multiline editor with its lower-right resize grip | `e2e/deals-form.spec.ts` |
+| DF-26, DF-27 | Form footer: Create Form Views label with Standard View and Create a custom form page (M11, inert) | `e2e/deals-form.spec.ts` |
+| DF-28 | Client Script tab on the page's right edge (M11, inert) | `e2e/deals-form.spec.ts` |
+| — | Create-route query-parameter prefill (Stage, Account_Name, Contact_Name and any other create-visible field) | `create-prefill-params.test.ts`, `e2e/deals-form.spec.ts` |
+| — | Edit on a lost stage paints Reason For Loss under Stage; other stages and create leave it out | `deals-form-rules.test.ts`, `form-model.test.ts`, `e2e/deals-form.spec.ts` |
+| — | Deals registered in the module registry: nav rail, Create Records and module search entries | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `global-search.test.tsx` |
+
+Interim rules (behaviour the capture did not observe): error copy, focus order,
+unsaved-changes confirmation, save destination and Save and New reset taken from
+the Accounts form; the whole Edit Deal form; the Choose Contact picker's
+configuration; Probability's 0–100 range; a stage prefilled through a query
+parameter refilling Probability.
+
+Known gaps: DF-01, DF-26, DF-27 and DF-28 belong to customization (M11) and
+DF-23 and DF-24 to Campaigns (M7) — drawn in place, inert. The Amount information
+icon is drawn without a handler because the capture never opened it.
