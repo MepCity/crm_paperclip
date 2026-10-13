@@ -1,5 +1,6 @@
+import type { Comparator, Criteria, CriteriaToken, ListView } from "../../contract";
 /** Sanitized saved-view definitions. Export date tokens remain source literals.
- * Adapt these to the domain criteria only when Tasks is registered; do not
+ * Domain views below adapt these tokens exactly; do not
  * substitute DUEINDAYS for NEXT7DAYS (the latter also includes overdue tasks).
  * BEST_TIME is preserved although it is absent from the exported field list.
  */
@@ -406,3 +407,38 @@ export const tasksViewSource = [
     sort: null,
   },
 ] as const;
+
+/** Explicit projection exception approved for a source column without a field. */
+export const tasksDroppedColumns = ["BEST_TIME"] as const;
+const sourceTokens: Readonly<Record<string, CriteriaToken>> = {
+  "${CURRENTUSER}": { token: "CURRENTUSER" },
+  "${TODAY}": { token: "TODAY" },
+  "${TOMORROW}": { token: "PERIOD", name: "TOMORROW" },
+  "${YESTERDAYMINUS}": { token: "PERIOD", name: "TILL_YESTERDAY" },
+  "${NEXT7DAYS}": { token: "NEXT7DAYS" },
+  "${TODAYANDOVERDUE}": { token: "TODAYANDOVERDUE" },
+};
+type SourceCriteria =
+  | { groupOperator: "and" | "or"; group: readonly SourceCriteria[] }
+  | { field: string; comparator: Comparator; value: string | boolean | { name: string } };
+function convertCriteria(source: SourceCriteria | null): Criteria | null {
+  if (source === null) return null;
+  if ("group" in source)
+    return {
+      groupOperator: source.groupOperator,
+      group: source.group.map((child) => convertCriteria(child) as Criteria),
+    };
+  const key = typeof source.value === "object" ? source.value.name : source.value;
+  return {
+    field: source.field,
+    comparator: source.comparator,
+    value: typeof key === "string" ? (sourceTokens[key] ?? key) : key,
+  };
+}
+export const tasksViews: readonly ListView[] = tasksViewSource.map((view) => ({
+  ...view,
+  columns: view.columns.filter(
+    (column) => !tasksDroppedColumns.some((dropped) => dropped === column),
+  ),
+  criteria: convertCriteria(view.criteria),
+}));

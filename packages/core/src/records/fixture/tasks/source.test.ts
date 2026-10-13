@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tasksMetadataSource } from "./metadata";
+import { tasksMetadata, tasksMetadataSource } from "./metadata";
 import { tasksPicklists } from "./picklists";
 import { tasksViewSource } from "./views";
 
@@ -30,7 +30,7 @@ const exportedFields = [
 describe("Tasks sanitized metadata source", () => {
   it("preserves all 20 field names, types, lengths and flags", () => {
     expect(
-      tasksMetadataSource.fields.map((field) => [
+      tasksMetadata.fields.map((field) => [
         field.apiName,
         field.dataType,
         field.maxLength,
@@ -38,7 +38,7 @@ describe("Tasks sanitized metadata source", () => {
         field.readOnly,
       ]),
     ).toEqual(exportedFields);
-    expect(tasksMetadataSource.fields.every((field) => !field.unique)).toBe(true);
+    expect(tasksMetadata.fields.every((field) => !field.unique)).toBe(true);
   });
 
   it("preserves layout order and the exported single column", () => {
@@ -99,6 +99,12 @@ describe("Tasks sanitized metadata source", () => {
   });
 
   it("preserves picklist display/stored values and order", () => {
+    expect(tasksMetadata.fields.find((field) => field.apiName === "Status")?.picklist).toEqual(
+      tasksPicklists.Status,
+    );
+    expect(tasksMetadata.fields.find((field) => field.apiName === "Priority")?.picklist).toEqual(
+      tasksPicklists.Priority,
+    );
     expect(tasksPicklists.Status).toEqual([
       { displayValue: "Not Started", storedValue: "Not Started" },
       { displayValue: "Deferred", storedValue: "Deferred" },

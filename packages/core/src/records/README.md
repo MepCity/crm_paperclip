@@ -488,55 +488,101 @@ and query shape are interim; no reference write or saved preference is required.
 The HTTP adapter implements the same port, and the shared module contract suite
 checks summary/list/count parity for Leads, Contacts, Accounts and Deals.
 
-## Tasks preparation and activity contract gate
+## Tasks and the shared activity foundation
 
-`fixture/tasks/metadata.ts`, `picklists.ts` and `views.ts` preserve sanitized
-Tasks export definitions. `seed.ts` prepares 250 deterministic synthetic tasks
-linked to existing Leads, Contacts, Accounts and Deals fixture records, with
-all status/priority values and both one-sided and two-sided references. These
-links implement the requested seed topology; they are not evidence of allowed
-reference modules. Registration still requires the approved target lists.
-Tasks is **not registered yet**: the source definitions
-are deliberately separate from `ModuleMetadata` and `ListView` until the CTO's
-contract decision. The export contains 20 fields and 17 saved views. No source
-account, field or view identifiers are retained.
+Tasks is registered with all 20 exported fields, layout columns, Status/Priority
+options and 17 saved views. Subject remains free text; its exported suggestions
+are preserved in `tasksPicklists` without making the text field a picklist.
+Seeds contain 250 deterministic synthetic tasks linked directly to existing
+Leads, Contacts, Accounts and Deals, including multiple tasks on one record,
+records without tasks, one-sided references, and every Status/Priority value.
+Existing module seeds are unchanged. All null view sorts use the shared
+id-descending default.
 
-Pending decisions and source gaps:
+### Multi-target references
 
-- `Remind_At` is `ALARM/jsonobject`; `Recurring_Activity` is `RRULE/jsonobject`.
-  The export supplies no inner key names or types. The current `FieldValue`
-  cannot represent these objects. Preserve the field types rather than treating
-  them as strings or record references. Reminder delivery and recurrence
-  execution remain outside this module definition.
-- The public lookup definition currently carries one `module`. The activity
-  fields require an allowed target list. The export supplies `Contacts` for
-  `Who_Id` and the unresolved `se_module` marker for `What_Id`, with no list of
-  allowed modules. Do not interpret that marker as an actual target module or
-  invent a target list. The existing `{ module, id, name? }` record reference
-  value itself can already carry the selected target.
-- Several personal views include `BEST_TIME`, absent from the 20 exported
-  fields. Keep this discrepancy visible; registration/projection behavior needs
-  a decision rather than silently dropping the column or adding a 21st field.
-- Source criteria retain `TODAYANDOVERDUE`, `YESTERDAYMINUS`, `NEXT7DAYS`,
-  `TODAY`, `TOMORROW`, and `CURRENTUSER` literals. Convert them to equivalent
-  domain criteria during registration. `NEXT7DAYS` includes overdue tasks;
-  the existing `DUEINDAYS` window excludes overdue dates and is not equivalent.
-- Every exported view has null sort: use the existing Leads default ordering.
-- Closed views explicitly use stored Status `Completed`; open views exclude it.
-  Use this boundary for related list/count reads pending activity flow research.
+`lookup.module` remains the default target. Optional `lookup.modules` lists
+allowed targets and contains that default. `lookupTargetModules(field)` is the
+shared accessor used by validation and resolution. Single-target wire values
+retain `{id,name?}`; multi-target values carry `{module,id,name?}` so the target
+survives HTTP round trips. Metadata returns both the default and target list.
 
-Once the contract gate is resolved, add Events and Calls using this pattern:
+The sanitized `fixture/tasks/related-targets.json` source table retains only
+module names and structural hrefs from the export. A row qualifies when its
+related module is Tasks and href is `<source module>/{ENTITYID}/Tasks`.
+What_Id targets are derived from qualifying source rows except Leads/Contacts;
+its default is Accounts. Who_Id defaults to Contacts and temporarily permits
+Contacts/Leads, in one constant (`tasksWhoTargets`). The shared resolver rejects
+unlisted modules and missing records in registered modules on create/update;
+it derives names from target display fields. Deleted targets read as null in
+get/list. Allowed unregistered modules retain their supplied references,
+including names, without an existence check. No Tasks-specific resolver exists.
 
-1. Read each module's fields, layout, picklists and detailed saved views. Copy
-   structure only, replacing identifiers with local fixture identifiers.
-2. Supply the approved multi-target lists in field metadata. Shared validation
-   must reject disallowed modules and missing records in registered modules,
-   resolve names from their targets, retain allowed unregistered references,
-   and return null for deleted targets on reads.
-3. Add deterministic synthetic seeds referencing existing fixture records, then
-   register a module bundle with its display name, managed fields and defaults.
-4. Convert saved-view criteria without changing their boundaries or column order.
-   Reuse list/count filters for Who_Id/What_Id and open/closed related reads.
-5. Run the reusable module contract suite, field/picklist table comparison,
-   lookup lifecycle/related-read tests and generic CRUD endpoint tests.
-   No reminder or recurrence execution belongs in these module definitions.
+Direct related reads use existing list/count criteria:
+
+```ts
+const filters = {
+  field: "Who_Id", // Leads/Contacts; use What_Id for Accounts/Deals
+  comparator: "equal",
+  value: { module: "Contacts", id: recordId },
+} as const;
+await records.count("Tasks", { viewId: "open-tasks", filters });
+```
+
+Reference equality compares both module and opaque id, ignoring supplied name.
+Open/closed reads add Status not_equal/equal Completed, or use open-tasks and
+closed-tasks. Completed is supported by the exported Closed Tasks view; this
+query boundary does not implement a completion transition. Contact tasks are
+not additionally inferred onto their Account.
+
+### Opaque object fields and view boundaries
+
+ALARM (`Remind_At`) and RRULE (`Recurring_Activity`) accept null or plain JSON
+objects with finite numbers, strings, booleans, nulls, nested objects/arrays.
+Objects are cloned on writes/reads and retained by deep value equality. Field
+dataType determines whether a value is an object or reference. Arrays/scalars,
+cycles and non-JSON members are invalid top-level values. Other field types
+retain their existing validation. These fields cannot be filtered or sorted.
+No reminder delivery, email notification or recurrence generation is performed.
+
+Saved-view tokens convert exactly: CURRENTUSER/TODAY are existing tokens;
+TOMORROW maps to PERIOD TOMORROW; YESTERDAYMINUS to PERIOD TILL_YESTERDAY.
+New NEXT7DAYS means overdue through UTC calendar day +7 inclusive;
+TODAYANDOVERDUE means through today inclusive. Both use less_equal and exclude
+null dates. NEXT7DAYS deliberately differs from DUEINDAYS, which excludes
+past/today dates. Boundary tests include overdue, today, tomorrow, +7 and +8.
+Source views preserve BEST_TIME; published columns omit only this undefined
+column through the explicit `tasksDroppedColumns` exception, in seven views.
+All remaining column order is preserved, and no 21st field is synthesized.
+
+### Open questions and temporary decisions
+
+- MEP-427 form research must confirm Leads on Who_Id; this is the CTO's temporary
+  routing decision because related lists do not identify the linking field.
+- The export supplies no inner key names/types for ALARM/RRULE. Keys remain
+  opaque; MEP-427 research will inform a separate schema-tightening issue.
+  Test JSON payloads are synthetic examples, not proposed reminder/repeat schemas.
+- MEP-425 detail research must explain BEST_TIME. Its projection exception stays
+  visible in source and tests until a separate decision supplies its meaning.
+- Completed defines closure for these queries; actual completion, reminder and
+  recurrence flows await their own research/implementation.
+
+### Adding Events and Calls with this pattern
+
+1. Read the module's exported fields, layout, picklists and detailed saved views;
+   retain structure only and replace source identifiers with local fixture IDs.
+2. Extract a sanitized related-target table using that activity's module name and
+   href suffix. Derive What_Id targets from it, and use approved Who_Id targets.
+   Keep `lookup.module` for existing consumers and use `modules` for multiple
+   allowed targets. Reuse shared validation/resolution without module branches.
+3. Add deterministic synthetic seeds referencing existing fixture records and
+   register a bundle with display field, managed fields, defaults and id range.
+4. Convert criteria with exact calendar boundaries; record undefined projection
+   columns explicitly. Reuse list/count criteria for direct related reads.
+5. Define a module contract-suite configuration, including a separate mass-update
+   scenario when the filter marker is ineligible (Tasks uses Priority).
+   Add exported field/picklist tables, lookup lifecycle, related reads and generic
+   CRUD handler/HTTP round-trip tests.
+6. Events multireminder/jsonarray needs a separately approved field contract on
+   JsonValue; it is outside this Tasks change. Neither activity executes reminder
+   or recurrence rules as part of its fixture definition.

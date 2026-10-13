@@ -1,4 +1,7 @@
-/** Sanitized export definition; registration awaits the activity contract decision.
+import type { ModuleMetadata } from "../../contract";
+import { tasksPicklists } from "./picklists";
+import relatedTargets from "./related-targets.json";
+/** Sanitized export definition.
  * ALARM/RRULE are preserved verbatim. se_module is an unresolved export marker,
  * not an allowed target module. No multi-target list is present in this export.
  */
@@ -390,3 +393,23 @@ export const tasksMetadataSource = {
     },
   ],
 } as const;
+
+/** Temporary Leads routing decision; form research will confirm Who_Id. */
+export const tasksWhoTargets = ["Contacts", "Leads"] as const;
+export const tasksWhatTargets = relatedTargets
+  .filter((row) => row.module === "Tasks" && row.href === `${row.sourceModule}/{ENTITYID}/Tasks`)
+  .map((row) => row.sourceModule)
+  .filter((module) => !tasksWhoTargets.some((target) => target === module));
+export const tasksMetadata: ModuleMetadata = {
+  ...tasksMetadataSource,
+  fields: tasksMetadataSource.fields.map((field) => ({
+    ...field,
+    ...(field.dataType === "picklist" ? { picklist: tasksPicklists[field.apiName] } : {}),
+    ...(field.apiName === "Who_Id"
+      ? { lookup: { module: "Contacts", modules: tasksWhoTargets } }
+      : {}),
+    ...(field.apiName === "What_Id"
+      ? { lookup: { module: "Accounts", modules: tasksWhatTargets } }
+      : {}),
+  })),
+};

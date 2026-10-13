@@ -8,6 +8,7 @@ import {
 import type { OrgContext } from "../../tenancy/types";
 import type {
   DuplicateGroup,
+  FieldDefinition,
   FieldValue,
   ListQuery,
   MergeInput,
@@ -15,6 +16,7 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
+import { isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import { calendarDays, historyRow } from "./deals/history";
 import { applyDealRules } from "./deals/rules";
@@ -57,6 +59,8 @@ const stringFieldNames = (bundle: FixtureModuleBundle) =>
       .filter(
         (field) =>
           ![
+            "ALARM",
+            "RRULE",
             "integer",
             "currency",
             "double",
@@ -69,8 +73,22 @@ const stringFieldNames = (bundle: FixtureModuleBundle) =>
       .map((field) => field.apiName),
   );
 
-const normalizeInput = (input: RecordInput, stringFields: Set<string>): RecordInput =>
-  copy(
+const normalizeInput = (
+  input: RecordInput,
+  stringFields: Set<string>,
+  fields: readonly FieldDefinition[],
+): RecordInput => {
+  for (const field of fields) {
+    const value = input[field.apiName];
+    if (
+      (field.dataType === "ALARM" || field.dataType === "RRULE") &&
+      value !== undefined &&
+      value !== null &&
+      !isJsonObject(value)
+    )
+      throw new ValidationError({ [field.apiName]: ["Invalid field type."] });
+  }
+  return copy(
     Object.fromEntries(
       Object.entries(input).map(([name, value]) => [
         name,
@@ -78,6 +96,7 @@ const normalizeInput = (input: RecordInput, stringFields: Set<string>): RecordIn
       ]),
     ),
   );
+};
 
 export interface FixtureRecordServiceOptions {
   /** Clock for seed times, write timestamps and date tokens. Defaults to the system clock. */
@@ -235,7 +254,12 @@ export function createFixtureRecordService(
     const history = moduleStore("DealHistory");
     for (const row of history.records.values()) {
       const reference = row.fields.Potential_Name;
-      if (typeof reference === "object" && reference && ids.includes(reference.id))
+      if (
+        typeof reference === "object" &&
+        reference &&
+        typeof reference.id === "string" &&
+        ids.includes(reference.id)
+      )
         history.records.delete(row.id);
     }
   };
@@ -315,7 +339,11 @@ export function createFixtureRecordService(
       throw new ValidationError({
         duplicateIds: ["Choose one or two distinct duplicates, excluding the master."],
       });
-    const normalized = normalizeInput(input.values, stringFieldNames(bundle));
+    const normalized = normalizeInput(
+      input.values,
+      stringFieldNames(bundle),
+      bundle.metadata.fields,
+    );
     validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
     validateReferences(module, normalized);
     await validateOwner(normalized);
@@ -361,6 +389,7 @@ export function createFixtureRecordService(
             typeof value === "object" &&
             value !== null &&
             value.module === module &&
+            typeof value.id === "string" &&
             removed.has(value.id)
           )
             nextFields[field.apiName] =
@@ -603,7 +632,7 @@ export function createFixtureRecordService(
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
-      const normalized = normalizeInput(input, stringFields);
+      const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       validateInput(normalized, false, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
@@ -635,7 +664,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
-      const normalized = normalizeInput(input, stringFields);
+      const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
@@ -666,7 +695,7 @@ export function createFixtureRecordService(
       const targets = [...ids];
       validateIds(targets);
       const stringFields = stringFieldNames(bundle);
-      const normalized = normalizeInput(input, stringFields);
+      const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       const names = Object.keys(normalized);
       if (names.length !== 1) throw new ValidationError({ data: ["Choose exactly one field."] });
       const name = names[0] as string;

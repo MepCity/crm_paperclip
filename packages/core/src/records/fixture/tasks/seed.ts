@@ -7,7 +7,7 @@ export function fullName(fields: Readonly<Record<string, FieldValue>>): string {
   return typeof fields.Subject === "string" ? fields.Subject : "";
 }
 
-/** Prepared seed; module registration awaits approved lookup target metadata. */
+/** Synthetic topology: direct links only, with all status and priority values. */
 export function generateFixtureTasks(
   seed = 68,
   now = new Date("2026-01-15T12:00:00.000Z"),
@@ -21,7 +21,8 @@ export function generateFixtureTasks(
     const fields: Record<string, FieldValue> = Object.fromEntries(
       tasksMetadataSource.fields.map((field) => [field.apiName, null]),
     );
-    const status = statuses[(index + seed) % statuses.length]?.storedValue;
+    const status =
+      index === 2 ? "Completed" : statuses[(index + seed) % statuses.length]?.storedValue;
     Object.assign(fields, {
       id,
       Subject: `Task ${String(index + 1).padStart(3, "0")}`,

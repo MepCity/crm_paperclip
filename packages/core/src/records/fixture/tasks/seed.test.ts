@@ -46,7 +46,13 @@ describe("prepared Tasks seed", () => {
       for (const task of generateFixtureTasks(68, now)) {
         for (const name of ["Who_Id", "What_Id"]) {
           const value = task.fields[name];
-          if (typeof value !== "object" || value === null || value.module !== module) continue;
+          if (
+            typeof value !== "object" ||
+            value === null ||
+            value.module !== module ||
+            typeof value.id !== "string"
+          )
+            continue;
           expect(targetIds.has(value.id)).toBe(true);
           counts.set(value.id, (counts.get(value.id) ?? 0) + 1);
         }
