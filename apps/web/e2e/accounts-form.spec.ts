@@ -287,3 +287,55 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(dialog).toBeHidden();
 });
+
+type Box = { x: number; y: number; width: number; height: number };
+
+function requireBox(box: Box | null, label: string): Box {
+  if (!box) throw new Error(`Missing ${label}`);
+  return box;
+}
+
+test("title strip row and Account Image placeholder match the reference", async ({ page }) => {
+  await openCreate(page);
+  const strip = page.locator("[data-record-form-strip]");
+  const title = requireBox(
+    await strip.locator("[data-record-form-title]").boundingBox(),
+    "Create Account title",
+  );
+  // AF-01: Edit Page Layout shares the title row, immediately right of the title.
+  const layout = requireBox(
+    await strip.getByRole("button", { name: "Edit Page Layout", exact: true }).boundingBox(),
+    "Edit Page Layout",
+  );
+  expect(layout.x).toBeGreaterThan(title.x + title.width);
+  expect(layout.y).toBeGreaterThanOrEqual(title.y);
+  expect(layout.y + layout.height).toBeLessThanOrEqual(title.y + title.height + 1);
+  expect(layout.x - (title.x + title.width)).toBeLessThanOrEqual(12);
+  await expect(strip.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+
+  // AF-05: the building placeholder is the 48 px image below the section label; no disc, no overlap.
+  const label = requireBox(
+    await page
+      .locator("[data-record-form-section-title]")
+      .filter({ hasText: "Account Image" })
+      .boundingBox(),
+    "Account Image label",
+  );
+  const image = page.getByRole("button", { name: "Account Image", exact: true });
+  const imageBox = requireBox(await image.boundingBox(), "Account Image placeholder");
+  expect(Math.abs(imageBox.width - 48)).toBeLessThanOrEqual(1);
+  expect(Math.abs(imageBox.height - 48)).toBeLessThanOrEqual(1);
+  expect(imageBox.y).toBeGreaterThan(label.y + label.height);
+  await expect(image).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  // The glyph stays inside the control instead of escaping over the label.
+  const glyph = requireBox(await image.locator("svg").boundingBox(), "Account Image glyph");
+  expect(glyph.x).toBeGreaterThanOrEqual(imageBox.x - 1);
+  expect(glyph.y).toBeGreaterThanOrEqual(Math.max(imageBox.y, label.y + label.height));
+  expect(glyph.x + glyph.width).toBeLessThanOrEqual(imageBox.x + imageBox.width + 1);
+  expect(glyph.y + glyph.height).toBeLessThanOrEqual(imageBox.y + imageBox.height + 1);
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/mep394-accounts-form.png`,
+    });
+  }
+});
