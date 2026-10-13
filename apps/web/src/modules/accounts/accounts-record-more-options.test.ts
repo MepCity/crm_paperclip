@@ -15,7 +15,6 @@ test("Accounts More Options menu inventory", () => {
     "Share",
     "Delete",
     "Print Preview",
-    "Find and Merge Duplicates",
     "Mail Merge",
     "Customize Business Card",
     "Organize Account Details",

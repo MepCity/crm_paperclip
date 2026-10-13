@@ -24,6 +24,11 @@ import type { ModuleKey } from "@/components/ui/later-module";
 
 export type RelatedListControlType = "button" | "split-button" | "select" | "icon-button";
 
+export interface ModuleMergeDefinition {
+  criterionFields: readonly string[];
+  matchingColumns: readonly string[];
+}
+
 export interface RelatedListControlDefinition {
   id: string;
   label: string;
@@ -138,6 +143,7 @@ export interface ModuleScreenDefinition {
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
+  merge?: ModuleMergeDefinition;
   buildFilterGroups: (input: {
     fields: readonly FieldDefinition[];
     users: readonly { userId: string; name: string; email?: string }[];
@@ -176,7 +182,7 @@ export interface ModuleScreenDefinition {
     moreOptions: (handlers: {
       onClone: () => void;
       onDelete: () => void;
-      onFindMergeDuplicates: () => void;
+      onFindMergeDuplicates?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

@@ -111,7 +111,7 @@ test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form mode
   expect(change).toHaveBeenLastCalledWith(null);
   await user.type(input, "0");
   expect(input.value).toBe("0");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("0");
   await user.type(input, "4.07.1998");
   expect(input.value).toBe("04.07.1998");
   expect(change).toHaveBeenLastCalledWith("1998-07-04");
@@ -134,7 +134,7 @@ test("date keeps a partial day when deleting from a filled value", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("15.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("15.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("15.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-15");
@@ -148,10 +148,33 @@ test("date keeps an impossible day while it is being corrected", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("30.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("30.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("30.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-30");
+});
+test("a half-typed date stays a model value while a cleared one is empty", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-15" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}{Backspace}");
+  expect(input.value).toBe("15.02.20");
+  expect(change).toHaveBeenLastCalledWith("15.02.20");
+  await user.clear(input);
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+test("date shows a half-typed entry that is held in the model", () => {
+  const noop = () => {};
+  const { rerender } = render(
+    <FieldInput field={field("date")} value="15.02.202" onChange={noop} />,
+  );
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe(
+    "15.02.202",
+  );
+  rerender(<FieldInput field={field("date")} value={null} onChange={noop} />);
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe("");
 });
 test("date follows a model written from outside the input", () => {
   const noop = () => {};

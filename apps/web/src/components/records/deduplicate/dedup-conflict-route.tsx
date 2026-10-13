@@ -52,6 +52,7 @@ export function DedupConflictRoute({
       fields={moduleQuery.data.fields}
       apiNames={knownNames}
       listHref={listHref}
+      merge={definition.merge}
     />
   );
 }

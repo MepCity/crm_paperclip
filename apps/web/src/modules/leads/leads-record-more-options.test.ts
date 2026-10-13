@@ -63,6 +63,17 @@ describe("leads-record-more-options", () => {
     ]);
   });
 
+  it("omits Find and Merge Duplicates when onFindMergeDuplicates is not provided", () => {
+    const onClone = vi.fn();
+    const onDelete = vi.fn();
+    const groups = buildLeadsRecordMoreMenuGroups({
+      onClone,
+      onDelete,
+    });
+    const labels = groups.flatMap((group) => group.items.map((item) => item.label));
+    expect(labels).not.toContain("Find and Merge Duplicates");
+  });
+
   it("lists every unimplemented label in deviations with a parity module", () => {
     const implemented = new Set(["Clone", "Delete", "Find and Merge Duplicates"]);
     const specLabels = LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS.flatMap((group) =>

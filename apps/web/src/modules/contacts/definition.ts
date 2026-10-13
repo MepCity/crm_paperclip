@@ -24,6 +24,20 @@ import {
 import { CONTACTS_LIST_CURRENCY_CODE, contactsListPageConfig } from "./list-config";
 import { buildContactsFilterGroups } from "./list-filters";
 
+export const contactsMergeDefinition = {
+  criterionFields: ["First_Name", "Last_Name", "Email", "Phone", "Mobile", "Account_Name"],
+  matchingColumns: [
+    "Full_Name",
+    "Account_Name",
+    "Email",
+    "Phone",
+    "Mobile",
+    "Created_Time",
+    "Modified_Time",
+    "Owner",
+  ],
+} as const;
+
 export const contactsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Contacts",
   tab: "Contacts",
@@ -34,6 +48,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   search: { secondaryFields: ["Email", "Phone"] },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,
+  merge: contactsMergeDefinition,
   buildFilterGroups: buildContactsFilterGroups,
   form: {
     rules: contactsFormRules,

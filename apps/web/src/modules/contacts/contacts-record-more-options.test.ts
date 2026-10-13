@@ -50,3 +50,10 @@ test("keeps all fifteen menu rows in the three observed groups and connects only
   expect(CONTACTS_DELETE_CONFIRM_TITLE).toBe("Delete Contact");
   expect(CONTACTS_DELETE_CONFIRM_MESSAGE).toBe("Are you sure you want to delete this Contact?");
 });
+
+test("omits Find and Merge Duplicates when onFindMergeDuplicates is not provided", () => {
+  const handlers = { onClone: vi.fn(), onDelete: vi.fn() };
+  const groups = buildContactsRecordMoreMenuGroups(handlers);
+  const labels = groups.flatMap((group) => group.items.map((item) => item.label));
+  expect(labels).not.toContain("Find and Merge Duplicates");
+});

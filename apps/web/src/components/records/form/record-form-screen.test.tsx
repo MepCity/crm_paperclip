@@ -7,6 +7,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { UnexpectedApiError } from "@/lib/api/wire/errors";
+import { contactsFormRules } from "@/modules/contacts/contacts-form-rules";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import { render } from "@/test/render";
 import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
@@ -585,3 +586,67 @@ test.each([undefined, { id: "saved-currency", fields: { [names.revenue]: 125 } }
     expect((input as HTMLInputElement).value).toBe(record ? "125" : "");
   },
 );
+
+/**
+ * `Date_of_Birth` is the optional date field of an already saved record: the entry mask is typed
+ * as `DD.MM.YYYY`, so deleting one character leaves half a day on the screen.
+ */
+function savedContactWithDateOfBirth() {
+  const record = {
+    id: "saved-contact",
+    fields: { Last_Name: "Saved Contact", Date_of_Birth: "1990-03-15" },
+  };
+  const { service, navigate } = harness(record, { module: "Contacts", rules: contactsFormRules });
+  const update = vi.spyOn(service, "update").mockResolvedValue(record);
+  return { update, navigate };
+}
+
+function dateOfBirthInput(): HTMLInputElement {
+  return screen.getByRole("textbox", { name: "Date of Birth" }) as HTMLInputElement;
+}
+
+test("a half-typed date blocks Save with the format message and keeps the stored day", async () => {
+  const { update, navigate } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  const date = dateOfBirthInput();
+  expect(date.value).toBe("15.03.1990");
+  date.setSelectionRange(date.value.length, date.value.length);
+  await user.type(date, "{Backspace}");
+  expect(date.value).toBe("15.03.199");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Please enter a valid Date of Birth.")).toBeTruthy();
+  expect(update).not.toHaveBeenCalled();
+  expect(navigate).not.toHaveBeenCalled();
+  expect(dateOfBirthInput().value).toBe("15.03.199");
+});
+
+test("completing a half-typed date clears the message and saves the calendar day", async () => {
+  const { update } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  const date = dateOfBirthInput();
+  date.setSelectionRange(date.value.length, date.value.length);
+  await user.type(date, "{Backspace}");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Please enter a valid Date of Birth.");
+  await user.type(date, "6");
+  expect(screen.queryByText("Please enter a valid Date of Birth.")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(update).toHaveBeenCalledWith("Contacts", "saved-contact", {
+      Date_of_Birth: "1996-03-15",
+    }),
+  );
+});
+
+test("clearing an optional date completely saves null", async () => {
+  const { update } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  await user.clear(dateOfBirthInput());
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(update).toHaveBeenCalledWith("Contacts", "saved-contact", { Date_of_Birth: null }),
+  );
+});

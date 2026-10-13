@@ -28,6 +28,7 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { useDuplicateGroups, useMergeRecords, useUsers } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import type { ModuleMergeDefinition } from "@/modules/types";
 import { DEDUP_MAX_MERGE_RECORDS, dedupConflictIntro, isDedupConflictGroup } from "./dedup-config";
 
 const GROUP_PAGE_SIZE = 10;
@@ -42,6 +43,7 @@ export interface DedupConflictGroupsProps {
   /** The match fields the cleanup ran on, in panel order. */
   apiNames: readonly string[];
   listHref: string;
+  merge?: ModuleMergeDefinition;
 }
 
 /**
@@ -55,6 +57,7 @@ export function DedupConflictGroups({
   fields,
   apiNames,
   listHref,
+  merge,
 }: DedupConflictGroupsProps) {
   const router = useRouter();
   const groupsQuery = useDuplicateGroups(module, apiNames);
@@ -218,7 +221,7 @@ export function DedupConflictGroups({
   }
 
   if (step === "choose") {
-    const columns = resolveMatchingTableColumns(module, fields);
+    const columns = resolveMatchingTableColumns(merge, fields);
     const chosen = group.filter((record) => selectedIds.has(record.id));
     return (
       <div className="dedup-conflict flex h-full min-h-0 flex-col" data-dedup-step="choose">
