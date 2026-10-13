@@ -198,12 +198,92 @@ Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by t
 
 Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by the overlay: none. Overview content is scrolled out as in m4c-card-notes. Cadences is selected and its plus is painted. Open Activities displays the untranslated selector label recorded above, rather than Accounts Column View; no option was opened. Open/Closed Tasks and Meetings form two visible columns; Calls is outside the horizontal viewport. Activity record links are row data and excluded from the inventory. Products heading and Add Products are visible at the bottom; its body is below the utility boundary. No card action, preference or row link was operated.
 
+### Control inventory — m4c-card-quotes
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+Both the 12000 ms attempt and the single 25000 ms retry painted only the loading skeleton. Both requested clicks were skipped with matched 0. No card control was observed.
+
+Rest: intended baseline m4c-detail-base, but no painted baseline control is present; covered by the overlay: none. Skeleton shapes and the Loading indicator are placeholders.
+
+### Control inventory — m4c-card-sales-orders
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DD-93 | Related-list rail | Organize Deal Details | icon button | after Related List heading | same | seen (m4c-card-sales-orders) | M11 | AD-105 |
+| DD-122 | Related-list rail | Plus icon | icon button | Sales Orders row, right end | same | seen (m4c-card-sales-orders) | P2 | AD-151 |
+| DD-123 | Sales Orders card | Assign | button | header, right group, first | same | seen (m4c-card-sales-orders) | P2 | AD-149 |
+| DD-124 | Sales Orders card | New | button | header, right group, second | same | seen (m4c-card-sales-orders) | P2 | AD-150 |
+| DD-125 | Contact Roles card | Add Contacts Roles | button | header, right group, first | not observed | seen (m4c-card-sales-orders) | M2 | new |
+| DD-126 | Contact Roles card | Edit All | button | header, right group, second | not observed | seen (m4c-card-sales-orders) | M2 | new |
+| DD-127 | Contact Roles card | Table with plus icon | icon button | header, right group, third | not observed | seen (m4c-card-sales-orders) | M11 | new |
+| DD-128 | Contact Roles card | Contact Name | column header | table header, named column 1 | same | seen (m4c-card-sales-orders) | M2 | AD-121 |
+| DD-129 | Contact Roles card | Account Name | column header | table header, named column 2 | not observed | seen (m4c-card-sales-orders) | M3 | new |
+| DD-130 | Contact Roles card | Phone | column header | table header, named column 3 | same | seen (m4c-card-sales-orders) | M2 | AD-123 moved |
+| DD-131 | Contact Roles card | Email | column header | table header, named column 4 | same | seen (m4c-card-sales-orders) | M2 | AD-122 moved |
+| DD-132 | Contact Roles card | Role Name | column header | table header, named column 5 | not observed | seen (m4c-card-sales-orders) | M2 | new |
+| DD-133 | Contact Roles card | Contact record link | link | row, Contact Name column | same | seen (m4c-card-sales-orders) | M2 | AD-127 |
+| DD-134 | Contact Roles card | Account record link | link | row, Account Name column | not observed | seen (m4c-card-sales-orders) | M3 | new |
+| DD-135 | Contact Roles card | Phone call icon | icon button | row, after Phone display | same | seen (m4c-card-sales-orders) | M5 | AD-129 |
+| DD-136 | Contact Roles card | Email link | link | row, Email column | same | seen (m4c-card-sales-orders) | M10 | AD-128 |
+| DD-137 | Emails card | Emails associated with … (clipped) | select | tab row, right | not observed | seen (m4c-card-sales-orders) | M10 | new |
+| DD-138 | Emails card | Compose Email | button | header, right | same | seen (m4c-card-sales-orders) | M10 | AD-131 |
+| DD-139 | Emails card | Mails | tab | below header, first | same | seen (m4c-card-sales-orders) | M10 | AD-132 |
+| DD-140 | Emails card | Drafts | tab | below header, second | same | seen (m4c-card-sales-orders) | M10 | AD-133 |
+| DD-141 | Emails card | Scheduled | tab | below header, third | same | seen (m4c-card-sales-orders) | M10 | AD-134 |
+| DD-142 | Cases card | Assign | button | header, right group, first | same | seen (m4c-card-sales-orders) | M8 | AD-155 |
+| DD-143 | Cases card | New | button | header, right group, second | same | seen (m4c-card-sales-orders) | M8 | AD-156 |
+| DD-144 | Invoices card | Assign | button | header, right group, first | same | seen (m4c-card-sales-orders) | P2 | AD-152 |
+| DD-145 | Invoices card | New (partly covered) | button | header, right group, second | same | seen (m4c-card-sales-orders) | P2 | AD-153 |
+| DD-98 | Record content | Scroll To Top | icon button | floating at lower right | same | seen (m4c-card-sales-orders) | M4 | AD-111 |
+
+Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by the overlay: none. Overview content is scrolled out. Sales Orders is selected. Sales Orders, Contact Roles, Emails and Cases have fully visible headings and upper controls, so no separate Contact Roles, Emails or Cases capture was taken. Contact Roles has a blank leading structural cell, five named columns and a populated row; no card-header counter or row-end action is painted. Record links are inventoried structurally without copying their values. The phone icon DD-135 is image-only. Emails shows Mails selected with No records found; Drafts, Scheduled and the selector were not opened. Its selector label differs from Accounts sent-mail scope. Invoices is empty; Scroll To Top partly covers its New action. No creation, assignment, editing, communication or preference control was activated.
+
+Absent here: Accounts email scope AD-130 (replaced by DD-137); Accounts Contacts Hierarchy View, Assign, New and diagonal expand controls AD-115–AD-117, AD-120 are not painted in Contact Roles. Mobile, Fax and Contact Owner headers AD-124–AD-126 are absent; Account Name and Role Name replace that field set.
+
+### Control inventory — m4c-card-invoices
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DD-93 | Related-list rail | Organize Deal Details | icon button | after Related List heading | same | seen (m4c-card-invoices) | M11 | AD-105 |
+| DD-125 | Contact Roles card | Add Contacts Roles | button | header, right group, first | not observed | seen (m4c-card-invoices) | M2 | new |
+| DD-126 | Contact Roles card | Edit All | button | header, right group, second | not observed | seen (m4c-card-invoices) | M2 | new |
+| DD-127 | Contact Roles card | Table with plus icon | icon button | header, right group, third | not observed | seen (m4c-card-invoices) | M11 | new |
+| DD-128 | Contact Roles card | Contact Name | column header | table header, named column 1 | same | seen (m4c-card-invoices) | M2 | AD-121 |
+| DD-129 | Contact Roles card | Account Name | column header | table header, named column 2 | not observed | seen (m4c-card-invoices) | M3 | new |
+| DD-130 | Contact Roles card | Phone | column header | table header, named column 3 | same | seen (m4c-card-invoices) | M2 | AD-123 moved |
+| DD-131 | Contact Roles card | Email | column header | table header, named column 4 | same | seen (m4c-card-invoices) | M2 | AD-122 moved |
+| DD-132 | Contact Roles card | Role Name | column header | table header, named column 5 | not observed | seen (m4c-card-invoices) | M2 | new |
+| DD-133 | Contact Roles card | Contact record link | link | row, Contact Name column | same | seen (m4c-card-invoices) | M2 | AD-127 |
+| DD-134 | Contact Roles card | Account record link | link | row, Account Name column | not observed | seen (m4c-card-invoices) | M3 | new |
+| DD-135 | Contact Roles card | Phone call icon | icon button | row, after Phone display | same | seen (m4c-card-invoices) | M5 | AD-129 |
+| DD-136 | Contact Roles card | Email link | link | row, Email column | same | seen (m4c-card-invoices) | M10 | AD-128 |
+| DD-137 | Emails card | Emails associated with … (clipped) | select | tab row, right | not observed | seen (m4c-card-invoices) | M10 | new |
+| DD-138 | Emails card | Compose Email | button | header, right | same | seen (m4c-card-invoices) | M10 | AD-131 |
+| DD-139 | Emails card | Mails | tab | below header, first | same | seen (m4c-card-invoices) | M10 | AD-132 |
+| DD-140 | Emails card | Drafts | tab | below header, second | same | seen (m4c-card-invoices) | M10 | AD-133 |
+| DD-141 | Emails card | Scheduled | tab | below header, third | same | seen (m4c-card-invoices) | M10 | AD-134 |
+| DD-142 | Cases card | Assign | button | header, right group, first | same | seen (m4c-card-invoices) | M8 | AD-155 |
+| DD-143 | Cases card | New | button | header, right group, second | same | seen (m4c-card-invoices) | M8 | AD-156 |
+| DD-144 | Invoices card | Assign | button | header, right group, first | same | seen (m4c-card-invoices) | P2 | AD-152 |
+| DD-145 | Invoices card | New | button | header, right group, second | same | seen (m4c-card-invoices) | P2 | AD-153 |
+| DD-98 | Record content | Scroll To Top | icon button | floating at lower right | same | seen (m4c-card-invoices) | M4 | AD-111 |
+| DD-146 | Related-list rail | Plus icon | icon button | Invoices row, right end | same | seen (m4c-card-invoices) | P2 | AD-151 moved |
+| DD-147 | Record-page footer | Add Related List | button | footer, left | same | seen (m4c-card-invoices) | M11 | D-93 |
+| DD-148 | Record-page footer | Standard View | select | footer, right group, first | same | seen (m4c-card-invoices) | M11 | D-94 |
+| DD-149 | Record-page footer | Create a custom record page | button | footer, right group, second | same | seen (m4c-card-invoices) | M11 | D-95 |
+
+Rest: as in m4c-detail-base for shell, fixed header, rail and tabs; covered by the overlay: none. Overview content and Sales Orders are scrolled out. Invoices is selected; its plus DD-146 replaces Sales Orders plus DD-122. Contact Roles upper actions are partly clipped beneath the fixed tab row, but its five named columns and structural row links remain visible. Emails and Cases retain their controls. Invoices has fully visible Assign and New with No records found; no counter or column header is painted. The record-page footer exposes Add Related List, the static Record detail page views label, Standard View and Create a custom record page. All three controls match Contacts D-93–D-95; Accounts did not observe this footer. No footer control was clicked. Scroll To Top no longer covers Invoices New.
+
+Absent here: DD-122–DD-124 (Sales Orders is scrolled out); no new control replaces those header actions.
+
 ### Control inventory — m4c-list-after
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-The required after capture produced a loading skeleton despite the extended wait. No painted interactive control; the central Loading indicator and skeleton shapes are placeholders. Shell, edges and bottom corners were inspected as an image.
+The required after capture produced a loading skeleton at 12000 ms and again in the single 25000 ms retry. No painted interactive control; the central Loading indicator and skeleton shapes are placeholders. Shell, edges and bottom corners were inspected as an image.
 
 Rest: intended route as in m4c-list-base, but its painted SH/DL controls are absent during loading; covered by the overlay: none. This is not module-wide absence. No count comparison is possible.
 
@@ -286,11 +366,11 @@ Only labels and order are compared. Exported sequence is from deals.md › Relat
 | 8 | Closed Activities | 12–14 | Combined Tasks/Meetings/Calls rail entry |
 | 9 | Products | 17 | Same relative order |
 | 10 | Quotes | 18 | Same relative order |
-| 11 | Sales Orders | 19 | Same relative order |
-| 12 | Contact Roles | 20 | Same relative order |
-| 13 | Emails | 21 | Same relative order |
-| 14 | Cases | 22 | Same relative order |
-| 15 | Invoices | 24 | Same relative order |
+| 11 | Sales Orders | P2 | No card-header counter | Assign DD-123; New DD-124 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Sales Orders: same | seen (m4c-card-sales-orders) |
+| 12 | Contact Roles | M2 | No card-header counter; rail badge DD-58 | Add Contacts Roles DD-125; Edit All DD-126; table with plus DD-127 | Contact Name; Account Name; Phone; Email; Role Name | Populated; empty state not observed | new | seen (m4c-card-sales-orders) |
+| 13 | Emails | M10 | No card-header counter | Compose Email DD-138; Mails/Drafts/Scheduled DD-139–DD-141; scope selector DD-137 | None painted | Mails: No records found; other tabs not opened | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Emails: same except scope selector | seen (m4c-card-sales-orders) |
+| 14 | Cases | M8 | No card-header counter | Assign DD-142; New DD-143 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Cases: same | seen (m4c-card-sales-orders) |
+| 15 | Invoices | P2 | No card-header counter | Assign DD-144; New DD-145 | None painted | No records found | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Accounts Invoices: same | seen (m4c-card-invoices); partly covered in m4c-card-sales-orders |
 
 Exported visible Checklists (23) and Locking Information (25) are not painted in this rail. Hidden Review Summary/Field History, Email Sentiment and Email Drafts are also not painted. Add Related List is a utility link, not an exported relation. SALES SUMMARY is a static section, not another related list. The rail's Stage History and Contact Roles badges are Deals-specific; Activities counts reuse Accounts.
 
@@ -318,7 +398,7 @@ The first fifteen rows follow the observed rail. Checklists and Locking Informat
 | not observed | Checklists | ? | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
 | not observed | Locking Information | M11 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
 
-Stage History, Contact Roles and Competitors have observed rail links (DD-54–DD-56), but no observed card headings, counters, upper buttons, columns, empty states or row-end controls. Connected Records also remains not observed at card level despite its shared rail reference. Stage History columns cannot be compared with [deals.md](deals.md#stage-history-module) without a painted card; metadata is not substituted for screen evidence. No new DD number is assigned to an unobserved control.
+Stage History, Competitors and Connected Records have painted card evidence in m4c-card-notes, as recorded above. Stage History exposes its upper icon and seven visible or clipped column headers; Competitors exposes New and its empty state; Connected Records exposes its empty state without upper controls. Contact Roles is painted in m4c-card-sales-orders, including its upper actions and five named columns. Stage History is compared with metadata in the following section; unseen columns and row-end actions are not inferred. No new DD number is assigned to an unobserved control.
 
 ## Stage History column comparison
 
@@ -326,7 +406,7 @@ Compare [deals.md](deals.md#stage-history-module), metadata only, with m4c-card-
 
 ## Record-page footer and edges
 
-The fixed header, tabs, rail, full right edge and utility strip were inspected in the two card images. Floating Scroll To Top DD-98 is newly painted and reuses Accounts AD-111. The lower Deal Information fields, Description, Add Link and record customization footer remain unreachable with a permitted named section control in the baseline. No free scrolling or alternate control was invented. Checklists and Locking Information have no observed rail entry.
+The fixed header, tabs, rail, full right edge and utility strip were inspected in every card image, including the lower card viewport. Floating Scroll To Top DD-98 is newly painted and reuses Accounts AD-111. The Invoices jump exposes the record customization footer: Add Related List DD-147, Standard View DD-148 and Create a custom record page DD-149 match Contacts D-93–D-95. The lower Deal Information fields, Description and rail Add Link remain unreachable with a permitted named section control in the baseline. No free scrolling or alternate control was invented. Checklists and Locking Information have no observed rail entry.
 
 ## Differences from earlier modules
 
@@ -334,7 +414,7 @@ The fixed header, tabs, rail, full right edge and utility strip were inspected i
 - Stage History and Competitors introduce Deals-specific card regions and controls DD-99–DD-107.
 - Cadences reuses Contacts rather than Accounts; its selected rail row paints a plus DD-108.
 - Open Activities paints an untranslated selector label DD-111 in the same position as Accounts Column View. Other observed activity-card controls match Accounts.
-- Remaining cards and lower fields are unobserved after the mandatory network stop; no equivalence is asserted for them.
+- Contact Roles adds its two labeled upper actions and Role Name column; Emails uses a Deal association scope selector rather than Accounts sent-mail scope. Quotes remains unobserved after both permitted loading retries; lower fields have no permitted section-navigation control.
 
 ## Capability table
 
@@ -349,8 +429,8 @@ The fixed header, tabs, rail, full right edge and utility strip were inspected i
 | Contact Person and Next Action links | M2/M3/M10/M5 | Accounts contact/email links moved; added activity summary | Links unoperated; card interiors deferred |
 | More Options | Per menu inventory | Accounts plus Contacts Run Macro / Enroll to Cadence | Fifteen rows; outcomes not observed |
 | Timeline History toolbar | M4/M12 | Accounts AD-159–AD-161 | Empty state observed; filter unopened |
-| Related cards | Per card inventory | Shared Accounts/Contacts controls plus Stage History and Competitors | Two viewports observed; actions unoperated; remaining scope stopped |
-| Lower details and record-page footer | M4/M11 | Shared candidates | No permitted named section navigation; not observed |
+| Related cards | Per card inventory | Shared Accounts/Contacts controls plus Stage History and Competitors | Upper and lower card viewports observed; actions unoperated; Quotes loading attempts unsuccessful |
+| Lower details and record-page footer | M4/M11 | Footer reused from Contacts D-93–D-95 | Footer observed in m4c-card-invoices; lower fields lack permitted named section navigation |
 | Populated stage-change Timeline rows | M4 | Deals-specific, not observed | No rows in this record |
 
 ## Capture refs
@@ -367,12 +447,15 @@ Only neutral slugs identify local evidence; raw images and customer values are n
 | m4c-list-base | 0 | 0 | Refreshed with extended wait; four record links, total count not painted |
 | m4c-detail-base | 1 | 0 | Preserved Overview baseline, three related reads |
 | m4c-card-notes | 2 | 0 | Preserved Notes through Competitors viewport |
-| m4c-card-cadences | 2 | 0 | Cadences, Open/Closed Activities, Products header; mandatory network stop |
-| m4c-list-after | 0 | 0 | Final click-free capture after profile-error retry; loading skeleton, no count |
+| m4c-card-cadences | 2 | 0 | Cadences, Open/Closed Activities, Products header; expected blocked telemetry |
+| m4c-card-quotes | 2 requested | 2 | 12000 ms attempt and 25000 ms retry both loading skeleton; no click applied |
+| m4c-card-sales-orders | 2 | 0 | Sales Orders, populated Contact Roles, Emails, Cases and Invoices; New partly covered |
+| m4c-card-invoices | 2 | 0 | Invoices header/actions fully visible; record customization footer |
+| m4c-list-after | 0 | 0 | 12000 ms attempt and single 25000 ms retry: loading skeleton, no total comparison |
 
-The first detail establishes three related reads; both subsequent detail captures retain that count. All captures satisfy the amended expected-call limits, including one blocked navigation read per detail capture. The menu and Timeline have no skipped click. No successful record write or telemetry request was observed. The base and main captures were not repeated. No stage, terminal action, persisted preference, menu row or unsafe card control was clicked.
+The first detail establishes three related reads; all successful subsequent card captures retain that count. Quotes has no applied click and only nine GET reads in each loading attempt. All captures satisfy the amended expected-call limits, including one blocked navigation read per detail capture. The menu and Timeline have no skipped click. No successful record write or telemetry request was observed. The base and main captures were not repeated. No stage, terminal action, persisted preference, menu row or unsafe card control was clicked.
 
-MEP-347: extended-wait list and detail captures from the interrupted run are preserved. Notes was also completed in that run; its file timestamp distinguishes it from the failed new invocation. Cadences first produced an empty directory; the single same-command retry succeeded. List/detail expected non-GET calls remain within their stated limits; detail and both cards have three related reads. Cadences includes one blocked POST /murphy/:id/clientmetricslog without a telemetry annotation. Because the task explicitly identifies telemetry-tagged paths as expected, this unannotated path triggers the conservative mandatory stop; no exception is inferred from its name. Further card/section navigation was cancelled. No successful record write or persisted preference was observed. Only the required click-free after capture was attempted afterward; the first attempt failed with profile in use, and the single delayed same-command retry produced a loading skeleton. It has nine GET reads, no successful non-GET call, one blocked telemetry request and no click. No total-record equality can be established.
+MEP-347: extended-wait list and detail captures from the interrupted run are preserved. Notes was also completed in that run; its timestamp distinguishes it from the failed new invocation. Cadences first produced an empty directory; the single same-command retry succeeded. List/detail expected non-GET calls remain within their stated limits; detail and both cards have three related reads. Cadences includes one blocked POST /murphy/:id/clientmetricslog with a [telemetry] annotation. The previous stop misread that annotation; QA confirmed this is expected under rule 5a, so permitted card research resumed. No successful record write or persisted preference was observed. Resumed Sales Orders and Invoices each retain three related reads and the expected list/detail call limits. Quotes was attempted at 12000 ms and retried once at 25000 ms; both requested clicks were skipped in a loading skeleton, so no replacement selector or route was tried. Sales Orders also fully covers Contact Roles, Emails and Cases; dedicated captures for those cards were omitted under the no-duplicate rule. Invoices was captured because its New action was partly overlapped; the resulting image also exposes the footer. The final click-free list remained a loading skeleton at both 12000 ms and 25000 ms; its retained retry has nine GET reads and three blocked telemetry-tagged calls. The initial painted list has four visible record links but no total label, so neither total-record equality nor visible-link equality can be established.
 
 ## Open questions
 
@@ -382,8 +465,8 @@ MEP-347: extended-wait list and detail captures from the interrupted run are pre
 - Hover-only inline-edit, rail and card controls remain not observed. No hover or unsafe alternate selector was attempted.
 - Competitors and Checklists retain unknown module ownership (`?`) from deals.md. Connected Records retains shared unknown ownership from Accounts; a lead decision is needed to assign it.
 - No Deals-specific shell ownership decision was introduced. Unknown SH ownership remains in contacts.md.
-- The unannotated blocked clientmetricslog request requires a lead assessment under the task network rule before any further card navigation. This research does not grant an exception.
-- Lower Deal Information, Description, Add Link, Contact Roles and remaining card bodies are not observed. The baseline provides no permitted named section-navigation control; remaining card navigation stopped under rule 5.
+- The earlier clientmetricslog stop was a reading error: its blocked-request entry carries [telemetry] and belongs to expected rule 5a. No exception or further network approval is required for the permitted card navigation.
+- Lower Deal Information, Description and Add Link remain not observed: the baseline provides no permitted named section-navigation control. Quotes remains not observed after the 12000 ms attempt and single 25000 ms retry both stayed in a loading skeleton. Contact Roles empty state and hover-only row-end controls remain not observed.
 - Total-record equality cannot be verified: the initial painted board has four visible links but no total count; column counts are not reliable totals.
 - Stage History rightmost columns and row-end controls remain not observed; Modified Time is only partially painted and Modified By is offscreen. No horizontal scrolling was attempted.
 - Checklists and Locking Information remain exported relations only; neither their rail controls nor card interiors were observed. Hover-only card controls remain not observed. No board decision is requested by this research.
@@ -1308,3 +1391,237 @@ Every source ordinal is accounted for exactly once below. Repeated wrappers can 
 | excluded: invisible zero-area element | 2–3 |
 
 3 source items; 0 inventory IDs represented; 3 excluded items. No image-only control painted.
+
+### m4c-card-sales-orders
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural wrapper, static label/value or repeated source; no separate painted control | 1, 37, 51, 59, 62, 82–83, 86, 106, 109, 121, 123–124, 172–174, 399–406, 411–412, 419–422, 430–433, 436, 439–440, 442–446, 456–457, 462–463 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 112, 114, 127, 130, 133, 139, 142, 151, 154, 157, 164, 167, 170, 195–196, 216, 222, 224, 230, 255, 265, 269, 282, 288, 301, 305, 314, 317–318, 321, 324–327, 331, 339, 351–352, 361, 364, 380, 382, 385, 390, 393, 418, 428–429, 454–455, 468–469, 478–495, 508 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: outside viewport or behind fixed content header | 65–80, 175, 177, 181–194, 197–215, 217–221, 223, 225–229, 231–254, 256–264, 266–268, 270–281, 283–287, 289–300, 302–304, 306–313, 315–316, 319–320, 322–323, 328–330, 332–338, 340–350, 353–360, 362–363, 365–379, 381, 383–384, 386–389, 391–392, 394–398, 470–476, 496, 509 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| DD-01 | 107–108 |
+| DD-90 | 110–111 |
+| DD-04 | 113 |
+| DD-05 | 115–116 |
+| DD-06 | 117–118 |
+| DD-07 | 119–120 |
+| DD-93 | 122 |
+| DD-10 | 125–126 |
+| DD-11 | 128–129 |
+| DD-12 | 131–132 |
+| DD-54 | 134–135 |
+| DD-57 | 136 |
+| DD-55 | 137–138 |
+| DD-13 | 140–141 |
+| DD-15 | 143–144 |
+| DD-30 | 145 |
+| DD-16 | 146–147 |
+| DD-31 | 148 |
+| DD-18 | 149–150 |
+| DD-20 | 152–153 |
+| DD-21 | 155–156 |
+| DD-122 | 158 |
+| DD-56 | 159–160 |
+| DD-58 | 161 |
+| DD-23 | 162–163 |
+| DD-19 | 165–166 |
+| DD-24 | 168–169 |
+| DD-29 | 171 |
+| DD-32 | 176 |
+| DD-33 | 178 |
+| DD-34 | 179 |
+| DD-35 | 180 |
+| DD-123 | 407–408 |
+| DD-124 | 409–410 |
+| DD-125 | 413–414 |
+| DD-126 | 415–416 |
+| DD-127 | 417 |
+| DD-128 | 423 |
+| DD-129 | 424 |
+| DD-130 | 425 |
+| DD-131 | 426 |
+| DD-132 | 427 |
+| DD-133 | 434–435 |
+| DD-134 | 437–438 |
+| DD-136 | 441 |
+| DD-138 | 447–448 |
+| DD-139 | 449 |
+| DD-140 | 450 |
+| DD-141 | 451 |
+| DD-137 | 452–453 |
+| DD-142 | 458–459 |
+| DD-143 | 460–461 |
+| DD-144 | 464–465 |
+| DD-145 | 466–467 |
+| DD-98 | 477 |
+| SH-35 | 497 |
+| SH-36 | 498 |
+| SH-37 | 499 |
+| SH-38 | 500 |
+| SH-39 | 501 |
+| SH-40 | 502 |
+| SH-41 | 503 |
+| SH-42 | 504 |
+| SH-43 | 505 |
+| SH-44 | 506 |
+| SH-45 | 507 |
+
+509 source items; 100 inventory IDs represented; 351 excluded items.
+
+Image-only additions for m4c-card-sales-orders: SH-46 and DD-135. These supplement the source-ID count; every source ordinal is assigned exactly once.
+
+### m4c-card-quotes
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: loading structural wrapper; no painted control | 1 |
+| excluded: invisible zero-area element | 2–3 |
+
+3 source items; 0 inventory IDs represented; 3 excluded items.
+
+### m4c-card-invoices
+
+| Inventory number / exclusion reason | controls.json item ordinals |
+| --- | --- |
+| excluded: structural wrapper, static label/value or repeated source; no separate painted control | 1, 37, 51, 59, 62, 82–83, 86, 106, 109, 121, 123–124, 172–174, 405–410, 412, 419–422, 430–433, 436, 439–440, 442–446, 456–457, 462–463, 470 |
+| SH-01 | 2–4 |
+| excluded: invisible zero-area element | 5–9, 12, 15, 18, 21, 24, 27, 32, 81, 90–91, 93–94, 96–97, 100–101, 112, 114, 127, 130, 133, 139, 142, 151, 154, 157, 163, 166, 169, 195–196, 216, 222, 224, 230, 255, 265, 269, 282, 288, 301, 305, 314, 317–318, 321, 324–327, 331, 339, 351–352, 361, 364, 380, 382, 385, 390, 393, 418, 428–429, 454–455, 468–469, 478–496 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29–31 |
+| SH-10 | 33 |
+| SH-11 | 34–35 |
+| SH-12 | 36 |
+| SH-13 | 38–39 |
+| SH-14 | 40–41 |
+| SH-15 | 42–43 |
+| SH-16 | 44–45 |
+| SH-17 | 46–47 |
+| SH-18 | 48–49 |
+| SH-19 | 50 |
+| SH-20 | 52–53 |
+| SH-21 | 54–55 |
+| SH-22 | 56–57 |
+| SH-23 | 58 |
+| SH-24 | 60–61 |
+| SH-25 | 63–64 |
+| excluded: outside viewport or behind fixed content header | 65–80, 175, 177, 181–194, 197–215, 217–221, 223, 225–229, 231–254, 256–264, 266–268, 270–281, 283–287, 289–300, 302–304, 306–313, 315–316, 319–320, 322–323, 328–330, 332–338, 340–350, 353–360, 362–363, 365–379, 381, 383–384, 386–389, 391–392, 394–404, 411, 497, 509 |
+| SH-26 | 84 |
+| SH-27 | 85 |
+| SH-28 | 87 |
+| SH-29 | 88 |
+| SH-30 | 89 |
+| SH-31 | 92 |
+| SH-32 | 95 |
+| SH-33 | 98–99 |
+| SH-34 | 102–105 |
+| DD-01 | 107–108 |
+| DD-90 | 110–111 |
+| DD-04 | 113 |
+| DD-05 | 115–116 |
+| DD-06 | 117–118 |
+| DD-07 | 119–120 |
+| DD-93 | 122 |
+| DD-10 | 125–126 |
+| DD-11 | 128–129 |
+| DD-12 | 131–132 |
+| DD-54 | 134–135 |
+| DD-57 | 136 |
+| DD-55 | 137–138 |
+| DD-13 | 140–141 |
+| DD-15 | 143–144 |
+| DD-30 | 145 |
+| DD-16 | 146–147 |
+| DD-31 | 148 |
+| DD-18 | 149–150 |
+| DD-20 | 152–153 |
+| DD-21 | 155–156 |
+| DD-56 | 158–159 |
+| DD-58 | 160 |
+| DD-23 | 161–162 |
+| DD-19 | 164–165 |
+| DD-24 | 167–168 |
+| DD-146 | 170 |
+| DD-29 | 171 |
+| DD-32 | 176 |
+| DD-33 | 178 |
+| DD-34 | 179 |
+| DD-35 | 180 |
+| DD-125 | 413–414 |
+| DD-126 | 415–416 |
+| DD-127 | 417 |
+| DD-128 | 423 |
+| DD-129 | 424 |
+| DD-130 | 425 |
+| DD-131 | 426 |
+| DD-132 | 427 |
+| DD-133 | 434–435 |
+| DD-134 | 437–438 |
+| DD-136 | 441 |
+| DD-138 | 447–448 |
+| DD-139 | 449 |
+| DD-140 | 450 |
+| DD-141 | 451 |
+| DD-137 | 452–453 |
+| DD-142 | 458–459 |
+| DD-143 | 460–461 |
+| DD-144 | 464–465 |
+| DD-145 | 466–467 |
+| DD-147 | 471 |
+| DD-148 | 472–474 |
+| DD-149 | 475–476 |
+| DD-98 | 477 |
+| SH-35 | 498 |
+| SH-36 | 499 |
+| SH-37 | 500 |
+| SH-38 | 501 |
+| SH-39 | 502 |
+| SH-40 | 503 |
+| SH-41 | 504 |
+| SH-42 | 505 |
+| SH-43 | 506 |
+| SH-44 | 507 |
+| SH-45 | 508 |
+
+509 source items; 101 inventory IDs represented; 349 excluded items.
+
+Image-only additions for m4c-card-invoices: SH-46 and DD-135. Every source ordinal is assigned exactly once.
