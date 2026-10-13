@@ -67,6 +67,10 @@ export const accountsListPageConfig: ModuleListScreenConfig = {
   filterTitle: "Filter Accounts by",
   filterGroups: accountsFilterGroups,
   sortFieldLabels: ACCOUNTS_SORT_FIELD_LABELS,
+  pinnedViews: ["All Accounts", "All Locked Accounts"],
+  phoneLaterModule: "M5",
+  linkWebsite: true,
+  badgeColumn: false,
   inventory: {
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },

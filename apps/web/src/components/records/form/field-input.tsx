@@ -19,9 +19,13 @@ import type { ClientRecordService } from "@/lib/api/client/provider";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
-  displayDateToCalendarShape,
+  displayDateToModelShape,
 } from "@/lib/records/calendar-date";
-import { isModuleRegistered, resolveModuleLaterKey } from "@/modules/registry";
+import {
+  isModuleRegistered,
+  resolveModuleLaterKey,
+  resolveModuleScreenByApiName,
+} from "@/modules/registry";
 import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
@@ -50,6 +54,10 @@ export interface FieldInputProps {
   hideLabel?: boolean;
   inline?: boolean;
   recordService?: RecordService | ClientRecordService;
+  /** Record address for the name-cell links of an observed record picker. */
+  lookupRecordHref?: (id: string, module?: string) => string;
+  /** Owner id to display name, forwarded to the record picker's owner columns. */
+  lookupOwnerNames?: Readonly<Record<string, string>>;
 }
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
@@ -65,7 +73,10 @@ export function picklistChoices(options: readonly PicklistOption[], value: strin
 }
 
 type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
-  /** The contract value: `YYYY-MM-DD`, or empty when the field has no day. */
+  /**
+   * The contract value: `YYYY-MM-DD`, the entry as typed while it is not a full day, or empty when
+   * the field has no day.
+   */
   value: string;
   onModelChange: (value: FieldValue) => void;
 };
@@ -76,9 +87,13 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
  * not exist: the shape is mapped to `YYYY-MM-DD` and `form-validation` rejects the impossible day,
  * instead of the input silently dropping it.
  *
- * Only a model write that did not come from this input replaces the entry. An incomplete day has
- * no model value at all, so treating the echo of our own write as an outside write would clear the
- * text the moment somebody deletes a character from a date that is already filled in.
+ * An entry that is not a full day yet keeps what is typed in the model too. Dropping it to the
+ * empty value would let `Save` clear a stored day with half an entry, because the field is optional
+ * and validation cannot tell the two apart. Only a genuinely blank entry means "no day".
+ *
+ * Only a model write that did not come from this input replaces the entry. Treating the echo of
+ * our own write as an outside write would clear the text the moment somebody deletes a character
+ * from a date that is already filled in.
  */
 function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
   const [written, setWritten] = useState(value);
@@ -94,7 +109,7 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
       value={entry}
       placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
       onChange={(next) => {
-        const shape = displayDateToCalendarShape(next);
+        const shape = displayDateToModelShape(next);
         // The empty model comes back as "" (`FieldInput` reads a non-string value as empty).
         setWritten(shape ?? "");
         setEntry(next);
@@ -125,6 +140,8 @@ export function FieldInput({
   hideLabel,
   inline,
   recordService,
+  lookupRecordHref,
+  lookupOwnerNames,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -144,6 +161,7 @@ export function FieldInput({
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
     isLookup && !isTargetRegistered ? resolveModuleLaterKey(targetModule) : undefined;
+  const lookupChrome = resolveModuleScreenByApiName(targetModule)?.form.recordPickerChrome;
   const lookupButtonRef = useLaterModule<HTMLButtonElement>(targetLaterModule);
   const [lookupOpen, setLookupOpen] = useState(false);
   const reference =
@@ -194,7 +212,10 @@ export function FieldInput({
       return (
         <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
+    // A `bigint` field is drawn as the same single-line numeric entry as `integer`: the reference
+    // Accounts form shows Account Number without any long-number widget.
     case "integer":
+    case "bigint":
     case "double":
     case "currency":
       return (
@@ -342,6 +363,12 @@ export function FieldInput({
               module={targetModule}
               selectedId={reference?.id}
               recordService={recordService}
+              chrome={lookupChrome ?? "interim"}
+              recordHref={lookupRecordHref ? (id) => lookupRecordHref(id, targetModule) : undefined}
+              ownerNames={
+                lookupOwnerNames ??
+                (users ? Object.fromEntries(users.map((u) => [u.id, u.name])) : undefined)
+              }
               onDone={(selected) => {
                 onChange(selected);
                 setLookupOpen(false);
@@ -354,7 +381,6 @@ export function FieldInput({
     }
     case "multi_module_lookup":
     case "datetime":
-    case "bigint":
       return null;
   }
 }

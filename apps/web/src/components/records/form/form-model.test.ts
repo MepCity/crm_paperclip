@@ -121,6 +121,54 @@ describe("metadata form model", () => {
     });
   });
 
+  it("sends a long integer as decimal text and keeps unchanged stored text out of the payload", () => {
+    const fields = [
+      field("Account_Number", { dataType: "bigint" }),
+      field("Employees", { dataType: "integer" }),
+    ];
+    expect(formPayload(fields, { Account_Number: 123456, Employees: 42 })).toEqual({
+      Account_Number: "123456",
+      Employees: 42,
+    });
+    // The stored form of a long integer is already decimal text, so retyping the same digits
+    // stays "unchanged" for the edit form's dirty compare.
+    const baseline = { Account_Number: "123456", Employees: 42 };
+    expect(formPayload(fields, { Account_Number: 123456, Employees: 43 }, baseline)).toEqual({
+      Employees: 43,
+    });
+    expect(initialFormValues(fields, baseline)).toEqual(baseline);
+  });
+
+  it("builds an Accounts payload the record service type rule accepts", async () => {
+    const ctx = {
+      orgId: "form-model-accounts",
+      orgSlug: "form-model-accounts",
+      orgName: "Form Model Accounts",
+      userId: "form-user",
+      role: "admin" as const,
+    };
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: async () => [ctx.userId],
+    });
+    const { accountsFormRules } = await import("@/modules/accounts/accounts-form-rules");
+    const module = await service.getModule("Accounts");
+    const fields = formFields(
+      module,
+      buildFormModel(module, "create"),
+      "create",
+      accountsFormRules,
+    );
+    const record = await service.create(
+      "Accounts",
+      formPayload(fields, {
+        Account_Name: "Payload Account",
+        Account_Number: 123456789012,
+        Owner: ctx.userId,
+      }),
+    );
+    expect(record.fields.Account_Number).toBe("123456789012");
+  });
+
   it("includes coordinate members for each Contacts address group", async () => {
     const service = createFixtureRecordService({
       orgId: "form-model-contacts",

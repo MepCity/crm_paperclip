@@ -70,6 +70,20 @@ test("whole numbers and empty optional integers pass", () => {
   }
 });
 
+test("bigint validates as a whole number and reports a decimal", () => {
+  const optional = [field("Account_Number", "Account Number", "bigint", false)];
+  for (const value of [1234567890, 0, null]) {
+    expect(validateRecordForm(optional, { Account_Number: value }, (f) => f.label)).toEqual({});
+  }
+  expect(validateRecordForm(optional, { Account_Number: 12.5 }, (f) => f.label)).toEqual({
+    Account_Number: "Please enter a valid Account Number.",
+  });
+  const required = [field("Account_Number", "Account Number", "bigint", true)];
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Account_Number: "Account Number cannot be empty.",
+  });
+});
+
 test("isEmailFormatValid accepts common addresses", () => {
   expect(isEmailFormatValid("user@example.test")).toBe(true);
   expect(isEmailFormatValid("bad")).toBe(false);
@@ -87,6 +101,28 @@ test("date rejects a day that never happened", () => {
   expect(validateRecordForm(fields, { Date_of_Birth: "2026-02-30" }, (f) => f.label)).toEqual({
     Date_of_Birth: "Please enter a valid Date of Birth.",
   });
+});
+
+test("date rejects a half-typed entry instead of reading it as empty", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  for (const value of ["1", "15.", "15.02", "15.02.202", "1.2.2024"]) {
+    expect(validateRecordForm(fields, { Date_of_Birth: value }, (f) => f.label)).toEqual({
+      Date_of_Birth: "Please enter a valid Date of Birth.",
+    });
+  }
+});
+
+test("an optional date stays valid when the entry is really cleared", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  expect(validateRecordForm(fields, { Date_of_Birth: null }, (f) => f.label)).toEqual({});
+  const requiredFields = [field("Date_of_Birth", "Date of Birth", "date", true)];
+  expect(validateRecordForm(requiredFields, { Date_of_Birth: null }, (f) => f.label)).toEqual({
+    Date_of_Birth: "Date of Birth cannot be empty.",
+  });
+  // Half an entry is not empty, so a required field reports the format, not the empty message.
+  expect(
+    validateRecordForm(requiredFields, { Date_of_Birth: "15.02.202" }, (f) => f.label),
+  ).toEqual({ Date_of_Birth: "Please enter a valid Date of Birth." });
 });
 
 test("date rejects anything outside the contract shape", () => {

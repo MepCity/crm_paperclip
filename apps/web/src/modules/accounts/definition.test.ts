@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { moduleScreens, resolveModuleScreen } from "../registry";
 import { accountsScreenDefinition } from "./definition";
 
-test("exports a complete definition meeting ModuleScreenDefinition without registry addition", () => {
+test("exports a complete Accounts module screen definition", () => {
   expect(accountsScreenDefinition).toMatchObject({
     apiName: "Accounts",
     tab: "Accounts",
@@ -23,6 +23,10 @@ test("exports a complete definition meeting ModuleScreenDefinition without regis
   expect(accountsScreenDefinition.form.profileImageIcon).toBeDefined();
   expect(accountsScreenDefinition.detail.portraitIcon).toBeDefined();
   expect(accountsScreenDefinition.form.rules.addresses).toHaveLength(2);
-  expect(resolveModuleScreen("Accounts")).toBeUndefined();
-  expect(moduleScreens.some((definition) => definition.apiName === "Accounts")).toBe(false);
+  expect(accountsScreenDefinition.detail.linkedContactSummary).toBe(true);
+  expect(accountsScreenDefinition.detail.relatedListRail?.linksGroup.title).toBe("Links");
+  expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
+  expect(moduleScreens.some((definition) => definition.apiName === "Accounts")).toBe(true);
+  // Lookups that target Accounts draw the picker captured in m3f-create-parent.
+  expect(accountsScreenDefinition.form.recordPickerChrome).toBe("observed");
 });

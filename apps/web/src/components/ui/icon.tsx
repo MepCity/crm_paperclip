@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Columns3,
   Contact,
   Folder,
   Home,
@@ -17,7 +18,9 @@ import {
   Loader2,
   LogOut,
   type LucideIcon,
+  Mail,
   MessageSquare,
+  Minus,
   PanelLeftClose,
   PanelLeftOpen,
   Phone,
@@ -416,6 +419,7 @@ function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { modu
 export const Icons = {
   activity: Activity,
   messageSquare: MessageSquare,
+  envelope: Mail,
   phone: Phone,
   recordLookup: RecordLookupIcon,
   recordUser: RecordUser,
@@ -448,6 +452,7 @@ export const Icons = {
   hideMenu: PanelLeftClose,
   showMenu: PanelLeftOpen,
   plus: Plus,
+  minus: Minus,
   settings: Settings,
   users: Users,
   spinner: Loader2,
@@ -475,12 +480,14 @@ export const Icons = {
   viewTypeCards: ViewTypeCardsIcon,
   viewTypeArrow: ViewTypeArrowIcon,
   settingsSliders: SettingsSlidersIcon,
+  columns: Columns3,
   eye: EyeIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
   timelinePencil: TimelinePencilIcon,
   timelineGeneric: TimelineGenericIcon,
   tablePlus: TablePlusIcon,
+  tableChevronDown: TableChevronDownIcon,
   diagonalExpand: DiagonalExpandIcon,
   recordTag: Tag,
 };
@@ -722,6 +729,29 @@ function TablePlusIcon(props: SVGProps<SVGSVGElement>) {
       <line x1="6.5" y1="5.5" x2="6.5" y2="14.5" />
       <line x1="10.5" y1="8" x2="10.5" y2="12" />
       <line x1="8.5" y1="10" x2="12.5" y2="10" />
+    </svg>
+  );
+}
+
+/** Record-picker table mark (AF-11.4): the same table frame with a down arrow instead of a plus. */
+function TableChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" />
+      <line x1="1.5" y1="5.5" x2="14.5" y2="5.5" />
+      <line x1="6.5" y1="5.5" x2="6.5" y2="14.5" />
+      <polyline points="9,8.5 11,10.5 13,8.5" />
     </svg>
   );
 }

@@ -83,8 +83,6 @@ export function buildContactsFilterGroups(input: Input): readonly FilterGroup[] 
       label: "Filter By Fields",
       items: [...initialFieldLabels, ...remaining].map((label, index) => {
         const field = labels.get(label);
-        if (label === "Account Name")
-          return { id: field?.apiName ?? `field-${index}`, label, laterModule: "M3" as const };
         const definition = field ? editor(field, input) : undefined;
         return {
           id: field?.apiName ?? `field-${index}`,

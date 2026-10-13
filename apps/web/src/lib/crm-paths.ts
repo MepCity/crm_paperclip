@@ -48,6 +48,25 @@ export function moduleRecordClonePath(
   return moduleTabPath(orgSlug, moduleApiName, recordId, "clone");
 }
 
+export function moduleRecordMergePath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "merge");
+}
+
+/** Conflict groups of a module-wide cleanup, carrying the match fields it ran on. */
+export function moduleDeduplicatePath(
+  orgSlug: string,
+  moduleApiName: string,
+  fields: readonly string[] = [],
+): string {
+  const params = new URLSearchParams();
+  if (fields.length > 0) params.set("fields", fields.join(","));
+  return withSearchParams(moduleTabPath(orgSlug, moduleApiName, "deduplicate"), params);
+}
+
 export function moduleCreatePath(orgSlug: string, moduleApiName: string): string {
   return moduleTabPath(orgSlug, moduleApiName, "create");
 }

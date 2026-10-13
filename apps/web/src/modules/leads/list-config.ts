@@ -1,4 +1,5 @@
 import type { ModuleApiName } from "@crm/core/records";
+import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
   moduleListCustomPath,
@@ -55,7 +56,7 @@ export const LEADS_SORT_FIELD_LABELS = [
   "Website",
 ] as const;
 
-export const leadsListPageConfig = {
+export const leadsListPageConfig: ModuleListScreenConfig = {
   module: LEADS_MODULE,
   linkField: "Full_Name",
   // The reference names the record title field "Lead Name" in Sort By.
@@ -66,6 +67,27 @@ export const leadsListPageConfig = {
   filterTitle: "Filter Leads by",
   filterGroups: leadsFilterGroups,
   sortFieldLabels: LEADS_SORT_FIELD_LABELS,
+  /**
+   * Actions menu rows in the order the reference list screen shows them; rows of later modules
+   * stay inert, and the rows Module 1 delivered without a handler keep that boundary.
+   */
+  toolbarActions: [
+    { id: "mass-transfer", label: "Mass Transfer" },
+    { id: "mass-delete", label: "Mass Delete" },
+    { id: "mass-update", label: "Mass Update" },
+    { id: "mass-convert", label: "Mass Convert" },
+    { id: "tags", label: "Manage Tags", laterModule: "M11" },
+    { id: "assignment-rules", label: "Assignment Rules", laterModule: "M12" },
+    { id: "drafts", label: "Drafts" },
+    { id: "mass-email", label: "Mass Email", laterModule: "M10" },
+    { id: "approve", label: "Approve Leads", laterModule: "P3" },
+    { id: "deduplicate", label: "Deduplicate Leads" },
+    { id: "campaigns", label: "Add to Campaigns", laterModule: "M7" },
+    { id: "client-script", label: "Create Client Script", laterModule: "M11" },
+    { id: "export", label: "Export Leads", laterModule: "M6" },
+    { id: "sheet", label: "Sheet view", laterModule: "P3" },
+    { id: "print", label: "Print View", laterModule: "M6", submenuIndicator: true },
+  ],
   paths: {
     defaultList: moduleListDefaultPath,
     customList: moduleListCustomPath,

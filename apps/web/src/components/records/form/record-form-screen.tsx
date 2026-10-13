@@ -105,7 +105,12 @@ export interface OwnerPickerProps {
 export interface RecordFormConfig {
   module: string;
   rules: FormRules;
-  paths: { detail: (id: string) => string; create: string; cancel: string };
+  paths: {
+    detail: (id: string, module?: string) => string;
+    record?: (module: string, id: string) => string;
+    create: string;
+    cancel: string;
+  };
   navigate: (path: string) => void;
   currencyPrefix?: string;
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
@@ -205,6 +210,10 @@ function LoadedRecordForm({
       : intent === "edit"
         ? `Edit ${metadata.singularLabel}`
         : `Create ${metadata.singularLabel}`;
+  const ownerNames = useMemo(
+    () => Object.fromEntries(users.map((user) => [user.id, user.name])),
+    [users],
+  );
   const labelsByField = useMemo(() => {
     const labels = new Map<string, string>();
     const fieldByName = new Map(fields.map((field) => [field.apiName, field]));
@@ -482,9 +491,25 @@ function LoadedRecordForm({
                 }
               : undefined
           }
-          searchable={Boolean(countryRule && field.apiName === countryRule.country) || isState}
+          searchable={
+            Boolean(countryRule && field.apiName === countryRule.country) ||
+            isState ||
+            Boolean(rules.searchablePicklists?.includes(field.apiName))
+          }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          lookupRecordHref={
+            field.dataType === "lookup"
+              ? (id: string, targetMod?: string) => {
+                  const targetModule = targetMod ?? field.lookup?.module ?? config.module;
+                  if (config.paths.record) {
+                    return config.paths.record(targetModule, id);
+                  }
+                  return config.paths.detail(id, targetModule);
+                }
+              : undefined
+          }
+          lookupOwnerNames={ownerNames}
           currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
           currencyInformation={
             field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined

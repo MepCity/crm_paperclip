@@ -21,6 +21,20 @@ export function displayDateToCalendarShape(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * What a `date` entry writes into the form model: `YYYY-MM-DD` for a full day, the entry itself
+ * while it is not a full day, and null once nothing is left.
+ *
+ * An unfinished entry must not collapse into the same model value as a cleared field: the write
+ * would drop a stored day on `Save` while the screen still shows half an entry. Keeping the typed
+ * text makes the model say "half an entry", so validation reports it and the write stays blocked;
+ * only the calendar shape is accepted by the record contract.
+ */
+export function displayDateToModelShape(value: string): string | null {
+  if (value.trim() === "") return null;
+  return displayDateToCalendarShape(value) ?? value;
+}
+
 /** `YYYY-MM-DD` as `DD.MM.YYYY`; anything else is shown as it came in. */
 export function calendarShapeToDisplayDate(value: string): string {
   const match = CALENDAR_SHAPE.exec(value);

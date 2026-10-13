@@ -209,6 +209,8 @@ The field names and configured values come from the metadata export. The path
 and response envelope were not captured; see ADR 0004. The decoder rejects
 missing, malformed and unknown currency fields with the existing ValidationError.
 
+Deals Stage options carry probability, forecast_category (name only), and deal_category together; options without stage metadata omit all three keys. Partial or invalid stage metadata fails decoding.
+
 ## Input bounds
 
 Reference values reject unknown inner keys with field-keyed `INVALID_DATA` (400).
@@ -218,8 +220,12 @@ optional display fields remain accepted for response round trips.
 
 Bulk and count restrictions accept search strings up to 2,000 UTF-16 code units,
 matching the existing long-text field limit. Empty strings remain valid and text
-is passed to the service unchanged. Each criteria group accepts up to 500
-siblings, matching the existing bulk ID limit; this applies at every nesting
-level alongside the existing depth limit of 32. These are local input bounds,
+is passed to the service unchanged. Each criteria group and each criteria
+value array accepts up to 500 entries, matching the existing bulk ID limit; the
+group limit applies at every nesting level alongside the existing depth limit
+of 32. A decoded criteria tree accepts at most 10,000 nodes in total (root,
+groups and leaves; value array entries do not count). The budget is shared
+across all branches and starts fresh for each decode; it allows nearly twenty
+full 500-leaf groups, well above current panel and saved-view criteria. These are local input bounds,
 not claims about observed reference CRM limits. Rejections retain the existing
 four-key error envelope with `details.fields.search` or `details.fields.filters`.

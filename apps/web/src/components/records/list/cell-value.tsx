@@ -16,6 +16,7 @@ export interface CellValueProps {
    * column is itself the link column, in which case the row address wins.
    */
   href?: string;
+  linkWebsite?: boolean;
   /**
    * User id → display name for `ownerlookup` cells. The component does not
    * resolve users; the caller supplies the map. An unknown id is shown as text.
@@ -34,6 +35,7 @@ export function CellValue({
   field,
   value,
   href,
+  linkWebsite,
   ownerNames = {},
   format,
   orgSlug,
@@ -53,6 +55,7 @@ export function CellValue({
   }
   const rendered = formatFieldValue(field, value, ownerNames, format, {
     href: field.dataType === "lookup" ? undefined : href,
+    linkWebsite,
     orgSlug: effectiveOrgSlug,
   });
   if (rendered.kind === "empty") return null;

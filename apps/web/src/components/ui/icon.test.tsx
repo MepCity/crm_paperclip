@@ -7,6 +7,7 @@ afterEach(cleanup);
 const expectedIcons = [
   "activity",
   "messageSquare",
+  "envelope",
   "phone",
   "recordUser",
   "avatarPerson",
@@ -36,6 +37,7 @@ const expectedIcons = [
   "hideMenu",
   "showMenu",
   "plus",
+  "minus",
   "productCaretDown",
   "settings",
   "users",
@@ -65,6 +67,7 @@ const expectedIcons = [
   "viewTypeCards",
   "viewTypeArrow",
   "settingsSliders",
+  "columns",
   "eye",
   "refresh",
   "ellipsis",
@@ -72,6 +75,7 @@ const expectedIcons = [
   "timelinePencil",
   "recordLookup",
   "tablePlus",
+  "tableChevronDown",
   "diagonalExpand",
   "recordTag",
 ] as const;

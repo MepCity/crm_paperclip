@@ -32,6 +32,8 @@ import {
   encodeModule,
   encodeRecord,
   encodeView,
+  MAX_CRITERIA_GROUP_SIZE,
+  MAX_CRITERIA_NODES,
 } from "./codec";
 import { encodeError } from "./errors";
 
@@ -92,7 +94,44 @@ const tokens: { port: CriteriaToken; wire: unknown }[] = [
   { port: { token: "CATEGORY", name: "Junk" }, wire: `\${CATEGORY.Junk}` },
 ];
 
+// Root plus 20 child groups; leaves fill each group up to the sibling limit.
+function criteriaTree(nodes: number) {
+  let leaves = nodes - 21;
+  return {
+    group_operator: "AND",
+    group: Array.from({ length: 20 }, () => {
+      const size = Math.min(leaves, MAX_CRITERIA_GROUP_SIZE);
+      leaves -= size;
+      return {
+        group_operator: "OR",
+        group: Array.from({ length: size }, () => ({
+          field: { api_name: "Converted__s" },
+          comparator: "equal",
+          value: false,
+        })),
+      };
+    }),
+  };
+}
+
 describe("wire codec", () => {
+  it("bounds criteria value arrays without changing accepted values", () => {
+    const value = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, (_, i) => `Value ${i}`);
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value };
+    expect(decodeCriteria(leaf)).toEqual({ field: "Company", comparator: "equal", value });
+    expect(() => decodeCriteria({ ...leaf, value: [...value, "extra"] })).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+  });
+  it("shares a total node budget across sibling groups and resets it per decode", () => {
+    const boundary = criteriaTree(MAX_CRITERIA_NODES);
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+    expect(() => decodeCriteria(criteriaTree(MAX_CRITERIA_NODES + 1))).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+  });
+
   it.each(["equal", "contains", "not_contains", "less_equal"] as const)(
     "preserves comparator %s and each token through JSON",
     (comparator) => {
@@ -745,6 +784,59 @@ describe("named reference wire contract", () => {
     const definition = field("Birthday", "date");
     expect(encodeField(definition).data_type).toBe("date");
     expect(decodeField(encodeField(definition))).toEqual(definition);
+  });
+});
+
+describe("picklist stage metadata", () => {
+  const definition = {
+    ...field("Stage", "picklist"),
+    picklist: [
+      {
+        displayValue: "Qualification",
+        storedValue: "Qualification",
+        stage: { probability: 10, forecastCategory: "Pipeline", category: "Open" as const },
+      },
+      { displayValue: "Plain", storedValue: "Plain" },
+    ],
+  };
+  it("round-trips stages and omits stage keys on plain options", () => {
+    const encoded = json(encodeField(definition));
+    expect(encoded.pick_list_values?.[0]).toEqual({
+      display_value: "Qualification",
+      actual_value: "Qualification",
+      probability: 10,
+      forecast_category: { name: "Pipeline" },
+      deal_category: "Open",
+    });
+    expect(encoded.pick_list_values?.[1]).toEqual({
+      display_value: "Plain",
+      actual_value: "Plain",
+    });
+    expect(decodeField(encoded)).toEqual(definition);
+    expect(decodeField(encoded).picklist?.[1]).not.toHaveProperty("stage");
+  });
+  it.each([
+    { probability: 10 },
+    { forecast_category: { name: "Pipeline" } },
+    { deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" } },
+    { probability: 10, deal_category: "Open" },
+    { forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" }, deal_category: "Other" },
+    { probability: -1, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 101, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 1.5, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: null, deal_category: "Open" },
+  ])("rejects partial or invalid stage metadata %j", (stage) => {
+    const encoded = encodeField(definition);
+    expect(() =>
+      decodeField({
+        ...encoded,
+        pick_list_values: [
+          { display_value: "Qualification", actual_value: "Qualification", ...stage },
+        ],
+      } as unknown as Parameters<typeof decodeField>[0]),
+    ).toThrow(ValidationError);
   });
 });
 

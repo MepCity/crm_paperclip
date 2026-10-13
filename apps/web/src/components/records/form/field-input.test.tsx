@@ -111,7 +111,7 @@ test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form mode
   expect(change).toHaveBeenLastCalledWith(null);
   await user.type(input, "0");
   expect(input.value).toBe("0");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("0");
   await user.type(input, "4.07.1998");
   expect(input.value).toBe("04.07.1998");
   expect(change).toHaveBeenLastCalledWith("1998-07-04");
@@ -134,7 +134,7 @@ test("date keeps a partial day when deleting from a filled value", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("15.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("15.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("15.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-15");
@@ -148,10 +148,33 @@ test("date keeps an impossible day while it is being corrected", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("30.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("30.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("30.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-30");
+});
+test("a half-typed date stays a model value while a cleared one is empty", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-15" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}{Backspace}");
+  expect(input.value).toBe("15.02.20");
+  expect(change).toHaveBeenLastCalledWith("15.02.20");
+  await user.clear(input);
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+test("date shows a half-typed entry that is held in the model", () => {
+  const noop = () => {};
+  const { rerender } = render(
+    <FieldInput field={field("date")} value="15.02.202" onChange={noop} />,
+  );
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe(
+    "15.02.202",
+  );
+  rerender(<FieldInput field={field("date")} value={null} onChange={noop} />);
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe("");
 });
 test("date follows a model written from outside the input", () => {
   const noop = () => {};
@@ -273,11 +296,26 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["multi_module_lookup", "datetime"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
   }
+});
+
+test("bigint renders the same single-line numeric entry as integer", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="bigint" initial={1234567890} onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("1234567890");
+  await user.clear(input);
+  await user.type(input, "42");
+  await user.tab();
+  expect(change).toHaveBeenLastCalledWith(42);
+  await user.clear(input);
+  await user.tab();
+  expect(change).toHaveBeenLastCalledWith(null);
 });
 
 test("lookup input with registered target displays value and opens selector dialog", async () => {
@@ -405,10 +443,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Account_Name",
-    label: "Account Name",
+    apiName: "Deal_Name",
+    label: "Deal Name",
     dataType: "lookup",
-    lookup: { module: "Accounts" },
+    lookup: { module: "Deals" },
     required: false,
     readOnly: false,
     unique: false,
@@ -420,19 +458,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      initial={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
-  expect(input.value).toBe("Acme Corp");
+  const input = screen.getByRole("textbox", { name: "Deal Name" }) as HTMLInputElement;
+  expect(input.value).toBe("Big Deal");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M3");
+  expect(input.getAttribute("data-later-module")).toBe("M4");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Account Name lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M3");
+  const btn = screen.getByRole("button", { name: "Open Deal Name lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M4");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog

@@ -23,6 +23,11 @@ import type { ModuleKey } from "@/components/ui/later-module";
 
 export type RelatedListControlType = "button" | "split-button" | "select" | "icon-button";
 
+export interface ModuleMergeDefinition {
+  criterionFields: readonly string[];
+  matchingColumns: readonly string[];
+}
+
 export interface RelatedListControlDefinition {
   id: string;
   label: string;
@@ -63,6 +68,11 @@ export interface RelatedListRailLinksGroupDefinition {
     label: string;
     moduleKey: ModuleKey;
   };
+}
+
+export interface RelatedListRailChromeDefinition {
+  organizeAriaLabel: string;
+  linksGroup: RelatedListRailLinksGroupDefinition;
 }
 
 export interface RelatedListDefinition {
@@ -116,6 +126,8 @@ export interface ModuleScreenDefinition {
   navigation: { id: string; icon: Icon };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
+  searchColumns?: readonly string[];
+  merge?: ModuleMergeDefinition;
   buildFilterGroups: (input: {
     fields: readonly FieldDefinition[];
     users: readonly { userId: string; name: string; email?: string }[];
@@ -129,9 +141,17 @@ export interface ModuleScreenDefinition {
     inventoryChrome?: boolean;
     profileImageLaterModule?: ModuleKey;
     profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    /**
+     * Pickers that target this module draw the reference-observed record-picker chrome
+     * (`accounts-form.md` › Parent Account lookup). Omitted keeps the shared interim picker.
+     */
+    recordPickerChrome?: "observed";
   };
   detail: {
-    header: (record: RecordData) => {
+    header: (
+      record: RecordData,
+      context?: { orgSlug?: string },
+    ) => {
       title: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
@@ -145,7 +165,11 @@ export interface ModuleScreenDefinition {
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
     inlineEditable: (field: FieldDefinition) => boolean;
     lastUpdate: (record: RecordData, now: Date, format: FormatOptions) => string | null;
-    moreOptions: (handlers: { onClone: () => void; onDelete: () => void }) => RecordMenuGroup[];
+    moreOptions: (handlers: {
+      onClone: () => void;
+      onDelete: () => void;
+      onFindMergeDuplicates?: () => void;
+    }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;
     loadingAttributes?: Readonly<Record<string, boolean>>;
@@ -163,5 +187,7 @@ export interface ModuleScreenDefinition {
       upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };
     relatedLists?: readonly RelatedListDefinition[];
+    linkedContactSummary?: boolean;
+    relatedListRail?: RelatedListRailChromeDefinition;
   };
 }
