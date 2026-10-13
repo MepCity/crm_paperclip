@@ -6,6 +6,14 @@ Status: research for Grok QA inventory review and UI Lead metadata approval. MEP
 
 Define the Tasks baseline and the Meetings/Calls metadata differences. Reuse existing specs for shared controls. Meetings/Calls list evidence is recorded below; all record details, forms and write flows are separate research tasks. Tables below are generated from exported metadata; they contain configuration, never record values.
 
+## QA evidence retry — load gate
+
+The requested rendered-list recapture remains pending. During the QA correction
+run, five load-gate readings were 23.26, 20.15, 24.50, 29.23 and 85.18, all above
+the permitted threshold of 16. No new capture or reference request was made.
+Existing loading-only evidence below is unchanged; it does not satisfy the
+rendered-list inventory requirement. Further captures await the load decision.
+
 ## Meetings list
 
 The two permitted click-free captures show a loading skeleton, not a populated or empty list. The module heading, view selector, toolbar, filter panel, table/calendar presentation and footer are **not observed**. A loading skeleton does not establish an empty state. No list/calendar preference was changed. The existing Meetings Views table remains metadata evidence only.
