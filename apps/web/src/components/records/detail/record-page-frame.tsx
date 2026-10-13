@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
@@ -11,6 +11,7 @@ export interface RelatedListEntry {
   id: string;
   label: string;
   targetId: string;
+  tabId?: string;
   countBadge?: number | string;
   moduleKey?: ModuleKey | "M2";
   laterModule?: ModuleKey;
@@ -121,6 +122,15 @@ export function getActiveRelatedEntryId(
   return closestId;
 }
 
+function scrollScrollerToTarget(scroller: HTMLElement, target: HTMLElement) {
+  const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+  if (delta !== 0) {
+    scroller.scrollTop += delta;
+  } else if (target.offsetTop !== undefined) {
+    scroller.scrollTop = target.offsetTop;
+  }
+}
+
 export function RecordPageFrame({
   header,
   relatedListLabel,
@@ -139,12 +149,35 @@ export function RecordPageFrame({
   relatedRailFooter,
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pendingTargetRef = useRef<RelatedListEntry | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [uncontrolledSelectedId, setUncontrolledSelectedId] = useState<string | undefined>(
     selectedRelatedId ?? relatedEntries[0]?.id,
   );
   const activeSelectedId =
     selectedRelatedId !== undefined ? selectedRelatedId : uncontrolledSelectedId;
+
+  useEffect(() => {
+    const pending = pendingTargetRef.current;
+    if (!pending) return;
+
+    const targetTabId = pending.tabId ?? tabs[0]?.id;
+    if (selectedTabId !== targetTabId) return;
+
+    pendingTargetRef.current = null;
+
+    const scroller = scrollRef.current;
+    const target = Array.from(scroller?.querySelectorAll<HTMLElement>("[id]") ?? []).find(
+      (node) => node.id === pending.targetId,
+    );
+    if (!target) return;
+
+    if (scroller) {
+      scrollScrollerToTarget(scroller, target);
+    }
+    setUncontrolledSelectedId(pending.id);
+    onRelatedSelectionChange?.(pending.id);
+  }, [selectedTabId, tabs, onRelatedSelectionChange]);
 
   function handleScroll(event: React.UIEvent<HTMLDivElement>) {
     const scroller = event.currentTarget;
@@ -159,18 +192,27 @@ export function RecordPageFrame({
   }
 
   function selectRelated(entry: RelatedListEntry) {
+    const targetTabId = entry.tabId ?? tabs[0]?.id;
+    if (!targetTabId || !tabs.some((tab) => tab.id === targetTabId)) {
+      return;
+    }
+
+    if (targetTabId !== selectedTabId) {
+      pendingTargetRef.current = entry;
+      onTabChange(targetTabId);
+      return;
+    }
+
     const scroller = scrollRef.current;
     // Find only within this frame; data targets never become a CSS selector.
     const target = Array.from(scroller?.querySelectorAll<HTMLElement>("[id]") ?? []).find(
       (node) => node.id === entry.targetId,
     );
-    if (scroller && target) {
-      const delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-      if (delta !== 0) {
-        scroller.scrollTop += delta;
-      } else if (target.offsetTop !== undefined) {
-        scroller.scrollTop = target.offsetTop;
-      }
+    if (!target) {
+      return;
+    }
+    if (scroller) {
+      scrollScrollerToTarget(scroller, target);
     }
     setUncontrolledSelectedId(entry.id);
     onRelatedSelectionChange?.(entry.id);
@@ -264,6 +306,7 @@ export function RecordPageFrame({
         <Tabs
           selectedKey={selectedTabId}
           onSelectionChange={(id) => {
+            pendingTargetRef.current = null;
             onTabChange(String(id));
             if (scrollRef.current) scrollRef.current.scrollTop = 0;
             setScrolled(false);
