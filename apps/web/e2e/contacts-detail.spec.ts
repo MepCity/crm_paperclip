@@ -422,6 +422,33 @@ test.describe("Contacts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("clicking related list in rail while on Timeline tab opens Overview and brings card into view", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+
+    const frame = page.locator("[data-record-frame]");
+    const timelineTab = frame.getByRole("tab", { name: "Timeline" });
+    const overviewTab = frame.getByRole("tab", { name: "Overview" });
+
+    await timelineTab.click();
+    await expect(timelineTab).toHaveAttribute("aria-selected", "true");
+    await expect(frame.locator("[data-timeline-history]")).toBeVisible();
+
+    const rail = frame.getByRole("navigation", { name: "Related List" });
+    await rail.getByRole("link", { name: "Reporting Contacts" }).click();
+
+    await expect(overviewTab).toHaveAttribute("aria-selected", "true");
+    const reportingCard = frame.getByRole("region", { name: "Reporting Contacts" });
+    await expect(reportingCard).toBeVisible();
+    await expect(reportingCard).toBeInViewport();
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Deals card lists the contact deals and Deal Name opens Deal detail", async ({
     page,
     pageErrors,

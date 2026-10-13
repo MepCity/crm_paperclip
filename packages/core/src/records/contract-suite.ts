@@ -71,6 +71,10 @@ export function describeRecordServiceContract(
       optional: moduleOptional,
     } = moduleDef;
     const markerField = filterMarker.field;
+    const massInput = (fallback: string): RecordInput =>
+      moduleOptional?.massUpdateScenario
+        ? { [moduleOptional.massUpdateScenario.field]: moduleOptional.massUpdateScenario.value }
+        : { [markerField]: fallback };
     const markerSample = filterMarker.sample;
     const markerUpdated = filterMarker.updated;
     const markerTenantOther = filterMarker.tenantOther;
@@ -632,17 +636,22 @@ export function describeRecordServiceContract(
         await validation(service.update(moduleApiName, created.id, { [name]: ctx.userId }), name);
     });
     it("mass updates one eligible field and applies ordinary update validation", async () => {
+      const massField = moduleOptional?.massUpdateScenario?.field ?? markerField;
+      const massValue = moduleOptional?.massUpdateScenario?.value ?? "Mass Updated";
       const first = await service.create(moduleApiName, input());
       const second = await service.create(moduleApiName, input());
       const ids = [second.id, first.id];
-      await service.massUpdate(moduleApiName, ids, { [markerField]: "Mass Updated" });
+      await service.massUpdate(moduleApiName, ids, { [massField]: massValue });
       for (const id of ids)
-        expect((await service.get(moduleApiName, id)).fields[markerField]).toBe("Mass Updated");
+        expect((await service.get(moduleApiName, id)).fields[massField]).toBe(massValue);
       await validation(service.massUpdate(moduleApiName, ids, {}), "data");
-      const massUpdateSecondFieldKey = massUpdateClearablePhone ?? "Second_Mass_Update_Field";
+      const massUpdateSecondFieldKey =
+        massUpdateClearablePhone ??
+        metadata.fields.find((field) => field.massUpdate && field.apiName !== massField)?.apiName ??
+        "Second_Mass_Update_Field";
       await validation(
         service.massUpdate(moduleApiName, ids, {
-          [markerField]: "Example",
+          [massField]: "Example",
           [massUpdateSecondFieldKey]: "123",
         }),
         "data",
@@ -656,17 +665,14 @@ export function describeRecordServiceContract(
         service.massUpdate(moduleApiName, ids, { Unknown_Field: "Example" }),
         "Unknown_Field",
       );
-      const markerFieldMeta = metadata.fields.find((field) => field.apiName === markerField);
+      const markerFieldMeta = metadata.fields.find((field) => field.apiName === massField);
       const massUpdateInvalidValues: FieldValue[] = markerFieldMeta?.required
         ? [null, "", " ", 42]
         : [42];
       if (markerFieldMeta?.maxLength != null)
         massUpdateInvalidValues.push("x".repeat(markerFieldMeta.maxLength + 1));
       for (const value of massUpdateInvalidValues)
-        await validation(
-          service.massUpdate(moduleApiName, ids, { [markerField]: value }),
-          markerField,
-        );
+        await validation(service.massUpdate(moduleApiName, ids, { [massField]: value }), massField);
       if (massUpdateInvalidPicklist)
         await validation(
           service.massUpdate(moduleApiName, ids, {
@@ -686,7 +692,7 @@ export function describeRecordServiceContract(
             (await service.get(moduleApiName, id)).fields[massUpdateClearablePhone],
           ).toBeNull();
       }
-      expect((await service.get(moduleApiName, first.id)).fields[markerField]).toBe("Mass Updated");
+      expect((await service.get(moduleApiName, first.id)).fields[massField]).toBe(massValue);
     });
 
     it("changes ownership only to an active organization member", async () => {
@@ -729,7 +735,7 @@ export function describeRecordServiceContract(
               case "update":
                 return service.update(moduleApiName, locked.id, { [markerField]: markerUpdated });
               case "massUpdate":
-                return service.massUpdate(moduleApiName, ids, { [markerField]: markerUpdated });
+                return service.massUpdate(moduleApiName, ids, massInput(markerUpdated));
               case "changeOwner":
                 return service.changeOwner(moduleApiName, ids, "lock-test-owner");
               case "delete":
@@ -757,7 +763,7 @@ export function describeRecordServiceContract(
       for (const missing of ["missing", foreignRecord.id]) {
         const ids = [first.id, missing];
         for (const run of [
-          () => service.massUpdate(moduleApiName, ids, { [markerField]: "Must Not Persist" }),
+          () => service.massUpdate(moduleApiName, ids, massInput("Must Not Persist")),
           () => service.changeOwner(moduleApiName, ids, ctx.userId),
           () => service.delete(moduleApiName, ids),
         ]) {
@@ -771,10 +777,7 @@ export function describeRecordServiceContract(
     it("enforces 1–500 IDs for every batch operation, including deletion", async () => {
       const record = await service.create(moduleApiName, input());
       for (const ids of [[], Array.from({ length: 501 }, () => record.id)]) {
-        await validation(
-          service.massUpdate(moduleApiName, ids, { [markerField]: "Rejected" }),
-          "ids",
-        );
+        await validation(service.massUpdate(moduleApiName, ids, massInput("Rejected")), "ids");
         await validation(service.changeOwner(moduleApiName, ids, ctx.userId), "ids");
         await validation(service.delete(moduleApiName, ids), "ids");
         expect(await service.get(moduleApiName, record.id)).toEqual(record);
@@ -783,11 +786,13 @@ export function describeRecordServiceContract(
         Array.from({ length: 500 }, () => service.create(moduleApiName, input())),
       );
       const ids = records.map((row) => row.id);
-      await service.massUpdate(moduleApiName, ids, { [markerField]: "Boundary" });
+      await service.massUpdate(moduleApiName, ids, massInput("Boundary"));
       await service.changeOwner(moduleApiName, ids, ctx.userId);
-      expect((await service.get(moduleApiName, ids[499] as string)).fields[markerField]).toBe(
-        "Boundary",
-      );
+      expect(
+        (await service.get(moduleApiName, ids[499] as string)).fields[
+          moduleOptional?.massUpdateScenario?.field ?? markerField
+        ],
+      ).toBe(moduleOptional?.massUpdateScenario?.value ?? "Boundary");
       await service.delete(moduleApiName, ids);
       await expect(service.get(moduleApiName, ids[0] as string)).rejects.toBeInstanceOf(
         NotFoundError,
