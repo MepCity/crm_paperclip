@@ -134,6 +134,45 @@ function ThumbDown(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Original outlined thumb up, with no copied icon asset. */
+function ThumbUp(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 28.5 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path
+        d="M22 13h5V5h-5zM22 12h-8L5 13C3 13 2 12 2 10l1-4c0-1 1-2 3-2h7l-1-3h3l5 5h2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Original stopwatch outline for deal closing date badge. */
+function Stopwatch(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      {...props}
+    >
+      <circle cx="7" cy="8" r="5.25" />
+      <path d="M7 5.25V8l2 1.25" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.5 1.5h3M7 1.5V3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Original checkmark sized to the status menu's measured ink box. */
 function StatusCheck(props: SVGProps<SVGSVGElement>) {
   return (
@@ -434,6 +473,8 @@ export const Icons = {
   recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
   thumbDown: ThumbDown,
+  thumbUp: ThumbUp,
+  stopwatch: Stopwatch,
   statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
   productCaretDown: ProductCaretDown,
