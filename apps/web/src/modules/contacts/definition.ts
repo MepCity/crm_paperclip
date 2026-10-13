@@ -65,6 +65,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     sections: buildContactsDetailSections,
     inlineEditable: isContactInlineEditable,
     lastUpdate: formatContactsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildContactsRecordMoreMenuGroups,
     deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
     deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
