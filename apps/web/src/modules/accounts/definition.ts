@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import type { ModuleScreenDefinition } from "../types";
+import { AccountRecordScreen } from "./account-record-screen";
 import {
   buildAccountsBusinessCardFields,
   buildAccountsDetailSections,
@@ -44,6 +45,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
   pluralLabel: "Accounts",
   pageTitle: "Accounts",
   navigation: { id: "accounts", icon: Icons.building },
+  search: { secondaryFields: ["Phone", "Website"] },
   list: accountsListPageConfig,
   listCurrencyCode: ACCOUNTS_LIST_CURRENCY_CODE,
   searchColumns: ["Account_Name", "Phone", "Website", "Owner"],
@@ -58,6 +60,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     recordPickerChrome: "observed",
   },
   detail: {
+    Screen: AccountRecordScreen,
     header: accountsRecordHeaderIdentity,
     portraitIcon: AccountBuildingPlaceholder,
     addTags: { label: "Add Tags", laterModule: "M6" },

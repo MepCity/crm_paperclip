@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import { accountsScreenDefinition } from "./accounts/definition";
 import { leadsScreenDefinition } from "./leads/definition";
-import { moduleScreens, resolveModuleScreen } from "./registry";
+import { getModuleScreens, resolveModuleScreen } from "./registry";
 
 test("the shipped modules is registered", () => {
-  expect(moduleScreens.map((definition) => definition.tab)).toEqual([
+  expect(getModuleScreens().map((definition) => definition.tab)).toEqual([
     "Leads",
     "Contacts",
     "Accounts",
