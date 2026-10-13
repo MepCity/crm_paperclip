@@ -20,6 +20,7 @@ import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import {
   useDeleteRecords,
+  useHomeCurrency,
   useModule,
   useRecord,
   useRecordList,
@@ -119,6 +120,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const homeCurrencyQuery = useHomeCurrency();
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
@@ -216,10 +218,19 @@ export function RecordDetailScreen({
   const displayRecord = rules.statusRibbon
     ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
     : record;
-  const { title, subtitle, subtitleLaterModule, subtitleHref, portraitIcon } = rules.header(
-    record,
-    { orgSlug },
-  );
+  const {
+    title,
+    subtitle,
+    subtitleLaterModule,
+    subtitleHref,
+    portraitIcon,
+    hasPortrait,
+    recordNavigation,
+  } = rules.header(record, {
+    orgSlug,
+    currency: homeCurrencyQuery.data,
+    currencySymbol: homeCurrencyQuery.data?.symbol,
+  });
   const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);
@@ -407,6 +418,8 @@ export function RecordDetailScreen({
             subtitleLaterModule={subtitleLaterModule}
             subtitleHref={subtitleHref}
             portraitIcon={portraitIcon ?? rules.portraitIcon}
+            showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
+            showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
             commands={[
