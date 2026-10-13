@@ -303,6 +303,61 @@ test.describe("Accounts record detail", () => {
     }
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("Hierarchy View opens Contact Hierarchy modal, shows tree, closes, and navigates on contact link (AD-115, AD-163, AD-164)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const contactsSection = page.getByRole("region", { name: "Contacts" });
+    const hierarchyBtn = contactsSection.getByRole("button", { name: "Hierarchy View" });
+    await expect(hierarchyBtn).toBeVisible();
+
+    // 1. Click Hierarchy View -> opens modal
+    await hierarchyBtn.click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("heading", { name: "Contact Hierarchy" })).toBeVisible();
+    const closeBtn = modal.getByRole("button", { name: "Close Modal" });
+    await expect(closeBtn).toBeVisible();
+
+    // 2. Tree renders root account and contacts
+    const accountRoot = modal.locator("[data-part='account-root']");
+    await expect(accountRoot).toBeVisible();
+    await expect(modal.getByRole("link").first()).toBeVisible();
+
+    // Take screenshot of opened modal for Accounts entry
+    const scratchDir = process.env.PAPERCLIP_RUN_SCRATCH_DIR || process.env.PAPERCLIP_SCRATCH_DIR;
+    if (scratchDir) {
+      await page.screenshot({ path: `${scratchDir}/accounts-contact-hierarchy-open.png` });
+    }
+
+    // 3. Test closing via Close Modal button
+    await closeBtn.click();
+    await expect(modal).not.toBeVisible();
+
+    // 4. Reopen and close via Escape
+    await hierarchyBtn.click();
+    await expect(modal).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(modal).not.toBeVisible();
+
+    // 5. Reopen and navigate via contact link
+    await hierarchyBtn.click();
+    await expect(modal).toBeVisible();
+    const contactLink = modal.getByRole("link").first();
+    const contactHref = await contactLink.getAttribute("href");
+    expect(contactHref).toBeTruthy();
+    await contactLink.click();
+    await expect(modal).not.toBeVisible();
+    if (contactHref) {
+      await expect(page).toHaveURL(contactHref);
+    }
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
 
 type Box = { x: number; y: number; width: number; height: number };
