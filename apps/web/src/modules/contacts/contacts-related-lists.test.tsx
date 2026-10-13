@@ -57,6 +57,14 @@ describe("contactsRelatedLists definition", () => {
       }
     }
   });
+
+  it("draws an activity badge from the records the card holds, never a constant", () => {
+    // D-30/D-31: the captured contact has no tasks, meetings or calls, so no badge is painted.
+    const lists = createContactsRelatedLists();
+    expect(lists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "open-activities")?.activityColumns).toHaveLength(2);
+  });
 });
 
 describe("RelatedCardsContainer with Contacts card set", () => {
@@ -450,10 +458,9 @@ describe("RecordPageFrame with Contacts rail", () => {
     // 3. Scroll to Closed Activities -> Closed Activities is selected, no plus button
     scrollToCard("related-list-closed-activities");
     expect(onSelect).toHaveBeenCalledWith("closed-activities");
-    const closedRow = within(rail)
-      .getByRole("link", { name: "Closed Activities" })
-      .closest("div[class*='flex items-center']");
-    expect(closedRow?.querySelector("button")).toBeNull();
+    // D-31: the card holds no records, so the rail draws a bare link row without a badge.
+    const closedActivities = within(rail).getByRole("link", { name: "Closed Activities" });
+    expect(closedActivities.closest("div[class*='flex items-center']")).toBeNull();
     expect(invoicesRow?.querySelector("button")).toBeNull();
 
     // 4. Scroll to Notes -> D-53 appears with laterModule M6
