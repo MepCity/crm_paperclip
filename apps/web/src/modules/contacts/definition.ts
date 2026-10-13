@@ -48,6 +48,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   search: { secondaryFields: ["Email", "Phone"] },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,
+  searchColumns: ["Full_Name", "Account_Name", "Email", "Phone", "Owner"],
   merge: contactsMergeDefinition,
   buildFilterGroups: buildContactsFilterGroups,
   form: {

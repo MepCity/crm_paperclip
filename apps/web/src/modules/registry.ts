@@ -44,6 +44,18 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
   return cachedModuleScreens;
 }
 
+/** Backward-compatible export delegating to getModuleScreens(). */
+export const moduleScreens: readonly ModuleScreenDefinition[] = new Proxy(
+  [] as unknown as readonly ModuleScreenDefinition[],
+  {
+    get(_target, prop, receiver) {
+      const screens = getModuleScreens();
+      const val = Reflect.get(screens, prop, receiver);
+      return typeof val === "function" ? val.bind(screens) : val;
+    },
+  },
+);
+
 export function resolveModuleScreen(
   tab: string,
   definitions: readonly ModuleScreenDefinition[] = getModuleScreens(),

@@ -143,6 +143,7 @@ export interface ModuleScreenDefinition {
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
+  searchColumns?: readonly string[];
   merge?: ModuleMergeDefinition;
   buildFilterGroups: (input: {
     fields: readonly FieldDefinition[];

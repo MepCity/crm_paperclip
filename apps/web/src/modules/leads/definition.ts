@@ -46,6 +46,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   search: { secondaryFields: ["Email", "Phone"] },
   list: leadsListPageConfig,
   listCurrencyCode: LEADS_LIST_CURRENCY_CODE,
+  searchColumns: ["Full_Name", "Company", "Email", "Phone", "Lead_Source"],
   merge: leadsMergeDefinition,
   buildFilterGroups: buildLeadsFilterGroups,
   form: { rules: leadsFormRules },
