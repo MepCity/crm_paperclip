@@ -139,6 +139,34 @@ describe("AdvancedSearchScreen", () => {
     expect(accountsCb.getAttribute("data-later-module")).toBeNull();
   });
 
+  it("handles Deals as working filter item and renders Deals card with active record link", async () => {
+    const user = userEvent.setup();
+    const service = createTestService();
+
+    // Search for Deal
+    renderSearch(service, "Deal");
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Deals search results" })).toBeTruthy();
+    });
+
+    const dealsCard = screen.getByRole("region", { name: "Deals search results" });
+    expect(dealsCard).toBeTruthy();
+
+    const dealLinks = within(dealsCard).getAllByRole("link");
+    const recordLink = dealLinks.find((l) => l.getAttribute("href")?.includes("/tab/Deals/"));
+    expect(recordLink).toBeDefined();
+    expect(recordLink?.getAttribute("data-later-module")).toBeNull();
+
+    // Open filter panel
+    await user.click(screen.getByRole("button", { name: "Filter" }));
+    const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
+
+    // Deals is a working checkbox (no laterModule on the checkbox)
+    const dealsCb = within(filterPanel).getByRole("checkbox", { name: "Deals" });
+    expect(dealsCb.getAttribute("data-later-module")).toBeNull();
+  });
+
   it("keeps module checkbox changes as draft until Apply Filter is clicked", async () => {
     const user = userEvent.setup();
     const service = createTestService();
@@ -166,11 +194,11 @@ describe("AdvancedSearchScreen", () => {
     const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
     await user.click(createdTimeOption);
 
-    // The sort triggered search should STILL have the unapplied modules (all 3)
+    // The sort triggered search should STILL have the unapplied modules (all 4)
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Leads"],
+          modules: ["Contacts", "Accounts", "Leads", "Deals"],
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -185,7 +213,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts"],
+          modules: ["Contacts", "Accounts", "Deals"],
         }),
       );
     });
@@ -210,6 +238,7 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Contacts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
