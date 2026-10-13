@@ -200,6 +200,59 @@ test("creates with every field type, a parent account and both addresses", async
   expect(body.Description).toBe("Created by e2e");
 });
 
+test("a long account number keeps its exact digits through save, detail, edit and clone", async ({
+  page,
+}) => {
+  // Past Number.MAX_SAFE_INTEGER a JavaScript number would store different digits, and the service
+  // only accepts decimal text for a long integer.
+  const digits = "9007199254740993";
+  const { org } = await openCreate(page);
+  await page
+    .getByRole("textbox", { name: "Account Name", exact: true })
+    .fill("Long Number Account");
+  await page.getByRole("textbox", { name: "Account Number", exact: true }).fill(digits);
+  const createRequest = page.waitForRequest(
+    (request) => request.method() === "POST" && new URL(request.url()).pathname === CREATE_PATH,
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await createRequest).postDataJSON().data[0].Account_Number).toBe(digits);
+  await expectRecordRoute(page, org.slug);
+  await expect(page.locator('[data-detail-field="Account_Number"]')).toContainText(digits);
+  const id = accountRecordIdFromPath(new URL(page.url()).pathname);
+
+  await page.goto(moduleRecordEditPath(org.slug, ACCOUNTS_TAB, id));
+  await expect(page.getByRole("heading", { name: "Edit Account" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Account Number", exact: true })).toHaveValue(
+    digits,
+  );
+  // Saving another field leaves the untouched long integer out of the write, so it cannot be lost.
+  await page.getByRole("textbox", { name: "Account Site", exact: true }).fill("Long Number Site");
+  const updateRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" && new URL(request.url()).pathname.startsWith(`${CREATE_PATH}/`),
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const edited = (await updateRequest).postDataJSON().data[0];
+  expect("Account_Number" in edited).toBe(false);
+  await expectRecordRoute(page, org.slug);
+  await expect(page.locator('[data-detail-field="Account_Number"]')).toContainText(digits);
+
+  await page.goto(moduleRecordClonePath(org.slug, ACCOUNTS_TAB, id));
+  await expect(page.getByRole("heading", { name: "Clone Account" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Account Number", exact: true })).toHaveValue(
+    digits,
+  );
+});
+
+test("an account number that is not digits is rejected on Save", async ({ page }) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Bad Number Account");
+  await page.getByRole("textbox", { name: "Account Number", exact: true }).fill("12a");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Please enter a valid Account Number.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Create Account" })).toBeVisible();
+});
+
 test("Save and New resets the create form", async ({ page }) => {
   const { org } = await openCreate(page);
   await page.getByRole("textbox", { name: "Account Name", exact: true }).fill("Save And New");

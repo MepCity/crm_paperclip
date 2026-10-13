@@ -209,3 +209,164 @@ describe("Accounts export and references", () => {
     ).toBe(0);
   });
 });
+
+describe("Accounts merge", () => {
+  it("repoints lookups that pointed at the duplicate onto the master", async () => {
+    const service = make();
+    const duplicate = await service.create("Accounts", { Account_Name: "Duplicate Account" });
+    const master = await service.create("Accounts", { Account_Name: "Master Account" });
+    const contact = await service.create("Contacts", {
+      Last_Name: "Linked",
+      Account_Name: { module: "Accounts", id: duplicate.id },
+    });
+    const member = await service.create("Accounts", {
+      Account_Name: "Member Account",
+      Parent_Account: { module: "Accounts", id: duplicate.id },
+    });
+    const merged = await service.merge("Accounts", {
+      masterId: master.id,
+      duplicateIds: [duplicate.id],
+      values: {},
+    });
+    expect(merged.id).toBe(master.id);
+    expect(merged.fields.Account_Name).toBe("Master Account");
+    expect((await service.get("Contacts", contact.id)).fields.Account_Name).toEqual({
+      module: "Accounts",
+      id: master.id,
+      name: "Master Account",
+    });
+    expect((await service.get("Accounts", member.id)).fields.Parent_Account).toEqual({
+      module: "Accounts",
+      id: master.id,
+      name: "Master Account",
+    });
+    await expect(service.get("Accounts", duplicate.id)).rejects.toBeInstanceOf(NotFoundError);
+    expect(
+      await service.count("Accounts", {
+        viewId: "all-accounts",
+        filters: { field: "Parent_Account", comparator: "equal", value: master.id },
+      }),
+    ).toBe(1);
+    expect(
+      await service.count("Contacts", {
+        viewId: "all-contacts",
+        filters: { field: "Account_Name", comparator: "equal", value: master.id },
+      }),
+    ).toBe(1);
+  });
+  it("nulls a master parent that pointed at its own duplicate", async () => {
+    const service = make();
+    const duplicate = await service.create("Accounts", { Account_Name: "Gone Parent" });
+    const master = await service.create("Accounts", {
+      Account_Name: "Merged Master",
+      Parent_Account: { module: "Accounts", id: duplicate.id },
+    });
+    const related = await service.create("Accounts", {
+      Account_Name: "Related Member",
+      Parent_Account: { module: "Accounts", id: duplicate.id },
+    });
+    const merged = await service.merge("Accounts", {
+      masterId: master.id,
+      duplicateIds: [duplicate.id],
+      values: {},
+    });
+    expect(merged.fields.Parent_Account).toBeNull();
+    expect((await service.get("Accounts", master.id)).fields.Parent_Account).toBeNull();
+    expect((await service.get("Accounts", related.id)).fields.Parent_Account).toMatchObject({
+      module: "Accounts",
+      id: master.id,
+    });
+  });
+  it("rejects a duplicate from another organization without changing any record", async () => {
+    const service = make();
+    const master = await service.create("Accounts", { Account_Name: "Kept Master" });
+    const duplicate = await service.create("Accounts", { Account_Name: "Kept Duplicate" });
+    const member = await service.create("Accounts", {
+      Account_Name: "Kept Member",
+      Parent_Account: { module: "Accounts", id: duplicate.id },
+    });
+    // Fixture ids are tenant-local, so advance the other organization past these ids.
+    const foreignService = make();
+    for (let index = 0; index < 3; index++)
+      await foreignService.create("Accounts", { Account_Name: `Other Organization ${index}` });
+    const foreign = await foreignService.create("Accounts", { Account_Name: "Foreign Account" });
+    const before = await Promise.all(
+      [master, duplicate, member].map((record) => service.get("Accounts", record.id)),
+    );
+    await expect(
+      service.merge("Accounts", { masterId: master.id, duplicateIds: [foreign.id], values: {} }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+    expect(
+      await Promise.all([master, duplicate, member].map((r) => service.get("Accounts", r.id))),
+    ).toEqual(before);
+    expect(
+      await service.count("Accounts", {
+        viewId: "all-accounts",
+        filters: { field: "Parent_Account", comparator: "equal", value: duplicate.id },
+      }),
+    ).toBe(1);
+  });
+});
+
+describe("Accounts negative lookup filters", () => {
+  const marker = "Negative Lookup Marker";
+  const query = (value: string) => ({
+    viewId: "all-accounts",
+    page: 1,
+    perPage: 100,
+    filters: {
+      groupOperator: "and" as const,
+      group: [
+        { field: "Account_Name", comparator: "contains" as const, value: marker },
+        { field: "Parent_Account", comparator: "not_equal" as const, value },
+      ],
+    },
+  });
+
+  it("keeps every record whose parent does not point at the compared id", async () => {
+    const service = make();
+    const parent = await service.create("Accounts", { Account_Name: "Parent One" });
+    const other = await service.create("Accounts", { Account_Name: "Parent Two" });
+    const pointing = await service.create("Accounts", {
+      Account_Name: `${marker} Points`,
+      Parent_Account: { module: "Accounts", id: parent.id },
+    });
+    const elsewhere = await service.create("Accounts", {
+      Account_Name: `${marker} Elsewhere`,
+      Parent_Account: { module: "Accounts", id: other.id },
+    });
+    const empty = await service.create("Accounts", { Account_Name: `${marker} Empty` });
+    const ids = (await service.list("Accounts", query(parent.id))).records.map((r) => r.id);
+    expect(ids).toEqual([empty.id, elsewhere.id]);
+    expect(
+      (
+        await service.list("Accounts", {
+          ...query(parent.id),
+          filters: { field: "Parent_Account", comparator: "equal", value: parent.id },
+        })
+      ).records.map((r) => r.id),
+    ).toEqual([pointing.id]);
+    expect(await service.count("Accounts", query(parent.id))).toBe(2);
+  });
+  it("also drops a record whose parent name happens to equal the compared id", async () => {
+    const service = make();
+    // Negative lookup compares identity and then name, keeping name filters working; the
+    // name collision below is therefore excluded as well, retained deliberately.
+    const parent = await service.create("Accounts", { Account_Name: "Parent One" });
+    const lookalike = await service.create("Accounts", { Account_Name: parent.id });
+    const pointing = await service.create("Accounts", {
+      Account_Name: `${marker} Points`,
+      Parent_Account: { module: "Accounts", id: parent.id },
+    });
+    const shadow = await service.create("Accounts", {
+      Account_Name: `${marker} Shadow`,
+      Parent_Account: { module: "Accounts", id: lookalike.id },
+    });
+    const ids = (await service.list("Accounts", query(parent.id))).records.map((r) => r.id);
+    expect(ids).toEqual([]);
+    expect(shadow.fields.Parent_Account).toMatchObject({ name: parent.id });
+    expect((await service.get("Accounts", pointing.id)).fields.Parent_Account).toMatchObject({
+      id: parent.id,
+    });
+  });
+});

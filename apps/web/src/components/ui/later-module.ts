@@ -24,6 +24,24 @@ export interface LaterModuleProp {
   laterModule?: ModuleKey;
 }
 
+export const LIVE_MODULE_KEYS = ["M2", "M3"] as const;
+export type LiveModuleKey = (typeof LIVE_MODULE_KEYS)[number];
+
+const LIVE_MODULE_SET: ReadonlySet<string> = new Set(LIVE_MODULE_KEYS);
+
+/**
+ * Resolves a module key against live modules.
+ * Returns undefined if key is undefined, empty, or currently live (e.g. M2, M3).
+ * Otherwise returns the key itself so later-module controls remain locked/inert.
+ */
+export function resolveLaterModule<T extends string = ModuleKey>(
+  key?: T | "M2" | null,
+): ModuleKey | undefined {
+  if (!key) return undefined;
+  if (LIVE_MODULE_SET.has(key)) return undefined;
+  return key as ModuleKey;
+}
+
 export interface UseLaterModuleOptions {
   /**
    * Whether to block ArrowDown / ArrowUp shortcuts used by menu and popover triggers.

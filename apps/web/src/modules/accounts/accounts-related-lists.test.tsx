@@ -3,6 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RelatedCardsContainer } from "@/components/records/detail/related-cards-container";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { render } from "@/test/render";
 import {
   accountsRelatedListRail,
@@ -22,16 +23,13 @@ function mapRailEntries(
     targetId: item.targetId,
     countBadge: item.countBadge,
     moduleKey: item.moduleKey,
-    laterModule: item.moduleKey === "M2" || item.moduleKey === "M3" ? undefined : item.moduleKey,
+    laterModule: resolveLaterModule(item.moduleKey),
     railAction: item.railAction
       ? {
           id: item.railAction.id,
           label: item.railAction.label,
           moduleKey: item.railAction.moduleKey,
-          laterModule:
-            item.railAction.moduleKey === "M2" || item.railAction.moduleKey === "M3"
-              ? undefined
-              : item.railAction.moduleKey,
+          laterModule: resolveLaterModule(item.railAction.moduleKey),
           onAction: item.id === "member-accounts" ? handlers?.onMemberAccountNew : undefined,
         }
       : undefined,
@@ -313,5 +311,72 @@ describe("RecordPageFrame with Accounts rail metadata", () => {
     await user.click(within(rail).getByRole("link", { name: "Notes" }));
     expect(notesRow?.querySelector("button")).not.toBeNull();
     expect(notesRow?.querySelector("button")?.getAttribute("data-later-module")).toBe("M6");
+  });
+
+  it("keeps Member Accounts rail link and Add action unlocked while later modules stay locked", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onMemberAccountNew = vi.fn();
+    const lists = createAccountsRelatedLists({ includeContactsPreview: false });
+    const entries = mapRailEntries(lists, { onMemberAccountNew });
+
+    render(
+      <RecordPageFrame
+        header={<div>Header</div>}
+        relatedListLabel="Related List"
+        relatedEntries={entries}
+        onRelatedSelectionChange={onSelect}
+        tabsLabel="Tabs"
+        selectedTabId="overview"
+        onTabChange={() => {}}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <div>
+                {lists.map((c) => (
+                  <div key={c.id} id={c.targetId}>
+                    {c.title}
+                  </div>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+      />,
+    );
+
+    const rail = screen.getByRole("navigation", { name: "Related List" });
+
+    // 1. Member Accounts rail link is unlocked and triggers selection
+    const memberAccountsLink = within(rail).getByRole("link", { name: "Member Accounts" });
+    expect(memberAccountsLink.getAttribute("data-later-module")).toBeNull();
+    expect(memberAccountsLink.getAttribute("aria-disabled")).toBeNull();
+
+    await user.click(memberAccountsLink);
+    expect(onSelect).toHaveBeenCalledWith("member-accounts");
+
+    // 2. Member Accounts Add button is unlocked and triggers onMemberAccountNew
+    const memberAccountsRow = memberAccountsLink.closest("div[class*='flex items-center']");
+    const addButton = memberAccountsRow?.querySelector("button");
+    expect(addButton).not.toBeNull();
+    expect(addButton?.getAttribute("data-later-module")).toBeNull();
+    expect(addButton?.getAttribute("aria-disabled")).toBeNull();
+
+    expect(addButton).toBeTruthy();
+    if (!addButton) throw new Error("addButton missing");
+    await user.click(addButton);
+    expect(onMemberAccountNew).toHaveBeenCalledOnce();
+
+    // 3. Later module rail rows (M4 deals, P2 products) remain locked
+    const dealsLink = within(rail).getByRole("link", { name: "Deals" });
+    expect(dealsLink.getAttribute("data-later-module")).toBe("M4");
+    expect(dealsLink.getAttribute("aria-disabled")).toBe("true");
+
+    const productsLink = within(rail).getByRole("link", { name: "Products" });
+    expect(productsLink.getAttribute("data-later-module")).toBe("P2");
+    expect(productsLink.getAttribute("aria-disabled")).toBe("true");
   });
 });

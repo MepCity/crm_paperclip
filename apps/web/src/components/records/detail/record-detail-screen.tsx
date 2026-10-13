@@ -16,6 +16,7 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import {
   useDeleteRecords,
@@ -167,13 +168,13 @@ export function RecordDetailScreen({
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: resolveLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: resolveLaterModule(item.railAction.moduleKey),
             onAction: item.railAction.onAction,
           }
         : undefined,
