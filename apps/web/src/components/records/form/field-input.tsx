@@ -212,10 +212,22 @@ export function FieldInput({
       return (
         <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
-    // A `bigint` field is drawn as the same single-line numeric entry as `integer`: the reference
-    // Accounts form shows Account Number without any long-number widget.
-    case "integer":
+    // A `bigint` field is a long integer, so the form keeps it as digit text end to end: parsing it
+    // into a JavaScript number would round the last digits away, and the service only accepts decimal
+    // text for it. The entry is drawn like the numeric ones — the same single-line frame — but what is
+    // typed is never parsed; `form-validation` reports an entry that is not digits.
     case "bigint":
+      return (
+        <TextField
+          {...common}
+          value={text}
+          inputMode="numeric"
+          maxLength={field.maxLength}
+          placeholder={placeholder}
+          onChange={(next) => onChange(next === "" ? null : next)}
+        />
+      );
+    case "integer":
     case "double":
     case "currency":
       return (

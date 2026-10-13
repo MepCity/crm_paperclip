@@ -7,6 +7,7 @@ import {
   formFields,
   formPayload,
   initialFormValues,
+  normalizeFormValue,
   numberValue,
   textValue,
 } from "./form-model";
@@ -121,21 +122,24 @@ describe("metadata form model", () => {
     });
   });
 
-  it("sends a long integer as decimal text and keeps unchanged stored text out of the payload", () => {
-    const fields = [
-      field("Account_Number", { dataType: "bigint" }),
-      field("Employees", { dataType: "integer" }),
-    ];
-    expect(formPayload(fields, { Account_Number: 123456, Employees: 42 })).toEqual({
-      Account_Number: "123456",
+  it("keeps a long integer as the exact digit text it was given", () => {
+    const longNumber = field("Account_Number", { dataType: "bigint" });
+    const fields = [longNumber, field("Employees", { dataType: "integer" })];
+    expect(formPayload(fields, { Account_Number: "9007199254740993", Employees: 42 })).toEqual({
+      Account_Number: "9007199254740993",
       Employees: 42,
     });
-    // The stored form of a long integer is already decimal text, so retyping the same digits
-    // stays "unchanged" for the edit form's dirty compare.
-    const baseline = { Account_Number: "123456", Employees: 42 };
-    expect(formPayload(fields, { Account_Number: 123456, Employees: 43 }, baseline)).toEqual({
-      Employees: 43,
-    });
+    for (const value of ["", "   "])
+      expect(formPayload([longNumber], { Account_Number: value })).toEqual({
+        Account_Number: null,
+      });
+    // Digits are held as text, so a value beyond the safe integer range is never rounded and a
+    // stored value typed again with stray spaces stays "unchanged" for the edit form's compare.
+    expect(normalizeFormValue(longNumber, " 9007199254740993 ")).toBe("9007199254740993");
+    const baseline = { Account_Number: "9007199254740993", Employees: 42 };
+    expect(
+      formPayload(fields, { Account_Number: "9007199254740993", Employees: 43 }, baseline),
+    ).toEqual({ Employees: 43 });
     expect(initialFormValues(fields, baseline)).toEqual(baseline);
   });
 
@@ -162,11 +166,11 @@ describe("metadata form model", () => {
       "Accounts",
       formPayload(fields, {
         Account_Name: "Payload Account",
-        Account_Number: 123456789012,
+        Account_Number: "9007199254740993",
         Owner: ctx.userId,
       }),
     );
-    expect(record.fields.Account_Number).toBe("123456789012");
+    expect(record.fields.Account_Number).toBe("9007199254740993");
   });
 
   it("includes coordinate members for each Contacts address group", async () => {
