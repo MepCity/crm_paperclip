@@ -8,6 +8,7 @@ import {
   moduleCreatePath,
   moduleListDefaultPath,
   moduleRecordClonePath,
+  moduleRecordEditPath,
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
@@ -227,6 +228,50 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));
+});
+
+/** F-05: the title reads on its own and the glyph is clipped inside the portrait control. */
+async function expectContactImagePortrait(page: Page) {
+  const heading = page.getByRole("heading", { name: "Contact Image", exact: true });
+  const button = page.getByRole("button", { name: "Contact Image", exact: true });
+  await expect(button).toHaveAttribute("data-later-module", "M6");
+  const title = await heading.boundingBox();
+  const control = await button.boundingBox();
+  const glyph = await button.locator(".record-profile-silhouette").boundingBox();
+  if (!title || !control || !glyph) {
+    throw new Error("Contact Image title, portrait or silhouette is not laid out");
+  }
+  const boxesIntersect =
+    title.x < control.x + control.width &&
+    title.x + title.width > control.x &&
+    title.y < control.y + control.height &&
+    title.y + title.height > control.y;
+  expect(boxesIntersect).toBe(false);
+  expect(glyph.x).toBeGreaterThanOrEqual(control.x - 1);
+  expect(glyph.y).toBeGreaterThanOrEqual(control.y - 1);
+  expect(glyph.x + glyph.width).toBeLessThanOrEqual(control.x + control.width + 1);
+  expect(glyph.y + glyph.height).toBeLessThanOrEqual(control.y + control.height + 1);
+  expect(glyph.width).toBeGreaterThanOrEqual(control.width * 0.6);
+  expect(glyph.height).toBeGreaterThanOrEqual(control.height * 0.6);
+  const url = page.url();
+  await button.click({ force: true });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(url);
+}
+
+test("Contact Image title and portrait do not overlap in create, edit or clone", async ({
+  page,
+}) => {
+  const { org } = await openCreate(page);
+  await expectContactImagePortrait(page);
+  await saveContact(page, "Portrait Contact");
+  const sourceId = contactRecordIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordEditPath(org.slug, CONTACTS_TAB, sourceId));
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+  await expectContactImagePortrait(page);
+  await page.goto(moduleRecordClonePath(org.slug, CONTACTS_TAB, sourceId));
+  await expect(page.getByRole("heading", { name: "Clone Contact" })).toBeVisible();
+  await expectContactImagePortrait(page);
 });
 
 test("creates contact with Account Name chosen via lookup dialog and reflects account on detail", async ({

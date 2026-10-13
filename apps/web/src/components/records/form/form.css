@@ -409,10 +409,17 @@
   margin-left: var(--space-1);
 }
 
+/* The silhouette inside is `.record-profile-silhouette`: absolutely positioned at
+ * -1 px with the portrait size, which fits exactly under a 1 px ring. Without
+ * `position` here that offset resolves against the section and the glyph paints over
+ * the section title, so this box stays the containing block and clips it to the ring. */
 .record-form-profile-image {
+  position: relative;
+  overflow: hidden;
   width: var(--size-form-portrait);
   height: var(--size-form-portrait);
   padding: 0;
+  border: 1px solid var(--color-form-portrait-ring);
   border-radius: var(--radius-full);
-  background-color: var(--color-form-portrait);
+  background-color: var(--color-surface);
 }
