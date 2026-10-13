@@ -167,6 +167,7 @@ export interface ModuleScreenDefinition {
   };
   detail: {
     Screen?: ComponentType<ModuleRecordDetailScreenProps>;
+    headerCurrency?: boolean;
     header: (
       record: RecordData,
       context?: {
