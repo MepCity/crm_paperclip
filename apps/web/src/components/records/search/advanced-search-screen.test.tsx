@@ -166,11 +166,11 @@ describe("AdvancedSearchScreen", () => {
     const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
     await user.click(createdTimeOption);
 
-    // The sort triggered search should STILL have the unapplied modules (all 3)
+    // The sort triggered search should STILL have the unapplied modules (all working)
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Leads"],
+          modules: ["Contacts", "Accounts", "Leads", "Deals"],
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -185,7 +185,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts"],
+          modules: ["Contacts", "Accounts", "Deals"],
         }),
       );
     });
@@ -210,6 +210,7 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Contacts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
