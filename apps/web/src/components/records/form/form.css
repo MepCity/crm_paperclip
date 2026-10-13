@@ -419,6 +419,8 @@
 /* AF-05 / F-05: the placeholder is the 48 px image itself — the shared portrait draws its own
    ring, a module placeholder (Accounts building) is drawn plain, with no disc behind it. */
 .record-form-profile-image {
+  position: relative;
+  overflow: hidden;
   width: var(--size-form-portrait);
   height: var(--size-form-portrait);
   padding: 0;
