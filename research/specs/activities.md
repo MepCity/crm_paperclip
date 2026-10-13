@@ -6,17 +6,27 @@ Status: research for Grok QA inventory review and UI Lead metadata approval. MEP
 
 Define the Tasks baseline and the Meetings/Calls metadata differences. Reuse existing specs for shared controls. Meetings/Calls list evidence is recorded below; all record details, forms and write flows are separate research tasks. Tables below are generated from exported metadata; they contain configuration, never record values.
 
-## QA evidence retry — load gate
+## QA evidence retry — rendering blocker
 
-The requested rendered-list recapture remains pending. During the QA correction
-run, five load-gate readings were 23.26, 20.15, 24.50, 29.23 and 85.18, all above
-the permitted threshold of 16. No new capture or reference request was made.
-Existing loading-only evidence below is unchanged; it does not satisfy the
-rendered-list inventory requirement. Further captures await the load decision.
+The CTO-authorized retry used the unchanged load threshold of 16 and a
+25-second wait for every capture. Meetings base was captured twice at loads
+7.33 and 5.20; Calls base twice at 5.54 and 15.78. All four attempts remained
+loading-only: three controls, no module title and no record links. Each image
+was opened and inspected. The final attempts replaced the same base slugs.
+No click was requested or executed. Each attempt had one permitted module bulk
+read; blocked telemetry counts were 5, 4, 4 and 4 respectively. No unexpected
+non-GET path was observed.
+
+Per the CTO's stop rule, both modules' create-menu, Actions and after captures
+were not retried. The after files below remain earlier-run evidence, not
+comparisons against the new bases. No rendered inventory is ready for QA.
+Further work requires the CTO to resolve the capture rendering blocker; a
+third base attempt is not authorized. The earlier high-load blocker is no
+longer the immediate cause: every retry passed the load gate.
 
 ## Meetings list
 
-The two permitted click-free captures show a loading skeleton, not a populated or empty list. The module heading, view selector, toolbar, filter panel, table/calendar presentation and footer are **not observed**. A loading skeleton does not establish an empty state. No list/calendar preference was changed. The existing Meetings Views table remains metadata evidence only.
+The renewed click-free base (two attempts, 25-second wait each) and the earlier after capture show a loading skeleton, not a populated or empty list. The module heading, view selector, toolbar, filter panel, table/calendar presentation and footer are **not observed**. A loading skeleton does not establish an empty state. No list/calendar preference was changed. The existing Meetings Views table remains metadata evidence only.
 
 Create-menu and Actions captures were not taken: neither trigger exists in the task's base controls.json, so a unique selector could not be validated. No alternative selector or navigation was attempted. No ML number is assigned to an unseen control.
 
@@ -31,7 +41,7 @@ No painted interactive control. Loading text and decorative placeholders are not
 
 ### Control inventory — m5l-meetings-list-after
 
-No changed interactive controls; the loading skeleton remains. Record links remain zero; total record count is not observed. This comparison does not verify persisted record counts.
+No changed interactive controls; the loading skeleton remains. This after file predates the renewed base; no new after comparison was taken. Both files contain zero record links, but total record count and persisted-count parity are not observed.
 
 Rest: as in m5l-meetings-list-base; covered by the overlay: none.
 
@@ -48,7 +58,7 @@ Each capture: source items 3; mapped items 0; exclusions 3; distinct inventory n
 
 ## Calls list
 
-Both permitted click-free captures show a loading skeleton. Title, view selector, toolbar, filter fields, table, footer, call type/direction indicators and handset actions are **not observed**. This is not an observed empty state. The Calls Views table remains metadata evidence; no view selector or view-type preference was exercised.
+The renewed click-free base (two attempts, 25-second wait each) and the earlier after capture show a loading skeleton. Title, view selector, toolbar, filter fields, table, footer, call type/direction indicators and handset actions are **not observed**. This is not an observed empty state. The Calls Views table remains metadata evidence; no view selector or view-type preference was exercised.
 
 Create-menu and Actions captures were not taken: their triggers are absent from this task's base controls.json. No unique selector could be validated; no alternative was attempted. The distinction, labels and order of scheduling versus logging menu rows remain not observed. No CL number is assigned to an unseen control.
 
@@ -63,7 +73,7 @@ No painted interactive control. Loading text and decorative placeholders are not
 
 ### Control inventory — m5l-calls-list-after
 
-No changed interactive controls; the loading skeleton remains. Record links remain zero; total record count is not observed. This comparison does not verify persisted record counts.
+No changed interactive controls; the loading skeleton remains. This after file predates the renewed base; no new after comparison was taken. Both files contain zero record links, but total record count and persisted-count parity are not observed.
 
 Rest: as in m5l-calls-list-base; covered by the overlay: none.
 
@@ -1299,12 +1309,12 @@ Administrator and Standard are the two exported profiles. Module metadata advert
 
 ## Capture refs
 
-- m5l-calls-list-base — no clicks; loading skeleton, no record links.
-- m5l-calls-list-after — no clicks, 12-second wait; loading skeleton, no record links.
+- m5l-calls-list-base — renewed twice with no clicks and 25-second wait; loading skeleton, no record links.
+- m5l-calls-list-after — earlier-run evidence, not renewed; loading skeleton, no record links.
 - m5l-calls-create-menu / m5l-calls-actions — not captured; triggers absent from base controls.json.
 
-- m5l-meetings-list-base — no clicks; loading skeleton, no record links.
-- m5l-meetings-list-after — no clicks, 12-second wait; loading skeleton, no record links.
+- m5l-meetings-list-base — renewed twice with no clicks and 25-second wait; loading skeleton, no record links.
+- m5l-meetings-list-after — earlier-run evidence, not renewed; loading skeleton, no record links.
 - m5l-meetings-create-menu / m5l-meetings-actions — not captured; triggers absent from base controls.json.
 
 
