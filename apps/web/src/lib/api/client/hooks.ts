@@ -2,6 +2,8 @@
 
 import type {
   CurrencyDefinition,
+  DeduplicateResult,
+  DuplicateGroup,
   ListQuery,
   MergeInput,
   ModuleApiName,
@@ -14,7 +16,12 @@ import type {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { OrgMember } from "./http-record-service";
 import { useClientRecordService, useOrgSlug } from "./provider";
-import { apiKeys, countQueriesPrefix, listQueriesPrefix } from "./query-keys";
+import {
+  apiKeys,
+  countQueriesPrefix,
+  duplicateGroupsPrefix,
+  listQueriesPrefix,
+} from "./query-keys";
 
 export function useHomeCurrency() {
   const orgSlug = useOrgSlug();
@@ -201,11 +208,44 @@ export function useMergeRecords(module: ModuleApiName) {
     mutationFn: (input: MergeInput) => service.merge(module, input),
     onSuccess: (record, input) => {
       invalidateModuleLists(queryClient, orgSlug, module, record.id);
+      void queryClient.invalidateQueries({ queryKey: duplicateGroupsPrefix(orgSlug, module) });
       for (const id of input.duplicateIds) {
         void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
         queryClient.removeQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
       }
       void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
+    },
+  });
+}
+
+/** Duplicate groups of a module for one to three match fields. */
+export function useDuplicateGroups(
+  module: ModuleApiName,
+  fields: readonly string[],
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<readonly DuplicateGroup[]>({
+    queryKey: apiKeys.duplicateGroups(orgSlug, module, fields),
+    queryFn: () => service.findDuplicateGroups(module, fields),
+    enabled: (options?.enabled ?? true) && fields.length > 0,
+  });
+}
+
+/**
+ * Runs the module-wide cleanup; the service keeps one running job per module and answers
+ * with a conflict error while another one holds the lock.
+ */
+export function useDeduplicate(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation<DeduplicateResult, Error, readonly string[]>({
+    mutationFn: (fields) => service.deduplicate(module, fields),
+    onSuccess: () => {
+      invalidateModuleLists(queryClient, orgSlug, module);
+      void queryClient.invalidateQueries({ queryKey: duplicateGroupsPrefix(orgSlug, module) });
     },
   });
 }

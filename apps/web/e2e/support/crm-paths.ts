@@ -1,5 +1,6 @@
 export {
   moduleCreatePath,
+  moduleDeduplicatePath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordClonePath,
