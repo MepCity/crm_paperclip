@@ -91,7 +91,9 @@ test("Tasks filters, paging, record route and related record link", async ({ pag
   // Field filter (TL-53 – TL-61): Subject text criterion that matches nothing
   const filter = fieldFilters.getByRole("checkbox", { name: "Subject", exact: true });
   await filter.scrollIntoViewIfNeeded();
-  await filter.check({ force: true });
+  await filter.focus();
+  await page.keyboard.press("Space");
+  await expect(filter).toBeChecked();
   await list.getByRole("textbox", { name: "Subject value" }).fill("Synthetic unmatched subject");
   await list.getByRole("button", { name: "Apply Filter" }).click();
   await expect(list.getByText("No Tasks found.")).toBeVisible();
