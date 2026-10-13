@@ -1,5 +1,6 @@
 import type { FormatOptions } from "@crm/core/format";
 import type {
+  CurrencyDefinition,
   FieldDefinition,
   FieldValue,
   ModuleApiName,
@@ -166,16 +167,25 @@ export interface ModuleScreenDefinition {
   };
   detail: {
     Screen?: ComponentType<ModuleRecordDetailScreenProps>;
+    headerCurrency?: boolean;
     header: (
       record: RecordData,
-      context?: { orgSlug?: string },
+      context?: {
+        orgSlug?: string;
+        currency?: CurrencyDefinition;
+        currencySymbol?: string;
+      },
     ) => {
       title: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+      hasPortrait?: boolean;
+      recordNavigation?: boolean;
     };
+    hasPortrait?: boolean;
+    recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];

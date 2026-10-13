@@ -140,3 +140,45 @@ test("ConfirmDialog calls onConfirm once and returns focus to the trigger", asyn
   await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   await waitFor(() => expect(document.activeElement).toBe(trigger));
 });
+
+test("ConfirmDialog keeps a synchronous handler error and retries on the next press", async () => {
+  const user = userEvent.setup();
+  let failing = true;
+  const onConfirm = vi.fn(() => {
+    if (failing) {
+      failing = false;
+      throw new Error("Delete failed");
+    }
+  });
+  // The error has to reach the global error machinery instead of being swallowed, so the test
+  // collects what the window reports and checks it carries the handler's error.
+  const reported: unknown[] = [];
+  const onError = (event: Event) => {
+    reported.push((event as ErrorEvent).error ?? (event as ErrorEvent).message);
+    event.preventDefault();
+  };
+  window.addEventListener("error", onError);
+  const trigger = renderConfirm(onConfirm);
+
+  try {
+    await user.click(trigger);
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    await waitFor(() =>
+      expect(reported).toEqual([expect.objectContaining({ message: "Delete failed" })]),
+    );
+
+    // Nothing is pending, so the dialog is operable again: Cancel works...
+    expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+    // ...and pressing the confirm button a second time runs the handler again.
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    expect(onConfirm).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  } finally {
+    window.removeEventListener("error", onError);
+  }
+});
