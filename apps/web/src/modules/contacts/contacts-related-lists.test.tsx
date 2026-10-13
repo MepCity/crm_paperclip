@@ -43,6 +43,13 @@ describe("contactsRelatedLists definition", () => {
       expect(actual.title).toBe(expected.title);
       expect(actual.moduleKey).toBe(expected.moduleKey);
     });
+
+    expect(
+      contactsRelatedLists.find((c) => c.id === "open-activities")?.countBadge,
+    ).toBeUndefined();
+    expect(
+      contactsRelatedLists.find((c) => c.id === "closed-activities")?.countBadge,
+    ).toBeUndefined();
   });
 
   it("assigns laterModule to all non-M2 cards and leaves M2 for Reporting Contacts", () => {
@@ -56,6 +63,14 @@ describe("contactsRelatedLists definition", () => {
         expect(card.moduleKey).not.toBe("M2");
       }
     }
+  });
+
+  it("draws an activity badge from the records the card holds, never a constant", () => {
+    // D-30/D-31: the captured contact has no tasks, meetings or calls, so no badge is painted.
+    const lists = createContactsRelatedLists();
+    expect(lists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "open-activities")?.activityColumns).toHaveLength(2);
   });
 });
 
@@ -450,10 +465,11 @@ describe("RecordPageFrame with Contacts rail", () => {
     // 3. Scroll to Closed Activities -> Closed Activities is selected, no plus button
     scrollToCard("related-list-closed-activities");
     expect(onSelect).toHaveBeenCalledWith("closed-activities");
-    const closedRow = within(rail)
-      .getByRole("link", { name: "Closed Activities" })
-      .closest("div[class*='flex items-center']");
-    expect(closedRow?.querySelector("button")).toBeNull();
+    // D-31: the card holds no records, so the rail draws a bare link row without a badge.
+    const closedLink = within(rail).getByRole("link", { name: "Closed Activities" });
+    const closedRow = closedLink.closest("div[class*='flex items-center']") ?? closedLink;
+    expect(closedRow.querySelector("button")).toBeNull();
+    expect(closedRow.querySelector("span[class*='rounded-full']")).toBeNull();
     expect(invoicesRow?.querySelector("button")).toBeNull();
 
     // 4. Scroll to Notes -> D-53 appears with laterModule M6

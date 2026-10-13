@@ -14,8 +14,10 @@ test("exports a complete Accounts module screen definition", () => {
   expect(accountsScreenDefinition.detail.statusRibbon).toBeUndefined();
   expect(accountsScreenDefinition.detail.addTags).toEqual({ label: "Add Tags", laterModule: "M6" });
   expect(accountsScreenDefinition.detail.headerCommands).toEqual([
-    { id: "send-email", label: "Send Email", laterModule: "M10" },
+    { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
   ]);
+  // AD-35: the update indicator shares the Overview/Timeline row.
+  expect(accountsScreenDefinition.detail.lastUpdatePlacement).toBe("tab-row");
   expect(accountsScreenDefinition.detail.timeline.upcomingAutomatedActions).toEqual({
     label: "Show Upcoming Automated Actions",
     laterModule: "M12",

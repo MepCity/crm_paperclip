@@ -3,6 +3,9 @@
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useId, useLayoutEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icon";
+import { isFieldValueEmpty } from "../field-format";
 import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
 import { useInlineEdit } from "./inline-edit-context";
@@ -15,6 +18,7 @@ export interface DetailFieldRowProps {
   format: FormatOptions;
   auditTimestamp?: string | null;
   layout: "business" | "details" | "details-full" | "details-full-description";
+  callAction?: boolean;
   onEdit?: (apiName: string) => void;
 }
 
@@ -25,6 +29,7 @@ export function DetailFieldRow({
   format,
   auditTimestamp,
   layout,
+  callAction,
   onEdit,
 }: DetailFieldRowProps) {
   const inline = useInlineEdit();
@@ -152,6 +157,17 @@ export function DetailFieldRow({
                 auditTimestamp={auditTimestamp}
               />
             )}
+            {callAction && !isFieldValueEmpty(field, value) ? (
+              <Button
+                variant="icon"
+                size="compact"
+                aria-label="Call"
+                laterModule="M5"
+                className="ms-1.5 inline-flex shrink-0 size-4 text-text-muted hover:text-text items-center justify-center self-center"
+              >
+                <Icons.phone aria-hidden className="size-3.5" />
+              </Button>
+            ) : null}
             {edit ? <FieldPencil label={`Edit ${field.label}`} onClick={edit} /> : null}
           </>
         )}

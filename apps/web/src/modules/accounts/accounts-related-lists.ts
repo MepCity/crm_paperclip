@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import type {
+  RelatedListActivityColumnDefinition,
   RelatedListDefinition,
   RelatedListRailLinksGroupDefinition,
   RelatedListTableRowDefinition,
@@ -69,12 +70,56 @@ function badgeValue(count: number | undefined): number | undefined {
   return count !== undefined && count > 0 ? count : undefined;
 }
 
+/** AD-30/AD-31: the rail badge is the number of records the card holds; zero draws no badge. */
+function activityCount(
+  columns: readonly RelatedListActivityColumnDefinition[],
+  supplied: number | undefined,
+): number | undefined {
+  return supplied ?? columns.reduce((total, column) => total + column.count, 0);
+}
+
 export function createAccountsRelatedLists(
   options: CreateAccountsRelatedListsOptions = {},
 ): readonly RelatedListDefinition[] {
   const { handlers = {}, badges = {}, includeContactsPreview = false } = options;
   const notesBadge = badges.notes !== undefined ? badgeValue(badges.notes) : badgeValue(1);
   const contactsBadge = badges.contacts !== undefined ? badgeValue(badges.contacts) : badgeValue(1);
+  const openActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
+    {
+      id: "open-tasks",
+      title: "Open Tasks",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.check,
+    },
+    {
+      id: "open-meetings",
+      title: "Open Meetings",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.calendar,
+    },
+  ];
+  const closedActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
+    {
+      id: "closed-tasks",
+      title: "Closed Tasks",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.check,
+    },
+    {
+      id: "closed-meetings",
+      title: "Closed Meetings",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.calendar,
+    },
+  ];
+  const openActivitiesBadge = badgeValue(activityCount(openActivityColumns, badges.openActivities));
+  const closedActivitiesBadge = badgeValue(
+    activityCount(closedActivityColumns, badges.closedActivities),
+  );
 
   return [
     {
@@ -232,7 +277,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-open-activities",
-      countBadge: badgeValue(badges.openActivities ?? 1),
+      countBadge: openActivitiesBadge,
       upperControls: [
         {
           id: "add-new",
@@ -261,22 +306,7 @@ export function createAccountsRelatedLists(
           icon: Icons.diagonalExpand,
         },
       ],
-      activityColumns: [
-        {
-          id: "open-tasks",
-          title: "Open Tasks",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.check,
-        },
-        {
-          id: "open-meetings",
-          title: "Open Meetings",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.calendar,
-        },
-      ],
+      activityColumns: openActivityColumns,
     },
     {
       id: "closed-activities",
@@ -284,7 +314,7 @@ export function createAccountsRelatedLists(
       moduleKey: "M5",
       order: 8,
       targetId: "related-list-closed-activities",
-      countBadge: badgeValue(badges.closedActivities ?? 1),
+      countBadge: closedActivitiesBadge,
       upperControls: [
         {
           id: "column-view-closed",
@@ -307,22 +337,7 @@ export function createAccountsRelatedLists(
           icon: Icons.diagonalExpand,
         },
       ],
-      activityColumns: [
-        {
-          id: "closed-tasks",
-          title: "Closed Tasks",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.check,
-        },
-        {
-          id: "closed-meetings",
-          title: "Closed Meetings",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.calendar,
-        },
-      ],
+      activityColumns: closedActivityColumns,
     },
     {
       id: "products",
