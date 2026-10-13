@@ -6,10 +6,13 @@ import type {
   FieldDefinition,
   ListResult,
   ModuleApiName,
+  ModuleMetadata,
+  RecordData,
   SortSpec,
 } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -67,6 +70,13 @@ export interface ModuleListPaths {
 
 export interface ModuleListScreenConfig {
   module: ModuleApiName;
+  defaultPresentation?: "table" | "board";
+  board?: (input: {
+    records: readonly RecordData[];
+    metadata: ModuleMetadata;
+    orgSlug: string;
+    ownerNames: Readonly<Record<string, string>>;
+  }) => RecordBoardProps;
   linkField: string;
   pluralLabel: string;
   singularLabel: string;
@@ -147,6 +157,12 @@ function ModuleListScreenLoaded({
     () => parseListSearchParams(searchParams, storedPerPage),
     [searchParams, storedPerPage],
   );
+  const requestedPresentation = searchParams.get("presentation");
+  const presentation = config.board
+    ? requestedPresentation === "table" || requestedPresentation === "board"
+      ? requestedPresentation
+      : (config.defaultPresentation ?? "table")
+    : "table";
   const [filterOpen, setFilterOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
@@ -316,8 +332,10 @@ function ModuleListScreenLoaded({
 
   const listHrefForContext = useMemo(() => {
     if (!listBasePath) return null;
-    return withSearchParams(listBasePath, searchParamsFromListState(searchState));
-  }, [listBasePath, searchState]);
+    const params = searchParamsFromListState(searchState);
+    if (config.board && requestedPresentation) params.set("presentation", presentation);
+    return withSearchParams(listBasePath, params);
+  }, [listBasePath, searchState, config.board, requestedPresentation, presentation]);
 
   useEffect(() => {
     const pageData = list.data;
@@ -342,7 +360,9 @@ function ModuleListScreenLoaded({
 
   function navigate(next: ListSearchState) {
     if (!listBasePath) return;
-    const href = withSearchParams(listBasePath, searchParamsFromListState(next));
+    const params = searchParamsFromListState(next);
+    if (config.board && requestedPresentation) params.set("presentation", presentation);
+    const href = withSearchParams(listBasePath, params);
     router.push(href);
   }
 
@@ -535,14 +555,19 @@ function ModuleListScreenLoaded({
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
 
+  const previousParams = searchParamsFromListState(previousState);
+  const nextParams = searchParamsFromListState(nextState);
+  if (config.board && requestedPresentation) {
+    previousParams.set("presentation", presentation);
+    nextParams.set("presentation", presentation);
+  }
+  const boardProps =
+    presentation === "board" && config.board && moduleQuery.data
+      ? config.board({ records, metadata: moduleQuery.data, orgSlug, ownerNames })
+      : null;
   const previousHref =
-    page > 1 && listBasePath
-      ? withSearchParams(listBasePath, searchParamsFromListState(previousState))
-      : null;
-  const nextHref =
-    moreRecords && listBasePath
-      ? withSearchParams(listBasePath, searchParamsFromListState(nextState))
-      : null;
+    page > 1 && listBasePath ? withSearchParams(listBasePath, previousParams) : null;
+  const nextHref = moreRecords && listBasePath ? withSearchParams(listBasePath, nextParams) : null;
 
   const inert = () => {};
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
@@ -570,9 +595,15 @@ function ModuleListScreenLoaded({
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
         pinnedViews={config.pinnedViews}
-        onViewChange={(id) => router.push(config.paths.customList(orgSlug, config.module, id))}
+        onViewChange={(id) => {
+          const params = new URLSearchParams();
+          if (config.board && requestedPresentation) params.set("presentation", presentation);
+          router.push(
+            withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
+          );
+        }}
       />
-      {selectionActive ? (
+      {selectionActive && presentation === "table" ? (
         <SelectionBar
           laterInventory={Boolean(config.inventory)}
           selectedCount={pageSelectedIds.length}
@@ -582,6 +613,17 @@ function ModuleListScreenLoaded({
         />
       ) : (
         <ListToolbar
+          presentation={config.board ? presentation : undefined}
+          onPresentationChange={
+            config.board
+              ? (next) => {
+                  const params = searchParamsFromListState(searchState);
+                  params.set("presentation", next);
+                  setSelectedIds([]);
+                  router.push(withSearchParams(listBasePath, params));
+                }
+              : undefined
+          }
           filterOpen={filterOpen}
           onFilterChange={setFilterOpen}
           onRefresh={refreshView}
@@ -606,6 +648,9 @@ function ModuleListScreenLoaded({
           }}
         />
       )}
+      {boardProps?.toolbar ? (
+        <div className="module-list-board-toolbar">{boardProps.toolbar}</div>
+      ) : null}
       {massUpdateOpen && massUpdateFields.length > 0 ? (
         <MassUpdateDialog
           isOpen
@@ -669,47 +714,51 @@ function ModuleListScreenLoaded({
           />
         ) : null}
         <div className="module-list-table-host">
-          <RecordTable
-            laterInventory={Boolean(config.inventory)}
-            badgeColumn={config.badgeColumn}
-            phoneLaterModule={config.phoneLaterModule}
-            linkWebsite={config.linkWebsite}
-            columns={columns}
-            records={records}
-            linkField={config.linkField}
-            linkFieldLabel={config.linkFieldLabel}
-            rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
-            selectedIds={pageSelectedIds}
-            onSelectedIdsChange={(ids) => {
-              const allowed = new Set(records.map((record) => record.id));
-              setSelectedIds([...ids].filter((id) => allowed.has(id)));
-            }}
-            sortableFields={eligibleSortFields}
-            onSortChange={applyColumnSort}
-            alphabet={{ value: letter, onChange: applyLetter }}
-            wrapText={wrapText}
-            emptyMessage={emptyMessage}
-            settings={
-              <ViewSettingsMenu
-                laterModule={config.inventory ? "M11" : undefined}
-                perPage={searchState.perPage}
-                onPerPageChange={changePerPage}
-                wrapText={wrapText}
-                onWrapTextChange={setWrapText}
-              />
-            }
-            ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
-            footer={{
-              total,
-              page,
-              pageSize: perPage,
-              recordCount: records.length,
-              moreRecords,
-              previousHref,
-              nextHref,
-            }}
-          />
+          {boardProps ? (
+            <RecordBoard {...boardProps} toolbar={undefined} />
+          ) : (
+            <RecordTable
+              laterInventory={Boolean(config.inventory)}
+              badgeColumn={config.badgeColumn}
+              phoneLaterModule={config.phoneLaterModule}
+              linkWebsite={config.linkWebsite}
+              columns={columns}
+              records={records}
+              linkField={config.linkField}
+              linkFieldLabel={config.linkFieldLabel}
+              rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
+              selectedIds={pageSelectedIds}
+              onSelectedIdsChange={(ids) => {
+                const allowed = new Set(records.map((record) => record.id));
+                setSelectedIds([...ids].filter((id) => allowed.has(id)));
+              }}
+              sortableFields={eligibleSortFields}
+              onSortChange={applyColumnSort}
+              alphabet={{ value: letter, onChange: applyLetter }}
+              wrapText={wrapText}
+              emptyMessage={emptyMessage}
+              settings={
+                <ViewSettingsMenu
+                  laterModule={config.inventory ? "M11" : undefined}
+                  perPage={searchState.perPage}
+                  onPerPageChange={changePerPage}
+                  wrapText={wrapText}
+                  onWrapTextChange={setWrapText}
+                />
+              }
+              ownerNames={ownerNames}
+              format={DEFAULT_FORMAT}
+              footer={{
+                total,
+                page,
+                pageSize: perPage,
+                recordCount: records.length,
+                moreRecords,
+                previousHref,
+                nextHref,
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

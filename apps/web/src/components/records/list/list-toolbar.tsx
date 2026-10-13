@@ -9,6 +9,8 @@ import { SortPopover, type SortPopoverProps } from "./sort-popover";
 import { ViewTypeSwitcher } from "./view-type-switcher";
 
 export interface ListToolbarProps {
+  presentation?: "table" | "board";
+  onPresentationChange?: (presentation: "table" | "board") => void;
   filterOpen: boolean;
   onFilterChange: (open: boolean) => void;
   onRefresh: () => void;
@@ -20,6 +22,8 @@ export interface ListToolbarProps {
 }
 
 export function ListToolbar({
+  presentation,
+  onPresentationChange,
   filterOpen,
   onFilterChange,
   onRefresh,
@@ -50,7 +54,10 @@ export function ListToolbar({
         </Button>
         <SortPopover fields={fields} sort={sort} onApply={onSortApply} />
         <span className="ml-(--size-list-view-switcher-offset)">
-          <ViewTypeSwitcher />
+          <ViewTypeSwitcher
+            presentation={presentation}
+            onPresentationChange={onPresentationChange}
+          />
         </span>
         <Button
           variant="ghost"

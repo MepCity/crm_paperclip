@@ -61,3 +61,11 @@
   flex: 1;
   min-height: 0;
 }
+
+.module-list-board-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline: var(--list-content-inset-start);
+  padding-top: 10px;
+}

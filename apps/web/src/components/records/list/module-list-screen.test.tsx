@@ -1495,3 +1495,38 @@ it("clears explicit sort parameters when None is applied", async () => {
   expect(navigation.params.has("sort_by")).toBe(false);
   expect(navigation.params.has("sort_order")).toBe(false);
 });
+
+it("uses URL presentation state for configured boards and keeps table-only modules unchanged", async () => {
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  const config = {
+    ...leadsListPageConfig,
+    defaultPresentation: "board" as const,
+    board: () => ({
+      columns: [{ key: "test", label: "Test stage", count: 0, cards: [] }],
+      createLabel: "Create Record",
+      onCreate: vi.fn(),
+      onMove: vi.fn(),
+    }),
+  };
+  const { rerender } = render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("region", { name: "Test stage" });
+  expect(screen.queryByRole("table", { name: "Records" })).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Board presentation" }).getAttribute("aria-pressed"),
+  ).toBe("true");
+  await userEvent.click(screen.getByRole("button", { name: "List presentation" }));
+  expect(navigation.push).toHaveBeenLastCalledWith(expect.stringContaining("presentation=table"));
+  rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />);
+  await screen.findByRole("table", { name: "Records" });
+  await userEvent.click(screen.getByRole("button", { name: "Board presentation" }));
+  rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />);
+  await screen.findByRole("region", { name: "Test stage" });
+  rerender(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />);
+  await screen.findByRole("table", { name: "Records" });
+  expect(
+    screen.getByRole("button", { name: "Split presentation" }).getAttribute("aria-disabled"),
+  ).toBe("true");
+});
