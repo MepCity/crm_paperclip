@@ -1,10 +1,10 @@
-# Deals — upper record detail
+# Deals — record detail
 
-Status: observed and submitted for independent inventory review. Module 4 / MEP-346.
+Status: upper detail observed; lower-detail research not observed because its list baseline remained a loading skeleton. Submitted for independent inventory review. Module 4 / MEP-346 and MEP-347.
 
 ## Purpose
 
-Describe the observed upper Deals detail, stage bar, More Options and Timeline. Reuse [accounts-record-detail.md](accounts-record-detail.md), then [contacts-record-detail.md](contacts-record-detail.md) and [record-detail.md](record-detail.md) for shared behaviour. Exported fields, stages and relations remain in [deals.md](deals.md). Lower field sections and related-card interiors belong to MEP-347; stage-changing flows belong to MEP-353. No write was attempted.
+Describe the observed upper Deals detail, stage bar, More Options and Timeline. Reuse [accounts-record-detail.md](accounts-record-detail.md), then [contacts-record-detail.md](contacts-record-detail.md) and [record-detail.md](record-detail.md) for shared behaviour. Exported fields, stages and relations remain in [deals.md](deals.md). Lower field sections and related-card interiors were attempted in MEP-347 but remain not observed; stage-changing flows belong to MEP-353. No write was attempted.
 
 ## Layout
 
@@ -130,6 +130,26 @@ The three added painted controls are incidental to later column loading; they we
 
 Rest: as in m4d-list-base; covered by the overlay: none.
 
+### Control inventory — m4c-list-base
+
+Shell: not observed in this capture; the shell is replaced by a loading skeleton. The whole image, right edge and bottom corners were inspected.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No painted interactive control. Loading shapes and the central Loading indicator are static placeholders, not buttons. The prior task's record selector matches zero source items; no alternative record link exists in this capture. Detail/card captures were not attempted under the unique-selector rule.
+
+Rest: as in m4-list-base only for the intended route; its populated screen is not painted here; covered by the overlay: none. Absent here: all painted SH and DL controls from that baseline, because the page is loading; this is not module-wide absence.
+
+### Control inventory — m4c-list-after
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+No changed painted control. The central loading animation differs in phase; it is not interactive. No record count or record link is painted in either list capture.
+
+Rest: as in m4c-list-base; covered by the overlay: none. Absent here: same loading-state absence as m4c-list-base.
+
 ### Shell controls missing from app-shell.md
 
 No additional Deals shell control found. Reuse the missing-shell list in contacts.md. SH-46 is image-only; resize hotspots have no painted grip.
@@ -217,6 +237,40 @@ Only labels and order are compared. Exported sequence is from deals.md › Relat
 
 Exported visible Checklists (23) and Locking Information (25) are not painted in this rail. Hidden Review Summary/Field History, Email Sentiment and Email Drafts are also not painted. Add Related List is a utility link, not an exported relation. SALES SUMMARY is a static section, not another related list. The rail's Stage History and Contact Roles badges are Deals-specific; Activities counts reuse Accounts.
 
+## Related-list cards
+
+The first fifteen rows follow the rail observed in m4d-detail-main, not a newly observed card order. Checklists and Locking Information follow exported relations only and have no observed rail position. MEP-347 did not reach any card. Shared references identify earlier documentation, **not** confirmed Deals equivalence; every Deals interior remains not observed. No row data is reproduced.
+
+| Order | Card title | Module | Counter | Upper controls | Column headers | Empty state | Ref | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Notes | M6 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Notes; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 2 | Connected Records | ? | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Connected Records; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 3 | Attachments | M6 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Attachments; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 4 | Stage History | M4 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 5 | Competitors | ? | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 6 | Cadences | P3 | not observed | not observed | not observed | not observed | [contacts-record-detail.md](contacts-record-detail.md#related-list-cards) › Related-list cards › Cadences; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 7 | Open Activities | M5 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Open Activities; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 8 | Closed Activities | M5 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Closed Activities; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 9 | Products | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Products; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 10 | Quotes | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Quotes; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 11 | Sales Orders | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Sales Orders; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 12 | Contact Roles | M2 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 13 | Emails | M10 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Emails; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 14 | Cases | M8 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Cases; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| 15 | Invoices | P2 | not observed | not observed | not observed | not observed | [accounts-record-detail.md](accounts-record-detail.md#related-list-cards) › Related-list cards › Invoices; Deals equivalence not observed | not observed (MEP-347); rail seen (m4d-detail-main) |
+| not observed | Checklists | ? | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
+| not observed | Locking Information | M11 | not observed | not observed | not observed | not observed | new scope; not observed | not observed (MEP-347); exported relation (deals.md) |
+
+Stage History, Contact Roles and Competitors have observed rail links (DD-54–DD-56), but no observed card headings, counters, upper buttons, columns, empty states or row-end controls. Connected Records also remains not observed at card level despite its shared rail reference. Stage History columns cannot be compared with [deals.md](deals.md#stage-history-module) without a painted card; metadata is not substituted for screen evidence. No new DD number is assigned to an unobserved control.
+
+## Record-page footer and edges
+
+The upper-detail right edge and utility strip retain the existing shell references. The record-page footer, lower Deal Information fields and description were not reached in MEP-347. Its two list images contain only shell/content skeletons and a central loading indicator, with no painted footer, edge icon or corner control. No named section-navigation control was available because no detail capture could be opened. This does not establish the absence of lower record controls.
+
+## Differences from earlier modules
+
+No lower-detail or card difference can be established from the loading captures. Accounts and Contacts remain the nearest shared-card documentation; their controls are not asserted as present in Deals until observed. The Deals-specific upper-detail differences above remain unchanged.
+
 ## Capability table
 
 | Capability | Module | Reused from Accounts / Contacts or Deals-specific | Evidence / limit |
@@ -230,6 +284,7 @@ Exported visible Checklists (23) and Locking Information (25) are not painted in
 | Contact Person and Next Action links | M2/M3/M10/M5 | Accounts contact/email links moved; added activity summary | Links unoperated; card interiors deferred |
 | More Options | Per menu inventory | Accounts plus Contacts Run Macro / Enroll to Cadence | Fifteen rows; outcomes not observed |
 | Timeline History toolbar | M4/M12 | Accounts AD-159–AD-161 | Empty state observed; filter unopened |
+| Lower details, related cards and record-page footer | Per related-card table | Shared candidates plus Deals-specific card scope | not observed in MEP-347; loading baseline prevents verified navigation |
 | Populated stage-change Timeline rows | M4 | Deals-specific, not observed | No rows in this record |
 
 ## Capture refs
@@ -243,8 +298,12 @@ Only neutral slugs identify local evidence; raw images and customer values are n
 | m4d-detail-more | 2 | 0 | Fifteen-row menu |
 | m4d-detail-timeline | 2 | 0 | History, empty log region |
 | m4d-list-after | 0 | 0 | Same four links/columns; late column controls |
+| m4c-list-base | 0 | 0 | Loading skeleton; no record links/count |
+| m4c-list-after | 0 | 0 | Loading skeleton; no record links/count |
 
 The first detail establishes three related reads; both subsequent detail captures retain that count. All captures satisfy the amended expected-call limits, including one blocked navigation read per detail capture. The menu and Timeline have no skipped click. No successful record write or telemetry request was observed. The base and main captures were not repeated. No stage, terminal action, persisted preference, menu row or unsafe card control was clicked.
+
+MEP-347: both preserved list captures have nine GET calls, no non-GET call, no blocked request and no skipped click. Their record counts cannot be compared because neither is painted. No detail baseline or related-read count was established. Detail, card and section captures were omitted because no unique record link could be validated in m4c-list-base. The loading-race retry rule applies to a skipped first click in a click-containing capture; neither capture has a click, so it was not invoked. No write or preference action was attempted.
 
 ## Open questions
 
@@ -252,9 +311,11 @@ The first detail establishes three related reads; both subsequent detail capture
 - Passed-stage styling, closed-stage strip display, stage/terminal menus and transition effects remain not observed; pipeline research owns these gaps.
 - Populated Timeline stage-change row structure and the relation between Stage History and Timeline remain not observed; this record shows an empty Timeline.
 - Hover-only inline-edit, rail and card controls remain not observed. No hover or unsafe alternate selector was attempted.
-- Competitors retains unknown module ownership (`?`) from deals.md. Connected Records retains shared unknown ownership from Accounts; a lead decision is needed to assign it.
+- Competitors and Checklists retain unknown module ownership (`?`) from deals.md. Connected Records retains shared unknown ownership from Accounts; a lead decision is needed to assign it.
 - No Deals-specific shell ownership decision was introduced. Unknown SH ownership remains in contacts.md.
-- Lower sections, Add Link and card interiors are outside this viewport and this task; MEP-347 owns their observation. No board decision is requested by this research.
+- MEP-347 could not open detail: its list baseline has no record link. Lower Deal Information fields, description, Add Link and every card interior remain not observed. The final list also remained a loading skeleton, so total-record equality cannot be verified. No alternate selector, direct record path or extra capture was attempted.
+- Stage History column comparison with deals.md › Stage History module remains not observed; exported field definitions are not evidence of painted column headings.
+- Checklists and Locking Information remain exported relations only; neither their rail controls nor card interiors were observed. Hover-only card controls remain not observed. No board decision is requested by this research.
 
 ## Reconciliation of controls.json
 
@@ -768,3 +829,14 @@ Every source ordinal is accounted for exactly once below. Repeated wrappers can 
 | SH-45 | 319 |
 
 320 source items; 89 inventory IDs represented; 161 excluded items.
+
+### m4c-list-base and m4c-list-after
+
+Each capture has the same three source items; every item is excluded, with no represented inventory ID. Both screenshots were opened as images and inspected over the entire viewport; no image-only interactive control exists.
+
+| Inventory number / exclusion reason | controls.json item ordinals, each capture |
+| --- | --- |
+| excluded: structural navigation wrapper around the skeleton; no painted control | 1 |
+| excluded: invisible zero-area element | 2–3 |
+
+Each: 3 source items; 0 inventory IDs represented; 3 excluded items. No shell ID is claimed from unpainted skeleton shapes.
