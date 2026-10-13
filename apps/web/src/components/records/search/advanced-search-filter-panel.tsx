@@ -14,24 +14,35 @@ import type { MultiSelectOption } from "@/components/ui/multi-select";
 import { TextField } from "@/components/ui/text-field";
 import type { OrgMember } from "@/lib/api/client/http-record-service";
 import { type PanelFilterInput, panelFiltersToCriteria } from "@/lib/records/filter-criteria";
-import {
-  DOCUMENTED_MODULE_FILTER_ITEMS,
-  REGISTERED_SEARCH_MODULES,
-  SYSTEM_FILTER_FIELDS,
-} from "./constants";
+import { moduleScreens } from "@/modules/registry";
+import type { ModuleScreenDefinition } from "@/modules/types";
+import { getDocumentedModuleFilterItems, SYSTEM_FILTER_FIELDS } from "./constants";
 
 export interface AdvancedSearchFilterPanelProps {
   appliedModules: readonly ModuleApiName[];
-  onApply: (params: { modules: ModuleApiName[]; criteria?: Criteria }) => void;
+  appliedSelectedFields?: readonly string[];
+  appliedDrafts?: Readonly<Record<string, FilterDraft>>;
+  onApply: (params: {
+    modules: ModuleApiName[];
+    criteria?: Criteria;
+    selectedFields: string[];
+    drafts: Record<string, FilterDraft>;
+  }) => void;
   onClear: () => void;
   users: readonly OrgMember[];
+  registeredModules?: readonly ModuleApiName[];
+  moduleDefinitions?: readonly ModuleScreenDefinition[];
 }
 
 export function AdvancedSearchFilterPanel({
   appliedModules,
+  appliedSelectedFields,
+  appliedDrafts,
   onApply,
   onClear,
   users,
+  registeredModules,
+  moduleDefinitions,
 }: AdvancedSearchFilterPanelProps) {
   const [draftModules, setDraftModules] = useState<ModuleApiName[]>(() => [...appliedModules]);
   const [prevApplied, setPrevApplied] = useState(appliedModules);
@@ -41,19 +52,47 @@ export function AdvancedSearchFilterPanel({
   }
 
   const [moduleSearch, setModuleSearch] = useState("");
-  const [selectedFieldApiNames, setSelectedFieldApiNames] = useState<string[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, FilterDraft>>({});
+  const [selectedFieldApiNames, setSelectedFieldApiNames] = useState<string[]>(() => [
+    ...(appliedSelectedFields ?? []),
+  ]);
+  const [prevAppliedFields, setPrevAppliedFields] = useState(appliedSelectedFields);
+  if (appliedSelectedFields !== prevAppliedFields) {
+    setPrevAppliedFields(appliedSelectedFields);
+    setSelectedFieldApiNames([...(appliedSelectedFields ?? [])]);
+  }
+
+  const [drafts, setDrafts] = useState<Record<string, FilterDraft>>(() => ({
+    ...(appliedDrafts ?? {}),
+  }));
+  const [prevAppliedDrafts, setPrevAppliedDrafts] = useState(appliedDrafts);
+  if (appliedDrafts !== prevAppliedDrafts) {
+    setPrevAppliedDrafts(appliedDrafts);
+    setDrafts({ ...(appliedDrafts ?? {}) });
+  }
 
   const userOptions: MultiSelectOption[] = useMemo(
     () => users.map((u) => ({ id: u.userId, label: u.name })),
     [users],
   );
 
+  const documentedItems = useMemo(
+    () => getDocumentedModuleFilterItems(moduleDefinitions),
+    [moduleDefinitions],
+  );
+
   const filteredModules = useMemo(() => {
     const q = moduleSearch.trim().toLowerCase();
-    if (!q) return DOCUMENTED_MODULE_FILTER_ITEMS;
-    return DOCUMENTED_MODULE_FILTER_ITEMS.filter((item) => item.label.toLowerCase().includes(q));
-  }, [moduleSearch]);
+    if (!q) return documentedItems;
+    return documentedItems.filter((item) => item.label.toLowerCase().includes(q));
+  }, [moduleSearch, documentedItems]);
+
+  const defaultModules = useMemo(
+    () =>
+      registeredModules ??
+      moduleDefinitions?.map((d) => d.apiName) ??
+      moduleScreens.map((d) => d.apiName),
+    [registeredModules, moduleDefinitions],
+  );
 
   const fieldDefinitions = useMemo<Record<string, FilterEditorDefinition>>(() => {
     const res: Record<string, FilterEditorDefinition> = {};
@@ -86,7 +125,7 @@ export function AdvancedSearchFilterPanel({
       if (editor) {
         setDrafts((prev) => ({
           ...prev,
-          [apiName]: initialFilterDraft(editor),
+          [apiName]: prev[apiName] ?? initialFilterDraft(editor),
         }));
       }
       setSelectedFieldApiNames((prev) => [...prev, apiName]);
@@ -117,13 +156,15 @@ export function AdvancedSearchFilterPanel({
     onApply({
       modules: [...draftModules],
       criteria,
+      selectedFields: [...selectedFieldApiNames],
+      drafts: { ...drafts },
     });
   }
 
   function handleClear() {
     setSelectedFieldApiNames([]);
     setDrafts({});
-    setDraftModules([...REGISTERED_SEARCH_MODULES]);
+    setDraftModules([...defaultModules]);
     onClear();
   }
 

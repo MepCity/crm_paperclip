@@ -46,6 +46,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   navigation: { id: "contacts", icon: Icons.users },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,
+  searchColumns: ["Full_Name", "Account_Name", "Email", "Phone", "Owner"],
   merge: contactsMergeDefinition,
   buildFilterGroups: buildContactsFilterGroups,
   form: {
