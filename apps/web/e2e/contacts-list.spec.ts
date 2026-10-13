@@ -130,3 +130,33 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     ).not.toBeChecked();
   }
 });
+
+test("navigates from Account Name cell in Contacts list to Account record detail and filters by Account Name", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Contacts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  const accountLink = list
+    .locator("tbody tr")
+    .getByRole("link", { name: /Account \d+/ })
+    .first();
+  await expect(accountLink).toBeVisible();
+  const accountName = (await accountLink.innerText()).trim();
+  await accountLink.click();
+  await expect(page).toHaveURL(/\/tab\/Accounts\/[^/?]+/);
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+  await expect(page.locator("[data-record-header]")).toContainText(accountName);
+
+  await page.goto(moduleListDefaultPath(org.slug, "Contacts"));
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  const filter = list.getByRole("checkbox", { name: "Account Name", exact: true });
+  await filter.scrollIntoViewIfNeeded();
+  await filter.check({ force: true });
+  await list.getByRole("textbox", { name: "Account Name value" }).fill(accountName);
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await expect(list.locator("tbody tr").first()).toContainText(accountName);
+});

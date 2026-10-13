@@ -8,6 +8,7 @@ import { useHomeCurrency } from "@/lib/api/client/hooks";
 import { moduleCreatePath, moduleListDefaultPath, moduleRecordPath } from "@/lib/crm-paths";
 import { consumeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { readRecordListContext } from "@/lib/records/record-list-context";
+import { resolveModuleScreenByApiName } from "./registry";
 import type { ModuleScreenDefinition } from "./types";
 import "./module-form-page.css";
 
@@ -53,7 +54,17 @@ export function ModuleFormClient({
           createPrefill,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
-            detail: (id) => moduleRecordPath(orgSlug, definition.tab, id),
+            detail: (id, targetModule) => {
+              if (targetModule) {
+                const targetDef = resolveModuleScreenByApiName(targetModule);
+                return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);
+              }
+              return moduleRecordPath(orgSlug, definition.tab, id);
+            },
+            record: (targetModule, id) => {
+              const targetDef = resolveModuleScreenByApiName(targetModule);
+              return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);
+            },
             create: moduleCreatePath(orgSlug, definition.tab),
             cancel: defaultCancel,
           },

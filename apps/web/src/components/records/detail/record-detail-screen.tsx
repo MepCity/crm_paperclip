@@ -35,6 +35,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
 import type { ModuleScreenDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
@@ -214,7 +215,10 @@ export function RecordDetailScreen({
   const displayRecord = rules.statusRibbon
     ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
     : record;
-  const { title, subtitle, subtitleLaterModule, subtitleHref, portraitIcon } = rules.header(record);
+  const { title, subtitle, subtitleLaterModule, subtitleHref, portraitIcon } = rules.header(
+    record,
+    { orgSlug },
+  );
   const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);
@@ -269,6 +273,11 @@ export function RecordDetailScreen({
           name: user.name,
           email: user.email,
         }))}
+        ownerNames={ownerNames}
+        recordPath={(targetModule, id) => {
+          const targetDef = resolveModuleScreenByApiName(targetModule);
+          return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
+        }}
         save={async (input) => {
           await updateRecord.mutateAsync({ id: recordId, input });
           await recordQuery.refetch();

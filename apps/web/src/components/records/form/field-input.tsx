@@ -55,7 +55,7 @@ export interface FieldInputProps {
   inline?: boolean;
   recordService?: RecordService | ClientRecordService;
   /** Record address for the name-cell links of an observed record picker. */
-  lookupRecordHref?: (id: string) => string;
+  lookupRecordHref?: (id: string, module?: string) => string;
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
 }
@@ -364,8 +364,11 @@ export function FieldInput({
               selectedId={reference?.id}
               recordService={recordService}
               chrome={lookupChrome ?? "interim"}
-              recordHref={lookupRecordHref}
-              ownerNames={lookupOwnerNames}
+              recordHref={lookupRecordHref ? (id) => lookupRecordHref(id, targetModule) : undefined}
+              ownerNames={
+                lookupOwnerNames ??
+                (users ? Object.fromEntries(users.map((u) => [u.id, u.name])) : undefined)
+              }
               onDone={(selected) => {
                 onChange(selected);
                 setLookupOpen(false);

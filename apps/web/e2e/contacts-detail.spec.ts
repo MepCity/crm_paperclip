@@ -167,6 +167,67 @@ test.describe("Contacts record detail", () => {
     expect(page.url()).toBe(before);
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("navigates from header Account subtitle link (D-03) and details card (D-39) to Account detail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+    const header = page.locator("[data-record-header]");
+    const headerAccountLink = header.getByRole("link", { name: "Account 001" });
+    await expect(headerAccountLink).toBeVisible();
+
+    const detailsAccountLink = page
+      .locator('[data-detail-field="Account_Name"]')
+      .getByRole("link", { name: "Account 001" });
+    await expect(detailsAccountLink).toBeVisible();
+
+    await headerAccountLink.click();
+    await expect(page).toHaveURL(/\/tab\/Accounts\/500000000000000000/);
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await expect(page.locator("[data-record-header]")).toContainText("Account 001");
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("inline-edits Account Name lookup field using Choose Account dialog", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, REPORT_ONLY_RECORD_ID);
+    const accountRow = page.locator('[data-detail-field="Account_Name"]');
+    await accountRow.hover();
+    await accountRow.getByRole("button", { name: "Edit Account Name value" }).click();
+
+    await accountRow.getByRole("button", { name: "Open Account Name lookup", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Choose Account" });
+    await expect(dialog).toBeVisible();
+    const firstDataRow = dialog.locator("tbody tr").first();
+    await expect(firstDataRow).toBeVisible();
+    const nameLink = firstDataRow.locator("td").nth(1).getByRole("link");
+    await expect(nameLink).toBeVisible();
+    await expect(nameLink).toHaveAttribute("href", /\/tab\/Accounts\//);
+    const chosenName = (await nameLink.innerText()).trim();
+    await firstDataRow.click();
+    await expect(dialog).toHaveCount(0);
+
+    const saveMutation = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PUT" &&
+        response.url().includes(`/crm/v2.2/Contacts/${REPORT_ONLY_RECORD_ID}`) &&
+        response.ok(),
+    );
+    await accountRow.getByRole("button", { name: "Save", exact: true }).click();
+    await saveMutation;
+
+    await expect(accountRow).toContainText(chosenName);
+    await expect(accountRow.getByRole("link", { name: chosenName })).toBeVisible();
+    await expect(page.locator("[data-record-header]")).toContainText(chosenName);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
 
 function headerTitle(page: import("@playwright/test").Page) {
