@@ -22,7 +22,14 @@ export const apiKeys = {
   ) => [...apiKeys.module(orgSlug, module), "count", serializeCountQuery(query)] as const,
   record: (orgSlug: string, module: string, id: string) =>
     [...apiKeys.module(orgSlug, module), "record", id] as const,
+  duplicateGroups: (orgSlug: string, module: string, fields: readonly string[]) =>
+    [...apiKeys.module(orgSlug, module), "duplicateGroups", fields.join(",")] as const,
 };
+
+/** Invalidates every duplicate-group query of a module. */
+export function duplicateGroupsPrefix(orgSlug: string, module: string) {
+  return [...apiKeys.module(orgSlug, module), "duplicateGroups"] as const;
+}
 
 /** Invalidates list queries only (not module metadata). */
 export function listQueriesPrefix(orgSlug: string, module: string) {
