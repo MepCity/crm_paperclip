@@ -236,7 +236,8 @@ remain authoritative.
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
 | D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
 | D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
-| D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View drawn without handler | Contacts detail e2e |
+| D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View opens Contact Hierarchy modal (D-90, MEP-421) | Contacts detail e2e |
+| AD-163–AD-164 | Contact Hierarchy modal Close Modal button (AD-163) and indented contact links (AD-164, MEP-421) | `contact-hierarchy-modal.test.tsx`, `e2e/contacts-detail.spec.ts` |
 
 Share (M11) and Print Preview (M6) are later-module controls in More Options (Module
 1 gate assignment). Find and Merge Duplicates opens the shared merge flow (MEP-352).
@@ -307,8 +308,8 @@ landed after the MEP-355 walk and were verified in their own QA.
   names until the Deals screen definition ships in M4.
 - **Merge:** no note, attachment, or activity transfer and no email notification
   (each belongs to its module).
-- **Hierarchy View, Drafts, Approve Contacts:** not observed in reference captures;
-  behaviour unknown; drawn inert.
+- **Drafts, Approve Contacts:** not observed in reference captures;
+  behaviour unknown; drawn inert. Hierarchy View on Reporting Contacts (D-90) opens Contact Hierarchy modal with interim rules (MEP-421).
 - **Shell:** only Home, Leads, Contacts, and Accounts; other tabs arrive with
   their modules.
 - **Database adapter** is not wired (ADR 0002 measurement pending); Contacts runs on
@@ -316,6 +317,7 @@ landed after the MEP-355 walk and were verified in their own QA.
 
 **Interim rules**
 
+- **Contact Hierarchy modal (D-90, MEP-421):** Contact hierarchy modal opens from Reporting Contacts card. Interim rules 1–9: tree of contact's account (root = Account_Name); if contact has no account, no account row is drawn, manager (if any) is at top, contact under manager, direct reports under contact; no badge/highlight for current contact; contact links navigate to contact detail; X, Escape, and backdrop click dismiss modal and restore focus; Loading... and RelatedRecordsListError states; pagination reads up to 500 contacts in pages of 100 with fields projection (Full_Name, Reporting_To, Account_Name). Unobserved aspects: empty state, depth limit, hover-only controls, close outcome, link target, and D-90's own opened state in reference captures. Multilevel account-company tree (Member Accounts) is explicitly out of scope.
 - Manual merge: the user picks the master record; bulk cleanup picks the record
   with the most recent activity as master.
 - Merged-record creation metadata comes from the oldest record in the group (spec
@@ -355,11 +357,12 @@ and the reference captures.
 | AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
 | AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: not walked** (seed record has no history) |
 | AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
-| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View drawn without handler | Accounts detail e2e |
+| AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View opens Contact Hierarchy modal (AD-115, MEP-421) | Accounts detail e2e |
+| AD-163–AD-164 | Contact Hierarchy modal Close Modal button (AD-163) and indented contact links (AD-164, MEP-421) | `contact-hierarchy-modal.test.tsx`, `e2e/accounts-detail.spec.ts` |
 
 Share (M11) and Print Preview (M6) are later-module controls in More Options (same as
 Contacts; open states not observed in reference captures). **Hierarchy View (AD-115):**
-drawn inert; open behaviour not observed (Module 3 gate known gap). Notes rail badge
+opens Contact Hierarchy modal (MEP-421, seen in m3h-hierarchy-open). Notes rail badge
 omitted when count is zero. Billing/Shipping and lower detail field order follow Contacts
 address interim rules. Contacts detail Account subtitle and Account Name links to Accounts
 detail were walked in MEP-384 (L-43 / D-03 / D-39 cross-check).
@@ -443,8 +446,7 @@ merged since).
 - **Not observed open in reference captures (same state as Contacts):** Share, Print Preview,
   Drafts, Print View, the five system filters (Locked, Record Action, Related Records Action,
   Touched Records, Untouched Records), and non-list view type icons.
-- **Hierarchy View** on the Contacts card: drawn inert; open state not observed; no
-  implementation task was opened.
+- **Hierarchy View (AD-115):** implemented in MEP-421; opens Contact Hierarchy modal with interim rules 1–9.
 - Connected To is omitted on the create form; synthetic seed data has no populated Timeline
   history (empty shell was walked).
 - **Not walked in closing QA:** show custom views as a dropdown (AL-02.10) and form footer
@@ -452,6 +454,7 @@ merged since).
 
 **Interim rules**
 
+- **Contact Hierarchy modal (AD-115, MEP-421):** Contact hierarchy modal opens from Contacts card. Interim rules 1–9: root = account; contacts of account fetched with Account_Name = account; Reporting_To in set nests under parent; cycle protection ensures single render and fallback to root; siblings sorted by Full_Name ascending; empty state renders only root account row with no empty text; contact links navigate to contact detail; X, Escape, and backdrop click dismiss modal and restore focus; Loading... and RelatedRecordsListError states; pagination reads up to 500 contacts in pages of 100 with fields projection (Full_Name, Reporting_To, Account_Name). Unobserved aspects: empty state, depth limit, hover-only controls, close outcome, link target, and D-90's own opened state in reference captures. Multilevel account-company tree (Member Accounts) is explicitly out of scope.
 - More Options, delete confirmation, Timeline shell, record page footer, and form error copy,
   focus order, unsaved-changes handling, post-save destination, Save and New, and Copy Address
   directions follow the Contacts patterns.
@@ -462,9 +465,7 @@ merged since).
 
 **Open items**
 
-- **Board question (gate card):** whether clicking Hierarchy View in the reference CRM to see
-  its open state counts as read-only research; if yes, CRM Analyst captures it and a task opens;
-  if no, whether to build it from the public documentation's description or leave it inert.
+- **Board question (gate card):** resolved in MEP-421; Hierarchy View opens Contact Hierarchy modal based on m3h-hierarchy-open capture and interim rules 1–9.
 - Assigning a parent account to itself or into a cycle is not blocked; the reference rule was
   not observed and none was invented.
 - Related-list cards cap at 100 records with no pagination; reference behaviour above that cap
@@ -473,3 +474,32 @@ merged since).
   a full Module 3 re-walk.
 - The database adapter is not wired (ADR 0002, MEP-40); Accounts runs on the fixture record
   service.
+
+## Module 4 — Deals
+
+Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md`.
+
+### Deals list — implemented; QA passed (MEP-410)
+
+Inventory is SH-16 and DL-01–DL-27, DL-65–DL-69. Board controls DL-70–DL-81 are a later task.
+DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-16 | Deals rail link under Accounts | `registry.test.ts`, `shell.spec.ts`, `deals-list.spec.ts` |
+| DL-01 | Single pinned tab, All Deals | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-02 | View menu: 11 service views plus the shared menu controls; My Deals omits Owner | `deals.test.ts`, `deals-list.spec.ts` |
+| DL-03 | Filter toggle | shared list toolbar, `deals-list.spec.ts` |
+| DL-04 | Sort by Deal Name | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-05–DL-11 | Seven view-type icons. List is active. Board switching stays unwired until the board task | `view-type-switcher.test.tsx`, `deals-list.spec.ts` |
+| DL-12 | Create Deal opens the create route | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-13 | Create arrow, M6, inert | `deals-list.spec.ts` |
+| DL-14 | Actions menu matches the Accounts row set with Deal / Deals labels | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-15–DL-16 | Filter search and System Defined Filters toggle | `deals-list.spec.ts` |
+| DL-17, DL-19–DL-25 | System rows in capture order. Activities M5, Latest Email Status M10, Cadences P3 are inert. Locked, Record Action, Related Records Action, Touched Records and Untouched Records stay disabled like Accounts | `list-filters.test.ts`, `deals-list.spec.ts` |
+| DL-26, DL-27, DL-65–DL-69 | Field rows: Account Name, Amount, Campaign Source (M7, inert), Closing Date, Connected To, Contact Name, then remaining metadata fields | `list-filters.test.ts`, `deals-list.spec.ts` |
+
+Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount through the shared currency cell, Closing Date through the shared date cell, Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
+
+Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
+

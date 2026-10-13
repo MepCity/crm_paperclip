@@ -2,7 +2,8 @@
 
 import type { RecordData } from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { ContactHierarchyModal } from "@/components/records/detail/contact-hierarchy-modal";
 import {
   RecordDetailScreen,
   type RecordDetailScreenProps,
@@ -38,12 +39,20 @@ function useAccountRelatedBadges(accountId: string) {
 export function AccountRecordScreen({ definition, ...props }: AccountRecordScreenProps) {
   const router = useRouter();
   const badges = useAccountRelatedBadges(props.recordId);
+  const [hierarchyOpen, setHierarchyOpen] = useState(false);
+  const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const buildRelatedLists = useCallback(
     (record: RecordData) =>
       createAccountsRelatedLists({
         badges,
         handlers: {
+          onHierarchyView: () => {
+            triggerRef.current = document.activeElement as HTMLElement | null;
+            setActiveRecord(record);
+            setHierarchyOpen(true);
+          },
           onContactsNew: () =>
             openContactCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
           onMemberAccountNew: () =>
@@ -58,12 +67,31 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
     [props.orgSlug],
   );
 
+  const accountName = (activeRecord?.fields.Account_Name as string | undefined) ?? props.recordId;
+
   return (
-    <RecordDetailScreen
-      {...props}
-      definition={definition}
-      buildRelatedLists={buildRelatedLists}
-      linkedContactSummaryPath={contactRecordPath}
-    />
+    <>
+      <RecordDetailScreen
+        {...props}
+        definition={definition}
+        buildRelatedLists={buildRelatedLists}
+        linkedContactSummaryPath={contactRecordPath}
+      />
+      {hierarchyOpen ? (
+        <ContactHierarchyModal
+          isOpen={hierarchyOpen}
+          onClose={() => {
+            setHierarchyOpen(false);
+            triggerRef.current?.focus?.();
+          }}
+          orgSlug={props.orgSlug}
+          account={{
+            id: props.recordId,
+            name: accountName,
+          }}
+          triggerElement={triggerRef.current}
+        />
+      ) : null}
+    </>
   );
 }

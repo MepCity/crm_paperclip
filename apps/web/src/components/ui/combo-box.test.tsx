@@ -39,6 +39,9 @@ function deferred() {
   return { promise, resolve };
 }
 
+/** Row the list shows when a lookup search failed; its wording is ours, not the reference's. */
+const loadFailureRow = "Unable to load results. Please try again.";
+
 const asyncWrapper = getConfig().asyncWrapper;
 
 // Keep the debounce clock independent of typing speed and machine load.
@@ -237,6 +240,35 @@ test("ComboBox shows when a search found nothing", async () => {
   expect(screen.queryAllByRole("option")).toHaveLength(0);
 });
 
+test("lookup separates a failed search from an empty one and retries on the next text", async () => {
+  const user = setupUser();
+  const loadOptions = vi.fn(async (query: string): Promise<Account[]> => {
+    if (query === "zzz") throw new Error("Search unavailable");
+    if (query === "cont") return [accounts[1] as Account];
+    return [];
+  });
+  render(
+    <ComboBox name="account" label="Account" loadOptions={loadOptions}>
+      {accountItem}
+    </ComboBox>,
+  );
+
+  await user.type(input(), "zzz");
+  await advanceTime();
+  expect(screen.getByRole("status").textContent).toBe(loadFailureRow);
+  expect(screen.queryByText("No results")).toBeNull();
+  expect(screen.queryAllByRole("option")).toHaveLength(0);
+
+  await user.keyboard("{Control>}a{/Control}cont");
+  await advanceTime();
+  expect(screen.queryByRole("status")).toBeNull();
+  expect(screen.getByRole("option", { name: "Contoso Ltd" })).toBeTruthy();
+
+  await user.keyboard("{Control>}a{/Control}qqq");
+  await advanceTime();
+  expect(screen.getByRole("status").textContent).toBe("No results");
+});
+
 test("ComboBox keeps the newest answer when an older search lands late", async () => {
   const user = setupUser();
   const first = deferred();
@@ -398,9 +430,12 @@ test("lookup selection does not search again for its label", async () => {
   expect(loadOptions.mock.calls).toEqual([["cont"]]);
 });
 
-test.each(["empty", "error"])(
+test.each([
+  ["empty", "No results"],
+  ["error", loadFailureRow],
+] as const)(
   "lookup preserves selection when the next search returns %s",
-  async (outcome) => {
+  async (outcome, rowText) => {
     const user = setupUser();
     const loadOptions = vi.fn(async (query: string) => {
       if (query === "cont") return [accounts[1] as Account];
@@ -418,7 +453,7 @@ test.each(["empty", "error"])(
     await user.click(input());
     await user.keyboard("{Control>}a{/Control}zzz");
     await advanceTime();
-    expect(screen.getByRole("status").textContent).toBe("No results");
+    expect(screen.getByRole("status").textContent).toBe(rowText);
     expect(screen.queryAllByRole("option")).toHaveLength(0);
     expectLookup("zzz", "account-2");
     await user.tab();
