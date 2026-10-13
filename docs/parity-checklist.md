@@ -491,7 +491,7 @@ DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
 | DL-02 | View menu: 11 service views plus the shared menu controls; My Deals omits Owner | `deals.test.ts`, `deals-list.spec.ts` |
 | DL-03 | Filter toggle | shared list toolbar, `deals-list.spec.ts` |
 | DL-04 | Sort by Deal Name | `list-config.test.ts`, `deals-list.spec.ts` |
-| DL-05–DL-11 | Seven view-type icons. List is active. Board switching stays unwired until the board task | `view-type-switcher.test.tsx`, `deals-list.spec.ts` |
+| DL-05–DL-11 | Seven view-type icons. Default presentation is Board (DP-06); List (DP-05) switches to table | `view-type-switcher.test.tsx`, `deals-list.spec.ts`, `deals-board.spec.ts` |
 | DL-12 | Create Deal opens the create route | `list-config.test.ts`, `deals-list.spec.ts` |
 | DL-13 | Create arrow, M6, inert | `deals-list.spec.ts` |
 | DL-14 | Actions menu matches the Accounts row set with Deal / Deals labels | `list-config.test.ts`, `deals-list.spec.ts` |
@@ -519,6 +519,25 @@ Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage
 | SALES SUMMARY rail section | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
 Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
+
+### Deals stage board — implemented; QA pending (MEP-413)
+
+Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| DP-05, DP-06 | Default presentation is `"board"` (DP-06 active). View switcher switches between board and list (table, DP-05) | `deals-board.spec.ts`, `deals-list.spec.ts`, `list-config.test.ts` |
+| DP-70, DP-71 | Board toolbar: STAGEVIEW select (DP-70) and pencil settings icon button (DP-71) rendered inert | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-72–DP-77 | All 9 metadata stages in order left to right. Column headers: Stage label (DP-72–74), count (DP-75), probability percentage (DP-76), Amount sum formatted as currency (DP-77) from `summarize({ groupBy: "Stage", sum: "Amount" })` | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-78–DP-80 | Card rows in order: Deal Name link (DP-78), Stage text, Account Name link (DP-79), Deal Owner text, Contact Name link (DP-80), Amount currency, Closing Date (`dd.MM.yyyy`). Empty fields omitted. Column limit: list page size | `deals-board.test.tsx`, `deals-board.spec.ts` |
+| DP-81 | Task icon (M5) omitted until activity module lands | CTO decision; deferred to M5 |
+| DD-L01–DD-L03 | Column header selection checkbox (DD-L01), opposing arrow collapse/expand (DD-L03), and footer Create Deal button (DD-L02) with stage pre-selected (`writeRecordCreatePrefill`) | `record-board.tsx`, `deals-board.spec.ts` |
+| Board drag & drop | Dragging card updates Stage. Moving into Closed Won / Closed Lost opens Verify Details dialog (`StageChangeDialog`: Amount, Closing Date, Stage, Reason for Loss for Lost). Save writes, Cancel rolls back. Service error rolls back card and shows danger toast | `deals-board.spec.ts`, `deals-board.tsx` |
+
+Interim rules:
+- Filter panel, views, and sort apply to board cards. Pagination, row selection, and selection bar are omitted in board presentation.
+- Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
+- Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
 
 ### Deals create / edit / clone form — implemented; QA pending (MEP-440)
 
