@@ -83,7 +83,9 @@ test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   // Field filter (DL-26, DL-27, DL-65-DL-69)
   const filter = list.getByRole("checkbox", { name: "Account Name", exact: true });
   await filter.check({ force: true });
-  await list.getByRole("textbox", { name: "Account Name value" }).fill("Synthetic unmatched account");
+  await list
+    .getByRole("textbox", { name: "Account Name value" })
+    .fill("Synthetic unmatched account");
   await list.getByRole("button", { name: "Apply Filter" }).click();
   await expect(list.getByText("No Deals found.")).toBeVisible();
   await list.getByRole("button", { name: "Clear", exact: true }).click();
