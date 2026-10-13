@@ -1,4 +1,10 @@
-import type { FieldDefinition, FieldValue, ModuleMetadata, RecordInput } from "@crm/core/records";
+import type {
+  FieldDefinition,
+  FieldValue,
+  ModuleMetadata,
+  RecordData,
+  RecordInput,
+} from "@crm/core/records";
 
 export type FormMode = "create" | "edit";
 export interface FormSectionModel {
@@ -139,6 +145,33 @@ export interface AddressFormRule {
   subfields?: readonly string[];
 }
 
+export interface NumberLimits {
+  min?: number;
+  max?: number;
+}
+
+/** Picker shape for one lookup field, when it differs from the target module's own configuration. */
+export interface LookupPickerRule {
+  chrome?: "interim" | "observed";
+  searchLabel?: string;
+}
+
+/** A picklist write refills a numeric field with the selected option's `stage.probability`. */
+export interface StageProbabilityRule {
+  stage: string;
+  probability: string;
+}
+
+/**
+ * A field that stays out of the form until the loaded record's stage option carries one of the
+ * listed `stage.category` values.
+ */
+export interface StageConditionalField {
+  field: string;
+  stage: string;
+  categories: readonly string[];
+}
+
 export interface FormRules {
   owner: string;
   prefix?: { field: string; prefix: string };
@@ -154,9 +187,63 @@ export interface FormRules {
   labelLines?: Readonly<Record<string, readonly string[]>>;
   /** Picklists whose reference panel paints a search field above the options (AF-13.1). */
   searchablePicklists?: readonly string[];
+  stageProbability?: StageProbabilityRule;
+  numberLimits?: Readonly<Record<string, NumberLimits>>;
+  stageConditionalFields?: readonly StageConditionalField[];
+  lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);
+}
+
+function stageCategoryMatches(
+  rule: StageConditionalField,
+  metadata: ModuleMetadata,
+  record: RecordData | undefined,
+): boolean {
+  const value = record?.fields[rule.stage];
+  if (typeof value !== "string") return false;
+  const option = metadata.fields
+    .find((field) => field.apiName === rule.stage)
+    ?.picklist?.find((item) => item.storedValue === value);
+  return Boolean(option?.stage?.category && rule.categories.includes(option.stage.category));
+}
+
+/**
+ * Resolves the rules for one loaded form. A stage-conditional field stays omitted outside edit —
+ * a create form has no record stage to read — and stays omitted in edit unless its stage option
+ * carries one of the listed categories.
+ */
+export function resolveFormRules(
+  rules: FormRules,
+  context: { mode: FormMode; metadata: ModuleMetadata; record?: RecordData },
+): FormRules {
+  const conditional = rules.stageConditionalFields;
+  if (!conditional?.length) return rules;
+  const omitted = [...(rules.omitted ?? [])];
+  for (const rule of conditional) {
+    if (stageCategoryMatches(rule, context.metadata, context.record)) continue;
+    if (!omitted.includes(rule.field)) omitted.push(rule.field);
+  }
+  return { ...rules, omitted };
+}
+
+/** The probability a stage write drags into its paired field, or undefined when nothing applies. */
+export function stageProbabilityWrite(
+  rules: FormRules,
+  metadata: ModuleMetadata,
+  name: string,
+  value: FieldValue,
+): { field: string; value: number } | undefined {
+  const rule = rules.stageProbability;
+  if (!rule || rule.stage !== name || typeof value !== "string") return undefined;
+  const option = metadata.fields
+    .find((field) => field.apiName === rule.stage)
+    ?.picklist?.find((item) => item.storedValue === value);
+  const probability = option?.stage?.probability;
+  return typeof probability === "number"
+    ? { field: rule.probability, value: probability }
+    : undefined;
 }
 
 export function formFields(

@@ -80,7 +80,7 @@ function cellText(
 export function SelectRecordDialog({
   module,
   title,
-  searchLabel = "Search",
+  searchLabel,
   searchPlaceholder,
   cancelLabel = "Cancel",
   doneLabel = "Done",
@@ -202,7 +202,9 @@ export function SelectRecordDialog({
     }));
 
   /** The observed picker names its search field after the record column and shows no summary. */
-  const effectiveSearchLabel = observed ? `Search by ${nameColLabel}` : searchLabel;
+  const effectiveSearchLabel = observed
+    ? (searchLabel ?? `Search by ${nameColLabel}`)
+    : (searchLabel ?? "Search");
   const effectiveSearchPlaceholder = observed
     ? effectiveSearchLabel
     : (searchPlaceholder ?? `Search ${pluralLabel}`);
