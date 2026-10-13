@@ -481,10 +481,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Deal_Name",
-    label: "Deal Name",
+    apiName: "Campaign_Source",
+    label: "Campaign Source",
     dataType: "lookup",
-    lookup: { module: "Deals" },
+    lookup: { module: "Campaigns" },
     required: false,
     readOnly: false,
     unique: false,
@@ -496,19 +496,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
+      initial={{ module: "Campaigns", id: "camp-1", name: "Big Campaign" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Deal Name" }) as HTMLInputElement;
-  expect(input.value).toBe("Big Deal");
+  const input = screen.getByRole("textbox", { name: "Campaign Source" }) as HTMLInputElement;
+  expect(input.value).toBe("Big Campaign");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M4");
+  expect(input.getAttribute("data-later-module")).toBe("M7");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Deal Name lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M4");
+  const btn = screen.getByRole("button", { name: "Open Campaign Source lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M7");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog

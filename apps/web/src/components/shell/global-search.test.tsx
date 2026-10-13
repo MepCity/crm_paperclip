@@ -104,10 +104,13 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
 
-  const deals = within(menu).getByRole("button", { name: "Deals" });
-  expect(deals.getAttribute("data-later-module")).toBe("M4");
-  await user.click(deals);
+  const tasks = within(menu).getByRole("button", { name: "Tasks" });
+  expect(tasks.getAttribute("data-later-module")).toBe("M5");
+  await user.click(tasks);
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
+
+  const deals = within(menu).getByRole("button", { name: "Deals" });
+  expect(deals.getAttribute("data-later-module")).toBeNull();
 
   const accounts = within(menu).getByRole("button", { name: "Accounts" });
   expect(accounts.getAttribute("data-later-module")).toBeNull();
@@ -261,10 +264,13 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Deals",
+      module: "Campaigns",
       total: 1,
       records: [
-        { id: "deal-1", fields: { Deal_Name: "Future Deal", Email: "hidden@example.test" } },
+        {
+          id: "campaign-1",
+          fields: { Campaign_Name: "Future Campaign", Email: "hidden@example.test" },
+        },
       ],
     },
   ]);
@@ -272,8 +278,8 @@ test("omits secondary line for modules without search field config", async () =>
   mount();
   await open(user);
   await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
-  const link = await screen.findByRole("link", { name: "deal-1" });
-  expect(link.textContent).toBe("deal-1");
+  const link = await screen.findByRole("link", { name: "campaign-1" });
+  expect(link.textContent).toBe("campaign-1");
 });
 
 test("search errors use the shared error notice", async () => {
