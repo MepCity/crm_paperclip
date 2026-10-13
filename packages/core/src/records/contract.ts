@@ -6,6 +6,8 @@ export type RecordId = string;
 
 /** Data types supported by the module record contract. */
 export type FieldDataType =
+  | "ALARM"
+  | "RRULE"
   | "text"
   | "textarea"
   | "email"
@@ -35,9 +37,12 @@ export type ModuleRecordReference = {
  * Text-like values, calendar dates (YYYY-MM-DD), timestamps, images, long integers
  * and owner IDs use strings. Numeric values use finite numbers; checkboxes use
  * booleans. Lookup references include their module, ID and optional display name. Null is
- * an empty field. This domain representation is independent of transport/storage.
+ * an empty field. ALARM/RRULE carry opaque plain JSON objects; their dataType
+ * distinguishes them from references. This representation is transport-independent.
  */
-export type FieldValue = string | number | boolean | ModuleRecordReference | null;
+export type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+export type JsonObject = { [key: string]: JsonValue };
+export type FieldValue = string | number | boolean | ModuleRecordReference | JsonObject | null;
 
 export type StageCategory = "Open" | "Closed Won" | "Closed Lost";
 
@@ -71,7 +76,7 @@ export interface FieldDefinition {
   unique: boolean;
   maxLength?: number;
   picklist?: readonly PicklistOption[];
-  lookup?: { module: ModuleApiName };
+  lookup?: { module: ModuleApiName; modules?: readonly ModuleApiName[] };
 }
 
 export interface LayoutSection {
@@ -134,6 +139,8 @@ export type CriteriaPeriod =
 export type CriteriaToken =
   | { token: "CURRENTUSER" }
   | { token: "TODAY" }
+  | { token: "NEXT7DAYS" }
+  | { token: "TODAYANDOVERDUE" }
   | { token: "AGEINDAYS"; offset: number; unit?: CriteriaUnit }
   | { token: "CATEGORY"; name: string }
   | { token: "DUEINDAYS"; offset: number; unit?: CriteriaUnit }
@@ -279,3 +286,8 @@ export interface RecordService {
 }
 
 export type RecordServiceFactory = (ctx: OrgContext) => RecordService;
+
+/** All allowed targets; a single-target field retains its existing default. */
+export function lookupTargetModules(field: FieldDefinition): readonly ModuleApiName[] {
+  return field.lookup?.modules ?? (field.lookup ? [field.lookup.module] : []);
+}

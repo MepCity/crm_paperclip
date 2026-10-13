@@ -11,6 +11,9 @@ import { fullName as dealsFullName, generateFixtureDeals } from "./deals/seed";
 import { dealsViews } from "./deals/views";
 import { leadsMetadata } from "./metadata";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
+import { tasksMetadata } from "./tasks/metadata";
+import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";
+import { tasksViews } from "./tasks/views";
 import { leadsViews } from "./views";
 
 export interface FixtureModuleBundle {
@@ -49,6 +52,17 @@ const contactsManaged = new Set([
 ]);
 
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+  Tasks: {
+    metadata: tasksMetadata,
+    views: tasksViews,
+    displayNameField: "Subject",
+    generateSeed: (now) => generateFixtureTasks(68, now),
+    fullName: tasksFullName,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Subject", "Description"],
+    initialNextId: 120000000000000000n,
+    createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
+  },
   Leads: {
     metadata: leadsMetadata,
     views: leadsViews,
