@@ -30,6 +30,7 @@ export interface RecordBoardProps {
   onCreate: (columnKey: string) => void;
   onMove: (cardId: string, fromKey: string, toKey: string) => Promise<BoardMoveResult>;
   loading?: boolean;
+  children?: ReactNode;
 }
 
 /** Service-free board. Optimistic moves remain until incoming data acknowledges them. */
@@ -40,6 +41,7 @@ export function RecordBoard({
   onCreate,
   onMove,
   loading,
+  children,
 }: RecordBoardProps) {
   const [moves, setMoves] = useState<Record<string, { from: string; to: string; card: BoardCard }>>(
     {},
@@ -70,10 +72,20 @@ export function RecordBoard({
   async function move(id: string, from: string, to: string) {
     if (from === to || pending.current.has(id)) return;
     const previous = moves[id];
-    const card =
+    const originalCard =
       previous?.card ??
       columns.find((column) => column.key === from)?.cards.find((item) => item.id === id);
-    if (!card) return;
+    if (!originalCard) return;
+    const targetColumn = columns.find((column) => column.key === to);
+    const card =
+      targetColumn && originalCard.rows.length > 1
+        ? {
+            ...originalCard,
+            rows: originalCard.rows.map((row, index) =>
+              index === 1 ? { ...row, text: targetColumn.label } : row,
+            ),
+          }
+        : originalCard;
     pending.current.add(id);
     setMoves((current) => ({ ...current, [id]: { from, to, card } }));
     try {
@@ -199,6 +211,7 @@ export function RecordBoard({
               <footer className="record-board-footer">
                 <Button
                   variant="ghost"
+                  data-board-footer-create
                   onPress={() => onCreate(column.key)}
                   className="text-primary flex-1 justify-start"
                 >
@@ -222,6 +235,7 @@ export function RecordBoard({
           );
         })}
       </div>
+      {children}
     </div>
   );
 }

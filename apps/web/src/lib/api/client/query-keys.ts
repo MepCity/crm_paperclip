@@ -1,4 +1,4 @@
-import type { ListQuery } from "@crm/core/records";
+import type { ListQuery, SummaryQuery } from "@crm/core/records";
 
 function root(orgSlug: string) {
   return ["crm", orgSlug] as const;
@@ -20,6 +20,8 @@ export const apiKeys = {
     module: string,
     query: Pick<ListQuery, "viewId" | "filters" | "search">,
   ) => [...apiKeys.module(orgSlug, module), "count", serializeCountQuery(query)] as const,
+  summarize: (orgSlug: string, module: string, query: SummaryQuery) =>
+    [...apiKeys.module(orgSlug, module), "summarize", serializeSummarizeQuery(query)] as const,
   record: (orgSlug: string, module: string, id: string) =>
     [...apiKeys.module(orgSlug, module), "record", id] as const,
   duplicateGroups: (orgSlug: string, module: string, fields: readonly string[]) =>
@@ -41,10 +43,19 @@ export function countQueriesPrefix(orgSlug: string, module: string) {
   return [...apiKeys.module(orgSlug, module), "count"] as const;
 }
 
+/** Invalidates summarize queries only (not module metadata). */
+export function summarizeQueriesPrefix(orgSlug: string, module: string) {
+  return [...apiKeys.module(orgSlug, module), "summarize"] as const;
+}
+
 function serializeListQuery(query: ListQuery): string {
   return JSON.stringify(query);
 }
 
 function serializeCountQuery(query: Pick<ListQuery, "viewId" | "filters" | "search">): string {
+  return JSON.stringify(query);
+}
+
+function serializeSummarizeQuery(query: SummaryQuery): string {
   return JSON.stringify(query);
 }

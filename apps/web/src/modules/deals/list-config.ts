@@ -5,6 +5,7 @@ import {
   moduleListDefaultPath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { buildDealsBoardProps, DealsBoard, dealsBoardToolbar } from "./deals-board";
 import { dealsFilterGroups } from "./list-filters";
 
 export const DEALS_LIST_CURRENCY_CODE = "TRY";
@@ -44,6 +45,10 @@ export const DEALS_SORT_FIELD_LABELS = [
 
 export const dealsListPageConfig: ModuleListScreenConfig = {
   module: "Deals",
+  defaultPresentation: "board",
+  board: buildDealsBoardProps,
+  boardComponent: DealsBoard,
+  boardToolbar: dealsBoardToolbar,
   linkField: "Deal_Name",
   linkFieldLabel: "Deal Name",
   pluralLabel: "Deals",
