@@ -23,12 +23,13 @@ import {
   listQueriesPrefix,
 } from "./query-keys";
 
-export function useHomeCurrency() {
+export function useHomeCurrency(options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery<CurrencyDefinition>({
     queryKey: apiKeys.homeCurrency(orgSlug),
     queryFn: () => service.getHomeCurrency(),
+    enabled: options?.enabled ?? true,
   });
 }
 
