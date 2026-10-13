@@ -81,14 +81,15 @@ function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
 }
 
 function FieldEdit(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 11.5 11.5"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      {...props}
+      {...filterIconRoleProps(props)}
+      {...rest}
     >
       <path
         transform="translate(-0.5 0.5) scale(1.38 1.23) translate(-1.38 0.11)"

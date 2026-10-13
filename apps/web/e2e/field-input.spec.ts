@@ -473,7 +473,7 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   await expect(countryUnselected).toHaveAttribute("data-hovered", "true");
   await expectInsetUnselectedHighlight(countryUnselected, panel);
   await search.fill("ALP");
-  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(panel.getByRole("option")).toHaveCount(2);
   await page.keyboard.press("Escape");
   const owner = demo.getByRole("button", { name: "ownerlookup filled", exact: true });
   await hydrate(owner);
