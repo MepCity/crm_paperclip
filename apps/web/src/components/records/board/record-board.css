@@ -91,3 +91,6 @@
   width: 50px;
   border-left: 1px solid var(--color-border);
 }
+.record-board-footer button {
+  color: var(--color-primary);
+}
