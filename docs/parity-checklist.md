@@ -478,29 +478,27 @@ merged since).
 
 Specs: `deals.md`, `deals-record-detail.md`, `deals-form.md`, `deals-pipeline.md`.
 
-### Deals list — implemented; QA pending (MEP-410)
+### Deals list — implemented; QA passed (MEP-410)
+
+Inventory is SH-16 and DL-01–DL-27, DL-65–DL-69. Board controls DL-70–DL-81 are a later task.
+DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
-| SH-16 | Registered in registry.ts beneath Accounts; list and detail routes resolve Deals definition | `registry.test.ts`, `definition.test.ts`, `deals-list.spec.ts` |
-| DL-01 | Single pinned tab strip with "All Deals" (no second tab unlike Accounts) | `list-config.test.ts`, `deals-list.spec.ts` |
-| DL-02 | View ellipsis menu with 11 stock views in reference CRM order; custom view switching; "My Deals" omits Owner column | `deals.test.ts`, `deals-list.spec.ts` |
-| DL-03, DL-64 | Filter toggle button, list refresh button | `deals-list.spec.ts` |
-| DL-04 | Sort popover by Deal Name and field dictionary labels | `list-config.test.ts`, `deals-list.spec.ts` |
-| DL-05–DL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | `view-type-switcher.test.tsx`, `deals-list.spec.ts` |
-| DL-12, DL-13 | Create Deal primary button; attached arrow dropdown (M6, inert) | `list-config.test.ts`, `deals-list.spec.ts` |
-| DL-14 | 10 Actions menu items in reference order (Mass Transfer, Mass Delete, Mass Update, Manage Tags M6, Drafts, Deduplicate Deals, Create Client Script M11, Export Deals M6, Sheet view P3, Print View) | `list-config.test.ts`, `deals-list.spec.ts` |
-| DL-15–DL-25 | System defined filters (Activities M5, Latest Email Status M10, Locked, Record Action, Related Records Action, Touched Records, Untouched Records, Cadences P3) | `list-filters.test.ts`, `deals-list.spec.ts` |
-| DL-26, DL-27, DL-65–DL-69 | Field filters with visible rows: Account Name, Amount, Campaign Source (M7), Closing Date, Connected To, Contact Name | `list-filters.test.ts`, `deals-list.spec.ts` |
-| DL-34, DL-40 | Header and row-level selection checkboxes; selection bar integration | `deals-list.spec.ts` |
-| DL-35, DL-39 | Columns: Deal Name, Amount, Stage, Closing Date, Account Name, Contact Name, Deal Owner (Owner omitted in My Deals) | `deals.test.ts`, `deals-list.spec.ts` |
-| DL-36 | Alphabet filter (A-Z, All) on Deal Name link column | `deals-list.spec.ts` |
-| DL-42 / DL-78 | Deal Name row link navigates to Deals record detail route | `deals-list.spec.ts` |
-| DL-79, DL-80 | Account Name and Contact Name lookup cells link to registered Accounts and Contacts record routes | `cell-value.test.tsx`, `deals-list.spec.ts` |
-| DL-48–DL-51 | Pagination: count, page size, next/previous links | `deals-list.spec.ts` |
+| SH-16 | Deals rail link under Accounts | `registry.test.ts`, `shell.spec.ts`, `deals-list.spec.ts` |
+| DL-01 | Single pinned tab, All Deals | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-02 | View menu: 11 service views plus the shared menu controls; My Deals omits Owner | `deals.test.ts`, `deals-list.spec.ts` |
+| DL-03 | Filter toggle | shared list toolbar, `deals-list.spec.ts` |
+| DL-04 | Sort by Deal Name | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-05–DL-11 | Seven view-type icons. List is active. Board switching stays unwired until the board task | `view-type-switcher.test.tsx`, `deals-list.spec.ts` |
+| DL-12 | Create Deal opens the create route | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-13 | Create arrow, M6, inert | `deals-list.spec.ts` |
+| DL-14 | Actions menu matches the Accounts row set with Deal / Deals labels | `list-config.test.ts`, `deals-list.spec.ts` |
+| DL-15–DL-16 | Filter search and System Defined Filters toggle | `deals-list.spec.ts` |
+| DL-17, DL-19–DL-25 | System rows in capture order. Activities M5, Latest Email Status M10, Cadences P3 are inert. Locked, Record Action, Related Records Action, Touched Records and Untouched Records stay disabled like Accounts | `list-filters.test.ts`, `deals-list.spec.ts` |
+| DL-26, DL-27, DL-65–DL-69 | Field rows: Account Name, Amount, Campaign Source (M7, inert), Closing Date, Connected To, Contact Name, then remaining metadata fields | `list-filters.test.ts`, `deals-list.spec.ts` |
 
-Later-module controls: Create Deal arrow M6; Activities M5; Latest Email Status M10;
-Cadences P3; Campaign Source M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3.
-Badge column is absent (badgeColumn: false matching Accounts).
-Mass action flows (Mass Update, Change Owner, Delete Deal) wire to selection bar dialogs.
+Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount through the shared currency cell, Closing Date through the shared date cell, Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
+
+Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
 

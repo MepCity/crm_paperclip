@@ -26,6 +26,10 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
   await expect(list.getByRole("columnheader", { name: "Account Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Contact Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Deal Owner", exact: true })).toBeVisible();
+  await expect(list.getByRole("link", { name: "Create Deal" })).toHaveAttribute(
+    "href",
+    /\/tab\/Deals\/create$/,
+  );
 
   // View type switcher DL-05–DL-11
   const switcher = list.locator("[data-view-type-switcher]");
@@ -80,23 +84,86 @@ test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   await list.getByRole("button", { name: "Filter by first letter" }).click();
   await page.getByRole("option", { name: "All", exact: true }).click();
 
-  // Field filter (DL-26, DL-27, DL-65-DL-69)
-  const filter = list.getByRole("checkbox", { name: "Account Name", exact: true });
-  await filter.check({ force: true });
-  await list
-    .getByRole("textbox", { name: "Account Name value" })
-    .fill("Synthetic unmatched account");
-  await list.getByRole("button", { name: "Apply Filter" }).click();
+  // Visible filter inventory (DL-15–DL-27, DL-65–DL-69). Board controls stay out of this screen.
+  // Locked also exists as a field row, so system and field groups are scoped separately.
+  await expect(list.getByRole("heading", { name: "Filter Deals by" })).toBeVisible();
+  await expect(list.getByRole("textbox", { name: "Search filter choices" })).toBeVisible();
+  const systemFilters = list.getByRole("group", { name: "System Defined Filters" });
+  for (const label of [
+    "Activities",
+    "Latest Email Status",
+    "Locked",
+    "Record Action",
+    "Related Records Action",
+    "Touched Records",
+    "Untouched Records",
+    "Cadences",
+  ]) {
+    const row = systemFilters.getByRole("checkbox", { name: label, exact: true });
+    await row.scrollIntoViewIfNeeded();
+    await expect(row).toBeVisible();
+  }
+  const fieldFilters = list.getByRole("group", { name: "Filter By Fields" });
+  for (const label of [
+    "Account Name",
+    "Amount",
+    "Campaign Source",
+    "Closing Date",
+    "Connected To",
+    "Contact Name",
+  ]) {
+    const row = fieldFilters.getByRole("checkbox", { name: label, exact: true });
+    await row.scrollIntoViewIfNeeded();
+    await expect(row).toBeVisible();
+  }
+
+  // Amount field filter (DL-65). Seed amounts are multiples of 100, so 1 matches nothing.
+  // The number field commits on blur; Apply stays disabled until then.
+  const amount = fieldFilters.getByRole("checkbox", { name: "Amount", exact: true });
+  await amount.scrollIntoViewIfNeeded();
+  await amount.check({ force: true });
+  const amountValue = fieldFilters.getByRole("textbox", { name: "Amount value" });
+  await amountValue.click();
+  await amountValue.fill("1");
+  await amountValue.press("Tab");
+  const apply = list.getByRole("button", { name: "Apply Filter" });
+  await expect(apply).toBeEnabled();
+  await apply.click();
   await expect(list.getByText("No Deals found.")).toBeVisible();
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr").first()).toBeVisible();
+
+  // Account Name cell opens the related account (M3). Contact Name stays a Contacts link (M2).
+  const accountLink = list
+    .locator("tbody tr")
+    .getByRole("link", { name: /Account \d+/ })
+    .first();
+  await expect(accountLink).toBeVisible();
+  const accountName = (await accountLink.innerText()).trim();
+  await expect(
+    list
+      .locator("tbody tr")
+      .getByRole("link", { name: /Contact / })
+      .first(),
+  ).toHaveAttribute("href", /\/tab\/Contacts\/[^/?]+$/);
+  await accountLink.click();
+  await expect(page).toHaveURL(/\/tab\/Accounts\/[^/?]+/);
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+  await expect(page.locator("[data-record-header]")).toContainText(accountName);
+
+  await page.goto(moduleListDefaultPath(org.slug, "Deals"));
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // Paging
   await list.getByRole("link", { name: "Next" }).click();
   await expect(page).toHaveURL(/page=2/);
 
-  // Row link navigation to detail (DL-78)
-  await list.locator("tbody tr").first().getByRole("link").first().click();
+  // Deal Name opens the deal record. Board card numbers DL-70–DL-81 are a later task.
+  await list
+    .locator("tbody tr")
+    .first()
+    .getByRole("link", { name: /Deal \d+/ })
+    .click();
   await expect(page).toHaveURL(/\/tab\/Deals\/[^/?]+/);
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
