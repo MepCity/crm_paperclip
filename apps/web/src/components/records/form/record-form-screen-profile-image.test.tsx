@@ -6,8 +6,8 @@ import { ApiProvider } from "@/lib/api/client/provider";
 import { accountsScreenDefinition } from "@/modules/accounts/definition";
 import { contactsScreenDefinition } from "@/modules/contacts/definition";
 import { leadsScreenDefinition } from "@/modules/leads/definition";
-import { render } from "@/test/render";
 import type { ModuleScreenDefinition } from "@/modules/types";
+import { render } from "@/test/render";
 import { RecordFormScreen } from "./record-form-screen";
 
 afterEach(() => cleanup());

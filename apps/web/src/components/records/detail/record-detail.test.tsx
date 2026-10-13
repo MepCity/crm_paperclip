@@ -288,9 +288,7 @@ test("the tab row keeps its right end empty until a module supplies one", () => 
   const row = document.querySelector("[data-record-tab-row]");
   expect(row?.textContent).toContain("Overview");
   expect(row?.querySelector(".detail-last-update")).toBeNull();
-  rerender(
-    <Frame tabRowEnd={<LastUpdateLabel text="Last Update : 2 day(s) ago" inTabRow />} />,
-  );
+  rerender(<Frame tabRowEnd={<LastUpdateLabel text="Last Update : 2 day(s) ago" inTabRow />} />);
   const label = document.querySelector("[data-record-tab-row] .detail-last-update");
   expect(label?.textContent).toBe("Last Update : 2 day(s) ago");
   expect(label?.querySelector("svg")).toBeTruthy();
