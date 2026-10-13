@@ -4,7 +4,11 @@ import type { ModuleKey } from "@/components/ui/later-module";
 export const ACCOUNTS_DELETE_CONFIRM_TITLE = "Delete Account";
 export const ACCOUNTS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete this Account?";
 
-type Handlers = { onClone: () => void; onDelete: () => void };
+type Handlers = {
+  onClone: () => void;
+  onDelete: () => void;
+  onFindMergeDuplicates?: () => void;
+};
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 
 /** Thirteen rows; Run Macro and Enroll to Cadence are absent on Accounts (AD-07.x). */
@@ -24,6 +28,11 @@ export const ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS: readonly {
     id: "accounts-more-print",
     items: [
       { id: "print-preview", label: "Print Preview" },
+      {
+        id: "find-merge-duplicates",
+        label: "Find and Merge Duplicates",
+        handler: "onFindMergeDuplicates",
+      },
       { id: "mail-merge", label: "Mail Merge", laterModule: "M9" },
     ],
   },
@@ -44,9 +53,14 @@ export const ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS: readonly {
 export function buildAccountsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGroup[] {
   return ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
     id: group.id,
-    items: group.items.map(({ handler, ...row }) => ({
-      ...row,
-      ...(handler ? { onAction: handlers[handler] } : {}),
-    })),
+    items: group.items
+      .filter(
+        (item) =>
+          item.handler !== "onFindMergeDuplicates" || handlers.onFindMergeDuplicates !== undefined,
+      )
+      .map(({ handler, ...row }) => ({
+        ...row,
+        ...(handler ? { onAction: handlers[handler] } : {}),
+      })),
   }));
 }
