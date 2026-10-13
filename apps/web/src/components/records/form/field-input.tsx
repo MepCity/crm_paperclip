@@ -235,6 +235,7 @@ export function FieldInput({
           {...common}
           value={number}
           placeholder={placeholder}
+          isReadOnly={field.readOnly || undefined}
           // An integer field still accepts what is typed: `Save` rejects a decimal with
           // `Please enter a valid <label>.`, which needs the value to survive in the input.
           formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
@@ -247,7 +248,11 @@ export function FieldInput({
             ) : undefined
           }
           endAction={
-            field.dataType === "currency" && currencyInformation ? (
+            field.readOnly ? (
+              <span role="img" className="record-input-end" aria-label="Locked">
+                <Icons.lock className="record-input-end-icon" aria-hidden />
+              </span>
+            ) : field.dataType === "currency" && currencyInformation ? (
               <span role="img" className="record-input-end" aria-label={currencyInformation}>
                 <Icons.recordInfo className="record-input-end-icon" aria-hidden />
               </span>

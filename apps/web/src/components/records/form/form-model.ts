@@ -145,11 +145,13 @@ export interface FormRules {
   country?: { field: string; state: string };
   countries?: readonly { field: string; state: string }[];
   currency?: string;
+  currencies?: readonly string[];
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
   labelLines?: Readonly<Record<string, readonly string[]>>;
   /** Picklists whose reference panel paints a search field above the options (AF-13.1). */
   searchablePicklists?: readonly string[];
+  defaultValues?: Readonly<Record<string, FieldValue>>;
 }
 
 export function formFields(

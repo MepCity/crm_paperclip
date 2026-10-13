@@ -157,7 +157,11 @@ export interface ModuleScreenDefinition {
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+      hasPortrait?: boolean;
+      recordNavigation?: boolean;
     };
+    hasPortrait?: boolean;
+    recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];

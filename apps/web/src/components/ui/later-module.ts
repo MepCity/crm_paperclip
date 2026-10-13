@@ -4,6 +4,7 @@ import type { Ref } from "react";
 import { useCallback, useRef } from "react";
 
 export type ModuleKey =
+  | "M2"
   | "M3"
   | "M4"
   | "M5"

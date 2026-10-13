@@ -17,6 +17,7 @@ import {
   Home,
   Info,
   Loader2,
+  Lock,
   LogOut,
   type LucideIcon,
   Mail,
@@ -492,6 +493,7 @@ export const Icons = {
   tableChevronDown: TableChevronDownIcon,
   diagonalExpand: DiagonalExpandIcon,
   recordTag: Tag,
+  lock: Lock,
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */

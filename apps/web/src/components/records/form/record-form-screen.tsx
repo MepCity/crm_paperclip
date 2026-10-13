@@ -179,6 +179,7 @@ function LoadedRecordForm({
   const emptyValues = () =>
     initialFormValues(fields, {
       [config.rules.owner]: currentUserId,
+      ...config.rules.defaultValues,
       ...config.createPrefill,
     });
   const cloneSeed =
@@ -519,7 +520,11 @@ function LoadedRecordForm({
               : undefined
           }
           lookupOwnerNames={ownerNames}
-          currencyPrefix={field.apiName === rules.currency ? config.currencyPrefix : undefined}
+          currencyPrefix={
+            field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
+              ? config.currencyPrefix
+              : undefined
+          }
           currencyInformation={
             field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined
           }
