@@ -179,6 +179,17 @@ export interface ListQuery {
   search?: string;
 }
 
+export type SummaryQuery = Pick<ListQuery, "viewId" | "filters" | "search"> & {
+  groupBy: string;
+  sum?: string;
+};
+
+export interface GroupSummary {
+  value: string | null;
+  count: number;
+  sum: number | null;
+}
+
 export interface ListResult {
   records: readonly RecordData[];
   page: number;
@@ -258,6 +269,7 @@ export interface RecordService {
     module: ModuleApiName,
     query: Pick<ListQuery, "viewId" | "filters" | "search">,
   ): Promise<number>;
+  summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
   create(module: ModuleApiName, input: RecordInput): Promise<RecordData>;
   update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData>;

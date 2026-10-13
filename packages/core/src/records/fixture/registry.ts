@@ -5,6 +5,7 @@ import { accountsViews } from "./accounts/views";
 import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
+import { historyMetadata, historyViews } from "./deals/history";
 import { dealsMetadata } from "./deals/metadata";
 import { fullName as dealsFullName, generateFixtureDeals } from "./deals/seed";
 import { dealsViews } from "./deals/views";
@@ -13,6 +14,7 @@ import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { leadsViews } from "./views";
 
 export interface FixtureModuleBundle {
+  readOnly?: boolean;
   metadata: ModuleMetadata;
   views: readonly ListView[];
   displayNameField: string;
@@ -73,6 +75,18 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     searchFields: ["Account_Name", "Phone", "Website", "Account_Site"],
     initialNextId: 600000000000000000n,
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
+  },
+  DealHistory: {
+    readOnly: true,
+    metadata: historyMetadata,
+    views: historyViews,
+    displayNameField: "id",
+    generateSeed: () => [],
+    fullName: (fields) => String(fields.id),
+    managedFields: new Set(),
+    searchFields: ["Stage"],
+    initialNextId: 900000000000000000n,
+    createDefaults: () => ({}),
   },
   Deals: {
     metadata: dealsMetadata,
