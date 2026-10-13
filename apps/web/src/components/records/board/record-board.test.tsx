@@ -112,3 +112,57 @@ it("ignores same-column drops and renders shared loading skeletons", () => {
   expect(screen.getAllByRole("status")).toHaveLength(2);
   expect(screen.queryByText("Record")).toBeNull();
 });
+
+it("optimistically redirects to selected stage and reconciles when server data arrives", async () => {
+  const threeColumns: readonly BoardColumn[] = [
+    ...columns,
+    { key: "c", label: "Third", count: 0, cards: [] },
+  ];
+  let resolve!: (value: BoardMoveResult) => void;
+  const move = vi.fn(
+    () =>
+      new Promise<BoardMoveResult>((yes) => {
+        resolve = yes;
+      }),
+  );
+  const { rerender } = render(
+    <RecordBoard columns={threeColumns} createLabel="Create" onCreate={vi.fn()} onMove={move} />,
+  );
+  drop("a", "b");
+  expect(document.querySelector('[data-board-column="b"] article')).toBeTruthy();
+  // onMove resolves with redirected target "c" (e.g. from dialog selection)
+  resolve({ to: "c" });
+  await waitFor(() => {
+    expect(document.querySelector('[data-board-column="c"] article')).toBeTruthy();
+    expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
+  });
+  expect(
+    document.querySelector('[data-board-column="c"] article div:nth-child(2)')?.textContent,
+  ).toBe("Third");
+  const [colA, colB, colC] = threeColumns;
+  if (!colA || !colB || !colC) throw new Error("Expected 3 columns");
+  const updatedColumns: readonly BoardColumn[] = [
+    { ...colA, count: 0, cards: [] },
+    colB,
+    {
+      ...colC,
+      count: 1,
+      cards: [
+        {
+          id: "card",
+          rows: [
+            { text: "Record", href: "#record" },
+            { text: "Third" },
+            { text: "Account", href: "#account" },
+          ],
+        },
+      ],
+    },
+  ];
+  rerender(
+    <RecordBoard columns={updatedColumns} createLabel="Create" onCreate={vi.fn()} onMove={move} />,
+  );
+  expect(document.querySelector('[data-board-column="c"] article')).toBeTruthy();
+  expect(document.querySelector('[data-board-column="a"] article')).toBeNull();
+  expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
+});

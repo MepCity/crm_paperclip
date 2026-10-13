@@ -22,7 +22,7 @@ export interface BoardColumn {
   cards: readonly BoardCard[];
 }
 // biome-ignore lint/suspicious/noConfusingVoidType: mutation callbacks may resolve without an explicit result
-export type BoardMoveResult = "moved" | "cancelled" | void;
+export type BoardMoveResult = "moved" | "cancelled" | { to: string } | void;
 export interface RecordBoardProps {
   columns: readonly BoardColumn[];
   toolbar?: ReactNode;
@@ -54,15 +54,18 @@ export function RecordBoard({
       const next = { ...current };
       let changed = false;
       for (const [id, movement] of Object.entries(current)) {
-        if (
-          !pending.current.has(id) &&
-          (columns
+        if (!pending.current.has(id)) {
+          const inTarget = columns
             .find((column) => column.key === movement.to)
-            ?.cards.some((card) => card.id === id) ||
-            !columns.some((column) => column.cards.some((card) => card.id === id)))
-        ) {
-          delete next[id];
-          changed = true;
+            ?.cards.some((card) => card.id === id);
+          const inSource = columns
+            .find((column) => column.key === movement.from)
+            ?.cards.some((card) => card.id === id);
+          const inAny = columns.some((column) => column.cards.some((card) => card.id === id));
+          if (inTarget || (!inSource && inAny) || !inAny) {
+            delete next[id];
+            changed = true;
+          }
         }
       }
       return changed ? next : current;
@@ -91,7 +94,21 @@ export function RecordBoard({
     try {
       const result = await onMove(id, from, to);
       if (result !== "cancelled") {
-        setMoves((current) => ({ ...current }));
+        const finalTo = typeof result === "object" && result && "to" in result ? result.to : to;
+        const finalTargetColumn = columns.find((column) => column.key === finalTo);
+        const finalCard =
+          finalTargetColumn && originalCard.rows.length > 1
+            ? {
+                ...originalCard,
+                rows: originalCard.rows.map((row, index) =>
+                  index === 1 ? { ...row, text: finalTargetColumn.label } : row,
+                ),
+              }
+            : card;
+        setMoves((current) => ({
+          ...current,
+          [id]: { from, to: finalTo, card: finalCard },
+        }));
         return;
       }
     } catch {
@@ -149,7 +166,7 @@ export function RecordBoard({
                   ) : null}
                 </div>
                 {column.totalText !== undefined ? (
-                  <div className="font-semibold">{column.totalText}</div>
+                  <div className="font-semibold record-board-total">{column.totalText}</div>
                 ) : null}
                 <div className="record-board-checkbox">
                   <Checkbox label={`Select ${column.label}`} hideLabel />

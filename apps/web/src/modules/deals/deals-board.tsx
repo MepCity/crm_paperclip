@@ -234,6 +234,7 @@ export function DealsBoard({
             : s.stage?.category === "Closed Lost"
               ? "lost"
               : "open",
+        stage: s.stage,
       })),
     [stageOptions],
   );
@@ -397,7 +398,7 @@ export function DealsBoard({
         void queryClient.invalidateQueries({
           queryKey: summarizeQueriesPrefix(orgSlug, "Deals"),
         });
-        pendingMove.resolve("moved");
+        pendingMove.resolve(values.stage === pendingMove.toKey ? "moved" : { to: values.stage });
         setPendingMove(null);
       } catch (error) {
         if (error instanceof ValidationError) {
@@ -408,12 +409,13 @@ export function DealsBoard({
             reasonForLoss: error.fieldErrors.Reason_For_Loss__s?.[0],
           });
         }
+        pendingMove.resolve("cancelled");
+        setPendingMove(null);
         toast({
           variant: "danger",
           title: "Update failed",
           message: error instanceof Error ? error.message : "Failed to update deal.",
         });
-        throw error;
       }
     },
     [orgSlug, pendingMove, queryClient, service, stageOptions],
