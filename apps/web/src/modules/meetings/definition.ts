@@ -38,14 +38,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
   navigation: { id: "meetings", icon: Icons.calendar },
   list: meetingsListPageConfig,
   listCurrencyCode: MEETINGS_LIST_CURRENCY_CODE,
-  searchColumns: [
-    "Event_Title",
-    "Start_DateTime",
-    "End_DateTime",
-    "What_Id",
-    "Who_Id",
-    "Owner",
-  ],
+  searchColumns: ["Event_Title", "Start_DateTime", "End_DateTime", "What_Id", "Who_Id", "Owner"],
   buildFilterGroups: buildMeetingsFilterGroups,
   form: {
     rules: accountsFormRules,

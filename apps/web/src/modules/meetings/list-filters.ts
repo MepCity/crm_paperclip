@@ -62,10 +62,7 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
 
 export function buildMeetingsFilterGroups(input: Input): readonly FilterGroup[] {
   const labels = new Map(
-    input.fields.map((field) => [
-      field.apiName === input.linkField ? "Title" : field.label,
-      field,
-    ]),
+    input.fields.map((field) => [field.apiName === input.linkField ? "Title" : field.label, field]),
   );
   const remaining = [...labels.keys()]
     .filter((label) => !initialFieldLabels.includes(label))
