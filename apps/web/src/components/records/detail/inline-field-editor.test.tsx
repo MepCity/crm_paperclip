@@ -128,6 +128,19 @@ test("an impossible day stays open with the format message in inline edit", asyn
   expect(save).not.toHaveBeenCalled();
 });
 
+test("deleting one character from a stored day keeps it and blocks the inline write", async () => {
+  const { user, save, complete } = setup("date", "2026-02-15");
+  const input = screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement;
+  expect(input.value).toBe("15.02.2026");
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}");
+  expect(input.value).toBe("15.02.202");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
+  expect(save).not.toHaveBeenCalled();
+  expect(complete).not.toHaveBeenCalled();
+});
+
 test.each([new ValidationError({ Company: ["Rejected field."] }), new Error("Update failed.")])(
   "server errors stay beneath the control",
   async (error) => {
