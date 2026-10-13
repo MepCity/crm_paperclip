@@ -86,7 +86,6 @@ export function createContactsRelatedLists(
       moduleKey: "M5",
       order: 6,
       targetId: "related-list-open-activities",
-      countBadge: 1,
       upperControls: [
         {
           id: "add-new",
@@ -138,7 +137,6 @@ export function createContactsRelatedLists(
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-closed-activities",
-      countBadge: 1,
       upperControls: [
         {
           id: "column-view-closed",
