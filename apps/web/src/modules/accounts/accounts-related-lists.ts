@@ -12,6 +12,8 @@ export interface AccountsRelatedListHandlers {
   onContactsNew?: () => void;
   onContactsEdit?: () => void;
   onMemberAccountNew?: () => void;
+  onDealsAssign?: () => void;
+  onDealsNew?: () => void;
 }
 
 export interface AccountsRelatedListRailDefinition {
@@ -56,6 +58,7 @@ export const accountsContactsTablePreviewRows: readonly RelatedListTableRowDefin
 export type AccountsRelatedListBadges = {
   notes?: number;
   contacts?: number;
+  deals?: number;
   openActivities?: number;
   closedActivities?: number;
 };
@@ -167,10 +170,13 @@ export function createAccountsRelatedLists(
       moduleKey: "M4",
       order: 4,
       targetId: "related-list-deals",
+      countBadge: badgeValue(badges.deals),
+      recordFilterField: "Account_Name",
       railAction: {
         id: "deals-add",
         label: "Add",
         moduleKey: "M4",
+        onAction: handlers.onDealsNew,
       },
       upperControls: [
         {
@@ -178,12 +184,14 @@ export function createAccountsRelatedLists(
           label: "Assign",
           type: "button",
           moduleKey: "M4",
+          onAction: handlers.onDealsAssign,
         },
         {
           id: "new-deal",
           label: "New Deal",
           type: "button",
           moduleKey: "M4",
+          onAction: handlers.onDealsNew,
         },
       ],
       emptyStateText: "No records found",

@@ -11,13 +11,13 @@ import {
 afterEach(cleanup);
 
 test("resolveLaterModule returns undefined for active modules and key for later modules", () => {
-  expect(LIVE_MODULE_KEYS).toEqual(["M2", "M3"]);
+  expect(LIVE_MODULE_KEYS).toEqual(["M2", "M3", "M4"]);
   expect(resolveLaterModule("M2")).toBeUndefined();
   expect(resolveLaterModule("M3")).toBeUndefined();
+  expect(resolveLaterModule("M4")).toBeUndefined();
   expect(resolveLaterModule(undefined)).toBeUndefined();
   expect(resolveLaterModule(null)).toBeUndefined();
   expect(resolveLaterModule("")).toBeUndefined();
-  expect(resolveLaterModule("M4")).toBe("M4");
   expect(resolveLaterModule("M5")).toBe("M5");
   expect(resolveLaterModule("P2")).toBe("P2");
   expect(resolveLaterModule("P3")).toBe("P3");

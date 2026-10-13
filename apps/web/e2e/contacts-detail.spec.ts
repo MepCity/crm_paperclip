@@ -11,6 +11,8 @@ import { expect, ignoreFailedResponses, test } from "./support/test";
 const CONTACTS_TAB = "Contacts";
 const MANAGER_RECORD_ID = "300000000000000000";
 const REPORT_ONLY_RECORD_ID = "300000000000000001";
+const NO_DEAL_RECORD_ID = "300000000000000249";
+const DEAL_RECORD_ID = "700000000000000000";
 
 async function openContactDetail(
   page: import("@playwright/test").Page,
@@ -417,6 +419,53 @@ test.describe("Contacts record detail", () => {
     await page.keyboard.press("Escape");
     await expect(modal2).not.toBeVisible();
 
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card lists the contact deals and Deal Name opens Deal detail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    const dealLink = deals.getByRole("link", { name: "Deal 001" });
+    await expect(dealLink).toHaveAttribute("href", /\/tab\/Deals\/700000000000000000$/);
+    await dealLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, "Deals", DEAL_RECORD_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card New Deal opens the create form with Contact Name and Account Name filled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    await deals.getByRole("button", { name: "New Deal" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Deals"));
+    await expect(page.getByRole("textbox", { name: "Contact Name", exact: true })).toHaveValue(
+      /Contact 001/,
+    );
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, NO_DEAL_RECORD_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByText("No records found")).toBeVisible();
+    await expect(deals.getByRole("table")).toHaveCount(0);
     ignoreFailedResponses(pageErrors, [400]);
   });
 });
