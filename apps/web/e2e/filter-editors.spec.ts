@@ -133,6 +133,10 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   });
   await page.keyboard.press("Home");
   await page.keyboard.press("Enter");
+  // Enter only lands the choice: focus comes back to the trigger when the popover unmounts, so
+  // the Tab below has to wait for that or it walks from a control that is still going away.
+  await expect(list).toBeHidden();
+  await expect(operator).toBeFocused();
   const equality = await operator.boundingBox();
   if (!equality) throw new Error("Missing equality selector");
   nearOperatorWidth(equality.width, 36);
