@@ -38,6 +38,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
 test("The registry holds Lead, Contact and Account entries pointing at their create pages", () => {
   expect(createRecordsNav.map((entry) => entry.label)).toEqual(["Lead", "Contact", "Account"]);
   expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
+  expect(createRecordsNav[1]?.path("example")).toBe("/crm/example/tab/Contacts/create");
   expect(createRecordsNav[2]?.path("example")).toBe("/crm/example/tab/Accounts/create");
 });
 
@@ -108,6 +109,7 @@ test("The search box filters rows by label and leaves the list empty on no match
   await user.type(search, "CON");
   expect(within(dialog).getByRole("link", { name: "Contact" })).toBeTruthy();
   expect(within(dialog).queryByRole("link", { name: "Lead" })).toBeNull();
+  expect(within(dialog).queryByRole("link", { name: "Account" })).toBeNull();
   await user.clear(search);
   await user.type(search, "deal");
   expect(within(dialog).queryAllByRole("link")).toHaveLength(0);
