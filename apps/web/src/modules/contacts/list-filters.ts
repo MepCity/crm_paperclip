@@ -7,7 +7,7 @@ import type { ModuleScreenDefinition } from "../types";
 
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
 const systemRows: readonly [string, ModuleKey?][] = [
-  ["Activities", "M5"],
+  ["Activities"],
   ["Campaigns", "M7"],
   ["Latest Email Status", "M10"],
   ["Locked"],
@@ -72,11 +72,20 @@ export function buildContactsFilterGroups(input: Input): readonly FilterGroup[] 
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, laterModule], index) => ({
-        id: `system-${index}`,
-        label,
-        ...(laterModule ? { laterModule } : { disabled: true }),
-      })),
+      items: systemRows.map(([label, laterModule], index) => {
+        if (label === "Activities") {
+          return {
+            id: "Activities",
+            label,
+            systemEditor: "activities" as const,
+          };
+        }
+        return {
+          id: `system-${index}`,
+          label,
+          ...(laterModule ? { laterModule } : { disabled: true }),
+        };
+      }),
     },
     {
       id: "fields",
