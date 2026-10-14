@@ -66,7 +66,8 @@ export interface FieldInputProps {
   lookupRecordHref?: (id: string, module?: string) => string;
   /** Polymorphic lookups: the type select is drawn elsewhere (form row label); this is its value. */
   lookupModule?: string;
-  onLookupModuleChange?: (module: string) => void;
+  /** The type select is rendered outside the input (form row label side). */
+  lookupTypeExternal?: boolean;
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
 }
@@ -206,7 +207,7 @@ export function FieldInput({
   lookupRecordHref,
   lookupOwnerNames,
   lookupModule,
-  onLookupModuleChange,
+  lookupTypeExternal,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -423,7 +424,7 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic && !onLookupModuleChange ? (
+              isPolymorphic && !lookupTypeExternal ? (
                 <div className="record-prefix-select">
                   <LookupTypeSelect
                     id={`${controlId}-module`}

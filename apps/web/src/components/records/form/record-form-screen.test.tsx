@@ -9,6 +9,7 @@ import { ApiProvider } from "@/lib/api/client/provider";
 import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import { contactsFormRules } from "@/modules/contacts/contacts-form-rules";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
+import { tasksFormRules } from "@/modules/tasks/tasks-form-rules";
 import { render } from "@/test/render";
 import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
 import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
@@ -687,3 +688,26 @@ test("populates initial values using function defaultValues reading metadata", a
   const input = screen.getByRole("textbox", { name: "Title" }) as HTMLInputElement;
   expect(input.value).toBe("Dynamic Title for Lead");
 });
+
+test("changing the label-side Who type clears the value and retargets the lookup", async () => {
+  harness(
+    {
+      id: "task-1",
+      fields: { Who_Id: { module: "Contacts", id: "c-1", name: "Ada Synthetic" } },
+    } as unknown as RecordData,
+    {
+      module: "Tasks",
+      rules: tasksFormRules,
+      paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
+    },
+  );
+  await ready(/^Edit Task$/);
+  const user = userEvent.setup();
+  const select = await screen.findByRole("button", { name: /Contact Name module/ });
+  expect(select.textContent).toContain("Contact");
+  expect(screen.getByDisplayValue("Ada Synthetic")).toBeTruthy();
+  await user.click(select);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(screen.queryByDisplayValue("Ada Synthetic")).toBeNull();
+  expect(screen.getByRole("button", { name: /Contact Name module/ }).textContent).toContain("Lead");
+}, 30_000);

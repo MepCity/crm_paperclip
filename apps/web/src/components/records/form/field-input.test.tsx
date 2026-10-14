@@ -652,9 +652,7 @@ test("an external type select leaves the lookup input without a prefix select", 
     label: "Contact Name",
     lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
   };
-  render(
-    <FieldInput field={who} value={null} onChange={() => {}} onLookupModuleChange={() => {}} />,
-  );
+  render(<FieldInput field={who} value={null} onChange={() => {}} lookupTypeExternal />);
   expect(screen.queryByRole("button", { name: /Contact Name module/ })).toBeNull();
 });
 

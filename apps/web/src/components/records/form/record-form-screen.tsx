@@ -555,7 +555,7 @@ function LoadedRecordForm({
           }
           lookupOwnerNames={ownerNames}
           lookupModule={polyModule}
-          onLookupModuleChange={polyTargets.length > 1 ? () => {} : undefined}
+          lookupTypeExternal={polyTargets.length > 1}
           currencyPrefix={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? config.currencyPrefix
