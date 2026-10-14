@@ -154,7 +154,7 @@ describeRecordServiceContract(
   eventsRecordServiceContractModule,
 );
 
-describe("Events HTTP opaque arrays", () => {
+describe("Events HTTP participants and opaque reminders", () => {
   it("round trips field opt-ins, arbitrary arrays and CURRENTTIME through generic endpoints", async () => {
     const ctx: OrgContext = {
       orgId: randomUUID(),
@@ -177,7 +177,7 @@ describe("Events HTTP opaque arrays", () => {
     const arrays = {
       Remind_At: [{ arbitrary: [true, null, 2] }],
       Remind_Participants: [],
-      Participants: [null, { id: "opaque", module: "opaque", token: "opaque" }],
+      Participants: [{ type: "email", id: null, name: "Guest", email: "guest@example.test" }],
     };
     const created = await service.create(
       "Events",
@@ -188,11 +188,32 @@ describe("Events HTTP opaque arrays", () => {
     expect(
       (
         await service.update("Events", created.id, {
-          Participants: [{ another: false }],
+          Participants: [{ type: "user", id: "member", name: "Member", email: null }],
           Remind_At: [],
         })
       ).fields,
-    ).toMatchObject({ Participants: [{ another: false }], Remind_At: [] });
+    ).toMatchObject({
+      Participants: [{ type: "user", id: "member", name: "Member", email: null }],
+      Remind_At: [],
+    });
+    for (const invalid of [
+      [null],
+      [{}],
+      [{ type: "email", id: null, name: "Guest", email: null }],
+      Array.from({ length: 51 }, () => ({
+        type: "email",
+        id: null,
+        name: "Guest",
+        email: "guest@example.test",
+      })),
+    ]) {
+      await expect(
+        service.update("Events", created.id, { Participants: invalid }),
+      ).rejects.toMatchObject({
+        code: "validation",
+        fieldErrors: { Participants: [expect.any(String)] },
+      });
+    }
     const filters = {
       field: "End_DateTime",
       comparator: "greater_equal",
