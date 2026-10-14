@@ -43,6 +43,7 @@ describe("ActivityRelationPanel", () => {
     expect(labels).toEqual(["Person summary", "Deal Summary", "Open Activities"]);
     expect(screen.getByRole("tab", { name: "Info" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Conversations" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Ada Test|Related person/ })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Ada Test" }).getAttribute("href")).toBe(
       "/contacts/p1",
     );
@@ -68,6 +69,15 @@ describe("ActivityRelationPanel", () => {
     expect(screen.getByRole("tab", { name: "Info" }).getAttribute("aria-selected")).toBe("true");
     expect(
       screen.getByRole("tab", { name: "Conversations" }).getAttribute("data-later-module"),
+    ).toBe("M10");
+    expect(
+      screen.getByRole("button", { name: "Send Email" }).getAttribute("data-later-module"),
+    ).toBe("M10");
+    expect(
+      screen
+        .getByText("ada@example.test")
+        .closest("[data-later-module]")
+        ?.getAttribute("data-later-module"),
     ).toBe("M10");
   });
 
@@ -97,6 +107,12 @@ describe("ActivityRelationPanel", () => {
     expect(within(section).getByRole("link", { name: "Call back" })).toBeTruthy();
     fireEvent.click(row);
     expect(within(section).queryByRole("link", { name: "Call back" })).toBeNull();
+    const meetings = within(section).getByRole("button", { name: /Meetings/ });
+    const calls = within(section).getByRole("button", { name: /Calls/ });
+    expect(meetings.getAttribute("aria-expanded")).toBe("false");
+    expect(calls.getAttribute("aria-expanded")).toBe("false");
+    expect(meetings.textContent).toContain("0");
+    expect(calls.textContent).toContain("1");
   });
 
   it("shows empty deal text and omits empty-valued rows", () => {
@@ -118,5 +134,6 @@ describe("ActivityRelationPanel", () => {
     );
     expect(labels).toEqual(["Open Activities"]);
     expect(screen.getByRole("tab", { name: "Info" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Ada Test|Related person/ })).toBeTruthy();
   });
 });

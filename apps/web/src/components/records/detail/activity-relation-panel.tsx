@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button as AriaButton } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
@@ -71,7 +72,7 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between">
       <h3 className="text-md font-semibold text-text-strong">{title}</h3>
-      <Button variant="secondary" size="sm" onPress={onAction}>
+      <Button variant="ghost" size="sm" className="text-primary" onPress={onAction}>
         <Icons.plus className="size-3" aria-hidden />
         {actionLabel}
       </Button>
@@ -89,14 +90,15 @@ function CallButton({
   onCall?: (phone: string) => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="icon"
+      size="sm"
       aria-label={label}
-      className="inline-flex size-5 items-center justify-center rounded text-text-muted outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-focus-ring"
-      onClick={onCall ? () => onCall(phone) : undefined}
+      className="size-5"
+      onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
-    </button>
+    </Button>
   );
 }
 
@@ -162,31 +164,36 @@ export function ActivityRelationPanel({
 
       {person ? (
         <>
-          <section aria-label="Person summary" className="flex gap-3">
-            <div
-              data-contact-portrait
-              aria-hidden
-              className="flex size-12 shrink-0 items-center justify-center rounded-md bg-bg text-avatar"
-            >
-              <Icons.recordPortrait className="size-full" />
-            </div>
-            <div className="flex min-w-0 flex-col gap-1 text-md">
-              <div className="flex items-center gap-2">
-                <Link
-                  href={contactRecordPath(person.id)}
-                  variant="body"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  {person.name}
-                </Link>
-                <span className="rounded bg-bg px-1.5 text-xs text-text-muted">
-                  {person.moduleLabel}
-                </span>
+          <section aria-label="Person summary" className="flex flex-col gap-2 text-md">
+            <div className="flex gap-3">
+              <div
+                data-contact-portrait
+                aria-hidden
+                className="flex size-12 shrink-0 items-center justify-center rounded-md bg-bg text-avatar"
+              >
+                <Icons.recordPortrait className="size-full" />
               </div>
-              <Button variant="secondary" size="sm" laterModule="M10">
-                Send Email
-              </Button>
-              {person.accountId && person.accountName ? (
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={contactRecordPath(person.id)}
+                    variant="body"
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {person.name}
+                  </Link>
+                  <span className="rounded bg-bg px-1.5 text-xs text-text-muted">
+                    {person.moduleLabel}
+                  </span>
+                </div>
+                <Button variant="primary" size="sm" laterModule="M10">
+                  Send Email
+                </Button>
+              </div>
+            </div>
+            {person.accountId && person.accountName ? (
+              <div className="flex items-center gap-2">
+                <Icons.building className="size-3.5 text-text-muted" aria-hidden />
                 <Link
                   href={accountRecordPath(person.accountId)}
                   variant="body"
@@ -194,8 +201,11 @@ export function ActivityRelationPanel({
                 >
                   {person.accountName}
                 </Link>
-              ) : null}
-              {person.email ? (
+              </div>
+            ) : null}
+            {person.email ? (
+              <div className="flex items-center gap-2">
+                <Icons.envelope className="size-3.5 text-text-muted" aria-hidden />
                 <Link
                   href={`mailto:${person.email}`}
                   variant="body"
@@ -204,19 +214,23 @@ export function ActivityRelationPanel({
                 >
                   {person.email}
                 </Link>
-              ) : null}
-              {person.phone ? (
-                <p className="flex items-center gap-1 text-text">
-                  <span>{person.phone}</span>
-                  <CallButton phone={person.phone} label="Call phone" onCall={onCall} />
-                </p>
-              ) : null}
-              {person.mobile ? (
-                <p className="flex items-center gap-1 text-text">
-                  <span>{person.mobile}</span>
-                  <CallButton phone={person.mobile} label="Call mobile" onCall={onCall} />
-                </p>
-              ) : null}
+              </div>
+            ) : null}
+            {person.phone ? (
+              <p className="flex items-center gap-2 text-text">
+                <Icons.phone className="size-3.5 text-text-muted" aria-hidden />
+                <span>{person.phone}</span>
+                <CallButton phone={person.phone} label="Call phone" onCall={onCall} />
+              </p>
+            ) : null}
+            {person.mobile ? (
+              <p className="flex items-center gap-2 text-text">
+                <Icons.phone className="size-3.5 text-text-muted" aria-hidden />
+                <span>{person.mobile}</span>
+                <CallButton phone={person.mobile} label="Call mobile" onCall={onCall} />
+              </p>
+            ) : null}
+            <div className="flex justify-end">
               <Link
                 href={contactRecordPath(person.id)}
                 variant="body"
@@ -253,18 +267,17 @@ export function ActivityRelationPanel({
 
       <section aria-label="Open Activities" className="flex flex-col gap-2">
         <SectionHeader title="Open Activities" actionLabel="New" onAction={onNewActivity} />
-        <ul className="flex flex-col">
+        <ul className="flex flex-col gap-2">
           {ACTIVITY_ROWS.map(({ kind, label }) => {
             const group = openActivities[kind];
             const isOpen = expanded.has(kind);
             const items = group.items ?? [];
             return (
               <li key={kind} className="flex flex-col">
-                <button
-                  type="button"
+                <AriaButton
                   aria-expanded={isOpen}
-                  onClick={() => toggle(kind)}
-                  className="flex items-center gap-2 py-1.5 text-md text-text outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                  onPress={() => toggle(kind)}
+                  className="flex items-center gap-2 rounded-md border border-panel-border px-3 py-1.5 text-md text-text outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                 >
                   <span>{label}</span>
                   <span
@@ -277,7 +290,7 @@ export function ActivityRelationPanel({
                     className={`ml-auto size-4 ${isOpen ? "rotate-180" : ""}`}
                     aria-hidden
                   />
-                </button>
+                </AriaButton>
                 {isOpen && items.length > 0 ? (
                   <ul className="flex flex-col gap-1 pb-2 pl-3">
                     {items.map((item) => (
