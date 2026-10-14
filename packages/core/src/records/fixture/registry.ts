@@ -3,6 +3,10 @@ import { accountsMetadata } from "./accounts/metadata";
 import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
 import { accountsViews } from "./accounts/views";
 import { activityDeleteHook } from "./activity-hooks";
+import { callsHooks } from "./calls/hooks";
+import { callsMetadata } from "./calls/metadata";
+import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
+import { callsViews } from "./calls/views";
 import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
@@ -11,12 +15,14 @@ import { dealsHooks, historyHooks } from "./deals/hooks";
 import { dealsMetadata } from "./deals/metadata";
 import { fullName as dealsFullName, generateFixtureDeals } from "./deals/seed";
 import { dealsViews } from "./deals/views";
+import { eventsHooks } from "./events/hooks";
 import { eventsMetadata } from "./events/metadata";
 import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed";
 import { eventsViews } from "./events/views";
 import type { FixtureModuleHooks } from "./hooks";
 import { leadsMetadata } from "./metadata";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
+import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
 import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";
 import { tasksViews } from "./tasks/views";
@@ -59,6 +65,7 @@ const contactsManaged = new Set([
 
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   Events: {
+    ...eventsHooks,
     metadata: eventsMetadata,
     views: eventsViews,
     displayNameField: "Event_Title",
@@ -69,7 +76,20 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     initialNextId: 140000000000000000n,
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
+  Calls: {
+    ...callsHooks,
+    metadata: callsMetadata,
+    views: callsViews,
+    displayNameField: "Subject",
+    generateSeed: (now) => generateFixtureCalls(68, now),
+    fullName: callsFullName,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Subject", "Description"],
+    initialNextId: 150000000000000000n,
+    createDefaults: (stamp) => ({ CTI_Entry: false, Created_Time: stamp, Modified_Time: stamp }),
+  },
   Tasks: {
+    ...tasksHooks,
     metadata: tasksMetadata,
     views: tasksViews,
     displayNameField: "Subject",

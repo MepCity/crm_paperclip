@@ -205,9 +205,13 @@ export function createFixtureRecordService(
     if (!record) throw new NotFoundError("Record not found.");
     return record;
   };
-  const resolveRead = (module: string, record: RecordData) => {
+  const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
-    return resolveRecordReferences(record, bundle.metadata.fields, referenceModules());
+    return resolveRecordReferences(
+      bundle.readRecord?.(record, now) ?? record,
+      bundle.metadata.fields,
+      referenceModules(),
+    );
   };
   const validateReferences = (module: string, input: RecordInput) => {
     const bundle = bundleFor(module);
@@ -276,7 +280,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
-      .map((record) => resolveRead(module, record))
+      .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
@@ -305,7 +309,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: stamp,
       };
-      bundle.applyRules?.(fields, input, record.fields);
+      bundle.applyRules?.(fields, input, record.fields, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       overrides.set(record.id, fields);
       return { id: record.id, fields };
@@ -359,7 +363,7 @@ export function createFixtureRecordService(
       Modified_By: ctx.userId,
       Modified_Time: clock().toISOString(),
     };
-    bundle.applyRules?.(fields, normalized, master.fields);
+    bundle.applyRules?.(fields, normalized, master.fields, hookContext);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
@@ -653,7 +657,7 @@ export function createFixtureRecordService(
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
-      bundle.applyRules?.(fields, normalized);
+      bundle.applyRules?.(fields, normalized, undefined, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const record = { id, fields };
       assertUniqueFieldValues(
@@ -682,7 +686,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: clock().toISOString(),
       };
-      bundle.applyRules?.(fields, normalized, record.fields);
+      bundle.applyRules?.(fields, normalized, record.fields, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const updated = { id, fields };
       const moduleState = moduleStore(module);

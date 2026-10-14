@@ -3,6 +3,7 @@ import { accountsScreenDefinition } from "./accounts/definition";
 import { contactsScreenDefinition } from "./contacts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
+import { tasksScreenDefinition } from "./tasks/definition";
 import type { ModuleScreenDefinition } from "./types";
 
 /** Module to laterModule key mapping maintained in one single place. */
@@ -41,6 +42,7 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
       contactsScreenDefinition,
       accountsScreenDefinition,
       dealsScreenDefinition,
+      tasksScreenDefinition,
     ];
   }
   return cachedModuleScreens;

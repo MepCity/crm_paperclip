@@ -149,7 +149,7 @@ describe("Events", () => {
       );
     },
   );
-  it.each(["Remind_At", "Remind_Participants", "Participants"])(
+  it.each(["Remind_At", "Remind_Participants"])(
     "copies opaque %s on create, update, get and list",
     async (field) => {
       const service = make();
@@ -196,35 +196,56 @@ describe("Events", () => {
       ).rejects.toBeInstanceOf(ValidationError);
     },
   );
-  it("compares opaque arrays by deep typed values with significant array order", () => {
+  it("compares typed participants with significant array order", () => {
     const field = fields.get("Participants");
     if (!field) throw new Error("Missing field");
-    expect(fieldValueKey([{ a: 1, b: [true, null] }], field)).toBe(
-      fieldValueKey([{ b: [true, null], a: 1 }], field),
+    const guest = { type: "email", id: null, name: "Guest", email: "guest@example.test" };
+    const member = { type: "user", id: "member", name: "Member", email: null };
+    expect(fieldValueKey([guest], field)).toBe(
+      fieldValueKey([{ email: guest.email, name: guest.name, id: null, type: "email" }], field),
     );
-    expect(fieldValueKey([{ a: 1 }], field)).not.toBe(fieldValueKey([{ a: 2 }], field));
-    expect(fieldValueKey([1, 2], field)).not.toBe(fieldValueKey([2, 1], field));
-    expect(fieldValueKey([1], field)).not.toBe(fieldValueKey(["1"], field));
+    expect(fieldValueKey([guest], field)).not.toBe(
+      fieldValueKey([{ ...guest, name: "Other" }], field),
+    );
+    expect(fieldValueKey([guest, member], field)).not.toBe(fieldValueKey([member, guest], field));
   });
   it("keeps opaque arrays out of global search and distinguishes public duplicate conflicts", async () => {
     expect(
       matchesGlobalSearch(
-        { id: "1", fields: { Participants: ["opaque-needle"] } },
+        {
+          id: "1",
+          fields: {
+            Participants: [
+              { type: "email", id: null, name: "opaque-needle", email: "guest@example.test" },
+            ],
+          },
+        },
         eventsMetadata.fields,
         "opaque-needle",
       ),
     ).toBe(false);
     const service = make();
     const marker = "Deep equality marker";
-    await service.create("Events", input({ Venue: marker, Participants: [{ a: 1, b: true }] }));
+    await service.create(
+      "Events",
+      input({
+        Venue: marker,
+        Participants: [{ type: "email", id: null, name: "Guest", email: "guest@example.test" }],
+      }),
+    );
     const second = await service.create(
       "Events",
-      input({ Venue: marker, Participants: [{ b: true, a: 1 }] }),
+      input({
+        Venue: marker,
+        Participants: [{ email: "guest@example.test", name: "Guest", id: null, type: "email" }],
+      }),
     );
     let groups = await service.findDuplicateGroups("Events", ["Venue"]);
     let group = groups.find((g) => g.records.some((r) => r.id === second.id));
     expect(group?.conflictFields).not.toContain("Participants");
-    await service.update("Events", second.id, { Participants: [{ a: 2, b: true }] });
+    await service.update("Events", second.id, {
+      Participants: [{ type: "email", id: null, name: "Other", email: "guest@example.test" }],
+    });
     groups = await service.findDuplicateGroups("Events", ["Venue"]);
     group = groups.find((g) => g.records.some((r) => r.id === second.id));
     expect(group?.conflictFields).toContain("Participants");

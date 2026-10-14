@@ -5,7 +5,7 @@ import { activityState } from "./activities";
 import type { RecordInput } from "./contract";
 import { createFixtureRecordService } from "./fixture";
 
-// Calls is not shipped yet: exercise a registered package without defining its schema.
+// Synthetic packages exercise both links for every parent and locked children.
 vi.mock("./fixture/registry", async (importOriginal) => {
   const original = await importOriginal<typeof import("./fixture/registry")>();
   const task = original.fixtureModules.Tasks;
@@ -57,6 +57,7 @@ vi.mock("./fixture/registry", async (importOriginal) => {
               : fields,
       },
       generateSeed: () => [],
+      applyRules: undefined,
       afterWrite(record) {
         if (
           record.fields.Subject === "Synthetic locked activity" ||
