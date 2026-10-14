@@ -73,7 +73,23 @@ function matchesDetailSpec(request: CrmRequest, spec: (typeof DETAIL_FROM_LIST_R
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
 }
 
-function assertDetailFromListRequests(requests: CrmRequest[]) {
+/** Activity cards load their own module metadata, views and rows; they are not the detail request. */
+function isActivityCardRequest(request: CrmRequest): boolean {
+  return (
+    /^\/crm\/v[\d.]+\/settings\//.test(request.pathname) ||
+    /^\/crm\/v[\d.]+\/(Tasks|Events|Calls)\b/.test(request.pathname)
+  );
+}
+
+function assertDetailFromListRequests(allRequests: CrmRequest[]) {
+  const seen = new Set<string>();
+  const requests = allRequests.filter((request) => {
+    if (isActivityCardRequest(request)) return false;
+    const key = `${request.method} ${request.pathname} ${[...request.searchParams.keys()].sort()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   for (const request of requests) {
     expect(
       DETAIL_FROM_LIST_REQUESTS.some((spec) => matchesDetailSpec(request, spec)),
@@ -111,6 +127,21 @@ async function openFirstLeadFromList(
 test.describe("Lead record detail page", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1470, height: 835 });
+  });
+
+  test("Leads activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("opens from the list name link", async ({ page }) => {
@@ -207,7 +238,13 @@ test.describe("Lead record detail page", () => {
     await expect(page.locator("[data-record-frame]")).toBeVisible();
     page.off("request", onRequest);
     assertDetailFromListRequests(seen);
-    expect(seen.some((item) => item.pathname.includes("/settings/custom_views"))).toBe(false);
+    expect(
+      seen.some(
+        (item) =>
+          item.pathname.includes("/settings/custom_views") &&
+          item.searchParams.get("module") === LEADS_MODULE,
+      ),
+    ).toBe(false);
   });
 
   test("meets accessibility rules on a populated record", async ({ page }) => {

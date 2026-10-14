@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import type { ModuleScreenDefinition } from "../types";
+import { LeadRecordScreen } from "./lead-record-screen";
 import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
 import { buildLeadsBusinessCardFields, buildLeadsDetailSections } from "./leads-detail-sections";
 import { leadsFormRules } from "./leads-form-rules";
@@ -51,6 +52,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   buildFilterGroups: buildLeadsFilterGroups,
   form: { rules: leadsFormRules },
   detail: {
+    Screen: LeadRecordScreen,
     header: leadsRecordHeaderIdentity,
     businessCard: buildLeadsBusinessCardFields,
     sections: buildLeadsDetailSections,
