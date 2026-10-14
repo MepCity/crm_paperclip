@@ -22,6 +22,10 @@ const handlers = [
   [operations.layouts, () => import("@/app/crm/v2.1/settings/layouts/route")],
   [operations.views, () => import("@/app/crm/v9/settings/custom_views/route")],
   [operations.view, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
+  [operations.kanbanViews, () => import("@/app/crm/v9/settings/kanban_views/route")],
+  [operations.createKanbanView, () => import("@/app/crm/v9/settings/kanban_views/route")],
+  [operations.kanbanView, () => import("@/app/crm/v9/settings/kanban_views/[viewId]/route")],
+  [operations.updateKanbanView, () => import("@/app/crm/v9/settings/kanban_views/[viewId]/route")],
   [operations.bulk, () => import("@/app/crm/v2.2/[module]/bulk/route")],
   [operations.summarize, () => import("@/app/crm/v2.2/[module]/actions/grouped_counts/route")],
   [operations.count, () => import("@/app/crm/v2.2/[module]/actions/count/route")],
@@ -379,6 +383,10 @@ describe("operation routes", () => {
           operations.massDelete,
           operations.massUpdate,
           operations.changeOwner,
+          operations.createKanbanView,
+          operations.updateKanbanView,
+          operations.kanbanView,
+          operations.kanbanViews,
         ].includes(op as typeof operations.create),
     )) {
       const response = await call(op, a, { recordId: created.id });
@@ -388,6 +396,27 @@ describe("operation routes", () => {
       if (op === operations.record)
         expect(body.data[0]).toMatchObject({ id: created.id, Last_Name: "Handler Example" });
     }
+  });
+  it("serves, creates and updates Kanban views through the routes", async () => {
+    const list = await call(operations.kanbanViews, a, { module: "Deals" });
+    expect(list.status).toBe(200);
+    const seed = (await list.json()).kanban_views[0];
+    expect(seed.name).toBe("STAGEVIEW");
+    const { id: _id, ...input } = seed;
+    const created = await call(operations.createKanbanView, a, {
+      module: "Deals",
+      body: { kanban_views: [{ ...input, name: "Route board" }] },
+    });
+    expect(created.status).toBe(200);
+    const id = (await created.json()).kanban_views[0].id;
+    const updated = await call(operations.updateKanbanView, a, {
+      module: "Deals",
+      viewId: id,
+      body: { kanban_views: [{ ...input, name: "Route board 2" }] },
+    });
+    expect((await updated.json()).kanban_views[0].name).toBe("Route board 2");
+    const read = await call(operations.kanbanView, a, { module: "Deals", viewId: id });
+    expect((await read.json()).kanban_views[0].name).toBe("Route board 2");
   });
   it.each([
     { op: operations.fields, envelope: "fields" },

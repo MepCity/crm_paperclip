@@ -38,6 +38,7 @@ import {
   pointsAtGroupMember,
 } from "./discovery";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
+import { createFixtureKanbanViews } from "./kanban-views";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
@@ -188,6 +189,7 @@ export function createFixtureRecordService(
     moduleBundle(module);
   };
   const bundleFor = (module: string) => moduleBundle(module);
+  const kanbanViews = createFixtureKanbanViews(ctx, bundleFor);
   const moduleStore = (module: string) => {
     moduleExists(module);
     const moduleState = state.modules.get(module);
@@ -537,6 +539,18 @@ export function createFixtureRecordService(
         });
       }
       return copy(groups);
+    },
+    async listKanbanViews(module) {
+      return kanbanViews.list(module);
+    },
+    async getKanbanView(module, id) {
+      return kanbanViews.get(module, id);
+    },
+    async createKanbanView(module, input) {
+      return kanbanViews.create(module, input);
+    },
+    async updateKanbanView(module, id, input) {
+      return kanbanViews.update(module, id, input);
     },
     async getHomeCurrency() {
       return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
