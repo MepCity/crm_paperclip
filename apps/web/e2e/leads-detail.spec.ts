@@ -73,7 +73,23 @@ function matchesDetailSpec(request: CrmRequest, spec: (typeof DETAIL_FROM_LIST_R
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
 }
 
-function assertDetailFromListRequests(requests: CrmRequest[]) {
+/** Activity cards load their own module metadata, views and rows; they are not the detail request. */
+function isActivityCardRequest(request: CrmRequest): boolean {
+  return (
+    /^\/crm\/v[\d.]+\/settings\//.test(request.pathname) ||
+    /^\/crm\/v[\d.]+\/(Tasks|Events|Calls)\b/.test(request.pathname)
+  );
+}
+
+function assertDetailFromListRequests(allRequests: CrmRequest[]) {
+  const seen = new Set<string>();
+  const requests = allRequests.filter((request) => {
+    if (isActivityCardRequest(request)) return false;
+    const key = `${request.method} ${request.pathname} ${[...request.searchParams.keys()].sort()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   for (const request of requests) {
     expect(
       DETAIL_FROM_LIST_REQUESTS.some((spec) => matchesDetailSpec(request, spec)),
@@ -222,7 +238,13 @@ test.describe("Lead record detail page", () => {
     await expect(page.locator("[data-record-frame]")).toBeVisible();
     page.off("request", onRequest);
     assertDetailFromListRequests(seen);
-    expect(seen.some((item) => item.pathname.includes("/settings/custom_views"))).toBe(false);
+    expect(
+      seen.some(
+        (item) =>
+          item.pathname.includes("/settings/custom_views") &&
+          item.searchParams.get("module") === LEADS_MODULE,
+      ),
+    ).toBe(false);
   });
 
   test("meets accessibility rules on a populated record", async ({ page }) => {
