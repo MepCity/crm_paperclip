@@ -35,7 +35,7 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Task",
   pluralLabel: "Tasks",
   pageTitle: "Tasks",
-  navigation: { id: "tasks", icon: Icons.check },
+  navigation: { id: "tasks", icon: Icons.check, group: "activities" },
   list: tasksListPageConfig,
   listCurrencyCode: TASKS_LIST_CURRENCY_CODE,
   searchColumns: ["Subject", "Due_Date", "Status", "Priority", "Owner"],

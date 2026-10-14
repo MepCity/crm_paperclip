@@ -9,11 +9,13 @@ test("Tasks shell entry, single tab, view menu with search, columns and sorting"
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, "Leads"));
-  // SH-20: Tasks entry in the main navigation
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Tasks", exact: true })
-    .click();
+  // SH-19, SH-20: Tasks is the first entry of the Activities group in the main navigation
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(nav.getByRole("button", { name: "Activities" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await nav.getByRole("link", { name: "Tasks", exact: true }).click();
   await expect(page).toHaveURL(/\/tab\/Tasks\/list$/);
   const list = page.locator(".module-list-page");
 

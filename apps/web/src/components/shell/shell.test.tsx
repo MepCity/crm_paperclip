@@ -136,7 +136,7 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation renders Leads, Contacts, Accounts, Deals and Tasks under Sales and omits empty groups", () => {
+test("Default navigation renders Leads, Contacts, Accounts, Deals and Tasks (Tasks under Activities) and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
   expect(screen.getAllByRole("link")).toHaveLength(6);
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
@@ -155,6 +155,14 @@ test("Default navigation renders Leads, Contacts, Accounts, Deals and Tasks unde
     "/crm/example/tab/Tasks/list",
   );
   expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
+  const activities = screen.getByRole("button", { name: "Activities" });
+  const sales = screen.getByRole("button", { name: "Sales" });
+  const tasks = screen.getByRole("link", { name: "Tasks" });
+  expect(activities.compareDocumentPosition(tasks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tasks.compareDocumentPosition(sales) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Deals" }).compareDocumentPosition(activities)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
 });
 
 test("Organization switcher exposes the current organization in its accessible name", () => {
