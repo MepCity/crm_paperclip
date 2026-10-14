@@ -10,7 +10,7 @@ import "./record-board.css";
 
 export interface BoardCard {
   id: string;
-  rows: readonly { text: string; href?: string; tone?: "danger" }[];
+  rows: readonly { text: string; href?: string; tone?: "danger"; strong?: boolean }[];
   iconLink?: { href: string; label: string; icon: ReactNode; laterModule?: ModuleKey };
 }
 export interface BoardColumn {
@@ -195,13 +195,20 @@ export function RecordBoard({
                         <div
                           // biome-ignore lint/suspicious/noArrayIndexKey: ordered, stateless display lines can repeat text
                           key={`${index}-${row.text}`}
-                          className={row.tone === "danger" ? "text-danger" : undefined}
+                          className={
+                            [
+                              row.tone === "danger" ? "text-danger" : "",
+                              row.strong ? "font-semibold" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ") || undefined
+                          }
                         >
                           {row.href ? (
                             <Link
                               href={row.href}
                               variant="body"
-                              className={index === 0 ? "font-semibold" : undefined}
+                              className={index === 0 || row.strong ? "font-semibold" : undefined}
                             >
                               {row.text}
                             </Link>

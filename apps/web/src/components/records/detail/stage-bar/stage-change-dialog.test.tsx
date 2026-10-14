@@ -54,6 +54,28 @@ test("renders reason for loss when target stage is lost", () => {
   expect(screen.getByLabelText("Reason for Loss")).toBeTruthy();
 });
 
+test("renders currency prefix when supplied", () => {
+  const onOpenChange = vi.fn();
+  render(
+    <StageChangeDialog
+      isOpen
+      onOpenChange={onOpenChange}
+      stages={demoStages}
+      initialValues={{
+        amount: 1000,
+        closingDate: "2026-06-15",
+        stage: "closed-won",
+        reasonForLoss: null,
+      }}
+      reasonForLossOptions={reasonForLossOptions}
+      showReasonForLoss={false}
+      currencyPrefix="TL"
+      onSubmit={vi.fn(async () => {})}
+    />,
+  );
+  expect(screen.getByText("TL")).toBeTruthy();
+});
+
 test("requires stage and closing date before submit", async () => {
   const onSubmit = vi.fn(async () => {});
   const { user } = setup({ onSubmit });

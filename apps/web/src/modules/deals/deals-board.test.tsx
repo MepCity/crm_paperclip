@@ -6,6 +6,7 @@ import {
   buildDealsBoardProps,
   dealsBoardToolbar,
   formatClosingDate,
+  isOverdueClosingDate,
 } from "./deals-board";
 import { dealMetadata } from "./test-metadata";
 
@@ -174,9 +175,11 @@ describe("buildDealCardRows", () => {
       },
     };
 
-    const rows = buildDealCardRows(deal, stageDisplayMap, ownerNames, "test-org");
+    const rows = buildDealCardRows(deal, stageDisplayMap, ownerNames, "test-org", {
+      now: new Date(2026, 7, 20),
+    });
     expect(rows).toEqual([
-      { text: "Big Deal", href: "/crm/test-org/tab/Deals/deal-101" },
+      { text: "Big Deal", href: "/crm/test-org/tab/Deals/deal-101", strong: true },
       { text: "Qualification" },
       { text: "Acme Corp", href: "/crm/test-org/tab/Accounts/acc-1" },
       { text: "Alice Smith" },
@@ -215,7 +218,7 @@ describe("buildDealCardRows", () => {
 
     const rows = buildDealCardRows(deal, stageDisplayMap, ownerNames, "test-org");
     expect(rows).toEqual([
-      { text: "Minimal Deal", href: "/crm/test-org/tab/Deals/deal-103" },
+      { text: "Minimal Deal", href: "/crm/test-org/tab/Deals/deal-103", strong: true },
       { text: "Needs Analysis" },
     ]);
   });
@@ -305,5 +308,35 @@ describe("dealsBoardToolbar", () => {
     expect(select).toBeTruthy();
     expect(select.value).toBe("STAGEVIEW");
     expect(screen.getByRole("button", { name: "Board settings" })).toBeTruthy();
+  });
+});
+
+describe("overdue Closing Date", () => {
+  const now = new Date(2026, 8, 20, 12, 0, 0);
+  const closed = new Set(["Closed Won"]);
+  const dealOn = (date: string, stage: string): RecordData => ({
+    id: "d1",
+    fields: { Deal_Name: "X", Stage: stage, Closing_Date: date },
+  });
+  const lastRow = (date: string, stage: string) => {
+    const rows = buildDealCardRows(dealOn(date, stage), stageDisplayMap, ownerNames, "o", {
+      closedStages: closed,
+      now,
+    });
+    return rows[rows.length - 1];
+  };
+
+  test("past date in an open stage is danger, today and later are plain", () => {
+    expect(lastRow("2026-09-19", "Qualification")).toEqual({
+      text: "19.09.2026",
+      tone: "danger",
+    });
+    expect(lastRow("2026-09-20", "Qualification")).toEqual({ text: "20.09.2026" });
+    expect(lastRow("2026-09-21", "Qualification")).toEqual({ text: "21.09.2026" });
+  });
+
+  test("past date in a closed stage stays plain", () => {
+    expect(lastRow("2026-01-01", "Closed Won")).toEqual({ text: "01.01.2026" });
+    expect(isOverdueClosingDate("2026-01-01", true, now)).toBe(false);
   });
 });

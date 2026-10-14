@@ -41,6 +41,15 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
     "true",
   );
 
+  // Table presentation keeps the refresh button; Amount cells carry the TRY code and decimals
+  await expect(list.getByRole("button", { name: "Refresh Custom View" })).toBeVisible();
+  await expect(
+    list
+      .locator("tbody")
+      .getByText(/^TRY\u00A0[\d,]+\.\d{2}$/)
+      .first(),
+  ).toBeVisible();
+
   // Column headers in reference order
   await expect(list.getByRole("columnheader", { name: "Deal Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Amount", exact: true })).toBeVisible();
