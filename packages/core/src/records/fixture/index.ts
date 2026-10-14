@@ -28,8 +28,6 @@ import type {
 } from "../contract";
 import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
-import { calendarDays, historyRow } from "./deals/history";
-import { applyDealRules } from "./deals/rules";
 import {
   automaticMaster,
   duplicateGroups,
@@ -38,19 +36,15 @@ import {
   matchesGlobalSearch,
   pointsAtGroupMember,
 } from "./discovery";
+import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
-interface ModuleStore {
-  records: Map<string, RecordData>;
-  nextId: bigint;
-}
-
 interface FixtureStore {
-  modules: Map<string, ModuleStore>;
+  modules: Map<string, FixtureModuleStore>;
   memberIds: Set<string>;
   deduplicating: Set<string>;
 }
@@ -157,27 +151,15 @@ export function createFixtureRecordService(
       memberIds: new Set(),
       deduplicating: new Set(),
     };
-    const histories = store.modules.get("DealHistory") as ModuleStore;
-    let seedIndex = 0;
-    for (const deal of store.modules.get("Deals")?.records.values() ?? []) {
-      if (seedIndex++ % 10 === 0 && deal.fields.Stage !== "Qualification") {
-        const stamp = new Date(
-          Date.parse(String(deal.fields.Created_Time)) - 2 * 86_400_000,
-        ).toISOString();
-        const fields = { ...deal.fields, Stage: "Qualification", Modified_Time: stamp };
-        applyDealRules(fields, {});
-        const first = historyRow({ id: deal.id, fields }, String(histories.nextId++));
-        first.fields = {
-          ...first.fields,
-          Moved_To__s: deal.fields.Stage ?? null,
-          Stage_Duration_Calendar_Days: 2,
-        };
-        histories.records.set(first.id, first);
-        deal.fields = { ...deal.fields, Created_Time: stamp };
-      }
-      const row = historyRow(deal, String(histories.nextId++));
-      histories.records.set(row.id, row);
-    }
+    const seededModules = store.modules;
+    const seedContext: FixtureHookContext = {
+      moduleStore: (module) => {
+        const moduleState = seededModules.get(module);
+        if (!moduleState) throw new NotFoundError("Module not found.");
+        return moduleState;
+      },
+    };
+    for (const bundle of Object.values(fixtureModules)) bundle.afterSeed?.(seedContext);
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -240,46 +222,7 @@ export function createFixtureRecordService(
   const assertModuleWritable = (module: string) => {
     if (bundleFor(module).readOnly) throw new ForbiddenError("This module is read-only.");
   };
-  const appendHistory = (module: string, record: RecordData, previous?: RecordData) => {
-    if (module !== "Deals" || previous?.fields.Stage === record.fields.Stage) return;
-    const history = moduleStore("DealHistory");
-    const prior = [...history.records.values()]
-      .filter((row) => {
-        const reference = row.fields.Potential_Name;
-        return (
-          typeof reference === "object" &&
-          reference !== null &&
-          "id" in reference &&
-          reference.id === record.id
-        );
-      })
-      .at(-1);
-    if (prior)
-      prior.fields = {
-        ...prior.fields,
-        Moved_To__s: record.fields.Stage ?? null,
-        Stage_Duration_Calendar_Days: calendarDays(
-          String(prior.fields.Modified_Time),
-          String(record.fields.Modified_Time),
-        ),
-      };
-    const row = historyRow(record, String(history.nextId++));
-    history.records.set(row.id, row);
-  };
-  const removeHistory = (ids: readonly string[]) => {
-    const history = moduleStore("DealHistory");
-    for (const row of history.records.values()) {
-      const reference = row.fields.Potential_Name;
-      if (
-        typeof reference === "object" &&
-        reference &&
-        "id" in reference &&
-        typeof reference.id === "string" &&
-        ids.includes(reference.id)
-      )
-        history.records.delete(row.id);
-    }
-  };
+  const hookContext: FixtureHookContext = { moduleStore };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
     if (record.fields.Locked__s === true)
       throw new RecordLockedError(
@@ -334,7 +277,7 @@ export function createFixtureRecordService(
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
     const storedRows = [...moduleStore(module).records.values()];
-    if (module === "DealHistory") storedRows.reverse();
+    bundle.orderRows?.(storedRows);
     return storedRows
       .map((record) => resolveRead(module, record))
       .filter(
@@ -365,7 +308,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: stamp,
       };
-      if (module === "Deals") applyDealRules(fields, input, record.fields);
+      bundle.applyRules?.(fields, input, record.fields);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       overrides.set(record.id, fields);
       return { id: record.id, fields };
@@ -375,7 +318,7 @@ export function createFixtureRecordService(
       projectRecordsWithOverrides(moduleState.records, overrides),
     );
     for (const record of updates) {
-      appendHistory(module, record, moduleState.records.get(record.id));
+      bundle.afterWrite?.(record, moduleState.records.get(record.id), hookContext);
       moduleState.records.set(record.id, record);
     }
   };
@@ -419,7 +362,7 @@ export function createFixtureRecordService(
       Modified_By: ctx.userId,
       Modified_Time: clock().toISOString(),
     };
-    if (module === "Deals") applyDealRules(fields, normalized, master.fields);
+    bundle.applyRules?.(fields, normalized, master.fields);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
@@ -429,9 +372,11 @@ export function createFixtureRecordService(
       for (const record of moduleState.records.values()) {
         if (name === module && removed.has(record.id)) continue;
         if (
-          module === "Deals" &&
-          name === "DealHistory" &&
-          pointsAtGroupMember(record.fields.Potential_Name, module, removed)
+          bundle.mergeRelatedRecords?.some(
+            (relation) =>
+              name === relation.module &&
+              pointsAtGroupMember(record.fields[relation.field], module, removed),
+          )
         )
           continue;
         const source = name === module && record.id === master.id ? updated : record;
@@ -463,9 +408,7 @@ export function createFixtureRecordService(
       projected.set(name, next);
     }
     for (const [name, records] of projected) moduleStore(name).records = records;
-    if (module === "Deals") {
-      appendHistory(module, updated, master);
-    }
+    bundle.afterWrite?.(updated, master, hookContext);
     return copy(resolveRead(module, recordFor(module, master.id)));
   };
   const findDuplicateGroups = async (
@@ -713,7 +656,7 @@ export function createFixtureRecordService(
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
-      if (module === "Deals") applyDealRules(fields, normalized);
+      bundle.applyRules?.(fields, normalized);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const record = { id, fields };
       assertUniqueFieldValues(
@@ -721,7 +664,7 @@ export function createFixtureRecordService(
         projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
       );
       moduleState.records.set(id, record);
-      appendHistory(module, record);
+      bundle.afterWrite?.(record, undefined, hookContext);
       return copy(resolveRead(module, record));
     },
     async update(module, id, input) {
@@ -742,7 +685,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: clock().toISOString(),
       };
-      if (module === "Deals") applyDealRules(fields, normalized, record.fields);
+      bundle.applyRules?.(fields, normalized, record.fields);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const updated = { id, fields };
       const moduleState = moduleStore(module);
@@ -750,7 +693,7 @@ export function createFixtureRecordService(
         bundle.metadata.fields,
         projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
       );
-      appendHistory(module, updated, record);
+      bundle.afterWrite?.(updated, record, hookContext);
       moduleState.records.set(id, updated);
       return copy(resolveRead(module, updated));
     },
@@ -790,7 +733,7 @@ export function createFixtureRecordService(
       for (const record of records) assertWritable(record, "delete");
       const moduleState = moduleStore(module);
       for (const id of ids) moduleState.records.delete(id);
-      if (module === "Deals") removeHistory(ids);
+      bundleFor(module).afterDelete?.(ids, hookContext);
     },
   };
 }
