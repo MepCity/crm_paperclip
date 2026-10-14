@@ -34,7 +34,11 @@ describe("parentActivityCriteria", () => {
   });
   it("uses What_Id for Accounts and Deals", () => {
     for (const m of ["Accounts", "Deals"]) {
-      expect(parentActivityCriteria(m, "7")).toMatchObject({ field: "What_Id" });
+      expect(parentActivityCriteria(m, "7")).toEqual({
+        field: "What_Id",
+        comparator: "equal",
+        value: { module: m, id: "7" },
+      });
     }
   });
   it("returns null elsewhere", () => {
@@ -161,5 +165,81 @@ describe("buildParentActivityCategories", () => {
     })[2]?.rows[0];
     expect(row).toMatchObject({ subject: "Ring", dateText: "2026-02-01 09:30", href: "/call/c1" });
     expect(row?.details).toEqual([{ label: "L:Call_Type", value: "Outbound" }]);
+  });
+
+  it("defaults label names by replacing underscores with spaces when fieldLabel is omitted", () => {
+    const records = {
+      ...empty,
+      task: [
+        rec("1", {
+          Subject: "A",
+          Status: "Open",
+          Priority: "High",
+        }),
+        rec("2", {
+          Subject: "B",
+          Closed_Time: "2026-01-02T10:00:00Z",
+          __closed: true,
+        }),
+      ],
+      call: [
+        rec("c1", {
+          Subject: "C",
+          Call_Type: "Inbound",
+        }),
+      ],
+    };
+    const { fieldLabel: _f, ...noLabelBase } = base;
+    const openTask = buildParentActivityCategories({
+      ...noLabelBase,
+      records,
+      variant: "open",
+    })[0]?.rows[0];
+    expect(openTask?.details).toEqual([
+      { label: "Status", value: "Open" },
+      { label: "Priority", value: "High" },
+    ]);
+
+    const closedTask = buildParentActivityCategories({
+      ...noLabelBase,
+      records,
+      variant: "closed",
+    })[0]?.rows[0];
+    expect(closedTask?.details).toEqual([{ label: "Closed Time", value: "2026-01-02 10:00" }]);
+
+    const callRow = buildParentActivityCategories({
+      ...noLabelBase,
+      records,
+      variant: "open",
+    })[2]?.rows[0];
+    expect(callRow?.details).toEqual([{ label: "Call Type", value: "Inbound" }]);
+  });
+
+  it("handles missing end dates and empty start dates", () => {
+    const meeting = [
+      rec("m_no_end", {
+        Event_Title: "No End",
+        Start_DateTime: "2026-02-01T10:00:00Z",
+      }),
+      rec("m_allday_no_end", {
+        Event_Title: "All Day No End",
+        Start_DateTime: "2026-02-02T00:00:00Z",
+        All_day: true,
+      }),
+      rec("m_no_start", {
+        Event_Title: "No Start",
+      }),
+    ];
+    const rows =
+      buildParentActivityCategories({
+        ...base,
+        records: { ...empty, meeting },
+        variant: "open",
+      })[1]?.rows ?? [];
+    expect(rows.map((r) => [r.subject, r.dateText])).toEqual([
+      ["No End", "2026-02-01 10:00"],
+      ["All Day No End", "2026-02-02"],
+      ["No Start", null],
+    ]);
   });
 });
