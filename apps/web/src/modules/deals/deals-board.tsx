@@ -32,6 +32,13 @@ import { combineCriteriaAnd } from "@/lib/records/filter-criteria";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { DEALS_LIST_CURRENCY_CODE } from "./list-config";
 
+export function buildOptimisticDealCard(card: BoardCard, targetColumn: BoardColumn): BoardCard {
+  return {
+    ...card,
+    rows: card.rows.map((row, index) => (index === 1 ? { ...row, text: targetColumn.label } : row)),
+  };
+}
+
 export const dealsBoardToolbar = (
   <>
     <select
@@ -214,6 +221,7 @@ export function buildDealsBoardProps(input: {
   return {
     columns,
     toolbar: dealsBoardToolbar,
+    buildOptimisticCard: buildOptimisticDealCard,
     createLabel: "Create Deal",
     onCreate: () => {},
     onMove: async () => {},
@@ -472,6 +480,7 @@ export function DealsBoard({
         createLabel="Create Deal"
         onCreate={handleCreate}
         onMove={handleMove}
+        buildOptimisticCard={buildOptimisticDealCard}
         loading={isLoading}
       />
       {pendingMove ? (

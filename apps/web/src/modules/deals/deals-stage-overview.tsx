@@ -14,6 +14,7 @@ import {
   buildStageBarStages,
   buildStageChangeInitialValues,
   isClosedStageKind,
+  mapStageChangeError,
   readStageValue,
   reasonForLossPicklist,
   stageChangeToRecordInput,
@@ -92,7 +93,11 @@ export function DealsStageOverview({
 
   async function submitDialog(values: typeof dialogInitial) {
     setErrorMessage(null);
-    await saveRecord(stageChangeToRecordInput(values));
+    try {
+      await saveRecord(stageChangeToRecordInput(values, module));
+    } catch (error) {
+      throw mapStageChangeError(error);
+    }
   }
 
   const currencyPrefix = homeCurrency.data?.symbol ?? "TL";

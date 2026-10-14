@@ -506,7 +506,7 @@ Temporary table rules (not painted in the Deals capture; Accounts table behaviou
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
 
-### Deals record detail — implemented; QA pending (MEP-412)
+### Deals record detail — done; QA MEP-453 (MEP-412)
 
 | Area | Inventory | Tests |
 | --- | --- | --- |
@@ -523,7 +523,7 @@ Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage
 
 Next Action summary (DD-69) omitted until Activities (M5). Related-card interiors deferred to the lower-half issue.
 
-### Deals record detail — related cards and lower half (MEP-414)
+### Deals record detail — related cards and lower half — done; QA MEP-453 (MEP-414)
 
 | Area | Inventory | Tests |
 | --- | --- | --- |
@@ -536,7 +536,7 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 
 **Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
 
-### Deals create / edit / clone form — implemented; QA pending (MEP-440)
+### Deals create / edit / clone form — done; QA MEP-453 (MEP-440)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -595,7 +595,7 @@ Interim rules:
 - Board card Closing Date in an open stage before today draws in danger colour; today, later dates and closed stages stay plain (DP-80). Deal Name draws in the bold title weight (DP-78).
 - Board presentation draws no refresh button; the table presentation keeps it.
 
-### Deals links in earlier modules — implemented (MEP-415)
+### Deals links in earlier modules — done; QA MEP-453 (MEP-415)
 
 `LIVE_MODULE_KEYS` carries M4, so every control keyed to Deals draws active: the Deals
 card and rail row in Accounts and Contacts, the converted-deal lookup in Leads, and the
@@ -616,6 +616,43 @@ converted-deal link has no fixture to exercise.
 
 ### Module 4 gate
 
+Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier module links; CTO approval) and MEP-451 (Deals list and stage board; CTO approval). Milestone code reviews: MEP-412, MEP-414, MEP-440, MEP-410, MEP-413, MEP-415. Baseline on `main` at `828d552`. Fixes MEP-469 verified on `main`.
+
+**Known gaps**
+
+- **Later-module controls (M5+):** activity, note, attachment, campaign, cases, email, customization, automation, and commerce controls (M5–M12, P2, P3) remain drawn in place and inert when clicked (`data-later-module`).
+- **Contact Roles card (DD-125–DD-132):** table headers, columns, and structural row links are drawn; upper actions (Add Contacts Roles, Edit All, table icon) and rail count badge (DD-58) remain handler-less until the deal–contact role relation service ships.
+- **Accounts Deals card Assign (AD-113):** drawn handler-less, mirroring the Contacts card Assign.
+- **Expected Revenue on form (DF-21):** read-only and uncomputed on client; server-side pipeline formula evaluation deferred.
+- **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
+- **Advanced search stage chip (S-42):** chip renders stage label for display only; no interactive filtering.
+- **Kanban configuration and multi-pipeline:** multi-pipeline selector (DP-96), pipeline management, and Kanban settings (DP-90–DP-95, DP-103) are out of scope for Module 4.
+- **Timeline history:** empty shell walked (seed deal record carries no prior audit events).
+- **Leads converted deal:** generic lookup display resolves the registered Deals route; seeded Leads records carry no converted references.
+
+**Interim rules**
+
+- Stage board is the default presentation (`defaultPresentation: "board"`); view switcher toggles between board and table presentation.
+- Stage board drag-and-drop between open stages updates Stage immediately; dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
+- Verify Details dialog on record detail and board verifies Amount, Closing Date, Stage, and Reason for Loss (for Closed Lost / Lost to Competition) with home currency symbol (`TL`).
+- Column footer `+ Create Deal` button on board sets session prefill (`writeRecordCreatePrefill`) and navigates to the create form with preselected Stage.
+- Form field order for Deal Information follows the seven-row two-column spec layout; Reason For Loss is conditionally rendered under Stage only when the record's stage is in a lost category.
+- Form validation, Save and New, unsaved-changes confirmation, save destination, error copy, and focus order follow the Accounts form patterns.
+- Choose Account and Choose Contact record pickers use the shared modal picker shape; Stage selection automatically updates Probability (%) to metadata default (editable).
+- Stage History card columns and Contact Roles columns follow the spec and capture order from left to right; Stage History rows record every stage transition with duration and timestamp.
+- Accounts and Contacts detail Deals cards use the shared `RelatedDealsCardBody` with All Deals columns, filtered by parent record lookup.
+- Deals table presentation follows Accounts table rules (row selection, Deal Name alphabet menu, pagination, refresh, row menu).
+- Board card Closing Date in an open stage before today draws in danger colour; today, later dates and closed stages stay plain (DP-80). Deal Name draws in the bold title weight (DP-78).
+- Board presentation draws no refresh button; the table presentation keeps it.
+
 **Open items**
 
+- **Board card Deal Name emphasis (DP-78):** resolved in MEP-469 with bold title styling.
+- **Verify Details dialog currency on board (DP-99):** resolved in MEP-469 with home currency symbol.
+- **Overdue Closing Date styling on board (DP-80):** resolved in MEP-469 with danger colour tone.
+- **Table Amount formatting:** resolved in MEP-469 with currency formatting.
+- **Board toolbar refresh button:** resolved in MEP-469 by removing refresh icon from board presentation.
+- Shared component visual differences with Leads / Contacts to be handled in end-of-project polish.
+- Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
 - Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
+

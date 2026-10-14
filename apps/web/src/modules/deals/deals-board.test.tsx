@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildDealCardRows,
   buildDealsBoardProps,
+  buildOptimisticDealCard,
   dealsBoardToolbar,
   formatClosingDate,
   isOverdueClosingDate,
@@ -339,4 +340,30 @@ describe("overdue Closing Date", () => {
     expect(lastRow("2026-01-01", "Closed Won")).toEqual({ text: "01.01.2026" });
     expect(isOverdueClosingDate("2026-01-01", true, now)).toBe(false);
   });
+});
+
+test("supplies the module-owned optimistic builder and preserves non-stage rows", () => {
+  const props = buildDealsBoardProps({
+    records: [],
+    metadata: sampleMetadata,
+    orgSlug: "example",
+    ownerNames: {},
+  });
+  expect(props.buildOptimisticCard).toBe(buildOptimisticDealCard);
+  const card = {
+    id: "example",
+    rows: [
+      { text: "Example", href: "#example" },
+      { text: "Qualification" },
+      { text: "15.10.2026", tone: "danger" as const },
+    ],
+  };
+  const updated = props.buildOptimisticCard?.(card, {
+    key: "next",
+    label: "Next stage",
+    count: 0,
+    cards: [],
+  });
+  expect(updated?.rows).toEqual([card.rows[0], { text: "Next stage" }, card.rows[2]]);
+  expect(card.rows[1]?.text).toBe("Qualification");
 });

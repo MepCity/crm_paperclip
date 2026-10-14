@@ -355,11 +355,12 @@ export function RecordDetailScreen({
         {relatedLists.length > 0 ? (
           <RelatedCardsContainer
             relatedLists={relatedLists}
-            orgSlug={orgSlug}
-            managerRecord={record}
-            recordPath={(id) => paths.record(orgSlug, definition.tab, id)}
-            contactRecordPath={(id) => paths.record(orgSlug, "Contacts", id)}
-            dealRecordPath={(id) => paths.record(orgSlug, "Deals", id)}
+            context={{
+              orgSlug,
+              record,
+              module: moduleApiName,
+              recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
+            }}
           />
         ) : null}
       </InlineEditProvider>
