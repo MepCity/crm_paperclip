@@ -655,6 +655,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - Shared component visual differences with Leads / Contacts to be handled in end-of-project polish.
 - Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
 
+
 ## Module 5 — Activities
 
 ### Tasks list — implemented; QA pending (MEP-459)

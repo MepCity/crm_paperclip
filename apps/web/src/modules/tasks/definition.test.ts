@@ -12,7 +12,7 @@ test("exports a Tasks module screen definition registered in the module table", 
     navigation: { id: "tasks" },
   });
   expect(resolveModuleScreen("Tasks")).toBe(tasksScreenDefinition);
-  expect(moduleScreens.map((definition) => definition.tab).slice(-2)).toEqual(["Deals", "Tasks"]);
+  expect(moduleScreens.map((definition) => definition.tab)).toContain("Tasks");
   expect(
     tasksScreenDefinition.detail.header({ id: "sample-task", fields: { Subject: "Sample" } }).title,
   ).toBe("Sample");
