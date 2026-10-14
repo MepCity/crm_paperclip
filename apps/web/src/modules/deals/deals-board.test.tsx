@@ -304,11 +304,20 @@ describe("buildDealsBoardProps", () => {
 
 describe("dealsBoardToolbar", () => {
   test("renders STAGEVIEW select and settings button", () => {
-    render(<div>{dealsBoardToolbar}</div>);
+    const { container } = render(<div>{dealsBoardToolbar}</div>);
     const select = screen.getByRole("combobox", { name: "Board grouping" }) as HTMLSelectElement;
     expect(select).toBeTruthy();
     expect(select.value).toBe("STAGEVIEW");
+    expect(select.className).toContain("text-sm");
     expect(screen.getByRole("button", { name: "Board settings" })).toBeTruthy();
+
+    const wrapper = select.parentElement;
+    expect(wrapper?.className).toContain("w-[109px]");
+    expect(wrapper?.className).toContain("h-[27px]");
+
+    const caret = container.querySelector("svg");
+    expect(caret?.getAttribute("aria-hidden")).toBe("true");
+    expect(caret?.className.baseVal ?? caret?.getAttribute("class")).toContain("right-3");
   });
 });
 
