@@ -19,6 +19,8 @@ describe("normalizeNoteLinkHref", () => {
     ["\u0001javascript:alert(1)", null],
     ["data:text/html,x", null],
     ["vbscript:x", null],
+    ["//example.com", "https://example.com"],
+    ["//example.com/a?b=1", "https://example.com/a?b=1"],
     ["", null],
     ["   ", null],
   ])("%j -> %j", (input, expected) => {
@@ -43,6 +45,14 @@ describe("NoteLinkPopover", () => {
     expect(onInsert).toHaveBeenCalledWith("https://example.com", "https://example.com");
   });
 
+  it("falls back to href when text contains only whitespace", async () => {
+    const onInsert = vi.fn();
+    render(<NoteLinkPopover initialText="   " onInsert={onInsert} onClose={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText(/URL/), "example.com");
+    await userEvent.click(screen.getByRole("button", { name: "Insert" }));
+    expect(onInsert).toHaveBeenCalledWith("https://example.com", "https://example.com");
+  });
+
   it("Enter inserts with text", async () => {
     const onInsert = vi.fn();
     render(<NoteLinkPopover initialText="Site" onInsert={onInsert} onClose={vi.fn()} />);
@@ -50,13 +60,24 @@ describe("NoteLinkPopover", () => {
     expect(onInsert).toHaveBeenCalledWith("https://example.com", "Site");
   });
 
-  it("shows an error and does not insert for invalid URL", async () => {
+  it("Enter key inside text input triggers insert", async () => {
+    const onInsert = vi.fn();
+    render(<NoteLinkPopover initialText="Site" onInsert={onInsert} onClose={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText(/URL/), "example.com");
+    await userEvent.type(screen.getByLabelText("Text"), "{Enter}");
+    expect(onInsert).toHaveBeenCalledWith("https://example.com", "Site");
+  });
+
+  it("shows an error and does not insert for invalid URL, and clears error on change", async () => {
     const onInsert = vi.fn();
     render(<NoteLinkPopover onInsert={onInsert} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/URL/), "javascript:alert(1)");
     await userEvent.click(screen.getByRole("button", { name: "Insert" }));
     expect(onInsert).not.toHaveBeenCalled();
     expect(screen.getByText("Please enter a valid URL.")).toBeTruthy();
+
+    await userEvent.type(screen.getByLabelText(/URL/), "a");
+    expect(screen.queryByText("Please enter a valid URL.")).toBeNull();
   });
 
   it("Cancel and Esc close", async () => {
