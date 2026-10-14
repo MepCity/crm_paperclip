@@ -675,3 +675,50 @@ picklists, views, deterministic seed and a derived related-target table.
   exported view criteria (Scheduled / Overdue / Completed on
   `Outgoing_Call_Status`); none is encoded. (2) Whether `Who_Id` should allow more
   than Contacts and Leads (export lists only Contacts; Leads kept as for Tasks).
+
+## Activity summaries and system filters (interim)
+
+Parent modules Leads, Contacts, Accounts and Deals accept optional `activityFilter`
+on list/count/summarize. `ActivityFilterValue` uses the five choices
+`without_open_activity`, `overdue`, `without_any_activity`, `activity_done`, and
+`activity_due` with `today`, `tomorrow`, `next_7_days` or `today_overdue`.
+All restrictions combine with saved-view criteria, field filters and search.
+Other modules reject an activity filter with `ValidationError.activityFilter`.
+
+`ListQuery.includeActivitySummary` adds `ListResult.activitySummaries`, keyed only
+by returned-page parent IDs with open activities, independently of field projection.
+Without the flag this field is absent; non-parent modules return an empty map.
+The earliest dated open activity wins; null dates come last; equal timestamps
+(including all-null dates) prefer task, meeting, call. Returned summaries contain
+`kind`, `activityId`, `date` and are detached from storage.
+
+The pure `activityState(module, record, now)` and `activityDate(module, record)`
+helpers are exported from `@crm/core/records/activities`, preserving the existing
+root entry point's runtime export boundary and its unchanged assertions.
+Tasks are open unless Status is Completed. Events are open only when End_DateTime
+is strictly after now. Calls are open only for Outgoing_Call_Status Scheduled or
+Overdue; missing/other values are closed. Dates come from Due_Date,
+Start_DateTime and Call_Start_Time respectively. Unknown modules are closed and
+have no activity date. These are CTO-approved temporary rules; reminders and
+recurrence remain opaque and never execute.
+
+Activities are read from registered Tasks/Events/Calls stores in the bound
+organization. Unregistered modules are ignored. Parent links match both module
+and opaque ID: Who_Id for Leads/Contacts, What_Id for Accounts/Deals.
+Without Open Activity means no open activity; Without Any Activity means none
+of either state; Activity Done means at least one closed activity. Overdue means
+an open date before today's UTC midnight. Today and Tomorrow use half-open UTC
+day intervals. Next 7 days includes tomorrow through today+7, excluding today+8.
+Today + Overdue includes all open dates before tomorrow's midnight. Null dates
+never match date predicates, but still count as activities and may be summarized.
+This uses the same UTC day boundary as existing service date tokens.
+
+Wire requests add `activity_filter` and `include_activity_summary` to the existing
+POST restriction body. Bulk responses add `activity_summaries` with per-ID
+`{kind, activity_id, date}`; requesting summaries preserves an empty 200 envelope
+so its empty map survives transport. Existing requests and empty 204 responses
+are unchanged. These additive wire fields are interim, pending observed evidence.
+
+Open questions: the reference CRM's applied-filter timezone/day boundary and
+multi-activity badge precedence/date selection remain unobserved. The UTC boundary
+and task/meeting/call tie order require confirmation at the module board gate.
