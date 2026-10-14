@@ -104,3 +104,29 @@ test("successful submit closes the dialog", async () => {
   await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   expect(onSubmit).toHaveBeenCalledOnce();
 });
+
+test("shows a general error alert, stays open and recovers on retry", async () => {
+  const onSubmit = vi
+    .fn<(values: unknown) => Promise<void>>()
+    .mockRejectedValueOnce(new Error("Record is locked."))
+    .mockResolvedValueOnce(undefined);
+  const { user, onOpenChange } = setup({ onSubmit });
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Record is locked.");
+  expect(onOpenChange).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+test("shows a field error under the field and unmapped ones as alert", async () => {
+  const onSubmit = vi
+    .fn<(values: unknown) => Promise<void>>()
+    .mockRejectedValueOnce(new StageChangeSubmitError({ amount: "Too low" }))
+    .mockRejectedValueOnce(new StageChangeSubmitError({ reasonForLoss: "Reason needed" }));
+  const { user } = setup({ onSubmit });
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Too low")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Reason needed");
+});

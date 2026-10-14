@@ -1,5 +1,11 @@
+import { ValidationError } from "@crm/core/errors";
 import { expect, test } from "vitest";
-import { buildStageBarStages, stageChangeToRecordInput } from "./deals-stage-utils";
+import { StageChangeSubmitError } from "@/components/records/detail/stage-bar";
+import {
+  buildStageBarStages,
+  mapStageChangeError,
+  stageChangeToRecordInput,
+} from "./deals-stage-utils";
 import { dealField, dealMetadata } from "./test-metadata";
 
 test("maps stage picklist metadata to stage bar kinds", () => {
@@ -29,18 +35,56 @@ test("maps stage picklist metadata to stage bar kinds", () => {
   ]);
 });
 
-test("builds record input from verify dialog values", () => {
-  expect(
-    stageChangeToRecordInput({
-      amount: 100,
-      closingDate: "2026-12-01",
-      stage: "Closed Lost",
-      reasonForLoss: "Price",
+const stageModule = () =>
+  dealMetadata([
+    dealField("Stage", {
+      label: "Stage",
+      dataType: "picklist",
+      picklist: [
+        {
+          displayValue: "Qualification",
+          storedValue: "Qualification",
+          stage: { probability: 10, forecastCategory: "Pipeline", category: "Open" },
+        },
+        {
+          displayValue: "Closed Won",
+          storedValue: "Closed Won",
+          stage: { probability: 100, forecastCategory: "Closed", category: "Closed Won" },
+        },
+        {
+          displayValue: "Closed Lost",
+          storedValue: "Closed Lost",
+          stage: { probability: 0, forecastCategory: "Omitted", category: "Closed Lost" },
+        },
+      ],
     }),
-  ).toEqual({
+  ]);
+
+const base = { amount: 100, closingDate: "2026-12-01", reasonForLoss: "Price" };
+
+test("sends the chosen reason when the target stage is lost", () => {
+  expect(stageChangeToRecordInput({ ...base, stage: "Closed Lost" }, stageModule())).toEqual({
     Stage: "Closed Lost",
     Closing_Date: "2026-12-01",
     Amount: 100,
     Reason_For_Loss__s: "Price",
   });
+});
+
+test("clears the stale reason for won and open target stages", () => {
+  for (const stage of ["Closed Won", "Qualification"]) {
+    expect(
+      stageChangeToRecordInput({ ...base, stage }, stageModule()).Reason_For_Loss__s,
+    ).toBeNull();
+  }
+});
+
+test("maps service validation errors to dialog errors", () => {
+  const mapped = mapStageChangeError(
+    new ValidationError({ Amount: ["Too low"], Other: ["x"] }, "bad"),
+  );
+  expect(mapped).toBeInstanceOf(StageChangeSubmitError);
+  expect((mapped as StageChangeSubmitError).fieldErrors.amount).toBe("Too low");
+  const plain = new Error("x");
+  expect(mapStageChangeError(plain)).toBe(plain);
 });
