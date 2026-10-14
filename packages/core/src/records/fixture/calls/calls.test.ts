@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ValidationError } from "../../../errors";
+import { NotFoundError, ValidationError } from "../../../errors";
 import { type Criteria, lookupTargetModules, type RecordInput } from "../../contract";
 import { describeRecordServiceContract } from "../../contract-suite";
 import { callsRecordServiceContractModule } from "../../contract-suite-module";
@@ -102,12 +102,12 @@ describe("Calls activity foundation", () => {
       );
     }
     await service.delete(module, [target.id]);
-    expect((await service.get("Calls", call.id)).fields[name]).toBeNull();
+    await expect(service.get("Calls", call.id)).rejects.toBeInstanceOf(NotFoundError);
     const listed = await service.list("Calls", {
       ...query,
       filters: { field: "id", comparator: "equal", value: call.id },
     });
-    expect(listed.records[0]?.fields[name]).toBeNull();
+    expect(listed.records).toHaveLength(0);
   });
 
   it("retains allowed unregistered target modules without resolution", async () => {

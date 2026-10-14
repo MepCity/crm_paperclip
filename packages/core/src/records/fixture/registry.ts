@@ -2,6 +2,7 @@ import type { FieldValue, ListView, ModuleMetadata, RecordData } from "../contra
 import { accountsMetadata } from "./accounts/metadata";
 import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
 import { accountsViews } from "./accounts/views";
+import { activityDeleteHook } from "./activity-hooks";
 import { callsHooks } from "./calls/hooks";
 import { callsMetadata } from "./calls/metadata";
 import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
@@ -100,6 +101,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Leads: {
+    afterDelete: activityDeleteHook("Leads"),
     metadata: leadsMetadata,
     views: leadsViews,
     displayNameField: "Full_Name",
@@ -116,6 +118,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     }),
   },
   Accounts: {
+    afterDelete: activityDeleteHook("Accounts"),
     metadata: accountsMetadata,
     views: accountsViews,
     displayNameField: "Account_Name",
@@ -141,6 +144,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   },
   Deals: {
     ...dealsHooks,
+    afterDelete: activityDeleteHook("Deals", dealsHooks.afterDelete),
     metadata: dealsMetadata,
     views: dealsViews,
     displayNameField: "Deal_Name",
@@ -152,6 +156,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Contacts: {
+    afterDelete: activityDeleteHook("Contacts"),
     metadata: contactsMetadata,
     views: contactsViews,
     displayNameField: "Full_Name",
