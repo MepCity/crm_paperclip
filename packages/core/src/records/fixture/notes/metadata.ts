@@ -33,7 +33,7 @@ export const notesMetadataSource = {
       required: false,
       readOnly: false,
       unique: false,
-      massUpdate: false,
+      massUpdate: true,
       views: {
         view: true,
         create: true,
