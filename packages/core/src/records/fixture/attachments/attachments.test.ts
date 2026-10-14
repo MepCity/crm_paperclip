@@ -137,6 +137,12 @@ describe("Attachments record contract", () => {
         Parent_Id: { module: "Contacts", id: parent.id },
       }),
     ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      service.update("Attachments", record.id, {
+        $type: "link",
+        $link_url: "https://example.test/file",
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
     expect(() => lifecycle.publish(record.id, published)).toThrow(ValidationError);
   });
   it.each([

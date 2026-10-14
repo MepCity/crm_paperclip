@@ -50,15 +50,8 @@ export function attachmentUltimateParent(
 export const attachmentsHooks: FixtureModuleHooks = {
   applyRules(fields, _input, previous, ctx) {
     attachmentUltimateParent(fields, ctx);
-    if (
-      previous &&
-      (JSON.stringify(attachmentParent(fields.Parent_Id)) !==
-        JSON.stringify(attachmentParent(previous.Parent_Id)) ||
-        fields.$type !== previous.$type)
-    )
-      throw new ValidationError({
-        Parent_Id: ["The attachment binding and type cannot be changed."],
-      });
+    if (previous && fields.$type !== previous.$type)
+      throw new ValidationError({ $type: ["The attachment storage type cannot be changed."] });
     fields.$type ??= "file";
     if (fields.$type !== "file" && fields.$type !== "link")
       throw new ValidationError({ $type: ["Choose file or link."] });
