@@ -8,7 +8,8 @@ export interface MeetingsParticipant {
 }
 
 export interface MeetingsParticipantsCardProps {
-  participants: readonly MeetingsParticipant[];
+  /** null means a populated opaque array whose item schema is not agreed. */
+  participants: readonly MeetingsParticipant[] | null;
   onAdd?: () => void;
 }
 
@@ -38,7 +39,9 @@ export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsPartic
       </div>
 
       {/* Card body */}
-      {participants.length === 0 ? (
+      {participants === null ? (
+        <div data-part="opaque" className="py-8" />
+      ) : participants.length === 0 ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
           No participant found
         </div>

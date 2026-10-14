@@ -691,3 +691,26 @@ Interim rules: Close Task shows only while the task is open, opens no confirmati
 updates Status through the record service (errors show a toast); Meetings and Calls open
 counts show 0 until those modules are registered; "+ New" and the panel search icons draw
 without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+### Meetings record detail — implemented; QA pending (MEP-507)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Back, tags, Edit, More Options and record navigation | MD-01, MD-04, MD-06–MD-09 | `meetings-detail.spec.ts` |
+| Overview, Timeline and tab-row Last Update | MD-33–MD-35 | `meetings-detail.spec.ts` |
+| Static business card, Related To suffix and Contact Name link | MD-39, MD-45 | `meetings-detail.spec.ts`, `meetings-detail-sections.test.ts` |
+| Participants between business card and details; Add without handler | MD-47, MD-41 | `meetings-detail.spec.ts` |
+| More Options: six rows, separators after Delete and Export Meeting | MD-07.1–MD-07.6 | `meetings-detail.spec.ts`, `meetings-record-more-options.test.ts` |
+| Person, Info/Conversations, Deal Summary and Open Activities | MD-50–MD-52, MD-54–MD-70 | `meetings-detail.spec.ts`; existing Tasks relation panel |
+
+Edit uses the registered shared Meetings form route. Inline editing in detail sections and
+Last Update reuse Deals rules; the business card is static. Add Tags is M6; the existing
+menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
+and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
+counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
+Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+
+Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
+show No participant found; a populated opaque array shows a blank body with heading/Add,
+without interpreting any entries or inventing names. The populated appearance/item schema
+remains an open question for the corresponding research/contract work.
