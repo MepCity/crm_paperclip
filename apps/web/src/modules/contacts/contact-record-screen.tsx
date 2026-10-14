@@ -9,6 +9,7 @@ import {
   type RecordDetailScreenProps,
 } from "@/components/records/detail/record-detail-screen";
 import { useRecordCount, useViews } from "@/lib/api/client/hooks";
+import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import {
   openContactCreateWithReportingTo,
   openDealCreateWithContact,
@@ -33,6 +34,7 @@ function useContactDealsBadge(contactId: string) {
 export function ContactRecordScreen({ definition, ...props }: ContactRecordScreenProps) {
   const router = useRouter();
   const dealsBadge = useContactDealsBadge(props.recordId);
+  const activityBadges = useParentActivityBadges("Contacts", props.recordId);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
   const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -53,9 +55,9 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
           onDealsNew: () =>
             openDealCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
         },
-        { deals: dealsBadge },
+        { deals: dealsBadge, ...activityBadges },
       ),
-    [dealsBadge, props.orgSlug, router],
+    [dealsBadge, activityBadges, props.orgSlug, router],
   );
 
   return (

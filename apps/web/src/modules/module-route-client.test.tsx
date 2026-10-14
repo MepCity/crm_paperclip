@@ -63,7 +63,10 @@ test("detail route renders module-specific Screen when the definition provides o
 });
 
 test("detail route uses shared RecordDetailScreen when Screen is omitted", () => {
-  resolveModuleScreen.mockReturnValue(leadsScreenDefinition);
+  resolveModuleScreen.mockReturnValue({
+    ...leadsScreenDefinition,
+    detail: { ...leadsScreenDefinition.detail, Screen: undefined },
+  });
   render(
     <ModuleRouteClient
       moduleTab="Leads"

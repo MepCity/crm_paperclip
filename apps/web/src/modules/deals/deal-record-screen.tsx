@@ -14,6 +14,7 @@ import { useHomeCurrency, useRecordCount, useUpdateRecord } from "@/lib/api/clie
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { countQueriesPrefix, listQueriesPrefix } from "@/lib/api/client/query-keys";
 import { moduleRecordPath } from "@/lib/crm-paths";
+import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import { DealsContactPersonSummary } from "./deals-contact-person-summary";
 import { createDealsRelatedLists } from "./deals-related-lists";
 import { DealsSalesSummary } from "./deals-sales-summary";
@@ -60,7 +61,11 @@ export function DealRecordScreen({
   const [verifyValues, setVerifyValues] = useState<StageChangeFormValues | null>(null);
   const [verifyLost, setVerifyLost] = useState(false);
 
-  const badges = useMemo(() => ({ stageHistory: historyCount.data ?? 0 }), [historyCount.data]);
+  const activityBadges = useParentActivityBadges("Deals", recordId);
+  const badges = useMemo(
+    () => ({ stageHistory: historyCount.data ?? 0, ...activityBadges }),
+    [historyCount.data, activityBadges],
+  );
 
   const buildRelatedLists = useCallback(() => createDealsRelatedLists({ badges }), [badges]);
 
@@ -140,7 +145,7 @@ export function DealRecordScreen({
             accountRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Accounts", id)}
           />
         ),
-        relatedRailBeforeFooter: <DealsSalesSummary record={record} />,
+        relatedRailAfterFooter: <DealsSalesSummary record={record} />,
       };
     },
     [saveRecord, updateRecord.isPending],

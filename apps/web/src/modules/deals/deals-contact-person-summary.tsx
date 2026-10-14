@@ -46,45 +46,48 @@ export function DealsContactPersonSummary({
     <section
       aria-label="Contact Person summary"
       data-deals-contact-person-summary
-      className="mx-3 mb-3 flex gap-3 rounded-md border border-panel-border bg-surface px-4 py-3"
+      className="mx-3 mb-3 flex flex-col gap-2 rounded-md border border-panel-border bg-surface px-4 py-3"
     >
-      <div
-        data-contact-portrait
-        aria-hidden
-        className="flex size-12 shrink-0 items-center justify-center rounded-md bg-bg text-avatar"
-      >
-        <Icons.recordPortrait className="size-full" />
-      </div>
-      <div className="flex min-w-0 flex-col gap-1">
-        <Link
-          href={contactRecordPath(contact.id)}
-          variant="body"
-          className="text-md font-semibold text-primary hover:underline"
+      <h3 className="text-md font-semibold text-text">Contact Person</h3>
+      <div className="flex gap-3">
+        <div
+          data-contact-portrait
+          aria-hidden
+          className="flex size-12 shrink-0 items-center justify-center rounded-md bg-bg text-avatar"
         >
-          {name}
-        </Link>
-        {accountRef && accountName ? (
-          <p className="text-md text-text">
-            <span className="text-text-muted">at </span>
-            <Link
-              href={accountRecordPath(accountRef.id)}
-              variant="body"
-              className="text-primary hover:underline"
-            >
-              {accountName}
-            </Link>
-          </p>
-        ) : null}
-        {email ? (
+          <Icons.recordPortrait className="size-full" />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
           <Link
-            href={`mailto:${email}`}
+            href={contactRecordPath(contact.id)}
             variant="body"
-            laterModule="M10"
-            className="text-md text-primary hover:underline"
+            className="text-md font-semibold text-primary hover:underline"
           >
-            {email}
+            {name}
           </Link>
-        ) : null}
+          {accountRef && accountName ? (
+            <p className="text-md text-text">
+              <span className="text-text-muted">at </span>
+              <Link
+                href={accountRecordPath(accountRef.id)}
+                variant="body"
+                className="text-primary hover:underline"
+              >
+                {accountName}
+              </Link>
+            </p>
+          ) : null}
+          {email ? (
+            <Link
+              href={`mailto:${email}`}
+              variant="body"
+              laterModule="M10"
+              className="text-md text-primary hover:underline"
+            >
+              {email}
+            </Link>
+          ) : null}
+        </div>
       </div>
     </section>
   );
