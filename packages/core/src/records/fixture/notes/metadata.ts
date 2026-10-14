@@ -1,0 +1,172 @@
+import type { ModuleMetadata } from "../../contract";
+
+/** Confirmed parent modules; activity parents remain a research question. */
+export const notesParentModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+
+/** Sanitized field export; se_module denotes a polymorphic lookup. */
+export const notesMetadataSource = {
+  apiName: "Notes",
+  singularLabel: "Note",
+  pluralLabel: "Notes",
+  businessCardFields: [],
+  fields: [
+    {
+      apiName: "Owner",
+      label: "Note Owner",
+      dataType: "ownerlookup",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: true,
+        edit: true,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "Note_Title",
+      label: "Note Title",
+      dataType: "text",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: true,
+        edit: true,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "Note_Content",
+      label: "Note Content",
+      dataType: "textarea",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: true,
+        edit: true,
+        quickCreate: false,
+      },
+      maxLength: 65535,
+    },
+    {
+      apiName: "Parent_Id",
+      label: "Parent ID",
+      dataType: "lookup",
+      required: true,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: true,
+        edit: true,
+        quickCreate: false,
+      },
+      maxLength: 120,
+      lookup: {
+        module: "se_module",
+      },
+    },
+    {
+      apiName: "Created_By",
+      label: "Created By",
+      dataType: "ownerlookup",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: false,
+        edit: false,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "Modified_By",
+      label: "Modified By",
+      dataType: "ownerlookup",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: false,
+        edit: false,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "Created_Time",
+      label: "Created Time",
+      dataType: "datetime",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: false,
+        edit: false,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "Modified_Time",
+      label: "Modified Time",
+      dataType: "datetime",
+      required: false,
+      readOnly: false,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: false,
+        edit: false,
+        quickCreate: false,
+      },
+      maxLength: 120,
+    },
+    {
+      apiName: "id",
+      label: "Record Id",
+      dataType: "bigint",
+      required: false,
+      readOnly: true,
+      unique: false,
+      massUpdate: false,
+      views: {
+        view: true,
+        create: false,
+        edit: false,
+        quickCreate: false,
+      },
+      maxLength: 18,
+    },
+  ],
+  layout: [],
+} as const;
+
+export const notesMetadata: ModuleMetadata = {
+  ...notesMetadataSource,
+  fields: notesMetadataSource.fields.map((field) => ({
+    ...field,
+    ...(field.apiName === "Parent_Id"
+      ? { lookup: { module: "Leads", modules: notesParentModules } }
+      : {}),
+  })),
+};
