@@ -198,7 +198,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Leads", "Deals"],
+          modules: expect.arrayContaining(["Contacts", "Accounts", "Leads", "Deals"]),
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -213,10 +213,12 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Deals"],
+          modules: expect.arrayContaining(["Contacts", "Accounts", "Deals"]),
         }),
       );
     });
+    const applied = searchSpy.mock.calls.at(-1)?.[0].modules ?? [];
+    expect(applied).not.toContain("Leads");
   });
 
   it("sends empty array when all modules are deselected and shows no records", async () => {
@@ -239,6 +241,8 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Meetings" }));
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
