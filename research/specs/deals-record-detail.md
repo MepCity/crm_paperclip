@@ -400,6 +400,46 @@ The first fifteen rows follow the observed rail. Checklists and Locking Informat
 
 Stage History, Competitors and Connected Records have painted card evidence in m4c-card-notes, as recorded above. Stage History exposes its upper icon and seven visible or clipped column headers; Competitors exposes New and its empty state; Connected Records exposes its empty state without upper controls. Sales Orders, Contact Roles, Emails and Cases are painted in m4c-card-sales-orders; Invoices upper controls are fully visible in m4c-card-invoices. Contact Roles includes its upper actions and five named columns. Quotes, Checklists, Locking Information and the lower detail fields remain unobserved. Stage History is compared with metadata in the following section; unseen columns and row-end actions are not inferred. No new DD number is assigned to an unobserved control.
 
+## Contact Roles behaviour
+
+MEP-557 (2026-10-14): existing captures re-inspected; no new reference navigation or clicks. The MEP-417 single-click exception explicitly belongs to Hierarchy View and cannot transfer to another control. Add Contacts Roles (DD-125) and Edit All (DD-126) were therefore not opened. No selection, save, settings change or write was attempted. Their interiors and the configured role list remain **not observed**.
+
+### Observed card and documented control inventory
+
+Existing DD-125–DD-136 and their source reconciliation remain authoritative. The following numbered entries distinguish card evidence from documentation; D-CR numbers are documentary references, not newly observed DD controls.
+
+| # | Region | Control / structure | Position / behaviour | Source | Module |
+| --- | --- | --- | --- | --- | --- |
+| DD-125 | Contact Roles card | Add Contacts Roles | First header action; opening not observed. Public help calls the entry Add Contact Roles. | seen (m4c-card-sales-orders, m4c-card-invoices); D-CR1 | M2 |
+| DD-126 | Contact Roles card | Edit All | Second header action; container, fields, footer, selection defaults and validation not observed; no explicit description found in the consulted help/API pages. Do not equate this with the settings page called Edit Contact Roles. | seen (same captures) | M2 |
+| DD-128–DD-132 | Contact Roles card | Contact Name, Account Name, Phone, Email, Role Name | Five named columns. A populated relationship has a visually blank Role Name cell; this establishes a display state, not how it was created. | seen (same captures) | M2; Account Name M3 |
+| D-CR1.1 | Contact Roles Mapping | Contact checkboxes; select all | Help describes selecting individual contacts or all contacts. FAQ scopes candidates to the deal's account; with no associated contacts, none are listed. Exact empty text, search, pagination and container shape not observed. | documented (D-CR1, D-CR2) | M2 |
+| D-CR1.2 | Contact Roles Mapping | Contact Role dropdown | One role selector for each contact in the documented flow. Actual configured options, order, default and blank-option label not observed. | documented (D-CR1) | M2 |
+| D-CR1.3 | Contact Roles Mapping | Save | Final action in the documented association flow; never operated. Cancel/close controls and success/error presentation not established by the consulted text. | documented (D-CR1, D-CR2) | M2 |
+
+### Rules, validation and role configuration
+
+- **Documented:** administrators can manage roles through Setup → Customization → Modules and Fields → Deals → Settings → Contact Roles. The settings page supports adding, deleting, renaming and reordering roles before saving (D-CR1). Settings were not visited. Help examples include Decision Maker, Product Management and Purchasing; these are not an exhaustive or account-specific list.
+- **Documented:** role metadata has a name, identifier and sequence position (D-CR3). Public sample options do not establish the configured list. No direct reference API request was made.
+- **Documented API validation, not UI validation:** the specific-deal association API requires a Contact_Role object and reports missing-role and invalid-role errors, as well as invalid deal/contact and permission errors (D-CR4). This does not prove that the web mapping screen requires a role. A blank card cell cannot prove successful creation without a role or the meaning of `-None-`.
+- **Not observable without a write / not documented in consulted sources:** adding the same contact twice (error, ignored selection or update), saving no selection, saving without a role, Edit All save behaviour, changing a relationship's Deal/Contact, exact validation messages and post-save states. The API identifies an association by deal/contact and describes its result as an update (D-CR4); inferring pair identity is reasonable, but rejecting a second add is not documented by that fact.
+
+### Differences and unresolved checks against MEP-556
+
+1. Its seven-option interim list is **unverified**, not a confirmed match. Documentation establishes configurable roles; it also mentions Decision Maker, absent from that list. This is a documentary difference, not proof of a missing configured option.
+2. Optional role / `-None-` remains an interim UI rule. The blank display is observed; the public association API requires a role object. Keep this API/UI distinction explicit rather than claiming either behaviour was tested.
+3. Duplicate-pair rejection and immutable Deal/Contact remain interim rules. The public API's pair-addressed update does not establish a duplicate-add validation error or the Edit All implementation.
+4. Account-scoped candidates are documented (D-CR2). MEP-556 seeds same-account examples but its stated existence checks alone do not express this picker scope. Cross-account API acceptance is not established here.
+
+### Documentary sources
+
+Public primary help/developer documentation read on 2026-10-14; titles and section keys are neutral references. Source URLs are intentionally excluded under the repository naming rule. No authenticated reference endpoint was called and no example record values or identifiers were retained.
+
+- D-CR1: **Modifying Special Fields**, “Customize Contact Roles”, customization and association steps.
+- D-CR2: **FAQs: Contact Management**, “How to associate multiple contacts with a deal?”.
+- D-CR3: **Get Contact Roles**, public API v8, response metadata definitions.
+- D-CR4: **Add Contact Roles to a Specific Deal**, public API v8, input requirements, errors and update result.
+
 ## Stage History column comparison
 
 Compare [deals.md](deals.md#stage-history-module), metadata only, with m4c-card-notes. Painted columns are Stage, Amount, Probability (%), Expected Revenue, Closing Date, Stage Duration (Calendar Days), then partially visible Modified Time. All seven labels correspond to exported fields, but their screen order differs from exported field order. Modified By exists in offscreen source only and is not asserted as painted. Deal Name, Record Id, Last Activity Time and Moved To are not painted; their metadata presence does not imply a visible column. The rightmost structure and row-end actions remain not observed. No table customization was opened.

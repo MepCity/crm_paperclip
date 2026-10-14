@@ -25,6 +25,11 @@ import {
   encodeInput,
   invalid,
 } from "@/lib/api/wire/codec";
+import {
+  decodeKanbanView,
+  encodeKanbanViewInput,
+  type WireKanbanViewsResponse,
+} from "@/lib/api/wire/kanban-views";
 import { operationPath, operations } from "@/lib/api/wire/operations";
 import type {
   WireBulkResponse,
@@ -373,6 +378,39 @@ export function createHttpRecordService({
         method: operations.changeOwner.method,
         body: { ids, owner: { id: ownerId } },
       });
+    },
+
+    async listKanbanViews(module) {
+      const body = (await request(
+        `${operationPath(operations.kanbanViews)}${queryString({ module })}`,
+      )) as WireKanbanViewsResponse;
+      return body.kanban_views.map(decodeKanbanView);
+    },
+
+    async getKanbanView(module, id) {
+      const path = operationPath(operations.kanbanView, { viewId: id });
+      const body = (await request(`${path}${queryString({ module })}`)) as WireKanbanViewsResponse;
+      return decodeKanbanView(requiredWire(body.kanban_views[0], "Kanban view"));
+    },
+
+    async createKanbanView(module, input) {
+      const body = (await request(
+        `${operationPath(operations.createKanbanView)}${queryString({ module })}`,
+        {
+          method: operations.createKanbanView.method,
+          body: { kanban_views: [encodeKanbanViewInput(input)] },
+        },
+      )) as WireKanbanViewsResponse;
+      return decodeKanbanView(requiredWire(body.kanban_views[0], "Kanban view"));
+    },
+
+    async updateKanbanView(module, id, input) {
+      const path = operationPath(operations.updateKanbanView, { viewId: id });
+      const body = (await request(`${path}${queryString({ module })}`, {
+        method: operations.updateKanbanView.method,
+        body: { kanban_views: [encodeKanbanViewInput(input)] },
+      })) as WireKanbanViewsResponse;
+      return decodeKanbanView(requiredWire(body.kanban_views[0], "Kanban view"));
     },
 
     async listUsers(): Promise<readonly OrgMember[]> {
