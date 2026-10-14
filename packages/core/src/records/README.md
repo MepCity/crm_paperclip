@@ -673,8 +673,8 @@ picklists, views, deterministic seed and a derived related-target table.
   reuses the shared multi-target reference code; no Calls-specific resolver.
 - **Related reads:** "calls of this record" is `list`/`count` with a `Who_Id` or
   `What_Id` equality filter; unit tests cover Leads, Contacts, Accounts, Deals.
-- **Seed:** 250 synthetic calls (ids from 130000000000000000; next id range
-  150000000000000000), every picklist value used, linked to seeded Leads,
+- **Seed:** 250 synthetic calls (ids from 150000000000000000; next id range
+  160000000000000000), every picklist value used, linked to seeded Leads,
   Contacts, Accounts and Deals; other modules' seeds are unchanged.
 - **Interim rules:** the source `${EMPTY}` token is projected to `is_empty`; the
   integer criterion value `"0"` becomes a number; a source column listed

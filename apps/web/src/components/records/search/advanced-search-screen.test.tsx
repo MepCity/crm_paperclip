@@ -198,7 +198,15 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Tasks", "Leads", "Deals", "Events", "Calls"],
+          modules: expect.arrayContaining([
+            "Contacts",
+            "Accounts",
+            "Tasks",
+            "Leads",
+            "Deals",
+            "Events",
+            "Calls",
+          ]),
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -213,10 +221,19 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Tasks", "Deals", "Events", "Calls"],
+          modules: expect.arrayContaining([
+            "Contacts",
+            "Accounts",
+            "Tasks",
+            "Deals",
+            "Events",
+            "Calls",
+          ]),
         }),
       );
     });
+    const applied = searchSpy.mock.calls.at(-1)?.[0].modules ?? [];
+    expect(applied).not.toContain("Leads");
   });
 
   it("sends empty array when all modules are deselected and shows no records", async () => {

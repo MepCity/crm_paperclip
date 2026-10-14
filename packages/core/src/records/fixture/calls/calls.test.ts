@@ -180,4 +180,32 @@ describe("Calls activity foundation", () => {
     expect(new Set(ranges).size).toBe(ranges.length);
     expect(Object.keys(callsPicklists)).toHaveLength(6);
   });
+
+  it("keeps seed id ranges disjoint across every fixture module", () => {
+    const now = new Date("2026-01-15T23:59:00Z");
+    const entries = Object.entries(fixtureModules).map(([name, bundle]) => ({
+      name,
+      next: bundle.initialNextId,
+      ids: bundle.generateSeed(now).map((record) => BigInt(String(record.id))),
+    }));
+    const owner = new Map<bigint, string>();
+    for (const { name, ids } of entries) {
+      for (const id of ids) {
+        expect(owner.has(id), `${name} id ${id} also used by ${owner.get(id)}`).toBe(false);
+        owner.set(id, name);
+      }
+    }
+    for (const { name, next, ids } of entries) {
+      for (const id of ids) expect(id < next, `${name} seed id ${id} >= its next id`).toBe(true);
+      for (const other of entries) {
+        for (let offset = 0n; offset < 1000n; offset += 1n) {
+          const candidate = other.next + offset;
+          expect(
+            owner.has(candidate),
+            `${other.name} next-id window hits ${owner.get(candidate)}`,
+          ).toBe(false);
+        }
+      }
+    }
+  });
 });
