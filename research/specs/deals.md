@@ -577,3 +577,27 @@ Raw screenshots remain in the research workspace; no reference image or customer
 - Export lacks a pipeline definition and derived revenue/duration formula. System changes and write outcomes cannot be established from metadata alone.
 - Connected Records, Competitors and Checklists related-list module assignment remains ?; preserve until lead classification.
 - View selector, Create menu and Actions contents remain not observed after the authorized attempts. Shared menu definitions are reuse candidates, not Deals observations. Review must retain this gap; no further capture or alternative selector was attempted.
+
+## Follow-up — board scroll and Stage evidence (MEP-539)
+
+`m539-board-base` is a fresh painted no-click board capture. The shell, filter controls, board headers and four visible cards reuse the `m4-list-base` inventory above; record values are omitted. One visible column contains two cards, both fully within the available card area. This is not a populated-overflow example. The first visible column also paints two footer controls absent from the earlier painted inventory:
+
+| # | Region | Control | Type | Position | Observed behaviour | Source | Module |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DL-82 | Board column footer | Create Deal | action | first visible column, footer left | Not operated; creating is forbidden | seen (`m539-board-base`) | M4 |
+| DL-83 | Board column footer | Collapse Kanban stage | icon button | same footer, right | Accessible name identifies collapse; not operated because it changes a persisted preference | seen (`m539-board-base`) | M4 |
+
+The corresponding control entries have `data-zcqa=createRecByStage` and `data-zcqa=collapseKanbanStage`; the latter has a column-scoped unique selector. No footer was clicked. Footer visibility on other columns or its hover trigger is not established.
+
+`m539-board-scroll` targets the exported unique **column root** for Needs Analysis. Step evidence reports `not scrollable`: root overflow is `visible`, its content exceeds its client height, and scroll position stays zero. This establishes only that the column root is not the vertical scroll container. It does **not** establish whether an inner card container has its own scrollbar or what happens with many cards. No inner scrolling-container selector was exported. No view, density, column sizing, sorting or filter preference was changed to manufacture overflow.
+
+The Stage values on this board are record text, not evidence of an advanced-search Stage chip action. No advanced-search result was reached in this no-click continuation; whether that chip opens a menu, a filter or an options list remains **not observed**. The documented advanced-search Stage badge in [global-search.md](global-search.md) does not establish its click behaviour.
+
+| Capture | Steps | Safety audit |
+| --- | --- | --- |
+| `m539-board-base` | None | Eight blocked background requests: reminder, grouped counts, Deals list, notification status and four telemetry requests |
+| `m539-board-scroll` | One bounded scroll probe, result `not scrollable` | Five blocked background requests: reminder, grouped counts, Deals list, notification status and telemetry |
+
+Both final screenshots were painted and inspected with the exported controls and metadata. The scroll step image is incomplete and does not establish a painted scroll transition; only metadata establishes the bounded probe result. Blocked list/count requests limit conclusions about record completeness and header counts. These aborted background calls are not evidence of a completed record or preference mutation.
+
+Open questions: a safe unique Amount icon selector (see [deals-form.md](deals-form.md)); an exported inner scroll-container selector and a naturally overflowing column; advanced-search Stage chip behaviour; Account Deals Assign and Contact Roles dialogs. Assign and Edit All remain gated by MEP-562 and were not attempted. No submitted, saved, assigned or edited state was studied.

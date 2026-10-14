@@ -321,3 +321,13 @@ The two saved screenshots were opened as images. m4f-create has visitor triggers
 - AF-45–AF-46 are source-only reuse references: their Accounts placement was not visually established, while the corresponding Deals footer is visible here. Preserve that distinction in implementation and review.
 
 No new board decision is requested. No missing state justifies a record write, preference change or additional unlisted click. Raw reference images remain in the research workspace.
+
+## Follow-up — Amount information icon (MEP-539)
+
+Fresh no-click capture `m539-amount-base-v2` is painted and confirms DF-17 at the right edge of Amount, after the blank currency input. The Create form control inventory above remains the baseline; no additional visible control was established. No field was filled and no form action was operated.
+
+The refreshed `controls.json` exposes the Amount input and hidden popover containers, but contains no entry or unique selector for the painted information icon. The input's `aria-describedby` points to `revenueInfo`; this attribute is not evidence of the icon's hover content. Zero-area popover containers do not establish a visible popup. The screenshot and control export were checked together before any hover was attempted.
+
+Hover/click content, popup placement, dismissal and whether the icon is interactive remain **not observed**. Do not implement tooltip text or a calculator from these attributes alone. A capture-tool follow-up must expose this exact icon safely; no positional or guessed selector was used.
+
+Capture: `m539-amount-base-v2` (screenshot, aria, controls, metadata and network). No clicks, hovers or scrolls; two background requests blocked (reminder and notification status). No record or preference operation was attempted.
