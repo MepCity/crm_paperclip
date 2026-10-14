@@ -2,13 +2,16 @@
 
 import "./filter-panel.css";
 
+import type { ActivityFilterValue } from "@crm/core/records";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { TextField } from "@/components/ui/text-field";
+import { activityFilterToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { ActivityFilterEditor } from "./activity-filter-editor";
 import {
   draftOperator,
   type FilterDraft,
@@ -18,16 +21,19 @@ import {
   isFilterComplete,
 } from "./filter-editor";
 
+export interface FilterItem {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  editor?: FilterEditorDefinition;
+  systemEditor?: "activities";
+  laterModule?: ModuleKey;
+}
+
 export interface FilterGroup {
   id: string;
   label: string;
-  items: {
-    id: string;
-    label: string;
-    disabled?: boolean;
-    editor?: FilterEditorDefinition;
-    laterModule?: ModuleKey;
-  }[];
+  items: FilterItem[];
 }
 
 export interface FilterPanelProps {
@@ -39,11 +45,17 @@ export interface FilterPanelProps {
   onSelectionChange: (selectedIds: string[]) => void;
   /** Applied values used to seed editors when the panel mounts. */
   initialFilters?: readonly AppliedFilter[];
-  onApply?: (filters: AppliedFilter[]) => void;
+  initialActivityFilter?: ActivityFilterValue | null;
+  onApply?: (filters: AppliedFilter[], activityFilter?: ActivityFilterValue | null) => void;
   onClear?: () => void;
   /** Shown above the footer actions when a server-side filter validation fails. */
   applyErrorMessage?: string | null;
 }
+
+const DEFAULT_ACTIVITY_FILTER: ActivityFilterValue = {
+  choice: "activity_due",
+  range: "today_overdue",
+};
 
 export function FilterPanel({
   title,
@@ -53,6 +65,7 @@ export function FilterPanel({
   selectedIds,
   onSelectionChange,
   initialFilters = [],
+  initialActivityFilter = null,
   onApply,
   onClear,
   applyErrorMessage,
@@ -61,6 +74,14 @@ export function FilterPanel({
   const [drafts, setDrafts] = useState<Record<string, FilterDraft>>(() =>
     Object.fromEntries(initialFilters.map(({ itemId, ...draft }) => [itemId, draft])),
   );
+  const [activityDraft, setActivityDraft] = useState<ActivityFilterValue>(
+    () => initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER,
+  );
+
+  useEffect(() => {
+    setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
+  }, [initialActivityFilter]);
+
   // External deselection (including page-level reset) must discard drafts too.
   useEffect(() => {
     setDrafts((current) => {
@@ -68,10 +89,21 @@ export function FilterPanel({
       return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
     });
   }, [selectedIds]);
-  const selectedItems = groups
+
+  const isActivityItem = (item: FilterItem) =>
+    item.systemEditor === "activities" ||
+    item.id === "Activities" ||
+    item.id === "activities" ||
+    (item.label === "Activities" && !item.laterModule && !item.disabled);
+
+  const selectedFieldItems = groups
     .flatMap((group) => group.items)
     .filter((item) => selectedIds.includes(item.id) && item.editor);
-  const completed = selectedItems.every(
+  const selectedActivityItem = groups
+    .flatMap((group) => group.items)
+    .find((item) => selectedIds.includes(item.id) && isActivityItem(item));
+  const hasSelectedItems = selectedFieldItems.length > 0 || Boolean(selectedActivityItem);
+  const completed = selectedFieldItems.every(
     (item) =>
       item.editor &&
       isFilterComplete(item.editor, drafts[item.id] ?? initialFilterDraft(item.editor)),
@@ -144,6 +176,9 @@ export function FilterPanel({
                           else delete next[item.id];
                           return next;
                         });
+                        if (!selected && isActivityItem(item)) {
+                          setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
+                        }
                         onSelectionChange(
                           selected
                             ? [...selectedIds, item.id]
@@ -161,6 +196,13 @@ export function FilterPanel({
                         }
                       />
                     )}
+                    {selectedIds.includes(item.id) && isActivityItem(item) && (
+                      <ActivityFilterEditor
+                        className="filter-editor"
+                        value={activityDraft}
+                        onChange={setActivityDraft}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -168,7 +210,7 @@ export function FilterPanel({
           </div>
         ))}
       </div>
-      {selectedItems.length > 0 && (
+      {hasSelectedItems && (
         <div className="filter-panel-actions flex flex-col gap-2 py-3">
           {applyErrorMessage ? (
             <p className="m-0 text-sm text-danger" role="alert">
@@ -182,30 +224,32 @@ export function FilterPanel({
                 isDisabled={!completed}
                 onPress={() => {
                   if (!completed) return;
-                  onApply(
-                    selectedItems.flatMap((item) => {
-                      if (!item.editor) return [];
-                      const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
-                      const control = draftOperator(item.editor, draft)?.control;
-                      const applied: {
-                        itemId: string;
-                        operatorId: typeof draft.operatorId;
-                        value: typeof draft.value;
-                        daysUnit?: typeof draft.daysUnit;
-                      } = {
-                        itemId: item.id,
-                        operatorId: draft.operatorId,
-                        value:
-                          control === "none"
-                            ? null
-                            : typeof draft.value === "string"
-                              ? draft.value.trim()
-                              : draft.value,
-                      };
-                      if (control === "days") applied.daysUnit = draft.daysUnit ?? "days";
-                      return [applied];
-                    }),
-                  );
+                  const applied = selectedFieldItems.flatMap((item) => {
+                    if (!item.editor) return [];
+                    const draft = drafts[item.id] ?? initialFilterDraft(item.editor);
+                    const control = draftOperator(item.editor, draft)?.control;
+                    const appliedFilter: {
+                      itemId: string;
+                      operatorId: typeof draft.operatorId;
+                      value: typeof draft.value;
+                      daysUnit?: typeof draft.daysUnit;
+                    } = {
+                      itemId: item.id,
+                      operatorId: draft.operatorId,
+                      value:
+                        control === "none"
+                          ? null
+                          : typeof draft.value === "string"
+                            ? draft.value.trim()
+                            : draft.value,
+                    };
+                    if (control === "days") appliedFilter.daysUnit = draft.daysUnit ?? "days";
+                    return [appliedFilter];
+                  });
+                  const appliedActivity = selectedActivityItem
+                    ? activityFilterToCriteria(activityDraft)
+                    : null;
+                  onApply(applied, appliedActivity);
                 }}
               >
                 Apply Filter
@@ -216,6 +260,7 @@ export function FilterPanel({
               variant="secondary"
               onPress={() => {
                 setDrafts({});
+                setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
                 onSelectionChange([]);
                 onClear?.();
               }}

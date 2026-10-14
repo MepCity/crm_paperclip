@@ -2,6 +2,7 @@
 
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type {
+  ActivityFilterValue,
   Criteria,
   FieldDefinition,
   ListResult,
@@ -184,6 +185,9 @@ function ModuleListScreenLoaded({
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilter[]>([]);
   const [appliedCriteria, setAppliedCriteria] = useState<Criteria | undefined>(undefined);
+  const [appliedActivityFilter, setAppliedActivityFilter] = useState<ActivityFilterValue | null>(
+    null,
+  );
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
@@ -219,6 +223,7 @@ function ModuleListScreenLoaded({
     priorViewId.current = viewId;
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
+    setAppliedActivityFilter(null);
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -235,16 +240,27 @@ function ModuleListScreenLoaded({
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
-    if (!listCriteria) return base;
-    return { ...base, filters: listCriteria };
-  }, [columnApiNames, eligibleSortFields, listCriteria, searchState, viewId]);
+    return {
+      ...base,
+      ...(listCriteria ? { filters: listCriteria } : {}),
+      ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+    };
+  }, [
+    appliedActivityFilter,
+    columnApiNames,
+    eligibleSortFields,
+    listCriteria,
+    searchState,
+    viewId,
+  ]);
 
   const countQuery = useMemo(
     () => ({
       viewId,
       ...(listCriteria ? { filters: listCriteria } : {}),
+      ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
     }),
-    [listCriteria, viewId],
+    [appliedActivityFilter, listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -287,7 +303,7 @@ function ModuleListScreenLoaded({
   const serverFilterMessage = useMemo(() => {
     const error = listValidationError ?? countValidationError;
     if (!error) return null;
-    const messages = error.fieldErrors.filters;
+    const messages = error.fieldErrors.filters ?? error.fieldErrors.activityFilter;
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
 
@@ -420,7 +436,10 @@ function ModuleListScreenLoaded({
     refreshModuleListData();
   }
 
-  function applyPanelFilters(applied: AppliedFilter[]) {
+  function applyPanelFilters(
+    applied: AppliedFilter[],
+    activityFilter?: ActivityFilterValue | null,
+  ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
       operatorId: row.operatorId,
@@ -430,6 +449,7 @@ function ModuleListScreenLoaded({
     setFilterApplyError(null);
     setAppliedFilters(applied);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
+    setAppliedActivityFilter(activityFilter ?? null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -439,6 +459,7 @@ function ModuleListScreenLoaded({
   function clearPanelFilters() {
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
+    setAppliedActivityFilter(null);
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -448,13 +469,13 @@ function ModuleListScreenLoaded({
 
   function handleFilterSelectionChange(next: string[]) {
     setFilterSelection(next);
-    if (next.length === 0 && appliedCriteria !== undefined) {
+    if (next.length === 0 && (appliedCriteria !== undefined || appliedActivityFilter !== null)) {
       clearPanelFilters();
     }
   }
 
   function handleFilterClear() {
-    if (appliedCriteria === undefined) {
+    if (appliedCriteria === undefined && appliedActivityFilter === null) {
       clearPanelFilters();
     }
   }
@@ -501,8 +522,9 @@ function ModuleListScreenLoaded({
 
   const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
   const countSettled = count.isSuccess && !count.isFetching;
+  const hasActiveFilter = listCriteria !== undefined || appliedActivityFilter !== null;
   const awaitingFilteredPair =
-    listCriteria !== undefined && !(listSettled && countSettled && !hasFilterValidationError);
+    hasActiveFilter && !(listSettled && countSettled && !hasFilterValidationError);
   const useAcceptedSnapshot =
     acceptedListSnapshot !== null && (hasFilterValidationError || awaitingFilteredPair);
 
@@ -646,7 +668,9 @@ function ModuleListScreenLoaded({
           }
           filterOpen={filterOpen}
           onFilterChange={(open) => {
-            setFilterSelection(appliedFilters.map((filter) => filter.itemId));
+            const activeIds = appliedFilters.map((filter) => filter.itemId);
+            if (appliedActivityFilter) activeIds.push("Activities");
+            setFilterSelection(activeIds);
             setFilterOpen(open);
           }}
           onRefresh={presentation === "board" ? undefined : refreshView}
@@ -732,6 +756,7 @@ function ModuleListScreenLoaded({
             searchPlaceholder="Search"
             groups={config.filterGroups}
             initialFilters={appliedFilters}
+            initialActivityFilter={appliedActivityFilter}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
