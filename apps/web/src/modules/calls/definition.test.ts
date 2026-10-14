@@ -16,7 +16,7 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
     singularLabel: "Call",
     pluralLabel: "Calls",
     pageTitle: "Calls",
-    navigation: { id: "calls" },
+    navigation: { id: "calls", group: "activities" },
     listCurrencyCode: "TRY",
   });
 
@@ -30,8 +30,7 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
   expect(callsScreenDefinition.detail.timeline.subtabs).toBeDefined();
   expect(callsScreenDefinition.detail.timeline.normalizeEventKind).toBeDefined();
 
-  // Registry contract: Calls must NOT be registered in registry.ts in this task
-  expect(resolveModuleScreen("Calls")).toBeUndefined();
-  expect(moduleScreens.some((definition) => definition.apiName === "Calls")).toBe(false);
-  expect(moduleScreens.some((definition) => definition.tab === "Calls")).toBe(false);
+  expect(resolveModuleScreen("Calls")).toBe(callsScreenDefinition);
+  expect(moduleScreens.some((definition) => definition.apiName === "Calls")).toBe(true);
+  expect(moduleScreens.some((definition) => definition.tab === "Calls")).toBe(true);
 });

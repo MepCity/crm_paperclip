@@ -1,8 +1,10 @@
 import type { ModuleKey } from "@/components/ui/later-module";
 import { accountsScreenDefinition } from "./accounts/definition";
+import { callsScreenDefinition } from "./calls/definition";
 import { contactsScreenDefinition } from "./contacts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
+import { meetingsScreenDefinition } from "./meetings/definition";
 import { tasksScreenDefinition } from "./tasks/definition";
 import type { ModuleScreenDefinition } from "./types";
 
@@ -13,6 +15,7 @@ export const MODULE_LATER_KEYS: Readonly<Record<string, ModuleKey>> = {
   Activities: "M5",
   Tasks: "M5",
   Meetings: "M5",
+  Events: "M5",
   Calls: "M5",
   Campaigns: "M7",
   Cases: "M8",
@@ -43,6 +46,8 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
       accountsScreenDefinition,
       dealsScreenDefinition,
       tasksScreenDefinition,
+      meetingsScreenDefinition,
+      callsScreenDefinition,
     ];
   }
   return cachedModuleScreens;
