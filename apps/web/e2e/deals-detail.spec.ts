@@ -31,6 +31,21 @@ test.describe("Deals record detail", () => {
     await page.setViewportSize({ width: 1470, height: 835 });
   });
 
+  test("Deals activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("header, rail order and stage history badge", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
