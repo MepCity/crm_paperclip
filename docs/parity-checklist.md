@@ -676,3 +676,62 @@ Related To and Contact Name link to the related record when the target module is
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
 
+
+
+## Module 5 — Activities
+
+### Tasks list — implemented; QA pending (MEP-459)
+
+Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Shell entry | SH-19, SH-20 (Tasks is the first entry of the Activities group) | `tasks-list.spec.ts`, `definition.test.ts` |
+| View strip and menu | TL-01, TL-02, TL-02.1 – TL-02.20 (Search filters rows by name; interim) | `tasks-list.spec.ts`, `view-tab-strip.test.tsx` |
+| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; TL-13 `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Actions | TL-14, TL-14.1 – TL-14.6 (Manage Tags and Export Tasks `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Filter panel | TL-15 – TL-26, TL-53 – TL-61, TL-66 (no Activities, Latest Email Status, Cadences, related-modules group) | `tasks-list.spec.ts`, `list-filters.test.ts` |
+| Table and footer | TL-33 – TL-42, TL-62 – TL-64, TL-48 – TL-51 (TL-33 `laterModule` M11) | `tasks-list.spec.ts` |
+
+Interim rules: selection bar, page size, empty state and row actions follow Accounts;
+Related To and Contact Name link to the related record when the target module is registered.
+The detail and form parts of the definition borrow module-neutral Deals builders until the
+Tasks detail and form tasks land.
+
+
+### Tasks record detail — implemented; QA pending (MEP-473)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Header, tags, Close Task, Edit, More Options | TD-01, TD-04–TD-09 | `tasks-detail.spec.ts` |
+| Tabs, last update, Timeline empty state | TD-33–TD-35 | `tasks-detail.spec.ts` |
+| Business card, detail sections, Related To suffix | TD-36–TD-46 | `tasks-detail.spec.ts`, `tasks-detail-sections.test.ts` |
+| Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
+
+Interim rules: Close Task shows only while the task is open, opens no confirmation and
+updates Status through the record service (errors show a toast); Meetings and Calls open
+counts show 0 until those modules are registered; "+ New" and the panel search icons draw
+without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+### Meetings record detail — implemented; QA pending (MEP-507)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Back, tags, Edit, More Options and record navigation | MD-01, MD-04, MD-06–MD-09 | `meetings-detail.spec.ts` |
+| Overview, Timeline and tab-row Last Update | MD-33–MD-35 | `meetings-detail.spec.ts` |
+| Static business card, Related To suffix and Contact Name link | MD-39, MD-45 | `meetings-detail.spec.ts`, `meetings-detail-sections.test.ts` |
+| Participants between business card and details; Add without handler | MD-47, MD-41 | `meetings-detail.spec.ts` |
+| More Options: six rows, separators after Delete and Export Meeting | MD-07.1–MD-07.6 | `meetings-detail.spec.ts`, `meetings-record-more-options.test.ts` |
+| Person, Info/Conversations, Deal Summary and Open Activities | MD-50–MD-52, MD-54–MD-70 | `meetings-detail.spec.ts`; existing Tasks relation panel |
+
+Edit uses the registered shared Meetings form route. Inline editing in detail sections and
+Last Update reuse Deals rules; the business card is static. Add Tags is M6; the existing
+menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
+and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
+counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
+Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+
+Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
+show No participant found; a populated opaque array shows a blank body with heading/Add,
+without interpreting any entries or inventing names. The populated appearance/item schema
+remains an open question for the corresponding research/contract work.

@@ -85,12 +85,14 @@ export function useRecordList(
 export function useRecordCount(
   module: ModuleApiName,
   query: Pick<ListQuery, "viewId" | "filters" | "search">,
+  options?: { enabled?: boolean },
 ) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.count(orgSlug, module, query),
     queryFn: () => service.count(module, query),
+    enabled: options?.enabled ?? true,
   });
 }
 

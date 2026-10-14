@@ -206,6 +206,7 @@ export interface ModuleScreenDefinition {
     hasPortrait?: boolean;
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    portraitAppearance?: "tile" | "inline";
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
