@@ -27,13 +27,23 @@ export function generateFixtureEvents(
       id,
       Event_Title: `Meeting ${String(index + 1).padStart(3, "0")}`,
       Start_DateTime: start.toISOString(),
-      End_DateTime: new Date(start.getTime() + (allDay ? 86_400_000 : 3_600_000)).toISOString(),
+      End_DateTime: new Date(start.getTime() + (allDay ? 86_399_000 : 3_600_000)).toISOString(),
       All_day: allDay,
       Meeting_Venue__s: venues[(index + seed) % venues.length]?.storedValue ?? "In-office",
       Created_Time: stamp,
       Modified_Time: stamp,
-      // Synthetic opaque examples only; these keys propose no participant/reminder schema.
-      Participants: index % 2 ? [] : [{ example: [index, null, true] }],
+      // Synthetic participants; reminder payloads remain opaque.
+      Participants:
+        index % 2
+          ? []
+          : [
+              {
+                type: "email",
+                id: null,
+                name: "Synthetic Guest",
+                email: `guest${index}@example.test`,
+              },
+            ],
       Remind_At: index % 3 ? [] : [{ example: "synthetic" }],
       Remind_Participants: index % 5 ? [] : [null, { example: false }],
     });

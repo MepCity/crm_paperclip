@@ -84,7 +84,8 @@ describe.each(["Plain", "Hooked"])("%s fixture lifecycle", (module) => {
         expect(hooks.applyRules).toHaveBeenCalledWith(
           record.fields,
           input,
-          ...(operation === "create" ? [] : [first.fields]),
+          operation === "create" ? undefined : first.fields,
+          { moduleStore: expect.any(Function) },
         );
         expect(hooks.afterWrite).toHaveBeenCalledWith(
           record,
