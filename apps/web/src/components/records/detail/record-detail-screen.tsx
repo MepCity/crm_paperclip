@@ -15,7 +15,7 @@ import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
-import { RecordHeader } from "@/components/records/detail/record-header";
+import { type RecordCommand, RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
@@ -71,6 +71,10 @@ export type RecordDetailSlots = {
   overviewPrefix?: ReactNode;
   contactSummary?: ReactNode;
   relatedRailAfterFooter?: ReactNode;
+  /** Right-hand panel; when present the related list rail and its toggle are not drawn. */
+  sidePanel?: ReactNode;
+  /** Commands drawn before Edit in the record header. */
+  headerCommands?: readonly RecordCommand[];
 };
 
 export type RecordDetailScreenProps = {
@@ -463,12 +467,14 @@ export function RecordDetailScreen({
             subtitleLaterModule={subtitleLaterModule}
             subtitleHref={subtitleHref}
             portraitIcon={portraitIcon ?? rules.portraitIcon}
+            portraitAppearance={rules.portraitAppearance}
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
             commands={[
               ...(rules.headerCommands ?? []),
+              ...(detailSlots?.headerCommands ?? []),
               {
                 id: "edit",
                 label: "Edit",
@@ -504,9 +510,12 @@ export function RecordDetailScreen({
           { id: "overview", label: "Overview", content: overview },
           { id: "timeline", label: "Timeline", content: timeline },
         ]}
-        relatedRailVisible={railVisible}
+        relatedRailVisible={railVisible && !detailSlots?.sidePanel}
+        sidePanel={detailSlots?.sidePanel}
         railControl={
-          <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+          detailSlots?.sidePanel ? undefined : (
+            <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+          )
         }
         scrollTopLabel="Scroll To Top"
       />

@@ -1,33 +1,24 @@
-import type { RecordData } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
-import {
-  buildDealsBusinessCardFields,
-  buildDealsDetailSections,
-} from "../deals/deals-detail-sections";
 import { isDealInlineEditable } from "../deals/deals-inline-edit";
 import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
-import { buildDealsRecordMoreMenuGroups } from "../deals/deals-record-more-options";
-import {
-  DEALS_TIMELINE_EMPTY_EVENTS,
-  DEALS_TIMELINE_MODULE_OPTIONS,
-  DEALS_TIMELINE_SOURCE_OPTIONS,
-  DEALS_TIMELINE_SUBTABS,
-  normalizeDealsEventKind,
-} from "../deals/deals-timeline";
 import type { ModuleScreenDefinition } from "../types";
 import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
-
-/**
- * Interim: the Tasks detail and form research is still open, so the detail screen and
- * form below borrow the module-neutral Deals builders (layout-driven sections, shared
- * inline edit, last-update label, empty timeline, More Options). Only the header title
- * is Tasks-specific.
- */
-function tasksRecordHeaderIdentity(record: RecordData) {
-  const title = typeof record.fields.Subject === "string" ? record.fields.Subject : "";
-  return { title, hasPortrait: false, recordNavigation: false };
-}
+import { TaskRecordScreen } from "./task-record-screen";
+import { buildTasksBusinessCardFields, buildTasksDetailSections } from "./tasks-detail-sections";
+import { tasksRecordHeaderIdentity } from "./tasks-record-header";
+import {
+  buildTasksRecordMoreMenuGroups,
+  TASKS_DELETE_CONFIRM_MESSAGE,
+  TASKS_DELETE_CONFIRM_TITLE,
+} from "./tasks-record-more-options";
+import {
+  normalizeTasksEventKind,
+  TASKS_TIMELINE_EMPTY_EVENTS,
+  TASKS_TIMELINE_MODULE_OPTIONS,
+  TASKS_TIMELINE_SOURCE_OPTIONS,
+  TASKS_TIMELINE_SUBTABS,
+} from "./tasks-timeline";
 
 export const tasksScreenDefinition: ModuleScreenDefinition = {
   apiName: "Tasks",
@@ -46,21 +37,25 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   },
   detail: {
     header: tasksRecordHeaderIdentity,
-    hasPortrait: false,
-    recordNavigation: false,
-    businessCard: buildDealsBusinessCardFields,
-    sections: buildDealsDetailSections,
+    hasPortrait: true,
+    portraitIcon: Icons.check,
+    portraitAppearance: "inline",
+    lastUpdatePlacement: "tab-row",
+    addTags: { label: "Add Tags", laterModule: "M6" },
+    businessCard: buildTasksBusinessCardFields,
+    sections: buildTasksDetailSections,
     inlineEditable: isDealInlineEditable,
     lastUpdate: formatDealsLastUpdateLabel,
-    moreOptions: buildDealsRecordMoreMenuGroups,
-    deleteTitle: "Delete Task",
-    deleteMessage: "Are you sure you want to delete this Task?",
+    moreOptions: buildTasksRecordMoreMenuGroups,
+    deleteTitle: TASKS_DELETE_CONFIRM_TITLE,
+    deleteMessage: TASKS_DELETE_CONFIRM_MESSAGE,
     timeline: {
-      subtabs: DEALS_TIMELINE_SUBTABS,
-      modules: DEALS_TIMELINE_MODULE_OPTIONS,
-      sources: DEALS_TIMELINE_SOURCE_OPTIONS,
-      events: DEALS_TIMELINE_EMPTY_EVENTS,
-      normalizeEventKind: normalizeDealsEventKind,
+      subtabs: TASKS_TIMELINE_SUBTABS,
+      modules: TASKS_TIMELINE_MODULE_OPTIONS,
+      sources: TASKS_TIMELINE_SOURCE_OPTIONS,
+      events: TASKS_TIMELINE_EMPTY_EVENTS,
+      normalizeEventKind: normalizeTasksEventKind,
     },
+    Screen: TaskRecordScreen,
   },
 };
