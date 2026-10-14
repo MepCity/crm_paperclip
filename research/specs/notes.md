@@ -14,7 +14,14 @@ establish the collapsed card and existing note history. New captures on
 reported `ERR_HTTP2_PROTOCOL_ERROR`. A subsequent single capture with a
 12-second wait also failed: twelve frontend GET requests reported
 `ERR_CONNECTION_CLOSED`, and the screenshot still showed Loading. No controls
-were clicked in that retry. Access recovery has not been verified.
+were clicked in that retry. The earlier frontend-network blocker was reported resolved. A subsequent
+2026-10-14 continuation could not acquire the shared browser: the capture
+tool fell back to launching the occupied profile and failed with
+`Failed to create a ProcessSingleton`. The local CDP version endpoint
+responded, but that alone does not establish a working capture connection.
+The machine load average was approximately 94 during this attempt.
+No reference control was reached or clicked; no completed capture or new
+product evidence was produced. Do not treat this as a Notes product error.
 The application remained at Loading;
 requested record and Notes clicks matched no controls and were skipped.
 The open composer and note action menu still require successful read-only
@@ -270,8 +277,10 @@ all three new attempts applied no clicks. The shared browser window was not clos
 
 ## Open questions and completion checklist
 
-1. Research access: frontend assets must load before composer/menu evidence can
-   be gathered. CRM Analyst owns retrying read-only capture after recovery.
+1. Research access: restore successful capture acquisition of the existing
+   shared browser before composer/menu evidence can be gathered. The earlier
+   frontend-network issue is resolved; this continuation exposed a separate
+   capture connection failure. CRM Analyst owns retrying after technical recovery.
 2. Capture the open composer in all four parent modules; reconcile every input,
    tool and Save / Cancel control against screenshot and controls.json.
 3. Identify row menu or hover-only actions without positional selectors or
