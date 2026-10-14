@@ -30,7 +30,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Call",
   pluralLabel: "Calls",
   pageTitle: "Calls",
-  navigation: { id: "calls", icon: Icons.phone },
+  navigation: { id: "calls", icon: Icons.phone, group: "activities" },
   list: callsListPageConfig,
   listCurrencyCode: CALLS_LIST_CURRENCY_CODE,
   searchColumns: ["Subject", "Call_Type", "Call_Start_Time", "Call_Duration", "Owner"],
