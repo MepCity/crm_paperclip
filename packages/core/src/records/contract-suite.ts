@@ -648,6 +648,7 @@ export function describeRecordServiceContract(
       const massUpdateSecondFieldKey =
         massUpdateClearablePhone ??
         metadata.fields.find((field) => field.massUpdate && field.apiName !== massField)?.apiName ??
+        metadata.fields.find((field) => field.apiName !== massField)?.apiName ??
         "Second_Mass_Update_Field";
       await validation(
         service.massUpdate(moduleApiName, ids, {
@@ -2005,6 +2006,105 @@ export function describeActivityReadContract(name: string, makeService: Contract
       Deals: { Deal_Name: "Activity Example", Stage: "Qualification", Closing_Date: "2026-10-30" },
     };
     for (const [module, input] of Object.entries(parentInputs)) {
+      it(`${module}: includes registered meetings in filters and summary selection`, async () => {
+        const service = await makeService(context(), {
+          now: () => new Date("2026-10-14T12:00:00Z"),
+        });
+        const view = required((await service.listViews(module)).find((item) => item.isDefault));
+        const parentInput =
+          module === "Deals"
+            ? {
+                ...input,
+                Account_Name: {
+                  module: "Accounts",
+                  id: (await service.create("Accounts", { Account_Name: "Meeting Account" })).id,
+                },
+              }
+            : input;
+        const parents: RecordData[] = [];
+        for (let i = 0; i < 7; i++) parents.push(await service.create(module, parentInput));
+        const link = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
+        const dates = [
+          "2026-10-13",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-21",
+          "2026-10-22",
+          "2026-10-13",
+        ];
+        const meetings: RecordData[] = [];
+        for (const [i, date] of dates.entries()) {
+          meetings.push(
+            await service.create("Events", {
+              Event_Title: "Synthetic meeting",
+              Meeting_Venue__s: "In-office",
+              Start_DateTime: `${date}T00:00:00Z`,
+              End_DateTime: i === 5 ? "2026-10-14T12:00:00Z" : "2026-10-23T12:00:00Z",
+              [link]: { module, id: required(parents[i]).id },
+            }),
+          );
+        }
+        const filters: import("./contract").Criteria = {
+          group: parents.map((parent) => ({ field: "id", comparator: "equal", value: parent.id })),
+          groupOperator: "or",
+        };
+        const scenarios: [import("./contract").ActivityFilterValue, number[]][] = [
+          [{ choice: "without_open_activity" }, [5, 6]],
+          [{ choice: "overdue" }, [0]],
+          [{ choice: "without_any_activity" }, [6]],
+          [{ choice: "activity_done" }, [5]],
+          [{ choice: "activity_due", range: "today" }, [1]],
+          [{ choice: "activity_due", range: "tomorrow" }, [2]],
+          [{ choice: "activity_due", range: "next_7_days" }, [2, 3]],
+          [{ choice: "activity_due", range: "today_overdue" }, [0, 1]],
+        ];
+        const groupBy = required(
+          (await service.getModule(module)).fields.find((field) => field.dataType === "picklist"),
+        ).apiName;
+        for (const [activityFilter, indexes] of scenarios) {
+          const query = { viewId: view.id, filters, activityFilter };
+          const list = await service.list(module, { ...query, page: 1, perPage: 100 });
+          expect(list.records.map((record) => record.id).sort()).toEqual(
+            indexes.map((i) => required(parents[i]).id).sort(),
+          );
+          expect(await service.count(module, query)).toBe(indexes.length);
+          expect(
+            (await service.summarize(module, { ...query, groupBy })).reduce(
+              (total, group) => total + group.count,
+              0,
+            ),
+          ).toBe(indexes.length);
+        }
+        const read = () =>
+          service.list(module, {
+            viewId: view.id,
+            filters,
+            page: 1,
+            perPage: 100,
+            includeActivitySummary: true,
+          });
+        const initial = await read();
+        for (let i = 0; i < 5; i++)
+          expect(initial.activitySummaries?.[required(parents[i]).id]).toEqual({
+            kind: "meeting",
+            activityId: required(meetings[i]).id,
+            date: `${dates[i]}T00:00:00Z`,
+          });
+        expect(initial.activitySummaries).not.toHaveProperty(required(parents[5]).id);
+        expect(initial.activitySummaries).not.toHaveProperty(required(parents[6]).id);
+        const task = await service.create("Tasks", {
+          Subject: "Same day task",
+          Due_Date: dates[0],
+          [link]: { module, id: required(parents[0]).id },
+        });
+        expect((await read()).activitySummaries?.[required(parents[0]).id]?.activityId).toBe(
+          task.id,
+        );
+        await service.update("Tasks", task.id, { Due_Date: "2026-10-15" });
+        expect((await read()).activitySummaries?.[required(parents[0]).id]?.activityId).toBe(
+          required(meetings[0]).id,
+        );
+      });
       it(`${module}: filters boundary days consistently across list/count/summary`, async () => {
         const service = await makeService(context(), {
           now: () => new Date("2026-10-14T12:00:00Z"),

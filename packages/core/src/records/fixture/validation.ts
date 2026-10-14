@@ -5,11 +5,11 @@ import {
   lookupTargetModules,
   type RecordInput,
 } from "../contract";
-import { isJsonObject } from "../json";
+import { isJsonArray, isJsonObject } from "../json";
 
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
-  if (typeof value === "object" && value !== null)
+  if (typeof value === "object" && value !== null && "id" in value)
     return typeof value.id === "string" ? value.id.length : undefined;
   if (typeof value !== "number") return undefined;
   // Count numeric digits, excluding sign/decimal separator; expand exponent notation.
@@ -30,6 +30,8 @@ export function isValidDateOnly(value: string): boolean {
 
 export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): boolean {
   if (value === null) return true;
+  if (field.acceptsJsonArray) return isJsonArray(value);
+  if (Array.isArray(value)) return false;
   switch (field.dataType) {
     case "ALARM":
     case "RRULE":
@@ -55,6 +57,8 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
     case "multi_module_lookup":
       return (
         typeof value === "object" &&
+        "id" in value &&
+        "module" in value &&
         typeof value.id === "string" &&
         typeof value.module === "string" &&
         (field.dataType !== "lookup" || lookupTargetModules(field).includes(value.module)) &&
@@ -94,6 +98,7 @@ export function validateInput(
       if (value === undefined || !acceptsFieldValue(field, value))
         errors[field.apiName] = ["Invalid field type."];
       else if (
+        !field.acceptsJsonArray &&
         field.dataType !== "ALARM" &&
         field.dataType !== "RRULE" &&
         field.maxLength !== undefined &&

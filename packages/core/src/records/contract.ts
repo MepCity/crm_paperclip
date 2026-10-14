@@ -6,6 +6,7 @@ export type RecordId = string;
 
 /** Data types supported by the module record contract. */
 export type FieldDataType =
+  | "multireminder"
   | "ALARM"
   | "RRULE"
   | "text"
@@ -38,11 +39,19 @@ export type ModuleRecordReference = {
  * and owner IDs use strings. Numeric values use finite numbers; checkboxes use
  * booleans. Lookup references include their module, ID and optional display name. Null is
  * an empty field. ALARM/RRULE carry opaque plain JSON objects; their dataType
- * distinguishes them from references. This representation is transport-independent.
+ * distinguishes them from references. Fields marked acceptsJsonArray carry opaque
+ * readonly JSON arrays, regardless of dataType; unmarked fields reject arrays. This representation is transport-independent.
  */
-export type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+export type JsonValue = string | number | boolean | null | JsonObject | readonly JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
-export type FieldValue = string | number | boolean | ModuleRecordReference | JsonObject | null;
+export type FieldValue =
+  | string
+  | number
+  | boolean
+  | ModuleRecordReference
+  | JsonObject
+  | readonly JsonValue[]
+  | null;
 
 export type StageCategory = "Open" | "Closed Won" | "Closed Lost";
 
@@ -66,6 +75,8 @@ export interface FieldViewFlags {
 }
 
 export interface FieldDefinition {
+  /** Opt-in opaque array values, independent of the exported JSON representation. */
+  acceptsJsonArray?: boolean;
   massUpdate: boolean;
   views: FieldViewFlags;
   apiName: string;
@@ -139,6 +150,7 @@ export type CriteriaPeriod =
 export type CriteriaToken =
   | { token: "CURRENTUSER" }
   | { token: "TODAY" }
+  | { token: "CURRENTTIME" }
   | { token: "NEXT7DAYS" }
   | { token: "TODAYANDOVERDUE" }
   | { token: "AGEINDAYS"; offset: number; unit?: CriteriaUnit }

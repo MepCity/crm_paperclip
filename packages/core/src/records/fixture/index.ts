@@ -26,14 +26,14 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
-import { isJsonObject } from "../json";
+import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import { calendarDays, historyRow } from "./deals/history";
 import { applyDealRules } from "./deals/rules";
 import {
   automaticMaster,
   duplicateGroups,
-  duplicateKey,
+  fieldValueKey,
   isDeferredMergeRejection,
   matchesGlobalSearch,
   pointsAtGroupMember,
@@ -68,6 +68,7 @@ const stringFieldNames = (bundle: FixtureModuleBundle) =>
     bundle.metadata.fields
       .filter(
         (field) =>
+          !field.acceptsJsonArray &&
           ![
             "ALARM",
             "RRULE",
@@ -91,10 +92,10 @@ const normalizeInput = (
   for (const field of fields) {
     const value = input[field.apiName];
     if (
-      (field.dataType === "ALARM" || field.dataType === "RRULE") &&
+      (field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE") &&
       value !== undefined &&
       value !== null &&
-      !isJsonObject(value)
+      !(field.acceptsJsonArray ? isJsonArray(value) : isJsonObject(value))
     )
       throw new ValidationError({ [field.apiName]: ["Invalid field type."] });
   }
@@ -245,7 +246,12 @@ export function createFixtureRecordService(
     const prior = [...history.records.values()]
       .filter((row) => {
         const reference = row.fields.Potential_Name;
-        return typeof reference === "object" && reference?.id === record.id;
+        return (
+          typeof reference === "object" &&
+          reference !== null &&
+          "id" in reference &&
+          reference.id === record.id
+        );
       })
       .at(-1);
     if (prior)
@@ -267,6 +273,7 @@ export function createFixtureRecordService(
       if (
         typeof reference === "object" &&
         reference &&
+        "id" in reference &&
         typeof reference.id === "string" &&
         ids.includes(reference.id)
       )
@@ -435,6 +442,8 @@ export function createFixtureRecordService(
             (field.dataType === "lookup" || field.dataType === "multi_module_lookup") &&
             typeof value === "object" &&
             value !== null &&
+            "module" in value &&
+            "id" in value &&
             value.module === module &&
             typeof value.id === "string" &&
             removed.has(value.id)
@@ -501,13 +510,13 @@ export function createFixtureRecordService(
             if (field.readOnly || bundleFor(module).managedFields.has(field.apiName)) continue;
             const current = master.fields[field.apiName];
             const value =
-              duplicateKey(current) !== null
+              fieldValueKey(current, field) !== null
                 ? current
                 : group.records
                     .map((record) => record.fields[field.apiName])
                     .find(
                       (candidate) =>
-                        duplicateKey(candidate) !== null &&
+                        fieldValueKey(candidate, field) !== null &&
                         !pointsAtGroupMember(candidate, module, memberIds),
                     );
             if (value !== undefined) values[field.apiName] = value;

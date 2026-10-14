@@ -583,9 +583,65 @@ All remaining column order is preserved, and no 21st field is synthesized.
    scenario when the filter marker is ineligible (Tasks uses Priority).
    Add exported field/picklist tables, lookup lifecycle, related reads and generic
    CRUD handler/HTTP round-trip tests.
-6. Events multireminder/jsonarray needs a separately approved field contract on
-   JsonValue; it is outside this Tasks change. Neither activity executes reminder
-   or recurrence rules as part of its fixture definition.
+6. Opt into opaque array values with `acceptsJsonArray` only on approved fields.
+   Events uses the contract below; preserve the exported dataType independently.
+   Neither activity executes reminder or recurrence rules in its fixture.
+
+
+## Events (Meetings)
+
+Events publishes all 34 exported fields, two one-column layout sections, and 11
+saved views with unchanged criteria and column order. API name is Events; labels
+are Meeting / Meetings. Meeting_Venue__s keeps In-office, Client location, Online
+in export order. Meeting_Provider__s has no exported options and publishes an empty
+picklist. Required fields are Event_Title, Meeting_Venue__s, Start_DateTime and
+End_DateTime. Venue is the only exported mass-update field.
+
+`acceptsJsonArray` on FieldDefinition is an acceptance policy, not a copy of
+`json_type`. It returns in metadata (wire `accepts_json_array`) and permits null or
+opaque readonly JSON arrays on Remind_At, Remind_Participants (multireminder), and
+Participants (its exported bigint dataType is preserved). Arrays contain arbitrary
+plain JSON, finite numbers, nested objects/arrays, booleans, strings or null.
+They are detached on writes and every read; equality is deep, type-sensitive,
+ignores object key order and preserves array order. Cycles, sparse arrays,
+accessors and non-JSON members are invalid. These fields cannot be filtered,
+used in criteria, or sorted; unmarked fields keep their current validation.
+HTTP JSON round trips preserve arrays without changing endpoint paths.
+
+CURRENTTIME maps exactly from `${CURRENTTIME}`. The runtime adapter clock resolves
+it anew for each query, using the exact instant without day rounding. Only datetime
+fields and less_than, less_equal, greater_than, greater_equal accept it. Null or
+unparseable dates never match. Four exported completed/upcoming views use it.
+`${THISWEEK}` maps to PERIOD THIS_WEEK; TODAY and CURRENTUSER retain their mapping.
+
+The 250 deterministic synthetic meetings include all-day/timed, past/future,
+empty/populated arrays and direct references to seeded Leads, Contacts, Accounts
+and Deals. The example JSON is invented test data, not a participant/reminder
+schema. Existing module seeds remain unchanged. Null view sorts use id descending.
+Who_Id temporarily allows Contacts/Leads, in eventsWhoTargets. What_Id targets
+come from qualifying `<source module>/{ENTITYID}/Events` rows in the sanitized
+related-target table, excluding Who_Id targets; its default is Accounts. The
+common resolver handles allowed unregistered targets and deleted target reads.
+Read related meetings with list/count on all-meetings and Who_Id or What_Id
+reference equality, including both module and id. No separate open/closed related
+list rule is introduced.
+
+Open questions and temporary decisions:
+
+- The export has four jsonarray fields. Tag is the explicit exception: it keeps
+  text, create/edit disabled, and rejects arrays, as the existing five modules do.
+  A separate common tag decision must reconcile that representation for all modules.
+- Host_or_Participant is absent from the field dictionary. Its source criterion
+  remains published on My Meetings and the existing missing-field evaluation rule
+  matches every record. The fixture view therefore returns all meetings; this is
+  not evidence of reference behavior and does not establish screen parity. No
+  Participants schema or Owner substitution is inferred.
+- Cancelled Meetings exports null criteria; My Cancelled Meetings exports only
+  Owner equality. No cancellation state or transition is invented.
+- End-time saved views do not establish the rule for open/closed related lists;
+  that boundary still requires research. Who_Id Leads routing awaits form research.
+- Reminder delivery, participant invitations/notifications, recurrence generation,
+  check-in transitions, database adapter and screens remain outside this definition.
 
 ## Activity summaries and system filters (interim)
 

@@ -22,6 +22,8 @@ export function resolveRecordReferences(
     if (value == null) continue;
     if (
       typeof value !== "object" ||
+      !("module" in value) ||
+      !("id" in value) ||
       typeof value.module !== "string" ||
       typeof value.id !== "string" ||
       !acceptsFieldValue(field, value)

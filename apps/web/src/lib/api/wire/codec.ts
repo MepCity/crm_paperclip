@@ -14,7 +14,7 @@ import type {
   RecordData,
   RecordInput,
 } from "@crm/core/records";
-import { isJsonObject, lookupTargetModules } from "@crm/core/records";
+import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import type {
   WireCriteria,
@@ -78,6 +78,10 @@ function encodeValue(
       ...referenceName(ref, field.apiName),
     };
   }
+  if (field.acceptsJsonArray) {
+    if (!isJsonArray(value)) invalid(field.apiName);
+    return structuredClone(value);
+  }
   if (field.dataType === "ALARM" || field.dataType === "RRULE") {
     if (!isJsonObject(value)) invalid(field.apiName);
   }
@@ -102,6 +106,10 @@ function decodeValue(field: FieldDefinition, value: unknown): FieldValue {
     if (typeof module !== "string" || !lookupTargetModules(field).includes(module))
       invalid(field.apiName);
     return { module, id: ref.id, ...referenceName(ref, field.apiName) };
+  }
+  if (field.acceptsJsonArray) {
+    if (!isJsonArray(value)) invalid(field.apiName);
+    return structuredClone(value);
   }
   if (field.dataType === "ALARM" || field.dataType === "RRULE") {
     if (!isJsonObject(value)) invalid(field.apiName);
@@ -162,6 +170,7 @@ export function encodeField(field: FieldDefinition): WireField {
     api_name: field.apiName,
     field_label: field.label,
     data_type: field.dataType,
+    ...(field.acceptsJsonArray === undefined ? {} : { accepts_json_array: field.acceptsJsonArray }),
     system_mandatory: field.required,
     read_only: field.readOnly,
     mass_update: field.massUpdate,
@@ -234,6 +243,9 @@ export function decodeField(field: WireField): FieldDefinition {
     apiName: field.api_name,
     label: field.field_label,
     dataType: field.data_type,
+    ...(field.accepts_json_array === undefined
+      ? {}
+      : { acceptsJsonArray: field.accepts_json_array }),
     required: field.system_mandatory,
     readOnly: field.read_only,
     massUpdate: field.mass_update,
@@ -343,9 +355,10 @@ function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
       case "TODAYANDOVERDUE":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return `\${${token.token}}`;
+      case "CURRENTTIME":
       case "TODAY":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
-        return `\${TODAY}`;
+        return `\${${token.token}}`;
       case "AGEINDAYS":
       case "DUEINDAYS": {
         const keys = Object.keys(value);
@@ -387,6 +400,7 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
   if (typeof value === "string") {
     if (value === `\${NEXT7DAYS}`) return { token: "NEXT7DAYS" };
     if (value === `\${TODAYANDOVERDUE}`) return { token: "TODAYANDOVERDUE" };
+    if (value === `\${CURRENTTIME}`) return { token: "CURRENTTIME" };
     if (value === `\${TODAY}`) return { token: "TODAY" };
     const age = /^\$\{AGEINDAYS\}([+-]\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/.exec(value);
     if (age?.[0] === value && Number.isFinite(Number(age[1])))
