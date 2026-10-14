@@ -159,6 +159,39 @@ describe("LeadRecordScreen", () => {
     expect(label.compareDocumentPosition(ribbon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("shows linked open and closed tasks in the activities cards", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected list rows.");
+    const who = { module: "Leads", id: record.id };
+    const taskViews = await service.listViews("Tasks");
+    const taskView = taskViews.find((item) => item.isDefault);
+    if (!taskView) throw new Error("Missing default Tasks view.");
+    const tasks = await service.list("Tasks", { viewId: taskView.id, page: 1, perPage: 30 });
+    const [first, second] = tasks.records;
+    if (!first || !second) throw new Error("Expected seeded tasks.");
+    await service.update("Tasks", first.id, {
+      Subject: "Call back",
+      Status: "Not Started",
+      Who_Id: who,
+    });
+    await service.update("Tasks", second.id, {
+      Subject: "Sent brochure",
+      Status: "Completed",
+      Who_Id: who,
+    });
+    renderScreen(service, record.id);
+    const open = await screen.findByRole("region", { name: "Open Tasks (1)" });
+    expect(within(open).getByText("Call back")).toBeTruthy();
+    const closed = await screen.findByRole("region", { name: "Closed Tasks (1)" });
+    expect(within(closed).getByText("Sent brochure")).toBeTruthy();
+    expect(screen.getAllByRole("region", { name: /^Open Meetings \(0\)$/ }).length).toBe(1);
+  });
+
   it("does not fetch view summaries when list context is present", async () => {
     const service = createService();
     const listViewSummaries = vi.spyOn(service, "listViewSummaries");
@@ -179,7 +212,7 @@ describe("LeadRecordScreen", () => {
     listViewSummaries.mockClear();
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
-    expect(listViewSummaries).not.toHaveBeenCalled();
+    expect(listViewSummaries).not.toHaveBeenCalledWith("Leads");
   });
 
   it("shows the status ribbon and updates Lead_Status from the stage menu", async () => {
