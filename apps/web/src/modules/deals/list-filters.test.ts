@@ -4,7 +4,7 @@ import { dealField } from "./test-metadata";
 
 test("preserves Deals system filter inventory (DL-17, DL-19, DL-20 - DL-25) in reference order", () => {
   expect(dealsFilterGroups[0]?.items.map((row) => [row.label, row.laterModule])).toEqual([
-    ["Activities", "M5"],
+    ["Activities", undefined],
     ["Latest Email Status", "M10"],
     ["Locked", undefined],
     ["Record Action", undefined],
@@ -13,6 +13,11 @@ test("preserves Deals system filter inventory (DL-17, DL-19, DL-20 - DL-25) in r
     ["Untouched Records", undefined],
     ["Cadences", "P3"],
   ]);
+  expect(dealsFilterGroups[0]?.items[0]).toEqual({
+    id: "Activities",
+    label: "Activities",
+    systemEditor: "activities",
+  });
 
   const systemLabels = dealsFilterGroups[0]?.items.map((row) => row.label) ?? [];
   expect(systemLabels).toContain("Activities");

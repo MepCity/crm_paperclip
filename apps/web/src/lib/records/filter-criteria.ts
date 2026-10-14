@@ -1,4 +1,10 @@
-import type { Comparator, Criteria, CriteriaPeriod, CriteriaValue } from "@crm/core/records";
+import type {
+  ActivityFilterValue,
+  Comparator,
+  Criteria,
+  CriteriaPeriod,
+  CriteriaValue,
+} from "@crm/core/records";
 import { displayDateToIso } from "./filter-date-input";
 import type { AppliedFilterValue, DateUnit, FilterOperatorId } from "./filter-operators";
 
@@ -250,4 +256,23 @@ export function combineCriteriaAnd(parts: readonly (Criteria | undefined)[]): Cr
   );
   if (group.length === 1) return group[0];
   return { groupOperator: "and", group };
+}
+
+/**
+ * Maps the ActivityFilterEditor value to the ActivityFilterValue criteria expected by the service.
+ * Enforces strict criteria shape (e.g. range is only present for activity_due).
+ */
+export function activityFilterToCriteria(
+  value: ActivityFilterValue | null | undefined,
+): ActivityFilterValue | undefined {
+  if (!value) return undefined;
+  if (value.choice === "activity_due") {
+    return {
+      choice: "activity_due",
+      range: value.range ?? "today_overdue",
+    };
+  }
+  return {
+    choice: value.choice,
+  };
 }
