@@ -1,7 +1,9 @@
 import type { ListQuery, RecordService, SearchQuery, SortSpec } from "@crm/core/records";
 import {
+  decodeActivityFilter,
   decodeCriteria,
   decodeInput,
+  encodeActivitySummaries,
   encodeCurrency,
   encodeField,
   encodeInfo,
@@ -67,14 +69,25 @@ async function bodyOf(input: OperationRequest): Promise<unknown> {
 export const MAX_SEARCH_LENGTH = 2000;
 async function restrictions(
   input: OperationRequest,
-): Promise<Pick<ListQuery, "filters" | "search">> {
+): Promise<Pick<ListQuery, "filters" | "search" | "activityFilter" | "includeActivitySummary">> {
   const value = await bodyOf(input);
   if (value === undefined) return {};
   const body = object(value, "filters");
   if (body.search !== undefined && typeof body.search !== "string") invalid("search");
   if (typeof body.search === "string" && body.search.length > MAX_SEARCH_LENGTH)
     invalid("search", "Send at most 2000 characters.");
+  if (
+    body.include_activity_summary !== undefined &&
+    typeof body.include_activity_summary !== "boolean"
+  )
+    invalid("includeActivitySummary");
   return {
+    ...(body.activity_filter === undefined
+      ? {}
+      : { activityFilter: decodeActivityFilter(body.activity_filter) }),
+    ...(body.include_activity_summary === undefined
+      ? {}
+      : { includeActivitySummary: body.include_activity_summary as boolean }),
     ...(body.filters === undefined ? {} : { filters: decodeCriteria(body.filters) }),
     ...(body.search === undefined ? {} : { search: body.search as string }),
   };
@@ -275,11 +288,14 @@ export const operations = {
         ...(sort ? { sort } : {}),
       };
       const result = await records.list(module, query);
-      if (!result.records.length) return empty();
+      if (!result.records.length && result.activitySummaries === undefined) return empty();
       const recordMembers = await members();
       return ok({
         data: result.records.map((row) => encodeRecord(row, metadata, recordMembers)),
         info: encodeInfo(result, result.records.length),
+        ...(result.activitySummaries === undefined
+          ? {}
+          : { activity_summaries: encodeActivitySummaries(result.activitySummaries) }),
       });
     },
   },
