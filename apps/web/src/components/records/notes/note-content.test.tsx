@@ -1,7 +1,13 @@
 import { cleanup, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { NoteContent } from "./note-content";
+import {
+  isNoteContentEmpty,
+  NOTE_CONTENT_MAX,
+  NOTE_TITLE_MAX,
+  NoteContent,
+  noteContentText,
+} from "./note-content";
 
 afterEach(() => {
   cleanup();
@@ -120,5 +126,11 @@ describe("edge cases", () => {
     expect(out).toContain("hi");
     expect(out).toContain("there");
     expect(out).toContain("&lt;b&gt;");
+  });
+  test("re-exports contract constants and helpers", () => {
+    expect(NOTE_TITLE_MAX).toBe(120);
+    expect(NOTE_CONTENT_MAX).toBe(65_535);
+    expect(noteContentText("<p>test</p>")).toBe("test");
+    expect(isNoteContentEmpty("<p><br></p>")).toBe(true);
   });
 });

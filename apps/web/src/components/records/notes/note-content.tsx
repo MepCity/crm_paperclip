@@ -64,3 +64,10 @@ export function NoteContent(props: { html: string; className?: string }): JSX.El
   const doc = new DOMParser().parseFromString(html, "text/html");
   return <div className={className}>{convertChildren(doc.body, "n")}</div>;
 }
+
+export {
+  isNoteContentEmpty,
+  NOTE_CONTENT_MAX,
+  NOTE_TITLE_MAX,
+  noteContentText,
+} from "./note-content-policy";
