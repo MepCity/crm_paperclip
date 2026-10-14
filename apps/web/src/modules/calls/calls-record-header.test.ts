@@ -10,7 +10,7 @@ test("title is the Who_Id name with module suffix link", () => {
     hasPortrait: false,
     recordNavigation: false,
   });
-  expect(callsHeaderTitleLink(record)).toEqual({ ...who, suffix: "Contact" });
+  expect(callsHeaderTitleLink(record)).toEqual({ ...who, suffix: "- Contacts" });
 });
 
 test("empty Who_Id falls back to Subject", () => {

@@ -104,9 +104,12 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await user.click(screen.getByRole("button", { name: "Search module" }));
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
 
-  const meetings = within(menu).getByRole("button", { name: "Meetings" });
-  expect(meetings.getAttribute("data-later-module")).toBe("M5");
-  await user.click(meetings);
+  const products = within(menu).getByRole("button", { name: "Products" });
+  expect(products.getAttribute("data-later-module")).toBe("P2");
+  await user.click(products);
+  expect(
+    within(menu).getByRole("button", { name: "Meetings" }).getAttribute("data-later-module"),
+  ).toBeNull();
   expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
 
   const tasks = within(menu).getByRole("button", { name: "Tasks" });
@@ -129,6 +132,21 @@ test("module search filters choices, future modules stay inert and Contacts rest
   await waitFor(() =>
     expect(search).toHaveBeenCalledWith(
       expect.objectContaining({ modules: ["Contacts"], perPage: 5 }),
+    ),
+  );
+});
+
+test("Meetings selection restricts search requests to Events", async () => {
+  const user = userEvent.setup();
+  mount();
+  await open(user);
+  await user.click(screen.getByRole("button", { name: "Search module" }));
+  const menu = await screen.findByRole("dialog", { name: "Search Modules" });
+  await user.click(within(menu).getByRole("button", { name: "Meetings" }));
+  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Search");
+  await waitFor(() =>
+    expect(search).toHaveBeenCalledWith(
+      expect.objectContaining({ modules: ["Events"], perPage: 5 }),
     ),
   );
 });

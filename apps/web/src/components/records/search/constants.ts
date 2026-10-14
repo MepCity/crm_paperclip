@@ -23,7 +23,7 @@ export const DOCUMENTED_MODULE_FILTER_SPECS: readonly DocumentedModuleFilterSpec
   { id: "S-31.3", moduleApiName: "Tasks", label: "Tasks" },
   { id: "S-31.4", moduleApiName: "Leads", label: "Leads" },
   { id: "S-31.5", moduleApiName: "Deals", label: "Deals" },
-  { id: "S-31.6", moduleApiName: "Meetings", label: "Meetings" },
+  { id: "S-31.6", moduleApiName: "Events", label: "Meetings" },
   { id: "S-31.7", moduleApiName: "Calls", label: "Calls" },
   { id: "S-31.8", moduleApiName: "Products", label: "Products" },
 ];
@@ -36,7 +36,7 @@ export function getDocumentedModuleFilterItems(
     return {
       ...item,
       isRegistered,
-      laterModule: isRegistered ? undefined : resolveModuleLaterKey(item.moduleApiName),
+      laterModule: isRegistered ? undefined : resolveModuleLaterKey(item.label),
     };
   });
 
