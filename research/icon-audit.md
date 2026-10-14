@@ -17,8 +17,8 @@ Rule (ADR 0003): one icon set (Lucide) through `apps/web/src/components/ui/icon.
 | All lists | Column options | original arrows | thin up/down arrows | same | no |
 | List and detail | Calendar, phone, mail, building, folder, tag, lock | Lucide, stroke 2 | thin outline | same Lucide, stroke 1.5 via `thin()` | yes (weight) |
 | Record detail header | Back arrow, prev/next chevrons | original, 1.5 | thin arrow/chevrons | same | no |
-| Record detail fields | Edit pencil (MEP-527) | filled original pencil | thin outline pencil | Lucide `Pencil`, stroke 1.5 | yes |
-| Deals board card | Edit pencil | filled original pencil | thin outline pencil | Lucide `Pencil` | yes |
+| Record detail fields | Edit pencil (MEP-527) | filled original pencil | filled pencil, measured 11.5 px ink box | kept (measured custom glyph) | no |
+| Deals board card | Edit pencil | filled original pencil | thin outline pencil | Lucide `Pencil` (`boardEdit`) | yes |
 | Activities card (record detail) | Task, meeting, call category | direct Lucide import, stroke 2 | outline clipboard-check, calendar, handset | `Icons.task`, `Icons.calendar`, `Icons.phone` | yes (via icon.tsx, stroke 1.5) |
 | Activities card | Owner silhouette | direct Lucide `UserRound` | outline user | `Icons.userRound` | yes |
 | Alerts | error, success, info, warning | Lucide, stroke 2 | thin outline | same, 1.5 | yes (weight) |

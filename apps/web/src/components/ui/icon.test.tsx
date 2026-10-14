@@ -46,6 +46,7 @@ const expectedIcons = [
   "spinner",
   "error",
   "fieldEdit",
+  "boardEdit",
   "task",
   "userRound",
   "success",
