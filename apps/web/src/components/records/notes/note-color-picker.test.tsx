@@ -243,6 +243,22 @@ describe("NoteColorPicker arrow-key navigation", () => {
     fireEvent.keyDown(getTable(), { key: "ArrowUp" });
     expect(document.activeElement).toBe(cellAt(cells, 0));
   });
+
+  test("Home key moves focus to the first cell", () => {
+    render(<NoteColorPicker label="Font Color" onPick={vi.fn()} onClose={vi.fn()} />);
+    const cells = getCells();
+    cellAt(cells, 7).focus();
+    fireEvent.keyDown(getTable(), { key: "Home" });
+    expect(document.activeElement).toBe(cellAt(cells, 0));
+  });
+
+  test("End key moves focus to the last cell", () => {
+    render(<NoteColorPicker label="Font Color" onPick={vi.fn()} onClose={vi.fn()} />);
+    const cells = getCells();
+    cellAt(cells, 0).focus();
+    fireEvent.keyDown(getTable(), { key: "End" });
+    expect(document.activeElement).toBe(cellAt(cells, cells.length - 1));
+  });
 });
 
 // ---------------------------------------------------------------------------
