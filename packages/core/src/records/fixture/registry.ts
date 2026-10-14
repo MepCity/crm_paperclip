@@ -6,12 +6,14 @@ import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
 import { historyMetadata, historyViews } from "./deals/history";
+import { dealsHooks, historyHooks } from "./deals/hooks";
 import { dealsMetadata } from "./deals/metadata";
 import { fullName as dealsFullName, generateFixtureDeals } from "./deals/seed";
 import { dealsViews } from "./deals/views";
 import { eventsMetadata } from "./events/metadata";
 import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed";
 import { eventsViews } from "./events/views";
+import type { FixtureModuleHooks } from "./hooks";
 import { leadsMetadata } from "./metadata";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { tasksMetadata } from "./tasks/metadata";
@@ -19,7 +21,7 @@ import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";
 import { tasksViews } from "./tasks/views";
 import { leadsViews } from "./views";
 
-export interface FixtureModuleBundle {
+export interface FixtureModuleBundle extends FixtureModuleHooks {
   readOnly?: boolean;
   metadata: ModuleMetadata;
   views: readonly ListView[];
@@ -105,6 +107,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   DealHistory: {
+    ...historyHooks,
     readOnly: true,
     metadata: historyMetadata,
     views: historyViews,
@@ -117,6 +120,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: () => ({}),
   },
   Deals: {
+    ...dealsHooks,
     metadata: dealsMetadata,
     views: dealsViews,
     displayNameField: "Deal_Name",
