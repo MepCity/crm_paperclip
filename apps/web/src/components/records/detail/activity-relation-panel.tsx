@@ -49,6 +49,7 @@ export interface ActivityRelationPanelProps {
   contactRecordPath: (contactId: string) => string;
   accountRecordPath: (accountId: string) => string;
   dealRecordPath: (dealId: string) => string;
+  dealEmptyText?: string;
   onCall?: (phone: string) => void;
   onNewDeal?: () => void;
   onNewActivity?: () => void;
@@ -116,6 +117,7 @@ export function ActivityRelationPanel({
   contactRecordPath,
   accountRecordPath,
   dealRecordPath,
+  dealEmptyText,
   onCall,
   onNewDeal,
   onNewActivity,
@@ -244,7 +246,9 @@ export function ActivityRelationPanel({
           <section aria-label="Deal Summary" className="flex flex-col gap-2">
             <SectionHeader title="Deal Summary" actionLabel="New" onAction={onNewDeal} />
             {deals.length === 0 ? (
-              <p className="py-2 text-center text-md text-text-empty">No records found</p>
+              <p className="py-2 text-center text-md text-text-empty">
+                {dealEmptyText ?? "No records found"}
+              </p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {deals.map((deal) => (

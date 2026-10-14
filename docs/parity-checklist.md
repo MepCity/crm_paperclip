@@ -690,3 +690,17 @@ Interim rules: Close Task shows only while the task is open, opens no confirmati
 updates Status through the record service (errors show a toast); Meetings and Calls open
 counts show 0 until those modules are registered; "+ New" and the panel search icons draw
 without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+
+### Calls record detail — implemented; QA pending (MEP-508)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Header, title link, phone glyph, tags, Reschedule Call, Down arrow, More Options | CD-01, CD-02, CD-04, CD-05, CD-05.1, CD-07, CD-08, CD-09 | `calls-detail.spec.ts`, `calls-record-header.test.ts`, `calls-reschedule.test.ts` |
+| More Options menu (Edit, Share, Delete, Print Preview, Send Email) | CD-07.1–CD-07.5 | `calls-detail.spec.ts`, `calls-record-more-options.test.ts` |
+| Tabs, last update, Timeline empty state | CD-33–CD-35 | `calls-detail.spec.ts`, `calls-timeline.test.ts` |
+| Business card, detail sections, Call For / Related To suffixes | CD-36, CD-39, CD-41, CD-42, CD-46 | `calls-detail.spec.ts`, `calls-detail-sections.test.ts` |
+| Right panel: person, Deal Summary ("No Deals found"), Open Activities, phone call icon | CD-50–CD-52, CD-54–CD-58, CD-60, CD-61, CD-63–CD-70 | `calls-detail.spec.ts` |
+
+Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
+
