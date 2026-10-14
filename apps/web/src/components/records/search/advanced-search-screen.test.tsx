@@ -31,6 +31,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => navigation.params,
 }));
 
+const ALL_MODULES = ["Contacts", "Accounts", "Tasks", "Leads", "Deals"];
+
 function createTestService() {
   const fixture = createFixtureRecordService(ctx);
   return createClientRecordService(fixture, {
@@ -198,7 +200,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Leads", "Deals"],
+          modules: [...ALL_MODULES],
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -213,7 +215,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Deals"],
+          modules: ALL_MODULES.filter((m) => m !== "Leads"),
         }),
       );
     });
@@ -235,10 +237,9 @@ describe("AdvancedSearchScreen", () => {
     const filterPanel = screen.getByRole("complementary", { name: "Search filter panel" });
 
     // Deselect all working modules
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Contacts" }));
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
+    for (const name of ALL_MODULES) {
+      await user.click(within(filterPanel).getByRole("checkbox", { name }));
+    }
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
