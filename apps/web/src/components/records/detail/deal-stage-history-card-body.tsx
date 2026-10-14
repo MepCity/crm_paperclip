@@ -105,7 +105,7 @@ export function DealStageHistoryCardBody({ dealId }: DealStageHistoryCardBodyPro
               {columns.map((field) => {
                 const value = row.fields[field.apiName] ?? null;
                 return (
-                  <td key={field.apiName} className="px-2 py-2 text-text">
+                  <td key={field.apiName} className="whitespace-nowrap px-2 py-2 text-text">
                     <FieldValueView
                       field={field}
                       value={value}
