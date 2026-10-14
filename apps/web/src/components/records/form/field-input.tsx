@@ -64,6 +64,9 @@ export interface FieldInputProps {
   recordService?: RecordService | ClientRecordService;
   /** Record address for the name-cell links of an observed record picker. */
   lookupRecordHref?: (id: string, module?: string) => string;
+  /** Polymorphic lookups: the type select is drawn elsewhere (form row label); this is its value. */
+  lookupModule?: string;
+  onLookupModuleChange?: (module: string) => void;
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
 }
@@ -143,6 +146,40 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
   );
 }
 
+export function LookupTypeSelect({
+  id,
+  label,
+  targets,
+  value,
+  onChange,
+  disabled,
+  prefix,
+}: {
+  id: string;
+  label: string;
+  targets: readonly string[];
+  value: string;
+  onChange: (module: string) => void;
+  disabled?: boolean;
+  prefix?: boolean;
+}) {
+  return (
+    <RecordChoice
+      id={id}
+      label={`${label} module`}
+      hideLabel
+      prefix={prefix}
+      value={value}
+      onChange={(next) => {
+        if (!next || next === value) return;
+        onChange(next);
+      }}
+      options={targets.map((module) => ({ value: module, label: moduleSingularLabel(module) }))}
+      disabled={disabled}
+    />
+  );
+}
+
 export function FieldInput({
   field,
   value,
@@ -168,6 +205,8 @@ export function FieldInput({
   recordService,
   lookupRecordHref,
   lookupOwnerNames,
+  lookupModule,
+  onLookupModuleChange,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -191,7 +230,7 @@ export function FieldInput({
       ? (value as ModuleRecordReference).module
       : undefined;
   const targetModule = isPolymorphic
-    ? (referenceModule ?? pickedModule ?? lookupTargets[0] ?? "")
+    ? (referenceModule ?? lookupModule ?? pickedModule ?? lookupTargets[0] ?? "")
     : (field.lookup?.module ?? "");
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
@@ -384,24 +423,19 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic ? (
+              isPolymorphic && !onLookupModuleChange ? (
                 <div className="record-prefix-select">
-                  <RecordChoice
+                  <LookupTypeSelect
                     id={`${controlId}-module`}
-                    label={`${field.label} module`}
-                    hideLabel
-                    prefix
+                    label={field.label}
+                    targets={lookupTargets}
                     value={targetModule}
+                    prefix
+                    disabled={common.isDisabled}
                     onChange={(next) => {
-                      if (!next || next === targetModule) return;
                       setPickedModule(next);
                       onChange(null);
                     }}
-                    options={lookupTargets.map((module) => ({
-                      value: module,
-                      label: moduleSingularLabel(module),
-                    }))}
-                    disabled={common.isDisabled}
                   />
                   <span className="record-prefix-divider" aria-hidden />
                 </div>
@@ -465,6 +499,7 @@ export function FieldInput({
           label={field.label}
           aria-label={field.label}
           isSelected={typeof value === "object" && value !== null}
+          subdued={field.dataType === "RRULE"}
           isDisabled={common.isDisabled}
           onChange={(on) => onChange(on ? (TOGGLE_DEFAULTS[field.dataType] ?? null) : null)}
         />

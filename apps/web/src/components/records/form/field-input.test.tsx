@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
-import { FieldInput, type FieldInputProps } from "./field-input";
+import { FieldInput, type FieldInputProps, LookupTypeSelect } from "./field-input";
 import { FormRow } from "./form-row";
 
 const options = [
@@ -643,6 +643,36 @@ test("polymorphic lookup draws a type select and clears the value when the type 
   await user.click(select);
   await user.click(screen.getByRole("option", { name: "Lead" }));
   expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test("an external type select leaves the lookup input without a prefix select", () => {
+  const who: FieldDefinition = {
+    ...field("lookup"),
+    apiName: "Who_Id",
+    label: "Contact Name",
+    lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
+  };
+  render(
+    <FieldInput field={who} value={null} onChange={() => {}} onLookupModuleChange={() => {}} />,
+  );
+  expect(screen.queryByRole("button", { name: /Contact Name module/ })).toBeNull();
+});
+
+test("the label-side type select reports the chosen module", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <LookupTypeSelect
+      id="who-module"
+      label="Contact Name"
+      targets={["Contacts", "Leads"]}
+      value="Contacts"
+      onChange={change}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: /Contact Name module/ }));
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(change).toHaveBeenCalledWith("Leads");
 });
 
 test.each(["ALARM", "RRULE"] as const)(

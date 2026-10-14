@@ -29,6 +29,7 @@ const styles = {
   },
   knob: "h-3 w-3 rounded-full bg-surface shadow-sm",
   label: "text-sm text-text",
+  labelSubdued: "text-sm text-text-muted",
   description: "text-sm text-text-muted",
   error: "text-sm text-danger",
 } as const;
@@ -44,9 +45,11 @@ export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "va
   label: string;
   description?: string;
   errorMessage?: string;
+  /** Draws the switch and its label in the muted ink (used while an optional block is off). */
+  subdued?: boolean;
 }
 
-export function Switch({ label, description, errorMessage, ...props }: SwitchProps) {
+export function Switch({ label, description, errorMessage, subdued, ...props }: SwitchProps) {
   return (
     <AriaSwitchField {...props} value={FORM_VALUE} className={styles.field}>
       <SwitchButton className={styles.button}>
@@ -60,7 +63,9 @@ export function Switch({ label, description, errorMessage, ...props }: SwitchPro
             >
               <span className={styles.knob} />
             </span>
-            <span className={styles.label}>{label}</span>
+            <span className={subdued && !isSelected ? styles.labelSubdued : styles.label}>
+              {label}
+            </span>
           </>
         )}
       </SwitchButton>

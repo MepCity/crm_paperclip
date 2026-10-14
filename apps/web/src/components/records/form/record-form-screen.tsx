@@ -1,7 +1,13 @@
 "use client";
 
 import { isAppError, NotFoundError } from "@crm/core/errors";
-import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
+import {
+  type FieldDefinition,
+  type FieldValue,
+  lookupTargetModules,
+  type ModuleMetadata,
+  type RecordData,
+} from "@crm/core/records";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,7 +28,7 @@ import {
   CopyAddressMenu,
   PrefixInput,
 } from "./composite-inputs";
-import { FieldInput, type OwnerOption } from "./field-input";
+import { FieldInput, LookupTypeSelect, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
 import {
@@ -204,6 +210,7 @@ function LoadedRecordForm({
       ? initialFormValues(fields, sourceRecord?.fields)
       : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
+  const [pickedModules, setPickedModules] = useState<Record<string, string>>({});
   const [values, setValues] = useState(() =>
     intent === "create" && !cloneSeed ? emptyValues() : baseline,
   );
@@ -465,6 +472,16 @@ function LoadedRecordForm({
         </div>
       );
     }
+    const polyTargets = field.dataType === "lookup" ? lookupTargetModules(field) : [];
+    const rawValue = values[field.apiName];
+    const polyModule =
+      polyTargets.length > 1
+        ? ((typeof rawValue === "object" && rawValue !== null && "module" in rawValue
+            ? String(rawValue.module)
+            : undefined) ??
+          pickedModules[field.apiName] ??
+          polyTargets[0])
+        : undefined;
     const prefix =
       rules.prefix?.field === field.apiName ? byName.get(rules.prefix.prefix) : undefined;
     if (prefix) {
@@ -537,6 +554,8 @@ function LoadedRecordForm({
               : undefined
           }
           lookupOwnerNames={ownerNames}
+          lookupModule={polyModule}
+          onLookupModuleChange={polyTargets.length > 1 ? () => {} : undefined}
           currencyPrefix={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? config.currencyPrefix
@@ -551,6 +570,21 @@ function LoadedRecordForm({
     return (
       <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
         <FormRow
+          labelControl={
+            polyTargets.length > 1 ? (
+              <LookupTypeSelect
+                id={`${id}-module`}
+                label={label}
+                targets={polyTargets}
+                value={polyModule ?? ""}
+                disabled={saving}
+                onChange={(next) => {
+                  setPickedModules((prev) => ({ ...prev, [field.apiName]: next }));
+                  change(field.apiName, null);
+                }}
+              />
+            ) : undefined
+          }
           label={
             rules.labelLines?.[field.apiName]
               ? rules.labelLines[field.apiName]?.map((line) => (

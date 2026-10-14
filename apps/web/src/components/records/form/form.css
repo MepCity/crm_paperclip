@@ -433,3 +433,9 @@
   height: 100%;
   color: var(--color-form-portrait);
 }
+
+.record-form-row__label--control {
+  transform: none;
+  padding-top: 0;
+  min-width: 0;
+}
