@@ -1,9 +1,18 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
-import { type BoardColumn, type BoardMoveResult, RecordBoard } from "./record-board";
+import {
+  type BoardCard,
+  type BoardColumn,
+  type BoardMoveResult,
+  RecordBoard,
+} from "./record-board";
 
 afterEach(cleanup);
+const buildOptimisticCard = (card: BoardCard, target: BoardColumn): BoardCard => ({
+  ...card,
+  rows: card.rows.map((row, index) => (index === 1 ? { ...row, text: target.label } : row)),
+});
 const columns: readonly BoardColumn[] = [
   {
     key: "a",
@@ -126,7 +135,13 @@ it("optimistically redirects to selected stage and reconciles when server data a
       }),
   );
   const { rerender } = render(
-    <RecordBoard columns={threeColumns} createLabel="Create" onCreate={vi.fn()} onMove={move} />,
+    <RecordBoard
+      columns={threeColumns}
+      createLabel="Create"
+      onCreate={vi.fn()}
+      onMove={move}
+      buildOptimisticCard={buildOptimisticCard}
+    />,
   );
   drop("a", "b");
   expect(document.querySelector('[data-board-column="b"] article')).toBeTruthy();
@@ -201,4 +216,49 @@ it("rolls back optimistic move when onMove rejects with an error", async () => {
     expect(document.querySelector('[data-board-column="a"] article')).toBeTruthy();
     expect(document.querySelector('[data-board-column="b"] article')).toBeNull();
   });
+});
+
+it("preserves every card row during and after a move without a builder", async () => {
+  let resolve!: (value: BoardMoveResult) => void;
+  render(
+    <RecordBoard
+      columns={columns}
+      createLabel="Create"
+      onCreate={vi.fn()}
+      onMove={() =>
+        new Promise((yes) => {
+          resolve = yes;
+        })
+      }
+    />,
+  );
+  const original = element('[data-board-card="card"]').innerHTML;
+  drop();
+  expect(element('[data-board-column="b"] article').innerHTML).toBe(original);
+  resolve({ to: "a" });
+  await waitFor(() => expect(element('[data-board-column="a"] article').innerHTML).toBe(original));
+});
+
+it("uses the supplied builder for the pending destination without mutating source rows", () => {
+  const builder = vi.fn((card: BoardCard, target: BoardColumn) => ({
+    ...card,
+    rows: [
+      { text: `${card.rows[0]?.text} in ${target.label}`, strong: true },
+      ...card.rows.slice(1),
+    ],
+  }));
+  render(
+    <RecordBoard
+      columns={columns}
+      createLabel="Create"
+      onCreate={vi.fn()}
+      onMove={() => new Promise(() => {})}
+      buildOptimisticCard={builder}
+    />,
+  );
+  drop();
+  expect(builder).toHaveBeenCalledWith(columns[0]?.cards[0], columns[1]);
+  expect(element('[data-board-column="b"] article div').textContent).toBe("Record in Empty");
+  expect(columns[0]?.cards[0]?.rows[0]?.text).toBe("Record");
+  expect(element('[data-board-column="b"] article div:nth-child(2)').textContent).toBe("Stage");
 });
