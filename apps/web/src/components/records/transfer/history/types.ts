@@ -84,7 +84,3 @@ export function formatTime(iso: string): string {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 }
-
-export function TableSkeletonRows() {
-  return null;
-}
