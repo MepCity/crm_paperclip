@@ -12,6 +12,7 @@ import {
 } from "@crm/core/records/contract-suite-module";
 import { describeDiscoveryContract } from "@crm/core/records/discovery-contract-suite";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
+import { describeKanbanViewContract } from "@crm/core/records/kanban-contract-suite";
 import { describe, expect, it } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
 import type { Operation, OperationDeps } from "@/lib/api/wire/operations";
@@ -233,5 +234,13 @@ describe("Events HTTP participants and opaque reminders", () => {
     );
     await service.delete("Events", [created.id]);
     await expect(service.get("Events", created.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describeKanbanViewContract("http", (ctx, options) => {
+  const deps = operationDeps(ctx, options);
+  return createHttpRecordService({
+    orgSlug: ctx.orgSlug,
+    fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
   });
 });
