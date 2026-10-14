@@ -92,7 +92,7 @@ function CallButton({
   return (
     <Button
       variant="icon"
-      size="sm"
+      size="compact"
       aria-label={label}
       className="size-5 shrink-0 text-text-muted"
       onPress={onCall ? () => onCall(phone) : undefined}

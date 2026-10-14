@@ -466,6 +466,7 @@ export function RecordDetailScreen({
             subtitleLaterModule={subtitleLaterModule}
             subtitleHref={subtitleHref}
             portraitIcon={portraitIcon ?? rules.portraitIcon}
+            portraitAppearance={rules.portraitAppearance}
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}

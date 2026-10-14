@@ -119,9 +119,12 @@ test.describe("Tasks record detail", () => {
       await expect(open.getByRole("button", { name })).toBeVisible();
     }
     await expect(open.getByRole("button", { name: /Meetings/ })).toContainText("0");
-    await expect(
-      panel.getByRole("button", { name: /^Call (phone|mobile)$/ }).first(),
-    ).toBeVisible();
+    const callButtons = panel.getByRole("button", { name: /^Call (phone|mobile)$/ });
+    await expect(callButtons).toHaveCount(2);
+    for (let i = 0; i < 2; i++) {
+      const box = await callButtons.nth(i).locator("svg").boundingBox();
+      expect(box?.width ?? 0).toBeGreaterThan(0);
+    }
     ignoreFailedResponses(pageErrors, [400]);
   });
 

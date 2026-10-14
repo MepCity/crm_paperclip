@@ -39,6 +39,7 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
     header: tasksRecordHeaderIdentity,
     hasPortrait: true,
     portraitIcon: Icons.check,
+    portraitAppearance: "inline",
     lastUpdatePlacement: "tab-row",
     addTags: { label: "Add Tags", laterModule: "M6" },
     businessCard: buildTasksBusinessCardFields,
