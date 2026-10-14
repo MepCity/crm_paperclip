@@ -599,14 +599,29 @@ End_DateTime. Venue is the only exported mass-update field.
 
 `acceptsJsonArray` on FieldDefinition is an acceptance policy, not a copy of
 `json_type`. It returns in metadata (wire `accepts_json_array`) and permits null or
-opaque readonly JSON arrays on Remind_At, Remind_Participants (multireminder), and
-Participants (its exported bigint dataType is preserved). Arrays contain arbitrary
-plain JSON, finite numbers, nested objects/arrays, booleans, strings or null.
-They are detached on writes and every read; equality is deep, type-sensitive,
-ignores object key order and preserves array order. Cycles, sparse arrays,
-accessors and non-JSON members are invalid. These fields cannot be filtered,
-used in criteria, or sorted; unmarked fields keep their current validation.
-HTTP JSON round trips preserve arrays without changing endpoint paths.
+opaque readonly JSON arrays on Remind_At and Remind_Participants (multireminder).
+Participants keeps its exported bigint dataType and acceptsJsonArray metadata,
+but its write contract has changed **opaque → typed**. Each item is
+`{ type: "user" | "lead" | "contact" | "email", id: string | null,
+name: string, email: string | null }`. At most 50 items are accepted. User,
+lead and contact items require a nonempty id; email items require a nonempty
+email. Lead/contact IDs must exist in the bound organization. Unknown keys
+are discarded on write; invalid items return ValidationError on Participants.
+A null field and an empty array remain valid. Reminder items remain arbitrary
+plain JSON. Arrays are detached on writes and reads; equality ignores object
+key order and preserves array order. These fields cannot be filtered or sorted.
+
+Tasks set Closed_Time at the write instant when entering Completed and clear
+it when leaving Completed. Writes while already Completed preserve it.
+Closed_Time is system managed. Meetings require Start_DateTime and End_DateTime;
+end before start returns ValidationError on End_DateTime. Provisionally,
+All_day normalizes the respective UTC dates to 00:00:00 and 23:59:59.
+
+Scheduled Calls with a past Call_Start_Time read as Overdue without changing
+storage; list/count filters see the same derived status. Completed calls
+require Call_Duration in mm:ss format (two or more minute digits, seconds
+00–59); Call_Duration_in_seconds is derived on write. Cancelled remains a
+status and retains the record.
 
 CURRENTTIME maps exactly from `${CURRENTTIME}`. The runtime adapter clock resolves
 it anew for each query, using the exact instant without day rounding. Only datetime
@@ -616,8 +631,7 @@ unparseable dates never match. Four exported completed/upcoming views use it.
 
 The 250 deterministic synthetic meetings include all-day/timed, past/future,
 empty/populated arrays and direct references to seeded Leads, Contacts, Accounts
-and Deals. The example JSON is invented test data, not a participant/reminder
-schema. Existing module seeds remain unchanged. Null view sorts use id descending.
+and Deals. Participants use the typed shape above; reminder JSON is invented test data. Existing module seeds remain unchanged. Null view sorts use id descending.
 Who_Id temporarily allows Contacts/Leads, in eventsWhoTargets. What_Id targets
 come from qualifying `<source module>/{ENTITYID}/Events` rows in the sanitized
 related-target table, excluding Who_Id targets; its default is Accounts. The
