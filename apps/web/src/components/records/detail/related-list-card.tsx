@@ -1,54 +1,22 @@
 "use client";
 
-import type { RecordData, RecordId } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { laterModuleProps, resolveLaterModule, useLaterModule } from "@/components/ui/later-module";
+import { laterModuleProps, resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
-import type { RelatedListControlDefinition, RelatedListDefinition } from "@/modules/types";
-import { AccountContactsCardBody } from "./account-contacts-card-body";
-import { AccountMemberAccountsCardBody } from "./account-member-accounts-card-body";
-import { DealStageHistoryCardBody } from "./deal-stage-history-card-body";
-import { RelatedDealsCardBody } from "./related-deals-card-body";
-import { ReportingContactsCardBody } from "./reporting-contacts-card-body";
-
+import type {
+  RelatedListBodyContext,
+  RelatedListControlDefinition,
+  RelatedListDefinition,
+} from "@/modules/types";
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
-  reportingContacts?: {
-    managerRecord: RecordData;
-    orgSlug: string;
-    recordPath: (recordId: RecordId) => string;
-  };
-  accountContacts?: {
-    accountRecord: RecordData;
-    orgSlug: string;
-    contactRecordPath: (recordId: RecordId) => string;
-  };
-  memberAccounts?: {
-    parentRecord: RecordData;
-    orgSlug: string;
-    accountRecordPath: (recordId: RecordId) => string;
-  };
-  dealStageHistory?: {
-    dealId: RecordId;
-  };
-  managerDeals?: {
-    managerRecord: RecordData;
-    filterField: string;
-    dealRecordPath: (recordId: RecordId) => string;
-  };
+  context?: RelatedListBodyContext;
 }
 
-export function RelatedListCard({
-  definition,
-  reportingContacts,
-  accountContacts,
-  memberAccounts,
-  dealStageHistory,
-  managerDeals,
-}: RelatedListCardProps) {
+export function RelatedListCard({ definition, context }: RelatedListCardProps) {
   const {
     id,
     title,
@@ -62,7 +30,7 @@ export function RelatedListCard({
     subtabRowEndControl,
     tableColumns,
     tablePreviewRows,
-    notesShowMore,
+    showEmptyTable,
     socialLinks,
     socialGuidance,
     introductoryText,
@@ -70,7 +38,12 @@ export function RelatedListCard({
   } = definition;
 
   const [activeSubtab, setActiveSubtab] = useState(subtabs?.[0]?.id ?? "");
-  const notesLaterRef = useLaterModule<HTMLTextAreaElement>(id === "notes" ? "M6" : undefined);
+  const customBody = definition.renderBody?.({
+    orgSlug: "",
+    recordPath: () => "#",
+    ...context,
+    definition,
+  });
 
   const afterTitleControls = upperControls.filter((c) => c.position === "after-title");
   const rightControls = upperControls.filter((c) => c.position !== "after-title");
@@ -172,36 +145,8 @@ export function RelatedListCard({
         )}
       </div>
 
-      {id === "notes" ? (
-        <div className="py-4">
-          <div className="flex items-center justify-between mb-2">
-            <Button
-              variant="secondary"
-              size="compact"
-              laterModule="M6"
-              className="flex items-center gap-1.5"
-            >
-              <span>Recent Last</span>
-              <Icons.chevronDown aria-hidden className="size-3 text-text-muted" />
-            </Button>
-          </div>
-          <textarea
-            ref={notesLaterRef}
-            {...laterModuleProps("M6")}
-            readOnly
-            rows={3}
-            placeholder="Add a note"
-            aria-label="Add a note"
-            className="w-full resize-none rounded-(--radius-md) border border-control-border bg-surface px-3 py-2 text-md text-text focus:outline-primary placeholder:text-text-placeholder"
-          />
-          {notesShowMore ? (
-            <div className="mt-2 text-right">
-              <Button variant="secondary" size="compact" laterModule="M6">
-                Show More
-              </Button>
-            </div>
-          ) : null}
-        </div>
+      {customBody != null ? (
+        customBody
       ) : tableColumns &&
         tableColumns.length > 0 &&
         tablePreviewRows &&
@@ -226,7 +171,7 @@ export function RelatedListCard({
                   <td className="px-2 py-2" />
                   {tableColumns.map((col) => {
                     const cellValue = row.cells[col.id] ?? "";
-                    if (col.id === "contactName" && row.recordLink) {
+                    if (col.cellKind === "recordLink" && row.recordLink) {
                       return (
                         <td key={col.id} className="px-2 py-2">
                           <Link
@@ -239,7 +184,7 @@ export function RelatedListCard({
                         </td>
                       );
                     }
-                    if (col.id === "email" && row.emailLink) {
+                    if (col.cellKind === "emailLink" && row.emailLink) {
                       return (
                         <td key={col.id} className="px-2 py-2">
                           <Link
@@ -253,7 +198,7 @@ export function RelatedListCard({
                         </td>
                       );
                     }
-                    if (col.id === "phone" && row.phoneAction) {
+                    if (col.cellKind === "phoneAction" && row.phoneAction) {
                       return (
                         <td key={col.id} className="px-2 py-2">
                           <span className="inline-flex items-center gap-2">
@@ -289,13 +234,7 @@ export function RelatedListCard({
       ) : activityColumns && activityColumns.length > 0 ? (
         <div className="flex divide-x divide-panel-border overflow-x-auto py-2">
           {activityColumns.map((col) => {
-            const ColumnIcon =
-              col.icon ??
-              (col.id.includes("task")
-                ? Icons.check
-                : col.id.includes("meeting")
-                  ? Icons.calendar
-                  : null);
+            const ColumnIcon = col.icon;
             return (
               <div key={col.id} className="flex-1 min-w-[220px] px-4 py-2">
                 <div className="flex items-center gap-2 mb-3">
@@ -383,33 +322,7 @@ export function RelatedListCard({
             </Button>
           )}
         </div>
-      ) : id === "reporting-contacts" && reportingContacts ? (
-        <ReportingContactsCardBody
-          managerRecord={reportingContacts.managerRecord}
-          orgSlug={reportingContacts.orgSlug}
-          recordPath={reportingContacts.recordPath}
-        />
-      ) : id === "contacts" && accountContacts ? (
-        <AccountContactsCardBody
-          accountRecord={accountContacts.accountRecord}
-          orgSlug={accountContacts.orgSlug}
-          contactRecordPath={accountContacts.contactRecordPath}
-        />
-      ) : id === "member-accounts" && memberAccounts ? (
-        <AccountMemberAccountsCardBody
-          parentRecord={memberAccounts.parentRecord}
-          orgSlug={memberAccounts.orgSlug}
-          accountRecordPath={memberAccounts.accountRecordPath}
-        />
-      ) : id === "stage-history" && dealStageHistory ? (
-        <DealStageHistoryCardBody dealId={dealStageHistory.dealId} />
-      ) : id === "deals" && managerDeals ? (
-        <RelatedDealsCardBody
-          managerRecord={managerDeals.managerRecord}
-          filterField={managerDeals.filterField}
-          dealRecordPath={managerDeals.dealRecordPath}
-        />
-      ) : id === "contact-roles" && tableColumns && tableColumns.length > 0 ? (
+      ) : showEmptyTable && tableColumns && tableColumns.length > 0 ? (
         <div className="overflow-x-auto py-2">
           <table className="w-full text-left text-md">
             <thead>

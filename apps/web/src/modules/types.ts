@@ -8,7 +8,7 @@ import type {
   RecordData,
   RecordId,
 } from "@crm/core/records";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailSection } from "@/components/records/detail/details-card";
 import type { RecordCommand, RecordMenuGroup } from "@/components/records/detail/record-header";
@@ -53,6 +53,7 @@ export interface RelatedListActivityColumnDefinition {
 export interface RelatedListTableColumnDefinition {
   id: string;
   label: string;
+  cellKind?: "recordLink" | "emailLink" | "phoneAction";
 }
 
 export interface RelatedListTableRowDefinition {
@@ -78,7 +79,19 @@ export interface RelatedListRailChromeDefinition {
   linksGroup?: RelatedListRailLinksGroupDefinition;
 }
 
+export interface RelatedListBodyContext {
+  record?: RecordData;
+  module?: ModuleApiName;
+  orgSlug: string;
+  recordPath: (module: ModuleApiName, recordId: RecordId) => string;
+}
+
 export interface RelatedListDefinition {
+  /** Return null or undefined to use the generic body; render hook-based bodies as elements. */
+  renderBody?: (
+    context: RelatedListBodyContext & { definition: RelatedListDefinition },
+  ) => ReactNode;
+  showEmptyTable?: boolean;
   id: string;
   title: string;
   moduleKey: ModuleKey | "M2";
@@ -101,7 +114,7 @@ export interface RelatedListDefinition {
   tablePreviewRows?: readonly RelatedListTableRowDefinition[];
   /**
    * Lookup field on the related module that points back to the record owning this card.
-   * Set on a data-loaded card (Deals) so the shared card body can filter the record service.
+   * Module-owned body builders use it to filter the record service.
    */
   recordFilterField?: string;
   notesShowMore?: boolean;
