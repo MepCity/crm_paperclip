@@ -39,6 +39,7 @@ export interface OwnerOption {
 }
 export interface FieldInputProps {
   field: FieldDefinition;
+  variant?: "activity";
   value: FieldValue;
   onChange: (value: FieldValue) => void;
   errorMessage?: string;
@@ -145,6 +146,7 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
 
 export function FieldInput({
   field,
+  variant,
   value,
   onChange,
   errorMessage,
@@ -302,6 +304,7 @@ export function FieldInput({
       return (
         <Checkbox
           {...common}
+          hideLabel={variant === "activity" || hideLabel}
           aria-label={field.label}
           isSelected={value === true}
           onChange={onChange}
@@ -428,11 +431,15 @@ export function FieldInput({
                 }}
                 {...(targetLaterModule ? laterModuleProps(targetLaterModule) : {})}
               >
-                <Icons.recordLookup
-                  module={targetModule}
-                  className="record-input-end-icon"
-                  aria-hidden
-                />
+                {variant === "activity" ? (
+                  <Icons.recordPanelSearch className="record-input-end-icon" aria-hidden />
+                ) : (
+                  <Icons.recordLookup
+                    module={targetModule}
+                    className="record-input-end-icon"
+                    aria-hidden
+                  />
+                )}
               </button>
             }
           />
@@ -463,6 +470,8 @@ export function FieldInput({
       return (
         <Switch
           label={field.label}
+          hideLabel={variant === "activity"}
+          variant={variant}
           aria-label={field.label}
           isSelected={typeof value === "object" && value !== null}
           isDisabled={common.isDisabled}

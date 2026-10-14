@@ -796,6 +796,35 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
 | `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
 
+| `--size-activity-form-width` | `548px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-inset` | `12px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-label-width` | `219px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-strip-height` | `63px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-strip-content-offset` | `4.5px` | activities-form.md → Visual layout — Task form (measured); action center y=86 versus band center y=81.5 |
+| `--size-activity-form-strip-inset` | `30px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-first-content-top` | `66px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-first-title-center` | `31px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-row-height` | `27px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-row-gap` | `23px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-rule` | `1px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-required-width` | `25px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-required-height` | `2px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-section-gap` | `52.5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-section-title-gap` | `26px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-textarea-height` | `37px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-textarea-rule-gap` | `7.5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-icon` | `16px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-icon-inset` | `5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-choice-gap` | `21px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-switch-width` | `28px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--size-activity-form-switch-height` | `15px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-rule` | `#dcdbee` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-required` | `#f27b77` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-value` | `#434d5f` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-placeholder` | `#8b9ab9` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-lookup` | `#aaaaaa` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+| `--color-activity-form-switch` | `#c8cdd6` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed |
+
 ### Measured values that carry no token
 
 These are in the Visual layout section but are not tokens, with the reason for each. They are not

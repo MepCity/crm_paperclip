@@ -7,6 +7,8 @@ import { expect, test } from "./support/test";
 
 const TASKS_TAB = "Tasks";
 
+test.use({ deviceScaleFactor: 2 });
+
 async function openCreate(page: Page) {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -31,6 +33,57 @@ test("Task Information is one column in the spec order with the create defaults"
   page,
 }) => {
   await openCreate(page);
+  await expect(page.getByRole("button", { name: "Client Script" })).toHaveCount(0);
+  await expect(page.getByText("Create Form Views :")).toHaveCount(0);
+  const row = page.locator('[data-form-field="Subject"] [data-record-form-row]');
+  const geometry = await row.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const control = element.querySelector("input");
+    const style = getComputedStyle(control as Element);
+    const marker = getComputedStyle(element, "::after");
+    return {
+      width: rect.width,
+      border: style.borderTopWidth,
+      shadow: style.boxShadow,
+      markerWidth: marker.width,
+      markerHeight: marker.height,
+      labelAlign: getComputedStyle(element.querySelector("label") as Element).textAlign,
+    };
+  });
+  expect(geometry).toEqual({
+    width: 548,
+    border: "0px",
+    shadow: "none",
+    markerWidth: "25px",
+    markerHeight: "2px",
+    labelAlign: "left",
+  });
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/activity-task-create.png`,
+    });
+  }
+  const controls = await page
+    .locator('[data-form-field="Owner"], [data-form-field="Remind_At"]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        field: node.getAttribute("data-form-field"),
+        elements: [
+          ...node.querySelectorAll(
+            "[data-record-form-control-slot], .record-choice-shell, .record-choice-trigger, [data-switch-track]",
+          ),
+        ].map((element) => ({
+          className: element.className,
+          x: element.getBoundingClientRect().x,
+          width: element.getBoundingClientRect().width,
+          height: element.getBoundingClientRect().height,
+          grid: getComputedStyle(element).gridColumn,
+        })),
+      })),
+    );
+  expect(controls[0]?.elements[0]?.x).toBe(551);
+  expect(controls[1]?.elements.at(-1)?.width).toBe(28);
+  expect(controls[1]?.elements.at(-1)?.height).toBe(15);
   const order = await page
     .getByRole("heading", { name: "Task Information", exact: true })
     .locator("xpath=ancestor::*[@data-record-form-section][1]")
