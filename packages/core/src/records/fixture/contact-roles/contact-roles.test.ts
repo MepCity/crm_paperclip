@@ -5,7 +5,7 @@ import { generateFixtureContacts } from "../contacts/seed";
 import { generateFixtureDeals } from "../deals/seed";
 import type { FixtureHookContext, FixtureModuleStore } from "../hooks";
 import { contactRolesHooks, removeContactRolesFor, transferContactRolesToMaster } from "./hooks";
-import { generateFixtureContactRoles } from "./seed";
+import { contactRolesIdBase, generateFixtureContactRoles } from "./seed";
 
 const row = (
   id: string,
@@ -116,10 +116,32 @@ describe("Contact_Roles helpers", () => {
 });
 
 describe("Contact_Roles seed", () => {
-  it("is deterministic and links same-account contacts", () => {
-    const make = () =>
-      generateFixtureContactRoles(generateFixtureDeals(), generateFixtureContacts());
+  const deals = generateFixtureDeals();
+  const contacts = generateFixtureContacts();
+  const make = () => generateFixtureContactRoles(deals, contacts);
+  const accountOf = (r: { fields: Record<string, unknown> } | undefined) =>
+    (r?.fields.Account_Name as { id?: string } | null)?.id;
+
+  it("is deterministic", () => {
     expect(make()).toEqual(make());
     expect(make().length).toBeGreaterThan(0);
+  });
+
+  it("links contacts of the deal's own account", () => {
+    for (const row of make()) {
+      const deal = deals.find((d) => d.id === (row.fields.Deal as { id: string }).id);
+      const contact = contacts.find((c) => c.id === (row.fields.Contact as { id: string }).id);
+      expect(accountOf(contact)).toBeDefined();
+      expect(accountOf(contact)).toBe(accountOf(deal));
+    }
+  });
+
+  it("mixes roles with empty roles and uses unique ids from the new base", () => {
+    const rows = make();
+    expect(rows.some((r) => r.fields.Contact_Role === null)).toBe(true);
+    expect(rows.some((r) => typeof r.fields.Contact_Role === "string")).toBe(true);
+    const ids = rows.map((r) => BigInt(r.id));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every((id) => id >= contactRolesIdBase)).toBe(true);
   });
 });

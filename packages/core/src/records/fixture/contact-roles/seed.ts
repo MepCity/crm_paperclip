@@ -1,7 +1,9 @@
 import type { FieldValue, RecordData } from "../../contract";
 import { contactRoleNames } from "./picklists";
 
-const idBase = 900000000000000000n;
+/** First id of the Contact_Roles range; the registry starts `initialNextId` above the seed rows. */
+export const contactRolesIdBase = 950000000000000000n;
+const idBase = contactRolesIdBase;
 
 function accountOf(record: RecordData, key: string): string | null {
   const value = record.fields[key];
