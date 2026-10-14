@@ -26,7 +26,6 @@ import {
   Minus,
   PanelLeftClose,
   PanelLeftOpen,
-  Pencil,
   Phone,
   Plus,
   Settings,
@@ -111,6 +110,17 @@ function FieldEdit(props: SVGProps<SVGSVGElement>) {
         d="M1.38 9.66h1.1l6.07-6.07-1.1-1.1-6.07 6.07v1.1zM9.11 3.04l1.1-1.1c.28-.28.28-.74 0-1.01l-.83-.83c-.28-.28-.74-.28-1.01 0l-1.1 1.1 1.1 1.1z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+/** Solid 45-degree pencil (tip bottom-left) used beside the board grouping select. */
+function BoardEdit(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 24 24" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" />
     </svg>
   );
 }
@@ -506,7 +516,7 @@ export const Icons = {
   columnSortAsc: ColumnSortArrowUp,
   columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
-  boardEdit: thin(Pencil),
+  boardEdit: BoardEdit,
   task: thin(ClipboardCheck),
   userRound: thin(UserRound),
   building: thin(Building2),

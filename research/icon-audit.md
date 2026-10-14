@@ -16,9 +16,9 @@ Rule (ADR 0003): one icon set (Lucide) through `apps/web/src/components/ui/icon.
 | All lists | View-type switcher | original ink-box glyphs | thin outline list/split/grid/chart/cards | same originals | no |
 | All lists | Column options | original arrows | thin up/down arrows | same | no |
 | List and detail | Calendar, phone, mail, building, folder, tag, lock | Lucide, stroke 2 | thin outline | same Lucide, stroke 1.5 via `thin()` | yes (weight) |
-| Record detail header | Back arrow, prev/next chevrons | original, 1.5 | thin arrow/chevrons | same | no |
+| Record detail header | Back arrow, prev/next chevrons | original 1.5 arrow, thin chevrons | thin arrow/chevrons | original `ArrowLeft` SVG (1.5 stroke) kept, chevrons via `thin()` | no |
 | Record detail fields | Edit pencil (MEP-527) | filled original pencil | filled pencil, measured 11.5 px ink box | kept (measured custom glyph) | no |
-| Deals board card | Edit pencil | filled original pencil | thin outline pencil | Lucide `Pencil` (`boardEdit`) | yes |
+| Deals board card | Edit pencil | filled 45° pencil | filled pencil | original `BoardEdit` SVG (MEP-527, no Lucide match) | no |
 | Activities card (record detail) | Task, meeting, call category | direct Lucide import, stroke 2 | outline clipboard-check, calendar, handset | `Icons.task`, `Icons.calendar`, `Icons.phone` | yes (via icon.tsx, stroke 1.5) |
 | Activities card | Owner silhouette | direct Lucide `UserRound` | outline user | `Icons.userRound` | yes |
 | Alerts | error, success, info, warning | Lucide, stroke 2 | thin outline | same, 1.5 | yes (weight) |
@@ -29,4 +29,4 @@ Rule (ADR 0003): one icon set (Lucide) through `apps/web/src/components/ui/icon.
 
 ## No Lucide match (kept as original SVG)
 
-Ink-box-measured glyphs (view-type switcher set, filter toggle funnel, table-with-plus, diagonal expand, record portrait silhouettes, filled carets, thumbs, stopwatch). Each already exists in `icon.tsx`, is drawn originally, and was approved with its owning screen.
+Ink-box-measured glyphs (view-type switcher set, filter toggle funnel, table-with-plus, diagonal expand, record portrait silhouettes, filled carets, thumbs, stopwatch, detail-card field pencil `fieldEdit`, Deals board pencil `boardEdit` — MEP-527). Each already exists in `icon.tsx`, is drawn originally, and was approved with its owning screen.
