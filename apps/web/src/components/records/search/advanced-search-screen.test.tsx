@@ -240,7 +240,6 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
