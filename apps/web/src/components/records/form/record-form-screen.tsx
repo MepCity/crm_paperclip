@@ -39,6 +39,8 @@ import {
   initialFormValues,
   normalizeFormValue,
   numberValue,
+  resolveFormRules,
+  stageProbabilityWrite,
   textValue,
 } from "./form-model";
 import { FormRow, type FormRowColumn } from "./form-row";
@@ -168,24 +170,33 @@ function LoadedRecordForm({
   users: OwnerOption[];
 }) {
   const mode: FormMode = intent === "edit" ? "edit" : "create";
+  const rules = useMemo(
+    () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
+    [config.rules, mode, metadata, sourceRecord],
+  );
   const sections = applySectionColumnOverrides(
     buildFormModel(metadata, mode),
     config.sectionColumnOverrides,
     metadata,
     mode,
   );
-  const fields = formFields(metadata, sections, mode, config.rules);
+  const fields = formFields(metadata, sections, mode, rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const ruleDefaults =
-    typeof config.rules.defaultValues === "function"
-      ? config.rules.defaultValues(metadata)
-      : config.rules.defaultValues;
-  const emptyValues = () =>
-    initialFormValues(fields, {
-      [config.rules.owner]: currentUserId,
+    typeof rules.defaultValues === "function" ? rules.defaultValues(metadata) : rules.defaultValues;
+  const emptyValues = () => {
+    const started = initialFormValues(fields, {
+      [rules.owner]: currentUserId,
       ...ruleDefaults,
       ...config.createPrefill,
     });
+    const rule = rules.stageProbability;
+    // A prefilled stage is a stage choice as much as a click is: its probability follows, unless
+    // the caller named the probability itself.
+    if (!rule || config.createPrefill?.[rule.probability] !== undefined) return started;
+    const write = stageProbabilityWrite(rules, metadata, rule.stage, started[rule.stage] ?? null);
+    return write ? { ...started, [write.field]: write.value } : started;
+  };
   const cloneSeed =
     intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
   const [baseline] = useState(() =>
@@ -222,7 +233,7 @@ function LoadedRecordForm({
   const labelsByField = useMemo(() => {
     const labels = new Map<string, string>();
     const fieldByName = new Map(fields.map((field) => [field.apiName, field]));
-    const addressRules = addressRulesList(config.rules);
+    const addressRules = addressRulesList(rules);
     for (const section of sections) {
       const sectionFields = section.columns.flat();
       const parents = addressRules
@@ -237,7 +248,7 @@ function LoadedRecordForm({
       }
     }
     return labels;
-  }, [sections, config.rules, fields]);
+  }, [sections, rules, fields]);
 
   useEffect(() => {
     if (saving || !errorFocusPending.current || Object.keys(errors).length === 0) return;
@@ -246,9 +257,8 @@ function LoadedRecordForm({
       const rows = rootRef.current?.querySelectorAll<HTMLElement>("[data-form-field]");
       for (const row of rows ?? []) {
         const fieldName = row.dataset.formField ?? "";
-        const prefixName =
-          config.rules.prefix?.field === fieldName ? config.rules.prefix.prefix : undefined;
-        const longitudeName = addressRulesList(config.rules).find(
+        const prefixName = rules.prefix?.field === fieldName ? rules.prefix.prefix : undefined;
+        const longitudeName = addressRulesList(rules).find(
           (rule) => rule.latitude === fieldName,
         )?.longitude;
         const compositeError =
@@ -278,16 +288,16 @@ function LoadedRecordForm({
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [errors, saving, config.rules]);
+  }, [errors, saving, rules]);
 
   /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
   const dependentClears: Readonly<Record<string, readonly string[]>> = useMemo(() => {
     const map: Record<string, readonly string[]> = {};
-    for (const rule of addressRulesList(config.rules)) {
+    for (const rule of addressRulesList(rules)) {
       map[rule.country] = [rule.state];
     }
     return map;
-  }, [config.rules]);
+  }, [rules]);
 
   function change(name: string, value: FieldValue) {
     const field = byName.get(name);
@@ -295,6 +305,8 @@ function LoadedRecordForm({
       field && normalizeFormValue(field, value) === null ? (dependentClears[name] ?? []) : [];
     const writes: Record<string, FieldValue> = { [name]: value };
     for (const dependent of clears) writes[dependent] = null;
+    const probability = stageProbabilityWrite(rules, metadata, name, value);
+    if (probability) writes[probability.field] = probability.value;
     setValues((previous) => ({ ...previous, ...writes }));
     setErrors((previous) => {
       const next = { ...previous };
@@ -365,7 +377,6 @@ function LoadedRecordForm({
   }
 
   function row(field: FieldDefinition, column: FormRowColumn, parent?: FieldDefinition): ReactNode {
-    const rules = config.rules;
     const addressRules = addressRulesList(rules);
     if (rules.omitted?.includes(field.apiName) || field.apiName === rules.prefix?.prefix)
       return null;
@@ -512,6 +523,8 @@ function LoadedRecordForm({
           }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          numberLimits={rules.numberLimits?.[field.apiName]}
+          lookupPicker={rules.lookupPickers?.[field.apiName]}
           lookupRecordHref={
             field.dataType === "lookup"
               ? (id: string, targetMod?: string) => {
@@ -579,13 +592,13 @@ function LoadedRecordForm({
         }}
       >
         {sections.map((section) => {
-          if (config.rules.omittedSections?.includes(section.label)) return null;
+          if (rules.omittedSections?.includes(section.label)) return null;
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );
           const sectionFields = columns.flat();
           const sectionFieldNames = new Set(sectionFields.map((field) => field.apiName));
-          const addressRules = addressRulesList(config.rules);
+          const addressRules = addressRulesList(rules);
           const groupsInSection = addressRules.flatMap((rule) => {
             const parent = byName.get(rule.field);
             if (!parent || !sectionFieldNames.has(parent.apiName)) return [];
@@ -697,10 +710,10 @@ function LoadedRecordForm({
       {pickerOpen
         ? config.renderOwnerPicker?.({
             users,
-            selectedId: textValue(values[config.rules.owner]),
+            selectedId: textValue(values[rules.owner]),
             onCancel: closePicker,
             onDone: (id) => {
-              change(config.rules.owner, id);
+              change(rules.owner, id);
               closePicker();
             },
           })

@@ -920,11 +920,14 @@ describe("activity field codec", () => {
       expect(() => decodeInput(input, metadata)).toThrow(ValidationError);
     }
   });
-  it.each(["NEXT7DAYS", "TODAYANDOVERDUE"] as const)("round trips exact %s tokens", (token) => {
-    const criteria: Criteria = { field: "Due_Date", comparator: "less_equal", value: { token } };
-    const wire = encodeCriteria(criteria);
-    if (!wire || "group" in wire) throw new Error("Expected a leaf criterion");
-    expect(wire.value).toBe(`\${${token}}`);
-    expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
-  });
+  it.each(["NEXT7DAYS", "TODAYANDOVERDUE", "CURRENTTIME"] as const)(
+    "round trips exact %s tokens",
+    (token) => {
+      const criteria: Criteria = { field: "Due_Date", comparator: "less_equal", value: { token } };
+      const wire = encodeCriteria(criteria);
+      if (!wire || "group" in wire) throw new Error("Expected a leaf criterion");
+      expect(wire.value).toBe(`\${${token}}`);
+      expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+    },
+  );
 });
