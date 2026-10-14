@@ -16,6 +16,7 @@ import { countQueriesPrefix, listQueriesPrefix } from "@/lib/api/client/query-ke
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import { DealsContactPersonSummary } from "./deals-contact-person-summary";
+import { DealsNextActionSummary } from "./deals-next-action-summary";
 import { createDealsRelatedLists } from "./deals-related-lists";
 import { DealsSalesSummary } from "./deals-sales-summary";
 import { DealsStageOverview } from "./deals-stage-overview";
@@ -139,11 +140,17 @@ export function DealRecordScreen({
           />
         ),
         contactSummary: (
-          <DealsContactPersonSummary
-            dealRecord={record}
-            contactRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Contacts", id)}
-            accountRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Accounts", id)}
-          />
+          <>
+            <DealsContactPersonSummary
+              dealRecord={record}
+              contactRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Contacts", id)}
+              accountRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Accounts", id)}
+            />
+            <DealsNextActionSummary
+              dealId={record.id}
+              recordPath={(module, id) => moduleRecordPath(slotOrgSlug, module, id)}
+            />
+          </>
         ),
         relatedRailAfterFooter: <DealsSalesSummary record={record} />,
       };
