@@ -8,6 +8,7 @@ import {
 import type { OrgContext } from "../../tenancy/types";
 import {
   activityDate,
+  activityParentIds,
   activityParentModules,
   activityRules,
   activityState,
@@ -153,6 +154,7 @@ export function createFixtureRecordService(
     };
     const seededModules = store.modules;
     const seedContext: FixtureHookContext = {
+      registeredModules: Object.keys(fixtureModules),
       moduleStore: (module) => {
         const moduleState = seededModules.get(module);
         if (!moduleState) throw new NotFoundError("Module not found.");
@@ -203,9 +205,13 @@ export function createFixtureRecordService(
     if (!record) throw new NotFoundError("Record not found.");
     return record;
   };
-  const resolveRead = (module: string, record: RecordData) => {
+  const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
-    return resolveRecordReferences(record, bundle.metadata.fields, referenceModules());
+    return resolveRecordReferences(
+      bundle.readRecord?.(record, now) ?? record,
+      bundle.metadata.fields,
+      referenceModules(),
+    );
   };
   const validateReferences = (module: string, input: RecordInput) => {
     const bundle = bundleFor(module);
@@ -222,7 +228,10 @@ export function createFixtureRecordService(
   const assertModuleWritable = (module: string) => {
     if (bundleFor(module).readOnly) throw new ForbiddenError("This module is read-only.");
   };
-  const hookContext: FixtureHookContext = { moduleStore };
+  const hookContext: FixtureHookContext = {
+    moduleStore,
+    registeredModules: Object.keys(fixtureModules),
+  };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
     if (record.fields.Locked__s === true)
       throw new RecordLockedError(
@@ -234,27 +243,19 @@ export function createFixtureRecordService(
   const linkedActivities = (module: string, now: Date) => {
     const result = new Map<string, LinkedActivity[]>();
     if (!activityParentModules.has(module)) return result;
-    const field = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
     for (const [activityModule, rule] of Object.entries(activityRules)) {
       if (!Object.hasOwn(fixtureModules, activityModule)) continue;
       for (const record of moduleStore(activityModule).records.values()) {
-        const ref = record.fields[field];
-        if (
-          !ref ||
-          typeof ref !== "object" ||
-          isJsonArray(ref) ||
-          ref.module !== module ||
-          typeof ref.id !== "string"
-        )
-          continue;
-        const items = result.get(ref.id) ?? [];
-        items.push({
-          kind: rule.kind,
-          activityId: record.id,
-          date: activityDate(activityModule, record),
-          state: activityState(activityModule, record, now),
-        });
-        result.set(ref.id, items);
+        for (const id of activityParentIds(module, record)) {
+          const items = result.get(id) ?? [];
+          items.push({
+            kind: rule.kind,
+            activityId: record.id,
+            date: activityDate(activityModule, record),
+            state: activityState(activityModule, record, now),
+          });
+          result.set(id, items);
+        }
       }
     }
     return result;
@@ -279,7 +280,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
-      .map((record) => resolveRead(module, record))
+      .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
@@ -308,7 +309,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: stamp,
       };
-      bundle.applyRules?.(fields, input, record.fields);
+      bundle.applyRules?.(fields, input, record.fields, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       overrides.set(record.id, fields);
       return { id: record.id, fields };
@@ -362,7 +363,7 @@ export function createFixtureRecordService(
       Modified_By: ctx.userId,
       Modified_Time: clock().toISOString(),
     };
-    bundle.applyRules?.(fields, normalized, master.fields);
+    bundle.applyRules?.(fields, normalized, master.fields, hookContext);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
@@ -656,7 +657,7 @@ export function createFixtureRecordService(
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
-      bundle.applyRules?.(fields, normalized);
+      bundle.applyRules?.(fields, normalized, undefined, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const record = { id, fields };
       assertUniqueFieldValues(
@@ -685,7 +686,7 @@ export function createFixtureRecordService(
         Modified_By: ctx.userId,
         Modified_Time: clock().toISOString(),
       };
-      bundle.applyRules?.(fields, normalized, record.fields);
+      bundle.applyRules?.(fields, normalized, record.fields, hookContext);
       fields[bundle.displayNameField] = bundle.fullName(fields);
       const updated = { id, fields };
       const moduleState = moduleStore(module);

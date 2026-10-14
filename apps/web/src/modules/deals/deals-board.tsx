@@ -41,15 +41,21 @@ export function buildOptimisticDealCard(card: BoardCard, targetColumn: BoardColu
 
 export const dealsBoardToolbar = (
   <>
-    <select
-      aria-label="Board grouping"
-      className="rounded border border-control-border bg-surface px-2 py-1"
-      defaultValue="STAGEVIEW"
-    >
-      <option value="STAGEVIEW">STAGEVIEW</option>
-    </select>
+    <span className="relative inline-flex h-[27px] w-[109px] items-center">
+      <select
+        aria-label="Board grouping"
+        className="h-full w-full appearance-none rounded border border-control-border bg-surface pl-2 pr-6 text-sm text-(--color-text-muted) outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+        defaultValue="STAGEVIEW"
+      >
+        <option value="STAGEVIEW">STAGEVIEW</option>
+      </select>
+      <Icons.recordFormCaret
+        aria-hidden
+        className="pointer-events-none absolute right-3 h-[5px] w-2 text-(--color-text-muted)"
+      />
+    </span>
     <Button variant="ghost" aria-label="Board settings">
-      <Icons.fieldEdit aria-hidden className="h-4 w-4" />
+      <Icons.boardEdit aria-hidden className="h-4 w-4" />
     </Button>
   </>
 );

@@ -6,6 +6,7 @@ import type {
   ModuleApiName,
   RecordData,
 } from "./contract";
+import { isJsonArray } from "./json";
 
 export const activityRules: Readonly<Record<string, { kind: ActivityKind; dateField: string }>> = {
   Tasks: { kind: "task", dateField: "Due_Date" },
@@ -13,6 +14,24 @@ export const activityRules: Readonly<Record<string, { kind: ActivityKind; dateFi
   Calls: { kind: "call", dateField: "Call_Start_Time" },
 };
 export const activityParentModules = new Set(["Leads", "Contacts", "Accounts", "Deals"]);
+
+/** Shared parent identity matching for activity reads and cascading deletion. */
+export function activityParentIds(module: ModuleApiName, record: RecordData): string[] {
+  if (!activityParentModules.has(module)) return [];
+  const ids = new Set<string>();
+  for (const field of ["Who_Id", "What_Id"]) {
+    const ref = record.fields[field];
+    if (
+      ref &&
+      typeof ref === "object" &&
+      !isJsonArray(ref) &&
+      ref.module === module &&
+      typeof ref.id === "string"
+    )
+      ids.add(ref.id);
+  }
+  return [...ids];
+}
 
 export function activityState(
   module: ModuleApiName,

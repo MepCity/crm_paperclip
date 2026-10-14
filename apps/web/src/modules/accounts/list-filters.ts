@@ -7,8 +7,9 @@ import type { ModuleScreenDefinition } from "../types";
 
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
 
-/** System Defined Filters rows AL-20 - AL-25; Activities, Campaigns, Latest Email Status are absent. */
+/** System Defined Filters rows AL-20 - AL-25; Activities is enabled in M5; Campaigns, Latest Email Status are absent. */
 const systemRows: readonly [string, ModuleKey?][] = [
+  ["Activities"],
   ["Locked"],
   ["Record Action"],
   ["Related Records Action"],
@@ -77,11 +78,20 @@ export function buildAccountsFilterGroups(input: Input): readonly FilterGroup[] 
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, laterModule], index) => ({
-        id: `system-${index}`,
-        label,
-        ...(laterModule ? { laterModule } : { disabled: true }),
-      })),
+      items: systemRows.map(([label, laterModule], index) => {
+        if (label === "Activities") {
+          return {
+            id: "Activities",
+            label,
+            systemEditor: "activities" as const,
+          };
+        }
+        return {
+          id: `system-${index}`,
+          label,
+          ...(laterModule ? { laterModule } : { disabled: true }),
+        };
+      }),
     },
     {
       id: "fields",

@@ -1604,3 +1604,41 @@ it("uses URL presentation state for configured boards and keeps table-only modul
     screen.getByRole("button", { name: "Split presentation" }).getAttribute("aria-disabled"),
   ).toBe("true");
 });
+
+it("applies and clears activities system filter on module list", async () => {
+  const records = createFixtureRecordService(ctx);
+  const config = await leadsConfigWithFilters(records);
+  const listSpy = vi.spyOn(records, "list");
+  const countSpy = vi.spyOn(records, "count");
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  const user = userEvent.setup();
+
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+
+  const activitiesCheckbox = screen.getByRole("checkbox", { name: "Activities" });
+  await user.click(activitiesCheckbox);
+
+  const overdueRadio = screen.getByRole("radio", { name: "Overdue" });
+  await user.click(overdueRadio);
+
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+
+  await waitFor(() => {
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    const countQuery = countSpy.mock.calls.at(-1)?.[1];
+    expect(listQuery?.activityFilter).toEqual({ choice: "overdue" });
+    expect(countQuery?.activityFilter).toEqual({ choice: "overdue" });
+  });
+
+  await user.click(screen.getByRole("button", { name: "Clear" }));
+
+  await waitFor(() => {
+    const listQuery = listSpy.mock.calls.at(-1)?.[1];
+    const countQuery = countSpy.mock.calls.at(-1)?.[1];
+    expect(listQuery?.activityFilter).toBeUndefined();
+    expect(countQuery?.activityFilter).toBeUndefined();
+  });
+});
