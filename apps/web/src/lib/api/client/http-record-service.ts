@@ -14,11 +14,13 @@ import type {
   SearchGroup,
 } from "@crm/core/records";
 import {
+  decodeActivitySummaries,
   decodeCurrency,
   decodeList,
   decodeModule,
   decodeRecord,
   decodeView,
+  encodeActivityFilter,
   encodeCriteria,
   encodeInput,
   invalid,
@@ -71,8 +73,14 @@ function requiredWire<T>(value: T | undefined, label: string): T {
   return value;
 }
 
-function listBody(query: Pick<ListQuery, "filters" | "search">): unknown | undefined {
-  const body: { filters?: ReturnType<typeof encodeCriteria>; search?: string } = {};
+function listBody(
+  query: Pick<ListQuery, "filters" | "search" | "activityFilter" | "includeActivitySummary">,
+): unknown | undefined {
+  const body: import("../wire/types").WireRestrictions = {};
+  if (query.activityFilter !== undefined)
+    body.activity_filter = encodeActivityFilter(query.activityFilter);
+  if (query.includeActivitySummary !== undefined)
+    body.include_activity_summary = query.includeActivitySummary;
   if (query.filters) body.filters = encodeCriteria(query.filters);
   if (query.search !== undefined) body.search = query.search;
   return Object.keys(body).length ? body : undefined;
@@ -269,6 +277,7 @@ export function createHttpRecordService({
         return projectList(
           {
             records: [],
+            ...(query.includeActivitySummary ? { activitySummaries: {} } : {}),
             page: query.page,
             perPage: query.perPage,
             moreRecords: false,
@@ -277,7 +286,15 @@ export function createHttpRecordService({
           query,
         );
       }
-      return projectList(decodeList(body.data, body.info, metadata), query);
+      return projectList(
+        {
+          ...decodeList(body.data, body.info, metadata),
+          ...(body.activity_summaries === undefined
+            ? {}
+            : { activitySummaries: decodeActivitySummaries(body.activity_summaries) }),
+        },
+        query,
+      );
     },
 
     async summarize(module, query) {
@@ -293,7 +310,7 @@ export function createHttpRecordService({
 
     async count(
       module: ModuleApiName,
-      query: Pick<ListQuery, "viewId" | "filters" | "search">,
+      query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
     ): Promise<number> {
       const path = operationPath(operations.count, { module });
       const restrictions = listBody(query);

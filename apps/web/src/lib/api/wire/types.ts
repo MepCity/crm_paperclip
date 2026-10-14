@@ -82,11 +82,26 @@ export type WireViewsResponse = {
   info: WirePageInfo & { default?: string };
 };
 export type WireViewResponse = { custom_views: readonly WireView[] };
-export type WireBulkResponse = { data: readonly WireRecord[]; info: WireInfo };
+export type WireActivitySummaries = Readonly<
+  Record<
+    string,
+    { kind: import("@crm/core/records").ActivityKind; activity_id: string; date: string | null }
+  >
+>;
+export type WireBulkResponse = {
+  data: readonly WireRecord[];
+  info: WireInfo;
+  activity_summaries?: WireActivitySummaries;
+};
 export type WireCountResponse = { count: number };
 export type WireRecordResponse = { data: readonly WireRecord[] };
 export type WireUsersResponse = { users: readonly WireUser[]; info: WirePageInfo };
-export type WireRestrictions = { filters?: WireCriteria; search?: string };
+export type WireRestrictions = {
+  filters?: WireCriteria;
+  search?: string;
+  activity_filter?: import("@crm/core/records").ActivityFilterValue;
+  include_activity_summary?: boolean;
+};
 
 export interface WireCurrency {
   symbol: string;

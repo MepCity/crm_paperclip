@@ -6,6 +6,16 @@ import {
   ValidationError,
 } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
+import {
+  activityDate,
+  activityParentModules,
+  activityRules,
+  activityState,
+  type LinkedActivity,
+  matchesActivityFilter,
+  selectActivitySummary,
+  validateActivityFilter,
+} from "../activities";
 import type {
   DuplicateGroup,
   FieldDefinition,
@@ -278,16 +288,51 @@ export function createFixtureRecordService(
           : "Cannot update record that is not approved yet",
       );
   };
+  const linkedActivities = (module: string, now: Date) => {
+    const result = new Map<string, LinkedActivity[]>();
+    if (!activityParentModules.has(module)) return result;
+    const field = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
+    for (const [activityModule, rule] of Object.entries(activityRules)) {
+      if (!Object.hasOwn(fixtureModules, activityModule)) continue;
+      for (const record of moduleStore(activityModule).records.values()) {
+        const ref = record.fields[field];
+        if (
+          !ref ||
+          typeof ref !== "object" ||
+          isJsonArray(ref) ||
+          ref.module !== module ||
+          typeof ref.id !== "string"
+        )
+          continue;
+        const items = result.get(ref.id) ?? [];
+        items.push({
+          kind: rule.kind,
+          activityId: record.id,
+          date: activityDate(activityModule, record),
+          state: activityState(activityModule, record, now),
+        });
+        result.set(ref.id, items);
+      }
+    }
+    return result;
+  };
   const matching = (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
     applyView = true,
+    now = clock(),
   ) => {
     const bundle = bundleFor(module);
     const view = applyView ? viewFor(module, query.viewId) : undefined;
     const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
     if (query.filters) validateCriteria(query.filters, fieldMap);
-    const runtimeCtx = { userId: ctx.userId, now: clock() };
+    if (query.activityFilter !== undefined) {
+      validateActivityFilter(query.activityFilter);
+      if (!activityParentModules.has(module))
+        throw new ValidationError({ activityFilter: ["Choose a parent record module."] });
+    }
+    const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
+    const runtimeCtx = { userId: ctx.userId, now };
     const storedRows = [...moduleStore(module).records.values()];
     if (module === "DealHistory") storedRows.reverse();
     return storedRows
@@ -296,7 +341,9 @@ export function createFixtureRecordService(
         (record) =>
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
-          matchesSearch(record, query.search, bundle.searchFields),
+          matchesSearch(record, query.search, bundle.searchFields) &&
+          (!query.activityFilter ||
+            matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
       );
   };
   const validateIds = (ids: readonly string[]) => {
@@ -576,9 +623,18 @@ export function createFixtureRecordService(
       if (Object.keys(errors).length) throw new ValidationError(errors);
       const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
       const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
-      const rows = sortRecords(matching(module, query), applied, fieldMap);
+      const now = clock();
+      const rows = sortRecords(matching(module, query, true, now), applied, fieldMap);
       const start = (query.page - 1) * query.perPage;
+      const activities = query.includeActivitySummary ? linkedActivities(module, now) : undefined;
+      const activitySummaries = Object.fromEntries(
+        rows.slice(start, start + query.perPage).flatMap((row) => {
+          const summary = selectActivitySummary(activities?.get(row.id) ?? []);
+          return summary ? [[row.id, summary]] : [];
+        }),
+      );
       return copy({
+        ...(query.includeActivitySummary ? { activitySummaries } : {}),
         records: rows.slice(start, start + query.perPage).map((record) =>
           query.fields === undefined
             ? record

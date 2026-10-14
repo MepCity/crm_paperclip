@@ -15,6 +15,7 @@ import type {
   RecordInput,
 } from "@crm/core/records";
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
+import { validateActivityFilter } from "@crm/core/records/activities";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -656,4 +657,39 @@ export function decodeCurrency(value: unknown): CurrencyDefinition {
     name: currency.name,
     prefixSymbol: currency.prefix_symbol,
   };
+}
+
+/** Interim additive activity wire fields, pending observed request evidence. */
+export function decodeActivityFilter(
+  value: unknown,
+): import("@crm/core/records").ActivityFilterValue {
+  validateActivityFilter(value);
+  return structuredClone(value);
+}
+export const encodeActivityFilter = decodeActivityFilter;
+export function encodeActivitySummaries(value: NonNullable<ListResult["activitySummaries"]>) {
+  return Object.fromEntries(
+    Object.entries(value).map(([id, summary]) => [
+      id,
+      {
+        kind: summary.kind,
+        activity_id: summary.activityId,
+        date: summary.date,
+      },
+    ]),
+  );
+}
+export function decodeActivitySummaries(
+  value: import("./types").WireActivitySummaries,
+): NonNullable<ListResult["activitySummaries"]> {
+  return Object.fromEntries(
+    Object.entries(value).map(([id, summary]) => [
+      id,
+      {
+        kind: summary.kind,
+        activityId: summary.activity_id,
+        date: summary.date,
+      },
+    ]),
+  );
 }
