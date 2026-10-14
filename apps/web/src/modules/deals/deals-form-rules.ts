@@ -30,12 +30,32 @@ export function buildDealsFormDefaults(metadata?: ModuleMetadata): Record<string
 
 export const DEALS_FORM_DEFAULTS = buildDealsFormDefaults();
 
+/** `PicklistOption.stage.category` values whose records show a reason for loss. */
+export const DEALS_FORM_LOST_STAGE_CATEGORIES = ["Closed Lost"] as const;
+
+/** Reason For Loss is editable in metadata but painted only while the record's stage is lost. */
+export const DEALS_FORM_REASON_FOR_LOSS = "Reason_For_Loss__s";
+
 export const dealsFormRules: FormRules = {
   owner: "Owner",
   currency: "Amount",
   currencies: ["Amount", "Expected_Revenue"],
-  omitted: ["Connected_To__s", "Reason_For_Loss__s"],
+  omitted: ["Connected_To__s"],
   omittedSections: ["Deal Image"],
+  stageProbability: { stage: "Stage", probability: "Probability" },
+  numberLimits: { Probability: { min: 0, max: 100 } },
+  // Interim: neither popup was painted in the Deals capture, so the Contact picker draws the
+  // same observed record-picker shape as Choose Account, named after the Contact Name column.
+  lookupPickers: {
+    Contact_Name: { chrome: "observed", searchLabel: "Search by Contact Name" },
+  },
+  stageConditionalFields: [
+    {
+      field: DEALS_FORM_REASON_FOR_LOSS,
+      stage: "Stage",
+      categories: DEALS_FORM_LOST_STAGE_CATEGORIES,
+    },
+  ],
   defaultValues: buildDealsFormDefaults,
 };
 
@@ -43,7 +63,8 @@ export const dealsFormRules: FormRules = {
  * Spec column order for Deal Information (seven rows in two columns).
  * Row 1: Deal Owner (left) / Amount (right)
  * Row 2: Deal Name (left) / Closing Date (right)
- * Row 3: Account Name (left) / Stage (right)
+ * Row 3: Account Name (left) / Stage (right), with Reason For Loss under Stage only while the
+ *        record's stage is a lost category
  * Row 4: Type (left) / Probability (%) (right)
  * Row 5: Next Step (left) / Expected Revenue (right)
  * Row 6: Lead Source (left) / Campaign Source (right)
@@ -51,5 +72,13 @@ export const dealsFormRules: FormRules = {
  */
 export const DEALS_FORM_INFORMATION_COLUMNS = [
   ["Owner", "Deal_Name", "Account_Name", "Type", "Next_Step", "Lead_Source", "Contact_Name"],
-  ["Amount", "Closing_Date", "Stage", "Probability", "Expected_Revenue", "Campaign_Source"],
+  [
+    "Amount",
+    "Closing_Date",
+    "Stage",
+    DEALS_FORM_REASON_FOR_LOSS,
+    "Probability",
+    "Expected_Revenue",
+    "Campaign_Source",
+  ],
 ] as const;

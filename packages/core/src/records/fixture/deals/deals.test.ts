@@ -216,6 +216,7 @@ describe("Deals export and fixture", () => {
         if (
           !ref ||
           typeof ref !== "object" ||
+          !("module" in ref) ||
           typeof ref.module !== "string" ||
           typeof ref.id !== "string"
         )
