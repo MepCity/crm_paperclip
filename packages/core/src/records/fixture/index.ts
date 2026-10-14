@@ -8,6 +8,7 @@ import {
 import type { OrgContext } from "../../tenancy/types";
 import {
   activityDate,
+  activityParentIds,
   activityParentModules,
   activityRules,
   activityState,
@@ -153,6 +154,7 @@ export function createFixtureRecordService(
     };
     const seededModules = store.modules;
     const seedContext: FixtureHookContext = {
+      registeredModules: Object.keys(fixtureModules),
       moduleStore: (module) => {
         const moduleState = seededModules.get(module);
         if (!moduleState) throw new NotFoundError("Module not found.");
@@ -226,7 +228,10 @@ export function createFixtureRecordService(
   const assertModuleWritable = (module: string) => {
     if (bundleFor(module).readOnly) throw new ForbiddenError("This module is read-only.");
   };
-  const hookContext: FixtureHookContext = { moduleStore };
+  const hookContext: FixtureHookContext = {
+    moduleStore,
+    registeredModules: Object.keys(fixtureModules),
+  };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
     if (record.fields.Locked__s === true)
       throw new RecordLockedError(
@@ -238,27 +243,19 @@ export function createFixtureRecordService(
   const linkedActivities = (module: string, now: Date) => {
     const result = new Map<string, LinkedActivity[]>();
     if (!activityParentModules.has(module)) return result;
-    const field = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
     for (const [activityModule, rule] of Object.entries(activityRules)) {
       if (!Object.hasOwn(fixtureModules, activityModule)) continue;
       for (const record of moduleStore(activityModule).records.values()) {
-        const ref = record.fields[field];
-        if (
-          !ref ||
-          typeof ref !== "object" ||
-          isJsonArray(ref) ||
-          ref.module !== module ||
-          typeof ref.id !== "string"
-        )
-          continue;
-        const items = result.get(ref.id) ?? [];
-        items.push({
-          kind: rule.kind,
-          activityId: record.id,
-          date: activityDate(activityModule, record),
-          state: activityState(activityModule, record, now),
-        });
-        result.set(ref.id, items);
+        for (const id of activityParentIds(module, record)) {
+          const items = result.get(id) ?? [];
+          items.push({
+            kind: rule.kind,
+            activityId: record.id,
+            date: activityDate(activityModule, record),
+            state: activityState(activityModule, record, now),
+          });
+          result.set(id, items);
+        }
       }
     }
     return result;

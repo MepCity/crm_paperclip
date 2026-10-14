@@ -718,7 +718,7 @@ recurrence remain opaque and never execute.
 
 Activities are read from registered Tasks/Events/Calls stores in the bound
 organization. Unregistered modules are ignored. Parent links match both module
-and opaque ID: Who_Id for Leads/Contacts, What_Id for Accounts/Deals.
+and opaque ID: either Who_Id or What_Id, using the shared activityParentIds helper.
 Without Open Activity means no open activity; Without Any Activity means none
 of either state; Activity Done means at least one closed activity. Overdue means
 an open date before today's UTC midnight. Today and Tomorrow use half-open UTC
@@ -736,3 +736,5 @@ are unchanged. These additive wire fields are interim, pending observed evidence
 Open questions: the reference CRM's applied-filter timezone/day boundary and
 multi-activity badge precedence/date selection remain unobserved. The UTC boundary
 and task/meeting/call tie order require confirmation at the module board gate.
+
+Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent; child locks are ignored temporarily, merge and conversion do not cascade, and restore is out of scope.

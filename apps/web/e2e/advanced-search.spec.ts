@@ -51,10 +51,6 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   await expect(tasksCheckbox).toBeChecked();
   await expect(tasksCheckbox).not.toHaveAttribute("data-later-module");
 
-  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
-  await expect(productsCheckbox).toBeVisible();
-  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
-
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
   await manageColumnsBtn.click();

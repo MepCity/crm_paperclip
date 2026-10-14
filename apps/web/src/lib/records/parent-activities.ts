@@ -6,6 +6,8 @@ export interface ParentActivityRow {
   subject: string;
   href: string;
   dateText: string | null;
+  /** Raw ISO sort date (due date, start or call start); null when the activity has none. */
+  date: string | null;
   ownerName: string | null;
   details: readonly { label: string; value: string }[];
 }
@@ -142,6 +144,7 @@ export function buildParentActivityCategories(
         subject: text(record.fields[subjectField]) ?? "",
         href: input.recordPath(kind, record.id),
         dateText: dateText(kind, record, input),
+        date: sortDate(kind, record),
         ownerName: input.ownerName(record.fields.Owner),
         details: detailPairs(kind, record, input.variant, input),
       }),
