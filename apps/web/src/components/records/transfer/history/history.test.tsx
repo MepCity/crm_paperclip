@@ -151,3 +151,30 @@ test("export module filter", async () => {
   expect(screen.queryByText("All Leads")).toBeNull();
   expect(screen.getByText("Open Deals")).toBeTruthy();
 });
+
+test("loading state displays skeleton", () => {
+  const { unmount } = render(
+    <ImportHistory
+      jobs={[]}
+      loading
+      onUndo={async () => {}}
+      canUndo={() => true}
+      moduleLabel={label}
+    />,
+  );
+  expect(screen.getByRole("status")).toBeTruthy();
+  expect(screen.getByText("Loading")).toBeTruthy();
+  unmount();
+
+  render(
+    <ExportHistory
+      jobs={[]}
+      loading
+      downloadHref={() => "/x"}
+      onRetry={() => {}}
+      moduleLabel={label}
+    />,
+  );
+  expect(screen.getByRole("status")).toBeTruthy();
+  expect(screen.getByText("Loading")).toBeTruthy();
+});
