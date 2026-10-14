@@ -620,3 +620,42 @@ test("checkbox renders inside the form row control slot", () => {
   const slot = document.querySelector("[data-record-form-control-slot]");
   expect(slot?.contains(screen.getByRole("checkbox"))).toBe(true);
 });
+
+test("polymorphic lookup draws a type select and clears the value when the type changes", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const who: FieldDefinition = {
+    ...field("lookup"),
+    apiName: "Who_Id",
+    label: "Contact Name",
+    lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
+  };
+  render(
+    <Controlled
+      type="lookup"
+      field={who}
+      initial={{ module: "Contacts", id: "1", name: "Ada" }}
+      onChange={change}
+    />,
+  );
+  const select = screen.getByRole("button", { name: /Contact Name module/ });
+  expect(select.textContent).toContain("Contact");
+  await user.click(select);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test.each(["ALARM", "RRULE"] as const)(
+  "%s renders an off switch that stores an object",
+  async (type) => {
+    const user = userEvent.setup();
+    const change = vi.fn();
+    render(<Controlled type={type} onChange={change} />);
+    const toggle = screen.getByRole("switch", { name: "Example" });
+    expect((toggle as HTMLInputElement).checked).toBe(false);
+    await user.click(toggle);
+    expect(change.mock.calls.at(-1)?.[0]).toEqual(expect.any(Object));
+    await user.click(toggle);
+    expect(change).toHaveBeenLastCalledWith(null);
+  },
+);

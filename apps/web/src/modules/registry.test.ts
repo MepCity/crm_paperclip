@@ -3,6 +3,7 @@ import { accountsScreenDefinition } from "./accounts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { getModuleScreens, resolveModuleScreen } from "./registry";
+import { tasksScreenDefinition } from "./tasks/definition";
 
 test("the shipped modules is registered", () => {
   expect(getModuleScreens().map((definition) => definition.tab)).toEqual([
@@ -10,10 +11,12 @@ test("the shipped modules is registered", () => {
     "Contacts",
     "Accounts",
     "Deals",
+    "Tasks",
   ]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
   expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
   expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);
+  expect(resolveModuleScreen("Tasks")).toBe(tasksScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });
 
