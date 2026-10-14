@@ -642,3 +642,36 @@ Open questions and temporary decisions:
   that boundary still requires research. Who_Id Leads routing awaits form research.
 - Reminder delivery, participant invitations/notifications, recurrence generation,
   check-in transitions, database adapter and screens remain outside this definition.
+
+## Calls
+
+Calls follows the Tasks pattern (`fixture/calls/`): sanitized export metadata,
+picklists, views, deterministic seed and a derived related-target table.
+
+- **Fields / views:** 26 fields (Call_Type, Call_Start_Time and Call_Duration are
+  required), 4 layout sections, 6 picklists (`Call_Type`, `Call_Purpose`,
+  `Call_Result`, `Reminder`, `Outgoing_Call_Status`, `Scheduled_In_CRM`) and 23
+  system views with a null sort (shared default order applies).
+- **Targets:** `Who_Id` = Contacts, Leads (temporary rule, same constant as Tasks,
+  kept in `callsWhoTargets`). `What_Id` = the `Calls` rows of
+  `related-targets.json` minus the Who targets: Accounts, Campaigns, Cases, Deals,
+  Invoices, Products, Purchase_Orders, Quotes, Sales_Orders, Vendors. Resolution
+  reuses the shared multi-target reference code; no Calls-specific resolver.
+- **Related reads:** "calls of this record" is `list`/`count` with a `Who_Id` or
+  `What_Id` equality filter; unit tests cover Leads, Contacts, Accounts, Deals.
+- **Seed:** 250 synthetic calls (ids from 130000000000000000; next id range
+  150000000000000000), every picklist value used, linked to seeded Leads,
+  Contacts, Accounts and Deals; other modules' seeds are unchanged.
+- **Interim rules:** the source `${EMPTY}` token is projected to `is_empty`; the
+  integer criterion value `"0"` becomes a number; a source column listed
+  twice (Completed Calls: Call_Start_Time) appears once. `Owner` is exported with
+  `read_only: true` but `field_read_only: false`; it stays writable here because
+  the shared ownership change writes it.
+- **Not covered:** call logging/scheduling rules, duration calculation, reminders,
+  CTI. Reminder is a plain picklist. There is no HTTP layer in the repository yet;
+  generic CRUD is verified through the module-independent contract suite and the
+  service-level tests.
+- **Open questions:** (1) whether an open/closed call split exists beyond the
+  exported view criteria (Scheduled / Overdue / Completed on
+  `Outgoing_Call_Status`); none is encoded. (2) Whether `Who_Id` should allow more
+  than Contacts and Leads (export lists only Contacts; Leads kept as for Tasks).

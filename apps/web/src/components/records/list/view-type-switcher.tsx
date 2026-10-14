@@ -72,9 +72,12 @@ const TILE_BASE =
 export function ViewTypeSwitcher({
   presentation,
   onPresentationChange,
+  tileIds,
 }: {
   presentation?: "table" | "board";
   onPresentationChange?: (presentation: "table" | "board") => void;
+  /** Tile ids to draw, in order; omitted draws all six tiles (Tasks has no Sheet tile). */
+  tileIds?: readonly string[];
 } = {}) {
   return (
     <div
@@ -82,7 +85,7 @@ export function ViewTypeSwitcher({
       data-view-type-switcher
       data-part="view-type-switcher"
     >
-      {TILES.map((tile) => {
+      {TILES.filter((tile) => !tileIds || tileIds.includes(tile.id)).map((tile) => {
         const target = tile.id === "list" ? "table" : tile.id === "split" ? "board" : null;
         const enabled = Boolean(presentation && target);
         const active = presentation ? target === presentation : tile.id === "list";
