@@ -49,6 +49,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
   await expect(tasksCheckbox).toBeVisible();
   await expect(tasksCheckbox).toBeChecked();
+  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module");
 
   const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
   await expect(productsCheckbox).toBeVisible();

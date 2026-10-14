@@ -194,7 +194,7 @@ describe("AdvancedSearchScreen", () => {
     const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
     await user.click(createdTimeOption);
 
-    // The sort triggered search should STILL have the unapplied modules (all 7)
+    // The sort triggered search should still include every shipped module (all 7)
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({

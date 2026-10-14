@@ -46,6 +46,17 @@ test.describe("Deals record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Next Action summary links to the nearest open activity", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const summary = page.locator("[data-deals-next-action-summary]");
+    await expect(summary.getByRole("heading", { name: "Next Action" })).toBeVisible();
+    await summary.getByRole("link").click();
+    await expect(page).toHaveURL(/\/tab\/(Tasks|Events|Calls)\/[^/]+$/);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("header, rail order and stage history badge", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
