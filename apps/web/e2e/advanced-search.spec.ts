@@ -48,7 +48,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
 
   const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
   await expect(tasksCheckbox).toBeVisible();
-  await expect(tasksCheckbox).toHaveAttribute("data-later-module", "M5");
+  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module", /.+/);
 
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
@@ -68,4 +68,36 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
 
   // Verify navigation to record detail page
   await expect(page).toHaveURL(/\/crm\/[^/]+\/tab\/Leads\/[^/?]+/);
+});
+
+test("Tasks module filter is enabled and lists a matching task; Meetings and Calls stay later-module", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Tasks", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: { data: [{ Subject: "Zephyrquartz advanced" }] },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephyrquartz`);
+  const tasksCard = page.getByRole("region", { name: "Tasks search results" });
+  await expect(tasksCard).toBeVisible();
+  await expect(tasksCard.getByRole("link", { name: "Zephyrquartz advanced" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
+  await expect(tasksCheckbox).toBeVisible();
+  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(tasksCheckbox).toBeChecked();
+
+  // Meetings and Calls are unregistered on this branch: they still show the later-module badge.
+  for (const name of ["Meetings", "Calls"]) {
+    await expect(filterPanel.getByRole("checkbox", { name })).toHaveAttribute(
+      "data-later-module",
+      "M5",
+    );
+  }
 });
