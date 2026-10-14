@@ -200,6 +200,14 @@ export interface FormRules {
   stageProbability?: StageProbabilityRule;
   numberLimits?: Readonly<Record<string, NumberLimits>>;
   stageConditionalFields?: readonly StageConditionalField[];
+  /** The end of each pair may not be earlier than its start (Meetings: From and To). */
+  ranges?: readonly { start: string; end: string }[];
+  /** A checked flag switches the listed date-time fields to a day-only entry. */
+  allDay?: { flag: string; fields: readonly string[] };
+  /** Record modules a participants field can pick from. */
+  participantModules?: Readonly<Record<string, readonly string[]>>;
+  /** Fields drawn in place but inert until the named module ships. */
+  laterModuleFields?: Readonly<Record<string, import("@/components/ui/later-module").ModuleKey>>;
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
   defaultValues?:
     | Readonly<Record<string, FieldValue>>

@@ -4,9 +4,9 @@ import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
 import type { ModuleScreenDefinition } from "../types";
 import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
-import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 import { TaskRecordScreen } from "./task-record-screen";
 import { buildTasksBusinessCardFields, buildTasksDetailSections } from "./tasks-detail-sections";
+import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 import { tasksRecordHeaderIdentity } from "./tasks-record-header";
 import {
   buildTasksRecordMoreMenuGroups,

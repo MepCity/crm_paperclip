@@ -7,8 +7,7 @@ import {
   type RecordDetailSlotsContext,
 } from "@/components/records/detail/record-detail-screen";
 import { TaskRelationPanel } from "../tasks/task-relation-panel";
-import { meetingParticipants } from "./meeting-participants";
-import { MeetingsParticipantsCard } from "./meetings-participants-card";
+import { MeetingParticipantsSlot } from "./meeting-participants-slot";
 
 export type MeetingRecordScreenProps = Omit<RecordDetailScreenProps, "buildDetailSlots">;
 
@@ -17,9 +16,7 @@ export function MeetingRecordScreen(props: MeetingRecordScreenProps) {
   const buildDetailSlots = useCallback(
     ({ record, orgSlug }: RecordDetailSlotsContext) => ({
       sidePanel: <TaskRelationPanel record={record} orgSlug={orgSlug} />,
-      contactSummary: (
-        <MeetingsParticipantsCard participants={meetingParticipants(record.fields.Participants)} />
-      ),
+      contactSummary: <MeetingParticipantsSlot record={record} />,
     }),
     [],
   );

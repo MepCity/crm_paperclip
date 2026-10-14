@@ -1,5 +1,4 @@
 import { Icons } from "@/components/ui/icon";
-import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { isDealInlineEditable } from "../deals/deals-inline-edit";
 import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
 import type { ModuleScreenDefinition } from "../types";
@@ -10,6 +9,7 @@ import {
   buildMeetingsBusinessCardFields,
   buildMeetingsDetailSections,
 } from "./meetings-detail-sections";
+import { meetingsFormRules } from "./meetings-form-rules";
 import { meetingsRecordHeaderIdentity } from "./meetings-record-header";
 import {
   buildMeetingsRecordMoreMenuGroups,
@@ -36,7 +36,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Event_Title", "Start_DateTime", "End_DateTime", "What_Id", "Who_Id", "Owner"],
   buildFilterGroups: buildMeetingsFilterGroups,
   form: {
-    rules: accountsFormRules,
+    rules: meetingsFormRules,
     inventoryChrome: true,
   },
   detail: {
