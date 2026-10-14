@@ -7,18 +7,15 @@ This document covers their Overview card and their representation in Timeline.
 Module 6 uses the Module 2+ control-inventory rule: no measurement table or
 network-contract reconstruction.
 
-**Status: research resumed; composer/menu cross-module evidence in progress.**
-Existing screenshots and control inventories establish the collapsed card,
-existing notes and the Accounts open composer. Earlier script-loading and shared
-browser connection failures were research-access problems, not Notes product
-errors. The capture connection timeout was increased in the local research tool;
-`m6-notes-accounts-resume` now renders the Accounts list successfully.
-A previously completed capture, `m6-notes-accounts-open`, was recovered after
-the interrupted run and reconciled visually with its accessibility tree and
-control inventory. No note was entered or saved.
-A retry using a normalized record path (`m6-notes-accounts-composer`) showed
-an invalid-route page; both requested controls matched zero elements and were
-skipped. It supplies no Notes UI evidence.
+**Status: research complete for UI Lead review; observation limits listed below.**
+The four parent modules now have visually reconciled open empty composers.
+Accounts additionally establishes populated/long-note state, the expanded
+formatting toolbar, hover-only row edit/delete controls and visible note-bearing
+Timeline history. No content command
+or write action was exercised. Historical script-loading and intermittent CDP
+failures are access incidents, not Notes product empty/error states. Longer
+per-step waits allowed subsequent Contacts, Accounts, Deals and Leads captures
+to finish. The occupied-profile failure is preserved in the capture log below.
 
 ## Layout
 
@@ -35,9 +32,9 @@ The Add Note label in each entry's metadata must not be treated as a confirmed
 reply action: its interaction was not observed.
 
 Leads and Deals screenshots show an empty list followed directly by Add a note;
-there is no separate empty-message copy. Contacts has an empty Notes list in
-its accessibility tree, but its screenshot scroll position hides the card above
-the viewport. Do not treat that screenshot as visual proof of the Contacts card.
+there is no separate empty-message copy. The older Contacts screenshot hides Notes above the viewport;
+`m6-notes-contacts-composer-ready` now visually confirms its empty card and open
+composer. The older screenshot alone is not visual proof of that card.
 
 ## Control inventory
 
@@ -125,7 +122,7 @@ Source: screenshots and available controls in `m3c-card-notes` and
 ### State A: collapsed empty Notes card — Leads, Contacts, Deals
 
 Sources: `detail-notes-card`, `m2d2-card-notes`, `m4c-card-notes`.
-Contacts visual coverage limitation is recorded above.
+Contacts empty-card visual coverage is supplied by the newer open-composer capture.
 
 64. Related-list rail Notes: opens / targets the Notes section; existing safe
     capture clicks identify `#notesRL` or `#newleft_Notes`.
@@ -136,7 +133,7 @@ Contacts visual coverage limitation is recorded above.
 68. Card top right Recent Last combobox: current ordering label. Options,
     persistence and actual ordering remain unresolved. Do not change selection.
 69. Below empty list Add a note textbox: collapsed composer entry point.
-    Opening expands the composer; Accounts open state is captured below.
+    Opening expands the composer; Accounts and Deals open states are captured below.
     Never filled or saved.
 
 No card search, filter button, pagination control or list-level More control
@@ -158,19 +155,18 @@ Shared controls 64–69 remain applicable; the rail count shows two entries.
     unresolved, not classified as reply without evidence.
 76. Note metadata date and author: read-only attribution.
 
-No row edit, delete, reply or overflow control is visible in the idle screenshot
-or available control inventory. Hover-only controls are unresolved; the updated
-local capture tool supports named/stable hover steps and a new observation is
-in progress. Do not manufacture an
-ellipsis action menu from an assumed pattern. No list pagination is visible for
-the two-entry sample. Show More belongs to one note's content, not list paging.
+Idle screenshots show no row actions. `m6-notes-accounts-tools` now confirms
+hover-only edit and delete icons (inventory 106–107). No overflow, reply or pin
+control is visible in that observed hover state. No list pagination is visible
+for the two-entry sample. Show More belongs to one note's content, not list paging.
 
 ### State C: Timeline with existing notes — Accounts
 
-Source: `m3m-detail-timeline` accessibility tree and screenshot. The screenshot
-confirms the Timeline frame, History selection and filter control, but shows
-call and field-change events only; note events are outside its viewport.
-The note-event body and its Show More remain semantic evidence, not visual proof.
+Sources: `m3m-detail-timeline` and `m6-notes-accounts-timeline-visible`.
+The older screenshot confirms the frame and filter only. The new screenshot
+brings both existing note events into the viewport using a text hover scoped
+to the Timeline panel; long body, Show More, short body, timestamps and author
+attribution now reconcile visually with accessibility/control evidence.
 Timeline controls are owned by parent record history unless stated otherwise.
 
 77. Timeline History tab: selected history view.
@@ -188,10 +184,12 @@ Contacts history evidence includes call and field-change events but no note
 example; Deals history evidence shows No logs found. This is a history empty
 state, distinct from the Notes card's empty list.
 
-### State D: open empty composer — Accounts
+### State D: open empty composer — all four parent modules
 
-Source: `m6-notes-accounts-open`, screenshot, accessibility tree and
-`controls.json`. Opened by targeting Notes and clicking the collapsed editor;
+Sources: `m6-notes-accounts-open`, `m6-notes-deals-open` and
+`m6-notes-leads-open`, `m6-notes-contacts-composer-ready`, screenshots,
+accessibility trees and `controls.json`. Contacts, Deals and Leads have no existing notes and
+show the same eight composer affordances as populated Accounts. Opened by targeting Notes and clicking the collapsed editor;
 no input, formatting command, attachment or save was performed. Shared frame
 1–63 and populated card 64–76 remain visible. The composer expands beneath
 the notes inside the same card rather than opening a separate modal.
@@ -203,20 +201,61 @@ the notes inside the same card rather than opening a separate modal.
     tree. No text was entered.
 84. Body bottom-right resize grip: visible editor affordance; not dragged.
 85. Footer left formatting icon (`cxNotesRichTextFormatIcon`): text-formatting
-    launcher; expanded toolbar and its individual commands pending observation.
+    launcher; opening it reveals controls 91–105 without changing body content.
 86. Beside formatting, paperclip (`notesAttachFile`): attachment launcher with
     button role; not activated. File selection and attachment persistence untested.
 87. Footer right Cancel: abandonment action; not exercised in this capture.
 88. Beside Cancel, Save: visibly disabled while both fields are empty; disabled
     state is also present in the accessibility tree. Never clicked.
 
-No separate link icon is visible in this collapsed formatting state. Do not infer
-that link insertion is absent from the expanded toolbar.
+The paperclip is visible in the collapsed formatting state. The expanded toolbar
+includes Insert Link and occupies that footer area; the paperclip is not visible
+in the expanded screenshot. No content tool was activated.
 
-### State E: note row actions
+89. Contacts Timeline Interactions tab: beside History, parent-module history
+    navigation; visible in `m2d2-detail-timeline`, not selected.
+90. Deals Timeline No logs found: non-interactive history empty-state indicator;
+    visible in `m4d-detail-timeline`, distinct from an empty Notes card.
 
-Hover and menu observation in progress. Do not infer row actions from other
-modules or classify the metadata Add Note label as a reply control.
+### State E: expanded formatting toolbar and hovered existing note
+
+Source: `m6-notes-accounts-tools` screenshot, aria and controls. Clicking only
+the formatting launcher revealed this horizontal footer row; hovering the first
+existing note revealed its two row icons. Shell 1–63, card 64–76 and composer
+82–88 remain applicable. Commands below describe the labelled affordance;
+none was exercised, so selected styles, keyboard effects and picker internals
+are unresolved. Order is left to right after the formatting launcher.
+
+91. Bold (Cmd+B): bold formatting button.
+92. Italics (Cmd+I): italic formatting button.
+93. Underline (Cmd+U): underline formatting button.
+94. Strikethrough: strike formatting button.
+95. Font Color: text-colour picker launcher, not opened.
+96. Font Background Color: highlight/background picker launcher, not opened.
+97. Bulleted List with dropdown indicator: list formatting, not opened.
+98. Numbered List with dropdown indicator: list formatting, not opened.
+99. Insert Link: link insertion launcher, not opened.
+100. Increase Indent: increase indentation affordance.
+101. Decrease Indent: appears faded in the empty editor; no disabled attribute
+     is exposed by the captured inventory, so do not assume enabled behaviour.
+102. Subscript: lower-script formatting affordance.
+103. Superscript: upper-script formatting affordance.
+104. Emojis: emoji picker launcher, not opened.
+105. Clear Formatting: appears faded in the empty editor; no command exercised.
+106. Hovered note top right pencil (`notesEdit`): direct edit affordance, not a
+     menu launcher. Never clicked because editing is outside read-only research.
+107. Beside pencil, trash (`notesDelete`): direct delete affordance. Never clicked;
+     confirmation and result cannot be established without invoking a write flow.
+
+No row overflow menu, reply or pin control is visible in the observed hover
+state. The task's menu example does not establish that such a menu exists.
+Hover evidence records the actual two direct controls instead. Metadata Add Note
+remains an event label, not a confirmed reply action.
+
+108. Timeline short-note event, beneath author attribution, Add Note with down
+     indicator: button role and `aria-controls="timelineNotes"` establish an
+     event-specific launcher. Not clicked; reply/association semantics remain
+     unresolved. This differs from the plain Add Note metadata in the Notes card.
 
 ## Fields
 
@@ -242,9 +281,9 @@ No account, record, profile or customer identifiers are included here.
   inspect the collapsed card. Existing captures demonstrate this in four modules.
 - Creation observation: Accounts Add a note expands an inline empty composer. Do not type,
   format content, attach a file, choose a link, save or reply.
-- Menu observation flow pending: identify an existing note's uniquely named or
-  stable captured control; inspect attributes and screenshot first; open only
-  if it is clearly a menu launcher. Select no menu item.
+- Row observation flow: hover an existing note using its captured stable
+  selector. Direct edit/delete icons appear; no menu launcher is observed.
+  Do not click these actions or select any edit/delete confirmation.
 - Sorting observation: Recent Last is the captured setting; changing sorting
   may persist a preference, so no selection change is permitted.
 - Timeline relationship: record Notes and activity records are separate related
@@ -273,8 +312,8 @@ failure, not evidence for the reference CRM's Notes error design.
   control inventory. Fifteen blocked requests recorded.
 - `m3m-detail-timeline`, `m2d2-detail-timeline`, `m4d-detail-timeline`:
   existing Timeline accessibility evidence. Accounts screenshot reconciles the
-  frame and filter, but not note events below its viewport; the other Timeline
-  screenshots still need reconciliation.
+  frame and filter, but not note events below its viewport; Contacts screenshot confirms field/call history and Interactions; Deals
+  screenshot confirms No logs found. All three older screenshots were reconciled.
 - `detail-notes`: list-screen evidence only; not a Notes card capture.
 - `w2b-filter-related-notes`, `w2b-filter-related-notes-ops`,
   `w2d-op-notes-without`: Leads list related-note filtering context, outside
@@ -294,34 +333,77 @@ failure, not evidence for the reference CRM's Notes error design.
   blocked requests. No content was entered or saved.
 - `m6-notes-accounts-resume`: successful list-only access verification;
   no clicks, two blocked legacy reminder/notification POSTs.
+- `m6-notes-contacts-open`: record navigation succeeded, Notes and composer
+  steps skipped with zero matches before the detail finished rendering. Final
+  screenshot shows record details, not the Notes card; eight blocked requests.
+  It does not resolve the missing Contacts card/composer visual evidence.
+- `m6-notes-deals-open`: record navigation and empty composer click succeeded;
+  intermediate Notes target skipped with zero matches. The editor click scrolled
+  the card into view. Screenshot confirms controls 82–88 and resize affordance;
+  nine blocked requests, no note content entered or saved.
+- `m6-notes-contacts-composer-ready`: longer-wait retry; all three safe clicks
+  succeeded. Visible empty card and open composer reconcile with controls/aria.
+  Fifteen blocked requests; no content entered or saved.
+- `m6-notes-leads-open`: record, Notes target and empty composer clicks all
+  succeeded; screenshot confirms the same open composer on an empty card.
+  Eight blocked requests; no content entered or saved.
+- `m6-notes-accounts-tools`: record, Notes, empty composer and formatting
+  launcher opened; existing note hovered. All five steps succeeded. Screenshot
+  and control inventory reconcile toolbar 91–105 and row actions 106–107.
+  Nineteen blocked requests; no formatting command or row action selected.
+- `m6-notes-accounts-timeline`: record and Timeline navigation succeeded;
+  `#timeline` is not itself scrollable, so the scroll step made no change.
+  Screenshot confirms history frame, not the note events below the viewport.
+  Twelve blocked requests.
+- `m6-notes-accounts-timeline-visible`: record and Timeline navigation, then
+  note-text hover scoped to `#timeline`, all succeeded. Hover scrolled the existing
+  short note into view without clicking it. Screenshot shows both note events,
+  long-content Show More and Timeline Add Note; fourteen blocked requests.
+- `m6-notes-accounts-timeline-note`: Timeline navigation succeeded; the note
+  text hover matched two elements and was skipped. Eleven blocked requests;
+  no note interaction occurred. Not visual proof of the off-screen note.
+- `m6-notes-accounts-hover`: CDP timeout followed by occupied-profile failure;
+  empty output directory, no reference clicks, blocked-request count unknown.
 - `m6-notes-accounts-composer`: invalid normalized-route attempt; both clicks
   skipped with zero matches, zero blocked requests; no Notes evidence.
 
+Successful composer captures blocked legacy reminder/notification requests and
+telemetry. Contacts and Leads additionally blocked related-count POSTs; Deals
+blocked grouped-count and module-settings requests. These denials do not prove
+that a write succeeded and may limit unrelated counts or settings availability.
+The capture tool's write guard remained active throughout.
+
 All captures remain in the local research workspace. No screenshots or note
 values are committed. Prior blocked-request counts do not mean writes succeeded;
-all three new attempts applied no clicks. The shared browser window was not closed.
+only navigation, empty-composer opening and observation steps were applied in
+the successful continuations. No note text, formatting command, file selection,
+save, edit, delete, reply or preference change was performed. The shared browser
+window was not closed.
 
-## Open questions and completion checklist
+## Open questions and observation limits
 
-1. Research access recovered: successful list acquisition and recovered Accounts
-   composer evidence are available. Complete the remaining captures below.
-2. Accounts open composer is captured. Capture the remaining parent modules
-   and the expanded formatting toolbar; reconcile every input,
-   tool and Save / Cancel control against screenshot and controls.json.
-3. Identify row menu or hover-only actions without positional selectors or
-   unsafe clicks; capture the menu and select nothing.
-4. Capture Contacts Notes with the card actually in the viewport.
-5. Reconcile Timeline screenshots with controls.json; obtain note-bearing
-   examples in other modules if existing records expose them safely.
-6. Determine Recent Last options and persistence without changing a preference.
-7. Determine whether Show More expansion persists; do not click until established.
-8. Find a naturally existing large note collection to observe list paging,
-   incremental loading and counts; never add notes to create this state.
-9. Confirm title/body UI requiredness, rich-text limits, permission-dependent
-   actions and write outcomes through public primary documentation or record as
-   not observable without a write. Saving, editing and deleting remain forbidden.
-10. Confirm note attachment/link handling and whether replies or pinning exist;
-    neither is established by current evidence.
+1. Title/body UI requiredness, validation wording, rich-text limits and successful
+   save behaviour are not observable without a write. Metadata limits above do
+   not substitute for UI validation evidence.
+2. Editing, deletion confirmation, persistence, success/error feedback and the
+   Timeline effects of edit/delete are not observable without invoking a write
+   flow. No such action was performed.
+3. Recent Last is observed. Other order options and preference persistence are
+   unresolved; no selection was changed. No Notes-card filter was observed.
+4. Show More belongs to a truncated note/event. Whether expansion persists is
+   unresolved, so it was not clicked.
+5. Only a two-entry collection was observed. Larger collections, paging,
+   incremental loading, count limits and permission variants remain unobserved;
+   no notes were added to manufacture those states.
+6. No reply, pin or overflow is visible in the sampled Overview hover state.
+   Timeline Add Note is a separate observed launcher; its association/reply
+   semantics are unresolved and were not tested. Other note
+   permissions or ownership variants may expose additional actions; do not
+   infer their existence or universal absence.
+7. Attachment and link launchers are identified. File selection, upload,
+   attachment/link validation, insertion and persistence were not exercised.
+   Picker internals are outside this empty-composer observation.
 
-Approval must wait for the missing read-only captures; this draft does not
-satisfy the complete issue acceptance criteria yet.
+All four open-composer screenshots, the formatting toolbar and hovered direct
+row controls are reconciled against their inventories. Remaining questions are
+explicit implementation inputs for lead review, not permission to test writes.
