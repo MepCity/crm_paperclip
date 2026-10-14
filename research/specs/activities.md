@@ -1725,3 +1725,136 @@ All screenshots were opened as images. Raw files stay in the local research work
 - Forms and all record details remain outside this list task.
 
 No board decision is requested by this spec. Unknown behaviour is explicitly preserved for the follow-on research and lead review.
+
+## Visual layout — Activities lists (measured)
+
+MEP-588, board measurement exception to the Module 2 inventory-only rule.
+Measured on 2026-10-15 from existing captures only; no new reference navigation,
+click, fill, selection, toggle or preference change. Coordinates are CSS px,
+origin at the viewport's top-left. All source PNGs are 2940 × 1670 at DPR 2,
+representing 1470 × 835 CSS px. Bounds use exclusive right/bottom edges.
+Raster rounding can introduce 0.5–1 px uncertainty. These are painted bounds,
+not inferred DOM boxes. Exact reference font size/weight is **not observed**;
+ink bounds and apparent regular/bold treatment are specified instead of
+claiming computed CSS from a screenshot. Do not copy reference assets.
+
+Evidence keys (all reference sources remain in the local research workspace):
+
+| Key | Image / accompanying evidence | Measurement method |
+| --- | --- | --- |
+| T | `m5f-tasks-list-base/screenshot.png`; cross-check `m5d-tasks-list-base` | `px.mjs` `h`, `v`, `top`, `box`, `ink`; named control bounds from `controls.json` |
+| M | `m5l-meetings-list-base/screenshot.png` | Same probes and named control bounds |
+| C | `m5l-calls-list-base/screenshot.png` | Same probes and named control bounds |
+| TA / MA / CA | `m5-tasks-actions`, `m5l-meetings-actions`, `m5l-calls-actions` | Menu border runs and image inspection |
+| TV | `m5-tasks-view-selector/screenshot.png` | Menu border runs and image inspection |
+| TC / MC / CC | `m5-tasks-create-menu`, `m5l-meetings-create-menu`, `m5l-calls-create-menu` | Trigger only; `meta.json` records skipped opening clicks; menu contents not observed |
+| LT / LM / LC | `local-tasks.png`, `local-meetings.png`, `local-calls.png` issue attachments | This worktree at `66dc71f`, own running app, synthetic organization and built-in sample records; 1470 × 835, DPR 2 |
+| LH / LA | `local-<module>-hover.png`, `local-<module>-actions.png`, `local-tasks-views.png` in the local evidence archive | Own app only; pointer hover / Actions opening; no reference interaction |
+| P / D | `pixel-probes.txt` / `local-measurements.json` issue attachments | Read-only `px.mjs` probes / local DOM bounds and computed styles; D contains synthetic labels only |
+
+Probe notation below: `h(y,x0,x1)` and `v(x,y0,y1)` are row/column colour
+runs; `top(x0,y0,x1,y1)` samples dominant colours; `box(colour,region)` and
+`ink(colour,region)` find paint extents. The image key selects the PNG.
+
+| ID | Element | Tasks | Meetings | Calls | Source + measurement |
+| --- | --- | --- | --- | --- | --- |
+| V01 | Global frame and page title | Sidebar ends x320; title bar y0–50, white; title ink x336 onward, dark `#313949` | Same as Tasks | Same as Tasks | T/M/C `h(150,315,1470)`, `v(340,0,835)`; title image inspection; exact title font size/weight not observed |
+| V02 | View strip | y50–92, white; All Tasks control (332,58,72,26), pill `#F0F4FC` | Same strip; All Meetings (332,58,97,26) | Same strip; All Calls (332,58,69,26) | T/M/C named view bounds; T `h(60,320,1470)`, `v(340,0,835)` |
+| V03 | Toolbar | y92–138, 46 high, white; canvas below `#EEF1F9` | Same as Tasks | Same as Tasks | T/M/C `v(340,0,835)` |
+| V04 | Filter and Sort | Filter (335,102,69,27), selected `#EDF0F9`; Sort (412,102,62,27) | Same as Tasks | Same as Tasks | T/M/C controls; T `h(105,320,1470)` |
+| V05 | View icons | 26 × 26 tiles around x500,532,564,596,628,660, y103; active tile `#F0F1FF` / `#5464F2`, inactive glyphs `#616E88`; list, kanban, chart, Timeline, bars, chevron | No Timeline; four icons plus chevron; chevron shifts to about x628 | Same as Meetings | T/M/C `top(500,103,677,129)` and image; existing TL/ML/CL inventories. Refresh is absent in base images but painted in TA/MA/CA: do not infer permanent absence |
+| V06 | Create split button | Create Task (1263,99,99,33), More (1362,99,35,33) | Create Meeting (1237,99,125,33), same More | Create Call (1266,99,96,33), same More | T/M/C controls; T `h(100,320,1470)` / `h(105,320,1470)`: gradient `#5767F6` to `#4C63EE` at sampled rows; white label/chevron |
+| V07 | Actions trigger | (1405,100,45,32), pale surface, `#D5D8E9` edge, dark ellipsis | Same as Tasks | Same as Tasks | T/M/C controls; T `h(130,320,1470)`, `box(#313949,335,100,1455,190)` |
+| V08 | Filter card | x335–537 = 202 wide; y153–794 = 641 high, white, ~6 corner radius, 1 px `#DCDBEE` edge; 10 px gap to table | Same as Tasks | Same as Tasks | T/M/C `h(170,315,1470)`, `v(340,130,805)`; rounded corner image inspection |
+| V09 | Filter heading and search | Heading ink starts x354, y175–187, bold-looking dark `#313949`; search outer x354–521, y207–241, 167 × 34; white with `#C5C4D3` edge, placeholder `#8C91AB` | Same as Tasks, module name differs | Same as Tasks, module name differs | T/M/C `top(350,174,520,190)`, `top(350,207,521,242)`; screenshot and border runs |
+| V10 | Filter group headings | System heading ink near y263; field heading near y484; down triangles and bold-looking `#202123`, first label ellipsized | System same; fields near y454 (no Locked row) | Same as Meetings | T/M/C image; `top(350,258,520,280)`; first field checkbox y514 in T / y484 in M/C |
+| V11 | Filter checkboxes and spacing | First box x354–369, y293–308 = 15 × 15; `#C5C4D3`; label ink `#313949`. Single-line step 30; wrapped labels consume ~44 | Same as Tasks; four system rows instead of five | Same as Meetings; field label wrapping differs | T/M/C `box(#C5C4D3,350,290,375,310)` and image; `top(350,290,520,309)` |
+| V12 | Filter open/closed and checked states | Panel and two groups open, no checked box; closed/checked state not observed | Same as Tasks | Same as Tasks | T/M/C image only; no toggles permitted for this issue |
+| V13 | Table card / header | x547–1455; top y153, header through y191 = 38; white, bottom 2 px `#DCDBEE`; text regular-looking `#202123`, Subject ink y166–179 | Same as Tasks; Title ink about y166–177 | Same as Tasks | T/M/C `v(560,130,805)`, `h(190,320,1470)`, T `ink(#202123,690,154,739,188)` |
+| V14 | Column geometry / selection | Checkbox paint x653–668, y164–179, 15 × 15. First text x690. Boundaries x878,1078,1278; 200 px text columns; right sliders overlay x1413–1455 | Checkbox x623–638; first text x660; boundaries x848,1048,1248; text columns also 200 | Same as Tasks geometry | T/M/C `h(170,315,1470)` and `box(#C5C4D3,335,100,1455,190)`; 1 px pale vertical header dividers visible y160–183 |
+| V15 | Column labels / sorting affordance | Subject + small All/down chevron, Due Date, Status, Priority; no persistent sort arrow visible in base | Title + All/down chevron, From, To, Related To | Subject + All/down chevron, Call Type, Call Start Time, Call Duration | T/M/C header images; exact inactive column-menu/hover state not observed |
+| V16 | Data rows and rules | Boundaries y191,244,299,354,393,448,503,542,597,652,709,761; single-line example 39, wrapped examples 53–57; 1 px `#EDF0F4` rules | Boundaries y191,228,285,324,363,420,475,514,553,592; single-line examples 37–39, wrapped 55–57 | Boundaries y191,244,283,340,397,436,491,530,585,640,695,734; 39–57 visible full rows | T/M/C `v(560,130,805)`; T `top(650,363,1410,419)`; heights are examples, not a fixed universal row height |
+| V17 | Row text / cell formats | Normal text `#313949`; dates day.month.year with leading zeros; Status and Priority plain text, no pills; subjects wrap | From/To day.month.year with 12-hour time and AM/PM, or date only; Related To includes a module pictogram; wraps | Call Type plain text, start day.month.year + 12-hour time; duration mm:ss or blank | T/M/C cell image inspection; `top(650,191,1410,227)`; reference font size/weight not observed; no record values reproduced |
+| V18 | Hover / link colour / row actions | No highlighted row in T; completion control not observed. Selection checkbox must not be described as completion | Highlighted row y363–420 uses `#F5F7FC`; link ink `#5464F2`; pencil and note at leading edge | Highlighted row y397–436 same colours; pencil, note, ellipsis | M/C `top(650,363,1410,419)`, image; C hover separately at y397–436; selected-record background not observed in any module |
+| V19 | Footer / paging | Footer top y760, bottom793, 33 high, white; total starts x564; previous (1326,764,25,25), next (1413,764,25,25), range between | Same as Tasks; previous x1334 | Same as Tasks | T/M/C `h(760,320,1470)`, `top(550,761,1450,790)` and controls; observed sample totals/ranges are data, not layout targets |
+| V20 | Empty list | not observed; source populated | not observed; source populated | not observed; source populated | T/M/C; do not invent an illustration/message or trigger a reference filter |
+| V21 | Actions menu | Approximately x1307–1450, y132–358, 143 × 226, white, rounded pale border/shadow; five regular rows then separator and Print View; first row light highlight | x1290–1450, about160 × 226; module label makes menu wider | Same bounds as Tasks | TA/MA/CA `h(140,1250,1460)`, `v(1445,130,365)`; no menu item activated |
+| V22 | View menu / Create menu | TV: x406–726, y91–780, width320, search above Public Views and scrolling rows, three bottom controls. Create menu not observed | View menu not observed; Create menu not observed | View menu not observed; Create menu not observed | TV image; TC/MC/CC skipped clicks in metadata. No new attempt made |
+
+Activities-specific differences from the Leads/Accounts list inventories are
+explicit targets, not reasons to reuse every control of those modules:
+
+| ID | Activities-specific structure | Source |
+| --- | --- | --- |
+| A01 | Tasks has Timeline but no Sheet tile; Meetings/Calls omit Timeline too | TL-05–TL-11; ML-05–ML-09; CL view controls; V05 |
+| A02 | Tasks has Locked plus four action/touch filters; Meetings/Calls omit Locked. Do not add unrelated module system-filter rows | TL-20–TL-26 and ML-14–ML-19; V10–V12 |
+| A03 | Task completion is represented by the Status text in this evidence; separate completion control not observed | TL-34–TL-47; V15/V18 |
+| A04 | Meetings has From/To and related-module pictograms instead of generic contact/account columns or a status badge | ML-32–ML-41; V15/V17/V18 |
+| A05 | Calls has type, start time, duration and leading hover ellipsis; no generic lead/company identity cell | Calls inventory; V15/V17/V18 |
+| A06 | No Create Form Views footer, Client Script tab or form field box is visible on any Activities list | T/M/C entire content region; these form-only controls are also absent locally |
+
+## Difference table — Activities lists
+
+Stable row numbers below are the implementation handoff for MEP-590. Severity
+values: `blocker` = an imported extra control absent at the corresponding
+reference position; `visible` = discernible geometry/format/state discrepancy;
+`minor` = small paint/rounding difference or a documented observation gap.
+Matching measurements are retained with `minor — match` so every measured
+item has a comparison row. No reference customer values are compared with
+sample data; differing counts and string lengths are not defects by themselves.
+`LT/LM/LC`, `LH/LA`, `P/D` resolve to the evidence table above.
+
+| # | Element / modules | Reference | Local | Difference / required result | Severity | Source + measurement |
+| --- | --- | --- | --- | --- | --- | --- |
+| 01 | Tasks field filter: Description | Created Time immediately followed by Due Date | Extra disabled Description row between them | Remove this imported visible row from that position; shifts Due Date and following rows by 30 | blocker | T/LT visible field sequence, V11; D field-row y positions |
+| 02 | Tasks field filter: Locked | Last Activity Time immediately followed by Modified By | Extra disabled Locked row between them | Remove this duplicate field-filter row; Locked already belongs to system filters | blocker | T/LT field sequence, V10–V11; D |
+| 03 | All: view strip background | White | `#EEF1F9` | Whole y50–92 strip is tinted; use reference white | visible | V02; P `h(70,320,1455)` |
+| 04 | All: active view pill bounds | T72 / M97 / C69 wide; x332,y58,h26 | T75.5 / M92.58 / C75.5; x332,y57.5,h26 | Width +3.5 / −4.42 / +6.5; y−0.5; preserve module text-driven bounds | minor | V02, D `[data-view-pill]` |
+| 05 | All: Filter / Sort | Filter 69 × 27 at335,102; Sort62 × 27 at412,102 | Filter69.5 × 27 at335,102; Sort71.97 × 33 at412.5,99 | Filter ~match; Sort +9.97 wide,+6 high,−3y; reference divider atx487 also missing | visible | V04; controls vs D; T/LT toolbar image |
+| 06 | Tasks: view icon inventory / paint | Five view icons + chevron; active26 × 26; inactive `#616E88` | Same inventory,26 × 26; active `#5464F2`, inactive `#616E88` | Match core inventory and colours; do not inherit a Sheet tile | minor — match | V05/A01; D switcher controls; P top colours |
+| 07 | Meetings/Calls: view icons | Four icons + chevron, no Timeline | Same inventory | Match; keep distinct from Tasks | minor — match | V05/A01; M/C, LM/LC, D |
+| 08 | All: Refresh visibility | Absent in base; present in existing Actions captures | Always painted in local base | State-dependent mismatch; do not remove globally on base-only evidence | visible | V05; T/M/C vs TA/MA/CA and LT/LM/LC |
+| 09 | Tasks: Create | Main1263,99,99,33; arrow1362,99,35,33 | Main1207,99,102.5,33; arrow1310.5,99,34,33 | Main−56x,+3.5w; arrow−51.5x,−1w; move group right | visible | V06; D Create anchor / More |
+| 10 | Meetings: Create | Main1237,99,125,33; same reference arrow | Main1191.47,99,118.03,33; local arrow as row09 | Main−45.53x,−6.97w; move group right and size label | visible | V06; LM/D |
+| 11 | Calls: Create | Main1266,99,96,33; same reference arrow | Main1207,99,102.5,33; local arrow as row09 | Main−59x,+6.5w; move group right | visible | V06; LC/D |
+| 12 | All: Create gradient / height | White ink; sampled gradient `#5767F6`/`#4C63EE`; h33 | Blue gradient, white ink, h33 | Height matches; exact local stops not sampled; retain gradient rather than flat fill | minor | V06; LT/LM/LC/D |
+| 13 | All: Actions trigger |1405,100,45,32 |1353,99.5,44,32 |−52x,−0.5y,−1w; right margin73 instead of20 | visible | V07; D Actions |
+| 14 | All: filter card |335,153,202,641 |335,154,202,640 | Width/white/edge match; top +1, height−1 | minor | V08; D section; P vertical probe |
+| 15 | All: filter title / search | Title ink around y175; search354,207,167,34 | Title visually same; search354,208,167,34 | Search +1y; font exact reference CSS not observed; local title14.5/650 | minor | V09; T/M/C vs LT/LM/LC, D |
+| 16 | All: filter group headings | Dark bold-looking ink, system near y263; fields T484,M/C454 | Local15.5px/650 `#202123`, system y260 box; fields T481,M/C451 box | Painted heading near-match; compare ink rather than mixing box top and glyph top | minor | V10; D group buttons; P top colours |
+| 17 | All: filter boxes / label colour |15 × 15, `#C5C4D3`; system labels dark `#313949` |Painted boxes15 × 15; several system labels disabled/faded | Size matches; enabled-looking reference controls are gray locally | visible | V11; T/M/C vs LT/LM/LC; D; screenshot, not hidden native input size |
+| 18 | All: filter open/closed |Panel and groups open; closed not observed |Panel and groups open |Open match; no claim for closed state or selected appearance | minor — match | V12; T/M/C and LT/LM/LC |
+| 19 | All: table card / header height |Card top153; header bottom191 (38 incl top edge) |Card top154; header content155–192 (37), 2px bottom edge |Table/header +1y; preserve shared footer baseline760 | minor | V13; P v560 and D th bounds |
+| 20 | Tasks/Calls: selection gutter |Box653–668; first text690; boundaries878,1078,1278 |Box623–638; first text661; boundaries848,1048,1248 |Checkbox−30x; text−29x; all visible text columns start30px too far left | visible | V14; T/C vs LT/LC; P box/h170 and D th |
+| 21 | Meetings: selection gutter |Box623–638; text660; boundaries848,1048,1248 |Box623–638; text660.5; same boundaries |Matches within0.5px; do not apply Tasks/Calls +30 adjustment to Meetings | minor — match | V14; M/LM; P and D |
+| 22 | All: header typography / dividers |Regular-looking `#202123`; Subject ink13px high; thin pale dividers |14.5px/400 `#202123`; Subject ink13.5px high; dividers present |Near-match ink/colour; exact reference font size/weight not observed | minor | V13–V14; T ink vs local px ink; D |
+| 23 | All: All chevron / sort arrow |Small All with down chevron; no persistent sort arrow in base |All label has no painted chevron; paired sort arrows appear on hover in LH/LA |Restore dropdown affordance; inactive hover sort state in reference not observed | visible | V15; T/M/C vs LT/LM/LC and LH; D first-letter button |
+| 24 | All: column-set distinction |Tasks Subject/Due/Status/Priority; M Title/From/To/Related; C Subject/Type/Start/Duration |Same named visible columns |Match; preserve activity-specific fields, not generic lead columns | minor — match | V15/A03–A05; D th labels |
+| 25 | All: row height / wrapping |Single-line examples37–39; wrapping53–57;1px `#EDF0F4` rules |All sampled rows37; rules `#EDF0F4`; synthetic short subjects |Short sample content cannot prove wrapping parity; reproduce53–57px multiline cases in fix QA; baseline body begins192 vs191 | visible | V16; D first rows; P v550. Do not force all rows to reference long-row height |
+| 26 | Tasks: date format |Zero-padded day.month.year |Abbreviated month, day, comma, year |Locale format differs; use measured numeric layout | visible | V17; T/LT cells; synthetic values omitted |
+| 27 | Tasks: status / priority / completion |Plain text; no completion control observed |Plain text; no separate completion control |Match presentation; no badge or completion feature inferred | minor — match | V17–V18/A03; T/LT |
+| 28 | Meetings: date/time format |Numeric date, space,12-hour time; some date-only |Month name format with comma before time; all sampled rows include time, including all-day samples |Change format; all-day date-only rule needs existing metadata/flow contract, not invented from screenshot | visible | V17; M/LM |
+| 29 | Calls: start / duration |Numeric date + time; duration mm:ss or blank |Month name + comma/time; mm:ss including zero values |Start format differs; mm:ss matches; blank-duration condition not observed locally | visible | V17; C/LC |
+| 30 | Meetings: related-module pictograms |Module pictogram before related record link |Text-only related record link |Missing activity-specific pictogram; recreate with own icon system | visible | V17/A04; M/LM |
+| 31 | Meetings/Calls: row hover background |`#F5F7FC`, with highlighted link `#5464F2` |Hovered cells stay white; title stays `#313949` in LH |Missing visible row/link hover treatment | visible | V18; M/C vs LH; px top(800,195,840,224) local white; reference M top hover region |
+| 32 | Meetings: hover tools |Pencil + note before checkbox |Ellipsis + note |Replace generic first tool with pencil; match geometry without shifting Meetings checkbox | visible | V18/A04; M/LM-hover |
+| 33 | Calls: hover tools |Pencil + note + ellipsis |Ellipsis + note |Missing pencil and wrong sequence/count | visible | V18/A05; C/LC-hover |
+| 34 | Tasks: hover / selected record |Neither highlighted nor selected row observed |Own hover captured; selected state not sampled |Reference comparison not observed; no reference selection permitted | minor | V18; T/LT-hover |
+| 35 | All: footer placement / total |y760–793, white; total startsx564 |Same footer y760–793, totalx564 |Match frame; synthetic total250 vs reference totals is not a layout defect | minor — match | V19; P h760; LT/LM/LC |
+| 36 | All: paging hit areas |Prev/next25 × 25; nextx1413,y764; range centered between |Next DOM link6 × 11 at1421,766.38; range/total baseline slightly higher |Icon paint close, clickable area too small; footer text needs baseline alignment | visible | V19; controls vs D Next; screenshots |
+| 37 | All: empty state |not observed, all supplied sources populated |not sampled; samples populated |No measured empty target; keep as explicit observation gap | minor | V20 |
+| 38 | Tasks/Calls: Actions menu |143 × 226 near1307,132 |~200 × 237 near1197,139 |~57 wider,+11 taller,7 lower; anchor shifted with trigger | visible | V21; TA/CA vs LA; px h145/v1388 |
+| 39 | Meetings: Actions menu |160 × 226 near1290,132 |~200 × 237 near1197,139 |~40 wider,+11 taller,7 lower | visible | V21; MA vs LM-actions; P |
+| 40 | All: Actions separator / highlight |Divider before Print View; pale first-row highlight |Uniform menu spacing without that divider/highlight in captured opening |Restore measured menu grouping; do not activate a write action to inspect | visible | V21; TA/MA/CA vs LA |
+| 41 | Tasks: view menu |320 wide atx406,y91; search, Public Views, scrolling views, fixed bottom controls |Outer panel about237 wide atx420,y91; inner menu235 × 902.25 startsy151; lower content clipped, bottom controls not visible |83px too narrow,14px too far right; labels wrap and selected checkmark takes a separate line; restore scrolling body and accessible bottom controls | visible | V22; TV vs local-tasks-views.png; px h145/h200 and local menu DOM |
+| 42 | All: Create menu |Opening skipped in TC/MC/CC |Opening not captured |not observed; do not fabricate reference menu geometry | minor | V22; skipped-click metadata |
+| 43 | All: form-only imported elements |No Create Form Views footer, Client Script tab or field box |None visible |Match absence; no blocker fabricated for an element absent on both screens | minor — match | A06; T/M/C vs LT/LM/LC |
+| 44 | All: shared shell visible differences |Full utility strip y807–835 and broader navigation/top-right controls |Blank bottom strip, shorter navigation, fewer top-right controls; development badge overlays bottom-left |Shared-shell differences, outside list-only correction; do not copy vendor branding or data. Development badge is local dev tooling, not a product control | visible | V01; full images; app-shell.md / contacts.md shared shell inventory |
+
+Read-only audit: the eleven named existing captures were consulted; no new
+reference capture was run. TC/MC/CC contain attempted but skipped Create-menu
+opening selectors; they are not proof of an open menu. Existing metadata
+records blocked reminder/status/telemetry requests; none was replayed or
+unblocked. Unknown selected/closed/empty states stay unobserved. Local writes
+were limited to our disposable synthetic organization/auth data. Reference
+PNGs, account identifiers and record values are excluded from this repository.
