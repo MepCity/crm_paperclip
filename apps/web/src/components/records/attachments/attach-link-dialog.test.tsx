@@ -42,6 +42,16 @@ test.each(["javascript:alert(1)", "ftp://example.com/a", "example.com/file", "ht
   },
 );
 
+test("clears invalid URL error when user edits the input", async () => {
+  const user = userEvent.setup();
+  setup();
+  await user.type(screen.getByRole("textbox"), "invalid-url");
+  await user.click(screen.getByRole("button", { name: "Attach" }));
+  expect(await screen.findByText("Please enter a valid URL.")).toBeTruthy();
+  await user.type(screen.getByRole("textbox"), "a");
+  expect(screen.queryByText("Please enter a valid URL.")).toBeNull();
+});
+
 test("attaches the trimmed URL", async () => {
   const user = userEvent.setup();
   const { onAttach } = setup();

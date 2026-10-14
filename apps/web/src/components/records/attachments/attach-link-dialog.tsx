@@ -71,7 +71,7 @@ function AttachLinkForm({
         isInvalid={Boolean(message)}
         errorMessage={message}
       />
-      <div className="mt-6 flex justify-between gap-3">
+      <div className="mt-6 flex justify-end gap-(--size-confirm-dialog-actions-gap)">
         <Button type="button" variant="secondary" size="record" onPress={close}>
           Cancel
         </Button>
