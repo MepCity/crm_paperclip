@@ -1,0 +1,74 @@
+.activity-categories-card-body {
+  display: flex;
+  overflow-x: auto;
+  color: var(--color-text);
+  font-size: var(--text-md);
+}
+
+.activity-categories-column {
+  flex: 0 0 50%;
+  min-width: 20rem;
+  min-height: 12rem;
+}
+
+.activity-categories-column:nth-child(even) {
+  background: var(--color-detail-timeline-filter-surface);
+}
+
+.activity-categories-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-panel-border);
+  font-size: inherit;
+  font-weight: var(--font-weight-semibold);
+}
+
+.activity-categories-count {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-detail-timeline-filter-surface);
+}
+
+.activity-categories-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-3);
+}
+
+.activity-categories-row {
+  padding: var(--space-4) var(--space-6) var(--space-3) calc(var(--space-8) + var(--space-4));
+  border-bottom: 1px solid var(--color-detail-divider);
+  overflow-wrap: anywhere;
+}
+
+.activity-categories-subject {
+  display: block;
+}
+
+.activity-categories-owner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.activity-categories-owner svg,
+.activity-categories-heading svg {
+  flex-shrink: 0;
+}
+
+.activity-categories-details {
+  margin: var(--space-4) 0 0;
+}
+
+.activity-categories-details > div {
+  display: grid;
+  grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.activity-categories-details dd {
+  margin: 0;
+}
