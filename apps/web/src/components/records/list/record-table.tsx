@@ -48,6 +48,8 @@ export interface RecordTableProps {
   /** User id → display name. See `CellValue`. */
   ownerNames?: Readonly<Record<string, string>>;
   format: FormatOptions;
+  /** ISO 4217 code for currency cells; plain number when omitted. */
+  currencyCode?: string;
   footer: RecordTableFooterProps;
 }
 
@@ -107,6 +109,7 @@ export function RecordTable({
   settings,
   ownerNames,
   format,
+  currencyCode,
   footer,
 }: RecordTableProps) {
   const empty = records.length === 0;
@@ -301,6 +304,7 @@ export function RecordTable({
                             linkWebsite={linkWebsite}
                             ownerNames={ownerNames}
                             format={format}
+                            currencyCode={currencyCode}
                           />
                         </div>
                         {phoneLaterModule &&

@@ -97,3 +97,8 @@ test("every toolbar icon svg has fill='none' and a stroke", () => {
     expect(svg.getAttribute("stroke")).toBe("currentColor");
   }
 });
+
+test("refresh button is not drawn without onRefresh", () => {
+  render(<ListToolbar {...base} onRefresh={undefined} />);
+  expect(screen.queryByRole("button", { name: "Refresh Custom View" })).toBeNull();
+});

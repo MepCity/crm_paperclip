@@ -33,6 +33,9 @@ test("Deals opens in board presentation by default with toolbar and view switche
   const board = list.locator("[data-record-board]");
   await expect(board).toBeVisible();
 
+  // Board presentation draws no refresh button
+  await expect(list.getByRole("button", { name: "Refresh Custom View" })).toHaveCount(0);
+
   // DP-70, DP-71: Board toolbar controls
   const stageviewSelect = list.getByRole("combobox", { name: "Board grouping" });
   await expect(stageviewSelect).toBeVisible();
@@ -281,10 +284,11 @@ test("Drag-and-drop card to Closed Won opens Verify Details dialog and updates o
   // Drag from Negotiation/Review to Closed Won
   await card.dragTo(wonCol);
 
-  // Verify Details dialog appears
+  // Verify Details dialog appears with TL currency prefix
   const dialog = page.getByRole("dialog", { name: "Verify Details" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Closed Won")).toBeVisible();
+  await expect(dialog.locator(".record-currency-prefix")).toContainText("TL");
 
   // Save the dialog
   await dialog.getByRole("button", { name: "Save" }).click();

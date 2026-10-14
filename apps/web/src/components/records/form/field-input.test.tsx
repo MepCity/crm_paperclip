@@ -97,6 +97,31 @@ test("integer keeps a typed decimal so Save can report it", async () => {
   expect((input as HTMLInputElement).value).toBe("12.5");
   expect(change).toHaveBeenLastCalledWith(12.5);
 });
+test("number limits stop the entry at the business bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} numberLimits={{ min: 0, max: 100 }} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.clear(input);
+  await user.type(input, "1");
+  input.focus();
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+});
+test("an entry without limits keeps stepping past the Deals bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}{ArrowUp}");
+  expect(input.value).toBe("101");
+});
 test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form model", async () => {
   const user = userEvent.setup();
   const change = vi.fn();

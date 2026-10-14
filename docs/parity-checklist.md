@@ -502,11 +502,9 @@ DL-18 is not in the Deals inventory (the Campaigns system filter is absent).
 | DL-17, DL-19–DL-25 | System rows in capture order. Activities M5, Latest Email Status M10, Cadences P3 are inert. Locked, Record Action, Related Records Action, Touched Records and Untouched Records stay disabled like Accounts | `list-filters.test.ts`, `deals-list.spec.ts` |
 | DL-26, DL-27, DL-65–DL-69 | Field rows: Account Name, Amount, Campaign Source (M7, inert), Closing Date, Connected To, Contact Name, then remaining metadata fields | `list-filters.test.ts`, `deals-list.spec.ts` |
 
-Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount through the shared field formatter as plain number without currency code or decimals (e.g. 31,800), Closing Date through the shared date cell, Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
+Temporary table rules (not painted in the Deals capture; Accounts table behaviour): row selection, Deal Name alphabet menu, pagination and total, refresh, row menu, Deal Name detail link, Account Name and Contact Name links, Amount drawn like the board card (`TRY 31,800.00`, empty stays empty; Deals only), Closing Date through the shared date cell (`Sep 26, 2026`, while board cards draw `dd.MM.yyyy`; the difference is a temporary rule), Stage as plain text. Selection, alphabet, paging, both links and the Amount filter are covered by `deals-list.spec.ts`.
 
 Later-module controls: DL-13 M6; DL-17 M5; DL-19 M10; DL-25 P3; DL-66 M7; Manage Tags M6; Export Deals M6; Create Client Script M11; Sheet view P3. View Settings is M11, same as Accounts. Drafts, Deduplicate Deals and Print View stay handler-less, same as Accounts.
-
-Open defects (QA MEP-451): Amount column renders as plain number without currency code or decimals (31,800), inconsistent with stage board TRY formatting.
 
 ### Deals record detail — implemented; QA pending (MEP-412)
 
@@ -538,6 +536,42 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 
 **Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
 
+### Deals create / edit / clone form — implemented; QA pending (MEP-440)
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| DF-01 | Edit Page Layout beside the form title (M11, inert) | shared form chrome, `e2e/deals-form.spec.ts` |
+| DF-02–DF-04 | Cancel, Save and New, Save in the title strip's right group | `e2e/deals-form.spec.ts` |
+| DF-05, DF-06 | Deal Owner field on the session owner, with the Select User dialog behind its lookup icon | `e2e/deals-form.spec.ts`, `select-user-dialog.spec.ts` |
+| DF-07 | Deal Name input with its required marker | `e2e/deals-form.spec.ts` |
+| DF-08, DF-09 | Account Name lookup entry plus the Choose Account picker re-used from the Accounts form | `e2e/deals-form.spec.ts` |
+| DF-10, DF-11, DF-12 | Type, Next Step and Lead Source in the spec's left column | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-13, DF-14 | Contact Name lookup entry with the same picker shape, titled Choose Contact and searched by Contact Name | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-15, DF-16, DF-17 | Amount with the home-currency prefix and the information icon (icon drawn without a handler) | `e2e/deals-form.spec.ts` |
+| DF-18 | Closing Date on the shared masked date entry (DD.MM.YYYY) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
+| DF-19 | Stage select holding the nine metadata stages in order | `e2e/deals-form.spec.ts`, `deals-form-rules.test.ts` |
+| DF-20 | Probability (%) as a bounded integer entry, refilled by the selected stage's metadata probability and still editable by hand | `deals-form-rules.test.ts`, `form-model.test.ts`, `field-input.test.tsx`, `e2e/deals-form.spec.ts` |
+| DF-21, DF-21.1, DF-21.2 | Expected Revenue read-only with its own currency prefix and lock; never computed in the form | `e2e/deals-form.spec.ts` |
+| DF-23, DF-24 | Campaign Source entry and lookup icon drawn in place, inert (M7 `laterModule`) | `e2e/deals-form.spec.ts`, `field-input.test.tsx` |
+| DF-25, DF-29 | Description multiline editor with its lower-right resize grip | `e2e/deals-form.spec.ts` |
+| DF-26, DF-27 | Form footer: Create Form Views label with Standard View and Create a custom form page (M11, inert) | `e2e/deals-form.spec.ts` |
+| DF-28 | Client Script tab on the page's right edge (M11, inert) | `e2e/deals-form.spec.ts` |
+| — | Create-route query-parameter prefill (Stage, Account_Name, Contact_Name and any other create-visible field) | `create-prefill-params.test.ts`, `e2e/deals-form.spec.ts` |
+| — | Edit on a lost stage paints Reason For Loss under Stage; other stages and create leave it out | `deals-form-rules.test.ts`, `form-model.test.ts`, `e2e/deals-form.spec.ts` |
+| — | Deals registered in the module registry: nav rail, Create Records row, module search result and all six routes | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `global-search.test.tsx`, `e2e/shell.spec.ts` |
+
+Interim rules (behaviour the capture did not observe): error copy, focus order,
+unsaved-changes confirmation, save destination and Save and New reset taken from
+the Accounts form; the whole Edit Deal form; the Choose Contact picker's
+configuration; Probability's 0–100 range; a stage prefilled through a query
+parameter refilling Probability.
+
+Known gaps: DF-01, DF-26, DF-27 and DF-28 belong to customization (M11) and
+DF-23 and DF-24 to Campaigns (M7) — drawn in place, inert. The Amount information
+icon is drawn without a handler because the capture never opened it. Expected
+Revenue stays empty after a save: the write service produces no value for it, and
+the formula is pipeline research (MEP-353), not this capture.
+
 ### Deals stage board — done; QA MEP-451 (MEP-413)
 
 Inventory is DP-05, DP-06, DP-70–DP-81, DD-L01–DD-L03.
@@ -557,10 +591,9 @@ Interim rules:
 - Column footer Create Deal sets session prefill and opens `/tab/Deals/create` with preselected Stage.
 - Dragging cards between open stages calls `update("Deals", id, { Stage })` immediately. Dragging into terminal stages (Closed Won, Closed Lost, Closed Lost to Competition) opens the Verify Details dialog.
 
-Open defects (QA MEP-451):
-- Verify Details dialog on board defaults Amount currency prefix to `$` instead of TRY / home currency (DP-99).
-- Overdue Closing Date on board cards in open stages does not render with red / danger tone (DP-80).
-- Board toolbar renders refresh icon button not present in reference pipeline capture.
+- Verify Details dialog on board shows the home currency symbol prefix (`TL` fallback), like record detail (DP-99).
+- Board card Closing Date in an open stage before today draws in danger colour; today, later dates and closed stages stay plain (DP-80). Deal Name draws in the bold title weight (DP-78).
+- Board presentation draws no refresh button; the table presentation keeps it.
 
 ### Deals links in earlier modules — implemented (MEP-415)
 
