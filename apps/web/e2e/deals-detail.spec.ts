@@ -46,6 +46,11 @@ test.describe("Deals record detail", () => {
     await expect(railLinks.nth(3)).toHaveText("Stage History");
     await expect(railLinks.nth(3).locator("..").getByText("1", { exact: true })).toBeVisible();
     await expect(railLinks.nth(14)).toHaveText("Invoices");
+    const addLink = rail.getByRole("link", { name: "Add Related List" });
+    const summary = rail.getByText("Sales Cycle Duration", { exact: false });
+    const addBox = await addLink.boundingBox();
+    const summaryBox = await summary.boundingBox();
+    expect(addBox && summaryBox && summaryBox.y > addBox.y).toBe(true);
     ignoreFailedResponses(pageErrors, [400]);
   });
 
