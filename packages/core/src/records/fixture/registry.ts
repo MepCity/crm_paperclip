@@ -2,6 +2,9 @@ import type { FieldValue, ListView, ModuleMetadata, RecordData } from "../contra
 import { accountsMetadata } from "./accounts/metadata";
 import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
 import { accountsViews } from "./accounts/views";
+import { callsMetadata } from "./calls/metadata";
+import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
+import { callsViews } from "./calls/views";
 import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
@@ -65,6 +68,17 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     searchFields: ["Event_Title", "Description", "Venue"],
     initialNextId: 140000000000000000n,
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Calls: {
+    metadata: callsMetadata,
+    views: callsViews,
+    displayNameField: "Subject",
+    generateSeed: (now) => generateFixtureCalls(68, now),
+    fullName: callsFullName,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Subject", "Description"],
+    initialNextId: 140000000000000000n,
+    createDefaults: (stamp) => ({ CTI_Entry: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Tasks: {
     metadata: tasksMetadata,

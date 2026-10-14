@@ -146,7 +146,7 @@ export interface ModuleScreenDefinition {
   singularLabel: string;
   pluralLabel: string;
   pageTitle: string;
-  navigation: { id: string; icon: Icon };
+  navigation: { id: string; icon: Icon; group?: "sales" | "activities" };
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
