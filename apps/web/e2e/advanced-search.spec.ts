@@ -70,9 +70,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   await expect(page).toHaveURL(/\/crm\/[^/]+\/tab\/Leads\/[^/?]+/);
 });
 
-test("Tasks module filter is enabled and lists a matching task; Meetings and Calls stay later-module", async ({
-  page,
-}) => {
+test("Tasks module filter is enabled and lists a matching task", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   const response = await page.request.post("/crm/v2.2/Tasks", {
@@ -92,12 +90,64 @@ test("Tasks module filter is enabled and lists a matching task; Meetings and Cal
   await expect(tasksCheckbox).toBeVisible();
   await expect(tasksCheckbox).not.toHaveAttribute("data-later-module", /.+/);
   await expect(tasksCheckbox).toBeChecked();
+});
 
-  // Meetings and Calls are unregistered on this branch: they still show the later-module badge.
-  for (const name of ["Meetings", "Calls"]) {
-    await expect(filterPanel.getByRole("checkbox", { name })).toHaveAttribute(
-      "data-later-module",
-      "M5",
-    );
-  }
+test("Meetings module filter (S-31.6) is enabled and lists a matching meeting", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  // Meetings use the Events API endpoint; Event_Title is the searchable title field.
+  const response = await page.request.post("/crm/v2.2/Events", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: {
+      data: [
+        {
+          Event_Title: "Zephrysearch Meeting advanced",
+          Start_DateTime: "2026-06-01T10:00:00.000Z",
+          End_DateTime: "2026-06-01T11:00:00.000Z",
+          All_day: false,
+        },
+      ],
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephrysearch`);
+  const meetingsCard = page.getByRole("region", { name: "Meetings search results" });
+  await expect(meetingsCard).toBeVisible();
+  await expect(
+    meetingsCard.getByRole("link", { name: "Zephrysearch Meeting advanced" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const meetingsCheckbox = filterPanel.getByRole("checkbox", { name: "Meetings" });
+  await expect(meetingsCheckbox).toBeVisible();
+  // S-31.6: Meetings is registered — no laterModule badge.
+  await expect(meetingsCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(meetingsCheckbox).toBeChecked();
+});
+
+test("Calls module filter (S-31.7) is enabled and lists a matching call", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Calls", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: { data: [{ Subject: "Zephrysearch Call advanced" }] },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephrysearch`);
+  const callsCard = page.getByRole("region", { name: "Calls search results" });
+  await expect(callsCard).toBeVisible();
+  await expect(callsCard.getByRole("link", { name: "Zephrysearch Call advanced" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const callsCheckbox = filterPanel.getByRole("checkbox", { name: "Calls" });
+  await expect(callsCheckbox).toBeVisible();
+  // S-31.7: Calls is registered — no laterModule badge.
+  await expect(callsCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(callsCheckbox).toBeChecked();
 });
