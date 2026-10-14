@@ -401,3 +401,44 @@ export const eventsRecordServiceContractModule: RecordServiceContractModuleDefin
     },
   },
 };
+
+export const callsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Calls",
+  singularLabel: "Call",
+  pluralLabel: "Calls",
+  expectedFieldCount: 26,
+  buildMinimalValidInput: (extra = {}) => ({
+    Call_Type: "Outbound",
+    Call_Start_Time: "2026-01-15T10:00:00.000Z",
+    Call_Duration: "05:00",
+    Subject: "Contract Call",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Description",
+    sample: "Contract marker",
+    updated: "Updated marker",
+    tenantOther: "Other marker",
+  },
+  sortFields: ["Subject", "Call_Start_Time"],
+  duplicatePermittedField: "Subject",
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 3],
+    ["Call_Start_Time", false],
+    ["Call_Duration_in_seconds", "5"],
+    ["CTI_Entry", "false"],
+    ["Who_Id", "contact"],
+  ],
+  optional: {
+    lengthValidationField: "Subject",
+    massUpdateScenario: { field: "Call_Purpose", value: "Prospecting" },
+    massUpdateInvalidPicklist: { field: "Call_Purpose", value: "Unknown" },
+    singleModuleLookup: {
+      field: "Who_Id",
+      reference: { module: "Contacts", id: "300000000000000000" },
+      expectedName: "Sample 001 Contact 001",
+    },
+  },
+};

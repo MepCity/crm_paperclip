@@ -599,14 +599,29 @@ End_DateTime. Venue is the only exported mass-update field.
 
 `acceptsJsonArray` on FieldDefinition is an acceptance policy, not a copy of
 `json_type`. It returns in metadata (wire `accepts_json_array`) and permits null or
-opaque readonly JSON arrays on Remind_At, Remind_Participants (multireminder), and
-Participants (its exported bigint dataType is preserved). Arrays contain arbitrary
-plain JSON, finite numbers, nested objects/arrays, booleans, strings or null.
-They are detached on writes and every read; equality is deep, type-sensitive,
-ignores object key order and preserves array order. Cycles, sparse arrays,
-accessors and non-JSON members are invalid. These fields cannot be filtered,
-used in criteria, or sorted; unmarked fields keep their current validation.
-HTTP JSON round trips preserve arrays without changing endpoint paths.
+opaque readonly JSON arrays on Remind_At and Remind_Participants (multireminder).
+Participants keeps its exported bigint dataType and acceptsJsonArray metadata,
+but its write contract has changed **opaque → typed**. Each item is
+`{ type: "user" | "lead" | "contact" | "email", id: string | null,
+name: string, email: string | null }`. At most 50 items are accepted. User,
+lead and contact items require a nonempty id; email items require a nonempty
+email. Lead/contact IDs must exist in the bound organization. Unknown keys
+are discarded on write; invalid items return ValidationError on Participants.
+A null field and an empty array remain valid. Reminder items remain arbitrary
+plain JSON. Arrays are detached on writes and reads; equality ignores object
+key order and preserves array order. These fields cannot be filtered or sorted.
+
+Tasks set Closed_Time at the write instant when entering Completed and clear
+it when leaving Completed. Writes while already Completed preserve it.
+Closed_Time is system managed. Meetings require Start_DateTime and End_DateTime;
+end before start returns ValidationError on End_DateTime. Provisionally,
+All_day normalizes the respective UTC dates to 00:00:00 and 23:59:59.
+
+Scheduled Calls with a past Call_Start_Time read as Overdue without changing
+storage; list/count filters see the same derived status. Completed calls
+require Call_Duration in mm:ss format (two or more minute digits, seconds
+00–59); Call_Duration_in_seconds is derived on write. Cancelled remains a
+status and retains the record.
 
 CURRENTTIME maps exactly from `${CURRENTTIME}`. The runtime adapter clock resolves
 it anew for each query, using the exact instant without day rounding. Only datetime
@@ -616,8 +631,7 @@ unparseable dates never match. Four exported completed/upcoming views use it.
 
 The 250 deterministic synthetic meetings include all-day/timed, past/future,
 empty/populated arrays and direct references to seeded Leads, Contacts, Accounts
-and Deals. The example JSON is invented test data, not a participant/reminder
-schema. Existing module seeds remain unchanged. Null view sorts use id descending.
+and Deals. Participants use the typed shape above; reminder JSON is invented test data. Existing module seeds remain unchanged. Null view sorts use id descending.
 Who_Id temporarily allows Contacts/Leads, in eventsWhoTargets. What_Id targets
 come from qualifying `<source module>/{ENTITYID}/Events` rows in the sanitized
 related-target table, excluding Who_Id targets; its default is Accounts. The
@@ -642,6 +656,39 @@ Open questions and temporary decisions:
   that boundary still requires research. Who_Id Leads routing awaits form research.
 - Reminder delivery, participant invitations/notifications, recurrence generation,
   check-in transitions, database adapter and screens remain outside this definition.
+
+## Calls
+
+Calls follows the Tasks pattern (`fixture/calls/`): sanitized export metadata,
+picklists, views, deterministic seed and a derived related-target table.
+
+- **Fields / views:** 26 fields (Call_Type, Call_Start_Time and Call_Duration are
+  required), 4 layout sections, 6 picklists (`Call_Type`, `Call_Purpose`,
+  `Call_Result`, `Reminder`, `Outgoing_Call_Status`, `Scheduled_In_CRM`) and 23
+  system views with a null sort (shared default order applies).
+- **Targets:** `Who_Id` = Contacts, Leads (temporary rule, same constant as Tasks,
+  kept in `callsWhoTargets`). `What_Id` = the `Calls` rows of
+  `related-targets.json` minus the Who targets: Accounts, Campaigns, Cases, Deals,
+  Invoices, Products, Purchase_Orders, Quotes, Sales_Orders, Vendors. Resolution
+  reuses the shared multi-target reference code; no Calls-specific resolver.
+- **Related reads:** "calls of this record" is `list`/`count` with a `Who_Id` or
+  `What_Id` equality filter; unit tests cover Leads, Contacts, Accounts, Deals.
+- **Seed:** 250 synthetic calls (ids from 130000000000000000; next id range
+  150000000000000000), every picklist value used, linked to seeded Leads,
+  Contacts, Accounts and Deals; other modules' seeds are unchanged.
+- **Interim rules:** the source `${EMPTY}` token is projected to `is_empty`; the
+  integer criterion value `"0"` becomes a number; a source column listed
+  twice (Completed Calls: Call_Start_Time) appears once. `Owner` is exported with
+  `read_only: true` but `field_read_only: false`; it stays writable here because
+  the shared ownership change writes it.
+- **Not covered:** call logging/scheduling rules, duration calculation, reminders,
+  CTI. Reminder is a plain picklist. There is no HTTP layer in the repository yet;
+  generic CRUD is verified through the module-independent contract suite and the
+  service-level tests.
+- **Open questions:** (1) whether an open/closed call split exists beyond the
+  exported view criteria (Scheduled / Overdue / Completed on
+  `Outgoing_Call_Status`); none is encoded. (2) Whether `Who_Id` should allow more
+  than Contacts and Leads (export lists only Contacts; Leads kept as for Tasks).
 
 ## Activity summaries and system filters (interim)
 

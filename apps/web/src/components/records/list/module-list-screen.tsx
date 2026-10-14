@@ -105,6 +105,10 @@ export interface ModuleListScreenConfig {
   /** ISO 4217 code for currency cells of the table; plain number when omitted. */
   cellCurrencyCode?: string;
   badgeColumn?: boolean;
+  /** Interim: Search box in the view menu, filtering the view rows by name (Tasks). */
+  viewMenuSearch?: boolean;
+  /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
+  viewTypeTileIds?: readonly string[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -615,6 +619,7 @@ function ModuleListScreenLoaded({
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
         pinnedViews={config.pinnedViews}
+        searchable={config.viewMenuSearch}
         onViewChange={(id) => {
           const params = new URLSearchParams();
           if (hasBoard && requestedPresentation) params.set("presentation", presentation);
@@ -633,6 +638,7 @@ function ModuleListScreenLoaded({
         />
       ) : (
         <ListToolbar
+          viewTypeTileIds={config.viewTypeTileIds}
           presentation={hasBoard ? presentation : undefined}
           onPresentationChange={
             hasBoard
