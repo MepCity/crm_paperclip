@@ -63,7 +63,7 @@ test.describe("Tasks record detail", () => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     // Seeded task related to a deal (What_Id) and no person.
-    await page.goto(moduleRecordPath(org.slug, TASKS_TAB, "110000000000000251"));
+    await page.goto(moduleRecordPath(org.slug, TASKS_TAB, "110000000000000247"));
     await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
     const card = page.getByRole("region", { name: "Business card" });
     await expect(card).toContainText("- Deals", { timeout: 15_000 });
