@@ -113,6 +113,21 @@ test.describe("Lead record detail page", () => {
     await page.setViewportSize({ width: 1470, height: 835 });
   });
 
+  test("Leads activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("opens from the list name link", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);

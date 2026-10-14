@@ -9,14 +9,15 @@ import { leadsScreenDefinition } from "./definition";
 import { createLeadsRelatedLists } from "./leads-related-lists";
 
 export type { RecordDetailPaths as LeadRecordPaths } from "@/components/records/detail/record-detail-screen";
-export function LeadRecordScreen(props: Omit<RecordDetailScreenProps, "definition">) {
+export function LeadRecordScreen({
+  definition = leadsScreenDefinition,
+  ...props
+}: Omit<RecordDetailScreenProps, "definition"> & {
+  definition?: RecordDetailScreenProps["definition"];
+}) {
   const badges = useParentActivityBadges("Leads", props.recordId);
   const buildRelatedLists = useCallback(() => createLeadsRelatedLists(badges), [badges]);
   return (
-    <RecordDetailScreen
-      {...props}
-      definition={leadsScreenDefinition}
-      buildRelatedLists={buildRelatedLists}
-    />
+    <RecordDetailScreen {...props} definition={definition} buildRelatedLists={buildRelatedLists} />
   );
 }
