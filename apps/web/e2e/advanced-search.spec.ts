@@ -41,14 +41,18 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Verify active Accounts checkbox and later-module Tasks checkbox in filter panel
+  // Verify active Accounts and Tasks checkboxes and later-module Products checkbox in filter panel
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
   await expect(accountsCheckbox).toBeChecked();
 
   const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
   await expect(tasksCheckbox).toBeVisible();
-  await expect(tasksCheckbox).toHaveAttribute("data-later-module", "M5");
+  await expect(tasksCheckbox).toBeChecked();
+
+  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
+  await expect(productsCheckbox).toBeVisible();
+  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
 
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
