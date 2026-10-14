@@ -2,8 +2,9 @@ import { expect, test } from "vitest";
 import { accountsFilterGroups, buildAccountsFilterGroups } from "./list-filters";
 import { accountField } from "./test-metadata";
 
-test("preserves Accounts system filter inventory (AL-20 - AL-25) and initial field rows without Activities/Campaigns", () => {
+test("preserves Accounts system filter inventory (AL-20 - AL-25) and initial field rows with live Activities", () => {
   expect(accountsFilterGroups[0]?.items.map((row) => [row.label, row.laterModule])).toEqual([
+    ["Activities", undefined],
     ["Locked", undefined],
     ["Record Action", undefined],
     ["Related Records Action", undefined],
@@ -11,9 +12,14 @@ test("preserves Accounts system filter inventory (AL-20 - AL-25) and initial fie
     ["Untouched Records", undefined],
     ["Cadences", "P3"],
   ]);
+  expect(accountsFilterGroups[0]?.items[0]).toEqual({
+    id: "Activities",
+    label: "Activities",
+    systemEditor: "activities",
+  });
 
   const systemLabels = accountsFilterGroups[0]?.items.map((row) => row.label) ?? [];
-  expect(systemLabels).not.toContain("Activities");
+  expect(systemLabels).toContain("Activities");
   expect(systemLabels).not.toContain("Campaigns");
   expect(systemLabels).not.toContain("Latest Email Status");
 
