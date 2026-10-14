@@ -165,3 +165,95 @@ test("later-module filter rows cannot change selection or open an editor", async
   expect(checkbox.checked).toBe(false);
   expect(onSelectionChange).not.toHaveBeenCalled();
 });
+
+test("renders ActivityFilterEditor and passes activity filter criteria on apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+
+  function ControlledActivitiesPanel() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: [
+              { id: "Activities", label: "Activities", systemEditor: "activities" },
+              { id: "recent", label: "Recent samples" },
+            ],
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+
+  render(<ControlledActivitiesPanel />);
+
+  // Ticking Activities shows the editor and action buttons
+  const activitiesCheckbox = screen.getByRole("checkbox", { name: "Activities" });
+  await user.click(activitiesCheckbox);
+
+  // Editor options are visible
+  expect(screen.getByRole("radio", { name: "Without Open Activity" })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: "Overdue" })).toBeTruthy();
+  const activityDue = screen.getByRole("radio", { name: "Activity Due" }) as HTMLInputElement;
+  expect(activityDue).toBeTruthy();
+  expect(activityDue.checked).toBe(true);
+  expect(screen.getByRole("radio", { name: "Without Any Activity" })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: "Activity Done" })).toBeTruthy();
+
+  // Apply default selection (activity_due / today_overdue)
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(false);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], {
+    choice: "activity_due",
+    range: "today_overdue",
+  });
+
+  // Switch to another option
+  const withoutAny = screen.getByRole("radio", { name: "Without Any Activity" });
+  await user.click(withoutAny);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], {
+    choice: "without_any_activity",
+  });
+
+  // Clear button resets selection and calls onClear
+  const clearButton = screen.getByRole("button", { name: "Clear" });
+  await user.click(clearButton);
+  expect(onClear).toHaveBeenCalled();
+  expect(screen.queryByRole("radio", { name: "Activity Due" })).toBeNull();
+});
+
+test("seeds ActivityFilterEditor from initialActivityFilter", async () => {
+  const onApply = vi.fn();
+  render(
+    <FilterPanel
+      {...props}
+      groups={[
+        {
+          id: "system",
+          label: "System Defined Filters",
+          items: [{ id: "Activities", label: "Activities", systemEditor: "activities" }],
+        },
+      ]}
+      selectedIds={["Activities"]}
+      initialActivityFilter={{ choice: "overdue" }}
+      onApply={onApply}
+    />,
+  );
+
+  const overdue = screen.getByRole("radio", { name: "Overdue" }) as HTMLInputElement;
+  expect(overdue.checked).toBe(true);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  expect(onApply).toHaveBeenCalledWith([], { choice: "overdue" });
+});

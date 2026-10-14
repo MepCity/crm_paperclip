@@ -654,6 +654,8 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - **Board toolbar refresh button:** resolved in MEP-469 by removing refresh icon from board presentation.
 - Shared component visual differences with Leads / Contacts to be handled in end-of-project polish.
 - Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
+- Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
+
 ## Module 5 — Activities
 
 ### Tasks list — implemented; QA pending (MEP-459)
@@ -673,6 +675,4 @@ Interim rules: selection bar, page size, empty state and row actions follow Acco
 Related To and Contact Name link to the related record when the target module is registered.
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
-
-- Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
 
