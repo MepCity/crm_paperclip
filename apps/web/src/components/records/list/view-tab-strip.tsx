@@ -5,16 +5,30 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, MenuDivider, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { TextField } from "@/components/ui/text-field";
 
 export interface ViewTabStripProps {
   viewName: string;
   views?: readonly Pick<ListView, "id" | "name">[];
   onViewChange?: (id: string) => void;
   pinnedViews?: readonly string[];
+  /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
+  searchable?: boolean;
 }
 
-export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews }: ViewTabStripProps) {
+export function ViewTabStrip({
+  viewName,
+  views,
+  onViewChange,
+  pinnedViews,
+  searchable,
+}: ViewTabStripProps) {
   const [publicOpen, setPublicOpen] = useState(true);
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const visibleViews = needle
+    ? views?.filter((view) => view.name.toLowerCase().includes(needle))
+    : views;
   return (
     <div
       className="flex h-(--size-list-tab-height) items-center gap-3 border-b border-(--color-panel-border)"
@@ -72,7 +86,22 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews }: Vie
           <Button variant="ghost" size="listIcon" aria-label="Custom views">
             <Icons.ellipsis aria-hidden className="h-4 w-4" />
           </Button>
-          <Menu aria-label="Custom views" placement="bottom start" appearance="measured">
+          <Menu
+            aria-label="Custom views"
+            placement="bottom start"
+            appearance="measured"
+            header={
+              searchable ? (
+                <TextField
+                  label="Search views"
+                  placeholder="Search"
+                  variant="filter-search"
+                  value={query}
+                  onChange={setQuery}
+                />
+              ) : undefined
+            }
+          >
             <MenuItem
               id="public"
               shouldCloseOnSelect={false}
@@ -82,7 +111,7 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews }: Vie
               Public Views
             </MenuItem>
             {publicOpen
-              ? views.map((view) => (
+              ? visibleViews?.map((view) => (
                   <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>
                     {view.name === viewName ? (
                       <Icons.check aria-hidden className="h-4 w-4" />
