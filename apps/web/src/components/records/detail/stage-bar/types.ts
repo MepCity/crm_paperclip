@@ -34,8 +34,11 @@ export type StageChangeFieldErrors = Partial<
 export class StageChangeSubmitError extends Error {
   readonly fieldErrors: StageChangeFieldErrors;
 
-  constructor(fieldErrors: StageChangeFieldErrors) {
-    super("Stage change validation failed");
+  readonly generalMessage: string | undefined;
+
+  constructor(fieldErrors: StageChangeFieldErrors, generalMessage?: string) {
+    super(generalMessage ?? "Stage change validation failed");
+    this.generalMessage = generalMessage;
     this.name = "StageChangeSubmitError";
     this.fieldErrors = fieldErrors;
   }

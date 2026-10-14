@@ -13,6 +13,10 @@
   color: var(--color-text-strong);
 }
 
+.stage-change-error {
+  margin: 0 0 var(--space-3);
+}
+
 .stage-change-fields {
   display: flex;
   flex-direction: column;

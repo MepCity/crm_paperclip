@@ -69,6 +69,7 @@ export function StageChangeDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [values, setValues] = useState(initialValues);
   const [fieldErrors, setFieldErrors] = useState<StageChangeFieldErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const stagePicklist = useMemo(
@@ -84,10 +85,13 @@ export function StageChangeDialog({
     if (!isOpen) return;
     setValues(initialValues);
     setFieldErrors({});
+    setSubmitError(null);
     const frame = requestAnimationFrame(() => claimOpeningFocus(cancelRef.current));
     return () => cancelAnimationFrame(frame);
   }, [isOpen, initialValues]);
 
+  const reasonVisible =
+    showReasonForLoss || stages.find((s) => s.value === values.stage)?.kind === "lost";
   const busy = isPending || submitting;
 
   function close() {
@@ -128,16 +132,27 @@ export function StageChangeDialog({
       setFieldErrors(nextErrors);
       return;
     }
+    setSubmitError(null);
     setSubmitting(true);
     try {
       await onSubmit(values);
       onOpenChange(false);
     } catch (error) {
       if (error instanceof StageChangeSubmitError) {
-        setFieldErrors(error.fieldErrors);
+        const shown: StageChangeFieldErrors = {};
+        const hidden: string[] = [];
+        for (const [key, message] of Object.entries(error.fieldErrors)) {
+          if (!message) continue;
+          if (key === "reasonForLoss" && !reasonVisible) hidden.push(message);
+          else shown[key as keyof StageChangeFieldErrors] = message;
+        }
+        setFieldErrors(shown);
+        const messages = [error.generalMessage, ...hidden].filter(Boolean) as string[];
+        if (messages.length) setSubmitError(messages.join(" "));
+        else if (!Object.keys(shown).length) setSubmitError("Update failed.");
         return;
       }
-      throw error;
+      setSubmitError(error instanceof Error && error.message ? error.message : "Update failed.");
     } finally {
       setSubmitting(false);
     }
@@ -182,7 +197,7 @@ export function StageChangeDialog({
             options={stagePicklist}
             searchable
           />
-          {showReasonForLoss || stages.find((s) => s.value === values.stage)?.kind === "lost" ? (
+          {reasonVisible ? (
             <FieldInput
               field={reasonField}
               value={values.reasonForLoss}
@@ -194,6 +209,11 @@ export function StageChangeDialog({
             />
           ) : null}
         </div>
+        {submitError ? (
+          <p className="stage-change-error text-sm text-danger" role="alert">
+            {submitError}
+          </p>
+        ) : null}
         <div className="stage-change-actions">
           <Button
             ref={cancelRef}

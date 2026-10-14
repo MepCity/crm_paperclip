@@ -23,6 +23,7 @@ import {
   buildStageBarStages,
   buildStageChangeInitialValues,
   isClosedStageKind,
+  mapStageChangeError,
   readStageValue,
   reasonForLossPicklist,
   stageChangeToRecordInput,
@@ -169,7 +170,11 @@ export function DealRecordScreen({
           reasonForLossOptions={reasonForLossPicklist(verifyModule)}
           showReasonForLoss={verifyLost}
           onSubmit={async (values) => {
-            await persistDeal(stageChangeToRecordInput(values));
+            try {
+              await persistDeal(stageChangeToRecordInput(values, verifyModule));
+            } catch (error) {
+              throw mapStageChangeError(error);
+            }
             setVerifyOpen(false);
             setVerifyValues(null);
           }}
