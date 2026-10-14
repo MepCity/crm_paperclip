@@ -1752,3 +1752,130 @@ meta/network checked before continuing; only expected list/shell reads and
 blocked reminder/notification/telemetry paths occurred. All six completed
 m5m captures used the prescribed wait and needed no retry. No successful
 record write, unblocked telemetry or unexpected non-GET path was observed.
+## Visual layout — Meeting form (measured)
+
+Measured exception for MEP-583 / MEP-570. Compare requirement numbers with
+MEP-582's **Visual layout — Task form (measured)** (approved commit `c3cd8e5`).
+Only differences and explicitly checked sameness are recorded here. Task's
+section may arrive through its separate merge; it is not duplicated here.
+All bounds are half-open CSS px from viewport top-left, DPR 2. `px.h`, `px.v`,
+`px.box` and `px.top` mean the research pixel tool's exact-colour probes; its
+output is already CSS px. `controls` means saved control boxes, checked against
+the screenshot. Ink bounds are not CSS font sizes. No computed styles or assets
+were extracted. No record values are reproduced.
+
+Sources: M = `m5m-meeting-create-click`; V = `m5m-meeting-create-venue`;
+F = `m583-meeting-full`; E = `m583-meeting-edit`. Each image is 2940 × 1670,
+representing a 1470 × 835 CSS viewport. `m5g-meeting-create` is shell-only and
+cannot establish form geometry. The one permitted Add more details opening
+succeeds: the result is the **same modal**, with its body showing lower fields,
+not an observed separate full-page form. Upper fields have negative DOM bounds
+in F and are not claimed visible there. No manual scroll or field interaction
+was performed. The modal's visible top is clipped by the viewport.
+
+| Task requirement | Meeting difference / checked sameness (CSS px) | Source and measurement path |
+| --- | --- | --- |
+| 1. Header, title, actions, body | Replaces page form with white modal x=485–985, width 500, visible y=0–547 (height 547; actual top beyond viewport not observed). Title solid #202123 ink x=516.5–710,y=27–46. Footer Cancel (816,490,74,32), Save (901,490,59,32), gap 11, right inset 25. No Edit Page Layout or Save and New. Dimmed list remains underneath. | M, px.h(60,450,1000), px.v(500,0,550), px.v(970,440,555), px.box(#202123,510,20,800,50); controls; image. F/E same modal bounds and footer. |
+| 2. Form width / placement | Lines x=515–933, width 418; modal left inset 30, right inset 52. This occupies 83.6% of modal width rather than Task's 548 px page form. | M, px.h(111/161/311/411,480,950); F line endpoints. |
+| 3. Sections | Meeting Information is modal title; no separate Task/Description Information section heading. Lower Description is a row label. Footer shadow transition near y=464.5–470 separates fixed actions from clipped body. | M/F images, px.v(500,440,550); F px.box(#616E88,510,295,650,320). |
+| 4. Columns / row rhythm / height | Labels left at x=515; value allocation starts x=682 (167 gap). Title/Location text input x=687,w=251,h=16; Venue span (682,139,122,17). Lines at y=111,161,211,261,311,361,411: 50 pitch. F lower lines y=113,163,213,274,340,446: pitches 50,50,61,66,106 as compound reminder/description rows grow. | M/F controls; M px.v(650,75,460), F px.v(650,50,455). |
+| 5. Field style / states | Same as Task: unboxed rows. Title's opening focus/selection state has accent #5464F2 x=682–933 at y=111. This is automatic opening state; hover and keyboard-only focus not observed. | M px.h(111,480,950), image. V venue-open accent; no new state exercised. |
+| 6. Separators | Same as Task: 1 px #DCDBEE shared label/value underline; width differs to 418. | M px.h(161/411,480,950), px.v(650,75,460); F px.box(#DCDBEE,510,330,940,345). |
+| 7. Required marker | Same as Task: 25 × 2 horizontal #F27B77 at row left. Present on Title, Meeting Venue, From, To; Title x=515–540,y=111–113. | M px.box(#F27B77,510,105,550,115), px.h(111/161/311,480,950); image To line y=361. |
+| 8. Person / related selectors | Quick viewport shows Participants instead of Task's Contact/Account lookups. None control (682,440,70,16), Add (762,440,41,15), 10 gap; partly clipped. F reveals fully at y=92 and Related To value-side None (682,142,35,16), arrow to its right, line y=163. No visible magnifying glass in this empty lower create state. | M/F controls and images. Populated lookup variants in E are below the clip, hence not observed. |
+| 9. Short selects | Venue displayed span 122 × 17, arrow (797,146,8,5); row retains 418 underline. Host allocation (682,390,251,16), arrow (797,398,9,5); identity omitted. No Status/Priority fields painted. | M controls/image; V opens three venue rows without selection. Native 1 px selects excluded from visual dimensions. |
+| 10. Date/time | From date (682,290,110,16), time (802,290,80,16): 10 gap. To same x/width at y=340. Date format DD.MM.YYYY, time hh:mm AM/PM. No separately painted calendar icon in these rows. | M controls/image; E same boxes, record values omitted. |
+| 11. All day / repeat / reminders | All day is an empty **15 × 15 checkbox**, (682,238), #C5C4D3 edge, rather than Task's 28 × 15 switch. F Repeat is None (682,188,70,16) plus Change pencil (914,189,19,19). Participants Reminder control (672,234,122,35); Reminder contains a number input (673,370,30,26), unit selector (672,366,152,35), and lower None selector (672,406,122,35). No toggle changed. | M px.box(#C5C4D3,680,235,700,255), controls; F controls/image. No configuration interior opened. |
+| 12. Description | Same unboxed treatment as Task; F textarea (682,295,251,37). Underline spans x=515–933,y=340–341. Solid #666666 resize ink x=924–931,y=323–330, 7 × 7. No separate Description section. | F controls, px.box(#DCDBEE,510,330,940,345), px.box(#666666,920,315,935,335). |
+| 13. Typography / colours | Same as Task observed label #616E88, value #313949, title #202123, line #DCDBEE, required #F27B77. Title ink height 19 versus Task's 15; Description label ink x=516.5–589.5,y=302–314.5. Exact font family/size/weight/line-height not observed. | M px.top(500,25,940,450,9), title box above; F label box above. Raster ink only. |
+| 14. Footer / edge | Same as Task: no create-form-view footer or Client Script tab. Modal adds fixed footer; Add more details link (510,495,110,16) in M; absent after opening F and in E. Footer begins around y=470; body content clips above it. | M/F/E controls and complete images; px.v(500/970,440,555). |
+
+### Meeting edit result and lower-form boundary
+
+E reaches the Meeting Information modal over record detail. Visible Title,
+Venue, Location, All day, From/To, Host and partly clipped Participants have the
+same boxes/lines as M. Record values replace create defaults; they are omitted.
+Add more details is absent in E. Lower Contact/Related To/Description DOM entries
+are not visible, so their edit layout is **not observed**. No second opening or
+scroll was attempted. F settles the former Add more details uncertainty only
+for the captured expanded modal state; a separate full-page Meeting form is
+**not observed**. Earlier no-Edit research limits remain historical; this
+explicitly authorized single attempt supersedes them only for E's visible area.
+
+## Visual layout — Call form (measured)
+
+C = `m5h-call-schedule`, P = `m5h-call-schedule-purpose`, R =
+`m5h-call-schedule-reminder`. Each is 2940 × 1842 image px (1470 × 921 CSS
+raster); the shell utility strip starts y=807 and covers lower form content.
+Do not treat DOM controls below that strip as visible. Methods/Task requirement
+numbers are as above. These sources establish **boxed** fields, right-aligned
+labels and wide selects. The issue's suggested short Call Type/Status geometry
+is not what these images paint; do not impose Task's underline treatment on C.
+
+| Task requirement | Call difference / checked sameness (CSS px) | Source and measurement path |
+| --- | --- | --- |
+| 1. Header / actions / body | Content x=320; title band y=50–113 is white #FFFFFF rather than Task's pale fill. Create Call at left; Edit Page Layout (465,80,107,16). Save and Create Follow-up Task (1046,70,233,32), Cancel (1290,70,74,32), Save (1373,70,59,32). Gaps 11/9; right margin 38. White body, no enclosing card. | C px.h(60,320,1470), px.v(350,50,180); controls and complete image. |
+| 2. Placement / width | Field border x=534.5–1065.5, width 531. Content width 1150: 46.2%; blank right 404.5. Label area extends left to x=350. Field left edge is 214.5 px inside content; unlike Task's full label-to-value row line, only the value box is enclosed. | C px.box(#C5C4D3,530,265,1070,302), controls; image. |
+| 3. Section headings | Call Information solid #313949 ink x=350.5–464,y=155.5–167. Purpose Of Outgoing Call ink x=351.5–531.5,y=702–716. Reminder box ends y=629.5, leaving 72.5 to second heading ink; Call Purpose control top y=744, gap 28 after heading ink. | C px.box(#313949,345,150,520,175), px.box(#313949,345,695,600,720); controls. |
+| 4. Columns / spacing / heights | Labels right-align around x=515; controls begin x=536 (text inset x=546). Related To label solid ink ends x=514. First lookup control (536,198,427,32); subsequent input/select outer visual heights ≈33–34. Related To border y=267.5–300.5; select tops y=322/377; start-time date input y=440; owner dropdown y=487; Subject input y=550; Reminder top y=596. Main repeated pitch 55 after Related To. | C controls, px.v(534,180,640), px.box(#616E88,350,275,518,295); raster/control bounds distinguished. |
+| 5. Field style / focus | Full rounded boxes, not Task underlines. First lookup opening focus is blue #5464F2 with surrounding shadow; P/R move the accent to the opened select. Hover and keyboard-only focus not observed. | C/P/R images; R px.box(#5464F2,530,590,1070,635) gives x=534.5–1065.5,y=595.5–629.5. |
+| 6. Borders / separators | #C5C4D3 full perimeter; no shared line under labels. Related To exact colour bounds x=534.5–1065.5,y=267.5–300.5. Lookup right segment fill #F0F4FF; border thickness around 1 px on straight edges; corner antialiasing excluded. | C px.box above, px.v(534,180,640), px.h(268,530,1070), px.top(520,190,1080,640,9). |
+| 7. Required indicator | Vertical #FF5D5A bar at left of Call From/To, Call Type and Call Start Time box. Call Type solid bounds x=534.5–537.5,y=322.5–354 (3 × 31.5). Subject has no visible required bar in this schedule state. | C px.box(#FF5D5A,530,320,540,356), px.v(534,180,640), image. |
+| 8. Call From/To / Related To | Call From/To has two-line label with Contact selector below: span (350,224,165,18), arrow (506,232,9,4). Lookup input (536,198,427,32); magnifier (1052,197,16,16). Related To is a plain right-aligned label, input (546,276,392,16), magnifier (1042,275,16,16), pale right icon cell. No Task-style Account label dropdown painted. | C controls/image. First magnifier box protrudes slightly beyond the input's outer right; report the captured geometry rather than normalize it. |
+| 9. Type / status selects | **Not short**: both displayed spans x=536,w=529,h=32, at y=322 and 377. Arrows (1046,336,9,5) and (1046,391,9,5). Outbound and Scheduled displayed. Hidden native-select widths 128/134 are not visible closed widths. | C controls and perimeter/image cross-check. |
+| 10. Call Start Time | One bordered compound row: date input (546,440,210,16), time (765,440,76,16), 9 gap between input boxes. Divider #C8CDD6 x=758–759,y=432.5–464.5. Date placeholder DD.MM.YYYY; time hh:mm AM/PM. No calendar icon painted. | C controls, px.v(758,430,465), px.h(450,520,1080), image. |
+| 11. Reminder / repeat | Reminder is full-width None dropdown (536,596,529,32), arrow (1046,610,9,5), not a toggle. No Repeat field painted. Open menu in R is above field: list bounds (537,384,168,210), 28 px rows; first seven rows fully painted and next clipped. No selection made. | C/R controls and images; R accent probe above. Hidden/partly clipped option boxes excluded as full visible rows. |
+| 12. Second-section fields / Description | Call Purpose full-width select (536,744,529,32); arrow (1046,758,9,5). Its border colour bounds x=534.5–1065.5,y=743–777. Call Agenda DOM input (546,806,509,16) lies at utility clip: only top border fragment painted; label/value/editor geometry not observed. No visible Description editor/resize grip. | C controls/image and px.box(#C5C4D3,530,740,1070,780). P popup list (537,536,144,206), seven 28 px option rows at y=541+28n; no search field painted despite a DOM input. |
+| 13. Typography / colours | Same as Task observed label #616E88 and heading #313949; Call value solid #313949 differs from Task's measured Status #434D5F. Borders and required colours differ as above. Exact CSS family/size/weight/line-height not observed. | C px.top(520,190,1080,640,9), heading/label boxes above, regional image inspection. |
+| 14. Edge / footer | Same as Task: no create-form-view footer or Client Script side tab; global utility strip clips lower rows at y=807. White raster below the strip is not evidence of additional form fields. | C/P/R complete images and shell controls (utility boxes y=807,h=28). |
+
+### Call edit result and open questions
+
+The one permitted attempt `m583-call-edit` reaches record detail and opens
+More Options. The Edit selector `[data-zcqa="edit"]` is **skipped** by the
+unchanged dangerous-attribute guard (`drop_action_edit_<record>`; neutralized
+here). Two opening clicks execute; the third requested click does not execute.
+The image remains detail plus menu. Edit layout is **not observed**; no retry,
+alternate route or guard exception was attempted. The selected record is a
+completed outbound call; this does not settle scheduled-call edit differences.
+
+**Open question:** “Edit formu create ile aynı kabul edilir — açık soru.”
+Create-equal edit layout is an implementation assumption requiring approval,
+not measured fact. Also not observed: complete Call Agenda/lower fields,
+separate Meeting full-page form, Meeting edit lower rows, exact CSS typography,
+hover and keyboard-only states, on-checkbox states, and validation/save results.
+The latter require writes and remain outside this assignment.
+
+### Capture gates and safety — measurement continuation
+
+| Capture | Gate / result | Evidence source |
+| --- | --- | --- |
+| m583-meetings-base | Painted Meetings title/list, total 9, nine record links, apiCalls 57 versus earlier 57; 0 clicks/0 skips, 2 blocked background requests. | screenshot, controls, meta; compared with m5m-meetings-list-base. |
+| m583-meeting-full | Create Meeting → Add more details, 2 executed clicks/0 skips, apiCalls 62; modal lower fields painted; 7 blocked background requests. | step-1/step-2 image evidence, screenshot, controls, meta. |
+| m583-meeting-edit | Record → Edit, 2 executed clicks/0 skips, apiCalls 92; upper edit modal painted; 7 blocked background requests, **no blocked Edit POST**. | screenshot, controls, meta, network. |
+| m583-calls-base | Painted Calls title/list, total 893, 23 captured record links (page range 1–30), apiCalls 55 versus earlier 55; 0 clicks/0 skips, 2 blocked background requests. Old m5h total 890 predates this run; only this run's 893 is the safety baseline. | screenshot, controls, meta; earlier baseline only for request-count gate. |
+| m583-call-edit | Record → More Options; Edit skipped by attribute guard. apiCalls 83; 2 executed clicks, 1 skipped; 6 blocked background requests. Form not rendered. | screenshot, controls, meta steps/skippedClicks. |
+
+Before each capture, the one-minute system load was conditionally checked below
+16. No paint retry was needed. The first Meeting record-entry preparation found
+only redacted hrefs and exited **before invoking capture**; it is not a second
+Edit attempt. Entry used a unique visible record name from the saved controls,
+without saving that name or a record identifier in this specification.
+
+Blocked requests after every clicked capture were inspected. They are the
+background reminder, notification and telemetry set; no record-write response
+was observed. Meeting Edit reads comprise list bulk/count/analytics, shell
+trigger and related bulk reads; there is no legacy Edit POST in its log.
+Call Edit never reaches the edit action. No Save, Cancel, field fill, selection,
+toggle, invitation or persisted preference action was invoked. Raw screenshots,
+record-bearing selectors and logs remain only in the research workspace.
+
+The no-click after-lists were also inspected as images. `m583-calls-after`
+retains total 893 and all 23 captured record links (page range 1–30), apiCalls 55,
+2 blocked background requests. `m583-meetings-after` retains total 9 and all
+nine captured record links, apiCalls 57, 3 blocked background requests. Both
+have 0 clicks/0 skips. Multiset comparison of visible record-link names loses
+zero baseline links for either module; no names are copied into this report.
+List/shell successful non-GET request shapes remain bulk/count/analytics/trigger
+reads. These comparisons support the read-only checks; they are not proof about
+unseen records or concurrent activity by other users.
