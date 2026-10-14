@@ -1,6 +1,6 @@
 # ADR 0005 — Notes, attachment storage and CSV import/export
 
-- Status: §1 Accepted (2026-10-14, MEP-534); §2–§3 Proposed
+- Status: §1–§2 Accepted (§1: 2026-10-14, MEP-534; §2: 2026-10-15, MEP-594); §3 Proposed
 - Date: 2026-10-14
 - Decider: CTO
 - Issue: MEP-523
@@ -186,6 +186,35 @@ proposals, not an existing fixture guarantee.
 - Which parent-lock checks apply to adding/deleting children? Child lock bypass
   during parent cascade follows MEP-518 but direct child mutations need a contract.
 - Who owns backup, storage quotas and the managed reconciliation runtime?
+
+### Decision (2026-10-15)
+
+Accepted by the CTO for §2 (MEP-594):
+
+- Choose option A: a server-only blob-store port, initially private local disk
+  under a configured root. Attachment metadata is a parent-bound logical child
+  module (`Attachments`) in the fixture record engine, like Notes. Physical
+  tables await ADR 0002. Bytes and filesystem paths never enter `RecordData` or
+  JSON responses.
+- Support `file` (blob) and `link` (HTTP/HTTPS URL only, no blob). The server never
+  fetches a linked page; its title is the URL.
+- Interim configurable selection budgets use decimal MB: records allow 10 files
+  and 100 MB combined (P1, OQ-01); notes allow five files and 20 MB combined (P3).
+  Count streamed bytes; do not trust headers.
+- Allow PDF, UTF-8 text/CSV, PNG/JPEG/GIF and DOCX/XLSX/PPTX. Validate extension,
+  declared media type and actual signature together. Reject HTML, SVG,
+  executables and macro-enabled files.
+- Downloads require a session, organization context and ultimate-parent view
+  permission. Use `Content-Disposition: attachment` with a safely encoded name
+  and `X-Content-Type-Options: nosniff`. No public blob URLs.
+- Deletion is permanent, without a recycle bin, as in §1; explicitly disclose
+  this difference at the module gate. Cascade parent deletion to attachments;
+  merge transfers attachments to the master without changing IDs (§1 C5).
+- Cloud and built-in drives remain disconnected (AT-04, AT-11–AT-21); dialogs
+  display only the disconnected state.
+
+Other §2 proposals, including reconciliation schedules and retention durations,
+remain unaccepted. This decision does not accept §3 or select physical tables.
 
 ## 3. CSV transfer through the record service
 

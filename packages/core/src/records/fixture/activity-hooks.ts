@@ -1,5 +1,7 @@
 import { activityParentIds, activityRules } from "../activities";
+import { removeAttachmentsForParents } from "./attachments/hooks";
 import type { FixtureModuleHooks } from "./hooks";
+import { removeNotesForParents } from "./notes/hooks";
 
 /** Attach to parent bundles; merge intentionally does not dispatch delete hooks. */
 export function activityDeleteHook(
@@ -18,6 +20,8 @@ export function activityDeleteHook(
         }
       }
     }
+    removeAttachmentsForParents(module, ids, ctx);
+    removeNotesForParents(module, ids, ctx);
     afterDelete?.(ids, ctx);
   };
 }

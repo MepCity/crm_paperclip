@@ -30,6 +30,11 @@ import type {
 import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import {
+  attachmentUltimateParent,
+  fixtureAttachmentLifecycle,
+  removeAttachmentIds,
+} from "./attachments/hooks";
+import {
   automaticMaster,
   duplicateGroups,
   fieldValueKey,
@@ -209,6 +214,7 @@ export function createFixtureRecordService(
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
+    if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     return resolveRecordReferences(
       bundle.readRecord?.(record, now) ?? record,
       bundle.metadata.fields,
@@ -282,6 +288,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
@@ -649,7 +656,10 @@ export function createFixtureRecordService(
       });
     },
     async get(module, id) {
-      return copy(resolveRead(module, recordFor(module, id)));
+      const record = recordFor(module, id);
+      if (module === "Attachments" && record.fields.$state !== "ready")
+        throw new NotFoundError("Record not found.");
+      return copy(resolveRead(module, record));
     },
     async create(module, input) {
       assertModuleWritable(module);
@@ -747,8 +757,24 @@ export function createFixtureRecordService(
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
       const moduleState = moduleStore(module);
+      if (module === "Attachments") removeAttachmentIds(ids, hookContext);
       for (const id of ids) moduleState.records.delete(id);
       bundleFor(module).afterDelete?.(ids, hookContext);
     },
   };
+}
+
+/** Internal lifecycle access for the server-side blob adapter; never a wire API. */
+export function createFixtureAttachmentLifecycle(context: OrgContext) {
+  createFixtureRecordService(context);
+  const state = stores.get(context.orgId);
+  if (!state) throw new NotFoundError("Organization store not found.");
+  return fixtureAttachmentLifecycle({
+    registeredModules: Object.keys(fixtureModules),
+    moduleStore(module) {
+      const store = state.modules.get(module);
+      if (!store) throw new NotFoundError("Module not found.");
+      return store;
+    },
+  });
 }

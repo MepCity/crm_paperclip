@@ -1,0 +1,300 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
+import type { OrgContext } from "../../../tenancy/types";
+import type { RecordData, RecordInput } from "../../contract";
+import { createFixtureAttachmentLifecycle, createFixtureRecordService } from "../index";
+import { fixtureModules } from "../registry";
+import { attachmentParentModules, attachmentsMetadata } from "./metadata";
+import { generateFixtureAttachments } from "./seed";
+
+function requireValue<T>(value: T | undefined): T {
+  if (value === undefined) throw new Error("Missing fixture value.");
+  return value;
+}
+
+function make() {
+  const context: OrgContext = {
+    orgId: randomUUID(),
+    orgSlug: "attachment-test",
+    orgName: "Fixture Organization",
+    userId: "test-user",
+    role: "admin",
+  };
+  return {
+    service: createFixtureRecordService(context),
+    lifecycle: createFixtureAttachmentLifecycle(context),
+    context,
+  };
+}
+const file = (module: string, id: string, extra: RecordInput = {}): RecordInput => ({
+  File_Name: "example.pdf",
+  Size: "12",
+  Parent_Id: { module, id },
+  ...extra,
+});
+const link = (module: string, id: string, url = "https://example.test/document"): RecordInput =>
+  file(module, id, { File_Name: url, Size: "0", $type: "link", $link_url: url });
+const published = {
+  storageKey: "opaque-key",
+  checksum: "test-checksum",
+  mediaType: "application/pdf",
+};
+const listQuery = { viewId: "all-attachments", page: 1, perPage: 10 };
+async function lead(service: ReturnType<typeof createFixtureRecordService>, name = "Example") {
+  return service.create("Leads", { Last_Name: name, Company: "Example Company" });
+}
+
+describe("Attachments record contract", () => {
+  it("registers evidenced metadata with empty seeds and hides internal fields", async () => {
+    const { service } = make();
+    expect(generateFixtureAttachments()).toEqual([]);
+    expect(await service.getModule("Attachments")).toEqual(attachmentsMetadata);
+    const fields = attachmentsMetadata.fields;
+    expect(fields.find((field) => field.apiName === "File_Name")).toMatchObject({
+      required: true,
+      maxLength: 100,
+    });
+    expect(fields.find((field) => field.apiName === "Size")).toMatchObject({
+      required: true,
+      dataType: "bigint",
+      maxLength: 100,
+    });
+    expect(
+      fields.some((field) =>
+        ["$state", "$storage_key", "$checksum", "$media_type"].includes(field.apiName),
+      ),
+    ).toBe(false);
+    expect((await service.list("Attachments", listQuery)).records).toEqual([]);
+  });
+  it.each(attachmentParentModules)(
+    "accepts %s parents and resolves Notes to their ultimate parent",
+    async (module) => {
+      const { service } = make();
+      const [view] = await service.listViews(module);
+      const parent = (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
+        .records[0];
+      if (!parent) throw new Error("Missing fixture parent.");
+      const record = await service.create("Attachments", link(module, parent.id));
+      expect((await service.get("Attachments", record.id)).fields.Parent_Id).toMatchObject({
+        module,
+        id: parent.id,
+      });
+    },
+  );
+  it("rejects invalid modules, malformed and absent parents and mandatory fields", async () => {
+    const { service } = make();
+    const parent = await lead(service);
+    for (const module of ["Tasks", "Events", "Calls", "Attachments", "Unknown"]) {
+      await expect(service.create("Attachments", file(module, parent.id))).rejects.toBeInstanceOf(
+        ValidationError,
+      );
+    }
+    await expect(service.create("Attachments", file("Leads", "missing"))).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    for (const field of ["File_Name", "Size", "Parent_Id"]) {
+      const input = { ...file("Leads", parent.id) };
+      delete input[field];
+      await expect(service.create("Attachments", input)).rejects.toBeInstanceOf(ValidationError);
+    }
+    for (const extra of <RecordInput[]>[
+      { File_Name: "x".repeat(101) },
+      { Size: "-1" },
+      { Size: 12 },
+      { $state: "ready" },
+      { $storage_key: "forged" },
+      { $type: "other" },
+    ]) {
+      await expect(
+        service.create("Attachments", file("Leads", parent.id, extra)),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
+  });
+  it("hides pending from get, list, search and exposes only ready public fields", async () => {
+    const { service, lifecycle } = make();
+    const parent = await lead(service);
+    const record = await service.create("Attachments", file("Leads", parent.id));
+    expect(record.fields.$state).toBeUndefined();
+    await expect(service.get("Attachments", record.id)).rejects.toBeInstanceOf(NotFoundError);
+    expect((await service.list("Attachments", listQuery)).records.length).toBe(0);
+    expect(await service.search({ text: "example.pdf", modules: ["Attachments"] })).toEqual([]);
+    expect(() =>
+      lifecycle.publish(record.id, { ...published, storageKey: "../private-file" }),
+    ).toThrow(ValidationError);
+    lifecycle.publish(record.id, published);
+    expect((await service.get("Attachments", record.id)).fields.$link_url).toBeUndefined();
+    expect((await service.list("Attachments", listQuery)).records.length).toBe(1);
+    expect((await service.get("Attachments", record.id)).fields).toMatchObject({
+      $type: "file",
+      File_Name: "example.pdf",
+      Size: "12",
+    });
+    expect(JSON.stringify(await service.get("Attachments", record.id))).not.toContain("opaque-key");
+    expect((await service.get("Attachments", record.id)).fields.$checksum).toBeUndefined();
+    await expect(
+      service.update("Attachments", record.id, {
+        Parent_Id: { module: "Contacts", id: parent.id },
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(() => lifecycle.publish(record.id, published)).toThrow(ValidationError);
+  });
+  it.each([
+    "javascript:alert(1)",
+    "data:text/plain,text",
+    "ftp://example.test/file",
+    "file:///document",
+    "invalid",
+  ])("rejects unsafe link %s", async (url) => {
+    const { service } = make();
+    const parent = await lead(service);
+    await expect(
+      service.create("Attachments", link("Leads", parent.id, url)),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+  it.each(["http://example.test/file", "https://example.test/file"])(
+    "uses URL as link title without blob cleanup: %s",
+    async (url) => {
+      const { service, lifecycle } = make();
+      const parent = await lead(service);
+      const record = await service.create("Attachments", {
+        ...link("Leads", parent.id, url),
+        File_Name: "Ignored title",
+      });
+      expect((await service.get("Attachments", record.id)).fields.File_Name).toBe(url);
+      await service.delete("Attachments", [record.id]);
+      expect(lifecycle.cleanupIntents()).toEqual([]);
+    },
+  );
+  it("cascades direct and note attachments after full parent batch validation", async () => {
+    const { service, lifecycle } = make();
+    const parent = await lead(service);
+    const other = await lead(service, "Other");
+    const note = await service.create("Notes", { Parent_Id: { module: "Leads", id: parent.id } });
+    const direct = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(direct.id, published);
+    const nested = await service.create("Attachments", file("Notes", note.id));
+    lifecycle.publish(nested.id, { ...published, storageKey: "note-key" });
+    const pending = await service.create("Attachments", file("Leads", parent.id));
+    const retained = await service.create("Attachments", link("Leads", other.id));
+    await expect(service.delete("Leads", [parent.id, "missing"])).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    expect((await service.get("Attachments", direct.id)).id).toBe(direct.id);
+    const bundle = requireValue(fixtureModules.Leads);
+    const original = bundle.createDefaults;
+    bundle.createDefaults = (stamp) => ({ ...original(stamp), Locked__s: true });
+    let locked: RecordData;
+    try {
+      locked = await lead(service, "Locked");
+    } finally {
+      bundle.createDefaults = original;
+    }
+    await expect(service.delete("Leads", [parent.id, locked.id])).rejects.toBeInstanceOf(
+      RecordLockedError,
+    );
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await service.delete("Leads", [parent.id]);
+    await expect(service.get("Notes", note.id)).rejects.toBeInstanceOf(NotFoundError);
+    expect(
+      (await service.list("Attachments", listQuery)).records.map((record) => record.id),
+    ).toEqual([retained.id]);
+    expect(lifecycle.cleanupIntents()).toEqual(
+      expect.arrayContaining([
+        { attachmentId: direct.id, storageKey: "opaque-key" },
+        { attachmentId: nested.id, storageKey: "note-key" },
+        { attachmentId: pending.id, storageKey: null },
+      ]),
+    );
+    expect(lifecycle.cleanupIntents()).toHaveLength(3);
+    expect(() => lifecycle.publish(pending.id, published)).toThrow(NotFoundError);
+    lifecycle.acknowledgeCleanup(direct.id);
+    expect(lifecycle.cleanupIntents()).toHaveLength(2);
+  });
+  it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
+    const { service, lifecycle } = make();
+    const parent = await lead(service);
+    const note = await service.create("Notes", { Parent_Id: { module: "Leads", id: parent.id } });
+    const child = await service.create("Attachments", file("Notes", note.id));
+    lifecycle.publish(child.id, published);
+    await service.delete("Notes", [note.id]);
+    await expect(service.get("Attachments", child.id)).rejects.toBeInstanceOf(NotFoundError);
+    const direct = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(direct.id, published);
+    await service.delete("Attachments", [direct.id]);
+    expect(lifecycle.cleanupIntents()).toHaveLength(2);
+  });
+  it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+    "cascades %s direct and note children",
+    async (module) => {
+      const { service, lifecycle } = make();
+      const [view] = await service.listViews(module);
+      const parent = requireValue(
+        (await service.list(module, { ...listQuery, viewId: requireValue(view).id })).records[0],
+      );
+      const note = await service.create("Notes", { Parent_Id: { module, id: parent.id } });
+      const direct = await service.create("Attachments", file(module, parent.id));
+      const nested = await service.create("Attachments", file("Notes", note.id));
+      lifecycle.publish(direct.id, published);
+      lifecycle.publish(nested.id, published);
+      await service.delete(module, [parent.id]);
+      await expect(service.get("Attachments", direct.id)).rejects.toBeInstanceOf(NotFoundError);
+      await expect(service.get("Attachments", nested.id)).rejects.toBeInstanceOf(NotFoundError);
+      expect(lifecycle.cleanupIntents()).toHaveLength(2);
+    },
+  );
+  it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+    "transfers %s attachments and notes in merge without changing child IDs or cleaning blobs",
+    async (module) => {
+      const { service, lifecycle } = make();
+      const [view] = await service.listViews(module);
+      const rows = (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
+        .records;
+      const [master, duplicate] = rows;
+      const note = await service.create("Notes", {
+        Parent_Id: { module, id: requireValue(duplicate).id },
+      });
+      const direct = await service.create("Attachments", file(module, requireValue(duplicate).id));
+      lifecycle.publish(direct.id, published);
+      const nested = await service.create("Attachments", file("Notes", note.id));
+      lifecycle.publish(nested.id, published);
+      await service.merge(module, {
+        masterId: requireValue(master).id,
+        duplicateIds: [requireValue(duplicate).id],
+        values: {},
+      });
+      expect((await service.get("Attachments", direct.id)).fields.Parent_Id).toMatchObject({
+        module,
+        id: requireValue(master).id,
+      });
+      expect((await service.get("Notes", note.id)).fields.Parent_Id).toMatchObject({
+        module,
+        id: requireValue(master).id,
+      });
+      expect((await service.get("Attachments", nested.id)).fields.Parent_Id).toMatchObject({
+        module: "Notes",
+        id: note.id,
+      });
+      expect(lifecycle.cleanupIntents()).toEqual([]);
+    },
+  );
+  it("isolates reads, parent validation, publication and cleanup by organization", async () => {
+    const first = make();
+    const second = make();
+    const parent = await lead(first.service);
+    await expect(
+      second.service.create("Attachments", file("Leads", parent.id)),
+    ).rejects.toBeInstanceOf(ValidationError);
+    const attachment = await first.service.create("Attachments", file("Leads", parent.id));
+    first.lifecycle.publish(attachment.id, published);
+    await expect(second.service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+    expect(() => second.lifecycle.publish(attachment.id, published)).toThrow(NotFoundError);
+    expect((await second.service.list("Attachments", listQuery)).records).toEqual([]);
+    await first.service.delete("Leads", [parent.id]);
+    expect(first.lifecycle.cleanupIntents()).toHaveLength(1);
+    expect(second.lifecycle.cleanupIntents()).toEqual([]);
+  });
+});

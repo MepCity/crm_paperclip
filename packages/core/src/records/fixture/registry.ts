@@ -3,6 +3,9 @@ import { accountsMetadata } from "./accounts/metadata";
 import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
 import { accountsViews } from "./accounts/views";
 import { activityDeleteHook } from "./activity-hooks";
+import { attachmentsHooks } from "./attachments/hooks";
+import { attachmentsMetadata } from "./attachments/metadata";
+import { generateFixtureAttachments } from "./attachments/seed";
 import { callsHooks } from "./calls/hooks";
 import { callsMetadata } from "./calls/metadata";
 import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
@@ -21,6 +24,9 @@ import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed
 import { eventsViews } from "./events/views";
 import type { FixtureModuleHooks } from "./hooks";
 import { leadsMetadata } from "./metadata";
+import { notesHooks } from "./notes/hooks";
+import { notesMetadata } from "./notes/metadata";
+import { generateFixtureNotes } from "./notes/seed";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
@@ -64,6 +70,50 @@ const contactsManaged = new Set([
 ]);
 
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+  Attachments: {
+    ...attachmentsHooks,
+    metadata: attachmentsMetadata,
+    views: [
+      {
+        id: "all-attachments",
+        name: "All Attachments",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["File_Name", "Size", "Parent_Id"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "File_Name",
+    generateSeed: generateFixtureAttachments,
+    fullName: (fields) => String(fields.File_Name ?? ""),
+    managedFields: new Set(["Created_By", "Modified_By", "Created_Time", "Modified_Time", "id"]),
+    searchFields: ["File_Name"],
+    initialNextId: 180000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Notes: {
+    ...notesHooks,
+    metadata: notesMetadata,
+    views: [
+      {
+        id: "all-notes",
+        name: "All Notes",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["Note_Title", "Parent_Id"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "Note_Title",
+    generateSeed: (now) => generateFixtureNotes(68, now),
+    fullName: (fields) => String(fields.Note_Title ?? ""),
+    managedFields: new Set(["Created_By", "Modified_By", "Created_Time", "Modified_Time", "id"]),
+    searchFields: ["Note_Title", "Note_Content"],
+    initialNextId: 150000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
   Events: {
     ...eventsHooks,
     metadata: eventsMetadata,
