@@ -613,3 +613,9 @@ Handler-less M4 controls: Accounts Deals card Assign (mirrors the Contacts card 
 advanced-search stage chip (reference behaviour is "display stage"). Leads conversion
 itself is untouched; the seeded Leads records carry no converted references, so the
 converted-deal link has no fixture to exercise.
+
+### Module 4 gate
+
+**Open items**
+
+- Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.

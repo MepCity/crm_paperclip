@@ -18,6 +18,15 @@ export interface StageBarProps {
   defaultOpenMenu?: "won" | "lost";
 }
 
+function TerminalThumb({ kind }: { kind: "won" | "lost" }) {
+  const up = "M2 7h3v7H2zM6 7l3-6c1 0 2 1 2 2v3h3c1 0 2 1 1.7 2l-1 4c-.2.7-.8 1-1.5 1H6z";
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" fill="currentColor" className="stage-bar-thumb">
+      <path d={up} transform={kind === "lost" ? "rotate(180 8 8)" : undefined} />
+    </svg>
+  );
+}
+
 function stageByValue(stages: readonly StageBarStage[], value: string) {
   return stages.find((stage) => stage.value === value);
 }
@@ -108,10 +117,12 @@ export function StageBar({
           {labels.startPrefix}
           <span className="stage-bar-date-value">{startDate}</span>
         </span>
-        <span className="stage-bar-date">
-          <Icons.stopwatch aria-hidden className="stage-bar-stopwatch" />
+        <span className="stage-bar-date stage-bar-date-closing">
           {labels.closingPrefix}
-          <span className="stage-bar-date-value">{closingDate}</span>
+          <span className="stage-bar-date-value">
+            <Icons.stopwatch aria-hidden className="stage-bar-stopwatch" />
+            {closingDate}
+          </span>
         </span>
       </div>
       <div className="stage-bar-lane">
@@ -194,11 +205,12 @@ export function StageBar({
               <Button
                 variant="ghost"
                 className="stage-bar-terminal"
+                data-kind="won"
                 data-active={current?.kind === "won" ? "" : undefined}
                 aria-label={labels.wonMenu}
                 isDisabled={isDisabled}
               >
-                <Icons.thumbUp aria-hidden />
+                <TerminalThumb kind="won" />
                 <Icons.filterChevronDown aria-hidden className="stage-bar-terminal-caret" />
               </Button>
             }
@@ -216,11 +228,12 @@ export function StageBar({
               <Button
                 variant="ghost"
                 className="stage-bar-terminal"
+                data-kind="lost"
                 data-active={current?.kind === "lost" ? "" : undefined}
                 aria-label={labels.lostMenu}
                 isDisabled={isDisabled}
               >
-                <Icons.thumbDown aria-hidden />
+                <TerminalThumb kind="lost" />
                 <Icons.filterChevronDown aria-hidden className="stage-bar-terminal-caret" />
               </Button>
             }
