@@ -9,7 +9,7 @@ type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
 
 /** System Defined Filters rows DL-17, DL-19, DL-20 - DL-25 in reference CRM order. */
 const systemRows: readonly [string, ModuleKey?][] = [
-  ["Activities", "M5"],
+  ["Activities"],
   ["Latest Email Status", "M10"],
   ["Locked"],
   ["Record Action"],
@@ -76,11 +76,20 @@ export function buildDealsFilterGroups(input: Input): readonly FilterGroup[] {
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, laterModule], index) => ({
-        id: `system-${index}`,
-        label,
-        ...(laterModule ? { laterModule } : { disabled: true }),
-      })),
+      items: systemRows.map(([label, laterModule], index) => {
+        if (label === "Activities") {
+          return {
+            id: "Activities",
+            label,
+            systemEditor: "activities" as const,
+          };
+        }
+        return {
+          id: `system-${index}`,
+          label,
+          ...(laterModule ? { laterModule } : { disabled: true }),
+        };
+      }),
     },
     {
       id: "fields",

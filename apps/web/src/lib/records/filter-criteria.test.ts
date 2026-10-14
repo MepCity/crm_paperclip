@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { combineCriteriaAnd, firstLetterCriteria, panelFiltersToCriteria } from "./filter-criteria";
+import {
+  activityFilterToCriteria,
+  combineCriteriaAnd,
+  firstLetterCriteria,
+  panelFiltersToCriteria,
+} from "./filter-criteria";
 import type { FilterOperatorId } from "./filter-operators";
 
 describe("panelFiltersToCriteria", () => {
@@ -312,6 +317,46 @@ describe("combineCriteriaAnd", () => {
     expect(combineCriteriaAnd([or, firstLetterCriteria("Full_Name", "Z")])).toEqual({
       groupOperator: "and",
       group: [or, { field: "Full_Name", comparator: "starts_with", value: "Z" }],
+    });
+  });
+});
+
+describe("activityFilterToCriteria", () => {
+  it("returns undefined for nullish values", () => {
+    expect(activityFilterToCriteria(null)).toBeUndefined();
+    expect(activityFilterToCriteria(undefined)).toBeUndefined();
+  });
+
+  it.each([
+    { choice: "without_open_activity" as const },
+    { choice: "overdue" as const },
+    { choice: "without_any_activity" as const },
+    { choice: "activity_done" as const },
+  ])("maps non-range choice %j strictly", (filter) => {
+    expect(activityFilterToCriteria(filter)).toEqual(filter);
+    expect(
+      activityFilterToCriteria({ ...filter, range: "today" } as unknown as typeof filter),
+    ).toEqual(filter);
+  });
+
+  it.each([
+    { choice: "activity_due" as const, range: "today" as const },
+    { choice: "activity_due" as const, range: "tomorrow" as const },
+    { choice: "activity_due" as const, range: "next_7_days" as const },
+    { choice: "activity_due" as const, range: "today_overdue" as const },
+  ])("maps activity_due with range %j", (filter) => {
+    expect(activityFilterToCriteria(filter)).toEqual(filter);
+  });
+
+  it("defaults range to today_overdue when range is omitted", () => {
+    expect(
+      activityFilterToCriteria({ choice: "activity_due" } as unknown as {
+        choice: "activity_due";
+        range: "today_overdue";
+      }),
+    ).toEqual({
+      choice: "activity_due",
+      range: "today_overdue",
     });
   });
 });
