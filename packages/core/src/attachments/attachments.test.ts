@@ -11,7 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BlobNotFoundError } from "./blob-store";
+import { BlobNotFoundError, InvalidBlobKeyError } from "./blob-store";
 import { createBudgetCounter, FilePolicyError, selectionBudget } from "./file-policy";
 import { LocalDiskBlobStore } from "./local-disk-blob-store";
 
@@ -149,9 +149,9 @@ describe("local disk blob store", () => {
     await symlink(target, path.join(root, ".staging", "org_1", "att_1"));
     await expect(
       store.stage(key, body(text("overwritten")), limits, { fileName: "a.txt" }),
-    ).rejects.toThrow();
+    ).rejects.toBeInstanceOf(InvalidBlobKeyError);
     expect(await readFile(target, "utf8")).toBe("original");
-    await expect(store.publish(key)).rejects.toThrow();
+    await expect(store.publish(key)).rejects.toBeInstanceOf(InvalidBlobKeyError);
     await rm(outside, { recursive: true, force: true });
   });
 
