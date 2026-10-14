@@ -149,7 +149,11 @@ describe("Calls activity foundation", () => {
   it("evaluates the exported Completed, Unattended and Scheduled criteria on seed data", async () => {
     const service = make();
     const calls = generateFixtureCalls(68, now);
-    const status = (call: (typeof calls)[number]) => call.fields.Outgoing_Call_Status;
+    const status = (call: (typeof calls)[number]) =>
+      call.fields.Outgoing_Call_Status === "Scheduled" &&
+      Date.parse(String(call.fields.Call_Start_Time)) < now.getTime()
+        ? "Overdue"
+        : call.fields.Outgoing_Call_Status;
     expect(await service.count("Calls", { viewId: "scheduled-calls" })).toBe(
       calls.filter((c) => status(c) === "Scheduled").length,
     );
