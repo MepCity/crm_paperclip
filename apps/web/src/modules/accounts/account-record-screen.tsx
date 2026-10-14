@@ -10,6 +10,7 @@ import {
 } from "@/components/records/detail/record-detail-screen";
 import { useRecordCount, useViews } from "@/lib/api/client/hooks";
 import { moduleRecordPath } from "@/lib/crm-paths";
+import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import {
   openAccountCreateWithParentAccount,
   openContactCreateWithAccountName,
@@ -49,7 +50,12 @@ function useAccountRelatedBadges(accountId: string) {
 
 export function AccountRecordScreen({ definition, ...props }: AccountRecordScreenProps) {
   const router = useRouter();
-  const badges = useAccountRelatedBadges(props.recordId);
+  const relatedBadges = useAccountRelatedBadges(props.recordId);
+  const activityBadges = useParentActivityBadges("Accounts", props.recordId);
+  const badges = useMemo(
+    () => ({ ...relatedBadges, ...activityBadges }),
+    [relatedBadges, activityBadges],
+  );
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
   const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);

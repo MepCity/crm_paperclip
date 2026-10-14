@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
 import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { Icons } from "@/components/ui/icon";
+import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
   RelatedListDefinition,
@@ -201,6 +202,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "open-activities",
+      renderBody: parentActivitiesBody("Deals", "open"),
       title: "Open Activities",
       moduleKey: "M5",
       order: 7,
@@ -238,6 +240,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "closed-activities",
+      renderBody: parentActivitiesBody("Deals", "closed"),
       title: "Closed Activities",
       moduleKey: "M5",
       order: 8,
