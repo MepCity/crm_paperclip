@@ -140,7 +140,7 @@ export function DealRecordScreen({
             accountRecordPath={(id) => moduleRecordPath(slotOrgSlug, "Accounts", id)}
           />
         ),
-        relatedRailBeforeFooter: <DealsSalesSummary record={record} />,
+        relatedRailAfterFooter: <DealsSalesSummary record={record} />,
       };
     },
     [saveRecord, updateRecord.isPending],
