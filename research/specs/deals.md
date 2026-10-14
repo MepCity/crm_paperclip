@@ -601,3 +601,15 @@ The Stage values on this board are record text, not evidence of an advanced-sear
 Both final screenshots were painted and inspected with the exported controls and metadata. The scroll step image is incomplete and does not establish a painted scroll transition; only metadata establishes the bounded probe result. Blocked list/count requests limit conclusions about record completeness and header counts. These aborted background calls are not evidence of a completed record or preference mutation.
 
 Open questions: a safe unique Amount icon selector (see [deals-form.md](deals-form.md)); an exported inner scroll-container selector and a naturally overflowing column; advanced-search Stage chip behaviour; Account Deals Assign and Contact Roles dialogs. Assign and Edit All remain gated by MEP-562 and were not attempted. No submitted, saved, assigned or edited state was studied.
+
+### Refreshed inner scroll-container evidence
+
+The painted no-click capture `m539-board-base-v3` now exports inner card containers for all three visible stage columns. This supersedes the missing-inner-selector question above. Each column exports both `div.lyteBoardContainer` and `div.lyteKanbanNestedSortable` as `kind: "scrollable"` with a non-null, column-scoped selector. For example, the first column uses `[data-zcqa="kanbanHeader_Qualification"] div.lyteKanbanNestedSortable`.
+
+All six visible-column entries report `clientHeight: 533`, `scrollHeight: 533`, and `overflowing: false` in capture CSS pixels. The columns share a bounded card area below the stage header. The four painted cards fit within that area; there is no naturally overflowing visible card list. The exporter identifies these as elements configured with vertical `auto` or `scroll` overflow, so **an inner vertical scroll container is established**, while an actual many-card scroll transition and visible scrollbar remain **not observed**. This snapshot does not establish how the height responds to another viewport size.
+
+No scroll step was attempted because no card list overflowed. The overflowing filter-panel container is unrelated to card scrolling and was not used. No record, filter, view mode or column preference was changed to manufacture overflow.
+
+Safety audit: eight blocked background requests (reminder ×1, grouped counts ×1, list request ×1, notification status ×1, telemetry ×4). The painted screenshot, controls and metadata were checked together; blocked list/count requests still limit record completeness and aggregate counts. Capture: `m539-board-base-v3`. No clicks, hovers or scrolls.
+
+Remaining questions: natural many-card overflow and scrollbar behaviour; Amount click-triggered content/dismissal (its unique selector and no-popup hover are now documented in [deals-form.md](deals-form.md)); advanced-search Stage chip behaviour; Account Deals Assign and Contact Roles dialogs. Assign/Edit All were not attempted while MEP-562 remains pending.

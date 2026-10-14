@@ -331,3 +331,11 @@ The refreshed `controls.json` exposes the Amount input and hidden popover contai
 Hover/click content, popup placement, dismissal and whether the icon is interactive remain **not observed**. Do not implement tooltip text or a calculator from these attributes alone. A capture-tool follow-up must expose this exact icon safely; no positional or guessed selector was used.
 
 Capture: `m539-amount-base-v2` (screenshot, aria, controls, metadata and network). No clicks, hovers or scrolls; two background requests blocked (reminder and notification status). No record or preference operation was attempted.
+
+### Refreshed icon inventory and hover evidence
+
+The painted no-click capture `m539-amount-base-v3` now exports the information icon as `kind: "icon"` with the unique selector `#Crm_Potentials_AMOUNT div.cxBoxRightIcon div`. Its enclosing right-edge icon area is also exported. This supersedes the selector gap above, without changing the DF-17 control inventory.
+
+`m539-amount-hover` uses the exact inner-icon selector. Metadata confirms one completed hover. The painted `step-1.png` and final screenshot show the complete Create form and the information icon, but no visible explanation, tooltip or popup. The step accessibility snapshot supplies no explanatory content. This establishes **no visible popup after the captured hover**, not that the icon has no click behaviour. No tooltip wording, placement or dismissal can be specified from this result. No click was requested in this continuation, and no field was filled.
+
+Safety audit: `m539-amount-base-v3` blocked five background requests (reminder ×1, notification status ×1, telemetry ×3); `m539-amount-hover` blocked six (reminder ×1, notification status ×1, telemetry ×4). Screenshots, step evidence, controls and metadata were inspected together. Raw captures remain in the local research workspace. Click-triggered content and dismissal remain open questions; no record or preference operation was attempted.
