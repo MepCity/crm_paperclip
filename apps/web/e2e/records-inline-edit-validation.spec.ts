@@ -1,7 +1,7 @@
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath, moduleRecordPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
-import { expect, ignoreFailedResponses, test } from "./support/test";
+import { expect, test } from "./support/test";
 
 /**
  * Inline-edit validation tests for required text fields across Accounts
@@ -54,9 +54,18 @@ async function verifyClearAndSaveShowsError(
   page: import("@playwright/test").Page,
   fieldApiName: string,
   fieldLabel: string,
-  { editButtonLabel, valueButtonLabel }: { editButtonLabel: string; valueButtonLabel: string },
+  {
+    editButtonLabel,
+    valueButtonLabel,
+    writePath,
+  }: { editButtonLabel: string; valueButtonLabel: string; writePath: string },
 ) {
   const row = page.locator(`[data-detail-field="${fieldApiName}"]`);
+  const original = await row.getByRole("button", { name: valueButtonLabel }).innerText();
+  let writes = 0;
+  page.on("request", (req) => {
+    if (req.method() === "PUT" && new URL(req.url()).pathname.startsWith(writePath)) writes += 1;
+  });
   await row.hover();
   await row.getByRole("button", { name: editButtonLabel, exact: true }).click();
   const input = row.getByRole("textbox", { name: fieldLabel });
@@ -68,6 +77,17 @@ async function verifyClearAndSaveShowsError(
   await expect(input).toBeVisible();
   // 1c. Value button is gone — we are still in edit mode.
   await expect(row.getByRole("button", { name: valueButtonLabel })).toHaveCount(0);
+  // 1d. Validation is client-side: no write request was sent.
+  expect(writes).toBe(0);
+  // 3. Cancel, reload: the stored value is the original one.
+  await row.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.reload();
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+  await expect(
+    page
+      .locator(`[data-detail-field="${fieldApiName}"]`)
+      .getByRole("button", { name: valueButtonLabel }),
+  ).toHaveText(original);
 }
 
 // ---------------------------------------------------------------------------
@@ -81,7 +101,6 @@ test.describe("Inline-edit validation – Accounts Account Name", () => {
 
   test("clearing Account Name and saving shows validation error with editor still open", async ({
     page,
-    pageErrors,
   }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -90,15 +109,11 @@ test.describe("Inline-edit validation – Accounts Account Name", () => {
     await verifyClearAndSaveShowsError(page, "Account_Name", "Account Name", {
       editButtonLabel: "Edit Account Name",
       valueButtonLabel: "Edit Account Name value",
+      writePath: "/crm/v2.2/Accounts/",
     });
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Cancel button on Account Name editor restores the original value", async ({
-    page,
-    pageErrors,
-  }) => {
+  test("Cancel button on Account Name editor restores the original value", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openDetail(page, org.slug, "Accounts", ACCOUNT_RECORD_ID);
@@ -112,14 +127,9 @@ test.describe("Inline-edit validation – Accounts Account Name", () => {
     await row.getByRole("button", { name: "Cancel", exact: true }).click();
 
     await expect(row.getByRole("button", { name: "Edit Account Name value" })).toHaveText(original);
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Escape key on Account Name editor restores the original value", async ({
-    page,
-    pageErrors,
-  }) => {
+  test("Escape key on Account Name editor restores the original value", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openDetail(page, org.slug, "Accounts", ACCOUNT_RECORD_ID);
@@ -134,13 +144,10 @@ test.describe("Inline-edit validation – Accounts Account Name", () => {
     await page.keyboard.press("Escape");
 
     await expect(row.getByRole("button", { name: "Edit Account Name value" })).toHaveText(original);
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("stored Account Name is unchanged after page reload when edit was cancelled", async ({
     page,
-    pageErrors,
   }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -161,8 +168,6 @@ test.describe("Inline-edit validation – Accounts Account Name", () => {
     await expect(reloaded.getByRole("button", { name: "Edit Account Name value" })).toHaveText(
       original,
     );
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 });
 
@@ -177,7 +182,6 @@ test.describe("Inline-edit validation – Deals Deal Name", () => {
 
   test("clearing Deal Name and saving shows validation error with editor still open", async ({
     page,
-    pageErrors,
   }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -186,15 +190,11 @@ test.describe("Inline-edit validation – Deals Deal Name", () => {
     await verifyClearAndSaveShowsError(page, "Deal_Name", "Deal Name", {
       editButtonLabel: "Edit Deal Name",
       valueButtonLabel: "Edit Deal Name value",
+      writePath: "/crm/v2.2/Deals/",
     });
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Cancel button on Deal Name editor restores the original value", async ({
-    page,
-    pageErrors,
-  }) => {
+  test("Cancel button on Deal Name editor restores the original value", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openDetail(page, org.slug, "Deals", DEAL_RECORD_ID);
@@ -208,14 +208,9 @@ test.describe("Inline-edit validation – Deals Deal Name", () => {
     await row.getByRole("button", { name: "Cancel", exact: true }).click();
 
     await expect(row.getByRole("button", { name: "Edit Deal Name value" })).toHaveText(original);
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
-  test("Escape key on Deal Name editor restores the original value", async ({
-    page,
-    pageErrors,
-  }) => {
+  test("Escape key on Deal Name editor restores the original value", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openDetail(page, org.slug, "Deals", DEAL_RECORD_ID);
@@ -230,13 +225,10 @@ test.describe("Inline-edit validation – Deals Deal Name", () => {
     await page.keyboard.press("Escape");
 
     await expect(row.getByRole("button", { name: "Edit Deal Name value" })).toHaveText(original);
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("stored Deal Name is unchanged after page reload when edit was cancelled", async ({
     page,
-    pageErrors,
   }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -257,7 +249,5 @@ test.describe("Inline-edit validation – Deals Deal Name", () => {
     await expect(reloaded.getByRole("button", { name: "Edit Deal Name value" })).toHaveText(
       original,
     );
-
-    ignoreFailedResponses(pageErrors, [400]);
   });
 });
