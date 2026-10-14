@@ -79,7 +79,9 @@ export function buildTasksBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record) ? [{ field, value: record.fields[name] ?? null }] : [];
+    if (!field || !visible(field, record)) return [];
+    const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
+    return [{ field, value: record.fields[name] ?? null, ...(valueSuffix ? { valueSuffix } : {}) }];
   });
 }
 
@@ -109,7 +111,9 @@ export function buildTasksDetailSections(
               : name === "Modified_By"
                 ? record.fields.Modified_Time
                 : undefined;
+          const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
           fields.push({
+            ...(valueSuffix ? { valueSuffix } : {}),
             column:
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field,

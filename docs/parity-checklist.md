@@ -634,3 +634,17 @@ Related To and Contact Name link to the related record when the target module is
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
 
+
+### Tasks record detail — implemented; QA pending (MEP-473)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Header, tags, Close Task, Edit, More Options | TD-01, TD-04–TD-09 | `tasks-detail.spec.ts` |
+| Tabs, last update, Timeline empty state | TD-33–TD-35 | `tasks-detail.spec.ts` |
+| Business card, detail sections, Related To suffix | TD-36–TD-46 | `tasks-detail.spec.ts`, `tasks-detail-sections.test.ts` |
+| Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
+
+Interim rules: Close Task shows only while the task is open, opens no confirmation and
+updates Status through the record service (errors show a toast); Meetings and Calls open
+counts show 0 until those modules are registered; "+ New" and the panel search icons draw
+without handlers; Add Tags and Conversations are drawn as later-module controls.

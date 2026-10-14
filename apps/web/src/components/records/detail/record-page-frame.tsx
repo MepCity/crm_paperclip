@@ -45,6 +45,8 @@ export interface RecordPageFrameProps {
   scrollTopLabel: string;
   relatedRailHeaderAction?: ReactNode;
   relatedRailFooter?: ReactNode;
+  /** Optional right-hand panel beside the tab column (activity records). */
+  sidePanel?: ReactNode;
 }
 
 export function getActiveRelatedEntryId(
@@ -147,6 +149,7 @@ export function RecordPageFrame({
   scrollTopLabel,
   relatedRailHeaderAction,
   relatedRailFooter,
+  sidePanel,
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingTargetRef = useRef<RelatedListEntry | null>(null);
@@ -351,6 +354,14 @@ export function RecordPageFrame({
             ))}
           </div>
         </Tabs>
+        {sidePanel ? (
+          <div
+            data-record-side-panel
+            className="w-(--size-record-rail-width) shrink-0 overflow-y-auto bg-bg px-3 pt-(--size-record-tab-top) pb-3"
+          >
+            {sidePanel}
+          </div>
+        ) : null}
       </div>
       {scrolled && (
         <Button
