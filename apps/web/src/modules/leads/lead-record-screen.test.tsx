@@ -192,6 +192,43 @@ describe("LeadRecordScreen", () => {
     expect(screen.getAllByRole("region", { name: /^Open Meetings \(0\)$/ }).length).toBe(1);
   });
 
+  it("shows linked open and closed calls in the activities cards", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const page = await service.list("Leads", { viewId: view.id, page: 1, perPage: 30 });
+    const record = page.records[0];
+    if (!record) throw new Error("Expected list rows.");
+    const who = { module: "Leads", id: record.id };
+    const callViews = await service.listViews("Calls");
+    const callView = callViews.find((item) => item.isDefault);
+    if (!callView) throw new Error("Missing default Calls view.");
+    const calls = await service.list("Calls", { viewId: callView.id, page: 1, perPage: 30 });
+    const [first, second] = calls.records;
+    if (!first || !second) throw new Error("Expected seeded calls.");
+    await service.update("Calls", first.id, {
+      Subject: "Introductory call",
+      Call_Type: "Outbound",
+      Call_Start_Time: "2026-07-01T12:00:00.000Z",
+      Outgoing_Call_Status: "Scheduled",
+      Who_Id: who,
+    });
+    await service.update("Calls", second.id, {
+      Subject: "Follow-up discussion",
+      Call_Type: "Outbound",
+      Call_Start_Time: "2026-05-01T12:00:00.000Z",
+      Call_Duration: "05:00",
+      Outgoing_Call_Status: "Completed",
+      Who_Id: who,
+    });
+    renderScreen(service, record.id);
+    const open = await screen.findByRole("region", { name: "Open Calls (1)" });
+    expect(within(open).getByText("Introductory call")).toBeTruthy();
+    const closed = await screen.findByRole("region", { name: "Closed Calls (1)" });
+    expect(within(closed).getByText("Follow-up discussion")).toBeTruthy();
+  });
+
   it("does not fetch view summaries when list context is present", async () => {
     const service = createService();
     const listViewSummaries = vi.spyOn(service, "listViewSummaries");

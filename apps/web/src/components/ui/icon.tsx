@@ -100,6 +100,17 @@ function FieldEdit(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Solid 45-degree pencil (tip bottom-left) used beside the board grouping select. */
+function BoardEdit(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 24 24" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" />
+    </svg>
+  );
+}
+
 function FilterSearch(props: SVGProps<SVGSVGElement>) {
   const { "aria-label": _label, ...rest } = props;
   return (
@@ -487,6 +498,7 @@ export const Icons = {
   columnSortAsc: ColumnSortArrowUp,
   columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
+  boardEdit: BoardEdit,
   building: Building2,
   check: Check,
   chevronUp: ChevronUp,

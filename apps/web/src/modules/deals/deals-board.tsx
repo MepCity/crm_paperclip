@@ -55,7 +55,7 @@ export const dealsBoardToolbar = (
       />
     </span>
     <Button variant="ghost" aria-label="Board settings">
-      <Icons.fieldEdit aria-hidden className="h-4 w-4" />
+      <Icons.boardEdit aria-hidden className="h-4 w-4" />
     </Button>
   </>
 );
