@@ -44,7 +44,7 @@ export const dealsBoardToolbar = (
     <span className="relative inline-flex h-[27px] w-[109px] items-center">
       <select
         aria-label="Board grouping"
-        className="h-full w-full appearance-none rounded border border-control-border bg-surface pl-2 pr-6 text-sm text-(--color-text-muted) outline-none"
+        className="h-full w-full appearance-none rounded border border-control-border bg-surface pl-2 pr-6 text-sm text-(--color-text-muted) outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         defaultValue="STAGEVIEW"
       >
         <option value="STAGEVIEW">STAGEVIEW</option>

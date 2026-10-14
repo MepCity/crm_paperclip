@@ -309,6 +309,8 @@ describe("dealsBoardToolbar", () => {
     expect(select).toBeTruthy();
     expect(select.value).toBe("STAGEVIEW");
     expect(select.className).toContain("text-sm");
+    expect(select.className).toContain("focus-visible:ring-2");
+    expect(select.className).toContain("focus-visible:ring-focus-ring");
     expect(screen.getByRole("button", { name: "Board settings" })).toBeTruthy();
 
     const wrapper = select.parentElement;
