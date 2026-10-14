@@ -71,6 +71,7 @@ export type RecordDetailSlots = {
   overviewPrefix?: ReactNode;
   contactSummary?: ReactNode;
   relatedRailBeforeFooter?: ReactNode;
+  relatedRailAfterFooter?: ReactNode;
   /** Right-hand panel; when present the related list rail and its toggle are not drawn. */
   sidePanel?: ReactNode;
   /** Commands drawn before Edit in the record header. */
@@ -418,7 +419,6 @@ export function RecordDetailScreen({
 
   const relatedRailFooter = hasRelatedLists ? (
     <div className="pt-2 border-t border-border mt-2 flex flex-col gap-1">
-      {detailSlots?.relatedRailBeforeFooter}
       <Link
         href="#add-related-list"
         variant="body"
@@ -427,6 +427,7 @@ export function RecordDetailScreen({
       >
         Add Related List
       </Link>
+      {detailSlots?.relatedRailAfterFooter}
       {railChrome?.linksGroup ? (
         <>
           <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
