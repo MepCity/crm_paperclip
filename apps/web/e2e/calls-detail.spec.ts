@@ -71,11 +71,11 @@ test.describe("Calls record detail", () => {
     await expect(card).toBeVisible();
     const cardText = (await card.innerText()).replace(/\s+/g, " ");
     const positions = [
+      "Contact Name",
+      "Related To",
       "Call Type",
-      "Call Start Time",
-      "Call Duration",
-      "Call Purpose",
       "Outgoing Call Status",
+      "Call Start Time",
     ].map((label) => cardText.indexOf(label));
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
