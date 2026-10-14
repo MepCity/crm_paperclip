@@ -35,7 +35,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Meeting",
   pluralLabel: "Meetings",
   pageTitle: "Meetings",
-  navigation: { id: "meetings", icon: Icons.calendar },
+  navigation: { id: "meetings", icon: Icons.calendar, group: "activities" },
   list: meetingsListPageConfig,
   listCurrencyCode: MEETINGS_LIST_CURRENCY_CODE,
   searchColumns: ["Event_Title", "Start_DateTime", "End_DateTime", "What_Id", "Who_Id", "Owner"],
