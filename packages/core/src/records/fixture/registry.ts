@@ -77,7 +77,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     fullName: callsFullName,
     managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
     searchFields: ["Subject", "Description"],
-    initialNextId: 140000000000000000n,
+    initialNextId: 150000000000000000n,
     createDefaults: (stamp) => ({ CTI_Entry: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Tasks: {

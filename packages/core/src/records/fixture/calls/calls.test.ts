@@ -130,7 +130,7 @@ describe("Calls activity foundation", () => {
       }[module] as string;
       const filters: Criteria = { field, comparator: "equal", value: { module, id } };
       const expected = generateFixtureCalls(68, now).filter((call) => {
-        const ref = call.fields[field];
+        const ref = call.fields[field] as { module?: string; id?: string } | null;
         return typeof ref === "object" && ref !== null && ref.module === module && ref.id === id;
       });
       const list = await service.list("Calls", { ...query, filters });

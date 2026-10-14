@@ -40,7 +40,7 @@ describe("prepared Calls seed", () => {
       const counts = new Map<string, number>();
       for (const call of generateFixtureCalls(68, now)) {
         for (const name of ["Who_Id", "What_Id"]) {
-          const value = call.fields[name];
+          const value = call.fields[name] as { module?: string; id?: string } | null;
           if (typeof value !== "object" || value === null || value.module !== module) continue;
           expect(targetIds.has(value.id as string)).toBe(true);
           counts.set(value.id as string, (counts.get(value.id as string) ?? 0) + 1);
