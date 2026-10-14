@@ -7,25 +7,18 @@ This document covers their Overview card and their representation in Timeline.
 Module 6 uses the Module 2+ control-inventory rule: no measurement table or
 network-contract reconstruction.
 
-**Status: partial research draft; not ready for implementation approval.**
-Existing screenshots, accessibility trees and available control inventories
-establish the collapsed card and existing note history. New captures on
-2026-10-14 failed to render the application because frontend script requests
-reported `ERR_HTTP2_PROTOCOL_ERROR`. A subsequent single capture with a
-12-second wait also failed: twelve frontend GET requests reported
-`ERR_CONNECTION_CLOSED`, and the screenshot still showed Loading. No controls
-were clicked in that retry. The earlier frontend-network blocker was reported resolved. A subsequent
-2026-10-14 continuation could not acquire the shared browser: the capture
-tool fell back to launching the occupied profile and failed with
-`Failed to create a ProcessSingleton`. The local CDP version endpoint
-responded, but that alone does not establish a working capture connection.
-The machine load average was approximately 94 during this attempt.
-No reference control was reached or clicked; no completed capture or new
-product evidence was produced. Do not treat this as a Notes product error.
-The application remained at Loading;
-requested record and Notes clicks matched no controls and were skipped.
-The open composer and note action menu still require successful read-only
-captures. Loading caused by this capture failure is not a product empty state.
+**Status: research resumed; composer/menu cross-module evidence in progress.**
+Existing screenshots and control inventories establish the collapsed card,
+existing notes and the Accounts open composer. Earlier script-loading and shared
+browser connection failures were research-access problems, not Notes product
+errors. The capture connection timeout was increased in the local research tool;
+`m6-notes-accounts-resume` now renders the Accounts list successfully.
+A previously completed capture, `m6-notes-accounts-open`, was recovered after
+the interrupted run and reconciled visually with its accessibility tree and
+control inventory. No note was entered or saved.
+A retry using a normalized record path (`m6-notes-accounts-composer`) showed
+an invalid-route page; both requested controls matched zero elements and were
+skipped. It supplies no Notes UI evidence.
 
 ## Layout
 
@@ -143,7 +136,8 @@ Contacts visual coverage limitation is recorded above.
 68. Card top right Recent Last combobox: current ordering label. Options,
     persistence and actual ordering remain unresolved. Do not change selection.
 69. Below empty list Add a note textbox: collapsed composer entry point.
-    Open form not captured; never filled or saved.
+    Opening expands the composer; Accounts open state is captured below.
+    Never filled or saved.
 
 No card search, filter button, pagination control or list-level More control
 is visible in these captured states. This does not prove their absence with
@@ -165,8 +159,9 @@ Shared controls 64–69 remain applicable; the rail count shows two entries.
 76. Note metadata date and author: read-only attribution.
 
 No row edit, delete, reply or overflow control is visible in the idle screenshot
-or available control inventory. Hover-only controls are unresolved: the capture
-command supports clicks rather than a hover workflow. Do not manufacture an
+or available control inventory. Hover-only controls are unresolved; the updated
+local capture tool supports named/stable hover steps and a new observation is
+in progress. Do not manufacture an
 ellipsis action menu from an assumed pattern. No list pagination is visible for
 the two-entry sample. Show More belongs to one note's content, not list paging.
 
@@ -193,12 +188,35 @@ Contacts history evidence includes call and field-change events but no note
 example; Deals history evidence shows No logs found. This is a history empty
 state, distinct from the Notes card's empty list.
 
-### States D and E: open composer and row action menu
+### State D: open empty composer — Accounts
 
-Not captured. Numbered observed inventory must be extended after access recovers
-for title / body inputs, each formatting tool, attachment / link controls,
-Save / Cancel, and every visible menu item. Their presence, labels, placement,
-disabled states and tooltips must not be inferred from the task description.
+Source: `m6-notes-accounts-open`, screenshot, accessibility tree and
+`controls.json`. Opened by targeting Notes and clicking the collapsed editor;
+no input, formatting command, attachment or save was performed. Shared frame
+1–63 and populated card 64–76 remain visible. The composer expands beneath
+the notes inside the same card rather than opening a separate modal.
+
+82. Composer top Title textbox: empty optional-title affordance; UI requiredness
+    is not established by metadata alone.
+83. Below Title, rich body editor: shows What's this note about? while empty;
+    editor is represented by `#noteTextarea1` and an iframe in the accessibility
+    tree. No text was entered.
+84. Body bottom-right resize grip: visible editor affordance; not dragged.
+85. Footer left formatting icon (`cxNotesRichTextFormatIcon`): text-formatting
+    launcher; expanded toolbar and its individual commands pending observation.
+86. Beside formatting, paperclip (`notesAttachFile`): attachment launcher with
+    button role; not activated. File selection and attachment persistence untested.
+87. Footer right Cancel: abandonment action; not exercised in this capture.
+88. Beside Cancel, Save: visibly disabled while both fields are empty; disabled
+    state is also present in the accessibility tree. Never clicked.
+
+No separate link icon is visible in this collapsed formatting state. Do not infer
+that link insertion is absent from the expanded toolbar.
+
+### State E: note row actions
+
+Hover and menu observation in progress. Do not infer row actions from other
+modules or classify the metadata Add Note label as a reply control.
 
 ## Fields
 
@@ -207,7 +225,7 @@ Metadata limits are not proof of the UI validation message or rich-text limit.
 
 | API field | Type / metadata limit | Role |
 | --- | --- | --- |
-| Note_Title | text, 120 | Optional title in metadata; open UI pending |
+| Note_Title | text, 120 | Optional title in metadata; visible empty Title input |
 | Note_Content | textarea, 65,535 | Body; system mandatory false in metadata |
 | Parent_Id | lookup | Mandatory parent-record relation |
 | Owner | owner lookup | Note ownership |
@@ -222,7 +240,7 @@ No account, record, profile or customer identifiers are included here.
 
 - Read flow: open a parent record, target Notes through its related-list rail,
   inspect the collapsed card. Existing captures demonstrate this in four modules.
-- Creation observation flow pending: open Add a note, inspect only. Do not type,
+- Creation observation: Accounts Add a note expands an inline empty composer. Do not type,
   format content, attach a file, choose a link, save or reply.
 - Menu observation flow pending: identify an existing note's uniquely named or
   stable captured control; inspect attributes and screenshot first; open only
@@ -271,17 +289,24 @@ failure, not evidence for the reference CRM's Notes error design.
   three blocked telemetry POSTs, no clicks or skipped clicks. The three
   inventory entries belong to the loading shell, not the Notes product UI.
 
+- `m6-notes-accounts-open`: recovered successful Accounts composer capture;
+  three applied clicks (record navigation, Notes target, empty composer), fifteen
+  blocked requests. No content was entered or saved.
+- `m6-notes-accounts-resume`: successful list-only access verification;
+  no clicks, two blocked legacy reminder/notification POSTs.
+- `m6-notes-accounts-composer`: invalid normalized-route attempt; both clicks
+  skipped with zero matches, zero blocked requests; no Notes evidence.
+
 All captures remain in the local research workspace. No screenshots or note
 values are committed. Prior blocked-request counts do not mean writes succeeded;
 all three new attempts applied no clicks. The shared browser window was not closed.
 
 ## Open questions and completion checklist
 
-1. Research access: restore successful capture acquisition of the existing
-   shared browser before composer/menu evidence can be gathered. The earlier
-   frontend-network issue is resolved; this continuation exposed a separate
-   capture connection failure. CRM Analyst owns retrying after technical recovery.
-2. Capture the open composer in all four parent modules; reconcile every input,
+1. Research access recovered: successful list acquisition and recovered Accounts
+   composer evidence are available. Complete the remaining captures below.
+2. Accounts open composer is captured. Capture the remaining parent modules
+   and the expanded formatting toolbar; reconcile every input,
    tool and Save / Cancel control against screenshot and controls.json.
 3. Identify row menu or hover-only actions without positional selectors or
    unsafe clicks; capture the menu and select nothing.
