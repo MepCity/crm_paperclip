@@ -56,6 +56,7 @@ it("fills controls, filters available fields and transfers fields in order", asy
     true,
   );
   await user.click(screen.getByRole("button", { name: "Remove Stage" }));
+  expect(within(screen.getByRole("dialog")).queryByText("0")).toBeNull();
   expect(
     within(screen.getByRole("list", { name: "Selected" }))
       .getAllByRole("button")

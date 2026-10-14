@@ -250,11 +250,11 @@ function SettingsContent({
               </div>
             </section>
           </div>
-          {errors.fields?.length && (
+          {errors.fields?.length ? (
             <p role="alert" className="text-danger">
               {errors.fields.join(" ")}
             </p>
-          )}
+          ) : null}
           {message && (
             <p role="alert" className="mt-3 text-danger">
               {message}
