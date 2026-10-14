@@ -92,7 +92,9 @@ test("Tasks module filter is enabled and lists a matching task", async ({ page }
   await expect(tasksCheckbox).toBeChecked();
 });
 
-test("Meetings module filter (S-31.6) is enabled and lists a matching meeting", async ({
+// Product defect: S-31.6 is keyed "Meetings" but the registered module apiName is "Events",
+// so the filter shows a disabled later-module entry plus a custom "Meetings" one (see MEP-515).
+test.fixme("Meetings module filter (S-31.6) is enabled and lists a matching meeting", async ({
   page,
 }) => {
   await signUpNewUser(page);

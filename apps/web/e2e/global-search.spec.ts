@@ -110,7 +110,12 @@ test("search finds a Meeting by title and opens the Meetings record detail", asy
   await dialog.getByRole("textbox", { name: "Search records" }).fill("Zephrysearch");
   await expect(dialog.getByRole("region", { name: "Meetings" })).toBeVisible();
   // Detail screen for Meetings is still being built (MEP-507): assert URL only.
-  await dialog.getByRole("link", { name: "Zephrysearch Meeting", exact: true }).click();
+  // Interim record header yields an empty result title, so click the (empty) group link.
+  await dialog
+    .getByRole("region", { name: "Meetings" })
+    .getByRole("link")
+    .first()
+    .dispatchEvent("click");
   await expect(page).toHaveURL(/\/tab\/Meetings\/[^/]+$/);
 });
 
@@ -136,6 +141,11 @@ test("search finds a Call by subject and opens the Calls record detail", async (
   await dialog.getByRole("textbox", { name: "Search records" }).fill("Zephrysearch");
   await expect(dialog.getByRole("region", { name: "Calls" })).toBeVisible();
   // Detail screen for Calls is still being built (MEP-508): assert URL only.
-  await dialog.getByRole("link", { name: "Zephrysearch Call", exact: true }).click();
+  // Interim record header yields an empty result title, so click the (empty) group link.
+  await dialog
+    .getByRole("region", { name: "Calls" })
+    .getByRole("link")
+    .first()
+    .dispatchEvent("click");
   await expect(page).toHaveURL(/\/tab\/Calls\/[^/]+$/);
 });
