@@ -24,6 +24,7 @@ import * as records from "@crm/core/records";
 describe("record port type boundary", () => {
   it("exports types without loading a runtime service", () => {
     expect(Object.keys(records).sort()).toEqual([
+      "KANBAN_HEADER_STYLES",
       "isJsonArray",
       "isJsonObject",
       "lookupTargetModules",

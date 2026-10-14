@@ -11,12 +11,15 @@ import {
   useCreateRecord,
   useDeleteRecords,
   useHomeCurrency,
+  useKanbanView,
+  useKanbanViews,
   useMassUpdate,
   useModule,
   useRecord,
   useRecordCount,
   useRecordList,
   useRefreshModuleListData,
+  useSaveKanbanView,
   useUpdateRecord,
   useUsers,
   useViews,
@@ -329,5 +332,47 @@ describe("record hooks", () => {
     await waitFor(() => expect(countSpy.mock.calls.length).toBeGreaterThan(countCallsBefore));
     expect(getSpy.mock.calls.length).toBe(getCallsBefore);
     expect(result.current.record.data?.fields.Company).toBe("Invalidate Changed");
+  });
+});
+
+describe("kanban view hooks", () => {
+  it("lists, reads, creates and updates views and refreshes the queries", async () => {
+    const service = createService();
+    const { result } = renderHook(
+      () => ({
+        list: useKanbanViews("Deals"),
+        save: useSaveKanbanView("Deals"),
+      }),
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => expect(result.current.list.data).toHaveLength(1));
+    const seed = result.current.list.data?.[0];
+    if (!seed) throw new Error("Missing seed view");
+    const { id: _id, ...input } = seed;
+    let created: { id: string } | undefined;
+    await act(async () => {
+      created = await result.current.save.mutateAsync({ input: { ...input, name: "Mine" } });
+    });
+    await waitFor(() => expect(result.current.list.data).toHaveLength(2));
+    await act(async () => {
+      await result.current.save.mutateAsync({
+        id: created?.id,
+        input: { ...input, name: "Mine v2" },
+      });
+    });
+    await waitFor(() =>
+      expect(result.current.list.data?.map((view) => view.name)).toContain("Mine v2"),
+    );
+  });
+
+  it("reads one view and stays idle without an id", async () => {
+    const service = createService();
+    const seed = (await service.listKanbanViews("Deals"))[0];
+    const one = renderHook(() => useKanbanView("Deals", seed?.id ?? ""), {
+      wrapper: wrapper(service),
+    });
+    await waitFor(() => expect(one.result.current.data?.name).toBe("STAGEVIEW"));
+    const idle = renderHook(() => useKanbanView("Deals", ""), { wrapper: wrapper(service) });
+    expect(idle.result.current.fetchStatus).toBe("idle");
   });
 });
