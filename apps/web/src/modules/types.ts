@@ -159,7 +159,7 @@ export interface ModuleScreenDefinition {
   singularLabel: string;
   pluralLabel: string;
   pageTitle: string;
-  navigation: { id: string; icon: Icon };
+  navigation: { id: string; icon: Icon; group?: "sales" | "activities" };
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
@@ -206,6 +206,7 @@ export interface ModuleScreenDefinition {
     hasPortrait?: boolean;
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    portraitAppearance?: "tile" | "inline";
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];

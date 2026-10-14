@@ -242,7 +242,7 @@ test("taskRelatedToSuffix generates unlinked module suffix for What_Id", () => {
         What_Id: { id: "deal-1", name: "Sample Deal", module: "Deals" },
       }),
     ),
-  ).toBe("Deal");
+  ).toBe("- Deals");
 
   // Accounts
   expect(
@@ -251,7 +251,7 @@ test("taskRelatedToSuffix generates unlinked module suffix for What_Id", () => {
         What_Id: { id: "acc-1", name: "Acme Corp", module: "Accounts" },
       }),
     ),
-  ).toBe("Account");
+  ).toBe("- Accounts");
 
   // Contacts
   expect(
@@ -260,7 +260,7 @@ test("taskRelatedToSuffix generates unlinked module suffix for What_Id", () => {
         What_Id: { id: "con-1", name: "Alice", module: "Contacts" },
       }),
     ),
-  ).toBe("Contact");
+  ).toBe("- Contacts");
 
   // Campaigns (from known dictionary)
   expect(
@@ -269,7 +269,7 @@ test("taskRelatedToSuffix generates unlinked module suffix for What_Id", () => {
         What_Id: { id: "camp-1", name: "Autumn Promo", module: "Campaigns" },
       }),
     ),
-  ).toBe("Campaign");
+  ).toBe("- Campaigns");
 
   // Missing or empty What_Id
   expect(taskRelatedToSuffix(taskRecord({}))).toBeUndefined();
