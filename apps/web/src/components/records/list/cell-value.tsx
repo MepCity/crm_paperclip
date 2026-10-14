@@ -25,6 +25,8 @@ export interface CellValueProps {
   /** Locale and time zone for date and datetime cells. */
   format: FormatOptions;
   orgSlug?: string;
+  /** ISO 4217 code for currency cells; plain number when omitted. */
+  currencyCode?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export function CellValue({
   format,
   orgSlug,
   laterModule,
+  currencyCode,
 }: CellValueProps) {
   const contextOrgSlug = useOptionalOrgSlug();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
@@ -58,6 +61,7 @@ export function CellValue({
     href: field.dataType === "lookup" ? undefined : href,
     linkWebsite,
     orgSlug: effectiveOrgSlug,
+    currencyCode,
   });
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {

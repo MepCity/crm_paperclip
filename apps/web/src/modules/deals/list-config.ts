@@ -58,6 +58,7 @@ export const dealsListPageConfig: ModuleListScreenConfig = {
   filterGroups: dealsFilterGroups,
   sortFieldLabels: DEALS_SORT_FIELD_LABELS,
   pinnedViews: ["All Deals"],
+  cellCurrencyCode: DEALS_LIST_CURRENCY_CODE,
   badgeColumn: false,
   inventory: {
     actions: [

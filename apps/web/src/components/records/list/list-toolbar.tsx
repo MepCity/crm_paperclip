@@ -13,7 +13,8 @@ export interface ListToolbarProps {
   onPresentationChange?: (presentation: "table" | "board") => void;
   filterOpen: boolean;
   onFilterChange: (open: boolean) => void;
-  onRefresh: () => void;
+  /** Omitted: the refresh button is not drawn (stage board presentation). */
+  onRefresh?: () => void;
   fields: SortPopoverProps["fields"];
   sort: SortSpec | null;
   onSortApply: (sort: SortSpec | null) => void;
@@ -59,17 +60,19 @@ export function ListToolbar({
             onPresentationChange={onPresentationChange}
           />
         </span>
-        <Button
-          variant="ghost"
-          size="listIcon"
-          aria-label="Refresh Custom View"
-          onPress={onRefresh}
-        >
-          <Icons.refresh
-            aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-(--color-text-muted)"
-          />
-        </Button>
+        {onRefresh ? (
+          <Button
+            variant="ghost"
+            size="listIcon"
+            aria-label="Refresh Custom View"
+            onPress={onRefresh}
+          >
+            <Icons.refresh
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-(--color-text-muted)"
+            />
+          </Button>
+        ) : null}
       </div>
       <div className="flex items-center gap-(--size-button-gap)">
         <SplitButton {...create} />
