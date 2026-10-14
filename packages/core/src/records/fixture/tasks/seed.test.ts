@@ -49,6 +49,7 @@ describe("prepared Tasks seed", () => {
           if (
             typeof value !== "object" ||
             value === null ||
+            !("module" in value) ||
             value.module !== module ||
             typeof value.id !== "string"
           )

@@ -116,7 +116,7 @@ or layout are server errors, not caller validation errors.
 - A `CATEGORY` token whose name contains `{`, `}` or a line break is returned
   from the wire as a plain string unchanged.
 - Only exact token forms decode as tokens; other strings remain plain values.
-  A plain string exactly matching a known TODAY, AGEINDAYS, CATEGORY, DUEINDAYS
+  A plain string exactly matching a known CURRENTTIME, TODAY, AGEINDAYS, CATEGORY, DUEINDAYS
   or PERIOD spelling consequently returns as a token. Unknown standalone token
   names, unknown periods and invalid due-token forms raise keyed filter validation
   errors. Existing non-token literal forms remain unchanged.
@@ -162,6 +162,7 @@ body names and `details.fields` are interim additions described above.
 | `ModuleMetadata.businessCardFields` | `modules[].business_card_fields[]{api_name}` | Observed key in Module definition; field IDs are omitted |
 | `LayoutSection.columns` | `layouts[].sections[].columns[][]` (field API name strings) | Interim: no placement key documented; the documented `column_name` has no observed UI-placement semantics |
 | Write `Owner: userId` | `data[].Owner: {id: userId}` | Interim: write payload unobserved; uses the existing owner/lookup write codec |
+| `FieldDefinition.acceptsJsonArray` | `fields[].accepts_json_array` (also on layout fields) | Our acceptance-policy key, not the exported `json_type`; omitted on unmarked fields |
 
 `columns` preserves empty columns and omits fields whose placement is unknown;
 `fields` continues to carry the full section inventory. The card's observed five
@@ -171,6 +172,12 @@ do not assert reference write parity.
 
 `FieldDefinition.massUpdate` maps losslessly to observed `fields[].mass_update`,
 including layout fields. Fixture values come from metadata, not field-type guesses.
+
+Marked fields carry opaque JSON arrays unchanged through record reads and writes;
+the codec validates plain JSON and copies the value. Events marks only Remind_At,
+Remind_Participants and Participants. Tag retains the shared text policy.
+`${CURRENTTIME}` maps exactly to the CURRENTTIME token; its exact-instant datetime
+comparison rules are enforced by the record service.
 
 
 ## Interim panel filter values

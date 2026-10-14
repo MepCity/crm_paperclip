@@ -26,6 +26,7 @@ import {
   resolveModuleLaterKey,
   resolveModuleScreenByApiName,
 } from "@/modules/registry";
+import type { LookupPickerRule, NumberLimits } from "./form-model";
 import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
@@ -48,6 +49,10 @@ export interface FieldInputProps {
   currencyPrefix?: string;
   currencyInformation?: string;
   textPrefix?: string;
+  /** Business range of a numeric entry; metadata carries no minimum or maximum. */
+  numberLimits?: NumberLimits;
+  /** Picker shape for this lookup field, when it differs from the target module's configuration. */
+  lookupPicker?: LookupPickerRule;
   placeholder?: string;
   defaultOpen?: boolean;
   id?: string;
@@ -134,6 +139,8 @@ export function FieldInput({
   currencyPrefix,
   currencyInformation,
   textPrefix,
+  numberLimits,
+  lookupPicker,
   placeholder,
   defaultOpen,
   id,
@@ -236,6 +243,8 @@ export function FieldInput({
           value={number}
           placeholder={placeholder}
           isReadOnly={field.readOnly || undefined}
+          minValue={numberLimits?.min}
+          maxValue={numberLimits?.max}
           // An integer field still accepts what is typed: `Save` rejects a decimal with
           // `Please enter a valid <label>.`, which needs the value to survive in the input.
           formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
@@ -380,7 +389,8 @@ export function FieldInput({
               module={targetModule}
               selectedId={reference?.id}
               recordService={recordService}
-              chrome={lookupChrome ?? "interim"}
+              chrome={lookupPicker?.chrome ?? lookupChrome ?? "interim"}
+              searchLabel={lookupPicker?.searchLabel}
               recordHref={lookupRecordHref ? (id) => lookupRecordHref(id, targetModule) : undefined}
               ownerNames={
                 lookupOwnerNames ??

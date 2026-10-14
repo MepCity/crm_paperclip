@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { buildFormModel, formFields } from "@/components/records/form/form-model";
+import { buildFormModel, formFields, resolveFormRules } from "@/components/records/form/form-model";
 import {
   buildDealsFormDefaults,
   DEALS_FORM_CREATE_TITLE,
@@ -8,10 +8,11 @@ import {
   DEALS_FORM_INFORMATION_COLUMNS,
   DEALS_FORM_PICKLIST_NONE,
   DEALS_FORM_PROBABILITY_DEFAULT,
+  DEALS_FORM_REASON_FOR_LOSS,
   DEALS_FORM_STAGE_DEFAULT,
   dealsFormRules,
 } from "./deals-form-rules";
-import { dealField, dealMetadata } from "./test-metadata";
+import { dealField, dealMetadata, dealRecord } from "./test-metadata";
 
 test("preserves Deals form titles, owner key, currencies and default values", () => {
   expect(DEALS_FORM_CREATE_TITLE).toBe("Create Deal");
@@ -20,8 +21,14 @@ test("preserves Deals form titles, owner key, currencies and default values", ()
   expect(dealsFormRules.owner).toBe("Owner");
   expect(dealsFormRules.currency).toBe("Amount");
   expect(dealsFormRules.currencies).toEqual(["Amount", "Expected_Revenue"]);
-  expect(dealsFormRules.omitted).toEqual(["Connected_To__s", "Reason_For_Loss__s"]);
+  expect(dealsFormRules.omitted).toEqual(["Connected_To__s"]);
   expect(dealsFormRules.omittedSections).toEqual(["Deal Image"]);
+  expect(dealsFormRules.stageProbability).toEqual({ stage: "Stage", probability: "Probability" });
+  expect(dealsFormRules.numberLimits).toEqual({ Probability: { min: 0, max: 100 } });
+  expect(dealsFormRules.lookupPickers?.Contact_Name).toEqual({
+    chrome: "observed",
+    searchLabel: "Search by Contact Name",
+  });
 
   expect(DEALS_FORM_STAGE_DEFAULT).toBe("Qualification");
   expect(DEALS_FORM_PROBABILITY_DEFAULT).toBe(10);
@@ -102,7 +109,12 @@ test("marks required fields and currency types in form fields model", () => {
     ],
   };
 
-  const fields = formFields(metadata, buildFormModel(metadata, "create"), "create", dealsFormRules);
+  const fields = formFields(
+    metadata,
+    buildFormModel(metadata, "create"),
+    "create",
+    resolveFormRules(dealsFormRules, { mode: "create", metadata }),
+  );
 
   expect(fields.find((f) => f.apiName === "Deal_Name")?.required).toBe(true);
   expect(fields.find((f) => f.apiName === "Account_Name")?.required).toBe(true);
@@ -126,12 +138,67 @@ test("exports spec 7-row column order for Deal Information", () => {
     "Lead_Source",
     "Contact_Name",
   ]);
+  // The stage-conditional field holds its row under Stage; the create form drops it through rules.
   expect(DEALS_FORM_INFORMATION_COLUMNS[1]).toEqual([
     "Amount",
     "Closing_Date",
     "Stage",
+    DEALS_FORM_REASON_FOR_LOSS,
     "Probability",
     "Expected_Revenue",
     "Campaign_Source",
   ]);
+});
+
+test("paints Reason For Loss only while an edited record's stage is a lost category", () => {
+  const metadata = dealMetadata(
+    [
+      dealField("Stage", {
+        dataType: "picklist",
+        picklist: [
+          {
+            storedValue: "Qualification",
+            displayValue: "Qualification",
+            stage: { probability: 10, forecastCategory: "Pipeline", category: "Open" },
+          },
+          {
+            storedValue: "Closed Lost",
+            displayValue: "Closed Lost",
+            stage: { probability: 0, forecastCategory: "Closed", category: "Closed Lost" },
+          },
+        ],
+      }),
+      dealField(DEALS_FORM_REASON_FOR_LOSS, { dataType: "picklist" }),
+    ],
+    {
+      layout: [
+        {
+          label: "Deal Information",
+          columnCount: 2,
+          columns: [["Stage"], [DEALS_FORM_REASON_FOR_LOSS]],
+          fields: ["Stage", DEALS_FORM_REASON_FOR_LOSS],
+        },
+      ],
+    },
+  );
+
+  const create = resolveFormRules(dealsFormRules, { mode: "create", metadata });
+  expect(create.omitted).toContain(DEALS_FORM_REASON_FOR_LOSS);
+
+  const open = resolveFormRules(dealsFormRules, {
+    mode: "edit",
+    metadata,
+    record: dealRecord({ Stage: "Qualification" }),
+  });
+  expect(open.omitted).toContain(DEALS_FORM_REASON_FOR_LOSS);
+
+  const lost = resolveFormRules(dealsFormRules, {
+    mode: "edit",
+    metadata,
+    record: dealRecord({ Stage: "Closed Lost" }),
+  });
+  expect(lost.omitted).not.toContain(DEALS_FORM_REASON_FOR_LOSS);
+
+  const fields = formFields(metadata, buildFormModel(metadata, "edit"), "edit", lost);
+  expect(fields.find((f) => f.apiName === DEALS_FORM_REASON_FOR_LOSS)).toBeTruthy();
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import type { FieldValue } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { RecordFormScreen } from "@/components/records/form/record-form-screen";
@@ -18,21 +19,24 @@ export function ModuleFormClient({
   currentUserId,
   recordId,
   cloneSourceId,
+  createPrefill,
 }: {
   orgSlug: string;
   definition: ModuleScreenDefinition;
   currentUserId: string;
   recordId?: string;
   cloneSourceId?: string;
+  createPrefill?: Readonly<Record<string, FieldValue>>;
 }) {
   const moduleApiName = definition.apiName;
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
-  const [createPrefill] = useState(() =>
+  const [prefill] = useState(() =>
     !recordId && !cloneSourceId
-      ? consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields
+      ? { ...consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields, ...createPrefill }
       : undefined,
   );
+  const hasPrefill = prefill && Object.keys(prefill).length > 0;
   const defaultCancel = cloneSourceId
     ? moduleRecordPath(orgSlug, definition.tab, cloneSourceId)
     : recordId
@@ -51,7 +55,7 @@ export function ModuleFormClient({
           inventoryChrome: definition.form.inventoryChrome,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           profileImageIcon: definition.form.profileImageIcon,
-          createPrefill,
+          createPrefill: hasPrefill ? prefill : undefined,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id, targetModule) => {

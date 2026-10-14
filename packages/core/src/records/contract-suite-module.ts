@@ -361,3 +361,43 @@ export const tasksRecordServiceContractModule: RecordServiceContractModuleDefini
     },
   },
 };
+
+export const eventsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Events",
+  singularLabel: "Meeting",
+  pluralLabel: "Meetings",
+  expectedFieldCount: 34,
+  buildMinimalValidInput: (extra = {}) => ({
+    Event_Title: "Contract Meeting",
+    Meeting_Venue__s: "In-office",
+    Start_DateTime: "2026-01-15T12:00:00.000Z",
+    End_DateTime: "2026-01-15T13:00:00.000Z",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Venue",
+    sample: "Contract marker",
+    updated: "Updated marker",
+    tenantOther: "Other marker",
+  },
+  sortFields: ["Event_Title", "Start_DateTime"],
+  duplicatePermittedField: "Event_Title",
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Event_Title", 3],
+    ["All_day", "false"],
+    ["Start_DateTime", false],
+    ["Who_Id", "contact"],
+    ["Remind_At", {}],
+    ["Participants", "123"],
+  ],
+  optional: {
+    lengthValidationField: "Event_Title",
+    singleModuleLookup: {
+      field: "Who_Id",
+      reference: { module: "Contacts", id: "300000000000000000" },
+      expectedName: "Sample 001 Contact 001",
+    },
+  },
+};
