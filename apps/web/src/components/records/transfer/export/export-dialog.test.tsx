@@ -57,7 +57,7 @@ test("exports the first view with all fields by default", async () => {
 test("uses defaultViewId", async () => {
   const { onExport, user } = setup({ defaultViewId: "v2" });
   await user.click(screen.getByRole("button", { name: "Export" }));
-  await waitFor(() => expect(onExport.mock.calls[0][0].viewId).toBe("v2"));
+  await waitFor(() => expect(onExport.mock.calls[0]?.[0]?.viewId).toBe("v2"));
 });
 
 test("selected records hide the view picker and send ids", async () => {
@@ -81,7 +81,7 @@ test("choose fields disables Export until something is picked and caps at 200", 
   await user.click(screen.getByRole("checkbox", { name: "Field 0" }));
   expect(screen.getByText("1 of 200")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Export" }));
-  await waitFor(() => expect(onExport.mock.calls[0][0].fields).toEqual({ include: ["F0"] }));
+  await waitFor(() => expect(onExport.mock.calls[0]?.[0]?.fields).toEqual({ include: ["F0"] }));
 });
 
 test("limit: 20 excluded then remaining options are disabled", async () => {
@@ -99,7 +99,7 @@ test("exclude mode sends exclude list; Export stays enabled when empty", async (
   await user.click(screen.getByRole("radio", { name: "Exclude fields" }));
   await user.click(screen.getByRole("checkbox", { name: "Field 3" }));
   await user.click(screen.getByRole("button", { name: "Export" }));
-  await waitFor(() => expect(onExport.mock.calls[0][0].fields).toEqual({ exclude: ["F3"] }));
+  await waitFor(() => expect(onExport.mock.calls[0]?.[0]?.fields).toEqual({ exclude: ["F3"] }));
 });
 
 test("shows the mapped error and stays open", async () => {
