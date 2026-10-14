@@ -39,7 +39,8 @@ export function ActivityCategoriesCardBody({
   const prefix = variant === "open" ? "Open" : "Closed";
 
   return (
-    <div className="activity-categories-card-body">
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard focusable
+    <div className="activity-categories-card-body" tabIndex={0}>
       {categoryDefinitions.map(({ kind, label, Icon }) => {
         const category = categories.find((item) => item.kind === kind);
         const count = category?.count ?? 0;

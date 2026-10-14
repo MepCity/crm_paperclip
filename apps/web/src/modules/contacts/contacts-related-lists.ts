@@ -3,6 +3,7 @@ import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-
 import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
+import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
 export interface ContactsRelatedListHandlers {
@@ -14,13 +15,16 @@ export interface ContactsRelatedListHandlers {
 
 export interface ContactsRelatedListBadges {
   deals?: number;
+  openActivities?: number;
+  closedActivities?: number;
 }
 
 /** D-30/D-31: the rail badge is the number of records the card holds; zero draws no badge. */
 function activityBadge(
   columns: readonly RelatedListActivityColumnDefinition[],
+  supplied?: number,
 ): number | undefined {
-  const total = columns.reduce((sum, column) => sum + column.count, 0);
+  const total = supplied ?? columns.reduce((sum, column) => sum + column.count, 0);
   return total > 0 ? total : undefined;
 }
 
@@ -146,11 +150,12 @@ export function createContactsRelatedLists(
     },
     {
       id: "open-activities",
+      renderBody: parentActivitiesBody("Contacts", "open"),
       title: "Open Activities",
       moduleKey: "M5",
       order: 6,
       targetId: "related-list-open-activities",
-      countBadge: activityBadge(openActivityColumns),
+      countBadge: activityBadge(openActivityColumns, badges.openActivities),
       upperControls: [
         {
           id: "add-new",
@@ -183,11 +188,12 @@ export function createContactsRelatedLists(
     },
     {
       id: "closed-activities",
+      renderBody: parentActivitiesBody("Contacts", "closed"),
       title: "Closed Activities",
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-closed-activities",
-      countBadge: activityBadge(closedActivityColumns),
+      countBadge: activityBadge(closedActivityColumns, badges.closedActivities),
       upperControls: [
         {
           id: "column-view-closed",
