@@ -15,7 +15,11 @@ import {
   useUsers,
 } from "@/lib/api/client/hooks";
 import { addressSubfieldApiNames } from "@/lib/records/composite-address";
-import { dateTimePartsToIso, isoToDateTimeParts } from "@/lib/records/datetime-parts";
+import {
+  allDayClearedTime,
+  dateTimePartsToIso,
+  isoToDateTimeParts,
+} from "@/lib/records/datetime-parts";
 import { buildCloneInput } from "./build-clone-input";
 import {
   AddressFieldGroups,
@@ -315,7 +319,7 @@ function LoadedRecordForm({
         const current = values[apiName];
         if (typeof current !== "string") return;
         const parts = isoToDateTimeParts(current, !dayOnly);
-        const time = dayOnly ? "" : index === 0 ? "09:00" : "10:00";
+        const time = dayOnly ? "" : allDayClearedTime(index === 0 ? 0 : 1);
         writes[apiName] = dateTimePartsToIso({ date: parts.date, time }, dayOnly);
       });
     }

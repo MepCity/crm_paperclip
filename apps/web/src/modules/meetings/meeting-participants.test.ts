@@ -21,7 +21,7 @@ test.each([
 });
 
 test("lists entries written by the Meetings form", () => {
-  expect(meetingParticipants([{ module: "Contacts", id: "c1", name: "Synthetic Person" }])).toEqual(
-    [{ id: "c1", name: "Synthetic Person" }],
-  );
+  expect(
+    meetingParticipants([{ type: "contact", id: "c1", name: "Synthetic Person", email: null }]),
+  ).toEqual([{ id: "c1", name: "Synthetic Person" }]);
 });

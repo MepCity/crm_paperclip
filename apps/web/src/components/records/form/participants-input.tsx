@@ -8,6 +8,7 @@ import {
   addParticipant,
   MEETING_PARTICIPANTS_MAX,
   participantEntries,
+  participantValue,
 } from "@/lib/records/meeting-participants";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { SelectRecordDialog } from "./select-record-dialog";
@@ -37,8 +38,7 @@ export function ParticipantsInput({
   const [module, setModule] = useState(modules[0] ?? "");
   const [pickerOpen, setPickerOpen] = useState(false);
   const full = entries.length >= MEETING_PARTICIPANTS_MAX;
-  const write = (next: readonly ModuleRecordReference[]) =>
-    onChange(next.length === 0 ? null : (next as unknown as FieldValue));
+  const write = (next: readonly ModuleRecordReference[]) => onChange(participantValue(next));
   return (
     <div className="record-form-participants" data-record-form-participants>
       <div className="record-form-participants__bar">

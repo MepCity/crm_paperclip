@@ -2,6 +2,7 @@
 
 import type { RecordData } from "@crm/core/records";
 import { useState } from "react";
+import { formSaveBannerMessage } from "@/components/records/form/form-save-error";
 import { SelectRecordDialog } from "@/components/records/form/select-record-dialog";
 import { Button } from "@/components/ui/button";
 import { RecordChoice } from "@/components/ui/record-choice";
@@ -11,6 +12,7 @@ import {
   addParticipant,
   MEETING_PARTICIPANT_MODULES,
   participantEntries,
+  participantValue,
 } from "@/lib/records/meeting-participants";
 import { resolveModuleScreenByApiName } from "../registry";
 import { meetingParticipants } from "./meeting-participants";
@@ -22,14 +24,21 @@ import { MeetingsParticipantsCard } from "./meetings-participants-card";
  */
 export function MeetingParticipantsSlot({ record }: { record: RecordData }) {
   const update = useUpdateRecord("Events");
+  const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"closed" | "module" | "record">("closed");
   const [module, setModule] = useState<string>(MEETING_PARTICIPANT_MODULES[0]);
   return (
     <>
       <MeetingsParticipantsCard
         participants={meetingParticipants(record.fields.Participants)}
-        onAdd={() => setStep("module")}
+        onAdd={() => !update.isPending && setStep("module")}
+        addDisabled={update.isPending}
       />
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-danger" data-participants-error>
+          {error}
+        </p>
+      ) : null}
       {step === "module" ? (
         <TopAlignedModal isOpen onOpenChange={(open) => !open && setStep("closed")}>
           <div className="p-6" data-participants-module-step>
@@ -47,7 +56,12 @@ export function MeetingParticipantsSlot({ record }: { record: RecordData }) {
               <Button variant="secondary" size="md" onPress={() => setStep("closed")}>
                 Cancel
               </Button>
-              <Button variant="primary" size="md" onPress={() => setStep("record")}>
+              <Button
+                variant="primary"
+                size="md"
+                isDisabled={update.isPending}
+                onPress={() => setStep("record")}
+              >
                 Next
               </Button>
             </div>
@@ -61,7 +75,14 @@ export function MeetingParticipantsSlot({ record }: { record: RecordData }) {
           onDone={(selected) => {
             const next = addParticipant(participantEntries(record.fields.Participants), selected);
             setStep("closed");
-            update.mutate({ id: record.id, input: { Participants: next as never } });
+            setError(null);
+            update.mutate(
+              { id: record.id, input: { Participants: participantValue(next) as never } },
+              {
+                onError: (e) =>
+                  setError(formSaveBannerMessage(e) ?? "Could not save participants."),
+              },
+            );
           }}
         />
       ) : null}

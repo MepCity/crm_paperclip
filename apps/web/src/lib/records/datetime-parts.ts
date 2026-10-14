@@ -46,3 +46,13 @@ export function nextFullHour(now: Date = new Date()): Date {
 export function addHours(date: Date, hours: number): Date {
   return new Date(date.getTime() + hours * 3_600_000);
 }
+
+/**
+ * Provisional rule when All day is cleared: From keeps its day at the next whole hour after
+ * `now`, To is one hour later — the same calculation as a new Meeting Information window.
+ */
+export function allDayClearedTime(index: 0 | 1, now: Date = new Date()): string {
+  const start = nextFullHour(now);
+  const at = index === 0 ? start : addHours(start, 1);
+  return `${pad(at.getHours())}:${pad(at.getMinutes())}`;
+}

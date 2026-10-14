@@ -5,6 +5,7 @@ import {
   addParticipant,
   MEETING_PARTICIPANTS_MAX,
   participantEntries,
+  participantValue,
 } from "@/lib/records/meeting-participants";
 import { reminderOffsetOf, reminderValue } from "@/lib/records/reminder-options";
 import { buildMeetingsFormDefaults, meetingsFormRules } from "./meetings-form-rules";
@@ -63,7 +64,11 @@ test("participants: no repeats, at most 50", () => {
     id: `l${i}`,
   }));
   expect(addParticipant(many, one)).toHaveLength(MEETING_PARTICIPANTS_MAX);
-  expect(participantEntries([one, { nope: true }])).toEqual([one]);
+  expect(participantEntries(participantValue([one]))).toEqual([one]);
+  expect(participantValue([one])).toEqual([
+    { type: "contact", id: "c1", name: "Synthetic One", email: null },
+  ]);
+  expect(participantEntries([{ nope: true }] as never)).toEqual([]);
 });
 
 test("reminder offsets round-trip through the stored value", () => {

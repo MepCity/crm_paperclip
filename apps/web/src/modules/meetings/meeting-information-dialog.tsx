@@ -15,7 +15,11 @@ import { validateRanges, validateRecordForm } from "@/components/records/form/fo
 import { Button } from "@/components/ui/button";
 import { useCreateRecord, useModule, useUsers } from "@/lib/api/client/hooks";
 import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
-import { dateTimePartsToIso, isoToDateTimeParts } from "@/lib/records/datetime-parts";
+import {
+  allDayClearedTime,
+  dateTimePartsToIso,
+  isoToDateTimeParts,
+} from "@/lib/records/datetime-parts";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { buildMeetingsFormDefaults, meetingsFormRules } from "./meetings-form-rules";
 
@@ -80,7 +84,7 @@ export function MeetingInformationDialog({
         const current = values[apiName];
         if (typeof current !== "string") return;
         const parts = isoToDateTimeParts(current, !dayOnly);
-        const time = dayOnly ? "" : index === 0 ? "09:00" : "10:00";
+        const time = dayOnly ? "" : allDayClearedTime(index === 0 ? 0 : 1);
         writes[apiName] = dateTimePartsToIso({ date: parts.date, time }, dayOnly);
       });
     }
