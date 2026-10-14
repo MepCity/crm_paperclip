@@ -130,3 +130,15 @@ test("shows a field error under the field and unmapped ones as alert", async () 
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect((await screen.findByRole("alert")).textContent).toContain("Reason needed");
 });
+
+test("shows field error and general alert simultaneously", async () => {
+  const onSubmit = vi
+    .fn<(values: unknown) => Promise<void>>()
+    .mockRejectedValueOnce(
+      new StageChangeSubmitError({ amount: "Too low" }, "General error message"),
+    );
+  const { user } = setup({ onSubmit });
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Too low")).toBeTruthy();
+  expect((await screen.findByRole("alert")).textContent).toContain("General error message");
+});

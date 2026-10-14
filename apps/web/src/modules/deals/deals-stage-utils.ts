@@ -79,8 +79,19 @@ export function mapStageChangeError(error: unknown): unknown {
       stage: error.fieldErrors.Stage?.[0],
       reasonForLoss: error.fieldErrors.Reason_For_Loss__s?.[0],
     };
-    const hasMapped = Object.values(mapped).some(Boolean);
-    return new StageChangeSubmitError(mapped, hasMapped ? undefined : error.message);
+    const unmappedMessages = Object.entries(error.fieldErrors)
+      .filter(
+        ([field]) => !["Amount", "Closing_Date", "Stage", "Reason_For_Loss__s"].includes(field),
+      )
+      .flatMap(([, messages]) => messages)
+      .filter(Boolean);
+    const generalMessage =
+      unmappedMessages.length > 0
+        ? unmappedMessages.join(" ")
+        : Object.values(mapped).some(Boolean)
+          ? undefined
+          : error.message;
+    return new StageChangeSubmitError(mapped, generalMessage);
   }
   return error;
 }

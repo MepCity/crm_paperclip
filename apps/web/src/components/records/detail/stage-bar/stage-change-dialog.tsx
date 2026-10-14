@@ -147,8 +147,8 @@ export function StageChangeDialog({
           else shown[key as keyof StageChangeFieldErrors] = message;
         }
         setFieldErrors(shown);
-        if (error.generalMessage) setSubmitError(error.generalMessage);
-        else if (hidden.length) setSubmitError(hidden.join(" "));
+        const messages = [error.generalMessage, ...hidden].filter(Boolean) as string[];
+        if (messages.length) setSubmitError(messages.join(" "));
         else if (!Object.keys(shown).length) setSubmitError("Update failed.");
         return;
       }

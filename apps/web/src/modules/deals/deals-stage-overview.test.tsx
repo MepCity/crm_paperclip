@@ -1,3 +1,4 @@
+import { ValidationError } from "@crm/core/errors";
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -85,5 +86,16 @@ test("a rejected save shows an alert in the dialog and keeps it open", async () 
   const { user, dialog } = await openWonDialog(saveRecord);
   await user.click(within(dialog).getByRole("button", { name: "Save" }));
   expect((await within(dialog).findByRole("alert")).textContent).toContain("Record is locked.");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+});
+
+test("a service validation error shows field error and unmapped alert in the dialog", async () => {
+  const saveRecord = vi.fn(async () => {
+    throw new ValidationError({ Amount: ["Too low"], Probability: ["Between 0 and 100"] });
+  });
+  const { user, dialog } = await openWonDialog(saveRecord);
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  expect(await within(dialog).findByText("Too low")).toBeTruthy();
+  expect((await within(dialog).findByRole("alert")).textContent).toContain("Between 0 and 100");
   expect(screen.getByRole("dialog")).toBeTruthy();
 });

@@ -85,6 +85,17 @@ test("maps service validation errors to dialog errors", () => {
   );
   expect(mapped).toBeInstanceOf(StageChangeSubmitError);
   expect((mapped as StageChangeSubmitError).fieldErrors.amount).toBe("Too low");
+  expect((mapped as StageChangeSubmitError).generalMessage).toBe("x");
   const plain = new Error("x");
   expect(mapStageChangeError(plain)).toBe(plain);
+});
+
+test("maps unmapped service validation errors to general message", () => {
+  const mapped = mapStageChangeError(
+    new ValidationError({ Probability: ["Choose an integer between 0 and 100."] }),
+  );
+  expect(mapped).toBeInstanceOf(StageChangeSubmitError);
+  expect((mapped as StageChangeSubmitError).generalMessage).toBe(
+    "Choose an integer between 0 and 100.",
+  );
 });
