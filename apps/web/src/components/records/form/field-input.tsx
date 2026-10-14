@@ -3,16 +3,19 @@
 import type {
   FieldDefinition,
   FieldValue,
+  JsonObject,
   ModuleRecordReference,
   PicklistOption,
   RecordService,
 } from "@crm/core/records";
+import { lookupTargetModules } from "@crm/core/records";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import type { ClientRecordService } from "@/lib/api/client/provider";
@@ -64,6 +67,22 @@ export interface FieldInputProps {
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
 }
+
+/** `Sales_Orders` reads `Sales Order`; a registered module's own singular label wins. */
+function moduleSingularLabel(module: string): string {
+  const registered = resolveModuleScreenByApiName(module)?.singularLabel;
+  if (registered) return registered;
+  return module.replace(/_/g, " ").replace(/ies$/, "y").replace(/s$/, "");
+}
+
+/**
+ * Provisional: switching Reminder or Repeat on stores a minimal opaque object because the
+ * reference's interior controls are write-only and were never observed (`activities-form.md`).
+ */
+const TOGGLE_DEFAULTS: Partial<Record<FieldDefinition["dataType"], JsonObject>> = {
+  ALARM: { ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-P1D" },
+  RRULE: { RRULE: "FREQ=DAILY;INTERVAL=1" },
+};
 
 export function picklistChoices(options: readonly PicklistOption[], value: string | null) {
   const choices: { value: string | null; label: string }[] = [
@@ -164,7 +183,16 @@ export function FieldInput({
     validationBehavior: "aria" as const,
   };
   const isLookup = field.dataType === "lookup";
-  const targetModule = field.lookup?.module ?? "";
+  const [pickedModule, setPickedModule] = useState<string | null>(null);
+  const lookupTargets = isLookup ? lookupTargetModules(field) : [];
+  const isPolymorphic = lookupTargets.length > 1;
+  const referenceModule =
+    typeof value === "object" && value !== null && "module" in value
+      ? (value as ModuleRecordReference).module
+      : undefined;
+  const targetModule = isPolymorphic
+    ? (referenceModule ?? pickedModule ?? lookupTargets[0] ?? "")
+    : (field.lookup?.module ?? "");
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
     isLookup && !isTargetRegistered ? resolveModuleLaterKey(targetModule) : undefined;
@@ -355,6 +383,30 @@ export function FieldInput({
             placeholder={placeholder}
             value={displayText}
             laterModule={targetLaterModule}
+            prefix={
+              isPolymorphic ? (
+                <div className="record-prefix-select">
+                  <RecordChoice
+                    id={`${controlId}-module`}
+                    label={`${field.label} module`}
+                    hideLabel
+                    prefix
+                    value={targetModule}
+                    onChange={(next) => {
+                      if (!next || next === targetModule) return;
+                      setPickedModule(next);
+                      onChange(null);
+                    }}
+                    options={lookupTargets.map((module) => ({
+                      value: module,
+                      label: moduleSingularLabel(module),
+                    }))}
+                    disabled={common.isDisabled}
+                  />
+                  <span className="record-prefix-divider" aria-hidden />
+                </div>
+              ) : undefined
+            }
             onChange={(next) => {
               if (next === "") {
                 onChange(null);
@@ -406,6 +458,17 @@ export function FieldInput({
         </>
       );
     }
+    case "ALARM":
+    case "RRULE":
+      return (
+        <Switch
+          label={field.label}
+          aria-label={field.label}
+          isSelected={typeof value === "object" && value !== null}
+          isDisabled={common.isDisabled}
+          onChange={(on) => onChange(on ? (TOGGLE_DEFAULTS[field.dataType] ?? null) : null)}
+        />
+      );
     case "multi_module_lookup":
     case "datetime":
       return null;
