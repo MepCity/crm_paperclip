@@ -41,7 +41,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Verify active Accounts and Tasks checkboxes in the filter panel
+  // Verify active Accounts and Tasks checkboxes and later-module Products checkbox in filter panel
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
   await expect(accountsCheckbox).toBeChecked();
@@ -50,6 +50,10 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   await expect(tasksCheckbox).toBeVisible();
   await expect(tasksCheckbox).toBeChecked();
   await expect(tasksCheckbox).not.toHaveAttribute("data-later-module");
+
+  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
+  await expect(productsCheckbox).toBeVisible();
+  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
 
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
@@ -71,7 +75,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   await expect(page).toHaveURL(/\/crm\/[^/]+\/tab\/Leads\/[^/?]+/);
 });
 
-test("Tasks module filter is enabled and lists a matching task; Meetings and Calls stay later-module", async ({
+test("Tasks, Meetings and Calls module filters are enabled; later-module products stay deferred", async ({
   page,
 }) => {
   await signUpNewUser(page);
@@ -94,11 +98,16 @@ test("Tasks module filter is enabled and lists a matching task; Meetings and Cal
   await expect(tasksCheckbox).not.toHaveAttribute("data-later-module", /.+/);
   await expect(tasksCheckbox).toBeChecked();
 
-  // Meetings and Calls are unregistered on this branch: they still show the later-module badge.
+  // Meetings and Calls are registered on this branch: they are active and checked.
   for (const name of ["Meetings", "Calls"]) {
-    await expect(filterPanel.getByRole("checkbox", { name })).toHaveAttribute(
-      "data-later-module",
-      "M5",
-    );
+    const cb = filterPanel.getByRole("checkbox", { name });
+    await expect(cb).toBeVisible();
+    await expect(cb).not.toHaveAttribute("data-later-module", /.+/);
+    await expect(cb).toBeChecked();
   }
+
+  // Later-module products stays deferred
+  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
+  await expect(productsCheckbox).toBeVisible();
+  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
 });
