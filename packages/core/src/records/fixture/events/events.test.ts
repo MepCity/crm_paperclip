@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ValidationError } from "../../../errors";
+import { NotFoundError, ValidationError } from "../../../errors";
 import type { Comparator, Criteria, FieldValue, RecordInput } from "../../contract";
 import { describeRecordServiceContract } from "../../contract-suite";
 import { eventsRecordServiceContractModule } from "../../contract-suite-module";
@@ -285,7 +285,7 @@ describe("Events", () => {
         service.update("Events", created.id, { [field]: { module, id: "missing" } }),
       ).rejects.toBeInstanceOf(ValidationError);
       await service.delete(module, [id]);
-      expect((await service.get("Events", created.id)).fields[field]).toBeNull();
+      await expect(service.get("Events", created.id)).rejects.toBeInstanceOf(NotFoundError);
     },
   );
   it("rejects disallowed reference targets and preserves allowed unregistered targets", async () => {

@@ -7,6 +7,7 @@ export interface FixtureModuleStore {
 
 /** Internal fixture access shared by synchronous module lifecycle hooks. */
 export interface FixtureHookContext {
+  registeredModules: readonly string[];
   moduleStore: (module: string) => FixtureModuleStore;
 }
 
