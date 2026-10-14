@@ -141,4 +141,32 @@ describe("NoteComposer", () => {
     setup({ error: "Boom" });
     expect(screen.getByText("Boom")).toBeTruthy();
   });
+  it("keeps the draft when initial is re-created or saving toggles", () => {
+    const base = {
+      mode: "edit" as const,
+      expanded: true,
+      onExpand: vi.fn(),
+      onCancel: vi.fn(),
+      onSave: vi.fn(),
+    };
+    const { rerender } = render(
+      <NoteComposer {...base} initial={{ title: "T", content: "<p>a</p>" }} />,
+    );
+    fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Typed" } });
+    typeBody("<p>typed body</p>");
+    rerender(<NoteComposer {...base} saving initial={{ title: "T", content: "<p>a</p>" }} />);
+    rerender(<NoteComposer {...base} initial={{ title: "T", content: "<p>a</p>" }} />);
+    expect((screen.getByPlaceholderText("Title") as HTMLInputElement).value).toBe("Typed");
+    expect(body().innerHTML).toBe("<p>typed body</p>");
+  });
+
+  it("keeps the draft when onSave rejects", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("x"));
+    setup({ onSave });
+    fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Keep" } });
+    await act(async () => {
+      fireEvent.click(save());
+    });
+    expect((screen.getByPlaceholderText("Title") as HTMLInputElement).value).toBe("Keep");
+  });
 });

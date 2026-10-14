@@ -46,17 +46,20 @@ export function NoteComposer({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [toolbarOpen, setToolbarOpen] = useState(false);
+  const initialRef = useRef(initial);
+  initialRef.current = initial;
 
   // Seed the uncontrolled editor and focus it when the composer opens.
   useEffect(() => {
     if (!expanded) return;
     const editor = editorRef.current;
     if (!editor) return;
-    editor.innerHTML = initial?.content ?? "";
-    setContent(initial?.content ?? "");
-    setTitle(initial?.title ?? "");
+    const seed = initialRef.current;
+    editor.innerHTML = seed?.content ?? "";
+    setContent(seed?.content ?? "");
+    setTitle(seed?.title ?? "");
     editor.focus();
-  }, [expanded, initial]);
+  }, [expanded]);
 
   const reset = useCallback(() => {
     setTitle("");
@@ -103,7 +106,11 @@ export function NoteComposer({
 
   const save = async () => {
     if (saveDisabled) return;
-    await onSave({ title: title.trim(), content });
+    try {
+      await onSave({ title: title.trim(), content });
+    } catch {
+      return; // keep the draft; the caller reports the failure via `error`
+    }
     reset();
   };
 
