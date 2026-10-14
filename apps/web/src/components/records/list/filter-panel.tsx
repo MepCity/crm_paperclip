@@ -246,10 +246,11 @@ export function FilterPanel({
                     if (control === "days") appliedFilter.daysUnit = draft.daysUnit ?? "days";
                     return [appliedFilter];
                   });
-                  const appliedActivity = selectedActivityItem
-                    ? activityFilterToCriteria(activityDraft)
-                    : null;
-                  onApply(applied, appliedActivity);
+                  if (selectedActivityItem) {
+                    onApply(applied, activityFilterToCriteria(activityDraft));
+                  } else {
+                    onApply(applied);
+                  }
                 }}
               >
                 Apply Filter
