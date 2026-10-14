@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { NotFoundError, RecordLockedError } from "../errors";
+import { activityState } from "./activities";
 import type { RecordInput } from "./contract";
 import { createFixtureRecordService } from "./fixture";
 
@@ -17,6 +18,19 @@ vi.mock("./fixture/registry", async (importOriginal) => {
         }
       : field,
   );
+  const status = task.metadata.fields.find((field) => field.apiName === "Status");
+  if (!status) throw new Error("Missing status field");
+  const callFields = [
+    ...fields,
+    {
+      ...status,
+      apiName: "Outgoing_Call_Status",
+      picklist: [
+        { storedValue: "Scheduled", displayValue: "Scheduled" },
+        { storedValue: "Completed", displayValue: "Completed" },
+      ],
+    },
+  ];
   const modules = { ...original.fixtureModules };
   for (const module of ["Tasks", "Events", "Calls"]) {
     const base = modules[module] ?? task;
@@ -38,11 +52,16 @@ vi.mock("./fixture/registry", async (importOriginal) => {
                     }
                   : field,
               )
-            : fields,
+            : module === "Calls"
+              ? callFields
+              : fields,
       },
       generateSeed: () => [],
       afterWrite(record) {
-        if (record.fields.Subject === "Synthetic locked activity")
+        if (
+          record.fields.Subject === "Synthetic locked activity" ||
+          record.fields.Event_Title === "Synthetic locked activity"
+        )
           record.fields = { ...record.fields, Locked__s: true };
       },
     };
@@ -75,7 +94,11 @@ const activityInput = (module: string, closed: boolean): RecordInput =>
         Start_DateTime: "2026-10-13T10:00:00Z",
         End_DateTime: closed ? "2026-10-13T11:00:00Z" : "2026-10-15T11:00:00Z",
       }
-    : { Subject: "Synthetic activity", Status: closed ? "Completed" : "Not Started" };
+    : {
+        Subject: "Synthetic activity",
+        Status: closed ? "Completed" : "Not Started",
+        ...(module === "Calls" ? { Outgoing_Call_Status: closed ? "Completed" : "Scheduled" } : {}),
+      };
 
 describe.each(Object.entries(parentInputs))("%s activity deletion contract", (module, input) => {
   const createParent = async (service: ReturnType<typeof make>, extra: RecordInput = {}) => {
@@ -103,8 +126,12 @@ describe.each(Object.entries(parentInputs))("%s activity deletion contract", (mo
           const child = await service.create(activityModule, {
             ...activityInput(activityModule, closed),
             [field]: { module, id: parent.id },
-            ...(activityModule !== "Events" ? { Subject: "Synthetic locked activity" } : {}),
+            [activityModule === "Events" ? "Event_Title" : "Subject"]: "Synthetic locked activity",
           });
+          expect(child.fields.Locked__s).toBe(true);
+          expect(activityState(activityModule, child, new Date("2026-10-14T12:00:00Z"))).toBe(
+            closed ? "closed" : "open",
+          );
           removed.push([activityModule, child.id]);
         }
         const child = await service.create(activityModule, {
@@ -178,5 +205,23 @@ describe.each(Object.entries(parentInputs))("%s activity deletion contract", (mo
     await service.merge(module, { masterId: master.id, duplicateIds: [duplicate.id], values: {} });
     for (const [name, id] of children)
       expect((await service.get(name, id)).fields.Who_Id).toMatchObject({ module, id: master.id });
+  });
+});
+
+// Conversion has no service operation yet; converted fixture records remain on the update path.
+it("preserves activities when an already converted Lead is updated", async () => {
+  const service = make();
+  const lead = (await service.list("Leads", { viewId: "converted-leads", page: 1, perPage: 10 }))
+    .records[0];
+  if (!lead) throw new Error("Missing converted seed");
+  expect(lead.fields.Converted__s).toBe(true);
+  const task = await service.create("Tasks", {
+    Subject: "Synthetic activity",
+    Who_Id: { module: "Leads", id: lead.id },
+  });
+  await service.update("Leads", lead.id, { Phone: "5550100" });
+  expect((await service.get("Tasks", task.id)).fields.Who_Id).toMatchObject({
+    module: "Leads",
+    id: lead.id,
   });
 });
