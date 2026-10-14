@@ -185,6 +185,17 @@ export interface ListView {
   sort: SortSpec | null;
 }
 
+export type ActivityKind = "task" | "meeting" | "call";
+export type ActivityDueRange = "today" | "tomorrow" | "next_7_days" | "today_overdue";
+export type ActivityFilterValue =
+  | { choice: "without_open_activity" | "overdue" | "without_any_activity" | "activity_done" }
+  | { choice: "activity_due"; range: ActivityDueRange };
+export interface ActivitySummary {
+  kind: ActivityKind;
+  activityId: RecordId;
+  date: string | null;
+}
+
 export interface ListQuery {
   viewId: string;
   /** One-based page number. */
@@ -196,9 +207,11 @@ export interface ListQuery {
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;
+  activityFilter?: ActivityFilterValue;
+  includeActivitySummary?: boolean;
 }
 
-export type SummaryQuery = Pick<ListQuery, "viewId" | "filters" | "search"> & {
+export type SummaryQuery = Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter"> & {
   groupBy: string;
   sum?: string;
 };
@@ -210,6 +223,7 @@ export interface GroupSummary {
 }
 
 export interface ListResult {
+  activitySummaries?: Readonly<Record<RecordId, ActivitySummary>>;
   records: readonly RecordData[];
   page: number;
   perPage: number;
@@ -286,7 +300,7 @@ export interface RecordService {
   list(module: ModuleApiName, query: ListQuery): Promise<ListResult>;
   count(
     module: ModuleApiName,
-    query: Pick<ListQuery, "viewId" | "filters" | "search">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;

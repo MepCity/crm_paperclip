@@ -1,3 +1,6 @@
+import { createElement } from "react";
+import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
+import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { Icons } from "@/components/ui/icon";
 import type {
   RelatedListActivityColumnDefinition,
@@ -101,6 +104,8 @@ export function createDealsRelatedLists(
   return [
     {
       id: "notes",
+      renderBody: ({ definition }) =>
+        createElement(RelatedNotesCardBody, { notesShowMore: definition.notesShowMore }),
       title: "Notes",
       moduleKey: "M6",
       order: 1,
@@ -138,6 +143,8 @@ export function createDealsRelatedLists(
     },
     {
       id: "stage-history",
+      renderBody: ({ record }) =>
+        record ? createElement(DealStageHistoryCardBody, { dealId: record.id }) : undefined,
       title: "Stage History",
       moduleKey: "M4",
       order: 4,
@@ -327,6 +334,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "contact-roles",
+      showEmptyTable: true,
       title: "Contact Roles",
       moduleKey: "M2",
       order: 12,

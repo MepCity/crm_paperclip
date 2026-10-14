@@ -1,0 +1,67 @@
+/* Activity filter editor in list filter panel.
+   Inventory: AX-40.1 - AX-40.5, AX-41, AX-41.1 - AX-41.4.
+   Kalıp: filter-editor.tsx / filter-control.css */
+
+.activity-filter-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.activity-filter-radiogroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.activity-filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 17px;
+  cursor: pointer;
+  outline: none;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.activity-filter-radio-circle {
+  display: flex;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-control-border);
+  background: var(--color-surface);
+}
+
+.activity-filter-option[data-selected] .activity-filter-radio-circle {
+  border-color: var(--color-primary);
+}
+
+.activity-filter-option[data-focus-visible] {
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.activity-filter-radio-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+.activity-filter-range-control {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.activity-filter-range-control .filter-operator-control {
+  width: 129px;
+  max-width: 100%;
+}

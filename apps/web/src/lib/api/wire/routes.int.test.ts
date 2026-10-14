@@ -147,6 +147,43 @@ describe("operation routes", () => {
     a = await createTestOrganization();
     b = await createTestOrganization();
   });
+  it("preserves requested activity summaries and validates filters on authenticated routes", async () => {
+    const service = getRecordService(a.ctx);
+    const lead = await service.create("Leads", {
+      Last_Name: "Route Activity",
+      Company: "Route Company",
+    });
+    const task = await service.create("Tasks", {
+      Subject: "Route Task",
+      Who_Id: { module: "Leads", id: lead.id },
+    });
+    const filters = { field: { api_name: "id" }, comparator: "equal", value: lead.id };
+    const body = {
+      filters,
+      activity_filter: { choice: "without_open_activity" },
+      include_activity_summary: true,
+    };
+    const empty = await call(operations.bulk, a, { body });
+    expect(empty.status).toBe(200);
+    expect(await empty.json()).toMatchObject({ data: [], activity_summaries: {} });
+    const populated = await call(operations.bulk, a, {
+      body: { filters, include_activity_summary: true },
+    });
+    expect(populated.status).toBe(200);
+    expect(await populated.json()).toMatchObject({
+      activity_summaries: { [lead.id]: { kind: "task", activity_id: task.id, date: null } },
+    });
+    for (const op of [operations.bulk, operations.count, operations.summarize]) {
+      const response = await call(op, a, {
+        query: { group_by: "Lead_Status" },
+        body: { activity_filter: { choice: "activity_due", range: "invalid" } },
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        details: { fields: { activityFilter: expect.any(Array) } },
+      });
+    }
+  });
   it("authenticates the currency GET and returns exactly one configured currency", async () => {
     const anonymous = await call(operations.currencies);
     expect(anonymous.status).toBe(401);

@@ -1,3 +1,8 @@
+import { createElement } from "react";
+import { AccountContactsCardBody } from "@/components/records/detail/account-contacts-card-body";
+import { AccountMemberAccountsCardBody } from "@/components/records/detail/account-member-accounts-card-body";
+import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
+import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { Icons } from "@/components/ui/icon";
 import type {
   RelatedListActivityColumnDefinition,
@@ -30,9 +35,9 @@ export const accountsRelatedListRail: AccountsRelatedListRailDefinition = {
 };
 
 const contactsTableColumns = [
-  { id: "contactName", label: "Contact Name" },
-  { id: "email", label: "Email" },
-  { id: "phone", label: "Phone" },
+  { id: "contactName", cellKind: "recordLink", label: "Contact Name" },
+  { id: "email", cellKind: "emailLink", label: "Email" },
+  { id: "phone", cellKind: "phoneAction", label: "Phone" },
   { id: "mobile", label: "Mobile" },
   { id: "fax", label: "Fax" },
   { id: "contactOwner", label: "Contact Owner" },
@@ -127,6 +132,8 @@ export function createAccountsRelatedLists(
   return [
     {
       id: "notes",
+      renderBody: ({ definition }) =>
+        createElement(RelatedNotesCardBody, { notesShowMore: definition.notesShowMore }),
       title: "Notes",
       moduleKey: "M6",
       order: 1,
@@ -166,6 +173,14 @@ export function createAccountsRelatedLists(
     },
     {
       id: "deals",
+      renderBody: ({ record, recordPath, definition }) =>
+        record
+          ? createElement(RelatedDealsCardBody, {
+              managerRecord: record,
+              filterField: definition.recordFilterField ?? "Account_Name",
+              dealRecordPath: (id) => recordPath("Deals", id),
+            })
+          : undefined,
       title: "Deals",
       moduleKey: "M4",
       order: 4,
@@ -198,6 +213,14 @@ export function createAccountsRelatedLists(
     },
     {
       id: "contacts",
+      renderBody: ({ record, orgSlug, recordPath, definition }) =>
+        record && !definition.tablePreviewRows?.length
+          ? createElement(AccountContactsCardBody, {
+              accountRecord: record,
+              orgSlug,
+              contactRecordPath: (id) => recordPath("Contacts", id),
+            })
+          : undefined,
       title: "Contacts",
       moduleKey: "M2",
       order: 5,
@@ -436,6 +459,14 @@ export function createAccountsRelatedLists(
     },
     {
       id: "member-accounts",
+      renderBody: ({ record, orgSlug, recordPath }) =>
+        record
+          ? createElement(AccountMemberAccountsCardBody, {
+              parentRecord: record,
+              orgSlug,
+              accountRecordPath: (id) => recordPath("Accounts", id),
+            })
+          : undefined,
       title: "Member Accounts",
       moduleKey: "M3",
       order: 13,
