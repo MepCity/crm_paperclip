@@ -1,5 +1,7 @@
+import { ValidationError } from "@crm/core/errors";
 import type { FieldDefinition, ModuleMetadata, RecordData, RecordInput } from "@crm/core/records";
 import type { StageBarStage, StageKind } from "@/components/records/detail/stage-bar";
+import { StageChangeSubmitError } from "@/components/records/detail/stage-bar";
 import type { StageChangeFormValues } from "@/components/records/detail/stage-bar/types";
 
 function stageKind(category: string | undefined): StageKind {
@@ -55,13 +57,43 @@ export function buildStageChangeInitialValues(record: RecordData): StageChangeFo
   };
 }
 
-export function stageChangeToRecordInput(values: StageChangeFormValues): RecordInput {
+export function stageChangeToRecordInput(
+  values: StageChangeFormValues,
+  module: ModuleMetadata,
+): RecordInput {
+  const isLost = stageOptionKind(module, values.stage) === "lost";
   return {
     Stage: values.stage,
     Closing_Date: values.closingDate,
     Amount: values.amount,
-    ...(values.reasonForLoss !== null ? { Reason_For_Loss__s: values.reasonForLoss } : {}),
+    Reason_For_Loss__s: isLost ? values.reasonForLoss : null,
   };
+}
+
+/** Maps a service validation error onto the dialog's field errors; other errors pass through. */
+export function mapStageChangeError(error: unknown): unknown {
+  if (error instanceof ValidationError) {
+    const mapped = {
+      amount: error.fieldErrors.Amount?.[0],
+      closingDate: error.fieldErrors.Closing_Date?.[0],
+      stage: error.fieldErrors.Stage?.[0],
+      reasonForLoss: error.fieldErrors.Reason_For_Loss__s?.[0],
+    };
+    const unmappedMessages = Object.entries(error.fieldErrors)
+      .filter(
+        ([field]) => !["Amount", "Closing_Date", "Stage", "Reason_For_Loss__s"].includes(field),
+      )
+      .flatMap(([, messages]) => messages)
+      .filter(Boolean);
+    const generalMessage =
+      unmappedMessages.length > 0
+        ? unmappedMessages.join(" ")
+        : Object.values(mapped).some(Boolean)
+          ? undefined
+          : error.message;
+    return new StageChangeSubmitError(mapped, generalMessage);
+  }
+  return error;
 }
 
 export function reasonForLossPicklist(
