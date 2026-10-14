@@ -18,6 +18,11 @@ describe("parseCsv", () => {
     expect(parseCsv(enc("a,b\n1,2"), opts)).toEqual(want);
     expect(parseCsv(enc("﻿a,b\r\n1,2\r\n"), opts)).toEqual(want);
   });
+  it("supports CR line endings and leading blank lines", () => {
+    const want = { headers: ["a", "b"], rows: [["1", "2"]] };
+    expect(parseCsv(enc("a,b\r1,2\r"), opts)).toEqual(want);
+    expect(parseCsv(enc("\n  \r\na,b\r1,2"), opts)).toEqual(want);
+  });
   it("decodes ISO-8859-1", () => {
     const r = parseCsv(new Uint8Array([0x61, 0x0a, 0xe9]), { ...opts, charset: "ISO-8859-1" });
     expect(r.rows).toEqual([["é"]]);
