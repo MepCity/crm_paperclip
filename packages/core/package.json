@@ -9,6 +9,7 @@
     "./format": "./src/format/index.ts",
     "./testing": "./src/testing.ts",
     "./records": "./src/records/index.ts",
+    "./records/activities": "./src/records/activities.ts",
     "./records/fixture": "./src/records/fixture/index.ts",
     "./records/contract-suite": "./src/records/contract-suite.ts",
     "./records/contract-suite-module": "./src/records/contract-suite-module.ts",

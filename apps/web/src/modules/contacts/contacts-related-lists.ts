@@ -1,3 +1,7 @@
+import { createElement } from "react";
+import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
+import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
+import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
@@ -60,6 +64,8 @@ export function createContactsRelatedLists(
   return [
     {
       id: "notes",
+      renderBody: ({ definition }) =>
+        createElement(RelatedNotesCardBody, { notesShowMore: definition.notesShowMore }),
       title: "Notes",
       moduleKey: "M6",
       order: 1,
@@ -113,6 +119,14 @@ export function createContactsRelatedLists(
     },
     {
       id: "deals",
+      renderBody: ({ record, recordPath, definition }) =>
+        record
+          ? createElement(RelatedDealsCardBody, {
+              managerRecord: record,
+              filterField: definition.recordFilterField ?? "Contact_Name",
+              dealRecordPath: (id) => recordPath("Deals", id),
+            })
+          : undefined,
       title: "Deals",
       moduleKey: "M4",
       order: 5,
@@ -394,6 +408,14 @@ export function createContactsRelatedLists(
     },
     {
       id: "reporting-contacts",
+      renderBody: ({ record, module, orgSlug, recordPath }) =>
+        record && module
+          ? createElement(ReportingContactsCardBody, {
+              managerRecord: record,
+              orgSlug,
+              recordPath: (id) => recordPath(module, id),
+            })
+          : undefined,
       title: "Reporting Contacts",
       moduleKey: "M2",
       order: 18,

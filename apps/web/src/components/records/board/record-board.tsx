@@ -29,6 +29,8 @@ export interface RecordBoardProps {
   createLabel: string;
   onCreate: (columnKey: string) => void;
   onMove: (cardId: string, fromKey: string, toKey: string) => Promise<BoardMoveResult>;
+  /** Pure module-owned projection for pending and redirected moves; omitted preserves all rows. */
+  buildOptimisticCard?: (card: BoardCard, targetColumn: BoardColumn) => BoardCard;
   loading?: boolean;
   children?: ReactNode;
 }
@@ -40,6 +42,7 @@ export function RecordBoard({
   createLabel,
   onCreate,
   onMove,
+  buildOptimisticCard,
   loading,
   children,
 }: RecordBoardProps) {
@@ -81,13 +84,8 @@ export function RecordBoard({
     if (!originalCard) return;
     const targetColumn = columns.find((column) => column.key === to);
     const card =
-      targetColumn && originalCard.rows.length > 1
-        ? {
-            ...originalCard,
-            rows: originalCard.rows.map((row, index) =>
-              index === 1 ? { ...row, text: targetColumn.label } : row,
-            ),
-          }
+      targetColumn && buildOptimisticCard
+        ? buildOptimisticCard(originalCard, targetColumn)
         : originalCard;
     pending.current.add(id);
     setMoves((current) => ({ ...current, [id]: { from, to, card } }));
@@ -97,13 +95,8 @@ export function RecordBoard({
         const finalTo = typeof result === "object" && result && "to" in result ? result.to : to;
         const finalTargetColumn = columns.find((column) => column.key === finalTo);
         const finalCard =
-          finalTargetColumn && originalCard.rows.length > 1
-            ? {
-                ...originalCard,
-                rows: originalCard.rows.map((row, index) =>
-                  index === 1 ? { ...row, text: finalTargetColumn.label } : row,
-                ),
-              }
+          finalTargetColumn && buildOptimisticCard
+            ? buildOptimisticCard(originalCard, finalTargetColumn)
             : card;
         setMoves((current) => ({
           ...current,
