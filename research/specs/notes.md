@@ -11,7 +11,11 @@ network-contract reconstruction.
 Existing screenshots, accessibility trees and available control inventories
 establish the collapsed card and existing note history. New captures on
 2026-10-14 failed to render the application because frontend script requests
-reported `ERR_HTTP2_PROTOCOL_ERROR`. The application remained at Loading;
+reported `ERR_HTTP2_PROTOCOL_ERROR`. A subsequent single capture with a
+12-second wait also failed: twelve frontend GET requests reported
+`ERR_CONNECTION_CLOSED`, and the screenshot still showed Loading. No controls
+were clicked in that retry. Access recovery has not been verified.
+The application remained at Loading;
 requested record and Notes clicks matched no controls and were skipped.
 The open composer and note action menu still require successful read-only
 captures. Loading caused by this capture failure is not a product empty state.
@@ -161,7 +165,10 @@ the two-entry sample. Show More belongs to one note's content, not list paging.
 
 ### State C: Timeline with existing notes — Accounts
 
-Source: `m3m-detail-timeline` accessibility tree; visual reconciliation pending.
+Source: `m3m-detail-timeline` accessibility tree and screenshot. The screenshot
+confirms the Timeline frame, History selection and filter control, but shows
+call and field-change events only; note events are outside its viewport.
+The note-event body and its Show More remain semantic evidence, not visual proof.
 Timeline controls are owned by parent record history unless stated otherwise.
 
 77. Timeline History tab: selected history view.
@@ -240,7 +247,9 @@ failure, not evidence for the reference CRM's Notes error design.
 - `m4c-card-notes`: Deals empty card; screenshot, accessibility tree and
   control inventory. Fifteen blocked requests recorded.
 - `m3m-detail-timeline`, `m2d2-detail-timeline`, `m4d-detail-timeline`:
-  existing Timeline accessibility evidence; visual reconciliation pending.
+  existing Timeline accessibility evidence. Accounts screenshot reconciles the
+  frame and filter, but not note events below its viewport; the other Timeline
+  screenshots still need reconciliation.
 - `detail-notes`: list-screen evidence only; not a Notes card capture.
 - `w2b-filter-related-notes`, `w2b-filter-related-notes-ops`,
   `w2d-op-notes-without`: Leads list related-note filtering context, outside
@@ -250,9 +259,14 @@ failure, not evidence for the reference CRM's Notes error design.
 - `m6-notes-accounts-card`: second failed-render screenshot; both intended
   clicks skipped with zero matches, zero blocked requests. No record was opened.
 
+- `m6-notes-accounts-retry`: single read-only retry with a 12-second wait;
+  Loading screenshot and accessibility tree, twelve failed frontend GETs,
+  three blocked telemetry POSTs, no clicks or skipped clicks. The three
+  inventory entries belong to the loading shell, not the Notes product UI.
+
 All captures remain in the local research workspace. No screenshots or note
 values are committed. Prior blocked-request counts do not mean writes succeeded;
-new attempts applied no clicks. The shared browser window was not closed.
+all three new attempts applied no clicks. The shared browser window was not closed.
 
 ## Open questions and completion checklist
 
