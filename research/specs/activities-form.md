@@ -1,4 +1,4 @@
-# Activities — Tasks create and edit forms
+# Activities — Tasks and Meetings create and edit forms
 
 ## Purpose
 
@@ -757,3 +757,430 @@ Source items 320; form inventory numbers 0; excluded items 320. Detail-base has 
 | Excluded: record-detail controls, outside this form inventory | 1–320 |
 
 Source items 320; form inventory numbers 0; excluded items 320. Detail-base has an explicit selector-only scope exemption. Edit remains on the detail screen after its blocked opening call; none of these items establishes an edit-form control. Both screenshots were inspected, without reproducing record values or a second detail inventory.
+
+## Meeting form
+
+Tasks TF numbers above remain the baseline. Meetings research follows the
+read-only capture boundary; record values and identities are omitted. The
+CTO decision in MEP-427 prohibits opening Edit. The selector-only detail
+capture is consequently omitted too. Meeting edit form: **not observed**.
+The existing Meeting detail specification and documented D2/D5 semantics in
+[activities-flows.md](activities-flows.md) describe capabilities, not an
+observed edit layout or confirmed create/edit differences.
+
+### Control inventory — m5g-meetings-list-base
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Meetings SH-21 active.
+Rest: as in m5l-meetings-list-base in [activities.md](activities.md); covered
+by the overlay: none. Absent here: ML-40–ML-41 (highlighted-row pencil and
+note bubble). Total Records is 9; all nine record links are present. No new
+list or shell control. The screenshot was opened as an image and scanned
+through the rail, toolbar, filter panel, table, footer and utility strip.
+
+### Reconciliation — m5g-meetings-list-base
+
+Every one-based source ordinal is mapped below. Ordinals are evidence
+indexes, never click selectors. Visibility exclusions retain the preceding
+Meetings list baseline; the screenshot confirms the same visible boundary.
+
+| Destination / exclusion | Source item ordinals |
+| --- | --- |
+| Excluded: non-control wrapper / static text | 1, 37, 51, 59, 62, 84, 88, 112, 120, 134, 139, 149, 209, 213, 214, 215, 216, 217, 218 |
+| SH-01 | 2, 3, 4 |
+| Excluded: zero-area / invisible | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81, 83, 85, 92, 93, 95, 96, 98, 99, 102, 103, 108, 109, 110, 111, 133, 137, 206, 207, 211, 212, 373, 374, 375, 376, 377, 378, 379, 380, 381, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 413 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| Excluded: outside visible viewport / clipped filter continuation | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 227, 228, 229, 243, 244, 245, 246, 259, 260, 261, 262, 275, 276, 277, 278, 291, 292, 293, 294, 307, 308, 309, 322, 323, 324, 325, 338, 339, 340, 341, 354, 355, 356, 369, 370, 371, 372, 401 |
+| Excluded: unpainted resize affordance | 82, 208 |
+| SH-26 | 86 |
+| SH-27 | 87 |
+| SH-28 | 89 |
+| SH-29 | 90 |
+| SH-30 | 91 |
+| SH-31 | 94 |
+| SH-32 | 97 |
+| SH-33 | 100, 101 |
+| SH-34 | 104, 105, 106, 107 |
+| ML-01 | 113 |
+| ML-02 | 114, 115, 116, 117 |
+| ML-03 | 118 |
+| ML-04 | 119 |
+| ML-05 | 121 |
+| ML-06 | 122 |
+| ML-07 | 123 |
+| ML-08 | 124 |
+| ML-09 | 125, 126 |
+| Excluded: Refresh not painted | 127, 128 |
+| ML-10 | 129 |
+| ML-11 | 130, 131 |
+| ML-12 | 132 |
+| ML-13 | 135, 136 |
+| ML-14 | 138 |
+| ML-15 | 140, 141 |
+| ML-16 | 142, 143 |
+| ML-17 | 144, 145 |
+| ML-18 | 146, 147 |
+| ML-19 | 148 |
+| ML-20 | 150, 151 |
+| ML-21 | 152, 153 |
+| ML-22 | 154, 155 |
+| ML-23 | 156, 157 |
+| ML-24 | 158, 159 |
+| ML-25 | 160, 161 |
+| ML-26 | 162, 163 |
+| ML-27 | 164, 165 |
+| ML-28 | 166, 167 |
+| ML-29 | 168, 169 |
+| ML-30 | 210 |
+| ML-31 | 219, 220 |
+| ML-32 | 221 |
+| ML-33 | 222, 223 |
+| ML-34 | 224 |
+| ML-35 | 225 |
+| ML-36 | 226 |
+| Excluded: record row data / non-control wrapper | 230, 231, 232, 233, 236, 239, 240, 241, 247, 248, 249, 252, 255, 256, 257, 263, 264, 265, 268, 271, 272, 273, 279, 280, 281, 284, 287, 288, 289, 295, 296, 297, 300, 303, 304, 305, 310, 311, 312, 315, 318, 319, 320, 326, 327, 328, 331, 334, 335, 336, 342, 343, 344, 347, 350, 351, 352, 357, 358, 359, 362, 365, 366, 367 |
+| ML-37 | 234, 235, 250, 251, 266, 267, 282, 283, 298, 299, 313, 314, 329, 330, 345, 346, 360, 361 |
+| ML-38 | 237, 238, 253, 254, 269, 270, 285, 286, 301, 302, 316, 317, 332, 333, 348, 349, 363, 364 |
+| ML-39 | 242, 258, 274, 290, 306, 321, 337, 353, 368 |
+| ML-42 | 382 |
+| ML-43 | 383 |
+| ML-44 | 384 |
+| ML-45 | 385 |
+| SH-35 | 402 |
+| SH-36 | 403 |
+| SH-37 | 404 |
+| SH-38 | 405 |
+| SH-39 | 406 |
+| SH-40 | 407 |
+| SH-41 | 408 |
+| SH-42 | 409 |
+| SH-43 | 410 |
+| SH-44 | 411 |
+| SH-45 | 412 |
+
+Source items 413; mapped source items 178; excluded 235; source-backed
+inventory numbers 88; image-only SH-46 adds one (89 total).
+
+### Control inventory — m5g-meeting-create
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Meetings SH-21 active.
+The permitted create address produced the shell with an empty content region
+on both completed attempts. Each used the prescribed wait; the second began
+more than three minutes after the first completed. **Create Meeting form is
+not observed.** There is no painted form title, header action, section, field,
+required marker or footer to inventory. No MF number is allocated to an
+unseen control. This is an incomplete rendering observation, not proof that
+Meetings lacks a create form. No alternative address or create-button click
+was attempted. Shell controls missing from app-shell.md: none newly observed.
+
+Absent here: all TF-01–TF-20 form controls are unpainted; this does not establish
+that their Meeting equivalents are unavailable. The shell utility strip is
+painted. The screenshot was opened as an image, including the right boundary
+and bottom corners.
+
+### Date-time, all-day and venue fields (Meetings)
+
+From / To, All day, Host, Location, Meeting Venue and Provider: rendered
+controls, ordering, default state, visible requiredness, date/time split and
+provider menu are **not observed**. No date/time list or picklist was opened.
+Metadata establishes field configuration only (table below). Documented D2
+in activities-flows.md describes start/end, all-day and physical/online venue
+semantics; it does not establish this organization's form presentation.
+Provider choices and conditional visibility remain open questions.
+
+### Participants picker (Meetings)
+
+No participant-opening button/link was painted. Conditional capture
+m5g-meeting-create-participants is omitted. Picker title, tabs, search,
+headers, row controls and footer are **not observed**. No participant was
+selected, added or removed, and no invitation was sent. Reuse documented D2
+participant categories and limits in activities-flows.md only as documented
+behaviour; do not infer an observed picker from them.
+
+### Reminder and repeat controls (Meetings)
+
+Reminder, Participants Reminder and Repeat control types and positions are
+**not observed**. There is no painted button/link permitting an opening
+capture, so m5g-meeting-create-repeat and m5g-meeting-create-reminder are
+omitted. No switch/checkbox was changed. Documented recurrence and reminder
+semantics reuse activities-flows.md D2/D5; they do not confirm rendered
+interiors, default configurations or create/edit dependencies. Contact Name
+and Related To differences from TF-09–TF-14 likewise remain **not observed**.
+
+### Meeting form fields vs metadata
+
+All rows below are metadata-only. API names and types reuse activities.md;
+none is promoted to a seen control or assigned an MF number.
+
+| Configured field | API name | Metadata type | Visible create control / state |
+| --- | --- | --- | --- |
+| Title | Event_Title | text | not observed; layout required |
+| Meeting Venue | Meeting_Venue__s | picklist | not observed; layout required |
+| Location | Venue | text | not observed |
+| Provider | Meeting_Provider__s | picklist | not observed; catalog unavailable in export |
+| All day | All_day | boolean | not observed |
+| From | Start_DateTime | datetime | not observed; layout required |
+| To | End_DateTime | datetime | not observed; layout required |
+| Host | Owner | ownerlookup | not observed |
+| Participants | Participants | bigint | not observed; participant semantics documented separately |
+| Contact Name | Who_Id | lookup | not observed; no TF equivalence established |
+| Related To | What_Id | lookup | not observed; no TF equivalence established |
+| Repeat | Recurring_Activity | RRULE | not observed |
+| Participants Reminder | Remind_Participants | multireminder | not observed |
+| Description | Description | textarea | not observed |
+| Reminder | Remind_At | multireminder | not observed |
+
+Exported layout sections are Meeting Information and Meeting Additional
+Information. Audit, check-in, geographic, tag and record-identity fields
+remain metadata-only as listed in activities.md; they are not an observed
+create form. No notification, validation, success, error or invitation
+confirmation state is inferred.
+
+### Meeting capability table
+
+| Capability | Owner | Reuse / addition | Evidence limit |
+| --- | --- | --- | --- |
+| Form shell | M5; shell registry | SH references above | shell seen; create content unpainted |
+| Scheduling / host / venue | M5 | activities.md metadata; activities-flows.md D2 | form controls and provider catalog not observed |
+| Participants / related person and record | M5; targets M1/M2/M3/M4/P2 | D2; TF baseline as comparison only | picker and actual form equivalence not observed |
+| Reminder / participants reminder / recurrence | M5 | D2/D5 | no interior observed or toggle changed |
+| Edit form | M5 | existing Meeting detail and D2/D5 | CTO prohibits Edit opening; create/edit differences not observed |
+| Invitation delivery | M10; participant state M5 | activities-flows.md | delivery outside scope; no send action |
+
+### Meeting capture refs
+
+| Slug | Clicks | Skipped | Evidence / boundary |
+| --- | --- | --- | --- |
+| m5g-meetings-list-base | 0 | 0 | Painted list; total 9; apiCalls 57, previous baseline 57; gate passed |
+| m5g-meeting-create | 0 | 0 | Shell only; two completed captures both apiCalls 47; form not observed |
+| m5g-meetings-list-after | 0 | 0 | Painted list; total 9; apiCalls 56; no baseline record link lost |
+
+The initial create attempt failed with profile in use and produced no usable
+meta/network/image. The identical command was retried after a measured wait
+exceeding five minutes; its shell-only image triggered the single permitted
+boyanma retry after more than three minutes. The saved create slug represents
+the final completed attempt. Earlier completed-attempt counts remain in the
+issue's comments. Every completed screenshot was opened as an image.
+The create read baseline has only the shared shell trigger outside GET;
+blocked reminder/notification/telemetry calls stay within the expected set.
+No successful record-write response or clicked control was observed.
+
+Not captured: participants/venue/repeat/reminder (no painted opening control);
+detail-base (selector-only prerequisite unnecessary when Edit is forbidden);
+edit (CTO decision). No alternate path, selector or guard override was tried.
+Raw images remain in the local research workspace.
+
+### Meeting open questions
+
+1. The authorized create address paints only the shell after the permitted
+   retry. A safe supported route to the form needs lead/CTO assessment before
+   further capture; an alternative route was not attempted in this task.
+2. Complete create inventory, required markers, From/To date/time arrangement,
+   all-day defaults, Host lookup, venue/provider menu and Location dependencies
+   remain not observed. Metadata is not a substitute for a rendered image.
+3. Participants picker, participants reminder and repeat/reminder interiors,
+   Contact Name / Related To differences and any hover-only form controls
+   remain not observed. No control type is invented from its field type.
+4. Edit is not observed under the CTO's no-Edit decision. Exact create/edit
+   differences, recurrence-instance prompt and read-only edit access remain
+   unresolved; existing detail and documented semantics do not answer layout.
+5. Validation/error/success, invitations and saved effects require writes and
+   remain outside this capture scope. No board decision is requested here.
+
+### Reconciliation — m5g-meeting-create
+
+One-based ordinals are evidence indexes only. The screenshot paints shell
+controls, no form controls. Every source item is mapped or excluded below.
+
+| Destination / exclusion | Source item ordinals |
+| --- | --- |
+| Excluded: non-control wrapper / static text | 1, 37, 51, 59, 62, 82, 84, 87, 122 |
+| SH-01 | 2, 3, 4 |
+| Excluded: zero-area / invisible | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81, 83, 91, 92, 94, 95, 97, 98, 101, 102, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 134 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| Excluded: outside visible viewport | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| SH-35 | 123 |
+| SH-36 | 124 |
+| SH-37 | 125 |
+| SH-38 | 126 |
+| SH-39 | 127 |
+| SH-40 | 128 |
+| SH-41 | 129 |
+| SH-42 | 130 |
+| SH-43 | 131 |
+| SH-44 | 132 |
+| SH-45 | 133 |
+
+Source items 134; mapped source items 71; excluded 63; source-backed
+inventory numbers 45; image-only SH-46 adds one (46 total). Form controls 0.
+
+### Control inventory — m5g-meetings-list-after
+
+Shell: SH-01–SH-46 as in contacts.md; Meetings SH-21 active. Differences:
+Channels AF-48 and Threads AF-49 appear in utility-strip positions three and
+four, as in accounts-form.md; Contacts SH-37 moves after them. No shell rows
+are repeated. Their module ownership remains ? as in that prior spec.
+
+Rest: as in m5g-meetings-list-base; covered by the overlay: none. No new
+Meeting control. Painted Total Records remains 9; no baseline record link
+is missing. The screenshot was opened as an image and its full boundary
+checked. Shell controls missing from app-shell.md: existing AF-48–AF-49
+classification gap only; no newly discovered control.
+
+### Reconciliation — m5g-meetings-list-after
+
+| Destination / exclusion | Source item ordinals |
+| --- | --- |
+| Excluded: non-control wrapper / static text | 1, 37, 51, 59, 62, 84, 88, 112, 120, 134, 139, 149, 209, 213, 214, 215, 216, 217, 218, 401 |
+| SH-01 | 2, 3, 4 |
+| Excluded: zero-area / invisible | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81, 83, 85, 92, 93, 95, 96, 98, 99, 102, 103, 108, 109, 110, 111, 133, 137, 206, 207, 211, 212, 373, 374, 375, 376, 377, 378, 379, 380, 381, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 415 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| Excluded: outside visible viewport / clipped filter continuation | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 227, 228, 229, 243, 244, 245, 246, 259, 260, 261, 262, 275, 276, 277, 278, 291, 292, 293, 294, 307, 308, 309, 322, 323, 324, 325, 338, 339, 340, 341, 354, 355, 356, 369, 370, 371, 372 |
+| Excluded: unpainted resize affordance | 82, 208 |
+| SH-26 | 86 |
+| SH-27 | 87 |
+| SH-28 | 89 |
+| SH-29 | 90 |
+| SH-30 | 91 |
+| SH-31 | 94 |
+| SH-32 | 97 |
+| SH-33 | 100, 101 |
+| SH-34 | 104, 105, 106, 107 |
+| ML-01 | 113 |
+| ML-02 | 114, 115, 116, 117 |
+| ML-03 | 118 |
+| ML-04 | 119 |
+| ML-05 | 121 |
+| ML-06 | 122 |
+| ML-07 | 123 |
+| ML-08 | 124 |
+| ML-09 | 125, 126 |
+| Excluded: Refresh not painted | 127, 128 |
+| ML-10 | 129 |
+| ML-11 | 130, 131 |
+| ML-12 | 132 |
+| ML-13 | 135, 136 |
+| ML-14 | 138 |
+| ML-15 | 140, 141 |
+| ML-16 | 142, 143 |
+| ML-17 | 144, 145 |
+| ML-18 | 146, 147 |
+| ML-19 | 148 |
+| ML-20 | 150, 151 |
+| ML-21 | 152, 153 |
+| ML-22 | 154, 155 |
+| ML-23 | 156, 157 |
+| ML-24 | 158, 159 |
+| ML-25 | 160, 161 |
+| ML-26 | 162, 163 |
+| ML-27 | 164, 165 |
+| ML-28 | 166, 167 |
+| ML-29 | 168, 169 |
+| ML-30 | 210 |
+| ML-31 | 219, 220 |
+| ML-32 | 221 |
+| ML-33 | 222, 223 |
+| ML-34 | 224 |
+| ML-35 | 225 |
+| ML-36 | 226 |
+| Excluded: record row data / non-control wrapper | 230, 231, 232, 233, 236, 239, 240, 241, 247, 248, 249, 252, 255, 256, 257, 263, 264, 265, 268, 271, 272, 273, 279, 280, 281, 284, 287, 288, 289, 295, 296, 297, 300, 303, 304, 305, 310, 311, 312, 315, 318, 319, 320, 326, 327, 328, 331, 334, 335, 336, 342, 343, 344, 347, 350, 351, 352, 357, 358, 359, 362, 365, 366, 367 |
+| ML-37 | 234, 235, 250, 251, 266, 267, 282, 283, 298, 299, 313, 314, 329, 330, 345, 346, 360, 361 |
+| ML-38 | 237, 238, 253, 254, 269, 270, 285, 286, 301, 302, 316, 317, 332, 333, 348, 349, 363, 364 |
+| ML-39 | 242, 258, 274, 290, 306, 321, 337, 353, 368 |
+| ML-42 | 382 |
+| ML-43 | 383 |
+| ML-44 | 384 |
+| ML-45 | 385 |
+| SH-35 | 402 |
+| SH-36 | 403 |
+| AF-48 | 404 |
+| AF-49 | 405 |
+| SH-37 | 406 |
+| SH-38 | 407 |
+| SH-39 | 408 |
+| SH-40 | 409 |
+| SH-41 | 410 |
+| SH-42 | 411 |
+| SH-43 | 412 |
+| SH-44 | 413 |
+| SH-45 | 414 |
+
+Source items 415; mapped source items 180; excluded 235; source-backed
+inventory numbers 90; image-only SH-46 adds one (91 total).
