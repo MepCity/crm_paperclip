@@ -30,14 +30,21 @@ test.describe("Tasks record detail", () => {
     await openTaskFromList(page, org.slug);
     const header = page.locator("[data-record-header]");
     await expect(header.getByText("Task 250")).toBeVisible();
-    await expect(header.locator("[data-record-portrait]")).toHaveCount(0);
-    await expect(header.getByRole("button", { name: "Previous Record" })).toHaveCount(0);
+    await expect(header.locator("[data-record-portrait]")).toHaveCount(1);
     await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
     // Close Task comes before Edit, More Options last.
     const labels = await header.getByRole("button").or(header.getByRole("link")).allInnerTexts();
-    const order = labels.filter((l) => ["Close Task", "Edit"].includes(l.trim()));
-    expect(order.map((l) => l.trim())).toEqual(["Close Task", "Edit"]);
-    await expect(header.getByRole("button", { name: "More Options" })).toBeVisible();
+    const wanted = ["Close Task", "Edit", "More Options", "Previous Record", "Next Record"];
+    const names = await header
+      .locator("button, a")
+      .evaluateAll((els) =>
+        els.map((el) => (el.textContent?.trim() || el.getAttribute("aria-label") || "").trim()),
+      );
+    expect(names.filter((n) => wanted.includes(n))).toEqual(wanted);
+    expect(labels.length).toBeGreaterThan(0);
+    // Last Update sits in the tab row, at its end.
+    await expect(page.locator("[data-record-tab-row]").getByText(/Last Update/i)).toBeVisible();
+    await expect(page.locator("[data-record-rail-control]")).toHaveCount(0);
 
     const card = page.getByRole("region", { name: "Business card" });
     const cardText = (await card.innerText()).replace(/\s+/g, " ");
@@ -49,6 +56,18 @@ test.describe("Tasks record detail", () => {
     await expect(page.getByText("Task Information")).toBeVisible();
     // No related list rail on activity records.
     await expect(page.locator("[data-record-rail]")).toHaveCount(0);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Related To shows the plural module suffix without a link", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    // Seeded task related to a deal (What_Id) and no person.
+    await page.goto(moduleRecordPath(org.slug, TASKS_TAB, "110000000000000251"));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    const card = page.getByRole("region", { name: "Business card" });
+    await expect(card).toContainText("- Deals", { timeout: 15_000 });
+    await expect(page.getByText("- Deals")).toHaveCount(2);
     ignoreFailedResponses(pageErrors, [400]);
   });
 
@@ -100,6 +119,9 @@ test.describe("Tasks record detail", () => {
       await expect(open.getByRole("button", { name })).toBeVisible();
     }
     await expect(open.getByRole("button", { name: /Meetings/ })).toContainText("0");
+    await expect(
+      panel.getByRole("button", { name: /^Call (phone|mobile)$/ }).first(),
+    ).toBeVisible();
     ignoreFailedResponses(pageErrors, [400]);
   });
 

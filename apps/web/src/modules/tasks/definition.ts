@@ -37,8 +37,9 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   },
   detail: {
     header: tasksRecordHeaderIdentity,
-    hasPortrait: false,
-    recordNavigation: false,
+    hasPortrait: true,
+    portraitIcon: Icons.check,
+    lastUpdatePlacement: "tab-row",
     addTags: { label: "Add Tags", laterModule: "M6" },
     businessCard: buildTasksBusinessCardFields,
     sections: buildTasksDetailSections,

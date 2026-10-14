@@ -1,6 +1,12 @@
 "use client";
 
-import type { ModuleApiName, ModuleRecordReference, RecordData } from "@crm/core/records";
+import type {
+  FieldDefinition,
+  FieldValue,
+  ModuleApiName,
+  ModuleRecordReference,
+  RecordData,
+} from "@crm/core/records";
 import { useMemo } from "react";
 import {
   type ActivityRelationDeal,
@@ -9,9 +15,12 @@ import {
   ActivityRelationPanel,
   type ActivityRelationPerson,
 } from "@/components/records/detail/activity-relation-panel";
+import { formatFieldValue } from "@/components/records/field-format";
 import { useRecord, useRecordCount, useRecordList } from "@/lib/api/client/hooks";
 import { moduleRecordPath } from "@/lib/crm-paths";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 import { resolveModuleScreenByApiName } from "../registry";
+import { TASKS_LIST_CURRENCY_CODE } from "./list-config";
 import { TASK_COMPLETED_STATUS } from "./tasks-closing";
 
 export interface TaskRelationPanelProps {
@@ -28,9 +37,35 @@ function text(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+function summaryField(apiName: string, dataType: "date" | "currency"): FieldDefinition {
+  return {
+    apiName,
+    label: apiName,
+    dataType,
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: false, edit: false, quickCreate: false },
+  };
+}
+
+function formatted(field: FieldDefinition, value: FieldValue): string | null {
+  const result = formatFieldValue(field, value, {}, DEFAULT_FORMAT, {
+    currencyCode: TASKS_LIST_CURRENCY_CODE,
+  });
+  return result.kind === "text" ? result.text : null;
+}
+
+const CLOSING_DATE_FIELD = summaryField("Closing_Date", "date");
+const AMOUNT_FIELD = summaryField("Amount", "currency");
+
 function dealSummaryText(deal: RecordData): string {
-  const parts = [text(deal.fields.Stage), text(deal.fields.Closing_Date)];
-  if (typeof deal.fields.Amount === "number") parts.push(String(deal.fields.Amount));
+  const parts = [text(deal.fields.Stage)];
+  if (deal.fields.Closing_Date != null)
+    parts.push(formatted(CLOSING_DATE_FIELD, deal.fields.Closing_Date));
+  if (typeof deal.fields.Amount === "number")
+    parts.push(formatted(AMOUNT_FIELD, deal.fields.Amount));
   return parts.filter(Boolean).join(" · ");
 }
 
@@ -57,16 +92,20 @@ export function TaskRelationPanel({ record, orgSlug }: TaskRelationPanelProps) {
     { enabled: Boolean(whoId) && isContact },
   );
 
-  const openTasks = useRecordCount("Tasks", {
-    viewId: "all-tasks",
-    filters: {
-      groupOperator: "and",
-      group: [
-        { field: "Who_Id", comparator: "equal", value: whoId },
-        { field: "Status", comparator: "not_equal", value: TASK_COMPLETED_STATUS },
-      ],
+  const openTasks = useRecordCount(
+    "Tasks",
+    {
+      viewId: "all-tasks",
+      filters: {
+        groupOperator: "and",
+        group: [
+          { field: "Who_Id", comparator: "equal", value: whoId },
+          { field: "Status", comparator: "not_equal", value: TASK_COMPLETED_STATUS },
+        ],
+      },
     },
-  });
+    { enabled: Boolean(whoId) },
+  );
 
   const persons = useMemo((): ActivityRelationPerson[] => {
     if (!whoRef) return [];

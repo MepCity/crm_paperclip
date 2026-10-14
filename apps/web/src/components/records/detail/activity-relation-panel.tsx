@@ -71,7 +71,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="text-md font-semibold text-text-strong">{title}</h3>
+      <h3 className="whitespace-nowrap text-md font-semibold text-text-strong">{title}</h3>
       <Button variant="ghost" size="sm" className="text-primary" onPress={onAction}>
         <Icons.plus className="size-3" aria-hidden />
         {actionLabel}
@@ -94,7 +94,7 @@ function CallButton({
       variant="icon"
       size="sm"
       aria-label={label}
-      className="size-5"
+      className="size-5 shrink-0 text-text-muted"
       onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
@@ -135,7 +135,7 @@ export function ActivityRelationPanel({
     <aside
       aria-label="Related information"
       data-activity-relation-panel
-      className="flex flex-col gap-4 rounded-md border border-panel-border bg-surface p-4"
+      className="flex flex-col gap-4 bg-surface py-1"
     >
       <Select
         label="Related person"
@@ -178,7 +178,7 @@ export function ActivityRelationPanel({
                   <Link
                     href={contactRecordPath(person.id)}
                     variant="body"
-                    className="font-semibold text-primary hover:underline"
+                    className="detail-field-value-link font-semibold hover:underline"
                   >
                     {person.name}
                   </Link>
@@ -197,7 +197,7 @@ export function ActivityRelationPanel({
                 <Link
                   href={accountRecordPath(person.accountId)}
                   variant="body"
-                  className="text-primary hover:underline"
+                  className="detail-field-value-link hover:underline"
                 >
                   {person.accountName}
                 </Link>
@@ -210,7 +210,7 @@ export function ActivityRelationPanel({
                   href={`mailto:${person.email}`}
                   variant="body"
                   laterModule="M10"
-                  className="text-primary hover:underline"
+                  className="detail-field-value-link hover:underline"
                 >
                   {person.email}
                 </Link>
@@ -234,7 +234,7 @@ export function ActivityRelationPanel({
               <Link
                 href={contactRecordPath(person.id)}
                 variant="body"
-                className="text-primary hover:underline"
+                className="detail-field-value-link hover:underline"
               >
                 More Info
               </Link>
@@ -252,7 +252,7 @@ export function ActivityRelationPanel({
                     <Link
                       href={dealRecordPath(deal.id)}
                       variant="body"
-                      className="text-primary hover:underline"
+                      className="detail-field-value-link hover:underline"
                     >
                       {deal.name}
                     </Link>
