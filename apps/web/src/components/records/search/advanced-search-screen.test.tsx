@@ -237,9 +237,9 @@ describe("AdvancedSearchScreen", () => {
     // Deselect all working modules
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Contacts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
-    await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Meetings" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Calls" }));
 

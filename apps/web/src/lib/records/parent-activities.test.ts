@@ -83,6 +83,7 @@ describe("buildParentActivityCategories", () => {
       subject: "A",
       href: "/task/1",
       dateText: "2026-02-01",
+      date: "2026-02-01",
       ownerName: "Ayşe",
       details: [{ label: "L:Status", value: "Not Started" }],
     });
