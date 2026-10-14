@@ -85,6 +85,12 @@ export function NoteComposer({
         data-testid="note-composer-collapsed"
         className="w-full rounded-md border border-border bg-surface px-3 py-2 text-left text-base text-text-muted"
         onClick={onExpand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onExpand();
+          }
+        }}
       >
         Add a note
       </button>
@@ -133,7 +139,7 @@ export function NoteComposer({
         suppressContentEditableWarning
         data-placeholder="What's this note about?"
         data-empty={isNoteContentEmpty(content) ? "true" : "false"}
-        className="min-h-24 resize-y overflow-auto text-base outline-none data-[empty=true]:before:text-text-muted data-[empty=true]:before:content-[attr(data-placeholder)]"
+        className="min-h-24 resize-y overflow-auto text-base outline-none data-[empty=true]:before:pointer-events-none data-[empty=true]:before:text-text-muted data-[empty=true]:before:content-[attr(data-placeholder)]"
         onInput={(e) => setContent(e.currentTarget.innerHTML)}
         onKeyUp={(e) => {
           rangeRef.current = saveSelection(e.currentTarget);

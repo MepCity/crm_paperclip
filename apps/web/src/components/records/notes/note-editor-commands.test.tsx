@@ -42,6 +42,29 @@ describe("applyNoteEditorCommand", () => {
     expect(fake).toHaveBeenCalledWith("insertHTML", false, '<a href="https://x.test">Label</a>');
   });
 
+  it("inserts a link with value as label when text is omitted in collapsed selection", () => {
+    const { editor, fake } = setup();
+    applyNoteEditorCommand(editor, "createLink", "https://x.test");
+    expect(fake).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      '<a href="https://x.test">https://x.test</a>',
+    );
+  });
+
+  it("creates a link wrapping selected text when selection is not collapsed", () => {
+    const { editor, fake } = setup();
+    editor.innerHTML = "<span>Selected</span>";
+    const span = editor.querySelector("span") as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(span);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    applyNoteEditorCommand(editor, "createLink", "https://x.test", undefined, range);
+    expect(fake).toHaveBeenCalledWith("createLink", false, "https://x.test");
+  });
+
   it("does nothing for unknown commands", () => {
     const { editor, fake } = setup();
     applyNoteEditorCommand(editor, "bogus");

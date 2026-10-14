@@ -66,7 +66,10 @@ export function applyNoteEditorCommand(
       exec(command);
       if (value) {
         const sel = window.getSelection();
-        const list = nearestList(sel?.anchorNode ?? null, editor);
+        const list = nearestList(
+          sel?.anchorNode ?? savedRange?.commonAncestorContainer ?? null,
+          editor,
+        );
         if (list) list.style.listStyleType = value;
       }
       return;

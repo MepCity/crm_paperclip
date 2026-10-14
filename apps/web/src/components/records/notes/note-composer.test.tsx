@@ -35,9 +35,17 @@ describe("NoteComposer", () => {
     expect(p.onExpand).toHaveBeenCalled();
   });
 
-  it("focuses body on open", () => {
+  it("collapsed expands on Enter key", () => {
+    const p = setup({ expanded: false });
+    fireEvent.keyDown(screen.getByTestId("note-composer-collapsed"), { key: "Enter" });
+    expect(p.onExpand).toHaveBeenCalled();
+  });
+
+  it("focuses body on open and enforces title maxLength 120", () => {
     setup();
     expect(document.activeElement).toBe(body());
+    const titleInput = screen.getByLabelText("Title") as HTMLInputElement;
+    expect(titleInput.maxLength).toBe(120);
   });
 
   it("Save rules", async () => {
