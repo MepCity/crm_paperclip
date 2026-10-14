@@ -61,8 +61,8 @@ test("creates a task and edits it from the record route", async ({ page }) => {
   await page.getByRole("textbox", { name: "Due Date", exact: true }).fill("30.11.2026");
   await page.getByRole("button", { name: "Status", exact: true }).click();
   await page.getByRole("option", { name: "In Progress", exact: true }).click();
-  await page.getByRole("switch", { name: "Reminder" }).click();
-  await page.getByRole("switch", { name: "Repeat" }).click();
+  await page.locator("[data-form-field=Remind_At] [aria-hidden=true]").first().click();
+  await page.locator("[data-form-field=Recurring_Activity] [aria-hidden=true]").first().click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
