@@ -8,6 +8,9 @@ import { createClientRecordService } from "@/lib/api/client/client-record-servic
 import { ApiProvider } from "@/lib/api/client/provider";
 import { resetPreferenceStoreForTests } from "@/lib/preferences";
 import { recordListContextKey } from "@/lib/records/record-list-context";
+import { accountsListPageConfig } from "@/modules/accounts/list-config";
+import { contactsListPageConfig } from "@/modules/contacts/list-config";
+import { dealsListPageConfig } from "@/modules/deals/list-config";
 import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
 import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
 import { ModuleListScreen } from "./module-list-screen";
@@ -1603,4 +1606,48 @@ it("uses URL presentation state for configured boards and keeps table-only modul
   expect(
     screen.getByRole("button", { name: "Split presentation" }).getAttribute("aria-disabled"),
   ).toBe("true");
+});
+
+describe("list activity summary capability", () => {
+  it.each([
+    leadsListPageConfig,
+    contactsListPageConfig,
+    accountsListPageConfig,
+    { ...dealsListPageConfig, defaultPresentation: "table" as const },
+  ])("requests summaries only for evidenced lists: $module", async (config) => {
+    // Linked seed activities target the oldest parent records.
+    navigation.params = new URLSearchParams("per_page=100&page=3");
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, { listUsers: async () => [] });
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, {
+      wrapper: wrapper(service),
+    });
+    await screen.findByRole("table", { name: "Records" });
+    const query = listSpy.mock.calls.find(([module]) => module === config.module)?.[1];
+    expect(query).toBeTruthy();
+    if (config.activityRibbon) {
+      expect(query?.includeActivitySummary).toBe(true);
+      await waitFor(() =>
+        expect(screen.getAllByRole("img", { name: /^Open / }).length).toBeGreaterThan(0),
+      );
+    } else {
+      expect(query).not.toHaveProperty("includeActivitySummary");
+      expect(screen.queryByRole("img", { name: /^Open / })).toBeNull();
+    }
+  });
+  it("omits the summary request when the capability is absent", async () => {
+    const records = createFixtureRecordService(ctx);
+    const listSpy = vi.spyOn(records, "list");
+    const service = createClientRecordService(records, { listUsers: async () => [] });
+    render(
+      <ModuleListScreen
+        orgSlug={ctx.orgSlug}
+        config={{ ...leadsListPageConfig, activityRibbon: undefined }}
+      />,
+      { wrapper: wrapper(service) },
+    );
+    await screen.findByRole("table", { name: "Records" });
+    expect(listSpy.mock.calls[0]?.[1]).not.toHaveProperty("includeActivitySummary");
+  });
 });

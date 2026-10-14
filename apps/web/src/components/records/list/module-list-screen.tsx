@@ -105,6 +105,8 @@ export interface ModuleListScreenConfig {
   /** ISO 4217 code for currency cells of the table; plain number when omitted. */
   cellCurrencyCode?: string;
   badgeColumn?: boolean;
+  /** L-41 is visible in this module’s saved list evidence. */
+  activityRibbon?: boolean;
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -235,9 +237,19 @@ function ModuleListScreenLoaded({
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
-    if (!listCriteria) return base;
-    return { ...base, filters: listCriteria };
-  }, [columnApiNames, eligibleSortFields, listCriteria, searchState, viewId]);
+    return {
+      ...base,
+      ...(listCriteria ? { filters: listCriteria } : {}),
+      ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
+    };
+  }, [
+    columnApiNames,
+    config.activityRibbon,
+    eligibleSortFields,
+    listCriteria,
+    searchState,
+    viewId,
+  ]);
 
   const countQuery = useMemo(
     () => ({
@@ -757,6 +769,7 @@ function ModuleListScreenLoaded({
             <RecordTable
               laterInventory={Boolean(config.inventory)}
               badgeColumn={config.badgeColumn}
+              activitySummaries={config.activityRibbon ? listPage.activitySummaries : undefined}
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}
