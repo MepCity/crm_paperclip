@@ -655,3 +655,23 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - Shared component visual differences with Leads / Contacts to be handled in end-of-project polish.
 - Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
 
+## Module 5 — Activities
+
+### Tasks list — implemented; QA pending (MEP-459)
+
+Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Shell entry | SH-19, SH-20 (Tasks is the first entry of the Activities group) | `tasks-list.spec.ts`, `definition.test.ts` |
+| View strip and menu | TL-01, TL-02, TL-02.1 – TL-02.20 (Search filters rows by name; interim) | `tasks-list.spec.ts`, `view-tab-strip.test.tsx` |
+| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; TL-13 `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Actions | TL-14, TL-14.1 – TL-14.6 (Manage Tags and Export Tasks `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Filter panel | TL-15 – TL-26, TL-53 – TL-61, TL-66 (no Activities, Latest Email Status, Cadences, related-modules group) | `tasks-list.spec.ts`, `list-filters.test.ts` |
+| Table and footer | TL-33 – TL-42, TL-62 – TL-64, TL-48 – TL-51 (TL-33 `laterModule` M11) | `tasks-list.spec.ts` |
+
+Interim rules: selection bar, page size, empty state and row actions follow Accounts;
+Related To and Contact Name link to the related record when the target module is registered.
+The detail and form parts of the definition borrow module-neutral Deals builders until the
+Tasks detail and form tasks land.
+
