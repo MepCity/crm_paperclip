@@ -674,3 +674,5 @@ Related To and Contact Name link to the related record when the target module is
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
 
+- Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
+

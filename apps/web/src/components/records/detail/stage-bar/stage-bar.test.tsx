@@ -110,3 +110,12 @@ test("current stage down chevron is decorative and not a separate button", () =>
   const current = screen.getByRole("listitem", { current: "step" });
   expect(within(current).queryAllByRole("button")).toHaveLength(0);
 });
+
+test("terminal buttons carry won and lost tones and dates sit inside the bar card", () => {
+  setup();
+  const buttons = document.querySelectorAll(".stage-bar-terminal");
+  expect(buttons[0]?.getAttribute("data-kind")).toBe("won");
+  expect(buttons[1]?.getAttribute("data-kind")).toBe("lost");
+  const bar = document.querySelector("[data-stage-bar]");
+  expect(bar?.querySelector(".stage-bar-dates")).not.toBeNull();
+});
