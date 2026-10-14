@@ -53,6 +53,24 @@ export interface NavConfig {
   sections: readonly NavSection[];
 }
 
+function navGroup(group: "sales" | "activities", label: string): NavGroup {
+  return {
+    id: group,
+    label,
+    icon: Icons.folder,
+    links: getModuleScreens()
+      .filter((definition) => (definition.navigation.group ?? "sales") === group)
+      .map((definition) => ({
+        id: definition.navigation.id,
+        label: definition.pluralLabel,
+        icon: definition.navigation.icon,
+        href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
+        activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
+        match: "prefix" as const,
+      })),
+  };
+}
+
 export const shellNav: NavConfig = {
   links: [
     {
@@ -68,21 +86,7 @@ export const shellNav: NavConfig = {
     {
       id: "teamspace",
       label: "Teamspace",
-      groups: [
-        {
-          id: "sales",
-          label: "Sales",
-          icon: Icons.folder,
-          links: getModuleScreens().map((definition) => ({
-            id: definition.navigation.id,
-            label: definition.pluralLabel,
-            icon: definition.navigation.icon,
-            href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
-            activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
-            match: "prefix" as const,
-          })),
-        },
-      ],
+      groups: [navGroup("sales", "Sales"), navGroup("activities", "Activities")],
     },
   ],
 };

@@ -136,9 +136,9 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation renders Leads, Contacts, Accounts and Deals under Sales and omits empty groups", () => {
+test("Default navigation renders Leads, Contacts, Accounts, Deals, Tasks, Meetings and Calls (under Activities) and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(5);
+  expect(screen.getAllByRole("link")).toHaveLength(8);
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
     "/crm/example/tab/Leads/list",
   );
@@ -151,7 +151,28 @@ test("Default navigation renders Leads, Contacts, Accounts and Deals under Sales
   expect(screen.getByRole("link", { name: "Deals" }).getAttribute("href")).toBe(
     "/crm/example/tab/Deals/list",
   );
+  expect(screen.getByRole("link", { name: "Tasks" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Tasks/list",
+  );
+  expect(screen.getByRole("link", { name: "Meetings" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Meetings/list",
+  );
+  expect(screen.getByRole("link", { name: "Calls" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Calls/list",
+  );
   expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
+  const activities = screen.getByRole("button", { name: "Activities" });
+  const sales = screen.getByRole("button", { name: "Sales" });
+  const tasks = screen.getByRole("link", { name: "Tasks" });
+  const meetings = screen.getByRole("link", { name: "Meetings" });
+  const calls = screen.getByRole("link", { name: "Calls" });
+  expect(activities.compareDocumentPosition(tasks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tasks.compareDocumentPosition(meetings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(meetings.compareDocumentPosition(calls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tasks.compareDocumentPosition(sales) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Deals" }).compareDocumentPosition(activities)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
 });
 
 test("Organization switcher exposes the current organization in its accessible name", () => {
