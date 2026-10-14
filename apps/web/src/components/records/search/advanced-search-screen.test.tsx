@@ -198,7 +198,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Leads", "Deals"],
+          modules: ["Contacts", "Accounts", "Tasks", "Leads", "Deals"],
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -213,7 +213,7 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Deals"],
+          modules: ["Contacts", "Accounts", "Tasks", "Deals"],
         }),
       );
     });
@@ -239,6 +239,7 @@ describe("AdvancedSearchScreen", () => {
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Accounts" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Leads" }));
     await user.click(within(filterPanel).getByRole("checkbox", { name: "Deals" }));
+    await user.click(within(filterPanel).getByRole("checkbox", { name: "Tasks" }));
 
     searchSpy.mockClear();
     await user.click(within(filterPanel).getByRole("button", { name: "Apply Filter" }));
