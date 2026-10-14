@@ -1,14 +1,17 @@
-import type { FieldDefinition, ModuleMetadata } from "@crm/core/records";
+import type { FieldDefinition, ModuleMetadata, StageCategory } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import {
   buildFormModel,
+  type FormRules,
   formFields,
   formPayload,
   initialFormValues,
   normalizeFormValue,
   numberValue,
+  resolveFormRules,
+  stageProbabilityWrite,
   textValue,
 } from "./form-model";
 
@@ -213,5 +216,87 @@ describe("metadata form model", () => {
     expect(payload).not.toHaveProperty(names.coordinates);
     for (const f of module.fields.filter((f) => !f.views.create))
       expect(payload).not.toHaveProperty(f.apiName);
+  });
+});
+
+const stageRules: FormRules = {
+  owner: "Owner",
+  omitted: ["Connected_To__s"],
+  stageProbability: { stage: "Stage", probability: "Probability" },
+  stageConditionalFields: [
+    { field: "Reason_For_Loss", stage: "Stage", categories: ["Closed Lost"] },
+  ],
+};
+
+function stageMetadata(stages: readonly [string, number, StageCategory][]): ModuleMetadata {
+  return {
+    apiName: "StageModule",
+    singularLabel: "Stage module",
+    pluralLabel: "Stage modules",
+    businessCardFields: [],
+    fields: [
+      field("Owner"),
+      field("Probability", { dataType: "integer" }),
+      field("Reason_For_Loss", { dataType: "picklist" }),
+      field("Stage", {
+        dataType: "picklist",
+        picklist: stages.map(([storedValue, probability, category]) => ({
+          storedValue,
+          displayValue: storedValue,
+          stage: { probability, forecastCategory: "Pipeline", category },
+        })),
+      }),
+    ],
+    layout: [
+      {
+        label: "Stage section",
+        columnCount: 2,
+        columns: [["Stage", "Reason_For_Loss"], ["Probability"]],
+        fields: [],
+      },
+    ],
+  };
+}
+
+describe("stage-driven form rules", () => {
+  const metadata = stageMetadata([
+    ["Qualification", 10, "Open"],
+    ["Closed Lost", 0, "Closed Lost"],
+  ]);
+
+  it("refills the paired number field with the stage option's metadata probability", () => {
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", "Closed Lost")).toEqual({
+      field: "Probability",
+      value: 0,
+    });
+    // Any other write, an unlisted option or a non-text value moves nothing.
+    expect(stageProbabilityWrite(stageRules, metadata, "Probability", 55)).toBeUndefined();
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", "Not A Stage")).toBeUndefined();
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", null)).toBeUndefined();
+  });
+
+  it("drops the conditional field from create and from an edit whose stage is not lost", () => {
+    expect(resolveFormRules(stageRules, { mode: "create", metadata }).omitted).toContain(
+      "Reason_For_Loss",
+    );
+    expect(
+      resolveFormRules(stageRules, {
+        mode: "edit",
+        metadata,
+        record: { id: "r1", fields: { Stage: "Qualification" } },
+      }).omitted,
+    ).toContain("Reason_For_Loss");
+  });
+
+  it("keeps the conditional field while the edited record's stage is lost", () => {
+    const rules = resolveFormRules(stageRules, {
+      mode: "edit",
+      metadata,
+      record: { id: "r1", fields: { Stage: "Closed Lost" } },
+    });
+    expect(rules.omitted).not.toContain("Reason_For_Loss");
+    const fields = formFields(metadata, buildFormModel(metadata, "edit"), "edit", rules);
+    expect(fields.some((f) => f.apiName === "Reason_For_Loss")).toBe(true);
+    expect(fields.some((f) => f.apiName === "Connected_To__s")).toBe(false);
   });
 });

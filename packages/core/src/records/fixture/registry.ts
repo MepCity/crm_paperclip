@@ -9,6 +9,9 @@ import { historyMetadata, historyViews } from "./deals/history";
 import { dealsMetadata } from "./deals/metadata";
 import { fullName as dealsFullName, generateFixtureDeals } from "./deals/seed";
 import { dealsViews } from "./deals/views";
+import { eventsMetadata } from "./events/metadata";
+import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed";
+import { eventsViews } from "./events/views";
 import { leadsMetadata } from "./metadata";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { tasksMetadata } from "./tasks/metadata";
@@ -52,6 +55,17 @@ const contactsManaged = new Set([
 ]);
 
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+  Events: {
+    metadata: eventsMetadata,
+    views: eventsViews,
+    displayNameField: "Event_Title",
+    generateSeed: (now) => generateFixtureEvents(68, now),
+    fullName: eventsFullName,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Event_Title", "Description", "Venue"],
+    initialNextId: 140000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
   Tasks: {
     metadata: tasksMetadata,
     views: tasksViews,

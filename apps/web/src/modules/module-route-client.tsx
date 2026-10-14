@@ -1,5 +1,6 @@
 "use client";
 
+import type { FieldValue } from "@crm/core/records";
 import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-conflict-route";
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
@@ -30,6 +31,7 @@ export function ModuleRouteClient({
   viewId,
   recordId,
   currentUserId,
+  createPrefill,
 }: {
   moduleTab: string;
   kind: ModuleRouteKind;
@@ -37,6 +39,7 @@ export function ModuleRouteClient({
   viewId?: string;
   recordId?: string;
   currentUserId: string;
+  createPrefill?: Readonly<Record<string, FieldValue>>;
 }) {
   const definition = resolveModuleScreen(moduleTab);
   if (!definition) throw new Error("Unknown module screen.");
@@ -86,6 +89,7 @@ export function ModuleRouteClient({
       definition={definition}
       orgSlug={orgSlug}
       currentUserId={currentUserId}
+      createPrefill={createPrefill}
       recordId={kind === "edit" ? recordId : undefined}
       cloneSourceId={kind === "clone" ? recordId : undefined}
     />

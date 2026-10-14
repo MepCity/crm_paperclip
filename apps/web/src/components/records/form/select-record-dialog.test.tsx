@@ -248,6 +248,33 @@ test("observed chrome paints the reference picker and keeps the footer actions o
   expect(onDone).not.toHaveBeenCalled();
 });
 
+/**
+ * A caller may name the observed picker's search field after its own lookup column, which is what
+ * the Deals Contact Name picker needs; without an override the record column label still wins.
+ */
+test("observed chrome takes the search label from the caller when one is given", async () => {
+  const service = createMockService();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      recordService={service}
+      chrome="observed"
+      searchLabel="Search by Contact Name"
+      title="Choose Contact"
+      onDone={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy();
+  });
+  expect(screen.getByRole("dialog", { name: "Choose Contact" })).toBeTruthy();
+  expect(screen.getByRole("textbox", { name: "Search by Contact Name" })).toBeTruthy();
+  expect(screen.getByPlaceholderText("Search by Contact Name")).toBeTruthy();
+});
+
 test("observed chrome applies a row selection at once", async () => {
   const user = userEvent.setup();
   const service = createMockService();

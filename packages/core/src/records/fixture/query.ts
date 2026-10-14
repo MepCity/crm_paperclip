@@ -174,6 +174,7 @@ function isCriteriaToken(value: CriteriaValue): value is CriteriaToken {
   const keys = Object.keys(record);
   if (
     record.token === "CURRENTUSER" ||
+    record.token === "CURRENTTIME" ||
     record.token === "TODAY" ||
     record.token === "NEXT7DAYS" ||
     record.token === "TODAYANDOVERDUE"
@@ -201,7 +202,13 @@ function comparatorFits(
   comparator: Comparator,
   value: CriteriaValue,
 ): boolean {
-  if (field.dataType === "ALARM" || field.dataType === "RRULE") return false;
+  if (field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE")
+    return false;
+  if (isCriteriaToken(value) && value.token === "CURRENTTIME")
+    return (
+      field.dataType === "datetime" &&
+      ["less_than", "less_equal", "greater_than", "greater_equal"].includes(comparator)
+    );
   if (
     field.dataType === "lookup" &&
     (comparator === "equal" || comparator === "not_equal") &&
@@ -304,7 +311,14 @@ export function validateCriteria(
 }
 
 function equalValues(left: FieldValue, right: FieldValue): boolean {
-  if (typeof left === "object" && left !== null && typeof right === "object" && right !== null)
+  if (
+    typeof left === "object" &&
+    left !== null &&
+    typeof right === "object" &&
+    right !== null &&
+    "id" in left &&
+    "id" in right
+  )
     return left.id === right.id && left.module === right.module;
   return left === right;
 }
@@ -441,6 +455,23 @@ export function matches(
   // A leaf on a field absent from module metadata is published but does not constrain.
   if (!fields.has(criteria.field)) return true;
   const raw = record.fields[criteria.field] ?? null;
+  if (isCriteriaToken(criteria.value) && criteria.value.token === "CURRENTTIME") {
+    const parsed = typeof raw === "string" ? Date.parse(raw) : NaN;
+    if (!Number.isFinite(parsed)) return false;
+    const instant = runtime.now.getTime();
+    switch (criteria.comparator) {
+      case "less_than":
+        return parsed < instant;
+      case "less_equal":
+        return parsed <= instant;
+      case "greater_than":
+        return parsed > instant;
+      case "greater_equal":
+        return parsed >= instant;
+      default:
+        return false;
+    }
+  }
   // Equality by opaque ID serves related lists; other text values still match names.
   if (
     fields.get(criteria.field)?.dataType === "lookup" &&
@@ -448,6 +479,7 @@ export function matches(
     typeof criteria.value === "string" &&
     typeof raw === "object" &&
     raw !== null &&
+    "id" in raw &&
     raw.id === criteria.value
   )
     return criteria.comparator === "equal";
@@ -462,7 +494,10 @@ export function matches(
     return criteria.comparator === "equal" ? equal : !equal;
   }
   const value =
-    fields.get(criteria.field)?.dataType === "lookup" && typeof raw === "object" && raw !== null
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    typeof raw === "object" &&
+    raw !== null &&
+    "id" in raw
       ? typeof raw.name === "string"
         ? raw.name
         : null
@@ -592,13 +627,14 @@ export function sortRecords(
     return copy;
   }
   const field = fields.get(sort.field);
-  if (!field || field.dataType === "ALARM" || field.dataType === "RRULE")
+  if (!field || field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE")
     throw new ValidationError({ sort: ["Unknown sort field or order."] });
   // Ties keep the default id-descending order. Array.sort is stable.
   copy.sort((a, b) => compareDecimal(b.id, a.id));
   const normalize = (value: FieldValue): string | number | boolean | null => {
     if (value === null || value === "") return null;
-    if (typeof value === "object")
+    if (typeof value === "object") {
+      if (!("id" in value)) return null;
       return field.dataType === "lookup"
         ? typeof value.name === "string"
           ? value.name.toLowerCase() || null
@@ -606,6 +642,7 @@ export function sortRecords(
         : typeof value.id === "string"
           ? value.id.toLowerCase()
           : null;
+    }
     if (["date", "datetime"].includes(field.dataType) && typeof value === "string")
       return Date.parse(value);
     return typeof value === "string" ? value.toLowerCase() : value;
