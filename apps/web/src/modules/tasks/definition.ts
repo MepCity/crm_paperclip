@@ -17,6 +17,7 @@ import {
 import type { ModuleScreenDefinition } from "../types";
 import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
+import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 
 /**
  * Interim: the Tasks detail and form research is still open, so the detail screen and
@@ -41,7 +42,8 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Due_Date", "Status", "Priority", "Owner"],
   buildFilterGroups: buildTasksFilterGroups,
   form: {
-    rules: { owner: "Owner" },
+    rules: tasksFormRules,
+    fallbackColumns: { "Task Information": TASKS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
   },
   detail: {
