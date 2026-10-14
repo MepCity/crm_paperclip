@@ -1,0 +1,51 @@
+/* Activity date ribbon in table row (L-41 / AX-44).
+   Shown between row checkbox and record name column for records with open activities. */
+
+.activity-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  height: 24px;
+  padding-left: 6px;
+  padding-right: 14px;
+  font-size: var(--text-xs, 0.71875rem);
+  font-weight: var(--font-weight-semibold, 510);
+  line-height: 1;
+  border-top-left-radius: var(--radius-sm, 2px);
+  border-bottom-left-radius: var(--radius-sm, 2px);
+  background-color: #ddf8ec;
+  color: #12aa67;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+  clip-path: polygon(0% 0%, 100% 0%, calc(100% - 10px) 50%, 100% 100%, 0% 100%);
+  transition: opacity 120ms ease;
+}
+
+a.activity-ribbon:hover,
+a.activity-ribbon:focus-visible {
+  opacity: 0.85;
+}
+
+.activity-ribbon--icon-only {
+  padding-left: 5px;
+  padding-right: 13px;
+}
+
+.activity-ribbon--overdue,
+.activity-ribbon.overdue {
+  background-color: var(--color-status-terminal-fill, #ffecec);
+  color: var(--color-status-terminal-icon, #ff5d5a);
+}
+
+.activity-ribbon-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.activity-ribbon-date {
+  font-size: var(--text-xs, 0.71875rem);
+  font-weight: var(--font-weight-semibold, 510);
+  white-space: nowrap;
+}
