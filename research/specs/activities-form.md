@@ -1,4 +1,4 @@
-# Activities — Tasks and Meetings create and edit forms
+# Activities — Tasks, Meetings and Calls create and edit forms
 
 ## Purpose
 
@@ -1184,3 +1184,382 @@ classification gap only; no newly discovered control.
 
 Source items 415; mapped source items 180; excluded 235; source-backed
 inventory numbers 90; image-only SH-46 adds one (91 total).
+
+
+## Call forms
+
+The permitted create address renders **Create Call**, with Outbound and
+Scheduled defaults. This is the observed schedule-state create form, not
+proof that the unobserved Create menu opens an identical form. The earlier
+m5l-calls-create-menu trigger was skipped by the tool; no menu row was
+available for a Log capture. Log and Edit forms remain **not observed**.
+The CTO's no-Edit decision also makes the selector-only detail capture
+unnecessary; existing Calls detail evidence is in activities-record-detail.md.
+
+Call Information is a single column: Call From/To with Contact type beneath
+its label, Related To, Call Type, Outgoing Call Status, Call Start Time,
+Call Owner, Subject, Reminder. Purpose Of Outgoing Call follows. A Call
+Purpose select is fully painted; only the upper edge of the following input
+is painted above the fixed utility strip. Its Call Agenda identity comes
+from controls.json and metadata; its label and complete input are not observed
+in the image. No scrolling was authorized. Lower outcome/description fields
+are not inferred to be absent from the complete form.
+
+Required input-edge markers are painted on Call From/To, Call Type and the
+date side of Call Start Time. Related To and Subject have no marker. The
+initial person input has a focus outline set by the page; no field was
+clicked, filled or searched. Owner identity and the initialized time value
+are omitted. Call Type and Outgoing Call Status both have dropdown arrows;
+their options and conditional changes were not opened. No duration control
+is painted in this Scheduled state. The footer is the global utility strip,
+not an observed additional form action row.
+
+### Control inventory — m5h-calls-list-base
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Calls SH-22 active.
+Rest: as in m5l-calls-list-base in [activities.md](activities.md); covered by
+the overlay: none. Absent here: CL-39–CL-41 highlighted-row affordances.
+Total Records 890; range 1 to 30. No new list control.
+
+### Control inventory — m5h-call-schedule
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Calls SH-22 active.
+No newly observed shell control. Utility-strip controls remain visible.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CF-01 | Header | Edit Page Layout | link | title strip, after title | same | seen (m5h-call-schedule) | M11 | TF-01 |
+| CF-02 | Header | Save and Create Follow-up Task | button | right group, first | not observed; never invoked | seen (m5h-call-schedule) | M5 | new |
+| CF-03 | Header | Cancel | button | right group, second | same | seen (m5h-call-schedule) | M5 | TF-02 moved |
+| CF-04 | Header | Save | button | right group, third | same | seen (m5h-call-schedule) | M5 | TF-04 |
+| CF-05 | Call Information | Contact | select | row 1, label side, below Call From/To | same; type list not opened | seen (m5h-call-schedule) | M5 | TF-09 moved |
+| CF-06 | Call Information | Call From/To | input | row 1, value side | not observed | seen (m5h-call-schedule) | M5 | new |
+| CF-07 | Call Information | Contact lookup icon | icon button | row 1, input right edge | same; not opened here | seen (m5h-call-schedule) | M5 | TF-11 moved |
+| CF-08 | Call Information | Related To | input | row 2, value side | same | seen (m5h-call-schedule) | M5 | TF-13 moved |
+| CF-09 | Call Information | Related-record lookup icon | icon button | row 2, input right edge | not observed; no module selector painted | seen (m5h-call-schedule) | M5 | TF-14 moved |
+| CF-10 | Call Information | Call Type | select | row 3, value side | not observed; Outbound displayed with dropdown arrow | seen (m5h-call-schedule) | M5 | new |
+| CF-11 | Call Information | Outgoing Call Status | select | row 4, value side | not observed; Scheduled displayed with dropdown arrow | seen (m5h-call-schedule) | M5 | new |
+| CF-12 | Call Information | Call Start Time (date) | input | row 5, left segment | not observed; date placeholder DD.MM.YYYY | seen (m5h-call-schedule) | M5 | new |
+| CF-13 | Call Information | Call Start Time (time) | input | row 5, right segment | not observed; 12-hour time with AM/PM | seen (m5h-call-schedule) | M5 | new |
+| CF-14 | Call Information | Call Owner | select | row 6, value side | same | seen (m5h-call-schedule) | M5 | TF-05 moved |
+| CF-15 | Call Information | User lookup icon | icon button | row 6, input right edge | same; not opened here | seen (m5h-call-schedule) | M5 | TF-06 moved |
+| CF-16 | Call Information | Subject | input | row 7, value side | same; no required marker here | seen (m5h-call-schedule) | M5 | TF-07 moved |
+| CF-17 | Call Information | Reminder | select | row 8, value side | opens picklist; None displayed | seen (m5h-call-schedule) | M5 | new |
+| CF-18 | Purpose Of Outgoing Call | Call Purpose | select | first row, value side | opens picklist; -None- displayed | seen (m5h-call-schedule) | M5 | new |
+| CF-19 | Lower continuation | Partially clipped input | input | below Call Purpose, upper edge above utility strip | not observed; DOM identifies Call Agenda, label unpainted | seen (m5h-call-schedule) | M5 | new |
+
+Absent here: TF-03 (Save and New), TF-08 (Due Date), TF-12 (Account module
+selector), TF-15–TF-16 (task Status/Priority), TF-17–TF-18 (Reminder/Repeat
+toggles), TF-19–TF-20 (Description/resize grip). No Meeting equivalence is
+established because its form is not observed. A calendar icon, duration,
+Call Result and outcome section are not painted in this viewport.
+
+### Call-specific field behaviour
+
+Contact type is shown below Call From/To; its closed control differs in
+position from TF-09. Lookup is present, but no Contact/Lead choice or lookup
+window is observed here. Related To has a record input and lookup icon with
+no separate Account/other-module type selector, unlike TF-12–TF-14. Its
+lookup target and module-selection interior remain not observed.
+
+Calls uses a Reminder **select**, unlike Tasks' TF-17 toggle and Meetings'
+metadata multireminder. Schedule-state duration and Call Result controls are
+not painted; Log duration minutes/seconds and result behaviour are documented
+in activities-flows.md D3, not observed controls. Call Agenda is configured
+as text, but only its input's upper edge is seen. No field value or choice
+was changed. Outgoing status, type-dependent sections, editability and exact
+schedule-versus-log requiredness cannot be inferred from the closed controls.
+
+### Reconciliation — m5h-call-schedule
+
+One-based source ordinals are evidence indexes, never selectors. Duplicate
+wrappers and dropdown arrows map to their parent control. CF-19 accounts for
+the clipped input edge; its unseen label is not claimed as image evidence.
+
+| Destination / exclusion | Source item ordinals |
+| --- | --- |
+| Excluded: non-control wrapper / static text | 1, 37, 51, 59, 62, 82, 84, 87, 163 |
+| SH-01 | 2, 3, 4 |
+| Excluded: zero-area / invisible | 5, 6, 7, 8, 9, 12, 15, 18, 21, 24, 27, 32, 81, 83, 91, 92, 94, 95, 97, 98, 101, 102, 108, 109, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 162 |
+| SH-02 | 10 |
+| SH-03 | 11, 13 |
+| SH-04 | 14, 16 |
+| SH-05 | 17, 19 |
+| SH-06 | 20, 22 |
+| SH-07 | 23, 25 |
+| SH-08 | 26, 28 |
+| SH-09 | 29, 30, 31 |
+| SH-10 | 33 |
+| SH-11 | 34, 35 |
+| SH-12 | 36 |
+| SH-13 | 38, 39 |
+| SH-14 | 40, 41 |
+| SH-15 | 42, 43 |
+| SH-16 | 44, 45 |
+| SH-17 | 46, 47 |
+| SH-18 | 48, 49 |
+| SH-19 | 50 |
+| SH-20 | 52, 53 |
+| SH-21 | 54, 55 |
+| SH-22 | 56, 57 |
+| SH-23 | 58 |
+| SH-24 | 60, 61 |
+| SH-25 | 63, 64 |
+| Excluded: outside visible viewport | 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 107, 160, 161 |
+| SH-26 | 85 |
+| SH-27 | 86 |
+| SH-28 | 88 |
+| SH-29 | 89 |
+| SH-30 | 90 |
+| SH-31 | 93 |
+| SH-32 | 96 |
+| SH-33 | 99, 100 |
+| SH-34 | 103, 104, 105, 106 |
+| CF-01 | 110 |
+| CF-04 | 111 |
+| CF-02 | 112 |
+| CF-03 | 113 |
+| CF-05 | 114, 115, 116 |
+| CF-06 | 117 |
+| CF-07 | 118 |
+| CF-08 | 119 |
+| CF-09 | 120 |
+| CF-10 | 121, 122, 123, 124 |
+| CF-11 | 125, 126, 127, 128 |
+| CF-12 | 129 |
+| CF-13 | 130 |
+| CF-14 | 131, 132, 133 |
+| CF-15 | 134 |
+| CF-16 | 135 |
+| CF-17 | 136, 137, 138, 139 |
+| CF-18 | 140, 141, 142, 143 |
+| CF-19 | 144 |
+| SH-35 | 164 |
+| SH-36 | 165 |
+| SH-37 | 166 |
+| SH-38 | 167 |
+| SH-39 | 168 |
+| SH-40 | 169 |
+| SH-41 | 170 |
+| SH-42 | 171 |
+| SH-43 | 172 |
+| SH-44 | 173 |
+| SH-45 | 174 |
+
+Source items 174; mapped source items 106; excluded 68; distinct inventory
+numbers 65, including image-only SH-46. Form inventory numbers 19.
+
+
+### Control inventory — m5h-call-schedule-purpose
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CF-18.1 | Call Purpose list | -None- | menu item | popup above field, first | not observed; currently highlighted | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.2 | Call Purpose list | Prospecting | menu item | popup, second | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.3 | Call Purpose list | Administrative | menu item | popup, third | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.4 | Call Purpose list | Negotiation | menu item | popup, fourth | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.5 | Call Purpose list | Demo | menu item | popup, fifth | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.6 | Call Purpose list | Project | menu item | popup, sixth | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+| CF-18.7 | Call Purpose list | Desk | menu item | popup, seventh | not observed | seen (m5h-call-schedule-purpose) | M5 | new |
+
+Rest: as in m5h-call-schedule; covered by the overlay: CF-16–CF-17
+(left input segment only). The popup opens upward; no search input is painted.
+The seven displayed labels agree with activities.md; Desk maps to Support
+in metadata, not an observed selected value. No option was selected.
+
+### Reconciliation — m5h-call-schedule-purpose
+
+Source ordinals 1–174 retain the destinations/exclusions of
+m5h-call-schedule. The overlay partly covers CF-16–CF-17; their remaining
+segments are still painted. Ordinal 175 is an unpainted search input,
+excluded; 176 is a non-control list wrapper, excluded. Ordinals 177–183
+map respectively to CF-18.1–CF-18.7. Source items 183; mapped source items
+113; exclusions 70; distinct inventory numbers 72, including image-only
+SH-46. The entire screenshot, shell, menu and utility strip were inspected.
+
+### Call form fields by form
+
+Schedule below means the observed Scheduled-state Create Call address.
+The menu-specific route is not observed. Log and Edit are not observed;
+documentation is kept in a separate column/narrative, never substituted for
+image evidence. Metadata entries reuse activities.md, including shared fields.
+
+| Field | Schedule form | Log form | Edit form | Metadata (activities.md) |
+| --- | --- | --- | --- | --- |
+| Contact Name / Call From/To | CF-05–CF-07; Contact type, person input, lookup; required edge | not observed | not observed | Who_Id lookup; not layout-required |
+| Related To | CF-08–CF-09; input + lookup; no module type selector | not observed | not observed | What_Id lookup; not layout-required |
+| Call Type | CF-10 select; Outbound; required edge | not observed | not observed | picklist; system/layout required |
+| Outgoing Call Status | CF-11 select; Scheduled | not observed | not observed | picklist; optional |
+| Call Start Time | CF-12–CF-13 date + time inputs; date required edge | not observed | not observed | datetime; system/layout required |
+| Call Owner | CF-14–CF-15 select + user lookup | not observed | not observed | ownerlookup; field_read_only false |
+| Subject | CF-16 input; no required edge | not observed | not observed | text; optional |
+| Reminder | CF-17 select; None | not observed | not observed | picklist; optional; nine exported options |
+| Call Purpose | CF-18 select; -None- | not observed | not observed | picklist; optional; seven exported options |
+| Call Agenda | CF-19 upper edge only; full control/label not observed | not observed | not observed | text; optional |
+| Call Duration | not painted in captured Scheduled state | not observed | not observed | text; system/layout required |
+| Call Duration (in seconds) | not painted | not observed | not observed | integer; optional |
+| Call Result | not painted in captured viewport | not observed | not observed | picklist; optional |
+| Description | not painted in captured viewport | not observed | not observed | textarea; optional |
+| Dialled Number / Caller ID | not painted | not observed | not observed | text; read-only |
+| Voice Recording | not painted | not observed | not observed | website/string; optional |
+| Scheduled in CRM | not painted | not observed | not observed | picklist/string; read-only |
+| CTI Entry | not painted | not observed | not observed | boolean; absent from Standard layout |
+| Repeat | not painted | not observed | not observed | no Calls RRULE field exported |
+| Audit / identity / Tag / Last Activity Time | not painted | not observed | not observed | configuration only; no create control inferred |
+
+### Call form fields vs metadata
+
+The observed required edge on Call From/To differs from the optional exported
+Who_Id layout field. Call Type and Call Start Time edges agree with required
+metadata. Call Duration is exported as required but is not painted in the
+captured Scheduled state; its conditional requiredness is not encoded by the
+layout. Call Agenda's complete rendering, lower outcome section and
+Description cannot be assessed outside this viewport. Metadata layout order
+and sections remain configuration, not evidence of a painted lower form.
+
+Call Type and Outgoing Call Status are rendered selects, not fixed plain
+text. Selection effects and available options were not observed; the closed
+values agree with the documented schedule defaults (activities-flows.md D3).
+Call Result's metadata picklist conflicts with D3's older text-box wording;
+no Log form was observed to resolve that conflict. Reminder and Call Purpose
+opened catalogs are compared separately with activities.md. No metadata-only
+field is assigned a fabricated CF number.
+
+### Call capability table
+
+| Capability | Owner | Reuse / addition | Evidence limit |
+| --- | --- | --- | --- |
+| Header / shell / owner | M5; shell registry | TF references; CF-02 follow-up task action | controls seen; save/cancel/follow-up result never invoked |
+| Who / related record | M5; targets M1/M2/M3/M4/P2 | CF-05–CF-09; TF baseline with positions changed | closed Contact type and lookup only; related module selector absent |
+| Schedule type / status / start | M5 | CF-10–CF-13; activities-flows.md D3/D4 | Closed selects and split date/time seen; conditional transitions unknown |
+| Reminder | M5 | CF-17 and opened options; activities.md catalog | no option chosen, no reminder created |
+| Purpose / agenda | M5 | CF-18; clipped CF-19 | purpose list seen; full agenda rendering unknown |
+| Log / duration / result | M5 | activities-flows.md D3–D5 | documented only; Log route and form not observed |
+| Edit | M5 | existing Calls detail; D3/D4 | CTO prohibits Edit opening; completed-edit documentation conflict unresolved |
+| Telephony | external service; M5 activity state | activities-flows.md | no handset or real call action invoked |
+
+### Call open questions
+
+1. Create menu entries and the Log route/form remain not observed because the
+   earlier permitted menu trigger was skipped. The observed /create page is
+   Scheduled-state evidence only; no alternate trigger or route was attempted.
+2. Exact Log-vs-Schedule controls, Call Type/status options and conditional
+   fields, requiredness, duration minutes/seconds arrangement and Call Result
+   popup remain not observed. Lower form content and full Call Agenda require
+   a separately authorized passive viewport observation; no scroll was attempted.
+3. Contact/Lead type list, Contact lookup and Related To lookup/module target
+   remain not observed here. Calls has no painted TF-12-like module selector.
+4. Edit is not observed under the CTO decision. Existing detail and D3/D4
+   establish documented semantics only; modern completed-edit access and exact
+   schedule/log/edit differences remain unresolved.
+5. Required Call From/To edge versus optional Who_Id metadata, and required
+   metadata duration versus unpainted Scheduled-state duration need assessment;
+   no conditional requirement is invented. Follow-up Task creation result,
+   validation/error/success states and hover-only controls remain not observed.
+
+### Module 5 remaining not-observed topics
+
+Across activities.md, activities-flows.md, activities-record-detail.md and
+this file: persisted view alternatives and hover-only actions; activity
+filter result/boundary rules and badge precedence; write-result validation,
+completion/reopen/cancel/reschedule effects and Closed Time handling;
+reminder/recurrence interiors and generated-series effects; notifications and
+participant/invitation outcomes; Meetings create/picker/venue/provider form
+presentation; Calls menu/Log/lower-form/duration/result and all Edit forms;
+parent activity count discrepancies/hidden Calls categories; no-provider
+handset outcome and unresolved legacy-documentation conflicts. These are
+research gaps, not inferred behaviours or a direct board question.
+
+
+### Control inventory — m5h-call-schedule-reminder
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CF-17.1 | Reminder list | None | menu item | popup above field, first | not observed; checked | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.2 | Reminder list | 5 minutes before | menu item | popup, second | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.3 | Reminder list | 10 minutes before | menu item | popup, third | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.4 | Reminder list | 15 minutes before | menu item | popup, fourth | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.5 | Reminder list | 30 minutes before | menu item | popup, fifth | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.6 | Reminder list | 1 hours before | menu item | popup, sixth | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.7 | Reminder list | 2 hours before | menu item | popup, seventh | not observed | seen (m5h-call-schedule-reminder) | M5 | new |
+| CF-17.8 | Reminder list | Partially clipped option | menu item | popup, lower boundary after seventh | not observed; full label unpainted | seen (m5h-call-schedule-reminder) | M5 | new |
+
+Rest: as in m5h-call-schedule; covered by the overlay: CF-11–CF-12,
+CF-14, CF-16 (left segments only). CF-13's time segment and right-side lookup
+icons remain visible. The popup opens upward. No search input is painted.
+The partial row's DOM label is 1 day before; 2 days before is below the
+popup clip and not observed as a visible option. No scrolling/selection was
+attempted. Metadata has nine options; seven complete plus one partial row
+are not a shorter configured catalog. The displayed **1 hours before**
+differs from metadata's **1 hour before**; the underlying mapping is not
+verified by a selection. None is visibly checked.
+
+### Reconciliation — m5h-call-schedule-reminder
+
+Source ordinals 1–174 retain m5h-call-schedule destinations/exclusions;
+partly covered field controls retain their painted segments. Ordinal 175
+is an unpainted search input (excluded); 176 is a non-control list wrapper
+(excluded). Ordinals 177–184 map respectively to CF-17.1–CF-17.8.
+Ordinal 185 is outside the popup's visible viewport (excluded).
+Source items 185; mapped source items 114; exclusions 71; distinct inventory
+numbers 73, including image-only SH-46. The complete image was inspected.
+
+### Call Log and Edit observation limit
+
+Log form, Log Call Result popup and duration controls are **not observed**;
+there was no observed menu row granting their prescribed entry route.
+Edit is **not observed** under the CTO no-Edit decision. No CF edit numbers,
+actions, default values or field differences are invented. Existing Calls
+detail is used as a field-readback reference only. activities-flows.md D3/D4
+provides documented schedule/log semantics and reminder availability; it
+does not settle modern form layout or its completed-edit restriction.
+
+### Reconciliation — m5h-calls-list-base
+
+Use the one-based mapping in activities.md › Calls source reconciliation —
+m5l-calls-list-base: old ordinals 292–295 are absent; old 1–291 retain their
+mapping, and old 296–655 map to current 292–651 (subtract four). This is the
+same mapping as m5l-calls-create-menu; tag/selector order and visible regions
+were compared. The Sort wrapper has different internal attributes but the
+same visible label/type/position and remains CL-04. Source items 651;
+mapped source items 181; exclusions 470; distinct inventory numbers 88,
+including image-only SH-46. No highlighted-row controls are painted.
+
+
+### Control inventory — m5h-calls-list-after
+
+Shell: SH-01–SH-46 as in [contacts.md](contacts.md); Calls SH-22 active.
+Rest: as in m5h-calls-list-base; covered by the overlay: none.
+Absent here: CL-39–CL-41, as in the current base. Total Records remains 890,
+range remains 1 to 30. Source record-link instances remain 23; multiset
+comparison loses zero baseline links. No record value is copied here.
+
+### Reconciliation — m5h-calls-list-after
+
+Source ordinals 1–651 retain m5h-calls-list-base destinations/exclusions.
+Only the Sort wrapper's internal attributes differ; its label, type and
+position are unchanged. Source items 651; mapped source items 181;
+exclusions 470; distinct inventory numbers 88, including image-only SH-46.
+The full image, table boundaries, side rail and utility strip were inspected.
+
+### Call capture refs
+
+| Slug | Clicks | Skipped | Evidence / boundary |
+| --- | --- | --- | --- |
+| m5h-calls-list-base | 0 | 0 | Painted list; total 890; apiCalls 55, previous baseline 55; gate passed |
+| m5h-call-schedule | 0 | 0 | Scheduled-state Create Call; 19 form inventory numbers; apiCalls 46 |
+| m5h-call-schedule-purpose | 1 | 0 | Seven complete purpose options; no selection; apiCalls 46 |
+| m5h-call-schedule-reminder | 1 | 0 | Seven complete options plus one partially clipped; no selection; apiCalls 46 |
+| m5h-calls-list-after | 0 | 0 | Painted list; total 890; apiCalls 55; no baseline record link lost |
+
+All five completed captures used the prescribed wait, with no retry needed.
+Every screenshot was opened as an image. Expected non-GET request paths and
+counts were checked before the next capture and recorded in issue comments;
+blocked requests remain shared reminder/notification/telemetry calls. No
+successful record-write response, unblocked telemetry or unexpected path was
+observed. Forms share only the shell trigger as their non-GET read baseline.
+
+Not captured: Log (earlier menu entries not observed); Log Result (no Log
+form); detail-base (only an Edit-selector prerequisite); Edit (CTO decision).
+No alternate selector, route, scrolling, toggle override or write was used.
+Raw captures remain in the local research workspace and are not uploaded.
