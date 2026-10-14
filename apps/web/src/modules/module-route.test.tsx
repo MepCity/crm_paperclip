@@ -41,7 +41,7 @@ vi.mock("./registry", async (importOriginal) => {
       createLabel: "Create Sample",
       filterTitle: "Filter Samples by",
     },
-    detail: { ...base.detail, statusRibbon: undefined },
+    detail: { ...base.detail, statusRibbon: undefined, Screen: undefined },
   };
   const definitions = [...original.getModuleScreens(), fake];
   return {

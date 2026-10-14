@@ -4,6 +4,7 @@ import { AccountMemberAccountsCardBody } from "@/components/records/detail/accou
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { Icons } from "@/components/ui/icon";
+import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
   RelatedListDefinition,
@@ -304,6 +305,7 @@ export function createAccountsRelatedLists(
     },
     {
       id: "open-activities",
+      renderBody: parentActivitiesBody("Accounts", "open"),
       title: "Open Activities",
       moduleKey: "M5",
       order: 7,
@@ -341,6 +343,7 @@ export function createAccountsRelatedLists(
     },
     {
       id: "closed-activities",
+      renderBody: parentActivitiesBody("Accounts", "closed"),
       title: "Closed Activities",
       moduleKey: "M5",
       order: 8,

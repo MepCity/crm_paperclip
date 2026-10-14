@@ -31,6 +31,21 @@ test.describe("Deals record detail", () => {
     await page.setViewportSize({ width: 1470, height: 835 });
   });
 
+  test("Deals activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("header, rail order and stage history badge", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -46,6 +61,11 @@ test.describe("Deals record detail", () => {
     await expect(railLinks.nth(3)).toHaveText("Stage History");
     await expect(railLinks.nth(3).locator("..").getByText("1", { exact: true })).toBeVisible();
     await expect(railLinks.nth(14)).toHaveText("Invoices");
+    const addLink = rail.getByRole("link", { name: "Add Related List" });
+    const summary = rail.getByText("Sales Cycle Duration", { exact: false });
+    const addBox = await addLink.boundingBox();
+    const summaryBox = await summary.boundingBox();
+    expect(addBox && summaryBox && summaryBox.y > addBox.y).toBe(true);
     ignoreFailedResponses(pageErrors, [400]);
   });
 
