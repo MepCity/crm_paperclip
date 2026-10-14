@@ -299,7 +299,7 @@ export function createFixtureRecordService(
         if (
           !ref ||
           typeof ref !== "object" ||
-          Array.isArray(ref) ||
+          isJsonArray(ref) ||
           ref.module !== module ||
           typeof ref.id !== "string"
         )

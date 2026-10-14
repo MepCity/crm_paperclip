@@ -2094,7 +2094,7 @@ export function describeActivityReadContract(name: string, makeService: Contract
         expect(initial.activitySummaries).not.toHaveProperty(required(parents[6]).id);
         const task = await service.create("Tasks", {
           Subject: "Same day task",
-          Due_Date: dates[0],
+          Due_Date: required(dates[0]),
           [link]: { module, id: required(parents[0]).id },
         });
         expect((await read()).activitySummaries?.[required(parents[0]).id]?.activityId).toBe(
