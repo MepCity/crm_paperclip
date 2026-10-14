@@ -107,6 +107,7 @@ test("Meetings module filter (S-31.6) is enabled and lists a matching meeting", 
           Start_DateTime: "2026-06-01T10:00:00.000Z",
           End_DateTime: "2026-06-01T11:00:00.000Z",
           All_day: false,
+          Meeting_Venue__s: "In-office",
         },
       ],
     },
@@ -134,7 +135,16 @@ test("Calls module filter (S-31.7) is enabled and lists a matching call", async 
   const org = await createOrganization(page);
   const response = await page.request.post("/crm/v2.2/Calls", {
     headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
-    data: { data: [{ Subject: "Zephrysearch Call advanced" }] },
+    data: {
+      data: [
+        {
+          Subject: "Zephrysearch Call advanced",
+          Call_Type: "Outbound",
+          Call_Start_Time: "2026-06-01T10:00:00.000Z",
+          Call_Duration: "00:30",
+        },
+      ],
+    },
   });
   expect(response.ok()).toBeTruthy();
 

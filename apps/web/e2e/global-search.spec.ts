@@ -99,6 +99,7 @@ test("search finds a Meeting by title and opens the Meetings record detail", asy
           Start_DateTime: "2026-06-01T10:00:00.000Z",
           End_DateTime: "2026-06-01T11:00:00.000Z",
           All_day: false,
+          Meeting_Venue__s: "In-office",
         },
       ],
     },
@@ -118,7 +119,16 @@ test("search finds a Call by subject and opens the Calls record detail", async (
   const org = await createOrganization(page);
   const response = await page.request.post("/crm/v2.2/Calls", {
     headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
-    data: { data: [{ Subject: "Zephrysearch Call" }] },
+    data: {
+      data: [
+        {
+          Subject: "Zephrysearch Call",
+          Call_Type: "Outbound",
+          Call_Start_Time: "2026-06-01T10:00:00.000Z",
+          Call_Duration: "00:30",
+        },
+      ],
+    },
   });
   expect(response.ok()).toBeTruthy();
   await page.getByRole("button", { name: "Search records" }).click();
