@@ -71,7 +71,7 @@ test("Cancel creates nothing and closes the window", async ({ page }) => {
 
 test("To earlier than From blocks Save and reports under To", async ({ page }) => {
   const { dialog } = await openDialog(page);
-  await dialog.locator("input[name=End_DateTime-date]").fill("2000-01-01");
+  await dialog.getByLabel("To date", { exact: true }).fill("2000-01-01");
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(dialog.getByText("Please enter a valid To.")).toBeVisible();
   await expect(dialog).toBeVisible();
@@ -109,7 +109,7 @@ test("adds a participant in the window and edits the meeting from the record", a
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Customer call");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   const picker = page.getByRole("dialog").last();
-  await picker.getByRole("radio").first().click();
+  await picker.locator("label.table-radio").first().click();
   await picker.getByRole("button", { name: "Done" }).click();
   await expect(dialog.getByText("1 selected")).toBeVisible();
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
