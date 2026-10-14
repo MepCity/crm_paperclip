@@ -16,12 +16,6 @@ import {
 
 const PAGE_SIZE = 100;
 
-/**
- * Calls has no records service until MEP-468 lands; while false the Calls column is zero rows
- * and no request is made. Flip to true when the Calls service is on main.
- */
-export const CALLS_SERVICE_AVAILABLE = false;
-
 const MODULE_BY_KIND: Record<ActivityKind, ModuleApiName> = {
   task: "Tasks",
   meeting: "Events",
@@ -37,13 +31,8 @@ export interface ParentActivitiesResult {
   closedCount: number;
 }
 
-function useActivityList(
-  module: ModuleApiName,
-  parentModule: string,
-  parentId: string,
-  available = true,
-) {
-  const views = useViews(module, { enabled: available });
+function useActivityList(module: ModuleApiName, parentModule: string, parentId: string) {
+  const views = useViews(module);
   const viewId = useMemo(
     () => views.data?.find((view) => view.isDefault)?.id ?? views.data?.[0]?.id ?? null,
     [views.data],
@@ -62,14 +51,12 @@ function useActivityList(
     [viewId, filters],
   );
   const list = useRecordList(module, query, {
-    enabled: available && viewId !== null && filters !== null,
+    enabled: viewId !== null && filters !== null,
   });
-  // A module without a service (Calls before it lands) is treated as zero rows, not an error.
-  const missing = views.isError;
   return {
     records: (list.data?.records ?? []) as readonly RecordData[],
-    isLoading: available && !missing && (views.isLoading || (viewId !== null && list.isLoading)),
-    isError: !missing && list.isError,
+    isLoading: views.isLoading || (viewId !== null && list.isLoading),
+    isError: views.isError || list.isError,
   };
 }
 
@@ -80,7 +67,7 @@ export function useParentActivities(
 ): ParentActivitiesResult {
   const tasks = useActivityList("Tasks", parentModule, parentId);
   const meetings = useActivityList("Events", parentModule, parentId);
-  const calls = useActivityList("Calls", parentModule, parentId, CALLS_SERVICE_AVAILABLE);
+  const calls = useActivityList("Calls", parentModule, parentId);
   const users = useUsers();
   const parts = [tasks, meetings, calls];
   const isLoading = parts.some((part) => part.isLoading) || users.isLoading;
