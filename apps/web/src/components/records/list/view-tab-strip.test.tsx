@@ -55,3 +55,24 @@ test("renders multiple pinned tabs and allows switching between them", async () 
   await user.click(lockedBtn);
   expect(change).toHaveBeenCalledWith("locked");
 });
+
+test("searchable draws the search box only when enabled and filters case-insensitively", async () => {
+  const user = userEvent.setup();
+  const views = [
+    { id: "a", name: "Open Tasks" },
+    { id: "b", name: "Overdue Tasks" },
+  ];
+  const { unmount } = render(<ViewTabStrip viewName="Open Tasks" views={views} />);
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  expect(screen.queryByRole("textbox", { name: "Search views" })).toBeNull();
+  unmount();
+  cleanup();
+  render(<ViewTabStrip viewName="Open Tasks" views={views} searchable />);
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  const box = screen.getByRole("textbox", { name: "Search views" });
+  await user.type(box, "OVER");
+  expect(screen.queryByRole("menuitem", { name: "Open Tasks" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "Overdue Tasks" })).toBeTruthy();
+  await user.clear(box);
+  expect(screen.getAllByRole("menuitem", { name: /Tasks$/ })).toHaveLength(2);
+});

@@ -14,8 +14,10 @@ export interface FixtureModuleHooks {
   applyRules?: (
     fields: Record<string, FieldValue>,
     input: RecordInput,
-    previous?: Readonly<Record<string, FieldValue>>,
+    previous: Readonly<Record<string, FieldValue>> | undefined,
+    ctx: FixtureHookContext,
   ) => void;
+  readRecord?: (record: RecordData, now: Date) => RecordData;
   afterWrite?: (
     record: RecordData,
     previous: RecordData | undefined,
