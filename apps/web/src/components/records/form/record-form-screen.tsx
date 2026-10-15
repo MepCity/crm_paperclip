@@ -1,18 +1,14 @@
 "use client";
 
 import { isAppError, NotFoundError } from "@crm/core/errors";
-import {
-  type FieldDefinition,
-  type FieldValue,
-  lookupTargetModules,
-  type ModuleMetadata,
-  type RecordData,
-} from "@crm/core/records";
+import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
+import { lookupTargetModules } from "@crm/core/records";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { RecordChoice } from "@/components/ui/record-choice";
 import {
   useCreateRecord,
   useModule,
@@ -28,7 +24,7 @@ import {
   CopyAddressMenu,
   PrefixInput,
 } from "./composite-inputs";
-import { FieldInput, LookupTypeSelect, type OwnerOption } from "./field-input";
+import { FieldInput, moduleSingularLabel, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
 import {
@@ -112,6 +108,7 @@ export interface OwnerPickerProps {
 
 export interface RecordFormConfig {
   module: string;
+  variant?: "activity";
   rules: FormRules;
   paths: {
     detail: (id: string, module?: string) => string;
@@ -210,10 +207,10 @@ function LoadedRecordForm({
       ? initialFormValues(fields, sourceRecord?.fields)
       : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
-  const [pickedModules, setPickedModules] = useState<Record<string, string>>({});
   const [values, setValues] = useState(() =>
     intent === "create" && !cloneSeed ? emptyValues() : baseline,
   );
+  const [lookupModules, setLookupModules] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -365,6 +362,7 @@ function LoadedRecordForm({
       if (andNew) {
         const next = emptyValues();
         setValues(next);
+        setLookupModules({});
         setDirtyBaseline({ ...next });
         config.navigate(config.paths.create);
       } else config.navigate(config.paths.detail(saved.id));
@@ -423,6 +421,19 @@ function LoadedRecordForm({
       );
     }
     if (addressRules.some((rule) => rule.longitude === field.apiName)) return null;
+    const lookupTargets = lookupTargetModules(field);
+    const labelLookup =
+      config.variant === "activity" &&
+      field.dataType === "lookup" &&
+      rules.lookupLabelFields?.includes(field.apiName);
+    const value = values[field.apiName];
+    const referenceModule =
+      typeof value === "object" && value !== null && "module" in value
+        ? String(value.module)
+        : undefined;
+    const lookupModule = labelLookup
+      ? (referenceModule ?? lookupModules[field.apiName] ?? lookupTargets[0])
+      : undefined;
     let input: ReactNode;
     const latitudeRule = addressRules.find((rule) => rule.latitude === field.apiName);
     if (latitudeRule) {
@@ -472,16 +483,6 @@ function LoadedRecordForm({
         </div>
       );
     }
-    const polyTargets = field.dataType === "lookup" ? lookupTargetModules(field) : [];
-    const rawValue = values[field.apiName];
-    const polyModule =
-      polyTargets.length > 1
-        ? ((typeof rawValue === "object" && rawValue !== null && "module" in rawValue
-            ? String(rawValue.module)
-            : undefined) ??
-          pickedModules[field.apiName] ??
-          polyTargets[0])
-        : undefined;
     const prefix =
       rules.prefix?.field === field.apiName ? byName.get(rules.prefix.prefix) : undefined;
     if (prefix) {
@@ -519,6 +520,8 @@ function LoadedRecordForm({
         <FieldInput
           id={id}
           hideLabel
+          variant={config.variant}
+          lookupModule={lookupModule}
           field={{ ...field, label }}
           value={isState && emptyCountry ? null : (values[field.apiName] ?? null)}
           onChange={(next) => change(field.apiName, next)}
@@ -554,8 +557,6 @@ function LoadedRecordForm({
               : undefined
           }
           lookupOwnerNames={ownerNames}
-          lookupModule={polyModule}
-          lookupTypeExternal={polyTargets.length > 1}
           currencyPrefix={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? config.currencyPrefix
@@ -568,18 +569,29 @@ function LoadedRecordForm({
       );
     }
     return (
-      <div key={field.apiName} data-form-field={field.apiName} data-form-type={field.dataType}>
+      <div
+        key={field.apiName}
+        data-form-field={field.apiName}
+        data-form-type={field.dataType}
+        data-form-toggle-subdued={rules.subduedToggles?.includes(field.apiName) || undefined}
+      >
         <FormRow
           labelControl={
-            polyTargets.length > 1 ? (
-              <LookupTypeSelect
+            labelLookup ? (
+              <RecordChoice
                 id={`${id}-module`}
-                label={label}
-                targets={polyTargets}
-                value={polyModule ?? ""}
-                disabled={saving}
+                label={`${label} module`}
+                hideLabel
+                value={lookupModule ?? null}
+                options={lookupTargets.map((module) => ({
+                  value: module,
+                  label: moduleSingularLabel(module),
+                }))}
+                searchable={lookupTargets.length > 2}
+                disabled={saving || field.readOnly}
                 onChange={(next) => {
-                  setPickedModules((prev) => ({ ...prev, [field.apiName]: next }));
+                  if (!next || next === lookupModule) return;
+                  setLookupModules((current) => ({ ...current, [field.apiName]: next }));
                   change(field.apiName, null);
                 }}
               />
@@ -596,6 +608,7 @@ function LoadedRecordForm({
           }
           controlId={id}
           column={column}
+          required={field.required}
         >
           {input}
         </FormRow>
@@ -605,8 +618,11 @@ function LoadedRecordForm({
 
   return (
     <div ref={rootRef}>
-      {config.inventoryChrome ? <RecordFormClientScriptTab /> : null}
+      {config.inventoryChrome && config.variant !== "activity" ? (
+        <RecordFormClientScriptTab />
+      ) : null}
       <RecordFormShell
+        variant={config.variant}
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
@@ -731,7 +747,9 @@ function LoadedRecordForm({
             </FormSection>
           );
         })}
-        {config.inventoryChrome ? <RecordFormInventoryFooter /> : null}
+        {config.inventoryChrome && config.variant !== "activity" ? (
+          <RecordFormInventoryFooter />
+        ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog
         isOpen={unsavedOpen}

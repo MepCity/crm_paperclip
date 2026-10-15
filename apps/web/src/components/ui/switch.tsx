@@ -29,7 +29,6 @@ const styles = {
   },
   knob: "h-3 w-3 rounded-full bg-surface shadow-sm",
   label: "text-sm text-text",
-  labelSubdued: "text-sm text-text-muted",
   description: "text-sm text-text-muted",
   error: "text-sm text-danger",
 } as const;
@@ -43,29 +42,41 @@ function trackBorder(isSelected: boolean, isInvalid: boolean): TrackBorder {
 
 export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "value"> {
   label: string;
+  hideLabel?: boolean;
+  variant?: "activity";
   description?: string;
   errorMessage?: string;
-  /** Draws the switch and its label in the muted ink (used while an optional block is off). */
-  subdued?: boolean;
 }
 
-export function Switch({ label, description, errorMessage, subdued, ...props }: SwitchProps) {
+export function Switch({
+  label,
+  hideLabel,
+  variant,
+  description,
+  errorMessage,
+  ...props
+}: SwitchProps) {
   return (
-    <AriaSwitchField {...props} value={FORM_VALUE} className={styles.field}>
+    <AriaSwitchField
+      {...props}
+      value={FORM_VALUE}
+      className={styles.field}
+      data-switch-variant={variant}
+    >
       <SwitchButton className={styles.button}>
         {({ isSelected, isInvalid }) => (
           <>
             <span
               aria-hidden="true"
+              data-switch-track
+              data-selected={isSelected || undefined}
               className={`${styles.track} ${styles.trackBorder[trackBorder(isSelected, isInvalid)]} ${
                 styles.trackFill[isSelected ? "on" : "off"]
               }`}
             >
               <span className={styles.knob} />
             </span>
-            <span className={subdued && !isSelected ? styles.labelSubdued : styles.label}>
-              {label}
-            </span>
+            <span className={hideLabel ? "sr-only" : styles.label}>{label}</span>
           </>
         )}
       </SwitchButton>

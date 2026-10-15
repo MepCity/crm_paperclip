@@ -3,8 +3,9 @@ import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
+import { RecordChoice } from "@/components/ui/record-choice";
 import { render } from "@/test/render";
-import { FieldInput, type FieldInputProps, LookupTypeSelect } from "./field-input";
+import { FieldInput, type FieldInputProps } from "./field-input";
 import { FormRow } from "./form-row";
 
 const options = [
@@ -645,34 +646,6 @@ test("polymorphic lookup draws a type select and clears the value when the type 
   expect(change).toHaveBeenLastCalledWith(null);
 });
 
-test("an external type select leaves the lookup input without a prefix select", () => {
-  const who: FieldDefinition = {
-    ...field("lookup"),
-    apiName: "Who_Id",
-    label: "Contact Name",
-    lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
-  };
-  render(<FieldInput field={who} value={null} onChange={() => {}} lookupTypeExternal />);
-  expect(screen.queryByRole("button", { name: /Contact Name module/ })).toBeNull();
-});
-
-test("the label-side type select reports the chosen module", async () => {
-  const user = userEvent.setup();
-  const change = vi.fn();
-  render(
-    <LookupTypeSelect
-      id="who-module"
-      label="Contact Name"
-      targets={["Contacts", "Leads"]}
-      value="Contacts"
-      onChange={change}
-    />,
-  );
-  await user.click(screen.getByRole("button", { name: /Contact Name module/ }));
-  await user.click(screen.getByRole("option", { name: "Lead" }));
-  expect(change).toHaveBeenCalledWith("Leads");
-});
-
 test.each(["ALARM", "RRULE"] as const)(
   "%s renders an off switch that stores an object",
   async (type) => {
@@ -687,3 +660,53 @@ test.each(["ALARM", "RRULE"] as const)(
     expect(change).toHaveBeenLastCalledWith(null);
   },
 );
+
+test.each(["ALARM", "RRULE", "boolean"] as const)(
+  "activity %s keeps an accessible name without duplicate visible text",
+  (type) => {
+    render(<Controlled type={type} variant="activity" hideLabel />);
+    const control = screen.getByRole(type === "boolean" ? "checkbox" : "switch", {
+      name: "Example",
+    });
+    expect(control).toBeTruthy();
+    expect(screen.getByText("Example").classList.contains("sr-only")).toBe(true);
+  },
+);
+
+test("the label-side selector works independently of its named lookup input", async () => {
+  const change = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <FormRow
+      label="Contact"
+      labelControl={
+        <RecordChoice
+          label="Contact type"
+          hideLabel
+          value="Contacts"
+          onChange={change}
+          options={[
+            { value: "Contacts", label: "Contact" },
+            { value: "Leads", label: "Lead" },
+          ]}
+        />
+      }
+      controlId="person"
+      column="full"
+    >
+      <Controlled type="text" id="person" />
+    </FormRow>,
+  );
+  const selector = screen.getByRole("button", { name: "Contact type" });
+  expect(selector.closest("label")).toBeNull();
+  await user.click(selector);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(change).toHaveBeenCalledWith("Leads");
+  expect(screen.getByRole("textbox", { name: "Example" }).id).toBe("person");
+});
+
+test("the default toggle retains its visible label", () => {
+  render(<Controlled type="ALARM" />);
+  expect(screen.getByRole("switch", { name: "Example" })).toBeTruthy();
+  expect(screen.getByText("Example").classList.contains("sr-only")).toBe(false);
+});

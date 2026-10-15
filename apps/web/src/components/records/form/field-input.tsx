@@ -39,6 +39,9 @@ export interface OwnerOption {
 }
 export interface FieldInputProps {
   field: FieldDefinition;
+  variant?: "activity";
+  /** Module selected by a label-side selector; suppresses the input prefix selector. */
+  lookupModule?: string;
   value: FieldValue;
   onChange: (value: FieldValue) => void;
   errorMessage?: string;
@@ -64,16 +67,12 @@ export interface FieldInputProps {
   recordService?: RecordService | ClientRecordService;
   /** Record address for the name-cell links of an observed record picker. */
   lookupRecordHref?: (id: string, module?: string) => string;
-  /** Polymorphic lookups: the type select is drawn elsewhere (form row label); this is its value. */
-  lookupModule?: string;
-  /** The type select is rendered outside the input (form row label side). */
-  lookupTypeExternal?: boolean;
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
 }
 
 /** `Sales_Orders` reads `Sales Order`; a registered module's own singular label wins. */
-function moduleSingularLabel(module: string): string {
+export function moduleSingularLabel(module: string): string {
   const registered = resolveModuleScreenByApiName(module)?.singularLabel;
   if (registered) return registered;
   return module.replace(/_/g, " ").replace(/ies$/, "y").replace(/s$/, "");
@@ -147,42 +146,10 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
   );
 }
 
-export function LookupTypeSelect({
-  id,
-  label,
-  targets,
-  value,
-  onChange,
-  disabled,
-  prefix,
-}: {
-  id: string;
-  label: string;
-  targets: readonly string[];
-  value: string;
-  onChange: (module: string) => void;
-  disabled?: boolean;
-  prefix?: boolean;
-}) {
-  return (
-    <RecordChoice
-      id={id}
-      label={`${label} module`}
-      hideLabel
-      prefix={prefix}
-      value={value}
-      onChange={(next) => {
-        if (!next || next === value) return;
-        onChange(next);
-      }}
-      options={targets.map((module) => ({ value: module, label: moduleSingularLabel(module) }))}
-      disabled={disabled}
-    />
-  );
-}
-
 export function FieldInput({
   field,
+  variant,
+  lookupModule,
   value,
   onChange,
   errorMessage,
@@ -206,8 +173,6 @@ export function FieldInput({
   recordService,
   lookupRecordHref,
   lookupOwnerNames,
-  lookupModule,
-  lookupTypeExternal,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -231,7 +196,7 @@ export function FieldInput({
       ? (value as ModuleRecordReference).module
       : undefined;
   const targetModule = isPolymorphic
-    ? (referenceModule ?? lookupModule ?? pickedModule ?? lookupTargets[0] ?? "")
+    ? (lookupModule ?? referenceModule ?? pickedModule ?? lookupTargets[0] ?? "")
     : (field.lookup?.module ?? "");
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
@@ -342,6 +307,7 @@ export function FieldInput({
       return (
         <Checkbox
           {...common}
+          hideLabel={variant === "activity" || hideLabel}
           aria-label={field.label}
           isSelected={value === true}
           onChange={onChange}
@@ -424,19 +390,24 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic && !lookupTypeExternal ? (
+              isPolymorphic && lookupModule === undefined ? (
                 <div className="record-prefix-select">
-                  <LookupTypeSelect
+                  <RecordChoice
                     id={`${controlId}-module`}
-                    label={field.label}
-                    targets={lookupTargets}
-                    value={targetModule}
+                    label={`${field.label} module`}
+                    hideLabel
                     prefix
-                    disabled={common.isDisabled}
+                    value={targetModule}
                     onChange={(next) => {
+                      if (!next || next === targetModule) return;
                       setPickedModule(next);
                       onChange(null);
                     }}
+                    options={lookupTargets.map((module) => ({
+                      value: module,
+                      label: moduleSingularLabel(module),
+                    }))}
+                    disabled={common.isDisabled}
                   />
                   <span className="record-prefix-divider" aria-hidden />
                 </div>
@@ -463,11 +434,15 @@ export function FieldInput({
                 }}
                 {...(targetLaterModule ? laterModuleProps(targetLaterModule) : {})}
               >
-                <Icons.recordLookup
-                  module={targetModule}
-                  className="record-input-end-icon"
-                  aria-hidden
-                />
+                {variant === "activity" ? (
+                  <Icons.recordPanelSearch className="record-input-end-icon" aria-hidden />
+                ) : (
+                  <Icons.recordLookup
+                    module={targetModule}
+                    className="record-input-end-icon"
+                    aria-hidden
+                  />
+                )}
               </button>
             }
           />
@@ -498,9 +473,10 @@ export function FieldInput({
       return (
         <Switch
           label={field.label}
+          hideLabel={variant === "activity"}
+          variant={variant}
           aria-label={field.label}
           isSelected={typeof value === "object" && value !== null}
-          subdued={field.dataType === "RRULE"}
           isDisabled={common.isDisabled}
           onChange={(on) => onChange(on ? (TOGGLE_DEFAULTS[field.dataType] ?? null) : null)}
         />

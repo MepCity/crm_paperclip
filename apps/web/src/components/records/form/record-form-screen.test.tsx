@@ -689,6 +689,28 @@ test("populates initial values using function defaultValues reading metadata", a
   expect(input.value).toBe("Dynamic Title for Lead");
 });
 
+test("activity variant removes inventory chrome and the enclosing card", async () => {
+  harness(undefined, { variant: "activity", inventoryChrome: true });
+  await ready();
+  expect(screen.queryByRole("button", { name: "Client Script" })).toBeNull();
+  expect(screen.queryByText("Create Form Views :")).toBeNull();
+  expect(screen.getByRole("button", { name: "Edit Page Layout" })).toBeTruthy();
+  const form = screen.getByRole("form", { name: "Create Lead" });
+  expect(form.parentElement?.className).toBe("record-form-activity-body");
+  const subject = screen.getByRole("textbox", { name: "Last Name" });
+  expect(subject.closest("[data-record-form-row]")?.hasAttribute("data-required")).toBe(true);
+});
+
+test("default variant retains inventory chrome and the enclosing card", async () => {
+  harness(undefined, { inventoryChrome: true });
+  await ready();
+  expect(screen.getByRole("button", { name: "Client Script" })).toBeTruthy();
+  expect(screen.getByText("Create Form Views :")).toBeTruthy();
+  expect(screen.getByRole("form", { name: "Create Lead" }).parentElement?.className).toBe(
+    "record-form-card",
+  );
+});
+
 test("changing the label-side Who type clears the value and retargets the lookup", async () => {
   harness(
     {
@@ -697,6 +719,7 @@ test("changing the label-side Who type clears the value and retargets the lookup
     } as unknown as RecordData,
     {
       module: "Tasks",
+      variant: "activity",
       rules: tasksFormRules,
       paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
     },

@@ -434,8 +434,144 @@
   color: var(--color-form-portrait);
 }
 
-.record-form-row__label--control {
+/* activities-form.md → Visual layout — Task form (measured). Opt-in only. */
+.record-form-shell[data-form-variant="activity"] {
+  --record-form-content-width: var(--size-activity-form-width);
+  background: var(--color-surface);
+}
+[data-form-variant="activity"] .record-form-strip {
+  max-width: none;
+  height: var(--size-activity-form-strip-height);
+  padding-inline: var(--size-activity-form-strip-inset);
+}
+[data-form-variant="activity"] .record-form-activity-body {
+  padding-inline: var(--size-activity-form-inset);
+}
+[data-form-variant="activity"] .record-form-card__body {
+  width: var(--size-activity-form-width);
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+}
+[data-form-variant="activity"] .record-form-section:first-child {
+  padding-top: var(--size-activity-form-first-content-top);
+}
+[data-form-variant="activity"] .record-form-section:first-child .record-form-section__title {
+  top: var(--size-activity-form-first-title-center);
+}
+[data-form-variant="activity"]
+  .record-form-section
+  .record-form-section__header
+  .record-form-section__title {
+  color: var(--color-text);
+}
+[data-form-variant="activity"] .record-form-section:not(:first-child) .record-form-section__title {
+  margin-top: var(--size-activity-form-section-gap);
+  margin-bottom: var(--size-activity-form-section-title-gap);
+}
+[data-form-variant="activity"] .record-form-grid {
+  display: block;
+}
+[data-form-variant="activity"] .record-form-column {
+  width: 100%;
+  gap: 0;
+}
+[data-form-variant="activity"] .record-form-row {
+  position: relative;
+  grid-template-columns: var(--size-activity-form-label-width) minmax(0, 1fr);
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--size-activity-form-row-height);
+  max-width: 100%;
+  border-bottom: var(--size-activity-form-rule) solid var(--color-activity-form-rule);
+}
+[data-form-variant="activity"] [data-form-field] + [data-form-field] {
+  margin-top: var(--size-activity-form-row-gap);
+}
+[data-form-variant="activity"] .record-form-row[data-required]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: calc(-1 * var(--size-activity-form-rule));
+  width: var(--size-activity-form-required-width);
+  height: var(--size-activity-form-required-height);
+  background: var(--color-activity-form-required);
+}
+[data-form-variant="activity"]
+  .record-form-row:has([data-focused], [data-focus-visible], [aria-expanded="true"]) {
+  border-bottom-color: var(--color-primary);
+}
+[data-form-variant="activity"] .record-form-row__label {
+  justify-self: start;
+  padding: 0;
   transform: none;
-  padding-top: 0;
-  min-width: 0;
+  text-align: left;
+}
+[data-form-variant="activity"] .record-form-row__control {
+  grid-column: 2;
+  padding: 0;
+}
+[data-form-variant="activity"] .record-form-row__control .record-control,
+[data-form-variant="activity"] .record-form-row__label .record-choice-trigger {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--color-activity-form-value);
+}
+[data-form-variant="activity"] .record-form-row__control .record-control::placeholder {
+  color: var(--color-activity-form-placeholder);
+}
+[data-form-variant="activity"] .record-form-row__control .record-choice-trigger,
+[data-form-variant="activity"] .record-form-row__label .record-choice-trigger {
+  width: fit-content;
+  padding-right: var(--size-activity-form-choice-gap);
+}
+[data-form-variant="activity"] .record-form-caret {
+  right: 0;
+}
+[data-form-variant="activity"] .record-input-end {
+  width: var(--size-activity-form-icon);
+  margin-right: var(--size-activity-form-icon-inset);
+  background: transparent;
+  color: var(--color-activity-form-lookup);
+}
+[data-form-variant="activity"] .record-input-end-icon {
+  width: var(--size-activity-form-icon);
+  height: var(--size-activity-form-icon);
+}
+[data-form-variant="activity"] .record-choice-shell--owner .record-choice-trigger {
+  flex: none;
+  padding: 0 var(--size-activity-form-choice-gap) 0 0;
+}
+[data-form-variant="activity"] .record-choice-shell--owner .record-input-end {
+  margin-left: auto;
+}
+[data-form-variant="activity"] [data-form-type="textarea"] .record-form-row {
+  padding-bottom: var(--size-activity-form-textarea-rule-gap);
+}
+[data-form-variant="activity"] .record-textarea {
+  height: var(--size-activity-form-textarea-height);
+  resize: both;
+}
+[data-form-variant="activity"] [data-switch-variant="activity"] [data-switch-track] {
+  width: var(--size-activity-form-switch-width);
+  height: var(--size-activity-form-switch-height);
+  border: 0;
+  background: var(--color-activity-form-switch);
+}
+[data-form-variant="activity"] [data-switch-variant="activity"] [data-switch-track][data-selected] {
+  background: var(--color-primary);
+}
+
+[data-form-variant="activity"] .record-form-strip__title-row,
+[data-form-variant="activity"] .record-form-strip__actions {
+  transform: translateY(var(--size-activity-form-strip-content-offset));
+}
+
+[data-form-variant="activity"] [data-form-toggle-subdued] [data-switch-track]:not([data-selected]) {
+  background: var(--color-activity-form-switch-subdued);
 }
