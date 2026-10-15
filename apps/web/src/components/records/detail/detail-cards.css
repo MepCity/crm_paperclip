@@ -269,7 +269,7 @@
 
 .detail-details-card--activity .detail-details-row,
 .detail-details-card--activity .detail-details-row-full {
-  grid-template-columns: 185px 0 minmax(0, 1fr);
+  grid-template-columns: 153.5px 31.5px minmax(0, 1fr);
 }
 
 .detail-details-card--activity .detail-field-label {
