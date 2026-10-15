@@ -153,6 +153,15 @@ export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
         $state: "ready",
       });
     },
+    /** Server-only: link attachments and published files are ready; staged uploads are not. */
+    isReady(id: string): boolean {
+      return store.records.get(id)?.fields.$state === "ready";
+    },
+    /** Server-only: the media type recorded at publish time, if any. */
+    mediaType(id: string): string | null {
+      const value = store.records.get(id)?.fields.$media_type;
+      return typeof value === "string" && value ? value : null;
+    },
     cleanupIntents(): readonly AttachmentCleanupIntent[] {
       return structuredClone(cleanup.get(store) ?? []);
     },
