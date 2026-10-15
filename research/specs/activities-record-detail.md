@@ -749,3 +749,138 @@ Ordinals 1–300 retain the complete m5e-call-main map above, including controls
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 Rest: as in m5e-calls-list-base; covered by the overlay: none. Total records remains 890, range 1–30; no baseline record link disappeared. All 651 tag/name source entries retain the list-base destination/exclusion, including its runtime-identifier limits. Mapped 181; excluded 470; distinct numbers 88 including screenshot-only SH-46.
+
+## Visual layout — Activities record detail (measured)
+
+Board-requested measurement exception for Activities (MEP-570, MEP-589). Measurements below supersede generic record-detail geometry for these observed states. Measured on 2026-10-15 from existing captures only; no new reference navigation, clicks, toggles or writes were made.
+
+### Method and evidence keys
+
+All coordinates are CSS px from the viewport origin. Each PNG is 2940 × 1670 image px at DPR 2, hence 1470 × 835 CSS px. Rectangles use `(x, y, width, height)`; intervals use exclusive end coordinates. `px.mjs` functions `h`, `v`, `box`, `ink`, `top`, `dims` read the saved raster. `C[n]` means the one-based saved controls.json entry's CSS bounding box, used to distinguish hit targets from painted ink; never a click selector. Pixel colours are exact solid samples, not computed reference CSS. Font sizes, invisible column allocation and radius tokens cannot be recovered exactly from ink and are not asserted. Rounded corners are observed and the sampled edge profile is recorded instead.
+
+| Key | Saved source |
+| --- | --- |
+| T | `m5d-task-main/screenshot.png` and controls.json |
+| T0 | `m5f-task-detail-base/screenshot.png` (cross-check of the same geometry) |
+| TM | `m5d-task-more/screenshot.png` and controls.json |
+| TT | `m5d-task-timeline/screenshot.png` and controls.json |
+| M | `m5e-meeting-main/screenshot.png` and controls.json |
+| MM | `m5e-meeting-more/screenshot.png` and controls.json |
+| C | `m5e-call-main/screenshot.png` and controls.json |
+| CM | `m5e-call-more/screenshot.png` and controls.json |
+| LT / LM / LC | Run-scratch `local-tasks-overview.png`, `local-meetings-overview.png`, `local-calls-overview.png`; matching `local-<type>-geometry.json` |
+| LTT / LMT / LCT | Run-scratch `local-tasks-timeline.png`, `local-meetings-timeline.png`, `local-calls-timeline.png` |
+| LTM / LMM / LCM | Run-scratch `local-tasks-more.png`, `local-meetings-more.png`, `local-calls-more.png` |
+
+Local captures use this issue's worktree after merging `origin/main` at `4c3ccd9`, a fresh local database, synthetic organization/member/records, Chromium, the same viewport and DPR, and top-of-record scroll position. No reference record content is reproduced. Task and Meeting use the first seeded list record; local Call is a Missed call whereas the reference C is a Scheduled outbound call. Call action-state differences require a Scheduled local regression case; the current unconditional Accounts header/menu wiring is separately confirmed in `apps/web/src/modules/calls/definition.ts`. Data-dependent values, title lengths, counts and relative-update ages are not visual defects. Local screenshots remain outside git and are uploaded as issue evidence. Reference images remain research-only.
+
+### Header and frame measurements
+
+| ID | Element | Task | Meeting | Call | Source: image + measurement |
+| --- | --- | --- | --- | --- | --- |
+| V01 | Shared shell boundary / record header | Shell ends x=320; header y=50–123, width 1150, height 73; white, bottom transition at y=122.5–123.5 | Same as Task | Same as Task | T/M/C: `h(200,300,1470)`, `v(340,40,185)`; `dims` |
+| V02 | Back arrow | Target (332,71,30,30); painted x=339–355, y=79.5–93, #313949 | Same as Task | Same as Task | T C[108]; T/M/C `box('#313949',330,65,360,100)` |
+| V03 | Activity glyph and title | Task glyph ink x=372.5–387, y=67–83; title ink starts x=399, y=66.5; #313949, observed cap height 19 | Calendar glyph before title; title starts x=399.5, y=67.5, solid ink height 14.5 | Call glyph before linked person identity; link colour #5464F2, Contacts suffix #313949; suffix ink y=67.5–82 | T `box('#313949',365,60,390,90)` and `box('#313949',390,60,900,90)`; M/C same title region; screenshot inspection |
+| V04 | Tags / status treatment | Tag glyph ink x=373–390, y=92.5–110; Add Tags ink starts x=394.5, y=96; no header status badge; Priority/Status plain summary text | Same tags placement; no header status badge | Same tags placement; status is a plain summary row, no header badge | T/M/C `box('#616E88',365,90,392,112)`, `box('#313949',390,90,470,110)`; screenshot |
+| V05 | Primary action | Close Task (1169,70,96,32) | No primary action in this image | Reschedule Call (1162,70,131,32) + dropdown (1293,70,34,32), total width 165 | T C[114]; C C[116,118]; `h(74,1160,1460)`; `top(1160,70,1320,102)` samples gradient #5767F6 and lower blues; no single flat fill |
+| V06 | Edit / More | Edit (1274,70,53,32); More three dots (1335,70,45,33), not a text More/dropdown button | Same as Task | No header Edit; More same as Task, Edit appears in menu | T C[116,118]; M C[114,117]; C C[119]; `h(74,1160,1460)` shows pale More interior #FDFDFE |
+| V07 | Previous / next | Target bounds (1398,79,8,15), (1430,79,8,15); painted #313949 x=1398–1405 and 1431–1438, y=79.5–92.5 | Same positions; previous disabled | Same positions; previous disabled | T C[120,121]; M C[118,119]; C C[121,122]; `box('#313949',1388,70,1415,103)` and next region; screenshots for disabled tone |
+| V08 | Left related-list rail and toggle | Absent; main canvas starts x=320 | Same as Task | Same as Task | T/M/C `h(200,300,1470)` and screenshots; absence applies to this record detail, not global navigation |
+| V09 | Overview / Timeline capsule | Outer white capsule x=332–554.5, y=136–173 (edge profile); Overview target (336,138,108,32), Timeline (449,138,101,32); active fill #EBEDFF, text #202123 | Same as Task | Same as Task | T C[123,124]; M C[121,122]; C C[125,126]; `h(154,330,560)`, `v(340,123,185)`, `top(338,143,440,165)` |
+| V10 | Last Update | Target (948,146,192,16), right-aligned in tab row | Same layout; width depends on content | Target (978,146,162,16); same right edge x=1140 | T C[125]; C C[127]; screenshots; content-dependent widths are not fixed tokens |
+| V11 | Main canvas / right panel | #EEF1F9 canvas x=320–1170; card x=332–1158; white panel x=1170–1470 from y=123 | Same as Task | Same as Task | T/M/C `h(200,300,1470)`, `v(1180,124,805)` |
+
+### Overview fields, cards and relation panel
+
+| ID | Element | Task | Meeting | Call | Source: image + measurement |
+| --- | --- | --- | --- | --- | --- |
+| V12 | Summary card | (332,185,826,285), white, no enclosing contrasting stroke | (332,185,826,417), white | Same bounds as Task | T/M/C `v(340,170,721)`, `h(200,300,1470)`; no guessed minimum height |
+| V13 | Summary corner profile | At y=186 white starts x=335.5; y=187 x=334.5; y=190 transition at x=332–332.5; rounded, exact radius not observed | Same as Task | Same as Task | T/M/C `h(186,332,345)`, `h(187,332,345)`, `h(190,332,345)` |
+| V14 | Summary labels and values | Right-aligned label ink ends x=505.5; label targets vary with text (Priority x=441,w=91; Due Date x=429,w=103; Status x=447,w=85; Related To x=420,w=112; Owner x=412,w=120), all end x=532. Value targets x=537,w=416; painted text starts about x=550.5–551 | Label targets x=352,w=185; ink right edge x=516.5; value target starts x=537,w=416; ink starts x=550.5 | Same label/value allocation as Meeting | T C[130,136,142,148,156,132,138]; M C[128,133,138,143,148,153,158,165]; C C[132,139,146,151,156,133,140]; `ink('#616E88',350,215,525,570)`, `ink('#313949',545,215,850,570)` |
+| V15 | Summary row pitch and order | Target y=220,264,308,352,396; 34 high, 44 pitch. Priority, Due Date, Status, Related To, Task Owner | Same pitch; y=220 through 528. From, To, All day, Meeting Venue, Location, Host, Related To, Contact Name | Same five y positions as Task. Call For, Related To, Call Type, Outgoing Call Status, Call Start Time | Same C entries as V14; label `ink` y runs; `h(258,345,1150)` uniformly white: no row separator |
+| V16 | Field colours / formats | Label #616E88, value #313949, relation #5464F2; date `DD.MM.YYYY`, relation link + plain module suffix | Same colours; dates add 12-hour time; empty All day/Location use dash | Same colours; Call For / Related To link + suffix, scheduled status plain text | T/M/C `top(340,200,1100,450)`, `ink` probes in V14; screenshots (no record values copied) |
+| V17 | Details card and toggle | Card starts (332,482), width 826; 12 gap after summary. Hide Details target (332,482,826,45); horizontal divider transition y=525.5–526.5 | Starts y=721 after Participants; same width and 45-high toggle; divider y=764.5–765.5 | Starts y=497, 27 gap after summary; same width/toggle; divider y=540.5–541.5 | T C[162]; M C[177]; C C[161]; `v(340,470,800)` |
+| V18 | Section headings | Task Information ink x=352.5–461.5, y=549–559.5, #202123 | Meeting Information x=353–488, y=788–801; below it fields are outside viewport | Call Information x=352.5–458.5, y=563.5–574.5 | T `box('#202123',345,540,580,575)`; M region y=780–805; C region y=555–590 |
+| V19 | Detail field columns | Label target x=352,w=137; label ink ends x=471.5. Value target x=494,w=559; value ink starts x=508. One visible field sequence | not observed: first field below viewport; offscreen controls are not image geometry evidence | Label target x=352,w=152; value target x=509,w=544; ink starts x=521.5 | T C[167,168,172,173]; C C[166,167,173,174]; T `ink('#616E88',350,580,490,800)` and `ink('#313949',505,580,950,800)`; C screenshot |
+| V20 | Detail row pitch / order | y=587,631,675,719,763, height 34, pitch 44; Task Owner, Subject, Due Date, Contact Name, Related To (last partly visible); no row dividers | not observed: below viewport | y=602,646,690,734,778, same pitch; Call For, Related To, Call Type, Outgoing Call Status, Call Start Time (last partly visible); no row dividers | T C[167–194] mapped above; C C[166–192]; `ink` label runs; screenshots |
+| V21 | Pencil / hover and boxed fields | Resting fields plain text, no painted input boxes or pencil. Hover pencil/editor geometry not observed | Same observation limit | Same observation limit | T/M/C screenshots; no hover/fill/click capture was attempted; button role alone is not editor evidence |
+| V22 | Participants related card | Absent in Task image | (332,614,826,95), white, rounded; heading ink x=353.5,y=629.5; full-width divider #C5C4D3 at y=657; Add target (1089,622,49,27), outlined blue; empty-state ink #8B9AB9 x=353.5–485.5,y=680.5–693.5 | Absent in Call image | M C[171,172]; `v(340,602,721)`, `h(657,332,1158)`, `box('#202123',350,620,455,650)`, `box('#8B9AB9',350,665,700,705)` |
+| V23 | Notes / Attachments / other lower cards | not observed: below viewport | not observed: below viewport | not observed: below viewport | T/M/C screenshot bottom boundary; offscreen inventory does not prove border, title, empty-state or Add geometry |
+| V24 | Right person selector / panel tabs | Selector (1180,138,184,34); Info target (1200,177,27,44), Conversations (1257,177,100,44); underline #5464F2 at y=219.5–222 | Same positions; selector width depends on label | Same positions; selector width depends on label | T C[257,260,261]; T/M/C `h(220,1160,1460)`, `v(1180,124,805)` |
+| V25 | Right person summary | Portrait + person link + Contact badge, Send Email, account/email links, phone/mobile, More Info; Send Email wrapper (1242,279,200,27) is not its painted button width | Same structure as Task | Same structure; no mobile value in this record; no inferred missing-field rule | T C[265]; T/M/C screenshots. Person text lengths, portrait content and contact values excluded |
+| V26 | Deal Summary / Open Activities | Deal Summary + New target (1409,501,41,16); Open Activities + New (1409,630,41,16); three collapsed rows (1190,656,260,37), next starts y=704 and 752; 48 pitch; tinted fill, #DCDBEE border | Same structure; section positions flow with wrapped deal content | Deal Summary empty state, Open Activities starts higher; do not fix all records to Task y positions | T C[275,281,282]; `v(1190,630,800)`; T/M/C screenshots; no expand/preferences tested |
+
+### Timeline and More Options
+
+| ID | Element | Task | Meeting | Call | Source: image + measurement |
+| --- | --- | --- | --- | --- | --- |
+| V27 | Timeline main surface | White rounded card x=332–1158,y=185–792; History target (362,185,60,38); underline #5464F2; divider transition y=222.5–223.5 | not observed: no saved Meeting Timeline capture | not observed: no saved Call Timeline capture | TT C[130]; `v(340,180,800)`, `top(340,186,1150,222)` |
+| V28 | Timeline toolbar | Timeline History ink x=357.5–472.5,y=257–271; adjacent filter target (483,248,42,30). Upcoming Automated Actions target (882,248,251,16), #5464F2 | not observed, same reason | not observed, same reason | TT C[132,134]; `box('#313949',350,245,480,280)`; screenshot |
+| V29 | Timeline empty state | Empty band y=324.5–399.5; No logs found ink x=704–786,y=356.5–368.5,#8B9AB9; centered around x=745; white body continues below | not observed, same reason | not observed, same reason | TT `v(340,223,800)`, `box('#8B9AB9',650,345,850,380)` |
+| V30 | More menu painted body | Inner white x=1173–1379,y=104.5–346.5; seven rows and two separators; initial Clone highlight | Inner white x=1237.5–1379,y=104–317; six rows, including Export Meeting | Inner white x=1336–1464,y=103.5–276.5; five rows, starts Edit, ends Send Email | TM/MM/CM `h(108,1100,1468)`, `v(1175/1240/1340,100,440)`; screenshots and existing menu inventories; shadow/outer border excluded from inner bounds |
+
+No new capture means no new meta.json or blocked-write event. Existing meta.json entries belong to their original captures; they include blocked reminder/notification and telemetry POST attempts (the capture write guard prevented them), not successful mutations. No blocked URL or identity is copied here. Meeting/Call Timeline, hover editors and lower cards remain explicitly unobserved; no repeated paint attempt or preference toggle was used to obtain them.
+
+## Difference table — Activities record detail
+
+Stable row numbers are the implementation handoff for MEP-591. `blocker` rows precede `visible`, then `small`. “Absent” describes the compared viewport/state unless source wiring independently establishes the fallback. Local DOM geometry is recorded alongside raster probes; it is not substituted for reference pixels. Local records and reference records differ in values; only structural, format and geometry differences are counted. Rows with `not observed` are evidence limits, not invented correction targets.
+
+| # | Element | Reference | Ours | Difference | Importance | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | All: copied Related List rail | Absent, V08 | Empty heading rail (320,123,220,684) | Extra 220 px rail shifts entire detail to the right | blocker | V08; LT/LM/LC + `[data-record-rail]` |
+| 2 | All: copied rail collapse control | Absent | (552,137,36,36) | Extra toggle before tabs | blocker | V08; LT/LM/LC + `[data-record-rail-control]` |
+| 3 | All: missing related-person panel | White 300 px panel, V11,V24–26 | No `[data-activity-relation-panel]` | Missing person picker, Info/Conversations, person summary, Deal Summary and Open Activities | blocker | T/M/C vs LT/LM/LC; V11,V24–26 |
+| 4 | Task summary fields | Five fields in V15 order | Only Task Owner | Priority, Due Date, Status, Related To missing; Owner moved first | blocker | V15; LT `.detail-business-row` count 1 |
+| 5 | Meeting summary fields | Eight fields, V15 | Empty business card | All eight fields absent; Accounts business-card builder wired | blocker | V15; LM; meetings/definition.ts |
+| 6 | Call summary fields | Five fields, V15 | Empty business card | All five fields absent; Accounts builder wired | blocker | V15; LC; calls/definition.ts |
+| 7 | Meeting Participants card | V22, between summary and Details | Absent | Missing card, heading, Add and empty state | blocker | M vs LM; V22 |
+| 8 | Call copied portrait block | Small call glyph, V03 | Generic building portrait (372,62,48,48) | Extra Accounts portrait | blocker | C vs LC; `[data-record-portrait]`; V03 |
+| 9 | Meeting identity | Calendar glyph + title, V03 | No visible h1/title | Accounts identity fails to display Meeting title | blocker | M vs LM; h1 has zero painted geometry; meetings/definition.ts |
+| 10 | Call identity | Linked Call For + Contacts suffix, V03 | No visible title; building block instead | Accounts identity fails to display linked person identity | blocker | C vs LC; calls/definition.ts |
+| 11 | All: Add Tags row | V04 below identity | Absent | Missing tag row and glyph | blocker | T/M/C vs LT/LM/LC; V04 |
+| 12 | Task closing action | Close Task 96 × 32, V05 | Only Edit and More | No closing control in compared state; header uses generic commands | blocker | T vs LT; V05; record-detail-screen.tsx |
+| 13 | Call header action family | Scheduled outbound: Reschedule Call split button; Edit in More | Header Edit, no split button; local record is Missed | Wrong unconditional Accounts command wiring; validate Scheduled case before asserting state-specific action behaviour | blocker | C vs LC; V05–06; calls/definition.ts |
+| 14 | All: extra Mail Merge menu item | Absent in TM/MM/CM | Present | Copied generic action | blocker | V30; LTM/LMM/LCM |
+| 15 | Task: extra Run Macro | Absent in TM | Present | Copied Deals action | blocker | TM vs LTM |
+| 16 | All: extra Add Related List menu item | Absent in TM/MM/CM | Present | Copied generic customization | blocker | V30; LTM/LMM/LCM |
+| 17 | All: extra Review History menu item | Absent in TM/MM/CM | Present | Copied generic action | blocker | V30; LTM/LMM/LCM |
+| 18 | Task: extra Enroll to Cadence | Absent in TM | Present | Copied Deals action | blocker | TM vs LTM |
+| 19 | All: extra Add Kiosk menu item | Absent in TM/MM/CM | Present | Copied generic customization | blocker | V30; LTM/LMM/LCM |
+| 20 | All: extra Create Client Script menu item | Absent in TM/MM/CM | Present | Copied generic script action; this is a menu item, not a tab | blocker | V30; LTM/LMM/LCM |
+| 21 | All: wrong Organize Details action | Task has Organize Task Details; Meeting/Call have no Organize entry | Task: Organize Deal Details; Meeting/Call: Organize Account Details | Wrong module action; extra on Meeting/Call | blocker | V30; LTM/LMM/LCM |
+| 22 | Meeting/Call: extra Customize Business Card | Absent in MM/CM | Present | Copied Accounts customization | blocker | V30; LMM/LCM |
+| 23 | Call: extra Clone / Create Button | Neither present in CM | Both present | Two copied generic actions | blocker | CM vs LCM; V30 |
+| 24 | All: main width / panel allocation | Main card width 826; right panel width 300 | Card width 906; no right panel | +80 card width and missing 300 panel; repair layout rather than shrinking text | visible | V11–12; `.detail-business-card` |
+| 25 | All: summary origin | (332,185) | (552,226.75) | +220 x, +41.75 y | visible | V12; LT/LM/LC; `h(250,320,1470)`, `v(560,120,805)` |
+| 26 | Summary height | Task/Call 285; Meeting 417 | All 287 | Task/Call +2; Meeting −130; missing rows remain blockers 4–6 | visible | V12; local DOM and raster |
+| 27 | Overview capsule placement | Overview target x=336,y=138,h=32; Timeline x=449 | Overview x=604,y=141,h=29; Timeline x=712 | Overview +268 x,+3 y,−3 height; Timeline +263 x | visible | V09; local `[role=tab]`; LT/LM/LC |
+| 28 | Last Update placement | Right tab-row edge x=1140,y=146 | Left line below tabs, x=552,y≈189 | Wrong row/alignment; creates 41.75 px vertical displacement | visible | V10; LT/LM/LC raster `v(560,120,227)` |
+| 29 | Task title placement and glyph | Glyph x≈373; title ink x=399,y=66.5 | No glyph; title ink x=372.5,y=77.5 | Title −26.5 x,+11 y; missing activity glyph | visible | V03; LT `box('#313949',360,60,700,112)` |
+| 30 | Task/Meeting previous-next | Both targets present; Meeting previous disabled, V07 | Neither shown | Navigation suppressed on both modules | visible | V07; LT/LM header |
+| 31 | Task/Meeting Edit and More positions | Edit x=1274,w=53; More x=1335,w=45 | Edit x≈1341.58,w≈51.92; More x=1402,w=44 | Edit +67.58 x; More +67 x; group anchored without navigation | visible | V06; local header geometry + screenshots |
+| 32 | Task summary label/value geometry | Label ink right edge 505.5; value ink starts ≈551 | Label right edge ≈725; value starts x=771 | Label +219.5, value +220; field selection also wrong (row 4) | visible | V14; LT label/value DOM and `ink` |
+| 33 | Details card origin | Task (332,482); Meeting (332,721); Call (332,497) | All (552,525.75) | x+220; y Task +43.75, Meeting −195.25, Call +28.75 | visible | V17; `.detail-details-card`; local `v(560,514,805)` |
+| 34 | Details toggle/divider | Target height 45, dividers V17 | Toggle height 43.5; divider transition y=569–570 | Height −1.5; divider offset Task +43.5, Meeting −195.5, Call +28.5 | visible | V17; local toggle DOM and raster |
+| 35 | Information heading placement | V18 ink x≈353; y Task 549, Meeting 788, Call 563.5 | All ink x≈572,y=592.5 | x+219; y Task +43.5, Meeting −195.5, Call +29 | visible | V18; local screenshot and section title DOM (box y=588.5) |
+| 36 | Task detail label/value columns | Label box x=352,w=137; value target x=494,w=559; ink starts ≈508 | Label x=572,w=129; value text x=737.5 in 433.5-wide column | Label +220 x,−8 width; painted value +229.5 x; no second column evidenced in reference viewport | visible | V19; LT `.detail-field-label/.detail-column/.detail-field-value` |
+| 37 | Call detail label/value columns | Label x=352,w=152; value target x=509,w=544; ink ≈521.5 | Label x=572,w=129; value x=737.5 | Label +220 x,−23 width; painted value +216 x; long status label wraps locally | visible | V19; LC label/value DOM and raster |
+| 38 | Task/Call detail row position and rhythm | Task first target y=587; Call y=602; 44 pitch | Both first row y=639, 44 pitch | Task +52 y, Call +37 y; pitch matches; Call status label becomes two lines | visible | V20; LT/LC `.detail-details-row`; raster `ink` |
+| 39 | Task date display | `DD.MM.YYYY` | English abbreviated month, comma, year | Wrong format, independent of differing date values | visible | V16; T vs LT |
+| 40 | Task Timeline surface | (332,185,826,607), white body to y=792 | White surface x=552–1458,y=185–332; below becomes canvas | +220 x,+80 width,−460 surface height | visible | V27; TT vs LTT `h(200,540,1470)`, `v(560,180,800)` |
+| 41 | Task Timeline toolbar | Heading x=357.5,y=257; filter adjacent (483,248,42,30) | Heading ink x=578.5,y=258; filter at far right (1390,249,42,30) | Heading +221 x,+1 y; filter +907 x,+1 y | visible | V28; TT vs LTT raster |
+| 42 | Task Upcoming Automated Actions | Present top-right, V28 | Absent | Missing toolbar control | visible | V28; TT vs LTT |
+| 43 | Task Timeline empty state | Centered ink x=704–786,y=356.5–368.5; #8B9AB9 | Left aligned ink x=591.5–681,y=299.5–313, #616E88 | Wrong alignment, y −57 and colour | visible | V29; TT vs LTT raster |
+| 44 | More menu size/position | V30 inner bounds: Task 206 × 242; Meeting 141.5 × 213; Call 128 × 173 | Much taller generic menus; Task outer box inner white x=1230–1445,y=103–555 | Excess actions dominate height and wrong horizontal anchor; target individual extras in rows 14–23 | visible | V30; TM/MM/CM vs LTM/LMM/LCM |
+| 45 | Meeting/Call missing menu actions | Meeting Export Meeting; Call Edit / Send Email | Missing; Call Edit moved to header | Wrong action family; these observations apply to saved states | visible | V30; MM/CM vs LMM/LCM |
+| 46 | Call More / navigation | More x=1335; arrows ink x=1398/1431 | More target x=1337; navigation hit slots 24 × 24 | More +2 x; arrow hit area vs ink must not be equated | small | V06–07; LC header geometry; target/ink distinction |
+| 47 | Summary row rhythm / separators | 44 pitch, 34 hit targets; no separators | Task single row box height 44.5; no separators; Meeting/Call no rows | Task +0.5 pitch; other pitches not measurable until rows exist | small | V15; local row DOM and raster |
+| 48 | Resting field styling / colours | Plain text, label #616E88, value #313949, link #5464F2 | Same colour values; plain text | Colours match; reference hover pencil geometry not observed | small | V16,V21; local computed styles + raster |
+| 49 | Back/header background | Back ink x=339–355,y=79.5–93; 73-high white header | Same back position/colour and header geometry | No correction measured | small | V01–02; all local header boxes and screenshots |
+| 50 | Summary background/corners | White, sampled rounded edge V13 | White, rounded; same shared surface colour | No colour defect; exact reference radius not observed | small | V12–13; local raster |
+| 51 | Meeting detail columns/row pitch | not observed below viewport | Local labels x=572,w=129, first row y=639,pitch 44 | No reference delta asserted; restore top-of-page cards before assessing lower fields | small | V19–20; M vs LM |
+| 52 | Notes/Attachments/lower related cards | not observed in all three reference images | Also below viewport or absent in captured region | Border/title/empty/Add deltas not observed; do not inherit generic card appearance as measured fact | small | V23; T/M/C vs LT/LM/LC |
+| 53 | Meeting/Call Timeline | not observed; no saved capture | Local images captured, generic History surface | No reference comparison asserted; no new capture attempted | small | V27–29; LMT/LCT |
+| 54 | Hover pencil/editor | not observed for all three reference states | Local editor controls exist in DOM; not activated | DOM presence is not painted hover geometry; no delta asserted | small | V21; local geometry/screenshot limits |
+| 55 | Create Form Views / Client Script tab / boxed inputs | Not painted in these record-detail viewports | Not painted in these local detail viewports | No observed extra form footer/tab/boxed input; extra script menu item is separately blocker 20 | small | T/M/C vs LT/LM/LC; viewport-only claim |
+
+The relation-panel correction in row 3 must include each measured part V24–26, not only an empty aside. Row 7 includes the Participants frame, divider, heading, Add and empty state V22. Preserve unobserved states as open questions: Meeting/Call Timeline; lower Notes/Attachments cards; exact hover/editor styling; exact reference font size/radius and hidden column widths. These are not permissions to write in the reference CRM.
