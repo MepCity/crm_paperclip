@@ -106,3 +106,32 @@ persisted preference. Capture each initial state before Escape.
    can be manufactured under the read-only rule.
 6. If dialog opening is rejected, record the exact guard result and route the
    bounded tooling question through MEP-562; do not substitute a selector to bypass it.
+
+## Continuation evidence (2026-10-15)
+
+The three partial specs were preserved on the dedicated `mep/MEP-629` branch;
+the source drafts in the ancestor worktree were retained. Existing numbered
+inventories cover the four Drafts and four Manage Tags states, three Print View
+submenus, Leads detail and the initial Recycle Bin screen. These inventories
+remain research evidence, not proof of the missing dialog contents.
+
+The bounded opening decision MEP-638 now permits one initial Add Tags, Share
+or Recycle Bin Search opening per capture, followed by Escape. This supersedes
+the earlier static-guard limitation noted above for those three controls only.
+It does not authorize field input, module selection, searching or submission.
+
+A fresh no-click `m6-recycle-bin-search-base` capture rendered the initial list.
+Its screenshot and exported Search selector were checked. Three automatic
+requests were blocked: reminder status, notification status and telemetry.
+The subsequent `m6-recycle-bin-search` attempt stayed on the loading skeleton;
+the Search click was skipped because the selector matched zero elements.
+Escape was pressed; no allowed opening was consumed and no dialog remained.
+The attempt blocked two telemetry requests and recorded static-resource
+HTTP/2 protocol failures. It proves no Search-panel state. In accordance with
+the tool owner's stop-on-skipped instruction, no further opening was attempted.
+
+Research is incomplete. Resume with a fully rendered no-click baseline and
+resolve the page-load/tooling failure before any additional allowed opening.
+Print Preview remains separately guard-blocked; no alternate selector was used.
+Do not treat any missing initial state, populated state or write outcome as
+implementation-ready. No reference record or saved preference was changed.

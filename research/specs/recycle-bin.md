@@ -67,8 +67,8 @@ validation. No filter, search value, sort or persisted preference was changed.
 The initial screen is naturally populated. No module dropdown is directly
 visible before opening Search. The Search control's exported attributes include
 an enable-related identifier, and its persistence semantics are unknown. It was
-not activated: this task forbids persisted panel preferences and the capture
-guard rejects enable-related attributes. Do not substitute another selector.
+not activated in that initial capture. MEP-638 subsequently permitted its
+initial opening only; the continuation attempt below did not find the control. Do not substitute another selector.
 No records may be removed or restored to create an empty state.
 
 ## Capture refs
@@ -84,9 +84,9 @@ repository content describes structure only.
 ## Open questions
 
 1. Search panel opening, module selector options and whether changing it persists
-   a preference. Obtain a safe tooling/behaviour decision through MEP-637 /
-   MEP-562 before
-   activating a control whose persistence is unknown.
+   a preference. The MEP-638 exception permits initial opening only. The continuation
+   failed before opening; module selection and preference persistence remain
+   unobserved and must not be tested by changing a selection.
 2. Module-specific filtered states for Leads, Contacts, Accounts and Deals.
 3. Naturally empty state and its toolbar availability; not observable by creating
    or removing data under the read-only rule.
@@ -95,3 +95,32 @@ repository content describes structure only.
 5. Exact roles and permissions beyond the visible explanatory notices.
 6. Row hover actions and offscreen pagination, if any; neither is inferred from
    unlabelled blank cells or the visible range/count.
+
+## Continuation evidence (2026-10-15)
+
+The three partial specs were preserved on the dedicated `mep/MEP-629` branch;
+the source drafts in the ancestor worktree were retained. Existing numbered
+inventories cover the four Drafts and four Manage Tags states, three Print View
+submenus, Leads detail and the initial Recycle Bin screen. These inventories
+remain research evidence, not proof of the missing dialog contents.
+
+The bounded opening decision MEP-638 now permits one initial Add Tags, Share
+or Recycle Bin Search opening per capture, followed by Escape. This supersedes
+the earlier static-guard limitation noted above for those three controls only.
+It does not authorize field input, module selection, searching or submission.
+
+A fresh no-click `m6-recycle-bin-search-base` capture rendered the initial list.
+Its screenshot and exported Search selector were checked. Three automatic
+requests were blocked: reminder status, notification status and telemetry.
+The subsequent `m6-recycle-bin-search` attempt stayed on the loading skeleton;
+the Search click was skipped because the selector matched zero elements.
+Escape was pressed; no allowed opening was consumed and no dialog remained.
+The attempt blocked two telemetry requests and recorded static-resource
+HTTP/2 protocol failures. It proves no Search-panel state. In accordance with
+the tool owner's stop-on-skipped instruction, no further opening was attempted.
+
+Research is incomplete. Resume with a fully rendered no-click baseline and
+resolve the page-load/tooling failure before any additional allowed opening.
+Print Preview remains separately guard-blocked; no alternate selector was used.
+Do not treat any missing initial state, populated state or write outcome as
+implementation-ready. No reference record or saved preference was changed.
