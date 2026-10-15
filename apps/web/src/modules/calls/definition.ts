@@ -1,10 +1,14 @@
 import { Icons } from "@/components/ui/icon";
-import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { isDealInlineEditable } from "../deals/deals-inline-edit";
 import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
 import type { ModuleScreenDefinition } from "../types";
 import { CallRecordScreen } from "./call-record-screen";
 import { buildCallsBusinessCardFields, buildCallsDetailSections } from "./calls-detail-sections";
+import {
+  CALLS_EDIT_INTENTS,
+  CALLS_FORM_FALLBACK_COLUMNS,
+  callsFormRules,
+} from "./calls-form-rules";
 import { callsRecordHeaderIdentity } from "./calls-record-header";
 import {
   buildCallsRecordMoreMenuGroups,
@@ -33,8 +37,11 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Call_Type", "Call_Start_Time", "Call_Duration", "Owner"],
   buildFilterGroups: buildCallsFilterGroups,
   form: {
-    // Temporary fallback: form rules will be replaced in the Calls form task
-    rules: accountsFormRules,
+    variant: "activity",
+    rules: callsFormRules,
+    fallbackColumns: CALLS_FORM_FALLBACK_COLUMNS,
+    inventoryChrome: true,
+    editIntents: CALLS_EDIT_INTENTS,
   },
   detail: {
     header: callsRecordHeaderIdentity,

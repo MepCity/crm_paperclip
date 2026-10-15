@@ -575,3 +575,9 @@
 [data-form-variant="activity"] [data-form-toggle-subdued] [data-switch-track]:not([data-selected]) {
   background: var(--color-activity-form-switch-subdued);
 }
+
+.record-duration-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+}

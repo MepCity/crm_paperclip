@@ -13,17 +13,30 @@ export interface FormSectionModel {
 }
 
 /** Placement comes from columns, never from field dictionary or sequence order. */
-export function buildFormModel(metadata: ModuleMetadata, mode: FormMode): FormSectionModel[] {
+export function buildFormModel(
+  metadata: ModuleMetadata,
+  mode: FormMode,
+  rules?: Pick<FormRules, "viewOverrides">,
+): FormSectionModel[] {
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
   return metadata.layout.map((section) => ({
     label: section.label,
     columns: section.columns.map((column) =>
       column.flatMap((name) => {
         const field = fields.get(name);
-        return field?.views[mode] ? [field] : [];
+        return field && fieldInView(field, mode, rules) ? [field] : [];
       }),
     ),
   }));
+}
+
+/** A field is in a form mode when its export view says so, unless a rule overrides that view. */
+export function fieldInView(
+  field: FieldDefinition,
+  mode: FormMode,
+  rules?: Pick<FormRules, "viewOverrides">,
+): boolean {
+  return rules?.viewOverrides?.[field.apiName]?.[mode] ?? field.views[mode];
 }
 
 /** Screen-order overrides when service layout columns do not match the reference form. */
@@ -32,6 +45,7 @@ export function applySectionColumnOverrides(
   overrides: Readonly<Record<string, readonly (readonly string[])[]>> | undefined,
   metadata: ModuleMetadata,
   mode: FormMode,
+  rules?: Pick<FormRules, "viewOverrides">,
 ): FormSectionModel[] {
   if (!overrides) return [...sections];
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
@@ -43,7 +57,7 @@ export function applySectionColumnOverrides(
       columns: override.map((column) =>
         column.flatMap((name) => {
           const field = fields.get(name);
-          return field?.views[mode] ? [field] : [];
+          return field && fieldInView(field, mode, rules) ? [field] : [];
         }),
       ),
     };
@@ -182,8 +196,25 @@ export interface StageConditionalField {
   categories: readonly string[];
 }
 
+/** What a rule set shows or requires for the values typed so far. */
+export interface FormDynamicState {
+  /** Fields not painted, validated or written while the current values hold. */
+  hidden?: readonly string[];
+  hiddenSections?: readonly string[];
+  /** Fields whose requirement differs from the export (`true` required, `false` optional). */
+  required?: Readonly<Record<string, boolean>>;
+}
+
 export interface FormRules {
   owner: string;
+  /** Per-mode view overrides for fields whose export view disagrees with the reference form. */
+  viewOverrides?: Readonly<Record<string, Partial<Record<FormMode, boolean>>>>;
+  /** Row label shown instead of the export label (also used in validation messages). */
+  labelOverrides?: Readonly<Record<string, string>>;
+  /** Duration text fields (`MM:SS`) entered as a minutes box and a seconds box. */
+  durationFields?: readonly string[];
+  /** Visibility and requirement that follow the values typed so far. */
+  dynamic?: (values: Readonly<Record<string, FieldValue | undefined>>) => FormDynamicState;
   prefix?: { field: string; prefix: string };
   address?: AddressFormRule;
   addresses?: readonly AddressFormRule[];
@@ -289,7 +320,9 @@ export function formFields(
   }
   return metadata.fields.filter(
     (field) =>
-      names.has(field.apiName) && field.views[mode] && !rules.omitted?.includes(field.apiName),
+      names.has(field.apiName) &&
+      fieldInView(field, mode, rules) &&
+      !rules.omitted?.includes(field.apiName),
   );
 }
 

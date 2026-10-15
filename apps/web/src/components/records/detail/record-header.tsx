@@ -24,10 +24,13 @@ export type RecordCommand = {
   iconOnly?: boolean;
   ariaLabel?: string;
   size?: keyof typeof import("@/components/ui/button-styles").buttonSizes;
+  /** When set the command is a menu button: its rows open under it instead of a press handler. */
+  menu?: readonly RecordMenuItem[];
 } & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
+export type RecordMenuItem = Omit<MenuAction, "onAction"> & { onAction?: () => void };
 export interface RecordMenuGroup {
   id: string;
-  items: readonly (Omit<MenuAction, "onAction"> & { onAction?: () => void })[];
+  items: readonly RecordMenuItem[];
 }
 export interface RecordHeaderProps {
   title: string;
@@ -166,6 +169,32 @@ export function RecordHeader({
           const size = command.size ?? (command.iconOnly ? "actions" : "record");
           const ariaLabel = command.ariaLabel ?? (command.iconOnly ? command.label : undefined);
           const CommandIcon = command.icon;
+          if (command.menu) {
+            return (
+              <MenuTrigger key={command.id}>
+                <Button variant={variant} size={size} aria-label={ariaLabel}>
+                  {CommandIcon ? <CommandIcon aria-hidden className="size-3.5" /> : null}
+                  {!command.iconOnly ? command.label : null}
+                </Button>
+                <Menu appearance="record" aria-label={ariaLabel ?? command.label}>
+                  <MenuGroup>
+                    {command.menu.map((item) => (
+                      <MenuItem
+                        key={item.id}
+                        id={item.id}
+                        appearance="record"
+                        onAction={item.onAction}
+                        isDisabled={item.isDisabled}
+                        laterModule={item.laterModule}
+                      >
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </MenuGroup>
+                </Menu>
+              </MenuTrigger>
+            );
+          }
           return command.href ? (
             <Link
               key={command.id}

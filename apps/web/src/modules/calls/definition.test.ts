@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { moduleScreens, resolveModuleScreen } from "../registry";
 import { CallRecordScreen } from "./call-record-screen";
 import { buildCallsBusinessCardFields, buildCallsDetailSections } from "./calls-detail-sections";
+import { callsFormRules } from "./calls-form-rules";
 import { callsRecordHeaderIdentity } from "./calls-record-header";
 import {
   buildCallsRecordMoreMenuGroups,
@@ -39,8 +39,8 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
   expect(callsScreenDefinition.detail.timeline.subtabs).toBe(CALLS_TIMELINE_SUBTABS);
   expect(callsScreenDefinition.detail.timeline.normalizeEventKind).toBe(normalizeCallsEventKind);
 
-  // Temporary fallbacks for form rules
-  expect(callsScreenDefinition.form.rules).toBe(accountsFormRules);
+  expect(callsScreenDefinition.form.rules).toBe(callsFormRules);
+  expect(callsScreenDefinition.form.variant).toBe("activity");
 
   expect(resolveModuleScreen("Calls")).toBe(callsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.apiName === "Calls")).toBe(true);

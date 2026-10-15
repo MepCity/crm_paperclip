@@ -29,6 +29,7 @@ import {
   CopyAddressMenu,
   PrefixInput,
 } from "./composite-inputs";
+import { DurationInput } from "./duration-input";
 import { FieldInput, moduleSingularLabel, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
@@ -129,6 +130,8 @@ export interface RecordFormConfig {
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
   createPrefill?: Readonly<Record<string, FieldValue>>;
+  /** Edit opened from a record action: values set on top of the record, and the field focused. */
+  editIntent?: { set?: Readonly<Record<string, FieldValue>>; focus?: string };
 }
 
 export interface RecordFormScreenProps {
@@ -183,10 +186,11 @@ function LoadedRecordForm({
     [config.rules, mode, metadata, sourceRecord],
   );
   const sections = applySectionColumnOverrides(
-    buildFormModel(metadata, mode),
+    buildFormModel(metadata, mode, rules),
     config.sectionColumnOverrides,
     metadata,
     mode,
+    rules,
   );
   const fields = formFields(metadata, sections, mode, rules);
   const byName = new Map(fields.map((field) => [field.apiName, field]));
@@ -213,8 +217,16 @@ function LoadedRecordForm({
       : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
   const [values, setValues] = useState(() =>
-    intent === "create" && !cloneSeed ? emptyValues() : baseline,
+    intent === "create" && !cloneSeed
+      ? emptyValues()
+      : intent === "edit" && config.editIntent?.set
+        ? { ...baseline, ...config.editIntent.set }
+        : baseline,
   );
+  const dynamic = rules.dynamic?.(values);
+  const isHidden = (apiName: string) => dynamic?.hidden?.includes(apiName) ?? false;
+  const isRequired = (field: FieldDefinition) =>
+    dynamic?.required?.[field.apiName] ?? field.required;
   const [lookupModules, setLookupModules] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
@@ -253,7 +265,11 @@ function LoadedRecordForm({
         });
       for (const field of sectionFields) {
         const parent = addressParentForField(field, addressRules, parents);
-        labels.set(field.apiName, parent ? addressLabel(field, parent) : field.label);
+        labels.set(
+          field.apiName,
+          rules.labelOverrides?.[field.apiName] ??
+            (parent ? addressLabel(field, parent) : field.label),
+        );
       }
     }
     return labels;
@@ -335,6 +351,18 @@ function LoadedRecordForm({
     });
   }
 
+  const focusField = config.editIntent?.focus;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: focus once when the form first paints
+  useEffect(() => {
+    if (!focusField) return;
+    const frame = requestAnimationFrame(() => {
+      rootRef.current
+        ?.querySelector<HTMLElement>(`[data-form-field="${focusField}"] input`)
+        ?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   function closePicker() {
     setPickerOpen(false);
     requestAnimationFrame(() => pickerTrigger.current?.focus());
@@ -342,7 +370,9 @@ function LoadedRecordForm({
 
   function runClientValidation(): boolean {
     const messages = validateRecordForm(
-      fields,
+      fields
+        .filter((field) => !isHidden(field.apiName))
+        .map((field) => ({ ...field, required: isRequired(field) })),
       values,
       (field) => labelsByField.get(field.apiName) ?? field.label,
     );
@@ -377,7 +407,11 @@ function LoadedRecordForm({
     setErrors({});
     setBannerMessage(null);
     try {
-      const input = formPayload(fields, values, editing ? baseline : undefined);
+      const input = formPayload(
+        fields.filter((field) => !isHidden(field.apiName)),
+        values,
+        editing ? baseline : undefined,
+      );
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
@@ -405,9 +439,14 @@ function LoadedRecordForm({
 
   function row(field: FieldDefinition, column: FormRowColumn, parent?: FieldDefinition): ReactNode {
     const addressRules = addressRulesList(rules);
-    if (rules.omitted?.includes(field.apiName) || field.apiName === rules.prefix?.prefix)
+    if (
+      rules.omitted?.includes(field.apiName) ||
+      field.apiName === rules.prefix?.prefix ||
+      isHidden(field.apiName)
+    )
       return null;
-    const label = parent ? addressLabel(field, parent) : field.label;
+    const label =
+      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label);
     const id = `record-form-${field.apiName}`;
     if (field.dataType === "profileimage") {
       if (!config.profileImageLaterModule) {
@@ -533,6 +572,17 @@ function LoadedRecordForm({
           }}
         />
       );
+    } else if (rules.durationFields?.includes(field.apiName)) {
+      input = (
+        <DurationInput
+          id={id}
+          field={{ ...field, label }}
+          value={values[field.apiName] ?? null}
+          onChange={(next) => change(field.apiName, next)}
+          errorMessage={errors[field.apiName]}
+          disabled={saving || field.readOnly}
+        />
+      );
     } else {
       const stateRule = addressRules.find((rule) => rule.state === field.apiName);
       const countryRule = addressRules.find((rule) => rule.country === field.apiName);
@@ -605,23 +655,28 @@ function LoadedRecordForm({
         <FormRow
           labelControl={
             labelLookup ? (
-              <RecordChoice
-                id={`${id}-module`}
-                label={`${label} module`}
-                hideLabel
-                value={lookupModule ?? null}
-                options={lookupTargets.map((module) => ({
-                  value: module,
-                  label: moduleSingularLabel(module),
-                }))}
-                searchable={lookupTargets.length > 2}
-                disabled={saving || field.readOnly}
-                onChange={(next) => {
-                  if (!next || next === lookupModule) return;
-                  setLookupModules((current) => ({ ...current, [field.apiName]: next }));
-                  change(field.apiName, null);
-                }}
-              />
+              <>
+                {rules.labelOverrides?.[field.apiName] ? (
+                  <span className="record-form-row__label-text">{label}</span>
+                ) : null}
+                <RecordChoice
+                  id={`${id}-module`}
+                  label={`${label} module`}
+                  hideLabel
+                  value={lookupModule ?? null}
+                  options={lookupTargets.map((module) => ({
+                    value: module,
+                    label: moduleSingularLabel(module),
+                  }))}
+                  searchable={lookupTargets.length > 2}
+                  disabled={saving || field.readOnly}
+                  onChange={(next) => {
+                    if (!next || next === lookupModule) return;
+                    setLookupModules((current) => ({ ...current, [field.apiName]: next }));
+                    change(field.apiName, null);
+                  }}
+                />
+              </>
             ) : undefined
           }
           label={
@@ -635,7 +690,7 @@ function LoadedRecordForm({
           }
           controlId={id}
           column={column}
-          required={field.required}
+          required={isRequired(field)}
         >
           {input}
         </FormRow>
@@ -670,6 +725,7 @@ function LoadedRecordForm({
       >
         {sections.map((section) => {
           if (rules.omittedSections?.includes(section.label)) return null;
+          if (dynamic?.hiddenSections?.includes(section.label)) return null;
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );

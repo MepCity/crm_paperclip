@@ -36,6 +36,11 @@ export function ModuleFormClient({
       ? { ...consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields, ...createPrefill }
       : undefined,
   );
+  const [editIntent] = useState(() => {
+    if (!recordId || typeof window === "undefined") return undefined;
+    const intent = new URLSearchParams(window.location.search).get("intent");
+    return intent ? definition.form.editIntents?.[intent] : undefined;
+  });
   const hasPrefill = prefill && Object.keys(prefill).length > 0;
   const defaultCancel = cloneSourceId
     ? moduleRecordPath(orgSlug, definition.tab, cloneSourceId)
@@ -57,6 +62,7 @@ export function ModuleFormClient({
           profileImageLaterModule: definition.form.profileImageLaterModule,
           profileImageIcon: definition.form.profileImageIcon,
           createPrefill: hasPrefill ? prefill : undefined,
+          editIntent,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id, targetModule) => {
