@@ -1,11 +1,17 @@
-import { userInfo } from "node:os";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir, userInfo } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   type CommandRunner,
   confirmedDead,
   parseIpcTable,
+  parseSemaphoreProbes,
+  parseSemaphoreTable,
   removeSegment,
   runCommand,
   selectOrphans,
+  selectSemaphoreOrphans,
 } from "./sysv-ipc";
 
 export function sweep(
@@ -13,6 +19,7 @@ export function sweep(
     apply?: boolean;
     platform?: string;
     owner?: string;
+    uid?: number;
     now?: () => number;
     dead?: (pid: number) => boolean;
     run?: CommandRunner;
@@ -75,9 +82,85 @@ export function sweep(
         log(`${fresh.row.id}: removal failed: ${String(error)}`);
       }
     }
-    return { exitCode: failed ? 1 : 0, removed };
+    const semaphores = sweepSemaphores({
+      apply: options.apply,
+      run,
+      log,
+      now,
+      owner,
+      uid: options.uid ?? userInfo().uid,
+    });
+    removed += semaphores.removed;
+    return { exitCode: failed || semaphores.exitCode ? 1 : 0, removed };
   } catch (error) {
     log(`IPC sweep refused: ${String(error)}`);
     return { exitCode: 1, removed };
+  }
+}
+
+/** One bulk native probe avoids thousands of subprocesses and guessed ctypes layouts. */
+function sweepSemaphores(options: {
+  apply?: boolean;
+  run: CommandRunner;
+  log: (line: string) => void;
+  now: () => number;
+  owner: string;
+  uid: number;
+}): { exitCode: number; removed: number } {
+  let directory: string | undefined;
+  let removed = 0;
+  try {
+    const table = parseSemaphoreTable(options.run("ipcs", ["-s", "-a"]), options.now());
+    if (table.error) throw new Error(table.error);
+    const possible = table.rows.filter((row) => row.owner === options.owner && row.nsems === 17);
+    options.log(`Semaphores: occupied=${table.rows.length}, inspect=${possible.length}`);
+    if (possible.length === 0) return { exitCode: 0, removed };
+    directory = mkdtempSync(join(tmpdir(), "crm-ipc-helper-"));
+    const helper = join(directory, "semaphores");
+    options.run("cc", [
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-o",
+      helper,
+      fileURLToPath(new URL("./sysv-semaphore.c", import.meta.url)),
+    ]);
+    const probes = parseSemaphoreProbes(
+      options.run(helper, ["inspect", ...possible.map((row) => `${row.id}:0:0:0`)]),
+    );
+    const selected = selectSemaphoreOrphans(table, probes, {
+      owner: options.owner,
+      uid: options.uid,
+      now: options.now(),
+    });
+    const ids = new Set(selected.map((probe) => probe.id));
+    for (const row of table.rows)
+      options.log(
+        `semaphore ${row.id}: ${ids.has(row.id) ? "candidate: orphan PostgreSQL marker" : "keep: ineligible or unconfirmed"}`,
+      );
+    if (!options.apply || selected.length === 0) return { exitCode: 0, removed };
+    const result = options.run(helper, [
+      "remove",
+      ...selected.map((probe) => `${probe.id}:${probe.createdAt / 1000}:${probe.pid}:${probe.key}`),
+    ]);
+    const reported = new Set<number>();
+    let failed = false;
+    for (const line of result.trim().split("\n").filter(Boolean)) {
+      const match = /^(\d+) (removed|failed)$/.exec(line);
+      if (!match || !ids.has(Number(match[1])) || reported.has(Number(match[1])))
+        throw new Error("Invalid semaphore removal result");
+      reported.add(Number(match[1]));
+      if (match[2] === "removed") removed++;
+      else failed = true;
+      options.log(`semaphore ${match[1]}: ${match[2]}`);
+    }
+    for (const id of ids)
+      if (!reported.has(id)) options.log(`semaphore ${id}: skipped after recheck`);
+    return { exitCode: failed ? 1 : 0, removed };
+  } catch (error) {
+    options.log(`Semaphore sweep refused: ${String(error)}`);
+    return { exitCode: 1, removed };
+  } finally {
+    if (directory) rmSync(directory, { recursive: true, force: true });
   }
 }
