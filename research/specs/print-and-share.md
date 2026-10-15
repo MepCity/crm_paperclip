@@ -21,7 +21,7 @@ destination layouts remain unobserved.
 | PS-03 | Record More menu, below Delete and a separator | Print Preview entry is visible. Destination not observed. | `w2f-detail-more` / Print |
 | PS-04 | List toolbar, upper right | Actions opens the module menu. | Four Actions captures below / module list |
 | PS-05 | Actions menu, below Manage Tags | Drafts is a module-scoped navigation link in all four modules. | Four Actions captures / Drafts |
-| PS-06 | Actions menu bottom, Leads / Contacts / Accounts tables | Print View has a right-facing submenu indicator. Submenu not observed. | Three table Actions screenshots / Print |
+| PS-06 | Actions menu bottom, Leads / Contacts / Accounts tables | Print View has a right-facing submenu indicator. Submenu observed below; destination unobserved. | Three table Actions screenshots / Print |
 
 Deals was already in stage-board view. Its open Actions menu ends after Export
 Deals and has no visible Print View entry. Do not infer its table view behaviour
@@ -135,3 +135,23 @@ resolve the page-load/tooling failure before any additional allowed opening.
 Print Preview remains separately guard-blocked; no alternate selector was used.
 Do not treat any missing initial state, populated state or write outcome as
 implementation-ready. No reference record or saved preference was changed.
+
+## Reviewed ready-gate retry (2026-10-15 10:08 UTC)
+
+Following the reviewed MEP-655 / MEP-656 continuation, the single permitted
+`m6-recycle-bin-search` retry used the explicit probe
+`[data-zcqa="rclBnAdvSearchEnable"]`. It exited 2 with
+`NOT RENDERED — no steps ran`: `ready.ok=false`, `waitedMs=30006`, zero probe
+matches and ten failed script requests (`net::ERR_HTTP2_PROTOCOL_ERROR`).
+The newly inspected screenshot and accessibility snapshot show only the loading
+skeleton. Both requested steps (Search click and Escape) are `not-run`.
+`clicks` is the requested selector list, not an executed-click log.
+No allowed opening, file chooser, download, popup or print call occurred.
+Six automatic telemetry POSTs were blocked; no record operation was attempted.
+
+The six base files were refreshed in that existing capture folder. Older
+`step-1` / `step-2` files left there belong to the preceding attempt and must
+not be attributed to this retry; use `capturedAt` and `steps` in the fresh meta.
+No Search-panel inventory or new dialog behaviour is established. Research
+stopped at the failed gate pending Platform Lead review; no browser, profile,
+network guard or reference preference was changed.
