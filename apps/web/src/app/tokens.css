@@ -815,3 +815,37 @@
   --size-detail-inline-save-check-height: 7.5px;
   --size-detail-inline-check-gap: 6px;
 }
+
+/* activities-form.md → Visual layout — Task form (measured). Row height/gap
+   allocate the observed 50px separator pitch; CSS row boxes were not observed. */
+:root {
+  --size-activity-form-width: 548px;
+  --size-activity-form-inset: 12px;
+  --size-activity-form-label-width: 219px;
+  --size-activity-form-strip-height: 63px;
+  --size-activity-form-strip-content-offset: 4.5px;
+  --size-activity-form-strip-inset: 30px;
+  --size-activity-form-first-content-top: 66px;
+  --size-activity-form-first-title-center: 31px;
+  --size-activity-form-row-height: 27px;
+  --size-activity-form-row-gap: 23px;
+  --size-activity-form-rule: 1px;
+  --size-activity-form-required-width: 25px;
+  --size-activity-form-required-height: 2px;
+  --size-activity-form-section-gap: 52.5px;
+  --size-activity-form-section-title-gap: 26px;
+  --size-activity-form-textarea-height: 37px;
+  --size-activity-form-textarea-rule-gap: 7.5px;
+  --size-activity-form-icon: 16px;
+  --size-activity-form-icon-inset: 5px;
+  --size-activity-form-choice-gap: 21px;
+  --size-activity-form-switch-width: 28px;
+  --size-activity-form-switch-height: 15px;
+  --color-activity-form-rule: #dcdbee;
+  --color-activity-form-required: #f27b77;
+  --color-activity-form-value: #434d5f;
+  --color-activity-form-placeholder: #8b9ab9;
+  --color-activity-form-lookup: #aaaaaa;
+  --color-activity-form-switch: #c8cdd6;
+  --color-activity-form-switch-subdued: #dee1e6;
+}
