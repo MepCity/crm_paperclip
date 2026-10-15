@@ -19,7 +19,7 @@ export const TRANSFER_FILE_BYTES = 25_000_000;
 /** Allowance for multipart framing around the file bytes. */
 const MULTIPART_OVERHEAD = 64 * 1024;
 const CHARSETS: readonly Charset[] = ["UTF-8", "ISO-8859-1"];
-const BOM = "﻿";
+const BOM = "\uFEFF";
 
 export type TransferInput = {
   ctx: OrgContext;

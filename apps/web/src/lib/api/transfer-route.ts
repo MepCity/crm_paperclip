@@ -22,6 +22,12 @@ export function getTransferService(): TransferService {
 }
 
 /** Binds a transfer operation to the authenticated, organization-scoped service. */
-export function transferRoute(operation: TransferOperation) {
-  return apiRoute<Record<string, string>>((input) => operation.run(getTransferService(), input));
+export function transferRoute(
+  operation: TransferOperation,
+  options: { orgFromQuery?: boolean } = {},
+) {
+  return apiRoute<Record<string, string>>(
+    (input) => operation.run(getTransferService(), input),
+    options,
+  );
 }

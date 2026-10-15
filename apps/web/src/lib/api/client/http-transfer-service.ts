@@ -58,6 +58,8 @@ export function createHttpTransferClient(
 ): TransferClient {
   const call = options.fetch ?? ((path, init) => apiFetch(orgSlug, path, init));
   const raw = options.fetchRaw ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
+  // Anchor downloads cannot send the org header, so the link carries it.
+  const withOrg = (url: string) => `${url}?org=${encodeURIComponent(orgSlug)}`;
   const path = (key: keyof typeof transferOperations, params?: Record<string, string>) =>
     transferPath(transferOperations[key].path, params);
   async function csv(url: string, fallback: string): Promise<CsvFile> {
@@ -111,9 +113,9 @@ export function createHttpTransferClient(
     async listExports() {
       return ((await call(path("listExports"))) ?? []) as ExportJob[];
     },
-    exportDownloadUrl: (id) => path("downloadExport", { exportId: id }),
+    exportDownloadUrl: (id) => withOrg(path("downloadExport", { exportId: id })),
     downloadExport: (id) => csv(path("downloadExport", { exportId: id }), "export.csv"),
-    sampleCsvUrl: (module) => path("sampleCsv", { module }),
+    sampleCsvUrl: (module) => withOrg(path("sampleCsv", { module })),
     sampleCsv: (module) => csv(path("sampleCsv", { module }), "sample.csv"),
   };
 }

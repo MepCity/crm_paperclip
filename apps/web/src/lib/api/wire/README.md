@@ -255,6 +255,8 @@ not imitated. Operations live in `wire/transfer.ts` (`transferOperations`).
 | Export history | `GET /crm/v9/settings/exports` | list of `ExportJob` |
 | Export download | `GET /crm/v9/settings/exports/{exportId}/download` | CSV download |
 
+- The two CSV `GET` downloads also accept the organization as `?org=<slug>` when the
+  `X-CRM-ORG` header is absent (a link cannot send headers); every other route still needs the header.
 - `{module}` is `Leads`, `Contacts`, `Accounts` or `Deals`; anything else is `INVALID_DATA`.
 - The multipart body is cut off while streaming at 25 MB plus framing (`file_too_large`);
   `Content-Length` is not trusted. Exactly one file field is accepted; other fields except

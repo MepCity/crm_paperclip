@@ -3,4 +3,4 @@ import { transferOperations } from "@/lib/api/wire/transfer";
 
 export const dynamic = "force-dynamic";
 
-export const GET = transferRoute(transferOperations.downloadExport);
+export const GET = transferRoute(transferOperations.downloadExport, { orgFromQuery: true });

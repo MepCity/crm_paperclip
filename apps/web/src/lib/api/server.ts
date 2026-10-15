@@ -35,13 +35,19 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * `details`; the cause is logged and is not written on the response.
  * Every response is `Cache-Control: no-store`. No CORS header is set.
  */
-export function apiRoute<Params extends Record<string, string>>(handler: ApiHandler<Params>) {
+export function apiRoute<Params extends Record<string, string>>(
+  handler: ApiHandler<Params>,
+  options: { orgFromQuery?: boolean } = {},
+) {
   return async (request: Request, context: { params?: Promise<Params> }): Promise<Response> => {
     try {
       assertSameOrigin(request);
       const session = await getSession(request.headers);
       if (!session) throw new UnauthenticatedError();
-      const orgSlug = request.headers.get("X-CRM-ORG");
+      // Only anchor-download routes opt in: a link cannot send the header.
+      const orgSlug =
+        request.headers.get("X-CRM-ORG") ??
+        (options.orgFromQuery ? new URL(request.url).searchParams.get("org") : null);
       if (orgSlug === null || orgSlug.trim() === "") {
         throw new ValidationError({ organization: ["An organization header is required."] });
       }

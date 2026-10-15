@@ -65,8 +65,8 @@ describe("http transfer client", () => {
 
   it("builds download URLs and reads the decoded file name", async () => {
     const { client, raw } = setup();
-    expect(client.exportDownloadUrl("e1")).toBe("/crm/v9/settings/exports/e1/download");
-    expect(client.sampleCsvUrl("Leads")).toBe("/crm/v2.2/Leads/actions/import_sample");
+    expect(client.exportDownloadUrl("e1")).toBe("/crm/v9/settings/exports/e1/download?org=acme");
+    expect(client.sampleCsvUrl("Leads")).toBe("/crm/v2.2/Leads/actions/import_sample?org=acme");
     const file = await client.downloadExport("e1");
     expect(file.fileName).toBe("café.csv");
     expect(await file.blob.text()).toBe("a,b\n");

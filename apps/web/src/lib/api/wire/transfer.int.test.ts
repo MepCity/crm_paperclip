@@ -30,6 +30,7 @@ async function call(
     headers?: Record<string, string>;
     origin?: string | null;
     orgHeader?: string | null;
+    query?: string;
   } = {},
 ) {
   const op = transferOperations[key];
@@ -47,7 +48,7 @@ async function call(
   const body = options.json === undefined ? options.body : JSON.stringify(options.json);
   const params = options.params ?? {};
   return handler(
-    new Request(new URL(transferPath(op.path, params), origin), {
+    new Request(new URL(transferPath(op.path, params) + (options.query ?? ""), origin), {
       method: op.method,
       headers,
       ...(body === undefined ? {} : { body }),
@@ -198,6 +199,32 @@ describe("transfer routes", () => {
     });
     expect(oversize.status).toBe(200);
     expect(await oversize.json()).toMatchObject({ status: "failed", code: "export_too_large" });
+  });
+
+  it("accepts the organization from ?org= on the two CSV downloads only", async () => {
+    const q = `?org=${encodeURIComponent(a.org.slug)}`;
+    const sample = await call("sampleCsv", a, {
+      params: { module: "Contacts" },
+      orgHeader: null,
+      query: q,
+    });
+    expect(sample.status).toBe(200);
+    const job = await (
+      await call("runExport", a, { params: { module: "Leads" }, json: { fields: "all" } })
+    ).json();
+    const file = await call("downloadExport", a, {
+      params: { exportId: job.id },
+      orgHeader: null,
+      query: q,
+    });
+    expect(file.status).toBe(200);
+    const other = await call("downloadExport", b, {
+      params: { exportId: job.id },
+      orgHeader: null,
+      query: q,
+    });
+    expect([403, 404]).toContain(other.status);
+    expect((await call("listImports", a, { orgHeader: null, query: q })).status).toBe(400);
   });
 
   it("serves the sample CSV as a download", async () => {
