@@ -1,54 +1,17 @@
-// Temporary UI-side copy of the shared transfer contract (packages/core/src/transfer/types.ts is
-// not on main yet). Replace with `@crm/core` imports once it lands; names are identical.
-export type TransferModule = "Leads" | "Contacts" | "Accounts" | "Deals";
-export type ImportMode = "add" | "update" | "both";
-export type Charset = "UTF-8" | "ISO-8859-1";
-export interface FieldMapping {
-  column: number;
-  field: string | null;
-  replaceEmptyWith?: string;
-}
-export interface ImportPreview {
-  uploadId: string;
-  fileName: string;
-  charset: Charset;
-  headers: string[];
-  sampleRows: string[][];
-  rowCount: number;
-  suggestedMapping: FieldMapping[];
-  fields: { apiName: string; label: string; required: boolean; type: string }[];
-  matchFields: { field: string; label: string }[];
-}
-export interface ImportSettings {
-  mode: ImportMode;
-  matchField?: string;
-  ignoreEmptyOnUpdate: boolean;
-  mapping: FieldMapping[];
-  defaults: { field: string; value: string }[];
-}
-export type RowOutcome = "created" | "updated" | "skipped" | "error";
-export interface ImportRowResult {
-  row: number;
-  outcome: RowOutcome;
-  code?: string;
-  field?: string;
-  recordId?: string;
-}
-export interface Actor {
-  id: string;
-  name: string;
-}
-export interface ImportJob {
-  id: string;
-  module: TransferModule;
-  fileName: string;
-  createdBy: Actor;
-  createdAt: string;
-  status: "completed" | "completed_with_errors" | "failed" | "undone";
-  counts: { created: number; updated: number; skipped: number; errors: number };
-  undoable: boolean;
-  rows: ImportRowResult[];
-}
+import type { Charset, ImportJob, ImportPreview, ImportSettings, TransferModule } from "@crm/core";
+
+export type {
+  Actor,
+  Charset,
+  FieldMapping,
+  ImportJob,
+  ImportMode,
+  ImportPreview,
+  ImportRowResult,
+  ImportSettings,
+  RowOutcome,
+  TransferModule,
+} from "@crm/core";
 
 export interface ImportWizardClient {
   preview(file: File, charset: Charset): Promise<ImportPreview>;
@@ -63,17 +26,6 @@ export interface ImportWizardProps {
   onCancel(): void;
   onDone(job: ImportJob): void;
   historyHref: string;
-}
-
-/** Props of the field-mapping step (MEP-607); the wizard owns the state. */
-export interface ImportMappingStepProps {
-  preview: ImportPreview;
-  mode: ImportMode;
-  mapping: FieldMapping[];
-  defaults: { field: string; value: string }[];
-  onMappingChange(mapping: FieldMapping[]): void;
-  onDefaultsChange(defaults: { field: string; value: string }[]): void;
-  onValidityChange(valid: boolean): void;
 }
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;

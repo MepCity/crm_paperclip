@@ -676,3 +676,28 @@ Related To and Contact Name link to the related record when the target module is
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
 
+
+## Module 6 — CSV import and export
+
+Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
+captured on the four module lists; the wizard, export dialog and history screens were not
+observable in the reference and follow public documentation (interim rules T4 – T7).
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| List entry points | CSV-02, CSV-04, CSV-05 (Create chevron "Import <Module>", Actions "Export <Module>" on Leads, Contacts, Accounts, Deals; Tasks, Meetings and Calls keep `laterModule` M6) | `csv-import-export.spec.ts`, `list-config.test.ts` |
+| Import wizard | CSV-06 – CSV-19 (route `tab/<module>/import`; mapping step replaces the earlier placeholder; default match field is the first non-`id` unique field) | `csv-import-export.spec.ts`, `import-wizard.test.tsx`, `mapping-step.test.tsx` |
+| Import summary and history | CSV-27 – CSV-30 (Settings › Data Administration › Import History, Undo removes added records only) | `csv-import-export.spec.ts`, `history.test.tsx` |
+| Export | CSV-21 – CSV-26 (view scope, all/choose/exclude fields, selected records up to 500, completion toast with Download and View export history) | `csv-import-export.spec.ts`, `export-dialog.test.tsx`, `toast.test.tsx` |
+| Export history | CSV-31, CSV-32 (Settings › Data Administration › Export History) | `history.test.tsx` |
+
+Open differences for the module gate: in-process, synchronous transfer without recovery
+(decision 1); CSV only, UTF-8 or ISO-8859-1, no XLS/XLSX/VCF, ZIP or password protection
+(decision 3); history is per-organization in memory, 7 days, lost on restart (decision 6);
+export reads at run and download time, best effort under concurrent writes, text cells starting
+with `=`, `+`, `-`, `@`, tab or CR get a leading `'` (decision 7); no separate export profile
+permission (decision 8); Notify Email (M10), Layout selection and Create New Fields (M11) are
+disabled (decision 9), and there is no criteria builder: scope is a custom view.
+Interim rules: Retry in Export History opens the module list; Undo is offered for every job that
+is not already undone and the server re-checks the delete permission; selection export is
+disabled above 500 rows with the limit written in the menu label.

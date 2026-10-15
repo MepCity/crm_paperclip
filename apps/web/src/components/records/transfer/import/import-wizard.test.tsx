@@ -170,3 +170,21 @@ test("Cancel with a file asks for confirmation; without a file cancels directly"
   await user.click(await screen.findByRole("button", { name: "Discard" }));
   await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(2));
 });
+
+test("default match field skips the record id entry", async () => {
+  const user = userEvent.setup();
+  const idFirst = {
+    ...preview,
+    matchFields: [
+      { field: "id", label: "Record Id" },
+      { field: "Email", label: "Email" },
+    ],
+  };
+  const { full } = setup({ preview: vi.fn().mockResolvedValue(idFirst) });
+  await toStep2(user);
+  await user.click(screen.getByRole("radio", { name: "Both" }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  await screen.findByText("Import completed");
+  expect(vi.mocked(full.run).mock.calls[0]?.[1].matchField).toBe("Email");
+});

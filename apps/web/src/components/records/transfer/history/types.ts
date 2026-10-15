@@ -1,40 +1,13 @@
-// Temporary local copy of the shared transfer contract (packages/core/src/transfer/types.ts).
-// Replace with the shared import once it lands on main.
-export type TransferModule = "Leads" | "Contacts" | "Accounts" | "Deals";
-export type RowOutcome = "created" | "updated" | "skipped" | "error";
-export interface ImportRowResult {
-  row: number;
-  outcome: RowOutcome;
-  code?: string;
-  field?: string;
-  recordId?: string;
-}
-export interface Actor {
-  id: string;
-  name: string;
-}
-export interface ImportJob {
-  id: string;
-  module: TransferModule;
-  fileName: string;
-  createdBy: Actor;
-  createdAt: string;
-  status: "completed" | "completed_with_errors" | "failed" | "undone";
-  counts: { created: number; updated: number; skipped: number; errors: number };
-  undoable: boolean;
-  rows: ImportRowResult[];
-}
-export interface ExportJob {
-  id: string;
-  module: TransferModule;
-  scope: string;
-  createdBy: Actor;
-  createdAt: string;
-  status: "completed" | "failed";
-  rowCount: number;
-  code?: string;
-  fileName: string;
-}
+import type { ExportJob, ImportJob, TransferModule } from "@crm/core";
+
+export type {
+  Actor,
+  ExportJob,
+  ImportJob,
+  ImportRowResult,
+  RowOutcome,
+  TransferModule,
+} from "@crm/core";
 
 export interface ImportHistoryProps {
   jobs: ImportJob[];

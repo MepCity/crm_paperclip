@@ -27,6 +27,8 @@ export interface ToastContentValue {
   variant: keyof typeof toastStyles;
   title: string;
   message?: string;
+  /** Inline actions under the message: a link when `href` is set, otherwise a button. */
+  actions?: { label: string; href?: string; onPress?: () => void }[];
 }
 
 export const TOAST_TIMEOUT_MS = 5000;
@@ -65,6 +67,30 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   <Text slot="description" className="text-text">
                     {item.content.message}
                   </Text>
+                ) : null}
+                {item.content.actions?.length ? (
+                  <div className="mt-1 flex gap-3">
+                    {item.content.actions.map((action) =>
+                      action.href ? (
+                        <a
+                          key={action.label}
+                          href={action.href}
+                          className="font-medium text-primary underline"
+                        >
+                          {action.label}
+                        </a>
+                      ) : (
+                        <button
+                          key={action.label}
+                          type="button"
+                          className="font-medium text-primary underline"
+                          onClick={action.onPress}
+                        >
+                          {action.label}
+                        </button>
+                      ),
+                    )}
+                  </div>
                 ) : null}
               </ToastContent>
               <Button slot="close" variant="ghost" size="sm">
