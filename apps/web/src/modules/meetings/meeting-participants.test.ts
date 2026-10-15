@@ -19,3 +19,9 @@ test.each([
 ])("keeps populated Participants opaque: $value", ({ value }) => {
   expect(meetingParticipants(value)).toBeNull();
 });
+
+test("lists entries written by the Meetings form", () => {
+  expect(
+    meetingParticipants([{ type: "contact", id: "c1", name: "Synthetic Person", email: null }]),
+  ).toEqual([{ id: "c1", name: "Synthetic Person" }]);
+});

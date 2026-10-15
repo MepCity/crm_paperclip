@@ -727,3 +727,24 @@ Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid
 show No participant found; a populated opaque array shows a blank body with heading/Add,
 without interpreting any entries or inventing names. The populated appearance/item schema
 remains an open question for the corresponding research/contract work.
+
+### Meetings create and edit — implemented; QA pending (MEP-509)
+
+Inventory is MF-01 – MF-15 and MF-02.1 – MF-02.3.
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Meeting Information window: Title, Meeting Venue and its three options, Location, All day, From and To (date + time), Host, Participants + Add | MF-01 – MF-11, MF-02.1 – MF-02.3 | `meetings-form.spec.ts`, `meetings-form-rules.test.ts` |
+| Footer: Add more details, Cancel, Save; body scroll | MF-12 – MF-15 | `meetings-form.spec.ts` |
+| Full form (Add more details, Edit): metadata layout order, values carried over | Meeting form fields vs metadata | `meetings-form.spec.ts` |
+
+Provisional rules: From and To are required, To before From blocks Save with the shared
+"Please enter a valid To." under To; a new window starts at the next full hour with To one
+hour later and Host the signed-in user; All day hides the time entries and stores the day at
+UTC midnight; no provider choice (Online adds no field), Location is always shown;
+Participants Add opens the existing record picker for Contacts or Leads, at most 50, rows can
+be removed, no invitation is sent; Reminder and Participants Reminder are selects (At start,
+5/10/15/30 minutes, 1/2 hours, 1/2 days before) that only store the value; Repeat is drawn
+in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
+Cancel creates nothing. The record's Participants Add opens the same picker and writes the
+list. Provider and the audit, check-in and tag fields are not drawn.

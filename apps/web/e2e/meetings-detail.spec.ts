@@ -76,6 +76,11 @@ test.describe("Meetings record detail", () => {
     const participants = page.getByRole("region", { name: "Participants card" });
     await expect(participants.getByText("No participant found")).toBeVisible();
     await participants.getByRole("button", { name: "Add", exact: true }).click();
+    // MEP-509: Add opens the participant picker; cancelling it changes nothing.
+    await page
+      .locator("[data-participants-module-step]")
+      .getByRole("button", { name: "Cancel" })
+      .click();
     await expect(participants.getByText("No participant found")).toBeVisible();
     expect(page.url()).toBe(before);
     expect(
@@ -88,7 +93,9 @@ test.describe("Meetings record detail", () => {
     await expect(page.getByRole("button", { name: "Show Details" })).toBeVisible();
   });
 
-  test("populated opaque Participants keep a blank body and inert Add", async ({ page }) => {
+  test("populated opaque Participants keep a blank body; Add can be cancelled", async ({
+    page,
+  }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await page.goto(moduleRecordPath(org.slug, "Meetings", "130000000000000244"));
@@ -97,6 +104,10 @@ test.describe("Meetings record detail", () => {
     await expect(card.getByText("No participant found")).toHaveCount(0);
     await expect(card.getByRole("list")).toHaveCount(0);
     await card.getByRole("button", { name: "Add", exact: true }).click();
+    await page
+      .locator("[data-participants-module-step]")
+      .getByRole("button", { name: "Cancel" })
+      .click();
     await expect(card.locator('[data-part="opaque"]')).toBeVisible();
   });
 

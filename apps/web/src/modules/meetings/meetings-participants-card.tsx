@@ -11,6 +11,7 @@ export interface MeetingsParticipantsCardProps {
   /** null means a populated opaque array whose item schema is not agreed. */
   participants: readonly MeetingsParticipant[] | null;
   onAdd?: () => void;
+  addDisabled?: boolean;
 }
 
 /**
@@ -23,7 +24,11 @@ export interface MeetingsParticipantsCardProps {
  * Add behaviour (provisional rule — not observed in reference): calls onAdd
  * when provided; renders a handler-less button when omitted.
  */
-export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsParticipantsCardProps) {
+export function MeetingsParticipantsCard({
+  participants,
+  onAdd,
+  addDisabled,
+}: MeetingsParticipantsCardProps) {
   return (
     <section
       aria-label="Participants card"
@@ -33,7 +38,13 @@ export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsPartic
       {/* Card header — MD-47 */}
       <div className="flex items-center justify-between min-h-(--size-list-header-height) py-2 border-b border-panel-border">
         <h3 className="text-md font-bold text-text-strong">Participants</h3>
-        <Button variant="secondary" size="compact" data-control="MD-47" onPress={onAdd}>
+        <Button
+          variant="secondary"
+          size="compact"
+          data-control="MD-47"
+          isDisabled={addDisabled}
+          onPress={onAdd}
+        >
           Add
         </Button>
       </div>
