@@ -198,7 +198,7 @@ export function RecordHeader({
                   aria-label={command.splitLabel}
                   isDisabled={command.isDisabled}
                   laterModule={command.laterModule}
-                  className="rounded-l-none"
+                  className="rounded-l-none border-l border-l-white/40"
                 >
                   <Icons.chevronDown aria-hidden className="h-4 w-4" />
                 </Button>

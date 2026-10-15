@@ -1,7 +1,7 @@
 import type { ModuleRecordReference, RecordData } from "@crm/core/records";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
-import { callReferenceSuffix } from "./calls-detail-sections";
+import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined {
   const who = record.fields.Who_Id;
@@ -47,6 +47,6 @@ export function callsHeaderTitleLink(
     name: ref.name,
     module: ref.module,
     id: ref.id,
-    suffix: callReferenceSuffix(record, "Who_Id"),
+    suffix: referenceModuleSuffix(record.fields.Who_Id),
   };
 }

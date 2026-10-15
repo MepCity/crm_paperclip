@@ -40,7 +40,7 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   },
   detail: {
     layout: "activity",
-    titleGlyph: Icons.check,
+    titleGlyph: Icons.checkSquare,
     header: tasksRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
