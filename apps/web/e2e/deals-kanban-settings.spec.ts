@@ -74,3 +74,24 @@ test("Cancel discards changes", async ({ page }) => {
   await expect(firstCard.locator(":scope > div")).toHaveCount(7);
   await expect(firstCard.locator(":scope > div").nth(6)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
 });
+
+test("Manage Kanban Views modal opens from selector and closes with Close Modal", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Deals"));
+  await expect(page.locator("[data-record-board]")).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Board grouping" })
+    .selectOption("__manage_kanban_views__");
+  const dialog = page.getByRole("dialog", { name: "Manage Kanban Views" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("columnheader", { name: "View Name" })).toBeVisible();
+  await expect(dialog.getByRole("columnheader", { name: "Used Field" })).toBeVisible();
+  await expect(dialog.getByRole("columnheader", { name: "Shared To" })).toBeVisible();
+  await expect(dialog.getByRole("cell", { name: "STAGEVIEW" })).toBeVisible();
+  await expect(dialog.getByRole("cell", { name: "Everyone" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Close Modal" }).click();
+  await expect(dialog).toBeHidden();
+});
