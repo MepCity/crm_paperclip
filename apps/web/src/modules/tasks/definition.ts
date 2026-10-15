@@ -6,6 +6,7 @@ import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
 import { TaskRecordScreen } from "./task-record-screen";
 import { buildTasksBusinessCardFields, buildTasksDetailSections } from "./tasks-detail-sections";
+import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 import { tasksRecordHeaderIdentity } from "./tasks-record-header";
 import {
   buildTasksRecordMoreMenuGroups,
@@ -19,7 +20,6 @@ import {
   TASKS_TIMELINE_SOURCE_OPTIONS,
   TASKS_TIMELINE_SUBTABS,
 } from "./tasks-timeline";
-import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 
 export const tasksScreenDefinition: ModuleScreenDefinition = {
   apiName: "Tasks",
