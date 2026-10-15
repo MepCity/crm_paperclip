@@ -10,6 +10,17 @@ import { type ReactNode, useEffect, useState } from "react";
  */
 const COLOUR_GROUPS = [
   {
+    label: "Activity forms",
+    tokens: [
+      "--color-activity-form-rule",
+      "--color-activity-form-required",
+      "--color-activity-form-value",
+      "--color-activity-form-placeholder",
+      "--color-activity-form-lookup",
+      "--color-activity-form-switch",
+    ],
+  },
+  {
     label: "Record forms",
     tokens: [
       "--color-form-required",
@@ -270,6 +281,33 @@ const SHADOW_TOKENS = [
 ] as const;
 
 const SIZE_GROUPS = [
+  {
+    label: "Activity forms",
+    tokens: [
+      "--size-activity-form-width",
+      "--size-activity-form-inset",
+      "--size-activity-form-label-width",
+      "--size-activity-form-strip-content-offset",
+      "--size-activity-form-strip-height",
+      "--size-activity-form-strip-inset",
+      "--size-activity-form-first-content-top",
+      "--size-activity-form-first-title-center",
+      "--size-activity-form-row-height",
+      "--size-activity-form-row-gap",
+      "--size-activity-form-rule",
+      "--size-activity-form-required-width",
+      "--size-activity-form-required-height",
+      "--size-activity-form-section-gap",
+      "--size-activity-form-section-title-gap",
+      "--size-activity-form-textarea-height",
+      "--size-activity-form-textarea-rule-gap",
+      "--size-activity-form-icon",
+      "--size-activity-form-icon-inset",
+      "--size-activity-form-choice-gap",
+      "--size-activity-form-switch-width",
+      "--size-activity-form-switch-height",
+    ],
+  },
   {
     label: "Inline record editing",
     tokens: [

@@ -106,6 +106,7 @@ export interface OwnerPickerProps {
 
 export interface RecordFormConfig {
   module: string;
+  variant?: "activity";
   rules: FormRules;
   paths: {
     detail: (id: string, module?: string) => string;
@@ -502,6 +503,7 @@ function LoadedRecordForm({
         <FieldInput
           id={id}
           hideLabel
+          variant={config.variant}
           field={{ ...field, label }}
           value={isState && emptyCountry ? null : (values[field.apiName] ?? null)}
           onChange={(next) => change(field.apiName, next)}
@@ -562,6 +564,7 @@ function LoadedRecordForm({
           }
           controlId={id}
           column={column}
+          required={field.required}
         >
           {input}
         </FormRow>
@@ -571,8 +574,11 @@ function LoadedRecordForm({
 
   return (
     <div ref={rootRef}>
-      {config.inventoryChrome ? <RecordFormClientScriptTab /> : null}
+      {config.inventoryChrome && config.variant !== "activity" ? (
+        <RecordFormClientScriptTab />
+      ) : null}
       <RecordFormShell
+        variant={config.variant}
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
@@ -697,7 +703,9 @@ function LoadedRecordForm({
             </FormSection>
           );
         })}
-        {config.inventoryChrome ? <RecordFormInventoryFooter /> : null}
+        {config.inventoryChrome && config.variant !== "activity" ? (
+          <RecordFormInventoryFooter />
+        ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog
         isOpen={unsavedOpen}
