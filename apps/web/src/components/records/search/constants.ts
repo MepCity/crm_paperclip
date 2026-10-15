@@ -36,7 +36,7 @@ export function getDocumentedModuleFilterItems(
     return {
       ...item,
       isRegistered,
-      laterModule: isRegistered ? undefined : resolveModuleLaterKey(item.moduleApiName),
+      laterModule: isRegistered ? undefined : resolveModuleLaterKey(item.label),
     };
   });
 
