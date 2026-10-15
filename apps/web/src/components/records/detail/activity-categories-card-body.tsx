@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ClipboardCheck, Phone, UserRound } from "lucide-react";
+import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import "./activity-categories-card-body.css";
 
@@ -27,9 +27,9 @@ export interface ActivityCategoriesCardBodyProps {
 }
 
 const categoryDefinitions = [
-  { kind: "task", label: "Tasks", Icon: ClipboardCheck },
-  { kind: "meeting", label: "Meetings", Icon: Calendar },
-  { kind: "call", label: "Calls", Icon: Phone },
+  { kind: "task", label: "Tasks", Icon: Icons.task },
+  { kind: "meeting", label: "Meetings", Icon: Icons.calendar },
+  { kind: "call", label: "Calls", Icon: Icons.phone },
 ] as const;
 
 export function ActivityCategoriesCardBody({
@@ -70,7 +70,7 @@ export function ActivityCategoriesCardBody({
                     {row.dateText !== null && <div>{row.dateText}</div>}
                     {row.ownerName !== null && (
                       <div className="activity-categories-owner">
-                        <UserRound size={16} aria-hidden="true" />
+                        <Icons.userRound size={16} aria-hidden="true" />
                         <span>{row.ownerName}</span>
                       </div>
                     )}
