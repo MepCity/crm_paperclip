@@ -70,11 +70,14 @@ export type RecordDetailSlotsContext = {
 export type RecordDetailSlots = {
   overviewPrefix?: ReactNode;
   contactSummary?: ReactNode;
+  relatedRailBeforeFooter?: ReactNode;
+  relatedRailAfterFooter?: ReactNode;
   /** Right-hand panel; when present the related list rail and its toggle are not drawn. */
   sidePanel?: ReactNode;
   /** Commands drawn before Edit in the record header. */
   headerCommands?: readonly RecordCommand[];
-  relatedRailAfterFooter?: ReactNode;
+  /** When true, omits the Edit button from the record header (e.g. Calls where Edit is in More Options). */
+  suppressEditCommand?: boolean;
 };
 
 export type RecordDetailScreenProps = {
@@ -251,6 +254,7 @@ export function RecordDetailScreen({
     : record;
   const {
     title,
+    titleHref,
     subtitle,
     subtitleLaterModule,
     subtitleHref,
@@ -302,6 +306,7 @@ export function RecordDetailScreen({
   }
 
   const moreMenuGroups = rules.moreOptions({
+    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
     ...(definition.merge
@@ -463,6 +468,7 @@ export function RecordDetailScreen({
         header={
           <RecordHeader
             title={title}
+            titleHref={titleHref}
             subtitle={subtitle}
             subtitleLaterModule={subtitleLaterModule}
             subtitleHref={subtitleHref}
@@ -475,12 +481,16 @@ export function RecordDetailScreen({
             commands={[
               ...(rules.headerCommands ?? []),
               ...(detailSlots?.headerCommands ?? []),
-              {
-                id: "edit",
-                label: "Edit",
-                variant: "secondary",
-                href: paths.edit(orgSlug, definition.tab, recordId),
-              },
+              ...(!detailSlots?.suppressEditCommand
+                ? [
+                    {
+                      id: "edit",
+                      label: "Edit",
+                      variant: "secondary" as const,
+                      href: paths.edit(orgSlug, definition.tab, recordId),
+                    },
+                  ]
+                : []),
             ]}
             menuGroups={moreMenuGroups}
             moreLabel="More Options"

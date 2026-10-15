@@ -40,7 +40,10 @@ export function buildCallsBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record) ? [{ field, value: record.fields[name] ?? null }] : [];
+    if (!field || !visible(field, record)) return [];
+    const valueSuffix =
+      name === "Who_Id" || name === "What_Id" ? callReferenceSuffix(record, name) : undefined;
+    return [{ field, value: record.fields[name] ?? null, ...(valueSuffix ? { valueSuffix } : {}) }];
   });
 }
 
@@ -63,10 +66,13 @@ export function buildCallsDetailSections(
             : name === "Modified_By"
               ? record.fields.Modified_Time
               : undefined;
+        const valueSuffix =
+          name === "Who_Id" || name === "What_Id" ? callReferenceSuffix(record, name) : undefined;
         fields.push({
           column: "full",
           field,
           value: record.fields[name] ?? null,
+          ...(valueSuffix ? { valueSuffix } : {}),
           auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
         });
       }

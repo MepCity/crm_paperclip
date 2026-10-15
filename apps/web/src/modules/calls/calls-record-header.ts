@@ -1,4 +1,7 @@
-import type { ModuleRecordReference, RecordData } from "@crm/core/records";
+import type { ModuleApiName, ModuleRecordReference, RecordData } from "@crm/core/records";
+import type { ComponentType, SVGProps } from "react";
+import { Icons } from "@/components/ui/icon";
+import { moduleRecordPath } from "@/lib/crm-paths";
 import { callReferenceSuffix } from "./calls-detail-sections";
 
 function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined {
@@ -8,14 +11,37 @@ function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined 
   return typeof ref.name === "string" && ref.name.trim() !== "" ? ref : undefined;
 }
 
-/** Header identity: the Call For record's name, else Subject (CD-02). No portrait. */
+/** Header identity: Call For contact record's name + link + module suffix, or Subject (CD-02). Static handset glyph. */
 export function callsRecordHeaderIdentity(
   record: RecordData,
-  _context?: unknown,
-): { title: string; subtitle?: string; hasPortrait?: boolean; recordNavigation?: boolean } {
-  const ref = whoRef(record);
+  context?: { orgSlug?: string },
+): {
+  title: string;
+  titleHref?: string;
+  subtitle?: string;
+  hasPortrait?: boolean;
+  portraitIcon?: ComponentType<SVGProps<SVGSVGElement>>;
+  recordNavigation?: boolean;
+} {
+  const link = callsHeaderTitleLink(record);
   const subject = typeof record.fields.Subject === "string" ? record.fields.Subject : "";
-  return { title: ref?.name ?? subject, hasPortrait: false, recordNavigation: false };
+  const title = link?.name ?? subject;
+  const orgSlug = context?.orgSlug ?? "";
+  const titleHref =
+    link?.id && orgSlug
+      ? moduleRecordPath(orgSlug, (link.module ?? "Contacts") as ModuleApiName, link.id)
+      : undefined;
+  const suffix = link?.suffix ?? "";
+  const cleanSuffix = suffix.startsWith("- ") ? suffix.slice(2).trim() : suffix.trim();
+
+  return {
+    title,
+    ...(titleHref ? { titleHref } : {}),
+    ...(cleanSuffix ? { subtitle: cleanSuffix } : {}),
+    hasPortrait: true,
+    portraitIcon: Icons.phone,
+    recordNavigation: true,
+  };
 }
 
 /** Title link target and unlinked module suffix for the header (CD-02); undefined when Who_Id is empty. */

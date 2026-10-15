@@ -197,6 +197,7 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
+      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
@@ -220,6 +221,7 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
