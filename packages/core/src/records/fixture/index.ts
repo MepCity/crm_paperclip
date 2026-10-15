@@ -30,6 +30,11 @@ import type {
 import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import {
+  attachmentUltimateParent,
+  fixtureAttachmentLifecycle,
+  removeAttachmentIds,
+} from "./attachments/hooks";
+import {
   automaticMaster,
   duplicateGroups,
   fieldValueKey,
@@ -139,7 +144,9 @@ export function createFixtureRecordService(
                   ...record,
                   fields: {
                     ...record.fields,
-                    Owner: ctx.userId,
+                    ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+                      ? { Owner: ctx.userId }
+                      : {}),
                     Created_By: ctx.userId,
                     Modified_By: ctx.userId,
                   },
@@ -209,6 +216,7 @@ export function createFixtureRecordService(
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
+    if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     return resolveRecordReferences(
       bundle.readRecord?.(record, now) ?? record,
       bundle.metadata.fields,
@@ -282,6 +290,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
@@ -329,6 +338,7 @@ export function createFixtureRecordService(
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertModuleWritable(module);
     const bundle = bundleFor(module);
+    if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
     const ids = [...input.duplicateIds];
     if (
       ids.length < 1 ||
@@ -370,7 +380,20 @@ export function createFixtureRecordService(
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
     const projected = new Map<string, Map<string, RecordData>>();
-    for (const [name, moduleState] of state.modules) {
+    const staged = new Map(
+      [...state.modules].map(
+        ([name, store]) => [name, { ...store, records: new Map(store.records) }] as const,
+      ),
+    );
+    bundle.transferMergedRecords?.(ids, master.id, {
+      registeredModules: hookContext.registeredModules,
+      moduleStore: (name) => {
+        const store = staged.get(name);
+        if (!store) throw new NotFoundError("Module not found.");
+        return store;
+      },
+    });
+    for (const [name, moduleState] of staged) {
       const next = new Map<string, RecordData>();
       for (const record of moduleState.records.values()) {
         if (name === module && removed.has(record.id)) continue;
@@ -419,6 +442,7 @@ export function createFixtureRecordService(
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]> => {
     const bundle = bundleFor(module);
+    if (bundle.childModule) return [];
     return copy(
       duplicateGroups(
         matching(module, { viewId: "" }, false),
@@ -502,6 +526,7 @@ export function createFixtureRecordService(
         query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
       )) {
         const bundle = bundleFor(module);
+        if (bundle.childModule) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -649,7 +674,10 @@ export function createFixtureRecordService(
       });
     },
     async get(module, id) {
-      return copy(resolveRead(module, recordFor(module, id)));
+      const record = recordFor(module, id);
+      if (module === "Attachments" && record.fields.$state !== "ready")
+        throw new NotFoundError("Record not found.");
+      return copy(resolveRead(module, record));
     },
     async create(module, input) {
       assertModuleWritable(module);
@@ -667,7 +695,9 @@ export function createFixtureRecordService(
       const stamp = clock().toISOString();
       Object.assign(fields, normalized, bundle.createDefaults(stamp), {
         id,
-        Owner: normalized.Owner ?? ctx.userId,
+        ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+          ? { Owner: normalized.Owner ?? ctx.userId }
+          : {}),
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
@@ -747,8 +777,24 @@ export function createFixtureRecordService(
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
       const moduleState = moduleStore(module);
+      if (module === "Attachments") removeAttachmentIds(ids, hookContext);
       for (const id of ids) moduleState.records.delete(id);
       bundleFor(module).afterDelete?.(ids, hookContext);
     },
   };
+}
+
+/** Internal lifecycle access for the server-side blob adapter; never a wire API. */
+export function createFixtureAttachmentLifecycle(context: OrgContext) {
+  createFixtureRecordService(context);
+  const state = stores.get(context.orgId);
+  if (!state) throw new NotFoundError("Organization store not found.");
+  return fixtureAttachmentLifecycle({
+    registeredModules: Object.keys(fixtureModules),
+    moduleStore(module) {
+      const store = state.modules.get(module);
+      if (!store) throw new NotFoundError("Module not found.");
+      return store;
+    },
+  });
 }
