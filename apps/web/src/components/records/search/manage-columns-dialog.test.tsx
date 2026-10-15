@@ -99,7 +99,7 @@ describe("ManageColumnsDialog", () => {
       expect(c.disabled).toBe(!c.checked);
     }
     expect(checkboxes().filter((c) => c.checked)).toHaveLength(MAX_SELECTED_COLUMNS);
-    await user.click(checkbox(fields[0].label));
+    await user.click(checkbox("First Name"));
     expect(checkboxes().every((c) => !c.disabled)).toBe(true);
   });
 
