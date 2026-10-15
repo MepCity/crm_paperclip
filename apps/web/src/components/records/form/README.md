@@ -347,3 +347,27 @@ insets, coordinate widths, Description width/height and bottom separator.
 Interim: Clear All resets all writable members of the Address group locally;
 read-only fields and identity fields are preserved. Its measured low-contrast
 ink is reported under ADR 0003 §8; no reference write was performed to study it.
+
+## Activity variant
+
+Set `ModuleScreenDefinition.form.variant` to `"activity"` to opt into the
+measured Activities shell. The route forwards it to `RecordFormConfig`, the
+shell and field renderer. Omission retains the existing record form layout.
+The activity shell has a full-width pale title band and an unframed white body;
+rows share a label-to-control underline and required rows have a short red
+segment at their left edge. Inventory footer and Client Script are omitted.
+
+`FormRow.labelControl` is the slot for an interactive label-side type selector.
+Supply the selector's own accessible name and keep the lookup input named by its
+field label. Module-specific type inventories and field bindings belong to the
+module form rules; this shell does not infer them. `FieldInput.variant` uses a
+search glyph for lookups and hides duplicate boolean/toggle text while retaining
+accessible names. New geometry tokens derive from `activities-form.md` →
+Visual layout — Task form (measured); typography continues to use shared tokens
+because CSS font properties were not observed in that capture.
+
+Task rules opt `Who_Id` and `What_Id` into `lookupLabelFields`. Their selector
+uses metadata targets and the loaded record's module; changing a target clears
+the previous reference. `FieldInput.lookupModule` routes the existing picker
+and omits the in-input type prefix. `subduedToggles` only changes the off-state
+track colour; it does not disable Repeat or change its payload.
