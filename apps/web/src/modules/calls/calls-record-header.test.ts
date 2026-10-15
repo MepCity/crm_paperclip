@@ -5,10 +5,12 @@ const who = { id: "p1", name: "Ada Sample", module: "Contacts" };
 
 test("title is the Who_Id name with module suffix link", () => {
   const record = { id: "c1", fields: { Who_Id: who, Subject: "Intro" } };
-  expect(callsRecordHeaderIdentity(record)).toEqual({
+  expect(callsRecordHeaderIdentity(record, { orgSlug: "acme" })).toEqual({
     title: "Ada Sample",
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
+    titleHref: expect.stringContaining("p1"),
+    titleSuffix: "Contact",
   });
   expect(callsHeaderTitleLink(record)).toEqual({ ...who, suffix: "Contact" });
 });

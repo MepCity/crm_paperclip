@@ -15,7 +15,7 @@ test("exports a complete Meetings module screen definition registered in the mod
   expect(meetingsScreenDefinition.list).toBe(meetingsListPageConfig);
   expect(meetingsScreenDefinition.listCurrencyCode).toBe("TRY");
   expect(meetingsScreenDefinition.detail.hasPortrait).toBe(false);
-  expect(meetingsScreenDefinition.detail.recordNavigation).toBe(false);
+  expect(meetingsScreenDefinition.detail.recordNavigation).toBe(true);
 
   expect(resolveModuleScreen("Meetings")).toBe(meetingsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.tab === "Meetings")).toBe(true);

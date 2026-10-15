@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import { accountsFormRules } from "../accounts/accounts-form-rules";
-import {
-  ACCOUNTS_DELETE_CONFIRM_MESSAGE,
-  ACCOUNTS_DELETE_CONFIRM_TITLE,
-} from "../accounts/accounts-record-more-options";
 import { moduleScreens, resolveModuleScreen } from "../registry";
+import {
+  CALLS_DELETE_CONFIRM_MESSAGE,
+  CALLS_DELETE_CONFIRM_TITLE,
+} from "./calls-record-more-options";
 import { callsScreenDefinition } from "./definition";
 import { callsListPageConfig } from "./list-config";
 import { buildCallsFilterGroups } from "./list-filters";
@@ -23,10 +23,12 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
   expect(callsScreenDefinition.list).toBe(callsListPageConfig);
   expect(callsScreenDefinition.buildFilterGroups).toBe(buildCallsFilterGroups);
 
-  // Temporary fallbacks from Accounts
+  // Form still borrows Accounts; detail is Calls-specific
   expect(callsScreenDefinition.form.rules).toBe(accountsFormRules);
-  expect(callsScreenDefinition.detail.deleteTitle).toBe(ACCOUNTS_DELETE_CONFIRM_TITLE);
-  expect(callsScreenDefinition.detail.deleteMessage).toBe(ACCOUNTS_DELETE_CONFIRM_MESSAGE);
+  expect(callsScreenDefinition.detail.deleteTitle).toBe(CALLS_DELETE_CONFIRM_TITLE);
+  expect(callsScreenDefinition.detail.deleteMessage).toBe(CALLS_DELETE_CONFIRM_MESSAGE);
+  expect(callsScreenDefinition.detail.layout).toBe("activity");
+  expect(callsScreenDefinition.detail.relatedListRail).toBeUndefined();
   expect(callsScreenDefinition.detail.timeline.subtabs).toBeDefined();
   expect(callsScreenDefinition.detail.timeline.normalizeEventKind).toBeDefined();
 

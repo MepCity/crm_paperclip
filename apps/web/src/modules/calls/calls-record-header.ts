@@ -1,4 +1,6 @@
 import type { ModuleRecordReference, RecordData } from "@crm/core/records";
+import { moduleRecordPath } from "@/lib/crm-paths";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { callReferenceSuffix } from "./calls-detail-sections";
 
 function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined {
@@ -11,11 +13,28 @@ function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined 
 /** Header identity: the Call For record's name, else Subject (CD-02). No portrait. */
 export function callsRecordHeaderIdentity(
   record: RecordData,
-  _context?: unknown,
-): { title: string; subtitle?: string; hasPortrait?: boolean; recordNavigation?: boolean } {
+  context?: { orgSlug?: string },
+): {
+  title: string;
+  subtitle?: string;
+  hasPortrait?: boolean;
+  recordNavigation?: boolean;
+  titleHref?: string;
+  titleSuffix?: string;
+} {
   const ref = whoRef(record);
   const subject = typeof record.fields.Subject === "string" ? record.fields.Subject : "";
-  return { title: ref?.name ?? subject, hasPortrait: false, recordNavigation: false };
+  const link = callsHeaderTitleLink(record);
+  const tab = link ? (resolveModuleScreenByApiName(link.module)?.tab ?? link.module) : undefined;
+  return {
+    title: ref?.name ?? subject,
+    hasPortrait: false,
+    recordNavigation: true,
+    ...(link && tab && context?.orgSlug
+      ? { titleHref: moduleRecordPath(context.orgSlug, tab, link.id) }
+      : {}),
+    ...(link?.suffix ? { titleSuffix: link.suffix } : {}),
+  };
 }
 
 /** Title link target and unlinked module suffix for the header (CD-02); undefined when Who_Id is empty. */

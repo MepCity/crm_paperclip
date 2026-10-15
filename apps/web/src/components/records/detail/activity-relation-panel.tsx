@@ -135,7 +135,7 @@ export function ActivityRelationPanel({
     <aside
       aria-label="Related information"
       data-activity-relation-panel
-      className="flex flex-col gap-4 rounded-md border border-panel-border bg-surface p-4"
+      className="flex flex-col gap-4 bg-surface px-2.5 pb-4 pt-[15px]"
     >
       <Select
         label="Related person"
