@@ -17,7 +17,9 @@ import type {
   SummaryQuery,
 } from "@crm/core/records";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type { OrgMember } from "./http-record-service";
+import { createHttpTransferClient, type TransferClient } from "./http-transfer-service";
 import { useClientRecordService, useOrgSlug } from "./provider";
 import {
   apiKeys,
@@ -314,5 +316,30 @@ export function useSaveKanbanView(module: ModuleApiName) {
         queryKey: apiKeys.kanbanView(orgSlug, module, view.id),
       });
     },
+  });
+}
+
+export function useTransferClient(): TransferClient {
+  const orgSlug = useOrgSlug();
+  return useMemo(() => createHttpTransferClient(orgSlug), [orgSlug]);
+}
+
+export function useImportHistory(options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const client = useTransferClient();
+  return useQuery({
+    queryKey: apiKeys.imports(orgSlug),
+    queryFn: () => client.listImports(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useExportHistory(options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const client = useTransferClient();
+  return useQuery({
+    queryKey: apiKeys.exports(orgSlug),
+    queryFn: () => client.listExports(),
+    enabled: options?.enabled ?? true,
   });
 }

@@ -6,6 +6,8 @@ export const CRM_ORG_HEADER = "X-CRM-ORG";
 export type ApiFetchOptions = {
   method?: string;
   body?: unknown;
+  /** Multipart upload; the browser sets the boundary header. */
+  form?: FormData;
   signal?: AbortSignal;
 };
 
@@ -23,7 +25,7 @@ export async function apiFetch(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<unknown> {
-  const { method = "GET", body, signal } = options;
+  const { method = "GET", body, form, signal } = options;
   const headers = new Headers({ [CRM_ORG_HEADER]: orgSlug });
   if (body !== undefined) headers.set("Content-Type", "application/json");
   const response = await fetch(path, {
@@ -31,7 +33,7 @@ export async function apiFetch(
     credentials: "same-origin",
     headers,
     signal,
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...(form ? { body: form } : body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   if (response.status === 204) return null;
   const text = await response.text();
