@@ -43,13 +43,14 @@ export function ModuleFormClient({
       ? moduleRecordPath(orgSlug, definition.tab, recordId)
       : moduleListDefaultPath(orgSlug, definition.tab);
   return (
-    <div className="module-form-page record-form-page">
+    <div className="module-form-page record-form-page" data-form-variant={definition.form.variant}>
       <RecordFormScreen
         currentUserId={currentUserId}
         recordId={recordId}
         cloneSourceId={cloneSourceId}
         config={{
           module: moduleApiName,
+          variant: definition.form.variant,
           rules: definition.form.rules,
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
