@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
+import { ForbiddenError, NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
 import type { OrgContext } from "../../../tenancy/types";
 import type { RecordData, RecordInput } from "../../contract";
 import { createFixtureAttachmentLifecycle, createFixtureRecordService } from "../index";
-import { fixtureModules } from "../registry";
+import { fixtureModules, supportedModules } from "../registry";
 import { attachmentParentModules, attachmentsMetadata } from "./metadata";
 import { generateFixtureAttachments } from "./seed";
 
@@ -66,6 +66,34 @@ describe("Attachments record contract", () => {
       ),
     ).toBe(false);
     expect((await service.list("Attachments", listQuery)).records).toEqual([]);
+  });
+  it("excludes ready Attachments from discovery and rejects child merges", async () => {
+    const { service, lifecycle } = make();
+    const parent = await lead(service);
+    const attachment = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(attachment.id, published);
+    const linked = await service.create("Attachments", link("Leads", parent.id));
+    expect((await service.get("Attachments", attachment.id)).id).toBe(attachment.id);
+    expect((await service.list("Attachments", listQuery)).records).toHaveLength(2);
+    for (const query of [
+      { text: "example.pdf" },
+      { text: "example.pdf", modules: ["Attachments"] },
+      {
+        text: "example.pdf",
+        modules: ["Attachments"],
+        filters: { field: "File_Name", comparator: "equal", value: "example.pdf" },
+      },
+    ] as const)
+      expect(await service.search(query)).toEqual([]);
+    expect(supportedModules).not.toContain("Attachments");
+    expect(await service.findDuplicateGroups("Attachments", ["File_Name"])).toEqual([]);
+    await expect(
+      service.merge("Attachments", {
+        masterId: attachment.id,
+        duplicateIds: [linked.id],
+        values: {},
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
   it.each(attachmentParentModules)(
     "accepts %s parents and resolves Notes to their ultimate parent",

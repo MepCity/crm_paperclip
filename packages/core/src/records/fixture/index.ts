@@ -144,7 +144,9 @@ export function createFixtureRecordService(
                   ...record,
                   fields: {
                     ...record.fields,
-                    Owner: ctx.userId,
+                    ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+                      ? { Owner: ctx.userId }
+                      : {}),
                     Created_By: ctx.userId,
                     Modified_By: ctx.userId,
                   },
@@ -336,6 +338,7 @@ export function createFixtureRecordService(
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertModuleWritable(module);
     const bundle = bundleFor(module);
+    if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
     const ids = [...input.duplicateIds];
     if (
       ids.length < 1 ||
@@ -377,7 +380,20 @@ export function createFixtureRecordService(
     const removed = new Set(ids);
     const updated = { id: master.id, fields };
     const projected = new Map<string, Map<string, RecordData>>();
-    for (const [name, moduleState] of state.modules) {
+    const staged = new Map(
+      [...state.modules].map(
+        ([name, store]) => [name, { ...store, records: new Map(store.records) }] as const,
+      ),
+    );
+    bundle.transferMergedRecords?.(ids, master.id, {
+      registeredModules: hookContext.registeredModules,
+      moduleStore: (name) => {
+        const store = staged.get(name);
+        if (!store) throw new NotFoundError("Module not found.");
+        return store;
+      },
+    });
+    for (const [name, moduleState] of staged) {
       const next = new Map<string, RecordData>();
       for (const record of moduleState.records.values()) {
         if (name === module && removed.has(record.id)) continue;
@@ -426,6 +442,7 @@ export function createFixtureRecordService(
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]> => {
     const bundle = bundleFor(module);
+    if (bundle.childModule) return [];
     return copy(
       duplicateGroups(
         matching(module, { viewId: "" }, false),
@@ -509,6 +526,7 @@ export function createFixtureRecordService(
         query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
       )) {
         const bundle = bundleFor(module);
+        if (bundle.childModule) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -677,7 +695,9 @@ export function createFixtureRecordService(
       const stamp = clock().toISOString();
       Object.assign(fields, normalized, bundle.createDefaults(stamp), {
         id,
-        Owner: normalized.Owner ?? ctx.userId,
+        ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+          ? { Owner: normalized.Owner ?? ctx.userId }
+          : {}),
         Created_By: ctx.userId,
         Modified_By: ctx.userId,
       });
