@@ -103,3 +103,16 @@
 .module-list-page[data-list-variant="activities"] [data-part="row"]:hover a {
   color: var(--color-primary);
 }
+
+/* Rows 09-11: measured Create main-button widths (arrow width left as is). */
+.module-list-page[data-list-module="Tasks"] [data-split-button] > :first-child {
+  width: 99px;
+}
+
+.module-list-page[data-list-module="Meetings"] [data-split-button] > :first-child {
+  width: 125px;
+}
+
+.module-list-page[data-list-module="Calls"] [data-split-button] > :first-child {
+  width: 96px;
+}
