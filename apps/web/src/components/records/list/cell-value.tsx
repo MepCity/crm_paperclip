@@ -30,6 +30,10 @@ export interface CellValueProps {
   currencyCode?: string;
   /** Activities list cells: numeric `dd.mm.yyyy` dates. */
   numericDates?: boolean;
+  /** Activities all-day rows: datetime cells show only the date. */
+  dateOnly?: boolean;
+  /** Meetings: a module pictogram precedes the Related To record. */
+  relatedToPictogram?: boolean;
 }
 
 /**
@@ -38,11 +42,17 @@ export interface CellValueProps {
  */
 export function CellValue(props: CellValueProps) {
   const content = <CellContent {...props} />;
-  // Activities lists (MEP-590 row 30): a module pictogram precedes the Related To record.
-  if (props.numericDates && props.field.label === "Related To" && props.value) {
+  // Meetings list (MEP-590 row 30): a pictogram of the related record's module precedes it.
+  const { value } = props;
+  if (props.relatedToPictogram && typeof value === "object" && value && "module" in value) {
+    const Pictogram = value.module === "Accounts" ? Icons.building : Icons.folder;
     return (
       <span className="inline-flex items-center gap-1.5">
-        <Icons.building aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+        <Pictogram
+          aria-hidden
+          data-part="related-pictogram"
+          className="h-4 w-4 shrink-0 text-muted"
+        />
         {content}
       </span>
     );
@@ -61,6 +71,7 @@ function CellContent({
   laterModule,
   currencyCode,
   numericDates,
+  dateOnly,
 }: CellValueProps) {
   const contextOrgSlug = useOptionalOrgSlug();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
@@ -81,6 +92,7 @@ function CellContent({
     orgSlug: effectiveOrgSlug,
     currencyCode,
     numericDates,
+    dateOnly,
   });
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {

@@ -56,6 +56,8 @@ export function formatFieldValue(
     orgSlug?: string;
     /** Activities list cells: zero-padded `dd.mm.yyyy` dates and 12-hour times. */
     numericDates?: boolean;
+    /** With `numericDates`, datetime cells show only the date (all-day events). */
+    dateOnly?: boolean;
   },
 ): FieldFormattedValue {
   if (value === null || value === "") return { kind: "empty" };
@@ -123,6 +125,7 @@ function valueText(
   options?: {
     currencyCode?: string;
     numericDates?: boolean;
+    dateOnly?: boolean;
   },
 ): string | null {
   if (value === null || value === "") return null;
@@ -136,9 +139,12 @@ function valueText(
   }
 
   if (field.dataType === "datetime" && typeof value === "string") {
-    return options?.numericDates
-      ? formatNumericDateTime(value, format)
-      : formatDateTime(value, format);
+    if (options?.numericDates) {
+      return options.dateOnly
+        ? formatNumericDate(value, format)
+        : formatNumericDateTime(value, format);
+    }
+    return formatDateTime(value, format);
   }
 
   if (field.dataType === "picklist" && typeof value === "string") {

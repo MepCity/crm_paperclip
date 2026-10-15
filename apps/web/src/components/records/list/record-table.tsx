@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
@@ -53,6 +54,12 @@ export interface RecordTableProps {
   /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
   numericDates?: boolean;
   /** Hover tool sequence before the checkbox (Activities rows 32-33); default ellipsis + note. */
+  /** Activities list: draw the Related To module pictogram (Meetings). */
+  relatedToPictogram?: boolean;
+  /** Activities list: boolean field marking all-day rows, whose datetime cells show only the date. */
+  allDayField?: string;
+  /** Edit page of a row; the `edit` hover tool links there. */
+  rowEditHref?: (record: RecordData) => string;
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   footer: RecordTableFooterProps;
 }
@@ -115,6 +122,9 @@ export function RecordTable({
   format,
   currencyCode,
   numericDates,
+  relatedToPictogram,
+  allDayField,
+  rowEditHref,
   rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
@@ -257,6 +267,17 @@ export function RecordTable({
                             >
                               <Icons.messageSquare aria-hidden className="h-4 w-4" />
                             </Button>
+                          ) : tool === "edit" && rowEditHref ? (
+                            <Link
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Edit record"
+                              href={rowEditHref(record)}
+                              prefetch={false}
+                            >
+                              <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                            </Link>
                           ) : (
                             <Button
                               key={tool}
@@ -333,6 +354,8 @@ export function RecordTable({
                             format={format}
                             currencyCode={currencyCode}
                             numericDates={numericDates}
+                            dateOnly={allDayField ? record.fields[allDayField] === true : false}
+                            relatedToPictogram={relatedToPictogram && field.apiName === "What_Id"}
                           />
                         </div>
                         {phoneLaterModule &&

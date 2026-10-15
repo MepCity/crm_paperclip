@@ -43,7 +43,7 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { moduleDeduplicatePath, withSearchParams } from "@/lib/crm-paths";
+import { moduleDeduplicatePath, moduleRecordEditPath, withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -115,6 +115,10 @@ export interface ModuleListScreenConfig {
   /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
   listVariant?: "activities";
   /** Row hover tools in order (Activities rows 32-33); omitted draws ellipsis + note. */
+  /** Meetings: draw the Related To module pictogram. */
+  relatedToPictogram?: boolean;
+  /** Boolean field marking all-day rows (date-only Start/End cells). */
+  allDayField?: string;
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
@@ -804,6 +808,9 @@ function ModuleListScreenLoaded({
               currencyCode={config.cellCurrencyCode}
               numericDates={config.listVariant === "activities"}
               rowTools={config.rowTools}
+              relatedToPictogram={config.relatedToPictogram}
+              allDayField={config.allDayField}
+              rowEditHref={(record) => moduleRecordEditPath(orgSlug, config.module, record.id)}
               columns={columns}
               records={records}
               linkField={config.linkField}

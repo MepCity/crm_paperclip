@@ -67,6 +67,8 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   listVariant: "activities",
   actionsMenuWidth: 160,
   rowTools: ["edit", "note"],
+  relatedToPictogram: true,
+  allDayField: "All_day",
   viewMenuSearch: true,
   viewTypeTileIds: MEETINGS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,

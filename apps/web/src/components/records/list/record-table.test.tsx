@@ -56,6 +56,7 @@ function Harness({
   linkFieldLabel,
   sortableFields = new Set(columns.map((field) => field.apiName)),
   onSortChange = () => {},
+  extra,
 }: {
   records: readonly RecordData[];
   emptyMessage?: string;
@@ -66,6 +67,7 @@ function Harness({
   linkFieldLabel?: string;
   sortableFields?: ReadonlySet<string>;
   onSortChange?: (sort: SortSpec) => void;
+  extra?: Partial<RecordTableProps>;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   return (
@@ -83,6 +85,7 @@ function Harness({
       wrapText={wrapText}
       emptyMessage={emptyMessage}
       settings={settings}
+      {...extra}
       format={DEFAULT_FORMAT}
       footer={{
         total: records.length,
@@ -512,4 +515,31 @@ test("omits badge column and pulse button when badgeColumn is false", () => {
   expect(screen.queryByRole("button", { name: "Record activity" })).toBeNull();
   expect(screen.getByRole("checkbox", { name: "Select Acme Corp" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Acme Corp" })).toBeTruthy();
+});
+
+test("row hover tools follow rowTools; the edit tool links to the edit page", () => {
+  const tools = () =>
+    Array.from(document.querySelectorAll("[data-part=row] td button, [data-part=row] td a"))
+      .map((node) => node.getAttribute("aria-label"))
+      .filter((label) => label && label !== "Select row" && label !== "Record activity");
+  const { unmount } = render(
+    <Harness records={[record("rec-001", "Lead 001")]} extra={{ laterInventory: true }} />,
+  );
+  expect(tools()).toEqual(["Record actions", "Notes"]);
+  unmount();
+
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      extra={{
+        laterInventory: true,
+        rowTools: ["edit", "note", "ellipsis"],
+        rowEditHref: (item) => `/records/${item.id}/edit`,
+      }}
+    />,
+  );
+  expect(tools()).toEqual(["Edit record", "Notes", "Record actions"]);
+  expect(screen.getByRole("link", { name: "Edit record" }).getAttribute("href")).toBe(
+    "/records/rec-001/edit",
+  );
 });

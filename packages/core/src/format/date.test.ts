@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   formatDate,
   formatDateTime,
+  formatNumericDate,
+  formatNumericDateTime,
   formatRecordAuditDateTime,
   formatRelativeTime,
   formatTime,
@@ -249,5 +251,38 @@ describe("formatRelativeTime", () => {
     expect(() => formatRelativeTime("not a date", NOW, options)).toThrow(RangeError);
     expect(() => formatRelativeTime(NOW, new Date("nope"), options)).toThrow(RangeError);
     expect(() => formatRelativeTime("2026-03-01T11:00:00", NOW, options)).toThrow(RangeError);
+  });
+});
+
+describe("formatNumericDate / formatNumericDateTime", () => {
+  const utc = { locale: "en-US", timeZone: "UTC" };
+  const istanbul = { locale: "en-US", timeZone: "Europe/Istanbul" };
+  const losAngeles = { locale: "en-US", timeZone: "America/Los_Angeles" };
+
+  it("zero-pads day and month", () => {
+    expect(formatNumericDate("2026-03-01", utc)).toBe("01.03.2026");
+  });
+
+  it("keeps a calendar day on that day in every time zone", () => {
+    for (const options of [utc, istanbul, losAngeles]) {
+      expect(formatNumericDate("2026-03-01", options)).toBe("01.03.2026");
+    }
+  });
+
+  it("converts an instant into the time zone", () => {
+    expect(formatNumericDate(INSTANT, utc)).toBe("01.03.2026");
+    expect(formatNumericDate(INSTANT, istanbul)).toBe("02.03.2026");
+    expect(formatNumericDateTime(INSTANT, utc)).toBe("01.03.2026 10:30 PM");
+    expect(formatNumericDateTime(INSTANT, istanbul)).toBe("02.03.2026 1:30 AM");
+  });
+
+  it("writes midnight and noon in 12-hour form", () => {
+    expect(formatNumericDateTime("2026-03-01T00:00:00Z", utc)).toBe("01.03.2026 12:00 AM");
+    expect(formatNumericDateTime("2026-03-01T12:30:00Z", utc)).toBe("01.03.2026 12:30 PM");
+  });
+
+  it("returns an empty string for null and undefined", () => {
+    expect(formatNumericDate(null, utc)).toBe("");
+    expect(formatNumericDateTime(undefined, utc)).toBe("");
   });
 });
