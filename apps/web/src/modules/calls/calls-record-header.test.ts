@@ -26,6 +26,7 @@ test("title with orgSlug in context includes titleHref", () => {
     portraitIcon: Icons.phone,
     recordNavigation: true,
   });
+  expect(callsHeaderTitleLink(record)).toEqual({ ...who, suffix: "- Contacts" });
 });
 
 test("empty Who_Id falls back to Subject", () => {

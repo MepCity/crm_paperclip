@@ -656,6 +656,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
 - Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
 
+
 ## Module 5 — Activities
 
 ### Tasks list — implemented; QA pending (MEP-459)
@@ -704,3 +705,25 @@ without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
 
+### Meetings record detail — implemented; QA pending (MEP-507)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Back, tags, Edit, More Options and record navigation | MD-01, MD-04, MD-06–MD-09 | `meetings-detail.spec.ts` |
+| Overview, Timeline and tab-row Last Update | MD-33–MD-35 | `meetings-detail.spec.ts` |
+| Static business card, Related To suffix and Contact Name link | MD-39, MD-45 | `meetings-detail.spec.ts`, `meetings-detail-sections.test.ts` |
+| Participants between business card and details; Add without handler | MD-47, MD-41 | `meetings-detail.spec.ts` |
+| More Options: six rows, separators after Delete and Export Meeting | MD-07.1–MD-07.6 | `meetings-detail.spec.ts`, `meetings-record-more-options.test.ts` |
+| Person, Info/Conversations, Deal Summary and Open Activities | MD-50–MD-52, MD-54–MD-70 | `meetings-detail.spec.ts`; existing Tasks relation panel |
+
+Edit uses the registered shared Meetings form route. Inline editing in detail sections and
+Last Update reuse Deals rules; the business card is static. Add Tags is M6; the existing
+menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
+and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
+counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
+Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+
+Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
+show No participant found; a populated opaque array shows a blank body with heading/Add,
+without interpreting any entries or inventing names. The populated appearance/item schema
+remains an open question for the corresponding research/contract work.
