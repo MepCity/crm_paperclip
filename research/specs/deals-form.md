@@ -339,3 +339,28 @@ The painted no-click capture `m539-amount-base-v3` now exports the information i
 `m539-amount-hover` uses the exact inner-icon selector. Metadata confirms one completed hover. The painted `step-1.png` and final screenshot show the complete Create form and the information icon, but no visible explanation, tooltip or popup. The step accessibility snapshot supplies no explanatory content. This establishes **no visible popup after the captured hover**, not that the icon has no click behaviour. No tooltip wording, placement or dismissal can be specified from this result. No click was requested in this continuation, and no field was filled.
 
 Safety audit: `m539-amount-base-v3` blocked five background requests (reminder ×1, notification status ×1, telemetry ×3); `m539-amount-hover` blocked six (reminder ×1, notification status ×1, telemetry ×4). Screenshots, step evidence, controls and metadata were inspected together. Raw captures remain in the local research workspace. Click-triggered content and dismissal remain open questions; no record or preference operation was attempted.
+
+### Follow-up after dialog-tool approval — paint gate (MEP-539)
+
+The dialog-opening tool dependency is complete, but the next no-click baseline
+did not paint a usable form. `m539-amount-base-v4` used an unverified module
+route and shows only a loading skeleton; it is not evidence about the create
+form. The single corrected baseline, `m539-amount-base-v5`, uses the native
+module route already established by the earlier successful captures. It paints
+the shell with a blank content area, without the Amount field. Neither capture
+establishes new form or dialog behaviour.
+
+Both screenshots were inspected with their controls and metadata. The first
+exports three controls and records six failed static-script GETs with HTTP/2
+protocol errors (plus six console error entries). The corrected baseline exports
+114 shell controls, records two failed static-script GETs and client
+initialization errors, and blocks one background telemetry POST. There were no
+clicks, hovers, scrolls, dialog openings or submitted values in either capture.
+No browser/profile repair or request-guard change was attempted.
+
+Research stopped at the paint gate. The previous successful hover observation
+remains valid; click content/dismissal, Stage badge activation, Assign, both
+Contact Roles dialogs and natural many-card overflow remain open. Tool support
+for initial Assign/Edit All opening is now available; usable screen painting is
+the current access dependency. Raw captures remain local because they may
+contain session or customer information.
