@@ -5,13 +5,13 @@ import { expect, ignoreFailedResponses, test } from "./support/test";
 
 const CALLS_TAB = "Calls";
 // Seeded scheduled call linked to a contact (Who_Id) with Outgoing_Call_Status: "Overdue"
-const SCHEDULED_CALL_ID = "130000000000000001";
+const SCHEDULED_CALL_ID = "150000000000000001";
 // Seeded non-scheduled call (Missed, Outgoing_Call_Status: null, Who_Id: Leads)
-const NON_SCHEDULED_CALL_ID = "130000000000000000";
+const NON_SCHEDULED_CALL_ID = "150000000000000000";
 // Seeded call related to a deal (What_Id)
-const DEAL_RELATED_CALL_ID = "130000000000000003";
+const DEAL_RELATED_CALL_ID = "150000000000000003";
 // Seeded first call on list page
-const FIRST_LIST_CALL_ID = "130000000000000249";
+const FIRST_LIST_CALL_ID = "150000000000000249";
 
 test.describe("Calls record detail", () => {
   test.beforeEach(async ({ page }) => {
