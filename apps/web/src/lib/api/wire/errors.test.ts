@@ -47,7 +47,7 @@ describe("encodeError / decodeError", () => {
         conflict: 400,
         validation: 400,
         record_locked: 400,
-      }[error.code],
+      }[_label],
     );
     expect(encoded.body.status).toBe("error");
     expect(Object.keys(encoded.body).sort()).toEqual(["code", "details", "message", "status"]);
