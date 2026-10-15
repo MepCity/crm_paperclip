@@ -57,6 +57,7 @@ const COLOUR_GROUPS = [
     label: "Primary",
     tokens: [
       "--color-primary",
+      "--color-list-row-hover-activities",
       "--color-primary-text",
       "--color-primary-hover",
       "--color-primary-pressed",
