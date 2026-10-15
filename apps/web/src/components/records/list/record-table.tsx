@@ -52,6 +52,8 @@ export interface RecordTableProps {
   currencyCode?: string;
   /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
   numericDates?: boolean;
+  /** Hover tool sequence before the checkbox (Activities rows 32-33); default ellipsis + note. */
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   footer: RecordTableFooterProps;
 }
 
@@ -113,6 +115,7 @@ export function RecordTable({
   format,
   currencyCode,
   numericDates,
+  rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
   const empty = records.length === 0;
@@ -243,12 +246,33 @@ export function RecordTable({
                   >
                     {laterInventory ? (
                       <div className="flex pt-(--size-list-checkbox-offset) opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
-                        <Button variant="ghost" size="compact" aria-label="Record actions">
-                          <Icons.ellipsis aria-hidden className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="compact" aria-label="Notes" laterModule="M6">
-                          <Icons.messageSquare aria-hidden className="h-4 w-4" />
-                        </Button>
+                        {rowTools.map((tool) =>
+                          tool === "note" ? (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Notes"
+                              laterModule="M6"
+                            >
+                              <Icons.messageSquare aria-hidden className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label={tool === "edit" ? "Edit record" : "Record actions"}
+                              laterModule={tool === "edit" ? "M6" : undefined}
+                            >
+                              {tool === "edit" ? (
+                                <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                              ) : (
+                                <Icons.ellipsis aria-hidden className="h-4 w-4" />
+                              )}
+                            </Button>
+                          ),
+                        )}
                       </div>
                     ) : null}
                   </td>

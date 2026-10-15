@@ -57,6 +57,7 @@ export const callsListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: CALLS_SORT_FIELD_LABELS,
   pinnedViews: ["All Calls"],
   listVariant: "activities",
+  rowTools: ["edit", "note", "ellipsis"],
   actionsMenuWidth: 143,
   viewMenuSearch: true,
   viewTypeTileIds: CALLS_VIEW_TYPE_TILE_IDS,
@@ -68,7 +69,7 @@ export const callsListPageConfig: ModuleListScreenConfig = {
       { id: "mass-update", label: "Mass Update" },
       { id: "tags", label: "Manage Tags", laterModule: "M6" },
       { id: "export", label: "Export Calls", laterModule: "M6" },
-      { id: "print", label: "Print View", submenuIndicator: true },
+      { id: "print", label: "Print View", submenuIndicator: true, separatorBefore: true },
     ],
   },
   paths: {

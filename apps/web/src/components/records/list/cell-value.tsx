@@ -2,6 +2,7 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { useOptionalOrgSlug } from "@/lib/api/client/provider";
@@ -35,7 +36,21 @@ export interface CellValueProps {
  * Read-only cell text for the field types that appear as columns in the list
  * views: text, email, phone, picklist, ownerlookup, date, datetime and lookup.
  */
-export function CellValue({
+export function CellValue(props: CellValueProps) {
+  const content = <CellContent {...props} />;
+  // Activities lists (MEP-590 row 30): a module pictogram precedes the Related To record.
+  if (props.numericDates && props.field.label === "Related To" && props.value) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Icons.building aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+        {content}
+      </span>
+    );
+  }
+  return content;
+}
+
+function CellContent({
   field,
   value,
   href,

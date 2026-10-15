@@ -66,6 +66,7 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   pinnedViews: ["All Meetings"],
   listVariant: "activities",
   actionsMenuWidth: 160,
+  rowTools: ["edit", "note"],
   viewMenuSearch: true,
   viewTypeTileIds: MEETINGS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,
@@ -76,7 +77,7 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
       { id: "mass-update", label: "Mass Update" },
       { id: "tags", label: "Manage Tags", laterModule: "M6" },
       { id: "export", label: "Export Meetings", laterModule: "M6" },
-      { id: "print", label: "Print View", submenuIndicator: true },
+      { id: "print", label: "Print View", submenuIndicator: true, separatorBefore: true },
     ],
   },
   paths: {

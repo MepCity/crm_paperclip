@@ -128,6 +128,8 @@ export function MenuItem<T extends object>({
 export interface MenuAction {
   /** Visual indicator only; does not create a submenu. */
   submenuIndicator?: boolean;
+  /** Draws a divider above the row (Activities Actions menu, MEP-590 row 40). */
+  separatorBefore?: boolean;
   id: string;
   label: string;
   onAction: () => void;

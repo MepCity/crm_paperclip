@@ -116,3 +116,25 @@
 .module-list-page[data-list-module="Calls"] [data-split-button] > :first-child {
   width: 96px;
 }
+
+/* Row 05: Sort is 62 x 27 in the reference toolbar. */
+.module-list-page[data-list-variant="activities"] [data-list-toolbar] [data-part="sort"] {
+  width: 62px;
+  height: 27px;
+}
+
+/* Row 17: the reference filter rows read as enabled; do not fade them. */
+.module-list-page[data-list-variant="activities"] .filter-panel [data-disabled] {
+  opacity: 1;
+}
+
+/* Row 23: the All letter control carries a small down chevron. */
+.module-list-page[data-list-variant="activities"] .alphabet-trigger::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-inline-start: 4px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+}

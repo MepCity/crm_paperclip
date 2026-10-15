@@ -96,7 +96,12 @@ export function ListToolbar({
               }
             >
               {(item) => (
-                <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
+                <MenuItem
+                  id={item.id}
+                  laterModule={item.laterModule}
+                  isDisabled={item.isDisabled}
+                  className={item.separatorBefore ? "mt-1 border-t border-border pt-1" : undefined}
+                >
                   <span className="flex items-center justify-between gap-3">
                     {item.label}
                     {item.submenuIndicator ? (

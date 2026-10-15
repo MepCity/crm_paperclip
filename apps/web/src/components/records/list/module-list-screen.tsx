@@ -114,6 +114,8 @@ export interface ModuleListScreenConfig {
   actionsMenuWidth?: number;
   /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
   listVariant?: "activities";
+  /** Row hover tools in order (Activities rows 32-33); omitted draws ellipsis + note. */
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -801,6 +803,7 @@ function ModuleListScreenLoaded({
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}
               numericDates={config.listVariant === "activities"}
+              rowTools={config.rowTools}
               columns={columns}
               records={records}
               linkField={config.linkField}
