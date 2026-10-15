@@ -21,6 +21,10 @@ import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed
 import { eventsViews } from "./events/views";
 import type { FixtureModuleHooks } from "./hooks";
 import { leadsMetadata } from "./metadata";
+import { notesHooks } from "./notes/hooks";
+import { notesMetadata } from "./notes/metadata";
+import { generateFixtureNotes } from "./notes/seed";
+import { notesViews } from "./notes/views";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
@@ -74,6 +78,18 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
     searchFields: ["Event_Title", "Description", "Venue"],
     initialNextId: 140000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Notes: {
+    ...notesHooks,
+    metadata: notesMetadata,
+    views: notesViews,
+    displayNameField: "Note_Title",
+    generateSeed: (now) => generateFixtureNotes(68, now),
+    fullName: (fields) => String(fields.Note_Title ?? ""),
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Note_Title", "Note_Content"],
+    initialNextId: 195000000000000000n,
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Calls: {
