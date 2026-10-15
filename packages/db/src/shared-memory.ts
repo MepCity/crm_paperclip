@@ -48,10 +48,11 @@ export function stalePostgresMarkers(
   return staleSysVSegments(rows, isPidAlive).filter((row) => row.size === POSTGRES_MARKER_BYTES);
 }
 
-/** The FATAL line PostgreSQL prints when the kernel refuses to give it a shared memory ID. */
+/** PostgreSQL IPC exhaustion: either a shared memory ID or a semaphore set was refused. */
 export function isSharedMemoryExhaustion(message: string): boolean {
   return (
-    message.includes("could not create shared memory segment") &&
+    (message.includes("could not create shared memory segment") ||
+      message.includes("could not create semaphores")) &&
     (message.includes("No space left on device") || message.includes("ENOSPC"))
   );
 }
@@ -91,7 +92,7 @@ export function describeSysVSharedMemory(
 }
 
 /**
- * Calls `work` again while it keeps failing on a full shared memory table: on this machine
+ * Calls `work` again while it keeps failing on exhausted SysV IPC resources: on this machine
  * several runs share the IDs, so another run finishing can free one. Any other failure is
  * rethrown on the first attempt.
  */
