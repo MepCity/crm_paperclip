@@ -1,10 +1,10 @@
 # ADR 0005 — Notes, attachment storage and CSV import/export
 
-- Status: §1–§2 Accepted (§1: 2026-10-14, MEP-534; §2: 2026-10-15, MEP-594); §3 Proposed
+- Status: §1–§3 Accepted (§1: 2026-10-14, MEP-534; §2: 2026-10-15, MEP-594; §3: 2026-10-15, MEP-604)
 - Date: 2026-10-14
 - Decider: CTO
 - Issue: MEP-523
-- Scope: Module 6 preparation; no implementation or schema approval
+- Scope: Module 6 logical boundaries; §3 authorizes bounded transfer, no physical schema approval
 
 ## Context and boundaries
 
@@ -226,96 +226,88 @@ remain unaccepted. This decision does not accept §3 or select physical tables.
 | B. Durable background job with streamed input/output | Bounded memory, progress, recovery and row-level results; handles documented volumes. | Requires persistent jobs and a worker earlier than ADR 0001 planned; cross-process fixture records cannot support it. |
 | C. Browser-driven batches | Can prototype against the fixture without a worker. | Closing the tab stops execution; retry state and authorization become fragile. Not a durable completion guarantee. |
 
-### Recommendation (Proposed)
+### Decision (Accepted, CTO, 2026-10-15)
 
-Choose B for usable Module 6 imports/large exports, with a bounded synchronous
-parse/mapping preview. Bring forward only a managed transfer runner; amend ADR
-0001's worker timing if accepted. Queue persistence/library, locking and record
-storage remain ADR 0002/implementation decisions. Do not launch a separate worker
-against process-local fixture data or report fixture state as durable jobs.
+Choose A for the first delivery: bounded synchronous, process-local transfer
+behind `TransferService`. No durable queue, managed runner, restart recovery or
+background-completion promise is provided. A persistent runner and atomic
+mutation/checkpoint idempotency contract are explicitly deferred until ADR 0002
+(MEP-40), under a separately reviewed follow-up. Do not run a worker over fixture
+maps or describe process memory as durable storage.
 
-Propose a configurable initial CSV budget of 25 MB, 30,000 data rows excluding
-header, and 500 columns; reject exceeded budgets before writes. The row cap is a
-conservative Enterprise value from P5, not a statement about the instance's
-subscription. P4 allows larger limits and P3 allows 50 MB for note imports;
-confirm the instance's behavior before selecting final module-specific limits.
-Use streaming UTF-8 parsing (optional BOM), quoted separators/newlines and explicit
-format settings; cap cell lengths from metadata and bound preview/error memory.
-Other spreadsheet/vCard formats and binary attachment import remain out of scope.
-Malformed CSV fails preflight; a valid file with invalid record values can have
-partial success. UI must distinguish these cases.
+Configurable initial budgets are decimal 25 MB per input file, 500 columns and
+5,000 import data rows excluding the header. Export permits 30,000 rows, decimal
+25 MB and at most 500 selected IDs. Exact boundaries pass; one over fails with
+an explicit code and no silent truncation. Input budgets and malformed CSV fail
+preflight before any write; an oversized export has a failed job and no file.
+These are accepted local resource limits, not inferred subscription limits.
 
-Persist the initiating user, organization, module, immutable source checksum,
-explicit mapping, import mode, match fields, format/blank-value settings and
-metadata revision/fingerprint. Statuses are proposed as queued, running,
-completed, completed-with-errors, failed and cancelled. A runner obtains current
-membership/authorization, never a stored browser cookie; recheck rights before
-writes and on report download. If metadata changes incompatibly, pause/fail for
-remapping instead of silently applying new validation. Cancellation stops future
-rows; it does not undo successful writes.
+Only comma-separated CSV is supported, using UTF-8 (optional BOM) or ISO-8859-1.
+Quoted commas/newlines and doubled quotes are supported. More than ten consecutive
+empty rows terminate parsing. XLS/XLSX/VCF, ZIP and password protection are outside
+the first delivery and must be reported as differences at the board gate.
 
-Map headers explicitly to writable API field names from `getModule`; reject
-ambiguous/duplicate mappings and missing required create fields. Do not map
-system-managed fields. Resolve owners and lookups only within the organization;
-ambiguous names fail that row rather than choosing an arbitrary match. Reuse the
-service's field types, picklists, lengths and empty-value semantics. Preview makes
-the difference between an unmapped field, an empty cell and “skip empty updates”
-explicit; do not auto-create fields or picklist options during import.
+Map metadata-defined writable fields by explicit API names. Reject duplicate
+field mappings, system fields and missing mandatory create mappings/defaults.
+Resolve owners and lookups by ID or unambiguous name within the current
+organization only; never create fields or picklist options automatically. Reuse
+`RecordService.create`/`update` validation, hooks, locks and unique checks for each
+row. Invalid rows do not roll back earlier successful rows. Apply explicit
+defaults and blank replacements; ignore empty cells on updates when requested.
 
-Support add-only, update-only and combined modes only after their matching
-contract is agreed. Invoke `create`/`update` for each eligible row, preserving
-validation, hooks, locks and unique-field checks; no direct record-table writes.
-Reuse Module 1 duplicate comparison rules from `research/specs/duplicates.md`
-and the adapter's matching implementation. Existing `findDuplicateGroups` operates
-on stored records; it is not an import upsert or incoming-row matcher. Factor or
-extend matching behind the service if needed, without requiring a new physical
-schema here. Leads Email is not automatically unique; Contacts Email is unique
-case-insensitively in the current fixture. Never use `deduplicate`/`merge` as an
-implicit import step. Missing update targets and multiple matches produce row
-errors; repeated input matches follow a documented deterministic policy, proposed
-as first valid row wins and later duplicate rows are skipped with a reason.
+Support Add, Update and Both. Match on `id`, metadata-unique fields or the module
+default: Leads/Contacts `Email`, Accounts `Account_Name`, Deals `Deal_Name`.
+Missing update targets and multiple targets are row errors. The first valid
+input row for a matching key wins; later duplicates are skipped with
+`duplicate_in_file`. Stored-record duplicate discovery, `deduplicate` and `merge`
+are never implicit import operations. Leads Email remains non-unique; ambiguous
+matches fail rather than choosing one target.
 
-Commit each successful row independently; invalid rows do not roll back earlier
-successes. Keep source row number, outcome (created/updated/skipped/error), safe
-field/error codes and authorized resulting record ID. Reports include counts and
-failed-row CSV for correction, with values available only to authorized users;
-logs contain counters/codes, not raw input. Proposed temporary source/report
-retention is seven days, then idempotent cleanup, with minimal audit counters
-retained under an agreed policy.
+Uploads are scoped to organization and initiating user for 30 minutes, with five
+pending uploads per organization (oldest evicted). Consumed uploads are removed.
+History and export bodies live in organization-scoped process memory for seven
+days, newest first, and are lost on restart. Cleanup occurs on access. Persist
+only safe row numbers, field names/codes and aggregate counters in job results;
+public result rows contain only skipped/error outcomes, never raw cell values.
+Undo deletes only IDs created by that import through `RecordService`, rechecks
+delete permission, skips already absent records and never reverses updates.
+A completed undo cannot run twice. UI confirmation belongs to the HTTP/UI slice.
 
-Job admission has an idempotency key; each row needs a durable execution key.
-The current `RecordService` has neither idempotency nor an atomic mutation-plus-
-checkpoint contract. A persistent implementation must atomically record success
-with the write, or provide an equivalent idempotent service operation. Without
-that, a crash after create and before checkpoint can duplicate records: do not
-promise exactly-once retries. The contract extension needs CTO review and does
-not select ADR 0002 storage. The fixture may support explicit demos only.
+Import requires create permission for Add, update permission for Update and both
+for Both. Undo requires delete permission; export requires read permission at
+execution and download. History is available only to current organization
+members. Separate profile export permission remains an explicit local difference.
+The composition root supplies live action authorization and organization members;
+projection is not an authorization boundary. Requested hidden fields fail with
+`field_not_allowed`, including explicit exclusions. Download also rechecks field
+visibility before releasing a retained file.
 
-For export, check the export action, row visibility and field visibility at
-execution and download, not just job creation. `ListQuery.fields` is projection,
-not an authorization boundary. Intersect the explicit requested fields with
-allowed fields and fail disallowed requests without revealing hidden data.
-Stream paged service reads for the agreed view/filter/selection; retain IDs as
-text and escape CSV quotes/separators/newlines. Proposed spreadsheet-safe output
-neutralizes formula-leading `=`, `+`, `-`, `@` and control characters in text cells;
-record this encoding so reimport is deliberate, rather than silently changing
-stored values. Apply it to error reports too. Keep blobs/reports private.
+Export uses the requested saved view (the default All view when omitted) or
+selected IDs, and paged service reads. Intersect fields with metadata visibility;
+put `Record Id` first and use field labels as headers. Keep IDs as strings and
+serialize CSV quoting correctly. Neutralize non-numeric formula-leading text
+(`=`, `+`, `-`, `@`, tab or CR) with an apostrophe, including error reports when
+provided. Filenames are `<Module>_<YYYY_MM_DD>.csv`. Concurrent writes under
+offset pagination are explicitly accepted as best effort; no snapshot promise
+is made. A stable snapshot/cursor remains future persistent-adapter work.
 
-The current list port provides no snapshot or cursor guarantee. A long export
-can drift under writes with offset pagination. Require a stable snapshot/cursor
-contract or an explicitly accepted best-effort policy before claiming complete,
-consistent exports. Proposed initial export cap is 30,000 rows/25 MB, with an
-explicit limit error instead of silent truncation; this is a local resource
-budget, not a researched reference export limit.
+Notify Email (CSV-09, Module 10), Layout selection (CSV-11, Module 11) and Create
+New Fields (CSV-20, Module 11) remain disabled with `laterModule`. Export criteria
+construction is deferred; scope is selected through saved views. The CSV wizard
+and histories were not observed in the reference session: these rules are
+provisional product behavior approved by the CTO, not a claim of observed parity.
 
-### Open questions
+### Resolved and deferred questions
 
-- Which tier/rollout resolves P4 versus P5, and are Notes CSV imports a distinct flow?
-- Which matching fields and blank-cell/date/time encodings does each module expose?
-- Approve the earlier managed runner and durable idempotency contract, or explicitly
-  limit the first delivery to synchronous demonstrators with no recovery promise?
-- What is the export snapshot policy, reference export limit and permission model?
-- Accept spreadsheet-safe encoding and seven-day report retention, and define audit retention?
+- Conflicting edition row limits: use the accepted local budgets above; exact
+  instance tier/rollout and Notes CSV remain research follow-ups.
+- Matching fields and empty semantics: resolved above. Dates/times use existing
+  record-service representations; do not infer locale-specific formats.
+- Runner and durable idempotency: deferred until ADR 0002; no automatic recovery.
+- Snapshot: best effort accepted. Export permission: current read permission;
+  separate export profiles await the permissions module.
+- Retention: seven days in process memory accepted, including undo eligibility;
+  durable audit retention is deferred with persistent storage.
 
 ## Consequences and acceptance work after approval
 
@@ -329,11 +321,13 @@ Future implementation acceptance must cover tenant isolation, inaccessible/delet
 parents, composed activity/note/attachment cascade, rejected parent batches,
 merge/conversion distinctions, rich-text safety, malicious paths/symlinks, type and
 exact-size boundaries, publication/delete races and failed cleanup. CSV checks
-must cover mapping and unique-field differences, malformed files versus row errors,
-partial success, crash/retry/cancel, changed permissions/metadata, hidden fields,
-CSV quoting/formulas and export drift. These are required future tests, not tests
-claimed as run for this documentation-only issue.
+must cover mapping and unique-field differences, malformed files versus row
+errors, partial success, changed permissions, hidden fields, quoting/formulas
+and explicit export limits. Crash/retry/cancel and metadata recovery checks await
+the durable adapter. Tests run for an implementation are recorded on its issue.
 
 CTO review must resolve or explicitly defer the numbered subject areas' open
-questions and identify accepted local deviations. This Proposed ADR does not
-approve Module 6 implementation, change ADR 0002, or bypass the module board gate.
+questions and identify accepted local deviations. The accepted §3 authorizes only
+the bounded first delivery described above; it does not change ADR 0002 or bypass
+the module board gate. Proposed §2 remains
+subject to its own acceptance.
