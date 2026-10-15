@@ -236,4 +236,81 @@ describe("Attachments HTTP handlers", () => {
       ) ?? "";
     expect(slashHeader).toContain("filename*=UTF-8''evil.pdf");
   });
+
+  it("retains the cleanup intent when blob deletion fails during removal", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+
+    deps.blobs.delete = async () => {
+      throw new Error("Disk write error");
+    };
+
+    const removed = await call(
+      deps,
+      { module: "Leads", recordId: id, attachmentId },
+      { method: "DELETE" },
+    );
+    expect(removed.status).toBe(200);
+    const intents = deps.lifecycle.cleanupIntents();
+    expect(intents.length).toBe(1);
+    expect(intents[0]?.attachmentId).toBe(attachmentId);
+  });
+
+  it("validates pagination parameters and handles multi-page listing", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const badPage = await call(deps, { module: "Leads", recordId: id }, { query: "?page=0" });
+    expect(badPage.status).toBe(400);
+    expect((await badPage.json()).code).toBe("INVALID_DATA");
+
+    const badPerPage = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?per_page=-5" },
+    );
+    expect(badPerPage.status).toBe(400);
+    expect((await badPerPage.json()).code).toBe("INVALID_DATA");
+
+    await post(deps, id, form({ file: pdf("1.pdf") }));
+    await post(deps, id, form({ file: pdf("2.pdf") }));
+
+    const page1 = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?page=1&per_page=1" },
+    );
+    expect(page1.status).toBe(200);
+    const body1 = await page1.json();
+    expect(body1.info).toEqual({ page: 1, per_page: 1, count: 1, more_records: true });
+    expect(body1.data.length).toBe(1);
+
+    const page2 = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?page=2&per_page=1" },
+    );
+    expect(page2.status).toBe(200);
+    const body2 = await page2.json();
+    expect(body2.info).toEqual({ page: 2, per_page: 1, count: 1, more_records: false });
+
+    const page3 = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?page=3&per_page=1" },
+    );
+    expect(page3.status).toBe(204);
+  });
+
+  it("rejects invalid upload batch header and unsupported methods", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const badBatch = await post(deps, id, form({ file: pdf() }), "invalid-uuid");
+    expect(badBatch.status).toBe(400);
+    expect((await badBatch.json()).code).toBe("INVALID_DATA");
+
+    const unsupported = await call(deps, { module: "Leads", recordId: id }, { method: "PUT" });
+    expect(unsupported.status).toBe(405);
+  });
 });
