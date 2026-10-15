@@ -365,3 +365,9 @@ search glyph for lookups and hides duplicate boolean/toggle text while retaining
 accessible names. New geometry tokens derive from `activities-form.md` →
 Visual layout — Task form (measured); typography continues to use shared tokens
 because CSS font properties were not observed in that capture.
+
+Task rules opt `Who_Id` and `What_Id` into `lookupLabelFields`. Their selector
+uses metadata targets and the loaded record's module; changing a target clears
+the previous reference. `FieldInput.lookupModule` routes the existing picker
+and omits the in-input type prefix. `subduedToggles` only changes the off-state
+track colour; it does not disable Repeat or change its payload.

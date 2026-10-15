@@ -823,6 +823,7 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--color-activity-form-placeholder` | `#8b9ab9` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
 | `--color-activity-form-lookup` | `#aaaaaa` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
 | `--color-activity-form-switch` | `#c8cdd6` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-switch-subdued` | `#dee1e6` | activities-form.md → Visual layout — Task form (measured); Repeat off track | from spec |
 
 ### Measured values that carry no token
 

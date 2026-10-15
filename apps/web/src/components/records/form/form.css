@@ -570,3 +570,7 @@
 [data-form-variant="activity"] .record-form-strip__actions {
   transform: translateY(var(--size-activity-form-strip-content-offset));
 }
+
+[data-form-variant="activity"] [data-form-toggle-subdued] [data-switch-track]:not([data-selected]) {
+  background: var(--color-activity-form-switch-subdued);
+}

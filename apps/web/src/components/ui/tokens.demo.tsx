@@ -18,6 +18,7 @@ const COLOUR_GROUPS = [
       "--color-activity-form-placeholder",
       "--color-activity-form-lookup",
       "--color-activity-form-switch",
+      "--color-activity-form-switch-subdued",
     ],
   },
   {
