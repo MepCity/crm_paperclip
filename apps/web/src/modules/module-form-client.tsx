@@ -1,7 +1,7 @@
 "use client";
 
 import type { FieldValue } from "@crm/core/records";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { RecordFormScreen } from "@/components/records/form/record-form-screen";
 import { SelectUserDialog } from "@/components/records/form/select-user-dialog";
@@ -36,11 +36,11 @@ export function ModuleFormClient({
       ? { ...consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields, ...createPrefill }
       : undefined,
   );
-  const [editIntent] = useState(() => {
-    if (!recordId || typeof window === "undefined") return undefined;
-    const intent = new URLSearchParams(window.location.search).get("intent");
-    return intent ? definition.form.editIntents?.[intent] : undefined;
-  });
+  // Read from the router, not the window: during a client navigation the window URL lags behind.
+  const intentName = useSearchParams().get("intent");
+  const [editIntent] = useState(() =>
+    recordId && intentName ? definition.form.editIntents?.[intentName] : undefined,
+  );
   const hasPrefill = prefill && Object.keys(prefill).length > 0;
   const defaultCancel = cloneSourceId
     ? moduleRecordPath(orgSlug, definition.tab, cloneSourceId)

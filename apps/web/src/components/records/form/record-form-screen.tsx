@@ -407,11 +407,15 @@ function LoadedRecordForm({
     setErrors({});
     setBannerMessage(null);
     try {
-      const input = formPayload(
+      const payload = formPayload(
         fields.filter((field) => !isHidden(field.apiName)),
         values,
         editing ? baseline : undefined,
       );
+      const fill = editing || !dynamic?.hiddenFill ? {} : dynamic.hiddenFill;
+      const input = { ...payload };
+      for (const [name, value] of Object.entries(fill))
+        if (isHidden(name) && input[name] == null) input[name] = value;
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);

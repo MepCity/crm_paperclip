@@ -60,6 +60,9 @@ export function callsFormDynamicState(
     ],
     hiddenSections: record ? [] : ["Outcome Of Outgoing Call"],
     required: { Who_Id: true, Call_Type: true, Call_Start_Time: true, Call_Duration: hasDuration },
+    // Interim rule: the service export marks Call Duration required, so a call without a duration
+    // (scheduled or missed) is written with a zero duration.
+    hiddenFill: { Call_Duration: "00:00" },
   };
 }
 

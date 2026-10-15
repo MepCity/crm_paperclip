@@ -29,6 +29,7 @@ async function pickCallFrom(page: Page) {
   const name = await radio.getAttribute("aria-label");
   if (!name) throw new Error("Missing record name in the picker");
   await dialog.getByRole("row", { name }).click();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
@@ -91,7 +92,8 @@ test("creates a scheduled call and opens its detail", async ({ page, pageErrors 
   const org = await openCreate(page);
   await pickCallFrom(page);
   await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Follow-up call");
-  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("2030-11-30");
+  await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/\\d+$`), {
     timeout: 60_000,
@@ -108,7 +110,7 @@ test("Reschedule Call opens Edit with the start time focused", async ({ page }) 
   await page.getByRole("button", { name: "Reschedule Call" }).click();
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Call Start Time date" })).toBeFocused();
-  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("2030-11-30");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/${SCHEDULED_CALL_ID}$`), {
     timeout: 60_000,
@@ -126,10 +128,9 @@ test("Mark as Completed asks for a duration and hides Reschedule Call", async ({
   await expect(
     page.getByRole("button", { name: "Outgoing Call Status", exact: true }),
   ).toContainText("Completed");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByText("Call Duration cannot be empty.")).toBeVisible();
-  await page.locator("[data-form-field=Call_Duration] input").first().fill("5");
-  await page.locator("[data-form-field=Call_Duration] input").nth(1).fill("30");
+  await expect(page.locator("[data-form-field=Call_Duration]")).toBeVisible();
+  await page.getByLabel("Call Duration minutes").fill("5");
+  await page.getByLabel("Call Duration seconds").fill("30");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/${SCHEDULED_CALL_ID}$`), {
     timeout: 60_000,

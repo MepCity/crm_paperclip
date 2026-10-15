@@ -203,6 +203,8 @@ export interface FormDynamicState {
   hiddenSections?: readonly string[];
   /** Fields whose requirement differs from the export (`true` required, `false` optional). */
   required?: Readonly<Record<string, boolean>>;
+  /** Values written for hidden fields the service still requires (create only, when empty). */
+  hiddenFill?: Readonly<Record<string, FieldValue>>;
 }
 
 export interface FormRules {
