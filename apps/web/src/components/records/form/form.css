@@ -545,6 +545,7 @@
 }
 [data-form-variant="activity"] .record-choice-shell--owner .record-choice-trigger {
   flex: none;
+  padding: 0 var(--size-activity-form-choice-gap) 0 0;
 }
 [data-form-variant="activity"] .record-choice-shell--owner .record-input-end {
   margin-left: auto;

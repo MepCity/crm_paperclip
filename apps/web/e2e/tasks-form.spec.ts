@@ -113,6 +113,14 @@ test("Task Information is one column in the spec order with the create defaults"
       })),
     );
   expect(controls[0]?.elements[0]?.x).toBe(551);
+  expect(
+    controls[0]?.elements.find((element) => element.className.includes("record-choice-trigger"))?.x,
+  ).toBe(551);
+  const ownerValueX = await page
+    .locator('[data-form-field="Owner"] .record-choice-trigger > span')
+    .first()
+    .evaluate((value) => value.getBoundingClientRect().x);
+  expect(ownerValueX).toBe(551);
   expect(controls[1]?.elements.at(-1)?.width).toBe(28);
   expect(controls[1]?.elements.at(-1)?.height).toBe(15);
   const order = await page
