@@ -93,6 +93,16 @@ export function initialFormValues(
 
 function sameValue(left: FieldValue, right: FieldValue): boolean {
   if (left === right) return true;
+  // ALARM / RRULE carry opaque plain objects, compared by content.
+  if (
+    typeof left === "object" &&
+    left !== null &&
+    typeof right === "object" &&
+    right !== null &&
+    !("module" in left) &&
+    !("module" in right)
+  )
+    return JSON.stringify(left) === JSON.stringify(right);
   return (
     typeof left === "object" &&
     left !== null &&
@@ -191,6 +201,10 @@ export interface FormRules {
   numberLimits?: Readonly<Record<string, NumberLimits>>;
   stageConditionalFields?: readonly StageConditionalField[];
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
+  /** Activity lookups whose module selector replaces the static row label. */
+  lookupLabelFields?: readonly string[];
+  /** Subdued off-state appearance; selection and editability are unchanged. */
+  subduedToggles?: readonly string[];
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);

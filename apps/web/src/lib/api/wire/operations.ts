@@ -17,6 +17,7 @@ import {
   object,
   referenceKeys,
 } from "./codec";
+import { kanbanViewOperations } from "./kanban-views";
 import type { WireMember } from "./types";
 
 export type OperationDeps = {
@@ -433,6 +434,7 @@ export const operations = {
       return ok(encodeWriteResult(ids, "owner is successfully updated"));
     },
   },
+  ...kanbanViewOperations,
 } satisfies Record<string, Operation>;
 
 export function operationPath(

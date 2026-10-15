@@ -57,6 +57,10 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
     "P2",
   );
 
+  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
+  await expect(productsCheckbox).toBeVisible();
+  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
+
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
   await manageColumnsBtn.click();
@@ -75,4 +79,41 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
 
   // Verify navigation to record detail page
   await expect(page).toHaveURL(/\/crm\/[^/]+\/tab\/Leads\/[^/?]+/);
+});
+
+test("Tasks, Meetings and Calls module filters are enabled; later-module products stay deferred", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Tasks", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: { data: [{ Subject: "Zephyrquartz advanced" }] },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephyrquartz`);
+  const tasksCard = page.getByRole("region", { name: "Tasks search results" });
+  await expect(tasksCard).toBeVisible();
+  await expect(tasksCard.getByRole("link", { name: "Zephyrquartz advanced" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
+  await expect(tasksCheckbox).toBeVisible();
+  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(tasksCheckbox).toBeChecked();
+
+  // Meetings and Calls are registered on this branch: they are active and checked.
+  for (const name of ["Meetings", "Calls"]) {
+    const cb = filterPanel.getByRole("checkbox", { name });
+    await expect(cb).toBeVisible();
+    await expect(cb).not.toHaveAttribute("data-later-module", /.+/);
+    await expect(cb).toBeChecked();
+  }
+
+  // Later-module products stays deferred
+  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
+  await expect(productsCheckbox).toBeVisible();
+  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
 });

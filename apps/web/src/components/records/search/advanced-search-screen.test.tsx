@@ -194,11 +194,19 @@ describe("AdvancedSearchScreen", () => {
     const createdTimeOption = await screen.findByRole("option", { name: "Created Time" });
     await user.click(createdTimeOption);
 
-    // The sort triggered search should STILL have the unapplied modules, including activities
+    // The sort triggered search should still include every shipped module (all 7)
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Tasks", "Leads", "Deals", "Events", "Calls"],
+          modules: expect.arrayContaining([
+            "Contacts",
+            "Accounts",
+            "Tasks",
+            "Leads",
+            "Deals",
+            "Events",
+            "Calls",
+          ]),
           sort: { field: "Created_Time", order: "desc" },
         }),
       );
@@ -213,10 +221,19 @@ describe("AdvancedSearchScreen", () => {
     await waitFor(() => {
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          modules: ["Contacts", "Accounts", "Tasks", "Deals", "Events", "Calls"],
+          modules: expect.arrayContaining([
+            "Contacts",
+            "Accounts",
+            "Tasks",
+            "Deals",
+            "Events",
+            "Calls",
+          ]),
         }),
       );
     });
+    const applied = searchSpy.mock.calls.at(-1)?.[0].modules ?? [];
+    expect(applied).not.toContain("Leads");
   });
 
   it("sends empty array when all modules are deselected and shows no records", async () => {

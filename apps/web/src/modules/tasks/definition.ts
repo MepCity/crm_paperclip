@@ -6,6 +6,7 @@ import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
 import { TaskRecordScreen } from "./task-record-screen";
 import { buildTasksBusinessCardFields, buildTasksDetailSections } from "./tasks-detail-sections";
+import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 import { tasksRecordHeaderIdentity } from "./tasks-record-header";
 import {
   buildTasksRecordMoreMenuGroups,
@@ -32,7 +33,9 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Due_Date", "Status", "Priority", "Owner"],
   buildFilterGroups: buildTasksFilterGroups,
   form: {
-    rules: { owner: "Owner" },
+    variant: "activity",
+    rules: tasksFormRules,
+    fallbackColumns: { "Task Information": TASKS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
   },
   detail: {

@@ -53,6 +53,9 @@ describe.skipIf(process.platform !== "darwin")("signal shutdown and owned SysV c
         let output = "";
         child.stderr?.on("data", (data) => {
           output += String(data);
+          for (const line of String(data).split("\n")) {
+            if (line.startsWith("[ipc-sweep]")) console.log(line);
+          }
         });
         ownPid = await new Promise<number>((resolve, reject) => {
           const timer = setTimeout(

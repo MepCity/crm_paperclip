@@ -1,10 +1,41 @@
 import { describe, expect, it } from "vitest";
-import { activityDate, activityState, selectActivitySummary } from "./activities";
+import {
+  activityDate,
+  activityParentIds,
+  activityState,
+  selectActivitySummary,
+} from "./activities";
 import type { RecordData } from "./contract";
 
 const now = new Date("2026-10-14T12:00:00Z");
 const row = (fields: RecordData["fields"]): RecordData => ({ id: "synthetic", fields });
 describe("shared activity rules", () => {
+  it("matches either parent link by module and opaque ID, deduplicating both links", () => {
+    expect(
+      activityParentIds(
+        "Leads",
+        row({
+          Who_Id: { module: "Leads", id: "same" },
+          What_Id: { module: "Leads", id: "same" },
+        }),
+      ),
+    ).toEqual(["same"]);
+    expect(
+      activityParentIds(
+        "Accounts",
+        row({
+          Who_Id: { module: "Contacts", id: "same" },
+          What_Id: { module: "Accounts", id: "same" },
+        }),
+      ),
+    ).toEqual(["same"]);
+    expect(
+      activityParentIds("Leads", row({ Who_Id: [], What_Id: { module: "Contacts", id: "same" } })),
+    ).toEqual([]);
+    expect(activityParentIds("Tasks", row({ Who_Id: { module: "Tasks", id: "same" } }))).toEqual(
+      [],
+    );
+  });
   it.each(["Not Started", "In Progress", "Deferred", null])(
     "keeps unfinished task %s open",
     (Status) => {

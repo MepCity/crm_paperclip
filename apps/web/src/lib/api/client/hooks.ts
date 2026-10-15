@@ -4,6 +4,8 @@ import type {
   CurrencyDefinition,
   DeduplicateResult,
   DuplicateGroup,
+  KanbanView,
+  KanbanViewInput,
   ListQuery,
   MergeInput,
   ModuleApiName,
@@ -84,7 +86,7 @@ export function useRecordList(
 
 export function useRecordCount(
   module: ModuleApiName,
-  query: Pick<ListQuery, "viewId" | "filters" | "search">,
+  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
   options?: { enabled?: boolean },
 ) {
   const orgSlug = useOrgSlug();
@@ -277,5 +279,42 @@ export function useGlobalSearch(query: SearchQuery, enabled: boolean) {
     queryKey: [...apiKeys.root(orgSlug), "search", query],
     queryFn: () => service.search(query),
     enabled,
+  });
+}
+
+export function useKanbanViews(module: ModuleApiName, options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<readonly KanbanView[]>({
+    queryKey: apiKeys.kanbanViews(orgSlug, module),
+    queryFn: () => service.listKanbanViews(module),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useKanbanView(module: ModuleApiName, id: string) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<KanbanView>({
+    queryKey: apiKeys.kanbanView(orgSlug, module, id),
+    queryFn: () => service.getKanbanView(module, id),
+    enabled: Boolean(id),
+  });
+}
+
+/** Creates a view when `id` is omitted, otherwise updates it; refreshes the view queries. */
+export function useSaveKanbanView(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation<KanbanView, Error, { id?: string; input: KanbanViewInput }>({
+    mutationFn: ({ id, input }) =>
+      id ? service.updateKanbanView(module, id, input) : service.createKanbanView(module, input),
+    onSuccess: (view) => {
+      void queryClient.invalidateQueries({ queryKey: apiKeys.kanbanViews(orgSlug, module) });
+      void queryClient.invalidateQueries({
+        queryKey: apiKeys.kanbanView(orgSlug, module, view.id),
+      });
+    },
   });
 }

@@ -5,7 +5,8 @@ import {
   moduleListDefaultPath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
-import { buildDealsBoardProps, DealsBoard, dealsBoardToolbar } from "./deals-board";
+import { buildDealsBoardProps, DealsBoard } from "./deals-board";
+import { dealsBoardToolbar } from "./deals-kanban-toolbar";
 import { dealsFilterGroups } from "./list-filters";
 
 export const DEALS_LIST_CURRENCY_CODE = "TRY";

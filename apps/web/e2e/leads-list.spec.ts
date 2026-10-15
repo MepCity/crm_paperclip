@@ -1247,7 +1247,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1282,7 +1285,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1306,13 +1312,17 @@ test.describe("Leads list page", () => {
     expect(todayCount.ok()).toBe(true);
     await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
+      include_activity_summary: true,
       filters: {
         field: { api_name: "Created_Time" },
         comparator: "equal",
         value: `\${TODAY}`,
       },
     });
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1337,6 +1347,81 @@ test.describe("Leads list page", () => {
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);
+  });
+
+  test("applies activities system filter to list data and count requests and resets on clear", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await bulkSearchParamsPromise;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
+    const initialRows = await page.locator("table tbody tr").count();
+    const initialTotal = await page.locator("[data-part=total-value]").innerText();
+
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    const activitiesRow = panel.getByRole("checkbox", { name: "Activities", exact: true });
+    await activitiesRow.scrollIntoViewIfNeeded();
+    await expect(activitiesRow).toBeEnabled({ timeout: 30_000 });
+    await activitiesRow.focus();
+    await page.keyboard.press("Space");
+    await expect(activitiesRow).toBeChecked();
+
+    const withoutOpenActivityOption = panel.getByRole("radio", {
+      name: "Without Open Activity",
+    });
+    await expect(withoutOpenActivityOption).toBeVisible();
+    await withoutOpenActivityOption.focus();
+    await page.keyboard.press("Space");
+    await expect(withoutOpenActivityOption).toBeChecked();
+
+    let lastBulkBody: Record<string, unknown> | undefined;
+    let lastCountBody: Record<string, unknown> | undefined;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) {
+        lastBulkBody = request.postDataJSON() as Record<string, unknown>;
+      }
+      if (parsed.pathname.endsWith("/Leads/actions/count")) {
+        lastCountBody = request.postDataJSON() as Record<string, unknown>;
+      }
+    });
+
+    const filterResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulkResponse, countResponse] = await filterResponses;
+    expect(bulkResponse.ok()).toBe(true);
+    expect(countResponse.ok()).toBe(true);
+
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        activity_filter: {
+          choice: "without_open_activity",
+        },
+        include_activity_summary: true,
+      }),
+    );
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
+
+    const clearResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Clear" }).click();
+    const [clearBulk, clearCount] = await clearResponses;
+    expect(clearBulk.ok()).toBe(true);
+    expect(clearCount.ok()).toBe(true);
+
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+    expect(lastBulkBody?.activity_filter).toBeUndefined();
+    expect(lastCountBody?.activity_filter).toBeUndefined();
   });
 
   test("alphabetical filter keeps the rows that start with the chosen letter", async ({ page }) => {
@@ -1383,7 +1468,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
     expect(await alphabetControl(page).innerText()).toBe("L");
     const names = await leadNameColumnTexts(page);
     expect(names.length).toBeGreaterThan(0);
