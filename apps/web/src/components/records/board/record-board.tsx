@@ -10,7 +10,14 @@ import "./record-board.css";
 
 export interface BoardCard {
   id: string;
-  rows: readonly { text: string; href?: string; tone?: "danger"; strong?: boolean }[];
+  rows: readonly {
+    text: string;
+    href?: string;
+    tone?: "danger";
+    strong?: boolean;
+    /** API name of the field the row shows, when the module supplies it. */
+    fieldKey?: string;
+  }[];
   iconLink?: { href: string; label: string; icon: ReactNode; laterModule?: ModuleKey };
 }
 export interface BoardColumn {
@@ -32,6 +39,8 @@ export interface RecordBoardProps {
   /** Pure module-owned projection for pending and redirected moves; omitted preserves all rows. */
   buildOptimisticCard?: (card: BoardCard, targetColumn: BoardColumn) => BoardCard;
   loading?: boolean;
+  /** Column header colouring; only `mono_color` is documented, so it keeps the current look. */
+  headerStyle?: string;
   children?: ReactNode;
 }
 
@@ -44,6 +53,7 @@ export function RecordBoard({
   onMove,
   buildOptimisticCard,
   loading,
+  headerStyle,
   children,
 }: RecordBoardProps) {
   const [moves, setMoves] = useState<Record<string, { from: string; to: string; card: BoardCard }>>(
@@ -145,7 +155,7 @@ export function RecordBoard({
                 if (source) void move(source.id, source.from, column.key);
               }}
             >
-              <header className="record-board-header">
+              <header className="record-board-header" data-header-style={headerStyle}>
                 <div className="record-board-heading">
                   <span>{column.label}</span>
                   <span className="record-board-count">{column.count}</span>

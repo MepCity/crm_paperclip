@@ -122,3 +122,112 @@ export function confirmedDead(pid: number): boolean {
 export function removeSegment(id: number, run: CommandRunner): string {
   return run("ipcrm", ["-m", String(id)]);
 }
+
+export type SemaphoreSet = {
+  id: number;
+  key: string;
+  owner: string;
+  nsems: number;
+  createdAt: number;
+};
+export type SemaphoreTable = { rows: SemaphoreSet[]; error?: string };
+
+/** Darwin semaphore table; unknown layouts or any malformed row fail closed. */
+export function parseSemaphoreTable(output: string, now: number): SemaphoreTable {
+  try {
+    const lines = output
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines[0]?.startsWith("IPC status from ")) lines.shift();
+    if (
+      lines.shift()?.replace(/\s+/g, " ") !==
+        "T ID KEY MODE OWNER GROUP CREATOR CGROUP NSEMS OTIME CTIME" ||
+      lines.shift() !== "Semaphores:" ||
+      !Number.isFinite(now)
+    )
+      throw new Error("invalid header");
+    const rows = lines.map((line) => {
+      const cells = line.split(/\s+/);
+      const [type, id, key, , owner, , , , nsems, , ctime] = cells;
+      if (
+        cells.length !== 11 ||
+        type !== "s" ||
+        !owner ||
+        !key ||
+        !/^0x[0-9a-f]+$/i.test(key) ||
+        !/^\d+$/.test(id ?? "") ||
+        !/^\d+$/.test(nsems ?? "") ||
+        !Number.isSafeInteger(Number(id)) ||
+        !Number.isSafeInteger(Number(nsems))
+      )
+        throw new Error("invalid row");
+      return {
+        id: Number(id),
+        key,
+        owner,
+        nsems: Number(nsems),
+        createdAt: creationTime(ctime ?? "", now),
+      };
+    });
+    if (new Set(rows.map((row) => row.id)).size !== rows.length) throw new Error("duplicate ID");
+    return { rows };
+  } catch (error) {
+    return { rows: [], error: `Cannot parse semaphore table: ${String(error)}` };
+  }
+}
+
+export type SemaphoreProbe = {
+  id: number;
+  uid: number;
+  nsems: number;
+  createdAt: number;
+  marker: number;
+  pid: number;
+  dead: boolean;
+  key: number;
+};
+
+export function parseSemaphoreProbes(output: string): SemaphoreProbe[] {
+  return output.trim() === ""
+    ? []
+    : output
+        .trim()
+        .split("\n")
+        .map((line) => {
+          const values = line.trim().split(/\s+/).map(Number);
+          if (
+            values.length !== 8 ||
+            values.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+            ![0, 1].includes(values[6] ?? -1)
+          )
+            throw new Error("Invalid semaphore probe");
+          const [id = 0, uid = 0, nsems = 0, seconds = 0, marker = 0, pid = 0, dead = 0, key = 0] =
+            values;
+          return { id, uid, nsems, createdAt: seconds * 1000, marker, pid, dead: dead === 1, key };
+        });
+}
+
+export function selectSemaphoreOrphans(
+  table: SemaphoreTable,
+  probes: SemaphoreProbe[],
+  options: { owner: string; uid: number; now: number },
+): SemaphoreProbe[] {
+  if (table.error || !Number.isFinite(options.now)) return [];
+  return probes.filter((probe) => {
+    const row = table.rows.find((row) => row.id === probe.id);
+    return (
+      row?.owner === options.owner &&
+      row.nsems === 17 &&
+      probe.nsems === 17 &&
+      probe.uid === options.uid &&
+      probe.marker === 537 &&
+      probe.pid > 0 &&
+      probe.dead &&
+      Number(row.key) === probe.key &&
+      options.now - row.createdAt >= 300_000 &&
+      options.now - probe.createdAt >= 300_000
+    );
+  });
+}

@@ -32,3 +32,30 @@ or drag error messages are invented. Loading uses the shared `Skeleton`.
 
 The `/dev/ui` gallery's `record-board` demo uses synthetic data and four columns.
 Moves into Needs Analysis succeed; moves into Rejected move reject and roll back.
+
+## Kanban settings dialog
+
+`KanbanSettingsDialog` is controlled by `open` and unmounts its draft when closed.
+Its local `KanbanViewInput` matches the service contract in MEP-545; replace the
+local type with the service export when integrating. Supply option inventories
+and the initial saved field order through props. The caller closes the dialog
+after a successful `onSave`; `onCancel` closes it without saving. Demo:
+`/dev/ui/kanban-settings`.
+
+Source: `research/specs/deals-kanban-settings.md` on the approved research branch
+(MEP-537), and the local `captures/m4k-settings/` reference image. The research
+spec is awaiting its separate merge; reference images stay outside the repo.
+
+Interim choices for unobserved interactions: single click or Enter/Space moves a
+field, newly selected fields append, Available retains supplied order, search
+uses an immediate case-insensitive substring match, and no field reordering or
+count limit is invented. Empty search results leave the Available list empty.
+Validation copy is local, tooltips explain documented grouping/sum purposes,
+and Help is disabled because its destination is unknown. Option lists come only
+from the caller; the demo uses observed values. `mode` identifies create/edit;
+sharing controls are outside this issue's four-field props/service contract.
+
+QA should compare the reference alongside the demo and check name/required
+marker, grouping/info, aggregate/info, header style/required marker, list
+headings/search, required Deal Name marker, dimmed overlay, and fixed Cancel/Save
+footer. Transfer gestures, errors and tooltip wording remain interim.

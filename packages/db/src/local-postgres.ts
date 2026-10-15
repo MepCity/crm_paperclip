@@ -204,7 +204,11 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
       onExhaustion: () => {
         if (swept || process.platform !== "darwin") return false;
         swept = true;
-        const log = (line: string) => report(`[ipc-sweep] ${line}`);
+        const log = (line: string) => {
+          const message = `[ipc-sweep] ${line}`;
+          if (options.onLog) report(message);
+          else console.error(message);
+        };
         try {
           const result = sweep({ apply: true, log });
           if (result.exitCode !== 0) log("Sweep failed; continuing the server start retry flow.");
@@ -214,8 +218,10 @@ export async function startLocalPostgres(options: LocalPostgresOptions): Promise
           return false;
         }
       },
-      onRetry: (_error, delayMs) =>
-        report(`shared memory table is full, retrying the server start in ${delayMs} ms`),
+      onRetry: (error, delayMs) =>
+        report(
+          `${String(error).includes("could not create semaphores") ? "semaphore" : "shared memory"} table is full, retrying the server start in ${delayMs} ms`,
+        ),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
