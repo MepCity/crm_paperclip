@@ -102,6 +102,30 @@ describe("Deals stage rules", () => {
       ValidationError,
     );
   });
+  it("rejects client revenue writes without changing stored deals", async () => {
+    const { service, create } = setup();
+    const deal = await create({ Amount: 100, Probability: 25 });
+    await expect(create({ Amount: 200, Expected_Revenue: 999 })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    await expect(
+      service.update("Deals", deal.id, { Amount: 200, Expected_Revenue: 999 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(await service.get("Deals", deal.id)).toEqual(deal);
+    await expect(
+      service.massUpdate("Deals", [deal.id], { Amount: 200, Expected_Revenue: 999 }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(await service.get("Deals", deal.id)).toEqual(deal);
+  });
+  it("derives revenue from the stored default probability for blank probability input", async () => {
+    const { service, create } = setup();
+    const deal = await create({ Amount: 123.45, Probability: null });
+    expect(deal.fields).toMatchObject({ Probability: 10, Expected_Revenue: 12.35 });
+    expect(
+      (await service.update("Deals", deal.id, { Stage: "Needs Analysis", Probability: null }))
+        .fields,
+    ).toMatchObject({ Probability: 20, Expected_Revenue: 24.69 });
+  });
   it("recalculates amount changes, keeps zero distinct from blank and rounds money", async () => {
     const { service, create } = setup();
     const deal = await create({ Amount: 100, Probability: 25 });
