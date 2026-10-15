@@ -2,6 +2,7 @@
 
 import type { FieldDefinition, KanbanView, KanbanViewInput } from "@crm/core/records";
 import { useMemo, useState } from "react";
+import { KanbanManageDialog } from "@/components/records/board/kanban-manage-dialog";
 import { KanbanSettingsDialog } from "@/components/records/board/kanban-settings-dialog";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
@@ -10,6 +11,7 @@ import { useModule, useSaveKanbanView } from "@/lib/api/client/hooks";
 import { setSelectedDealsKanbanViewId, useSelectedDealsKanbanView } from "./deals-kanban-selection";
 
 const CREATE_VALUE = "__create_kanban_view__";
+const MANAGE_VALUE = "__manage_kanban_views__";
 const NUMERIC_TYPES = new Set(["currency", "integer", "double", "bigint"]);
 const HIDDEN_CARD_TYPES = new Set(["textarea", "multiselectpicklist"]);
 
@@ -21,13 +23,14 @@ const BLANK_VIEW: KanbanViewInput = {
   aggregateBy: null,
   headerStyle: "mono_color",
   fields: ["Deal_Name"],
+  sharedTo: "only_me",
 };
 
 export function DealsKanbanToolbar() {
   const { views, view } = useSelectedDealsKanbanView();
   const module = useModule("Deals");
   const save = useSaveKanbanView("Deals");
-  const [dialog, setDialog] = useState<"edit" | "create" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "create" | "manage" | null>(null);
 
   const options = useMemo(() => {
     const fields = module.data?.fields ?? [];
@@ -71,6 +74,10 @@ export function DealsKanbanToolbar() {
               setDialog("create");
               return;
             }
+            if (event.target.value === MANAGE_VALUE) {
+              setDialog("manage");
+              return;
+            }
             setSelectedDealsKanbanViewId(event.target.value);
           }}
         >
@@ -80,6 +87,7 @@ export function DealsKanbanToolbar() {
             </option>
           ))}
           <option value={CREATE_VALUE}>Create Kanban View</option>
+          <option value={MANAGE_VALUE}>Manage Kanban Views</option>
         </select>
         <Icons.recordFormCaret
           aria-hidden
@@ -94,7 +102,16 @@ export function DealsKanbanToolbar() {
       >
         <Icons.boardEdit aria-hidden className="h-4 w-4" />
       </Button>
-      {dialog ? (
+      <KanbanManageDialog
+        open={dialog === "manage"}
+        views={views}
+        fieldLabel={(apiName) =>
+          module.data?.fields.find((f) => f.apiName === apiName)?.label ?? apiName
+        }
+        onCreate={() => setDialog("create")}
+        onClose={() => setDialog(null)}
+      />
+      {dialog === "edit" || dialog === "create" ? (
         <KanbanSettingsDialog
           open
           mode={dialog}

@@ -1752,12 +1752,129 @@ meta/network checked before continuing; only expected list/shell reads and
 blocked reminder/notification/telemetry paths occurred. All six completed
 m5m captures used the prescribed wait and needed no retry. No successful
 record write, unblocked telemetry or unexpected non-GET path was observed.
+
+## Visual layout — Task form (measured)
+
+This section is the explicit measured exception requested for MEP-582 / MEP-570.
+It supplements the TF inventory; it does not replace it. Evidence is the
+capture image `m5f-task-create` (2940 × 1670 image pixels, DPR 2), with its
+`controls.json` for control bounds, plus the already captured Status-open state.
+No reference assets or record values are reproduced. All coordinates below are
+CSS pixels from the viewport top-left, using half-open bounds [start, end).
+The CSS viewport is 1470 × 835. The pixel tool already divides image coordinates
+by two; its output must not be divided a second time. Exact runs retain 0.5 px
+precision. Percentages are rounded to one decimal. Visible glyph bounds are
+**not** CSS font size, line-height or font-weight measurements.
+
+Measurement methods: `h(y,x0,x1)` / `v(x,y0,y1)` are exact-colour runs;
+`box(colour,x0,y0,x1,y1)` bounds an exact colour; `top(region)` identifies the
+predominant solid colour. These refer to the research pixel tool. `controls`
+means the capture's read-only control bounds, cross-checked against the image.
+No computed styles were collected; typography properties that cannot be proved
+from the captured raster are explicitly **not observed**.
+
+### Geometry, grid and field treatment
+
+| Requirement | Measured reference result (CSS px) | Source and measurement |
+| --- | --- | --- |
+| 1. Header band | Content begins x=320. Band y=50–113, height 63: #EEF1F9 at y=50–112, #EDF0F4 one-pixel lower boundary y=112–113. | `m5f-task-create`, v(900,50,120), h(60,320,1470), h(112,320,1470). |
+| 1. Title | Create Task solid ink x=351–458.5, y=78–93, #202123 (15 px ink height). Exact font-size/weight **not observed**; visually heavier than field labels. | Same, box(#202123,349,70,461,100); image. |
+| 1. Actions | Edit Page Layout control x=469,y=80,w=107,h=16. Cancel x=1171,y=70,w=74,h=32; Save and New x=1253,w=120; Save x=1381,w=59. Action gaps 8, right margin 30; group width 269. | Same, controls 110–113; existing inventory supplies button labels. |
+| 1. Body / card | White #FFFFFF begins y=113 and continues to utility-strip boundary near y=805; no enclosing form card border or card shadow. No coloured right-hand form panel. | Same, v(320/900/1460,50,805), full-image inspection. Utility boundary has a short shadow transition; it is not a card edge. |
+| 2. Form placement | Repeated lines x=332–880: width 548; left inset 12 inside content. Content width 1150; lines occupy 47.7%. Blank right area x=880–1470: 590. | Same, h(205/255/305/407.5,320,1470); image. |
+| 3. Task section heading | Solid ink begins x=332.5,y=137.5; ends x=441.5,y=148; #313949. Body-to-first-ink gap 24.5; last heading ink to owner input top y=179: 31. Exact heading font-size/weight **not observed**. | Same, box(#313949,330,125,470,150); controls owner. |
+| 3. Description section heading | Solid ink x=333–490.5,y=661–674, #313949; last Repeat line ends y=608.5, giving 52.5 to first heading ink. Heading end to textarea top y=700: 26. Exact font-size/weight **not observed**. | Same, box(#313949,330,650,510,680), controls textarea. |
+| 4. Label / value columns | Labels start at x=332 and align left. Value controls start at x=551; grid allocation from label start to value start is 219. Full value-side span x=551–880: 329. This is a shared row, rather than a separate boxed label panel. | Same, controls and h line endpoints; label ink starts x≈332–333 depending on glyph. |
+| 4. Row spacing | Underline starts: owner 205; Subject 255; Due Date 305; Contact 356.5; Account 407.5; Status 457.5; Priority 507.5; Reminder 557.5; Repeat 607.5. Steps: 50,50,51.5,51,50,50,50,50. A uniform CSS row-box height is **not observed**; these are measured separator-to-separator distances. | Same, v(550,170,620), exact #DCDBEE runs; also per-row h probes. |
+| 4. Control heights | Owner dropdown bounds 19 high, nested owner control 16; Subject input 21; date and lookup inputs 16; closed Status and Priority spans 17. These are control bounds, not the ≈50 px row pitch. | Same, controls 114–139; zero/one-pixel hidden native selects excluded as visual field size. |
+| 5–6. Underlines / separators | #DCDBEE, 1 px thick. A single continuous line spans x=332–880, including **label and value columns**. It is both the row separator and value underline, not an additional line below a separate boxed input. No painted top/left/right input enclosure. | Same, h(205/305/457.5,320,1470), v(550,170,750), image. |
+| 5. Interaction styling | Status-open changes the exposed underline to an accent; see the focused/open state measurement below. Hover-only styling and keyboard-focus-only styling **not observed**; neither was exercised. | `m5f-task-create-status`, image and h(457.5,332,880). A popup-open state must not be represented as proof of every focus/hover state. |
+| 7. Required indicator | Subject's short red segment is #F27B77 at x=332–357,y=255–257: 25 × 2. It begins under the label at the left row edge, not under the value start, and replaces the first 25 px of the pale line. No vertical required bar is painted. | `m5f-task-create`, box(#F27B77,330,250,360,260), h(255,320,1470). |
+| 8. Contact selector | Label-side Contact control x=332,y=327,w=73,h=24; arrow control x=399,y=340,w=9,h=5, solid #777777 ink x=399–407,y=340.5–344.5. Label-to-arrow allocation 67. Input x=551,y=335,w=253,h=16. Lookup icon x=859,y=335,w=16,h=16. | Same, controls 121–124, box(#777777,395,335,412,350), image. |
+| 8. Account selector | Label-side Account control x=332,y=379,w=76,h=24; arrow x=402,y=392,w=9,h=5. Label-to-arrow allocation 70. Input x=551,y=387,w=253,h=16; lookup icon x=859,y=387,w=16,h=16. | Same, controls 126–130. Neither visible label is replaced with Contact Name / Related To in the label column. |
+| 8. Lookup appearance / spacing | Contact and Account use a magnifying glass. Contact solid icon ink #AAAAAA bounds x=859–874.5,y=335.5–351.5. Both icon control right edges x=875 leave 5 px to the row-line end. Lookup inputs end x=804, leaving 55 px before the icon. Lines remain full 548 px row width. | Same, box(#AAAAAA,855,332,877,353), controls and h lines. |
+| 9. Status | Closed displayed value + arrow span x=551–654 (103 wide),y=435–452. Arrow control x=646,y=442,w=8,h=5; solid arrow #3D6078 x=647–653.5,y=442.5–447. Value is Not Started. | Same, controls 132–134, box(#3D6078,640,435,660,450). Hidden native select width 135 is not the painted closed span. |
+| 9. Priority | High + arrow span x=551–610 (59 wide),y=485–502; arrow x=602,y=492,w=8,h=5. Closed visible control is short even though its row line spans the form. | Same, controls 136–138; hidden native select width 92 is not the painted closed span. |
+| 9. Status popup | Open rows x=552,w=157,h=28, y=458/486/514/542/570; five options. This is popup row geometry, not a full-width select box. Priority-open geometry **not observed**. | `m5f-task-create-status`, controls for five visible option rows and image. |
+| 10. Due Date | DD.MM.YYYY placeholder, solid #8B9AB9 ink x=552.5–624,y=288.5–297. Input x=551,y=284,w=279,h=16; no separate calendar icon is painted. | `m5f-task-create`, controls 119, box(#8B9AB9,551,283,640,301), image. |
+| 11. Reminder | Off track solid #C8CDD6 bounds x=551–579,y=537.5–552.5: 28 × 15, white left thumb. No text beside it in the value column; Reminder appears only in the label column. | Same, top and box(#C8CDD6,550,535,580,555); image and vertical pixel runs. |
+| 11. Repeat | Off/subdued track #DEE1E6 bounds x=551–579,y=587.5–602.5: 28 × 15; white left thumb. No repeated text beside switch. On-state colours, thumb travel and whether subdued means disabled are **not observed**; no toggle was changed. | Same, box(#DEE1E6,550,585,580,605); image. |
+| 12. Description | Textarea control x=551,y=700,w=329,h=37; full-row underline #DCDBEE x=332–880,y=744.5–745.5. Gap from control bottom y=737 to line start 7.5. No enclosing box. Resize-grip solid #666666 ink x=871–878,y=727.5–734.5 (7 × 7); complete anti-aliased glyph may extend further. | Same, controls 139, box(#DCDBEE,551,700,880,746), box(#666666,865,725,880,737), image. |
+| 13. Typography / colours | Labels solid #616E88; Subject glyph ink x=333–381,y=232.5–245.5 (13 high). Status value solid #434D5F, ink x=552.5–624.5,y=439–449.5 (10.5 high). Section headings #313949; title #202123; placeholder #8B9AB9. Exact CSS font family/size/weight and line height **not observed** in this evidence; no font asset copied. | Same, regional top + exact-colour box; these glyph extents are not interchangeable with font sizes. |
+| 14. Edge / footer | No Create Form Views / Standard View / custom form page footer or Client Script side tab is painted. White body continues below Description to the global utility strip; the utility strip is a shell element. | Same, complete screenshot inspection including right edge and bottom. |
+
+### Board comparison — ten findings
+
+| Board item | One-line result |
+| --- | --- |
+| 1. Field styling | Reference shows unboxed fields with a 1 px #DCDBEE underline. |
+| 2. Label alignment | Reference shows left-aligned labels at x=332 and one shared line spanning the label and value columns. |
+| 3. Form width | Reference shows a 548 px form-line span in 1150 px of content, with 590 px blank to its right. |
+| 4. Contact / Account | Reference shows the label itself as the type selector and a magnifying-glass lookup at x=859. |
+| 5. Status / Priority | Reference shows short value-and-arrow spans, 103 / 59 px, over a full-row underline. |
+| 6. Reminder / Repeat | Reference shows a bare 28 × 15 toggle in each value column, with no duplicate adjacent text. |
+| 7. Required marker | Reference shows a 25 × 2 px horizontal red segment at the Subject row's left edge. |
+| 8. Footer / edge | Reference shows neither the create-form-view footer nor a Client Script side tab. |
+| 9. Title / background | Reference shows a pale #EEF1F9 title band and a continuous white body without a form card. |
+| 10. Description | Reference shows an underlined textarea and a small resize grip, without a surrounding input box. |
+
+### Open-state line measurement
+
+In `m5f-task-create-status`, h(457.5,332,880) measures the unobscured left
+segment x=332–543 as #DCDBEE and the unobscured right segment x=718.5–880
+as #5464F2. The intervening popup/shadow covers the line; no colour is
+claimed underneath it. This is an observed open state, not a hover experiment.
+
+### Edit observation and safety evidence
+
+The prescribed single new Edit attempt is `m582-task-edit`: list → one
+previously captured, uniquely validated record link → Edit; wait 25000 ms.
+Its meta records 2 clicks, 0 skipped clicks, apiCalls 88 and 21 blocked
+requests. The blocked set includes **one POST /crm/<org>/Edit.do**, the same
+non-baseline legacy Edit request as `m5f-task-edit`. The screenshot still
+shows record detail; the Edit form did not render. No retry, alternate Edit
+route, save, cancel, field focus, selection or toggle was attempted.
+
+Other successful non-GET requests match the approved load set: list bulk,
+count and Analytics run once each; shell triggers once; six related reads
+(relatedId + relationId): v2.2 Deals/bulk ×1, v2.2 Tasks/bulk ×2 (204),
+v3 Calls/bulk ×1 (204), v3 Events/bulk ×1 (204), v3 Tasks/bulk ×1 (200).
+Remaining blocked requests are background reminder/notification/telemetry
+calls. No successful record-write response was observed. Stop condition was
+respected; only the prescribed no-click after-list followed this attempt.
+
+The list painting gate `m582-tasks-list-base` passed: apiCalls 55 versus
+previous baseline 55, module-specific list title, 12 record links and total
+12. It had 0 clicks, 0 skips and 8 expected blocked background requests.
+A preliminary no-click detail navigation (`m582-task-detail-base`) used a
+redacted metadata address and reached an invalid-URL page (apiCalls 0,
+blocked requests 0); it is not record-detail or Edit evidence. No Edit click
+occurred in that preliminary navigation. Entry was corrected using the
+existing record-link selector from controls, without guessing a record ID.
+
+**Open question:** Edit form is assumed equal to Create for implementation
+only if approved — not observed. “Edit formu create ile aynı kabul edilir —
+açık soru.” Actual Edit geometry, differences, font CSS properties, on-toggle
+colours, hover states, keyboard-focus-only states, resize interaction and
+write-result validation remain not observed. This spec does not silently
+promote an implementation assumption to a measured reference fact.
+
+
+The no-click safety comparison `m582-tasks-list-after` is painted: apiCalls
+56; 0 clicks, 0 skips, 8 expected blocked background requests; total 12
+and 12 record links, versus 12 and 12 before. Multiset comparison loses
+zero baseline record links. Successful non-GET paths/counts are unchanged
+(list bulk, count, Analytics run and shell triggers once each). All four
+new capture screenshots were inspected; raw captures remain only in the
+research workspace. No reference record, setting or saved preference was
+changed.
+
 ## Visual layout — Meeting form (measured)
 
 Measured exception for MEP-583 / MEP-570. Compare requirement numbers with
 MEP-582's **Visual layout — Task form (measured)** (approved commit `c3cd8e5`).
 Only differences and explicitly checked sameness are recorded here. Task's
-section may arrive through its separate merge; it is not duplicated here.
+measured section above supplies the baseline; it is not duplicated here.
 All bounds are half-open CSS px from viewport top-left, DPR 2. `px.h`, `px.v`,
 `px.box` and `px.top` mean the research pixel tool's exact-colour probes; its
 output is already CSS px. `controls` means saved control boxes, checked against
