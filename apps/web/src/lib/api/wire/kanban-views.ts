@@ -9,6 +9,9 @@ export type WireKanbanView = {
   aggregate_by: string | null;
   header_style: string;
   fields: readonly { api_name: string }[];
+  shared_to: string;
+  created_by: { id: string; name: string };
+  modified_by: { id: string; name: string };
 };
 export type WireKanbanViewsResponse = { kanban_views: readonly WireKanbanView[] };
 
@@ -20,6 +23,9 @@ export function encodeKanbanView(view: KanbanView): WireKanbanView {
     aggregate_by: view.aggregateBy,
     header_style: view.headerStyle,
     fields: view.fields.map((api_name) => ({ api_name })),
+    shared_to: view.sharedTo,
+    created_by: { ...view.createdBy },
+    modified_by: { ...view.modifiedBy },
   };
 }
 
@@ -31,25 +37,43 @@ export function decodeKanbanView(view: WireKanbanView): KanbanView {
     aggregateBy: view.aggregate_by,
     headerStyle: view.header_style,
     fields: view.fields.map((field) => field.api_name),
+    sharedTo: view.shared_to as KanbanView["sharedTo"],
+    createdBy: { ...view.created_by },
+    modifiedBy: { ...view.modified_by },
   };
 }
 
-export function encodeKanbanViewInput(input: KanbanViewInput): Omit<WireKanbanView, "id"> {
-  const { id: _id, ...rest } = encodeKanbanView({ id: "", ...input });
-  return rest;
+export type WireKanbanViewInput = Omit<
+  WireKanbanView,
+  "id" | "created_by" | "modified_by" | "shared_to"
+> & {
+  shared_to?: string;
+};
+
+export function encodeKanbanViewInput(input: KanbanViewInput): WireKanbanViewInput {
+  return {
+    name: input.name,
+    categorize_by: input.categorizeBy,
+    aggregate_by: input.aggregateBy,
+    header_style: input.headerStyle,
+    fields: input.fields.map((api_name) => ({ api_name })),
+    ...(input.sharedTo ? { shared_to: input.sharedTo } : {}),
+  };
 }
 
 /** Strict decode of one write body item; semantic rules stay in the service. */
 export function decodeKanbanViewInput(value: unknown): KanbanViewInput {
   const item = object(value, "kanban_views");
-  const keys = ["name", "categorize_by", "aggregate_by", "header_style", "fields"];
+  const keys = ["name", "categorize_by", "aggregate_by", "header_style", "fields", "shared_to"];
   if (Object.keys(item).some((key) => !keys.includes(key))) invalid("kanban_views", "Unknown key.");
   if (typeof item.name !== "string") invalid("name");
   if (typeof item.categorize_by !== "string") invalid("categorizeBy");
   if (item.aggregate_by !== null && typeof item.aggregate_by !== "string") invalid("aggregateBy");
   if (typeof item.header_style !== "string") invalid("headerStyle");
   if (!Array.isArray(item.fields)) invalid("fields");
+  if (item.shared_to !== undefined && typeof item.shared_to !== "string") invalid("sharedTo");
   return {
+    ...(item.shared_to !== undefined ? { sharedTo: item.shared_to as KanbanView["sharedTo"] } : {}),
     name: item.name as string,
     categorizeBy: item.categorize_by as string,
     aggregateBy: item.aggregate_by as string | null,
