@@ -1,7 +1,14 @@
 import { NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { ModuleMetadata } from "../contract";
-import { KANBAN_HEADER_STYLES, type KanbanView, type KanbanViewInput } from "../kanban-views";
+import {
+  KANBAN_HEADER_STYLES,
+  KANBAN_SHARE_TARGETS,
+  type KanbanSharedTo,
+  type KanbanView,
+  type KanbanViewInput,
+  type KanbanViewUser,
+} from "../kanban-views";
 
 interface ModuleKanbanState {
   views: KanbanView[];
@@ -18,12 +25,13 @@ const stores = runtime[storeKey];
 const FIRST_ID = 6000000000000000001n;
 const NUMERIC_TYPES = new Set(["currency", "integer", "double", "bigint"]);
 
-const seeds: Readonly<Record<string, KanbanViewInput & { name: string }>> = {
+const seeds: Readonly<Record<string, KanbanViewInput & { sharedTo: KanbanSharedTo }>> = {
   Deals: {
     name: "STAGEVIEW",
     categorizeBy: "Stage",
     aggregateBy: "Amount",
     headerStyle: "mono_color",
+    sharedTo: "everyone",
     fields: [
       "Deal_Name",
       "Stage",
@@ -38,7 +46,7 @@ const seeds: Readonly<Record<string, KanbanViewInput & { name: string }>> = {
 
 const copy = <T>(value: T): T => structuredClone(value);
 
-function stateFor(orgId: string, module: string): ModuleKanbanState {
+function stateFor(orgId: string, module: string, user: KanbanViewUser): ModuleKanbanState {
   let org = stores.get(orgId);
   if (!org) {
     org = new Map();
@@ -48,7 +56,14 @@ function stateFor(orgId: string, module: string): ModuleKanbanState {
   if (!state) {
     state = { views: [], nextId: FIRST_ID };
     const seed = seeds[module];
-    if (seed) state.views.push({ id: String(state.nextId++), ...copy(seed) });
+    if (seed)
+      state.views.push({
+        id: String(state.nextId++),
+        ...copy(seed),
+        sharedTo: "everyone",
+        createdBy: { ...user },
+        modifiedBy: { ...user },
+      });
     org.set(module, state);
   }
   return state;
@@ -60,7 +75,7 @@ function validate(
   displayNameField: string,
   input: KanbanViewInput,
   siblings: readonly KanbanView[],
-): KanbanViewInput {
+): KanbanViewInput & { sharedTo: KanbanSharedTo } {
   const errors: Record<string, string[]> = {};
   const fieldOf = (name: string) => metadata.fields.find((field) => field.apiName === name);
   const name = typeof input.name === "string" ? input.name.trim() : "";
@@ -85,7 +100,12 @@ function validate(
   else if (!fields.includes(displayNameField))
     errors.fields = ["The record name field must be on the card."];
   if (Object.keys(errors).length) throw new ValidationError(errors);
+  const sharedTo = input.sharedTo ?? "only_me";
+  if (!(KANBAN_SHARE_TARGETS as readonly string[]).includes(sharedTo))
+    errors.sharedTo = ["Choose who can see this view."];
+  if (Object.keys(errors).length) throw new ValidationError(errors);
   return {
+    sharedTo,
     name,
     categorizeBy: input.categorizeBy,
     aggregateBy: input.aggregateBy,
@@ -106,23 +126,32 @@ export function createFixtureKanbanViews(
   ctx: OrgContext,
   metadataOf: (module: string) => { metadata: ModuleMetadata; displayNameField: string },
 ): FixtureKanbanViews {
+  const user: KanbanViewUser = { id: ctx.userId, name: ctx.userId };
   const state = (module: string) => {
     metadataOf(module);
-    return stateFor(ctx.orgId, module);
+    return stateFor(ctx.orgId, module, user);
   };
+  /** "Only me" views are visible to their creator alone. */
+  const visible = (view: KanbanView) =>
+    view.sharedTo === "everyone" || view.createdBy.id === user.id;
   const find = (module: string, id: string) => {
-    const view = state(module).views.find((candidate) => candidate.id === id);
+    const view = state(module).views.find((candidate) => candidate.id === id && visible(candidate));
     if (!view) throw new NotFoundError("View not found.");
     return view;
   };
   return {
-    list: (module) => copy(state(module).views),
+    list: (module) => copy(state(module).views.filter(visible)),
     get: (module, id) => copy(find(module, id)),
     create(module, input) {
       const moduleState = state(module);
       const { metadata, displayNameField } = metadataOf(module);
       const valid = validate(metadata, displayNameField, input, moduleState.views);
-      const view: KanbanView = { id: String(moduleState.nextId++), ...valid };
+      const view: KanbanView = {
+        id: String(moduleState.nextId++),
+        ...valid,
+        createdBy: { ...user },
+        modifiedBy: { ...user },
+      };
       moduleState.views.push(view);
       return copy(view);
     },
@@ -136,7 +165,8 @@ export function createFixtureKanbanViews(
         input,
         moduleState.views.filter((view) => view.id !== id),
       );
-      Object.assign(current, valid);
+      const { sharedTo: _sharedTo, ...rest } = valid;
+      Object.assign(current, rest, { modifiedBy: { ...user } });
       return copy(current);
     },
   };
