@@ -24,7 +24,7 @@ async function createRecord(
 async function openImport(page: Page, orgSlug: string, module: string) {
   await page.goto(moduleListDefaultPath(orgSlug, module));
   await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
-  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("button", { name: "More", exact: true }).click();
   await page.getByRole("menuitem", { name: `Import ${module}` }).click();
   await expect(page).toHaveURL(new RegExp(`/tab/${module}/import`));
 }
@@ -58,7 +58,7 @@ test.describe("CSV import and export", () => {
     await openImport(page, org.slug, "Leads");
     await uploadCsv(
       page,
-      "Last Name,Email\nImportOne,one@example.test\nImportTwo,two@example.test\n,three@example.test\n",
+      "Last Name,Company,Email\nImportOne,Acme,one@example.test\nImportTwo,Acme,two@example.test\n,Acme,three@example.test\n",
     );
     await page.getByRole("radio", { name: /Add as new/ }).check({ force: true });
     await page.getByRole("button", { name: "Next" }).click();
@@ -70,8 +70,8 @@ test.describe("CSV import and export", () => {
     await page.getByRole("button", { name: "Done" }).click();
 
     await expect(page).toHaveURL(/\/tab\/Leads\/list/);
-    await expect(page.getByText("ImportOne")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("ImportTwo")).toBeVisible();
+    await expect(page.getByRole("link", { name: "ImportOne" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("link", { name: "ImportTwo" })).toBeVisible();
 
     await page.goto(`/crm/${org.slug}/settings/import-history`);
     const row = page.getByRole("row", { name: /import\.csv/ });
@@ -87,7 +87,7 @@ test.describe("CSV import and export", () => {
 
     await page.goto(moduleListDefaultPath(org.slug, "Leads"));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("ImportOne")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "ImportOne" })).toHaveCount(0);
   });
 
   test("Contacts: Update mode matches by Email", async ({ page }) => {
@@ -116,7 +116,7 @@ test.describe("CSV import and export", () => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     for (const name of ["ExportA", "ExportB", "ExportC"]) {
-      await createRecord(page, "Leads", org.slug, { Last_Name: name });
+      await createRecord(page, "Leads", org.slug, { Last_Name: name, Company: "Acme" });
     }
     await page.goto(moduleListDefaultPath(org.slug, "Leads"));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
@@ -125,7 +125,7 @@ test.describe("CSV import and export", () => {
     await page.getByRole("menuitem", { name: "Export Leads" }).click();
     const dialog = page.getByRole("dialog", { name: "Export Leads" });
     await dialog.getByRole("radio", { name: "Choose fields" }).check({ force: true });
-    await dialog.getByRole("checkbox", { name: "Last Name", exact: true }).check({ force: true });
+    await dialog.getByRole("checkbox", { name: "Company", exact: true }).check({ force: true });
     await dialog.getByRole("button", { name: "Export", exact: true }).click();
     await expect(page.getByText("Export completed")).toBeVisible({ timeout: 15_000 });
     const [download] = await Promise.all([
@@ -135,10 +135,10 @@ test.describe("CSV import and export", () => {
     const path = await download.path();
     const { readFile } = await import("node:fs/promises");
     const rows = parseCsv(await readFile(path, "utf8"));
-    expect(rows[0]).toEqual(["Last Name"]);
-    expect(rows).toHaveLength(4);
+    expect(rows[0]).toEqual(["Record Id", "Company"]);
+    expect(rows.filter((row) => row[1] === "Acme")).toHaveLength(3);
 
-    const checks = page.getByRole("checkbox", { name: /Select row/ });
+    const checks = page.getByRole("checkbox", { name: /^Select (?!all)/ });
     await checks.nth(0).check({ force: true });
     await checks.nth(1).check({ force: true });
     await page.getByRole("button", { name: "Actions", exact: true }).click();
