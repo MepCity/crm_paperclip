@@ -153,6 +153,28 @@ describe("assertUniqueFieldValues", () => {
     ];
     expect(() => assertUniqueFieldValues(fields, records)).not.toThrow();
   });
+
+  it("detects conflict on second unique field when records are provided as single-use iterator", () => {
+    const fields: FieldDefinition[] = [
+      makeField({ apiName: "Email", label: "Email", dataType: "email", unique: true }),
+      makeField({ apiName: "Phone", label: "Phone", dataType: "phone", unique: true }),
+    ];
+    const recordsMap = new Map<string, RecordData>([
+      ["rec-1", { id: "rec-1", fields: { Email: "first@example.com", Phone: "12345" } }],
+      ["rec-2", { id: "rec-2", fields: { Email: "second@example.com", Phone: "12345" } }],
+    ]);
+
+    expect(() => assertUniqueFieldValues(fields, recordsMap.values())).toThrow(ConflictError);
+
+    try {
+      assertUniqueFieldValues(fields, recordsMap.values());
+      expect.unreachable("should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConflictError);
+      const conflict = error as ConflictError;
+      expect(conflict.message).toBe("Phone is already in use.");
+    }
+  });
 });
 
 describe("projectRecordsWithOverrides", () => {
