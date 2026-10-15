@@ -1,8 +1,8 @@
 "use client";
 
 import { ValidationError } from "@crm/core/errors";
-import { formatCurrency } from "@crm/core/format";
-import type { ListQuery, ModuleMetadata, RecordData } from "@crm/core/records";
+import { formatCurrency, formatNumber } from "@crm/core/format";
+import type { FieldDefinition, ListQuery, ModuleMetadata, RecordData } from "@crm/core/records";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -19,9 +19,8 @@ import {
   type StageChangeFormValues,
   StageChangeSubmitError,
 } from "@/components/records/detail/stage-bar";
+import { formatFieldValue } from "@/components/records/field-format";
 import type { ModuleListBoardProps } from "@/components/records/list/module-list-screen";
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/ui/icon";
 import { toast } from "@/components/ui/toast";
 import { invalidateModuleLists, useHomeCurrency, useRecordSummary } from "@/lib/api/client/hooks";
 import { useClientRecordService } from "@/lib/api/client/provider";
@@ -30,35 +29,20 @@ import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { combineCriteriaAnd } from "@/lib/records/filter-criteria";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
+import { useSelectedDealsKanbanView } from "./deals-kanban-selection";
+import { dealsBoardToolbar } from "./deals-kanban-toolbar";
 import { DEALS_LIST_CURRENCY_CODE } from "./list-config";
 
 export function buildOptimisticDealCard(card: BoardCard, targetColumn: BoardColumn): BoardCard {
   return {
     ...card,
-    rows: card.rows.map((row, index) => (index === 1 ? { ...row, text: targetColumn.label } : row)),
+    rows: card.rows.map((row, index) =>
+      (row.fieldKey ?? (index === 1 ? "Stage" : "")) === "Stage"
+        ? { ...row, text: targetColumn.label }
+        : row,
+    ),
   };
 }
-
-export const dealsBoardToolbar = (
-  <>
-    <span className="relative inline-flex h-[27px] w-[109px] items-center">
-      <select
-        aria-label="Board grouping"
-        className="h-full w-full appearance-none rounded border border-control-border bg-surface pl-2 pr-6 text-sm text-(--color-text-muted) outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-        defaultValue="STAGEVIEW"
-      >
-        <option value="STAGEVIEW">STAGEVIEW</option>
-      </select>
-      <Icons.recordFormCaret
-        aria-hidden
-        className="pointer-events-none absolute right-3 h-[5px] w-2 text-(--color-text-muted)"
-      />
-    </span>
-    <Button variant="ghost" aria-label="Board settings">
-      <Icons.boardEdit aria-hidden className="h-4 w-4" />
-    </Button>
-  </>
-);
 
 export function formatClosingDate(value: string): string {
   const trimmed = value.trim();
@@ -94,99 +78,130 @@ export function isOverdueClosingDate(
   return match ? (match[1] as string) < localIsoDate(now) : false;
 }
 
+/** Card fields of the seeded stage view; used until a saved view is available. */
+export const DEFAULT_DEAL_CARD_FIELDS: readonly string[] = [
+  "Deal_Name",
+  "Stage",
+  "Account_Name",
+  "Owner",
+  "Contact_Name",
+  "Amount",
+  "Closing_Date",
+];
+
+type DealCardRow = NonNullable<BoardCard["rows"]>[number];
+
+const LOOKUP_MODULES: Readonly<Record<string, string>> = {
+  Account_Name: "Accounts",
+  Contact_Name: "Contacts",
+};
+
+function lookupRow(
+  value: RecordData["fields"][string] | undefined,
+  moduleName: string,
+  orgSlug: string,
+): DealCardRow | null {
+  if (value && typeof value === "object" && "id" in value && value.id) {
+    const name =
+      "name" in value && typeof value.name === "string" && value.name.trim()
+        ? value.name.trim()
+        : String(value.id);
+    return { text: name, href: moduleRecordPath(orgSlug, moduleName, String(value.id)) };
+  }
+  if (typeof value === "string" && value.trim()) {
+    return { text: value.trim(), href: moduleRecordPath(orgSlug, moduleName, value.trim()) };
+  }
+  return null;
+}
+
 export function buildDealCardRows(
   deal: RecordData,
   stageDisplayMap: Readonly<Record<string, string>>,
   ownerNames: Readonly<Record<string, string>>,
   orgSlug: string,
-  options: { closedStages?: ReadonlySet<string>; now?: Date } = {},
-): readonly { text: string; href?: string; tone?: "danger"; strong?: boolean }[] {
-  const rows: { text: string; href?: string; tone?: "danger"; strong?: boolean }[] = [];
+  options: {
+    closedStages?: ReadonlySet<string>;
+    now?: Date;
+    /** Card field API names in display order; defaults to the seeded stage view. */
+    fields?: readonly string[];
+    fieldDefinitions?: readonly FieldDefinition[];
+  } = {},
+): readonly DealCardRow[] {
+  const rows: DealCardRow[] = [];
+  const push = (fieldKey: string, row: Omit<DealCardRow, "fieldKey"> | null) => {
+    if (row) rows.push({ ...row, fieldKey });
+  };
 
-  // 1. Deal Name (link to detail)
-  const dealName = typeof deal.fields.Deal_Name === "string" ? deal.fields.Deal_Name.trim() : "";
-  if (dealName) {
-    rows.push({
-      text: dealName,
-      href: moduleRecordPath(orgSlug, "Deals", deal.id),
-      strong: true,
-    });
-  }
-
-  // 2. Stage (plain text)
-  const stageVal = typeof deal.fields.Stage === "string" ? deal.fields.Stage.trim() : "";
-  const stageText = stageVal ? (stageDisplayMap[stageVal] ?? stageVal) : "";
-  if (stageText) {
-    rows.push({ text: stageText });
-  }
-
-  // 3. Account Name (link to account if present)
-  const accountRef = deal.fields.Account_Name;
-  if (accountRef && typeof accountRef === "object" && "id" in accountRef && accountRef.id) {
-    const name =
-      "name" in accountRef && typeof accountRef.name === "string" && accountRef.name.trim()
-        ? accountRef.name.trim()
-        : String(accountRef.id);
-    rows.push({
-      text: name,
-      href: moduleRecordPath(orgSlug, "Accounts", String(accountRef.id)),
-    });
-  } else if (typeof accountRef === "string" && accountRef.trim()) {
-    rows.push({
-      text: accountRef.trim(),
-      href: moduleRecordPath(orgSlug, "Accounts", accountRef.trim()),
-    });
-  }
-
-  // 4. Deal Owner (plain text)
-  const ownerId = typeof deal.fields.Owner === "string" ? deal.fields.Owner.trim() : "";
-  const ownerText = ownerId ? (ownerNames[ownerId] ?? ownerId) : "";
-  if (ownerText) {
-    rows.push({ text: ownerText });
-  }
-
-  // 5. Contact Name (link to contact if present)
-  const contactRef = deal.fields.Contact_Name;
-  if (contactRef && typeof contactRef === "object" && "id" in contactRef && contactRef.id) {
-    const name =
-      "name" in contactRef && typeof contactRef.name === "string" && contactRef.name.trim()
-        ? contactRef.name.trim()
-        : String(contactRef.id);
-    rows.push({
-      text: name,
-      href: moduleRecordPath(orgSlug, "Contacts", String(contactRef.id)),
-    });
-  } else if (typeof contactRef === "string" && contactRef.trim()) {
-    rows.push({
-      text: contactRef.trim(),
-      href: moduleRecordPath(orgSlug, "Contacts", contactRef.trim()),
-    });
-  }
-
-  // 6. Amount (currency formatted text)
-  if (typeof deal.fields.Amount === "number") {
-    rows.push({
-      text: formatCurrency(deal.fields.Amount, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT),
-    });
-  }
-
-  // 7. Closing Date (dd.MM.yyyy text)
-  const closingDate =
-    typeof deal.fields.Closing_Date === "string" ? deal.fields.Closing_Date.trim() : "";
-  if (closingDate) {
-    const formatted = formatClosingDate(closingDate);
-    if (formatted) {
-      const stageKey = typeof deal.fields.Stage === "string" ? deal.fields.Stage : "";
-      const overdue = isOverdueClosingDate(
-        closingDate,
-        options.closedStages?.has(stageKey) ?? false,
-        options.now ?? new Date(),
+  for (const key of options.fields ?? DEFAULT_DEAL_CARD_FIELDS) {
+    const value = deal.fields[key];
+    if (key === "Deal_Name") {
+      const name = typeof value === "string" ? value.trim() : "";
+      push(
+        key,
+        name
+          ? { text: name, href: moduleRecordPath(orgSlug, "Deals", deal.id), strong: true }
+          : null,
       );
-      rows.push(overdue ? { text: formatted, tone: "danger" } : { text: formatted });
+    } else if (key === "Stage") {
+      const stage = typeof value === "string" ? value.trim() : "";
+      const text = stage ? (stageDisplayMap[stage] ?? stage) : "";
+      push(key, text ? { text } : null);
+    } else if (key in LOOKUP_MODULES) {
+      push(key, lookupRow(value, LOOKUP_MODULES[key] as string, orgSlug));
+    } else if (key === "Owner") {
+      const ownerId = typeof value === "string" ? value.trim() : "";
+      const text = ownerId ? (ownerNames[ownerId] ?? ownerId) : "";
+      push(key, text ? { text } : null);
+    } else if (key === "Amount") {
+      push(
+        key,
+        typeof value === "number"
+          ? { text: formatCurrency(value, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT) }
+          : null,
+      );
+    } else if (key === "Closing_Date") {
+      const closingDate = typeof value === "string" ? value.trim() : "";
+      const formatted = closingDate ? formatClosingDate(closingDate) : "";
+      if (formatted) {
+        const stageKey = typeof deal.fields.Stage === "string" ? deal.fields.Stage : "";
+        const overdue = isOverdueClosingDate(
+          closingDate,
+          options.closedStages?.has(stageKey) ?? false,
+          options.now ?? new Date(),
+        );
+        push(key, overdue ? { text: formatted, tone: "danger" } : { text: formatted });
+      }
+    } else {
+      const definition = options.fieldDefinitions?.find((f) => f.apiName === key);
+      if (!definition || value === undefined) continue;
+      const formatted = formatFieldValue(definition, value, ownerNames, DEFAULT_FORMAT, {
+        currencyCode: DEALS_LIST_CURRENCY_CODE,
+        orgSlug,
+      });
+      if (formatted.kind === "text" || formatted.kind === "multiline") {
+        push(key, { text: formatted.text });
+      } else if (formatted.kind === "link") {
+        push(key, { text: formatted.link.text, href: formatted.link.href });
+      } else if (formatted.kind === "audit") {
+        push(key, { text: formatted.name });
+      }
     }
   }
-
   return rows;
+}
+
+/** Column total text for the summed field; `undefined` when the view has no Aggregate By. */
+export function formatColumnTotal(
+  sum: number,
+  aggregateBy: string | null | undefined,
+  fieldDefinitions: readonly FieldDefinition[],
+): string | undefined {
+  if (!aggregateBy) return undefined;
+  const definition = fieldDefinitions.find((f) => f.apiName === aggregateBy);
+  if (!definition || definition.dataType === "currency") {
+    return formatCurrency(sum, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT);
+  }
+  return formatNumber(sum, DEFAULT_FORMAT);
 }
 
 export function buildDealsBoardProps(input: {
@@ -296,15 +311,18 @@ export function DealsBoard({
   }, [metadata.fields]);
 
   // Summarize query for stage header counts and sums
+  const { view: kanbanView } = useSelectedDealsKanbanView();
+  const aggregateBy = kanbanView ? kanbanView.aggregateBy : "Amount";
+  const cardFields = kanbanView?.fields ?? DEFAULT_DEAL_CARD_FIELDS;
   const summaryQuery = useMemo(
     () => ({
       viewId,
       ...(filters ? { filters } : {}),
       ...(search ? { search } : {}),
       groupBy: "Stage",
-      sum: "Amount",
+      ...(aggregateBy ? { sum: aggregateBy } : {}),
     }),
-    [filters, search, viewId],
+    [aggregateBy, filters, search, viewId],
   );
   const summary = useRecordSummary("Deals", summaryQuery, { enabled: Boolean(viewId) });
 
@@ -351,7 +369,11 @@ export function DealsBoard({
 
       const cards: BoardCard[] = records.map((deal) => ({
         id: deal.id,
-        rows: buildDealCardRows(deal, stageDisplayMap, ownerNames, orgSlug, { closedStages }),
+        rows: buildDealCardRows(deal, stageDisplayMap, ownerNames, orgSlug, {
+          closedStages,
+          fields: cardFields,
+          fieldDefinitions: metadata.fields,
+        }),
       }));
 
       return {
@@ -359,11 +381,22 @@ export function DealsBoard({
         label: stage.displayValue,
         count,
         percentage: `${stage.stage?.probability ?? 0}%`,
-        totalText: formatCurrency(sum ?? 0, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT),
+        totalText: formatColumnTotal(sum ?? 0, aggregateBy, metadata.fields),
         cards,
       };
     });
-  }, [stageOptions, stageQueries, summaryMap, stageDisplayMap, ownerNames, orgSlug, closedStages]);
+  }, [
+    stageOptions,
+    stageQueries,
+    summaryMap,
+    stageDisplayMap,
+    ownerNames,
+    orgSlug,
+    closedStages,
+    cardFields,
+    aggregateBy,
+    metadata.fields,
+  ]);
 
   const handleCreate = useCallback(
     (stageKey: string) => {
@@ -488,6 +521,7 @@ export function DealsBoard({
         onMove={handleMove}
         buildOptimisticCard={buildOptimisticDealCard}
         loading={isLoading}
+        headerStyle={kanbanView?.headerStyle}
       />
       {pendingMove ? (
         <StageChangeDialog
