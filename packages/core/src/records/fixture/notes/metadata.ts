@@ -158,7 +158,36 @@ export const notesMetadataSource = {
       maxLength: 18,
     },
   ],
-  layout: [],
+  layout: [
+    {
+      label: "Note Information",
+      columnCount: 1,
+      columns: [
+        [
+          "Owner",
+          "Note_Title",
+          "Note_Content",
+          "Parent_Id",
+          "Created_By",
+          "Modified_By",
+          "Created_Time",
+          "Modified_Time",
+          "id",
+        ],
+      ],
+      fields: [
+        "Owner",
+        "Note_Title",
+        "Note_Content",
+        "Parent_Id",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "id",
+      ],
+    },
+  ],
 } as const;
 
 export const notesMetadata: ModuleMetadata = {
