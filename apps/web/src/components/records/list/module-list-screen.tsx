@@ -119,6 +119,8 @@ export interface ModuleListScreenConfig {
   relatedToPictogram?: boolean;
   /** Boolean field marking all-day rows (date-only Start/End cells). */
   allDayField?: string;
+  /** Row edit pencil links to the record edit page; leave off until the module has an edit form. */
+  rowEditLink?: boolean;
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
@@ -810,7 +812,11 @@ function ModuleListScreenLoaded({
               rowTools={config.rowTools}
               relatedToPictogram={config.relatedToPictogram}
               allDayField={config.allDayField}
-              rowEditHref={(record) => moduleRecordEditPath(orgSlug, config.module, record.id)}
+              rowEditHref={
+                config.rowEditLink
+                  ? (record) => moduleRecordEditPath(orgSlug, config.module, record.id)
+                  : undefined
+              }
               columns={columns}
               records={records}
               linkField={config.linkField}
