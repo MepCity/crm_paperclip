@@ -380,3 +380,31 @@ This is the first low-load recovery attempt, not a new form observation.
 A single delayed retry is reserved after at least ten minutes; no browser,
 profile or guard change is authorized by this result. All outstanding behaviour
 questions above remain open. Raw evidence remains in the research workspace.
+
+### Delayed recovery and renewed failure (MEP-539)
+
+The single delayed no-click retry, `m539-amount-base-v7`, ran after the
+one-minute load fell to 10.19, using the established native route and a
+15-second wait. Its screenshot paints the complete Create Deal form, including
+Amount and its right-edge information icon. The refreshed export contains 234
+controls and gives the icon wrapper the unique selector
+`#Crm_Potentials_AMOUNT div.cxBoxRightIcon`. Metadata records 51 API calls,
+zero HTTP/2 request failures and three blocked background requests (reminder,
+notification status and telemetry). Client initialization errors remain in the
+diagnostics; this is a painted baseline, not proof of stable access recovery.
+
+The next capture, `m539-amount-click`, requested that exported selector and
+Escape, with a two-second wait. The new page load failed to paint: the screenshot
+is a loading skeleton, the export contains only three controls, and five static
+GETs failed with HTTP/2 protocol errors. The tool skipped the requested click
+because it matched zero elements. Escape completed; there was no actual click,
+opened dialog, submitted value or blocked request. Nine API calls were recorded.
+This shorter wait differs from the successful baseline, but the recorded static
+request failures also prevent treating the missing icon as a UI behaviour.
+
+Both final screenshots, controls and metadata were inspected. No Amount popup,
+wording, placement or dismissal is established. The earlier hover observation
+remains valid. Further captures stopped because access is intermittent after
+the bounded recovery attempts; no browser/profile, lock or guard repair was
+attempted. Stage badge activation, Assign, both Contact Roles dialogs and natural
+many-card overflow remain open. Raw captures stay in the local research workspace.
