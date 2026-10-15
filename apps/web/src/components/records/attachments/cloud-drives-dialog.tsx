@@ -164,7 +164,7 @@ export function CloudDrivesDialog({ open, onClose }: CloudDrivesDialogProps) {
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setSelectedProvider(provider)}
-                    className={`flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       isSelected
                         ? "border-l-4 border-primary bg-surface font-semibold text-text shadow-xs"
                         : "text-text-muted hover:bg-surface-hover hover:text-text"
@@ -197,7 +197,7 @@ export function CloudDrivesDialog({ open, onClose }: CloudDrivesDialogProps) {
                 <button
                   type="button"
                   aria-disabled="true"
-                  className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
+                  className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
                 >
                   Terms of use
                 </button>{" "}
@@ -205,7 +205,7 @@ export function CloudDrivesDialog({ open, onClose }: CloudDrivesDialogProps) {
                 <button
                   type="button"
                   aria-disabled="true"
-                  className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
+                  className="font-semibold text-primary underline underline-offset-2 hover:opacity-80"
                 >
                   Privacy policy
                 </button>
