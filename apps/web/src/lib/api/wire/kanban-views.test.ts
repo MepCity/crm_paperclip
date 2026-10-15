@@ -17,6 +17,9 @@ const view = {
   aggregateBy: null,
   headerStyle: "mono_color",
   fields: ["Deal_Name", "Stage"],
+  sharedTo: "only_me" as const,
+  createdBy: { id: "u1", name: "Ada" },
+  modifiedBy: { id: "u2", name: "Bob" },
 };
 
 describe("kanban view codec", () => {
@@ -29,14 +32,26 @@ describe("kanban view codec", () => {
       aggregate_by: null,
       header_style: "mono_color",
       fields: [{ api_name: "Deal_Name" }, { api_name: "Stage" }],
+      shared_to: "only_me",
+      created_by: { id: "u1", name: "Ada" },
+      modified_by: { id: "u2", name: "Bob" },
     });
     expect(decodeKanbanView(wire)).toEqual(view);
-    const { id: _id, ...input } = view;
+    const input = {
+      name: view.name,
+      categorizeBy: view.categorizeBy,
+      aggregateBy: view.aggregateBy,
+      headerStyle: view.headerStyle,
+      fields: view.fields,
+      sharedTo: "everyone" as const,
+    };
     expect(decodeKanbanViewInput(encodeKanbanViewInput(input))).toEqual(input);
   });
 
   it("rejects malformed write items", () => {
     const ok = encodeKanbanViewInput({ ...view, id: undefined } as never);
+    const withoutShare = encodeKanbanViewInput({ ...view, sharedTo: undefined } as never);
+    expect("shared_to" in withoutShare).toBe(false);
     for (const bad of [
       null,
       { ...ok, extra: 1 },

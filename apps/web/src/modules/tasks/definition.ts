@@ -20,8 +20,8 @@ import { buildTasksFilterGroups } from "./list-filters";
 import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 
 /**
- * Interim: the Tasks detail and form research is still open, so the detail screen and
- * form below borrow the module-neutral Deals builders (layout-driven sections, shared
+ * Interim: the Tasks detail research is still open, so the detail screen
+ * below borrows the module-neutral Deals builders (layout-driven sections, shared
  * inline edit, last-update label, empty timeline, More Options). Only the header title
  * is Tasks-specific.
  */
@@ -42,6 +42,7 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Due_Date", "Status", "Priority", "Owner"],
   buildFilterGroups: buildTasksFilterGroups,
   form: {
+    variant: "activity",
     rules: tasksFormRules,
     fallbackColumns: { "Task Information": TASKS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,

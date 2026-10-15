@@ -1,15 +1,18 @@
 import type { ModuleMetadata, RecordData } from "@crm/core/records";
-import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import {
-  buildDealCardRows,
   buildDealsBoardProps,
+  buildDealCardRows as buildKeyedDealCardRows,
   buildOptimisticDealCard,
-  dealsBoardToolbar,
   formatClosingDate,
+  formatColumnTotal,
   isOverdueClosingDate,
 } from "./deals-board";
 import { dealMetadata } from "./test-metadata";
+
+/** Rows without the field keys, for the legacy seven-row expectations. */
+const buildDealCardRows = (...args: Parameters<typeof buildKeyedDealCardRows>) =>
+  buildKeyedDealCardRows(...args).map(({ fieldKey: _fieldKey, ...row }) => row);
 
 const sampleMetadata: ModuleMetadata = dealMetadata([
   {
@@ -302,27 +305,6 @@ describe("buildDealsBoardProps", () => {
   });
 });
 
-describe("dealsBoardToolbar", () => {
-  test("renders STAGEVIEW select and settings button", () => {
-    const { container } = render(<div>{dealsBoardToolbar}</div>);
-    const select = screen.getByRole("combobox", { name: "Board grouping" }) as HTMLSelectElement;
-    expect(select).toBeTruthy();
-    expect(select.value).toBe("STAGEVIEW");
-    expect(select.className).toContain("text-sm");
-    expect(select.className).toContain("focus-visible:ring-2");
-    expect(select.className).toContain("focus-visible:ring-focus-ring");
-    expect(screen.getByRole("button", { name: "Board settings" })).toBeTruthy();
-
-    const wrapper = select.parentElement;
-    expect(wrapper?.className).toContain("w-[109px]");
-    expect(wrapper?.className).toContain("h-[27px]");
-
-    const caret = container.querySelector("svg");
-    expect(caret?.getAttribute("aria-hidden")).toBe("true");
-    expect(caret?.className.baseVal ?? caret?.getAttribute("class")).toContain("right-3");
-  });
-});
-
 describe("overdue Closing Date", () => {
   const now = new Date(2026, 8, 20, 12, 0, 0);
   const closed = new Set(["Closed Won"]);
@@ -377,4 +359,46 @@ test("supplies the module-owned optimistic builder and preserves non-stage rows"
   });
   expect(updated?.rows).toEqual([card.rows[0], { text: "Next stage" }, card.rows[2]]);
   expect(card.rows[1]?.text).toBe("Qualification");
+});
+
+describe("kanban view driven cards and totals", () => {
+  const deal: RecordData = {
+    id: "d1",
+    fields: {
+      Deal_Name: "Big Deal",
+      Stage: "Qualification",
+      Amount: 1500,
+      Account_Name: { id: "a1", name: "Acme" },
+      Closing_Date: "2030-01-02",
+    },
+  } as unknown as RecordData;
+
+  test("rows follow the view field order and carry field keys", () => {
+    const rows = buildKeyedDealCardRows(deal, {}, {}, "o", {
+      fields: ["Amount", "Deal_Name", "Account_Name"],
+    });
+    expect(rows.map((r) => r.fieldKey)).toEqual(["Amount", "Deal_Name", "Account_Name"]);
+    expect(rows[1]?.strong).toBe(true);
+    expect(rows[2]?.href).toContain("a1");
+  });
+
+  test("skips fields the view does not select", () => {
+    const rows = buildKeyedDealCardRows(deal, {}, {}, "o", { fields: ["Deal_Name"] });
+    expect(rows).toHaveLength(1);
+  });
+
+  test("optimistic move rewrites the Stage row wherever it sits", () => {
+    const rows = buildKeyedDealCardRows(deal, {}, {}, "o", { fields: ["Amount", "Stage"] });
+    const next = buildOptimisticDealCard(
+      { id: "d1", rows },
+      { key: "Won", label: "Won", count: 0, cards: [] },
+    );
+    expect(next.rows[1]?.text).toBe("Won");
+    expect(next.rows[0]?.text).toBe(rows[0]?.text);
+  });
+
+  test("column total is absent without Aggregate By", () => {
+    expect(formatColumnTotal(10, null, [])).toBeUndefined();
+    expect(formatColumnTotal(10, "Amount", [])).toContain("10.00");
+  });
 });
