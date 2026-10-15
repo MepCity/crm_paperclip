@@ -209,6 +209,10 @@ export interface FormRules {
   /** Fields drawn in place but inert until the named module ships. */
   laterModuleFields?: Readonly<Record<string, import("@/components/ui/later-module").ModuleKey>>;
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
+  /** Activity lookups whose module selector replaces the static row label. */
+  lookupLabelFields?: readonly string[];
+  /** Subdued off-state appearance; selection and editability are unchanged. */
+  subduedToggles?: readonly string[];
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);

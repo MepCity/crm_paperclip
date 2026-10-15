@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ValidationError } from "../../../errors";
+import { NotFoundError, ValidationError } from "../../../errors";
 import {
   type Criteria,
   type FieldValue,
@@ -107,12 +107,12 @@ describe("Tasks activity foundation", () => {
         );
       }
       await service.delete(targetModule, [target.id]);
-      expect((await service.get("Tasks", task.id)).fields[field]).toBeNull();
+      await expect(service.get("Tasks", task.id)).rejects.toBeInstanceOf(NotFoundError);
       const listed = await service.list("Tasks", {
         ...query,
         filters: { field: "id", comparator: "equal", value: task.id },
       });
-      expect(listed.records[0]?.fields[field]).toBeNull();
+      expect(listed.records).toEqual([]);
     },
   );
   it("retains allowed unregistered target modules without existence or name resolution", async () => {

@@ -15,6 +15,7 @@ export const MODULE_LATER_KEYS: Readonly<Record<string, ModuleKey>> = {
   Activities: "M5",
   Tasks: "M5",
   Meetings: "M5",
+  Events: "M5",
   Calls: "M5",
   Campaigns: "M7",
   Cases: "M8",
