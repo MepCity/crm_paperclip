@@ -6,6 +6,7 @@ import { createFixtureRecordService } from "../index";
 import { dealsMetadata } from "./metadata";
 import { dealsPicklists } from "./picklists";
 import { applyDealRules } from "./rules";
+import { generateFixtureDeals } from "./seed";
 
 function setup() {
   let now = new Date("2026-01-15T23:55:00Z");
@@ -100,6 +101,55 @@ describe("Deals stage rules", () => {
     await expect(service.update("Deals", deal.id, { Expected_Revenue: 12 })).rejects.toBeInstanceOf(
       ValidationError,
     );
+  });
+  it("recalculates amount changes, keeps zero distinct from blank and rounds money", async () => {
+    const { service, create } = setup();
+    const deal = await create({ Amount: 100, Probability: 25 });
+    expect(deal.fields.Expected_Revenue).toBe(25);
+    for (const [Amount, Expected_Revenue] of [
+      [246.9, 61.73],
+      [0, 0],
+      [null, null],
+      [100, 25],
+    ] as const) {
+      const updated = await service.update("Deals", deal.id, { Amount });
+      expect(updated.fields).toMatchObject({ Probability: 25, Expected_Revenue });
+    }
+    expect(
+      (await service.update("Deals", deal.id, { Probability: 0 })).fields.Expected_Revenue,
+    ).toBe(0);
+    for (const [Amount, Expected_Revenue] of [
+      [1.005, 1.01],
+      [-1.005, -1.01],
+    ] as const) {
+      expect((await create({ Amount, Probability: 100 })).fields.Expected_Revenue).toBe(
+        Expected_Revenue,
+      );
+    }
+  });
+  it("overwrites supplied or stale derived revenue when applying the write rule", () => {
+    const fields: Record<string, FieldValue> = {
+      Stage: "Qualification",
+      Amount: 123.45,
+      Probability: 50,
+      Expected_Revenue: 999,
+    };
+    applyDealRules(fields, { Probability: 50, Expected_Revenue: 999 });
+    expect(fields.Expected_Revenue).toBe(61.73);
+    fields.Amount = null;
+    applyDealRules(fields, { Expected_Revenue: 999 }, fields);
+    expect(fields.Expected_Revenue).toBeNull();
+  });
+  it("derives revenue for every generated and initialized seed deal", async () => {
+    const generated = generateFixtureDeals();
+    expect(generated).toHaveLength(250);
+    const { service } = setup();
+    for (const deal of generated) {
+      const expected =
+        Math.round(Number(deal.fields.Amount) * Number(deal.fields.Probability)) / 100;
+      expect(deal.fields.Expected_Revenue).toBe(expected);
+      expect((await service.get("Deals", deal.id)).fields.Expected_Revenue).toBe(expected);
+    }
   });
   it("accepts loss reasons only for either lost category and clears them when reopening", async () => {
     const { service, create } = setup();
