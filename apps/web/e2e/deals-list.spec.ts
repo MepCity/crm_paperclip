@@ -199,7 +199,9 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
   await page.getByRole("menuitem", { name: "Import Deals", exact: true }).click();
   await expect(page).toHaveURL(/\/tab\/Deals\/import$/);
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(page).toHaveURL(before);
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Deals"));
+  // Restore the explicit table presentation for the selection checks below.
+  await page.goto(before);
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // View Settings (M11)
