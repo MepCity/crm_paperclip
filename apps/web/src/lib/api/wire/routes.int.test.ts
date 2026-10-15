@@ -402,7 +402,8 @@ describe("operation routes", () => {
     expect(list.status).toBe(200);
     const seed = (await list.json()).kanban_views[0];
     expect(seed.name).toBe("STAGEVIEW");
-    const { id: _id, ...input } = seed;
+    const { id: _id, created_by: _c, modified_by: _m, shared_to: _s, ...input } = seed;
+    expect(seed.shared_to).toBe("everyone");
     const created = await call(operations.createKanbanView, a, {
       module: "Deals",
       body: { kanban_views: [{ ...input, name: "Route board" }] },
