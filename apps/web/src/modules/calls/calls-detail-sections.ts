@@ -18,7 +18,7 @@ function visible(field: { views: { view: boolean }; apiName: string }, record: R
 
 /**
  * Unlinked module suffix shown after a record link (CD-36, CD-39, CD-42, CD-46):
- * the singular label of the referenced record's module, for Who_Id and What_Id.
+ * a dash and plural module label, for Who_Id and What_Id.
  */
 export function callReferenceSuffix(
   record: RecordData,
@@ -40,7 +40,10 @@ export function buildCallsBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record) ? [{ field, value: record.fields[name] ?? null }] : [];
+    if (!field || !visible(field, record)) return [];
+    const valueSuffix =
+      name === "Who_Id" || name === "What_Id" ? callReferenceSuffix(record, name) : undefined;
+    return [{ field, value: record.fields[name] ?? null, ...(valueSuffix ? { valueSuffix } : {}) }];
   });
 }
 
@@ -63,10 +66,13 @@ export function buildCallsDetailSections(
             : name === "Modified_By"
               ? record.fields.Modified_Time
               : undefined;
+        const valueSuffix =
+          name === "Who_Id" || name === "What_Id" ? callReferenceSuffix(record, name) : undefined;
         fields.push({
           column: "full",
           field,
           value: record.fields[name] ?? null,
+          ...(valueSuffix ? { valueSuffix } : {}),
           auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
         });
       }

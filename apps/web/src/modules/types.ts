@@ -197,6 +197,7 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
+      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
@@ -207,6 +208,7 @@ export interface ModuleScreenDefinition {
     hasPortrait?: boolean;
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    portraitAppearance?: "tile" | "inline";
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
@@ -219,6 +221,7 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
