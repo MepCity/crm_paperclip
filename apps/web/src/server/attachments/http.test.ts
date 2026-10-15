@@ -347,4 +347,41 @@ describe("Attachments HTTP handlers", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe(deps.lifecycle.mediaType(attachmentId));
   });
+
+  it("hides uploads while blob-store staging is in progress until published", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const originalStage = deps.blobs.stage.bind(deps.blobs);
+    let capturedId: string | null = null;
+    let releaseStage!: () => void;
+    const stageEntered = new Promise<void>((resolve) => {
+      deps.blobs.stage = async (key, stream, options, meta) => {
+        capturedId = key.attachmentId;
+        resolve();
+        await new Promise<void>((r) => {
+          releaseStage = r;
+        });
+        return originalStage(key, stream, options, meta);
+      };
+    });
+
+    const uploadPromise = post(deps, id, form({ file: pdf() }));
+    await stageEntered;
+
+    const parent = { module: "Leads", recordId: id };
+    expect(capturedId).toBeTruthy();
+    const stagedId = String(capturedId);
+    expect(deps.lifecycle.isReady(stagedId)).toBe(false);
+    expect((await call(deps, parent)).status).toBe(204);
+    expect((await call(deps, { ...parent, attachmentId: stagedId })).status).toBe(404);
+
+    releaseStage();
+    const created = await uploadPromise;
+    expect(created.status).toBe(201);
+    expect(deps.lifecycle.isReady(stagedId)).toBe(true);
+
+    const listed = await (await call(deps, parent)).json();
+    expect(listed.info.count).toBe(1);
+    expect(listed.data[0].id).toBe(stagedId);
+  });
 });
