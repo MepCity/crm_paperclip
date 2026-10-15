@@ -8,6 +8,7 @@ import { createClientRecordService } from "@/lib/api/client/client-record-servic
 import { ApiProvider } from "@/lib/api/client/provider";
 import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import { contactsFormRules } from "@/modules/contacts/contacts-form-rules";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import { render } from "@/test/render";
 import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
@@ -686,4 +687,57 @@ test("populates initial values using function defaultValues reading metadata", a
   await ready(/^Create Lead$/);
   const input = screen.getByRole("textbox", { name: "Title" }) as HTMLInputElement;
   expect(input.value).toBe("Dynamic Title for Lead");
+});
+
+test("updates initial values when createPrefill arrives after initial mount", async () => {
+  const ctx = {
+    orgId: `form-screen-${++counter}`,
+    orgSlug: "form-screen",
+    orgName: "Form Screen",
+    userId: "form-author",
+    role: "admin" as const,
+  };
+  const fixture = createFixtureRecordService(ctx, {
+    listMemberIds: async () => [ctx.userId, "other-user"],
+  });
+  const service = createClientRecordService(fixture, {
+    listUsers: async () => [
+      { userId: ctx.userId, name: "Form Author", email: "author@example.test" },
+      { userId: "other-user", name: "Other User", email: "other@example.test" },
+    ],
+  });
+  const config: RecordFormConfig = {
+    module: "Deals",
+    rules: dealsFormRules,
+    paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
+    navigate: vi.fn(),
+  };
+
+  const { rerender } = render(
+    <ApiProvider orgSlug={ctx.orgSlug} service={service}>
+      <RecordFormScreen config={config} currentUserId={ctx.userId} />
+    </ApiProvider>,
+  );
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "Deal Name" })).toBeTruthy());
+  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+  expect(input.value).toBe("");
+
+  // createPrefill arrives asynchronously (e.g. from delayed session prefill or query param resolution)
+  rerender(
+    <ApiProvider orgSlug={ctx.orgSlug} service={service}>
+      <RecordFormScreen
+        config={{
+          ...config,
+          createPrefill: {
+            Account_Name: { module: "Accounts", id: "500000000000000000", name: "Account 001" },
+          },
+        }}
+        currentUserId={ctx.userId}
+      />
+    </ApiProvider>,
+  );
+  await waitFor(() => {
+    const updatedInput = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+    expect(updatedInput.value).toBe("Account 001");
+  });
 });
