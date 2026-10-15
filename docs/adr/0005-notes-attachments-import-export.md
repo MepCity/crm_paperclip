@@ -1,6 +1,6 @@
 # ADR 0005 — Notes, attachment storage and CSV import/export
 
-- Status: Proposed
+- Status: §1 Accepted (2026-10-14, MEP-534); §2–§3 Proposed
 - Date: 2026-10-14
 - Decider: CTO
 - Issue: MEP-523

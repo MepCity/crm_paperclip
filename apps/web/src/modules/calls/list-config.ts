@@ -39,6 +39,12 @@ export const CALLS_SORT_FIELD_LABELS = [
   "Voice Recording",
 ] as const;
 
+/**
+ * View type tiles drawn for Calls (CL-05 – CL-09): List, Kanban, Chart, two horizontal bars
+ * (Cards presentation). Timeline and Sheet are absent; the down chevron is rendered trailing.
+ */
+export const CALLS_VIEW_TYPE_TILE_IDS = ["list", "split", "chart", "cards"] as const;
+
 export const callsListPageConfig: ModuleListScreenConfig = {
   module: "Calls",
   linkField: "Subject",
@@ -50,6 +56,8 @@ export const callsListPageConfig: ModuleListScreenConfig = {
   filterGroups: callsFilterGroups,
   sortFieldLabels: CALLS_SORT_FIELD_LABELS,
   pinnedViews: ["All Calls"],
+  viewMenuSearch: true,
+  viewTypeTileIds: CALLS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,
   inventory: {
     actions: [

@@ -73,10 +73,9 @@ vi.mock("./ports", () => ({
 // error and the initdb output.
 const SHARED_MEMORY_LOG = "FATAL:  could not create shared memory segment: No space left on device";
 const SHARED_MEMORY_ERROR = `Postgres init script failed (code: 1, signal: null). ERROR OUTPUT: ${SHARED_MEMORY_LOG}`;
-// Another kernel-object shortage: an ENOSPC word is in the line, but no shared memory ID was
-// refused, so a retry would not help.
-const SEMAPHORE_LOG = "FATAL:  could not create semaphore set: No space left on device";
-const SEMAPHORE_ERROR = `Postgres server exited during start. ERROR OUTPUT: ${SEMAPHORE_LOG}`;
+// A different startup failure must not inherit the previous attempt's IPC error.
+const NON_IPC_LOG = "FATAL:  could not open file: Permission denied";
+const NON_IPC_ERROR = `Postgres server exited during start. ERROR OUTPUT: ${NON_IPC_LOG}`;
 
 describe("parsePostmasterPid", () => {
   it("reads pid and port from a postmaster.pid file", () => {
@@ -118,8 +117,8 @@ describe("startLocalPostgres", () => {
   it("reports only the failing attempt's own log, so a second failure is not retried", async () => {
     postgresStub.steps = [
       { logLines: [SHARED_MEMORY_LOG], failAt: "initialise", error: SHARED_MEMORY_ERROR },
-      { logLines: [SEMAPHORE_LOG], failAt: "start", error: SEMAPHORE_ERROR },
-      { logLines: [SEMAPHORE_LOG], failAt: "start", error: SEMAPHORE_ERROR },
+      { logLines: [NON_IPC_LOG], failAt: "start", error: NON_IPC_ERROR },
+      { logLines: [NON_IPC_LOG], failAt: "start", error: NON_IPC_ERROR },
     ];
     const logs: string[] = [];
     const settled = startLocalPostgres({ dataDir, onLog: (line) => logs.push(line) }).catch(
@@ -133,13 +132,13 @@ describe("startLocalPostgres", () => {
     const failure = (await settled) as Error;
     expect(failure).toBeInstanceOf(Error);
     const message = (failure as Error).message;
-    expect(message).toContain(SEMAPHORE_LOG);
+    expect(message).toContain(NON_IPC_LOG);
     expect(message).not.toContain("shared memory segment");
     expect(message).not.toContain("retrying the server start");
     expect(postgresStub.builds).toBe(2);
     expect(postgresStub.stopped).toBe(2);
     // Everything each attempt logged is still handed to the caller.
-    expect(logs).toEqual(expect.arrayContaining([SHARED_MEMORY_LOG, SEMAPHORE_LOG]));
+    expect(logs).toEqual(expect.arrayContaining([SHARED_MEMORY_LOG, NON_IPC_LOG]));
   });
 
   it("starts on a later attempt once another run gives an id back", async () => {
@@ -157,51 +156,54 @@ describe("startLocalPostgres", () => {
     expect(server.port).toBe(portsStub.port);
     expect(logs).toContain("shared memory table is full, retrying the server start in 5000 ms");
   });
-  it("sweeps once in apply mode and retries immediately after a removal", async () => {
-    vi.mocked(sweep).mockImplementation((options) => {
-      options?.log?.("Apply: limit=32, occupied=32, free=0");
-      options?.log?.("987: candidate: orphan marker");
-      options?.log?.("987: removed");
-      return { exitCode: 0, removed: 1 };
-    });
-    postgresStub.steps = [
-      { logLines: [SHARED_MEMORY_LOG], failAt: "start", error: SHARED_MEMORY_ERROR },
-      { logLines: [] },
-    ];
-    const log = vi.fn();
-    const server = await startLocalPostgres({ dataDir, onLog: log });
-    expect(server.adopted).toBe(false);
-    expect(sweep).toHaveBeenCalledExactlyOnceWith({ apply: true, log: expect.any(Function) });
-    expect(vi.getTimerCount()).toBe(0);
-    expect(log).toHaveBeenCalledWith("[ipc-sweep] Apply: limit=32, occupied=32, free=0");
-    expect(log).toHaveBeenCalledWith("[ipc-sweep] 987: candidate: orphan marker");
-    expect(log).toHaveBeenCalledWith("[ipc-sweep] 987: removed");
-  });
+  it.each([SHARED_MEMORY_LOG, "FATAL: could not create semaphores: No space left on device"])(
+    "sweeps once and retries immediately: %s",
+    async (fatal) => {
+      vi.mocked(sweep).mockImplementation((options) => {
+        options?.log?.("Apply: limit=32, occupied=32, free=0");
+        options?.log?.("987: candidate: orphan marker");
+        options?.log?.("987: removed");
+        return { exitCode: 0, removed: 1 };
+      });
+      postgresStub.steps = [{ logLines: [fatal], failAt: "start", error: fatal }, { logLines: [] }];
+      const log = vi.fn();
+      const server = await startLocalPostgres({ dataDir, onLog: log });
+      expect(server.adopted).toBe(false);
+      expect(sweep).toHaveBeenCalledExactlyOnceWith({ apply: true, log: expect.any(Function) });
+      expect(vi.getTimerCount()).toBe(0);
+      expect(log).toHaveBeenCalledWith("[ipc-sweep] Apply: limit=32, occupied=32, free=0");
+      expect(log).toHaveBeenCalledWith("[ipc-sweep] 987: candidate: orphan marker");
+      expect(log).toHaveBeenCalledWith("[ipc-sweep] 987: removed");
+    },
+  );
 
-  it("retains both retry waits and three attempts when no identifiers are removed", async () => {
-    postgresStub.steps = Array.from({ length: 3 }, () => ({
-      logLines: [SHARED_MEMORY_LOG],
-      failAt: "start" as const,
-      error: SHARED_MEMORY_ERROR,
-    }));
-    const log = vi.fn();
-    const settled = startLocalPostgres({ dataDir, onLog: log }).catch((error: unknown) => error);
-    await vi.advanceTimersByTimeAsync(4_999);
-    expect(postgresStub.builds).toBe(1);
-    await vi.advanceTimersByTimeAsync(1);
-    expect(postgresStub.builds).toBe(2);
-    await vi.advanceTimersByTimeAsync(14_999);
-    expect(postgresStub.builds).toBe(2);
-    await vi.advanceTimersByTimeAsync(1);
-    expect(((await settled) as Error).message).toContain(
-      "System V shared memory: 1 kernel IDs in use",
-    );
-    expect(postgresStub.builds).toBe(3);
-    expect(sweep).toHaveBeenCalledTimes(1);
-    expect(log).toHaveBeenCalledWith(
-      "shared memory table is full, retrying the server start in 15000 ms",
-    );
-  });
+  it.each([SHARED_MEMORY_LOG, "FATAL: could not create semaphores: ENOSPC"])(
+    "retains bounded retries and sweeps once: %s",
+    async (fatal) => {
+      postgresStub.steps = Array.from({ length: 3 }, () => ({
+        logLines: [fatal],
+        failAt: "start" as const,
+        error: fatal,
+      }));
+      const log = vi.fn();
+      const settled = startLocalPostgres({ dataDir, onLog: log }).catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(postgresStub.builds).toBe(1);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(postgresStub.builds).toBe(2);
+      await vi.advanceTimersByTimeAsync(14_999);
+      expect(postgresStub.builds).toBe(2);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(((await settled) as Error).message).toContain(
+        "System V shared memory: 1 kernel IDs in use",
+      );
+      expect(postgresStub.builds).toBe(3);
+      expect(sweep).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith(
+        `${fatal.includes("semaphores") ? "semaphore" : "shared memory"} table is full, retrying the server start in 15000 ms`,
+      );
+    },
+  );
 
   it.each(["throw", "refuse", "removal failure"])(
     "preserves the original error and table summary on sweep %s",
@@ -241,13 +243,13 @@ describe("startLocalPostgres", () => {
     });
     postgresStub.steps = [
       { logLines: [SHARED_MEMORY_LOG], failAt: "start", error: SHARED_MEMORY_ERROR },
-      { logLines: [SEMAPHORE_LOG], failAt: "start", error: SEMAPHORE_ERROR },
+      { logLines: [NON_IPC_LOG], failAt: "start", error: NON_IPC_ERROR },
     ];
     const log = vi.fn();
     const failure = await startLocalPostgres({ dataDir, onLog: log }).catch(
       (error: unknown) => error,
     );
-    expect((failure as Error).message).toContain(SEMAPHORE_LOG);
+    expect((failure as Error).message).toContain(NON_IPC_LOG);
     expect((failure as Error).message).not.toContain("shared memory segment");
     expect(postgresStub.builds).toBe(2);
     expect(log.mock.calls.filter(([line]) => line.startsWith("[ipc-sweep]"))).toHaveLength(30);
@@ -256,11 +258,11 @@ describe("startLocalPostgres", () => {
   it("never sweeps for non-exhaustion failures or normal startup", async () => {
     await startLocalPostgres({ dataDir });
     postgresStub.steps[postgresStub.builds] = {
-      logLines: [SEMAPHORE_LOG],
+      logLines: [NON_IPC_LOG],
       failAt: "start",
-      error: SEMAPHORE_ERROR,
+      error: NON_IPC_ERROR,
     };
-    await expect(startLocalPostgres({ dataDir })).rejects.toThrow(SEMAPHORE_ERROR);
+    await expect(startLocalPostgres({ dataDir })).rejects.toThrow(NON_IPC_ERROR);
     expect(sweep).not.toHaveBeenCalled();
   });
 
@@ -274,6 +276,52 @@ describe("startLocalPostgres", () => {
     await vi.advanceTimersByTimeAsync(5_000);
     await starting;
     expect(sweep).not.toHaveBeenCalled();
+  });
+
+  it("logs automatic removals even without an onLog callback", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(sweep).mockImplementation((options) => {
+      options?.log?.("semaphore 987: removed");
+      return { exitCode: 0, removed: 1 };
+    });
+    const fatal = "FATAL: could not create semaphores: ENOSPC";
+    postgresStub.steps = [{ logLines: [fatal], failAt: "start", error: fatal }, { logLines: [] }];
+    await startLocalPostgres({ dataDir });
+    expect(log).toHaveBeenCalledWith("[ipc-sweep] semaphore 987: removed");
+  });
+
+  it("recovers a semaphore startup failure through the real sweep with fake IPC", async () => {
+    const core = await vi.importActual<typeof import("./ipc-sweep")>("./ipc-sweep");
+    const now = new Date(2026, 9, 10, 10, 10).getTime();
+    const run = vi.fn((command: string, args: string[]) => {
+      if (command === "sysctl") return "32";
+      if (command === "ipcs")
+        return args[0] === "-m"
+          ? "T ID KEY MODE OWNER GROUP CREATOR CGROUP NATTCH SEGSZ CPID LPID ATIME DTIME CTIME\nShared Memory:\n"
+          : "T ID KEY MODE OWNER GROUP CREATOR CGROUP NSEMS OTIME CTIME\nSemaphores:\ns 987 0x123 --rw------- test-owner test-group test-owner test-group 17 no-entry 10:00:00\n";
+      if (command === "cc") return "";
+      return args[0] === "inspect"
+        ? `987 501 17 ${(now - 600_000) / 1000} 537 765 1 291`
+        : "987 removed";
+    });
+    vi.mocked(sweep).mockImplementation((options) =>
+      core.sweep({
+        ...options,
+        platform: "darwin",
+        owner: "test-owner",
+        uid: 501,
+        now: () => now,
+        run,
+      }),
+    );
+    const fatal = "FATAL: could not create semaphores: No space left on device";
+    postgresStub.steps = [{ logLines: [fatal], failAt: "start", error: fatal }, { logLines: [] }];
+    const log = vi.fn();
+    await startLocalPostgres({ dataDir, onLog: log });
+    expect(postgresStub.builds).toBe(2);
+    expect(sweep).toHaveBeenCalledTimes(1);
+    expect(run.mock.calls.filter(([, args]) => args[0] === "remove")).toHaveLength(1);
+    expect(log).toHaveBeenCalledWith("[ipc-sweep] semaphore 987: removed");
   });
 
   it("uses the core recheck path and protects every ineligible row", async () => {
@@ -293,7 +341,13 @@ describe("startLocalPostgres", () => {
         row.replace("m 987", "m 992").replaceAll("test-owner", "other-owner"),
       ].join("");
     const run = vi.fn((command: string, _args: string[]) =>
-      command === "sysctl" ? "32" : command === "ipcs" ? table : "",
+      command === "sysctl"
+        ? "32"
+        : command === "ipcs"
+          ? _args[0] === "-s"
+            ? "T ID KEY MODE OWNER GROUP CREATOR CGROUP NSEMS OTIME CTIME\nSemaphores:\n"
+            : table
+          : "",
     );
     vi.mocked(sweep).mockImplementation((options) =>
       core.sweep({
@@ -318,7 +372,7 @@ describe("startLocalPostgres", () => {
     expect(run.mock.calls.filter(([command]) => command === "ipcrm")).toEqual([
       ["ipcrm", ["-m", "987"]],
     ]);
-    expect(run.mock.calls.filter(([command]) => command === "ipcs")).toHaveLength(2);
+    expect(run.mock.calls.filter(([command]) => command === "ipcs")).toHaveLength(3);
     expect(log.mock.calls.filter(([line]) => line.includes(": keep:"))).toHaveLength(5);
     expect(postgresStub.builds).toBe(3);
   });
