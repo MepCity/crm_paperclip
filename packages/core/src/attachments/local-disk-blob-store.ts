@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
-import { createReadStream, type Stats } from "node:fs";
-import { lstat, mkdir, open, readdir, realpath, rename, rm, stat } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import {
@@ -22,6 +22,12 @@ import {
 
 const COMPONENT = /^[A-Za-z0-9_-]{1,64}$/;
 const STAGING = ".staging";
+const NOFOLLOW = fsConstants.O_NOFOLLOW ?? 0;
+
+function isLinkError(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === "ELOOP" || code === "EMLINK";
+}
 
 export function defaultAttachmentsRoot(): string {
   return process.env.MEP_ATTACHMENTS_DIR || path.resolve(".data/attachments");
@@ -84,7 +90,17 @@ export class LocalDiskBlobStore implements BlobStore {
   ): Promise<StagedBlob> {
     const allowed = resolveAllowedType(declared);
     const file = await this.resolve("staging", key, true);
-    const handle = await open(file, "w+");
+    let handle: Awaited<ReturnType<typeof open>>;
+    try {
+      handle = await open(
+        file,
+        fsConstants.O_RDWR | fsConstants.O_CREAT | fsConstants.O_TRUNC | NOFOLLOW,
+        0o600,
+      );
+    } catch (error) {
+      if (isLinkError(error)) throw new InvalidBlobKeyError("Symbolic link in blob path");
+      throw error;
+    }
     const hash = createHash("sha256");
     const text = allowed.kind === "text" ? createTextValidator() : undefined;
     let head = new Uint8Array(0);
@@ -133,6 +149,9 @@ export class LocalDiskBlobStore implements BlobStore {
     const from = await this.resolve("staging", key, false);
     const to = await this.resolve("final", key, true);
     try {
+      if ((await lstat(from)).isSymbolicLink()) {
+        throw new InvalidBlobKeyError("Symbolic link in blob path");
+      }
       await rename(from, to);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new BlobNotFoundError();
@@ -142,15 +161,21 @@ export class LocalDiskBlobStore implements BlobStore {
 
   async read(key: BlobKey): Promise<ReadableStream<Uint8Array>> {
     const file = await this.resolve("final", key, false);
-    let info: Stats;
+    let handle: Awaited<ReturnType<typeof open>>;
     try {
-      info = await stat(file);
+      handle = await open(file, fsConstants.O_RDONLY | NOFOLLOW);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new BlobNotFoundError();
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === "ENOENT" || isLinkError(error)) throw new BlobNotFoundError();
       throw error;
     }
-    if (!info.isFile()) throw new BlobNotFoundError();
-    return Readable.toWeb(createReadStream(file)) as unknown as ReadableStream<Uint8Array>;
+    try {
+      if (!(await handle.stat()).isFile()) throw new BlobNotFoundError();
+    } catch (error) {
+      await handle.close().catch(() => undefined);
+      throw error;
+    }
+    return Readable.toWeb(handle.createReadStream()) as unknown as ReadableStream<Uint8Array>;
   }
 
   async delete(key: BlobKey): Promise<void> {
