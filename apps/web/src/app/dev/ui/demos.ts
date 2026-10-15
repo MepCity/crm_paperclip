@@ -1,3 +1,4 @@
+import KanbanSettingsDialogDemo from "@/components/records/board/kanban-settings-dialog.demo";
 import RecordBoardDemo from "@/components/records/board/record-board.demo";
 import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
@@ -54,6 +55,7 @@ import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
   "record-board": RecordBoardDemo,
+  "kanban-settings": KanbanSettingsDialogDemo,
   "inline-field-editor": InlineFieldEditorDemo,
   "field-input": FieldInputDemo,
   "form-error-banner": FormErrorBannerDemo,

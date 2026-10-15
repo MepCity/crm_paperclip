@@ -84,12 +84,13 @@ describe.each(["Plain", "Hooked"])("%s fixture lifecycle", (module) => {
         expect(hooks.applyRules).toHaveBeenCalledWith(
           record.fields,
           input,
-          ...(operation === "create" ? [] : [first.fields]),
+          operation === "create" ? undefined : first.fields,
+          { registeredModules: expect.any(Array), moduleStore: expect.any(Function) },
         );
         expect(hooks.afterWrite).toHaveBeenCalledWith(
           record,
           operation === "create" ? undefined : first,
-          { moduleStore: expect.any(Function) },
+          { registeredModules: expect.any(Array), moduleStore: expect.any(Function) },
         );
       }
     },
@@ -104,6 +105,7 @@ describe.each(["Plain", "Hooked"])("%s fixture lifecycle", (module) => {
     expect(hooks.afterDelete).toHaveBeenCalledTimes(module === "Hooked" ? 1 : 0);
     if (module === "Hooked")
       expect(hooks.afterDelete).toHaveBeenCalledWith([record.id], {
+        registeredModules: expect.any(Array),
         moduleStore: expect.any(Function),
       });
     expect(hooks.afterWrite).not.toHaveBeenCalled();
@@ -116,7 +118,10 @@ it("runs seed hooks once per store and row ordering only for the selected bundle
   const service = createFixtureRecordService(ctx);
   createFixtureRecordService(ctx);
   expect(hooks.afterSeed).toHaveBeenCalledTimes(1);
-  expect(hooks.afterSeed).toHaveBeenCalledWith({ moduleStore: expect.any(Function) });
+  expect(hooks.afterSeed).toHaveBeenCalledWith({
+    registeredModules: expect.any(Array),
+    moduleStore: expect.any(Function),
+  });
   await service.list("Plain", { viewId: "all-contacts", page: 1, perPage: 10 });
   expect(hooks.orderRows).not.toHaveBeenCalled();
   await service.list("Hooked", { viewId: "all-contacts", page: 1, perPage: 10 });
