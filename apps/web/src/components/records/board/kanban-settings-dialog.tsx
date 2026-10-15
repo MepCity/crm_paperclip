@@ -5,6 +5,7 @@ import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ export interface KanbanViewInput {
   aggregateBy: string | null;
   headerStyle: string;
   fields: readonly string[];
+  sharedTo?: string;
 }
 export interface KanbanOption {
   value: string;
@@ -193,6 +195,24 @@ function SettingsContent({
               </Select>
             </div>
           ))}
+          {mode === "create" && (
+            <div className="kanban-settings-row">
+              <span className="text-right text-text-muted">Share this with</span>
+              <RadioGroup
+                label="Share this with"
+                orientation="horizontal"
+                value={input.sharedTo ?? "only_me"}
+                onChange={(value) => change("sharedTo", value)}
+                isDisabled={pending}
+                options={[
+                  { value: "only_me", label: "Only me" },
+                  { value: "everyone", label: "Everyone" },
+                  // The user picker was not observed; the choice is shown but unavailable.
+                  { value: "selected_users", label: "Selected users", isDisabled: true },
+                ]}
+              />
+            </div>
+          )}
           <h3 className="mt-6 mb-4 font-semibold">Select Fields</h3>
           <div className="grid grid-cols-2 gap-6">
             <section aria-label="Available fields">

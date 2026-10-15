@@ -12,3 +12,11 @@
 .module-form-page .record-textarea {
   height: var(--size-form-input-height);
 }
+
+.module-form-page[data-form-variant="activity"] {
+  padding-inline: 0;
+  background: var(--color-surface);
+}
+.module-form-page[data-form-variant="activity"] .record-textarea {
+  height: var(--size-activity-form-textarea-height);
+}

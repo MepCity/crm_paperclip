@@ -52,6 +52,9 @@ export function describeKanbanViewContract(name: string, makeService: Factory): 
         categorizeBy: "Stage",
         aggregateBy: "Amount",
         headerStyle: "mono_color",
+        sharedTo: "everyone",
+        createdBy: { id: "kanban-user" },
+        modifiedBy: { id: "kanban-user" },
         fields: [
           "Deal_Name",
           "Stage",
@@ -86,6 +89,43 @@ export function describeKanbanViewContract(name: string, makeService: Factory): 
       expect(created.fields).toEqual(["Amount", "Deal_Name", "Stage"]);
       expect(await service.getKanbanView("Deals", created.id)).toEqual(created);
       expect(await service.listKanbanViews("Deals")).toHaveLength(2);
+    });
+
+    it("defaults sharedTo to only_me and shows only_me views to their creator alone", async () => {
+      const created = await service.createKanbanView("Deals", valid);
+      expect(created).toMatchObject({
+        sharedTo: "only_me",
+        createdBy: { id: "kanban-user" },
+        modifiedBy: { id: "kanban-user" },
+      });
+      const shared = await service.createKanbanView("Deals", {
+        ...valid,
+        name: "Shared board",
+        sharedTo: "everyone",
+      });
+      expect(shared.sharedTo).toBe("everyone");
+      const other = await makeService({ ...ctx, userId: "other-user" });
+      const names = (await other.listKanbanViews("Deals")).map((view) => view.name);
+      expect(names).toEqual(["STAGEVIEW", "Shared board"]);
+      await expect(other.getKanbanView("Deals", created.id)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it("ignores sharedTo on update and records the modifier", async () => {
+      const created = await service.createKanbanView("Deals", valid);
+      const updated = await service.updateKanbanView("Deals", created.id, {
+        ...valid,
+        sharedTo: "everyone",
+      });
+      expect(updated.sharedTo).toBe("only_me");
+      expect(updated.createdBy).toEqual(created.createdBy);
+    });
+
+    it("rejects an unknown sharedTo value", async () => {
+      expect(
+        await fieldCodes(
+          service.createKanbanView("Deals", { ...valid, sharedTo: "selected_users" as never }),
+        ),
+      ).toEqual(["sharedTo"]);
     });
 
     it("keeps views per organization", async () => {

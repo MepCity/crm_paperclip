@@ -172,6 +172,7 @@ export interface ModuleScreenDefinition {
     currencyCode: string;
   }) => readonly FilterGroup[];
   form: {
+    variant?: "activity";
     rules: FormRules;
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
