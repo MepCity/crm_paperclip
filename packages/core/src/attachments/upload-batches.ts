@@ -26,7 +26,9 @@ export function createUploadBatchRegistry(
   function sweep(): number {
     const time = now();
     for (const [id, batch] of batches) {
-      if (time >= batch.expiresAt) batches.delete(id);
+      // Fixed windows keep expiration times in Map insertion order.
+      if (time < batch.expiresAt) break;
+      batches.delete(id);
     }
     return time;
   }
