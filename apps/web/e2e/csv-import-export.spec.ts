@@ -88,6 +88,7 @@ test.describe("CSV import and export", () => {
     await page.goto(moduleListDefaultPath(org.slug, "Leads"));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole("link", { name: "ImportOne" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "ImportTwo" })).toHaveCount(0);
   });
 
   test("Contacts: Update mode matches by Email", async ({ page }) => {
@@ -146,6 +147,16 @@ test.describe("CSV import and export", () => {
     const selected = page.getByRole("dialog", { name: "Export Leads" });
     await expect(selected.getByText("Selected records (2)")).toBeVisible();
     await selected.getByRole("button", { name: "Export", exact: true }).click();
-    await expect(page.getByText("2 records exported").first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/2 records exported/)).toBeVisible({ timeout: 15_000 });
+    const [selectedDownload] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("link", { name: "Download", exact: true }).last().click(),
+    ]);
+    const selectedRows = parseCsv(await readFile(await selectedDownload.path(), "utf8"));
+    expect(selectedRows).toHaveLength(3);
+    expect(new Set(selectedRows.slice(1).map((row) => row[0])).size).toBe(2);
+    await page.getByRole("link", { name: "View export history" }).last().click();
+    await expect(page).toHaveURL(/\/settings\/export-history/);
+    await expect(page.getByRole("row", { name: /Selected records/ })).toBeVisible();
   });
 });

@@ -56,6 +56,9 @@ export function ImportHistoryScreen() {
   const client = useTransferClient();
   const queryClient = useQueryClient();
   const history = useImportHistory();
+  if (history.isError) {
+    return <p role="alert">Import history could not be loaded. Try again.</p>;
+  }
   return (
     <ImportHistory
       jobs={history.data ?? []}
@@ -76,6 +79,9 @@ export function ExportHistoryScreen() {
   const router = useRouter();
   const client = useTransferClient();
   const history = useExportHistory();
+  if (history.isError) {
+    return <p role="alert">Export history could not be loaded. Try again.</p>;
+  }
   return (
     <ExportHistory
       jobs={history.data ?? []}

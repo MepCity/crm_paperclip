@@ -28,7 +28,7 @@ export interface ImportWizardProps {
   historyHref: string;
 }
 
-export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const MAX_FILE_BYTES = 25_000_000;
 
 export const ERROR_MESSAGES: Record<string, string> = {
   file_too_large: "File exceeds the 25 MB limit.",
