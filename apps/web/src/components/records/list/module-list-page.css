@@ -85,3 +85,21 @@
 .module-list-page[data-list-module="Calls"] {
   --size-list-leading-pair-width: 130px;
 }
+
+/* Row 36: previous/next hit areas are 25 x 25 and the icon is centred in them. */
+.module-list-page[data-list-variant="activities"] [data-part="footer"] [data-part="previous"],
+.module-list-page[data-list-variant="activities"] [data-part="footer"] [data-part="next"] {
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Row 31: hovered rows get the measured `#F5F7FC` fill and a `#5464F2` link. */
+.module-list-page[data-list-variant="activities"] [data-part="row"]:hover > td {
+  background-color: var(--color-list-row-hover-activities);
+}
+
+.module-list-page[data-list-variant="activities"] [data-part="row"]:hover a {
+  color: var(--color-primary);
+}

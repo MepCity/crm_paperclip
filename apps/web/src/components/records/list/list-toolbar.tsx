@@ -21,6 +21,8 @@ export interface ListToolbarProps {
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
   viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px; omitted keeps the shared width. */
+  actionsMenuWidth?: number;
 }
 
 export function ListToolbar({
@@ -35,6 +37,7 @@ export function ListToolbar({
   create,
   actions = [],
   viewTypeTileIds,
+  actionsMenuWidth,
 }: ListToolbarProps) {
   return (
     <div
@@ -86,6 +89,7 @@ export function ListToolbar({
             </Button>
             <Menu
               width="actions"
+              widthPx={actionsMenuWidth}
               items={actions}
               onAction={(key) =>
                 actions.find((item) => item.id === key && !item.laterModule)?.onAction()

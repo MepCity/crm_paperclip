@@ -43,6 +43,7 @@ export const tasksListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: TASKS_SORT_FIELD_LABELS,
   pinnedViews: ["All Tasks"],
   listVariant: "activities",
+  actionsMenuWidth: 143,
   viewMenuSearch: true,
   viewTypeTileIds: TASKS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,

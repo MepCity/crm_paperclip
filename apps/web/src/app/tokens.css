@@ -20,6 +20,8 @@
   --color-border: #ced0e1;
 
   --color-primary: #5464f2;
+  /* Activities lists, row hover fill (MEP-590 row 31, measured). */
+  --color-list-row-hover-activities: #f5f7fc;
   --color-primary-text: #ffffff;
   --color-primary-hover: #1d4ed8;
   --color-primary-pressed: #1e40af;

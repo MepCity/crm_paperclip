@@ -110,6 +110,8 @@ export interface ModuleListScreenConfig {
   viewMenuSearch?: boolean;
   /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
   viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px (Activities rows 38-39). */
+  actionsMenuWidth?: number;
   /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
   listVariant?: "activities";
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
@@ -667,6 +669,7 @@ function ModuleListScreenLoaded({
       ) : (
         <ListToolbar
           viewTypeTileIds={config.viewTypeTileIds}
+          actionsMenuWidth={config.actionsMenuWidth}
           presentation={hasBoard ? presentation : undefined}
           onPresentationChange={
             hasBoard

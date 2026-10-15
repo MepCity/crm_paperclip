@@ -168,8 +168,11 @@ export function Menu<T extends object>({
   placement,
   header,
   shouldCloseOnInteractOutside,
+  widthPx,
   ...props
 }: AriaMenuProps<T> & {
+  /** Measured outer width in px; overrides the named `width` (Activities Actions menu). */
+  widthPx?: number;
   width?: "create" | "actions" | "settings" | "columnOptions";
   appearance?: "default" | "measured" | "record";
   placement?: ComponentProps<typeof Popover>["placement"];
@@ -196,6 +199,7 @@ export function Menu<T extends object>({
       placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
       className={menuPopoverClass(widthClass, appearance)}
+      {...(widthPx ? { style: { width: widthPx } } : {})}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}
