@@ -41,8 +41,10 @@ test.describe("Deals record detail", () => {
     const open = page.locator("#related-list-open-activities");
     await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
     await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Calls \(\d+\)$/ })).toBeVisible();
     const closed = page.locator("#related-list-closed-activities");
     await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(closed.getByRole("region", { name: /^Closed Calls \(\d+\)$/ })).toBeVisible();
     ignoreFailedResponses(pageErrors, [400]);
   });
 

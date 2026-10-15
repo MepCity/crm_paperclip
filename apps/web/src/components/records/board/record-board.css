@@ -18,12 +18,14 @@
   min-height: 0;
   flex: 1;
   gap: 20px;
+  max-height: calc(100dvh - 220px);
   overflow-x: auto;
 }
 .record-board-column {
   display: flex;
   flex: 0 0 300px;
   min-height: 400px;
+  max-height: 100%;
   flex-direction: column;
 }
 .record-board-header {
@@ -54,6 +56,8 @@
 }
 .record-board-cards {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-block: 10px;
 }
 .record-board-card {

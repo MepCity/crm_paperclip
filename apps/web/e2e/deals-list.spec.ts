@@ -207,8 +207,8 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
   const cadences = list.locator('[data-later-module="P3"]', { hasText: "Cadences" }).first();
   await expect(cadences).toBeVisible();
 
-  // DL-17: Activities system filter (M5)
-  const activities = list.locator('[data-later-module="M5"]', { hasText: "Activities" }).first();
+  // DL-17: Activities system filter (live in M5)
+  const activities = list.getByRole("checkbox", { name: "Activities" });
   await expect(activities).toBeVisible();
 
   // DL-19: Latest Email Status system filter (M10)

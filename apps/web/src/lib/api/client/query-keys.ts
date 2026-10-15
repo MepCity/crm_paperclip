@@ -13,6 +13,10 @@ export const apiKeys = {
     [...apiKeys.module(orgSlug, module), "views"] as const,
   view: (orgSlug: string, module: string, viewId: string) =>
     [...apiKeys.module(orgSlug, module), "view", viewId] as const,
+  kanbanViews: (orgSlug: string, module: string) =>
+    [...apiKeys.module(orgSlug, module), "kanbanViews"] as const,
+  kanbanView: (orgSlug: string, module: string, viewId: string) =>
+    [...apiKeys.module(orgSlug, module), "kanbanView", viewId] as const,
   list: (orgSlug: string, module: string, query: ListQuery) =>
     [...apiKeys.module(orgSlug, module), "list", serializeListQuery(query)] as const,
   count: (

@@ -1,0 +1,76 @@
+.note-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--color-menu-surface);
+  border-radius: 4px;
+}
+
+.note-color-picker__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0 2px;
+}
+
+.note-color-picker__grid {
+  border-collapse: separate;
+  border-spacing: 3px;
+  margin: -3px;
+}
+
+.note-color-picker__grid td {
+  padding: 0;
+}
+
+.note-color-picker__cell {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.note-color-picker__cell:hover {
+  transform: scale(1.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.note-color-picker__cell:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+/* White cell gets a thin border so it is visible against the white panel background */
+.note-color-picker__cell--white {
+  border: 1px solid var(--color-border);
+}
+
+/* "No Color" cell: shown as a crossed-out white square */
+.note-color-picker__cell--none {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.note-color-picker__cell--none::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* diagonal red slash */
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    #e53935 calc(50% - 1px),
+    #e53935 calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}

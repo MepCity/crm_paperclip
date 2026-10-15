@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
@@ -261,4 +262,14 @@ it("uses the supplied builder for the pending destination without mutating sourc
   expect(element('[data-board-column="b"] article div').textContent).toBe("Record in Empty");
   expect(columns[0]?.cards[0]?.rows[0]?.text).toBe("Record");
   expect(element('[data-board-column="b"] article div:nth-child(2)').textContent).toBe("Stage");
+});
+
+it("keeps each column body as its own vertical scroll region", () => {
+  const css = readFileSync("apps/web/src/components/records/board/record-board.css", "utf8");
+  const rule = (name: string) => css.match(new RegExp(`\\.${name} \\{([^}]*)\\}`))?.[1] ?? "";
+  expect(rule("record-board-cards")).toMatch(/overflow-y:\s*auto/);
+  expect(rule("record-board-cards")).toMatch(/min-height:\s*0/);
+  expect(rule("record-board-column")).toMatch(/max-height:\s*100%/);
+  expect(rule("record-board-scroll")).toMatch(/max-height:/);
+  expect(rule("record-board-scroll")).toMatch(/overflow-x:\s*auto/);
 });

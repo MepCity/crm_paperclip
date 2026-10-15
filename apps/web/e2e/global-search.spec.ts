@@ -68,3 +68,20 @@ test("Enter and advanced search preserve query and selected module in the route"
   await expect(page).toHaveURL(`/crm/${org.slug}/search?q=Global`);
   ignoreFailedResponses(pageErrors, [404]);
 });
+
+test("search finds a Task by subject and opens the Tasks record detail", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Tasks", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: { data: [{ Subject: "Zephyrquartz follow-up" }] },
+  });
+  expect(response.ok()).toBeTruthy();
+  await page.getByRole("button", { name: "Search records" }).click();
+  const dialog = page.getByRole("dialog", { name: "Search records" });
+  await dialog.getByRole("textbox", { name: "Search records" }).fill("Zephyrquartz");
+  await expect(dialog.getByRole("region", { name: "Tasks" })).toBeVisible();
+  await dialog.getByRole("link", { name: "Zephyrquartz follow-up", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Tasks\/[^/]+$/);
+  await expect(page.locator("[data-record-header]")).toContainText("Zephyrquartz follow-up");
+});

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ValidationError } from "../../../errors";
+import { NotFoundError, ValidationError } from "../../../errors";
 import { type Criteria, lookupTargetModules, type RecordInput } from "../../contract";
 import { describeRecordServiceContract } from "../../contract-suite";
 import { callsRecordServiceContractModule } from "../../contract-suite-module";
@@ -102,12 +102,12 @@ describe("Calls activity foundation", () => {
       );
     }
     await service.delete(module, [target.id]);
-    expect((await service.get("Calls", call.id)).fields[name]).toBeNull();
+    await expect(service.get("Calls", call.id)).rejects.toBeInstanceOf(NotFoundError);
     const listed = await service.list("Calls", {
       ...query,
       filters: { field: "id", comparator: "equal", value: call.id },
     });
-    expect(listed.records[0]?.fields[name]).toBeNull();
+    expect(listed.records).toHaveLength(0);
   });
 
   it("retains allowed unregistered target modules without resolution", async () => {
@@ -179,5 +179,33 @@ describe("Calls activity foundation", () => {
     const ranges = Object.values(fixtureModules).map((bundle) => bundle.initialNextId);
     expect(new Set(ranges).size).toBe(ranges.length);
     expect(Object.keys(callsPicklists)).toHaveLength(6);
+  });
+
+  it("keeps seed id ranges disjoint across every fixture module", () => {
+    const now = new Date("2026-01-15T23:59:00Z");
+    const entries = Object.entries(fixtureModules).map(([name, bundle]) => ({
+      name,
+      next: bundle.initialNextId,
+      ids: bundle.generateSeed(now).map((record) => BigInt(String(record.id))),
+    }));
+    const owner = new Map<bigint, string>();
+    for (const { name, ids } of entries) {
+      for (const id of ids) {
+        expect(owner.has(id), `${name} id ${id} also used by ${owner.get(id)}`).toBe(false);
+        owner.set(id, name);
+      }
+    }
+    for (const { name, next, ids } of entries) {
+      for (const id of ids) expect(id < next, `${name} seed id ${id} >= its next id`).toBe(true);
+      for (const other of entries) {
+        for (let offset = 0n; offset < 1000n; offset += 1n) {
+          const candidate = other.next + offset;
+          expect(
+            owner.has(candidate),
+            `${other.name} next-id window hits ${owner.get(candidate)}`,
+          ).toBe(false);
+        }
+      }
+    }
   });
 });
