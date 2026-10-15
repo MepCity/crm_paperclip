@@ -18,7 +18,7 @@ const columns: readonly BoardColumn[] = [
           { text: "Example opportunity", href: "#example" },
           { text: "Qualification" },
           { text: "Sample company", href: "#company" },
-          { text: "Sample owner" },
+          { text: "Sample owner", strong: true },
           { text: "Sample contact", href: "#contact" },
           { text: "USD 1,000" },
           { text: "31.12.2026", tone: "danger" },
