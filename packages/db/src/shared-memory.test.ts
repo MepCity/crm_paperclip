@@ -98,6 +98,13 @@ describe("isSharedMemoryExhaustion", () => {
     expect(isSharedMemoryExhaustion(EXHAUSTION)).toBe(true);
   });
 
+  it.each(["No space left on device", "ENOSPC"])("recognises semaphore exhaustion: %s", (code) => {
+    expect(isSharedMemoryExhaustion(`FATAL: could not create semaphores: ${code}`)).toBe(true);
+    expect(isSharedMemoryExhaustion("FATAL: could not create semaphores: Permission denied")).toBe(
+      false,
+    );
+  });
+
   it("does not match a plain disk-full or a different startup failure", () => {
     expect(isSharedMemoryExhaustion("no space left on device, wrote 4 kB")).toBe(false);
     expect(isSharedMemoryExhaustion("port 5432 is already in use")).toBe(false);
