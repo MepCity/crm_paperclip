@@ -626,7 +626,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - **Expected Revenue on form (DF-21):** read-only and uncomputed on client; server-side pipeline formula evaluation deferred.
 - **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
 - **Advanced search stage chip (S-42):** chip renders stage label for display only; no interactive filtering.
-- **Kanban configuration and multi-pipeline:** Kanban settings window (DP-90–DP-93, DP-103) is done; Stage is the only Categorize By option and Mono Color the only Header Style (DP-94, DP-95 pending), and the multi-pipeline selector (DP-96) and pipeline management remain out of scope for Module 4.
+- **Kanban configuration and multi-pipeline:** Kanban settings window (DP-90–DP-93, DP-103), Manage Kanban Views window (DP-95, DP-111, DP-112) and the create-mode Share this with choice (DP-110) are done; Stage is the only Categorize By option and Mono Color the only Header Style (DP-94 pending). Gaps: Manage Kanban Views has no reordering or deleting (movements not observed), Selected users is drawn disabled (user picker not observed), and the multi-pipeline selector (DP-96) and pipeline management remain out of scope for Module 4.
 - **Timeline history:** empty shell walked (seed deal record carries no prior audit events).
 - **Leads converted deal:** generic lookup display resolves the registered Deals route; seeded Leads records carry no converted references.
 
