@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  ClipboardCheck,
   Clock,
   Columns3,
   Contact,
@@ -32,10 +33,23 @@ import {
   Store,
   Tag,
   Triangle,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
-import type { SVGProps } from "react";
+import { forwardRef, type SVGProps } from "react";
+
+/** Shared line weight for every Lucide glyph; the reference icons are thin-lined. */
+export const ICON_STROKE_WIDTH = 1.5;
+
+/** Lucide glyph with the shared stroke width as default; callers may still override. */
+function thin(Glyph: LucideIcon): LucideIcon {
+  const Thin = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, ref) => (
+    <Glyph ref={ref} strokeWidth={ICON_STROKE_WIDTH} {...props} />
+  ));
+  Thin.displayName = `Thin(${Glyph.displayName ?? "Icon"})`;
+  return Thin as unknown as LucideIcon;
+}
 
 /** Named filter glyphs only expose `role="img"` when given an accessible name. */
 function filterIconRoleProps(props: SVGProps<SVGSVGElement>) {
@@ -457,24 +471,28 @@ function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
 
 export type Icon = LucideIcon;
 
+const ThinBuilding = thin(Building2);
+const ThinStore = thin(Store);
+const ThinContact = thin(Contact);
+
 function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { module?: string }) {
   switch (module) {
     case "Accounts":
-      return <Building2 {...props} />;
+      return <ThinBuilding {...props} />;
     case "Vendors":
-      return <Store {...props} />;
+      return <ThinStore {...props} />;
     case "Contacts":
-      return <Contact {...props} />;
+      return <ThinContact {...props} />;
     default:
-      return <Building2 {...props} />;
+      return <ThinBuilding {...props} />;
   }
 }
 
 export const Icons = {
-  activity: Activity,
-  messageSquare: MessageSquare,
-  envelope: Mail,
-  phone: Phone,
+  activity: thin(Activity),
+  messageSquare: thin(MessageSquare),
+  envelope: thin(Mail),
+  phone: thin(Phone),
   recordLookup: RecordLookupIcon,
   recordUser: RecordUser,
   avatarPerson: AvatarPerson,
@@ -500,33 +518,35 @@ export const Icons = {
   columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
   boardEdit: BoardEdit,
-  building: Building2,
-  check: Check,
-  checkSquare: SquareCheck,
-  chevronUp: ChevronUp,
-  folder: Folder,
-  home: Home,
-  signOut: LogOut,
-  hideMenu: PanelLeftClose,
-  showMenu: PanelLeftOpen,
-  plus: Plus,
-  minus: Minus,
-  settings: Settings,
-  users: Users,
-  spinner: Loader2,
-  error: AlertCircle,
-  success: CheckCircle2,
-  info: Info,
-  warning: AlertTriangle,
-  calendar: Calendar,
-  clock: Clock,
-  chevronDown: ChevronDown,
+  task: thin(ClipboardCheck),
+  userRound: thin(UserRound),
+  building: thin(Building2),
+  check: thin(Check),
+  checkSquare: thin(SquareCheck),
+  chevronUp: thin(ChevronUp),
+  folder: thin(Folder),
+  home: thin(Home),
+  signOut: thin(LogOut),
+  hideMenu: thin(PanelLeftClose),
+  showMenu: thin(PanelLeftOpen),
+  plus: thin(Plus),
+  minus: thin(Minus),
+  settings: thin(Settings),
+  users: thin(Users),
+  spinner: thin(Loader2),
+  error: thin(AlertCircle),
+  success: thin(CheckCircle2),
+  info: thin(Info),
+  warning: thin(AlertTriangle),
+  calendar: thin(Calendar),
+  clock: thin(Clock),
+  chevronDown: thin(ChevronDown),
   arrowLeft: ArrowLeft,
-  chevronLeft: ChevronLeft,
-  chevronRight: ChevronRight,
+  chevronLeft: thin(ChevronLeft),
+  chevronRight: thin(ChevronRight),
   recordHeaderChevronLeft: RecordHeaderChevronLeft,
   recordHeaderChevronRight: RecordHeaderChevronRight,
-  close: X,
+  close: thin(X),
   filter: FilterIcon,
   filterToggle: FilterToggleIcon,
   sort: SortIcon,
@@ -539,7 +559,7 @@ export const Icons = {
   viewTypeCards: ViewTypeCardsIcon,
   viewTypeArrow: ViewTypeArrowIcon,
   settingsSliders: SettingsSlidersIcon,
-  columns: Columns3,
+  columns: thin(Columns3),
   eye: EyeIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
@@ -548,8 +568,8 @@ export const Icons = {
   tablePlus: TablePlusIcon,
   tableChevronDown: TableChevronDownIcon,
   diagonalExpand: DiagonalExpandIcon,
-  recordTag: Tag,
-  lock: Lock,
+  recordTag: thin(Tag),
+  lock: thin(Lock),
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */

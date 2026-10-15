@@ -39,6 +39,9 @@ export interface OwnerOption {
 }
 export interface FieldInputProps {
   field: FieldDefinition;
+  variant?: "activity";
+  /** Module selected by a label-side selector; suppresses the input prefix selector. */
+  lookupModule?: string;
   value: FieldValue;
   onChange: (value: FieldValue) => void;
   errorMessage?: string;
@@ -69,7 +72,7 @@ export interface FieldInputProps {
 }
 
 /** `Sales_Orders` reads `Sales Order`; a registered module's own singular label wins. */
-function moduleSingularLabel(module: string): string {
+export function moduleSingularLabel(module: string): string {
   const registered = resolveModuleScreenByApiName(module)?.singularLabel;
   if (registered) return registered;
   return module.replace(/_/g, " ").replace(/ies$/, "y").replace(/s$/, "");
@@ -145,6 +148,8 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
 
 export function FieldInput({
   field,
+  variant,
+  lookupModule,
   value,
   onChange,
   errorMessage,
@@ -191,7 +196,7 @@ export function FieldInput({
       ? (value as ModuleRecordReference).module
       : undefined;
   const targetModule = isPolymorphic
-    ? (referenceModule ?? pickedModule ?? lookupTargets[0] ?? "")
+    ? (lookupModule ?? referenceModule ?? pickedModule ?? lookupTargets[0] ?? "")
     : (field.lookup?.module ?? "");
   const isTargetRegistered = isLookup && isModuleRegistered(targetModule);
   const targetLaterModule =
@@ -302,6 +307,7 @@ export function FieldInput({
       return (
         <Checkbox
           {...common}
+          hideLabel={variant === "activity" || hideLabel}
           aria-label={field.label}
           isSelected={value === true}
           onChange={onChange}
@@ -384,7 +390,7 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic ? (
+              isPolymorphic && lookupModule === undefined ? (
                 <div className="record-prefix-select">
                   <RecordChoice
                     id={`${controlId}-module`}
@@ -428,11 +434,15 @@ export function FieldInput({
                 }}
                 {...(targetLaterModule ? laterModuleProps(targetLaterModule) : {})}
               >
-                <Icons.recordLookup
-                  module={targetModule}
-                  className="record-input-end-icon"
-                  aria-hidden
-                />
+                {variant === "activity" ? (
+                  <Icons.recordPanelSearch className="record-input-end-icon" aria-hidden />
+                ) : (
+                  <Icons.recordLookup
+                    module={targetModule}
+                    className="record-input-end-icon"
+                    aria-hidden
+                  />
+                )}
               </button>
             }
           />
@@ -463,6 +473,8 @@ export function FieldInput({
       return (
         <Switch
           label={field.label}
+          hideLabel={variant === "activity"}
+          variant={variant}
           aria-label={field.label}
           isSelected={typeof value === "object" && value !== null}
           isDisabled={common.isDisabled}

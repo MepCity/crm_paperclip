@@ -9,11 +9,13 @@ const row =
 const now = () => new Date(2026, 9, 10, 10, 10).getTime();
 function fixture(tables = [header + row]) {
   let reads = 0;
-  const run = vi.fn((command: string) =>
+  const run = vi.fn((command: string, args: string[]) =>
     command === "sysctl"
       ? "32"
       : command === "ipcs"
-        ? (tables[Math.min(reads++, tables.length - 1)] ?? "")
+        ? args[0] === "-s"
+          ? "T ID KEY MODE OWNER GROUP CREATOR CGROUP NSEMS OTIME CTIME\nSemaphores:\n"
+          : (tables[Math.min(reads++, tables.length - 1)] ?? "")
         : "",
   );
   const log = vi.fn();
@@ -48,14 +50,14 @@ describe("ipc sweep", () => {
   it("defaults to dry run and never executes a removal", () => {
     const options = fixture();
     expect(sweep(options)).toBe(0);
-    expect(options.run.mock.calls.map(([command]) => command)).toEqual(["sysctl", "ipcs"]);
+    expect(options.run.mock.calls.map(([command]) => command)).toEqual(["sysctl", "ipcs", "ipcs"]);
     expect(options.log).toHaveBeenCalledWith("Dry run: limit=32, occupied=1, free=31");
   });
   it("rechecks before an explicit apply", () => {
     const options = fixture();
     expect(sweep({ ...options, apply: true })).toBe(0);
-    expect(options.run).toHaveBeenLastCalledWith("ipcrm", ["-m", "987"]);
-    expect(options.run.mock.calls.filter(([command]) => command === "ipcs")).toHaveLength(2);
+    expect(options.run).toHaveBeenCalledWith("ipcrm", ["-m", "987"]);
+    expect(options.run.mock.calls.filter(([command]) => command === "ipcs")).toHaveLength(3);
   });
   it.each([
     header,

@@ -34,6 +34,7 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Due_Date", "Status", "Priority", "Owner"],
   buildFilterGroups: buildTasksFilterGroups,
   form: {
+    variant: "activity",
     rules: tasksFormRules,
     fallbackColumns: { "Task Information": TASKS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
