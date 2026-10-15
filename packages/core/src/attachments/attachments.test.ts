@@ -1,8 +1,17 @@
-import { mkdtemp, readdir, readFile, rm, symlink, utimes } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BlobNotFoundError } from "./blob-store";
+import { BlobNotFoundError, InvalidBlobKeyError } from "./blob-store";
 import { createBudgetCounter, FilePolicyError, selectionBudget } from "./file-policy";
 import { LocalDiskBlobStore } from "./local-disk-blob-store";
 
@@ -119,6 +128,30 @@ describe("local disk blob store", () => {
     ).resolves.toBeDefined();
     await expect(store.publish({ orgId: "evil", attachmentId: "a" })).rejects.toThrow();
     expect(await readdir(outside)).toEqual([]);
+    await rm(outside, { recursive: true, force: true });
+  });
+
+  it("refuses to read a final file that is a symbolic link", async () => {
+    const outside = await mkdtemp(path.join(tmpdir(), "outside-"));
+    const target = path.join(outside, "secret.txt");
+    await writeFile(target, "secret");
+    await mkdir(path.join(root, "org_1"), { recursive: true });
+    await symlink(target, path.join(root, "org_1", "att_1"));
+    await expect(store.read(key)).rejects.toBeInstanceOf(BlobNotFoundError);
+    await rm(outside, { recursive: true, force: true });
+  });
+
+  it("does not write through a staging file that is a symbolic link", async () => {
+    const outside = await mkdtemp(path.join(tmpdir(), "outside-"));
+    const target = path.join(outside, "victim.txt");
+    await writeFile(target, "original");
+    await mkdir(path.join(root, ".staging", "org_1"), { recursive: true });
+    await symlink(target, path.join(root, ".staging", "org_1", "att_1"));
+    await expect(
+      store.stage(key, body(text("overwritten")), limits, { fileName: "a.txt" }),
+    ).rejects.toBeInstanceOf(InvalidBlobKeyError);
+    expect(await readFile(target, "utf8")).toBe("original");
+    await expect(store.publish(key)).rejects.toBeInstanceOf(InvalidBlobKeyError);
     await rm(outside, { recursive: true, force: true });
   });
 
