@@ -364,3 +364,19 @@ Contact Roles dialogs and natural many-card overflow remain open. Tool support
 for initial Assign/Edit All opening is now available; usable screen painting is
 the current access dependency. Raw captures remain local because they may
 contain session or customer information.
+
+### Low-load recovery attempt — paint gate remains closed (MEP-539)
+
+Following the access diagnosis, `m539-amount-base-v6` repeats the established
+native create route without interactions and with a 15-second wait. The
+one-minute machine load before launch was 12.29, below the prescribed threshold
+of 20. The screenshot still shows only the loading skeleton, not the form.
+Ten static-script GET requests failed with HTTP/2 protocol errors; eight API
+calls were recorded. Both blocked requests were background telemetry. There
+were zero clicks, hover/scroll steps, dialog openings, print calls or popup
+requests. Screenshot, controls and metadata were inspected together.
+
+This is the first low-load recovery attempt, not a new form observation.
+A single delayed retry is reserved after at least ten minutes; no browser,
+profile or guard change is authorized by this result. All outstanding behaviour
+questions above remain open. Raw evidence remains in the research workspace.
