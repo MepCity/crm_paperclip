@@ -36,3 +36,32 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
   expect(moduleScreens.some((definition) => definition.apiName === "Calls")).toBe(true);
   expect(moduleScreens.some((definition) => definition.tab === "Calls")).toBe(true);
 });
+
+test("calls detail buildHeaderCommands includes Reschedule Call split button when scheduled", () => {
+  const scheduledCommands = callsScreenDefinition.detail.buildHeaderCommands?.(
+    { id: "c1", fields: { Outgoing_Call_Status: "Scheduled" } },
+    { editHref: "/edit", save: () => Promise.resolve() },
+  );
+  expect(scheduledCommands).toEqual([
+    expect.objectContaining({
+      id: "reschedule-call",
+      label: "Reschedule Call",
+      variant: "primary",
+      href: "/edit",
+      splitLabel: "Reschedule options",
+    }),
+  ]);
+
+  const nonScheduledCommands = callsScreenDefinition.detail.buildHeaderCommands?.(
+    { id: "c2", fields: { Outgoing_Call_Status: "Completed" } },
+    { editHref: "/edit", save: () => Promise.resolve() },
+  );
+  expect(nonScheduledCommands).toEqual([
+    expect.objectContaining({
+      id: "edit",
+      label: "Edit",
+      variant: "secondary",
+      href: "/edit",
+    }),
+  ]);
+});
