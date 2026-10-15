@@ -35,3 +35,22 @@ export {
   type Transaction,
   withOrg,
 } from "./tenancy";
+export type {
+  Actor,
+  Charset,
+  ExportJob,
+  ExportRequest,
+  FieldMapping,
+  ImportJob,
+  ImportMode,
+  ImportPreview,
+  ImportRowResult,
+  ImportSettings,
+  RowOutcome,
+  TransferAction,
+  TransferDependencies,
+  TransferLimits,
+  TransferModule,
+  TransferService,
+} from "./transfer";
+export { createTransferService, DEFAULT_TRANSFER_LIMITS } from "./transfer";
