@@ -56,6 +56,7 @@ export const callsListPageConfig: ModuleListScreenConfig = {
   filterGroups: callsFilterGroups,
   sortFieldLabels: CALLS_SORT_FIELD_LABELS,
   pinnedViews: ["All Calls"],
+  listVariant: "activities",
   viewMenuSearch: true,
   viewTypeTileIds: CALLS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,

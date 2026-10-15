@@ -69,3 +69,19 @@
   padding-inline: var(--list-content-inset-start);
   padding-top: 10px;
 }
+
+/* Activities lists (MEP-590 difference table rows 03, 05, 09-13, 20): measured against the
+   reference lists; the shared look of the other modules is untouched. */
+.module-list-page[data-list-variant="activities"] {
+  --list-toolbar-inset-end: 20px;
+}
+
+.module-list-page[data-list-variant="activities"] > [data-view-tab-strip] {
+  background-color: var(--color-surface);
+}
+
+/* Row 20: Tasks and Calls start 30 px further right than Meetings (row 21, which matches). */
+.module-list-page[data-list-module="Tasks"],
+.module-list-page[data-list-module="Calls"] {
+  --size-list-leading-pair-width: 130px;
+}

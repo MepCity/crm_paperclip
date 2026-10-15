@@ -4,6 +4,8 @@ import {
   formatDate,
   formatDateTime,
   formatNumber,
+  formatNumericDate,
+  formatNumericDateTime,
   formatRecordAuditDateTime,
 } from "@crm/core/format";
 import type { FieldDefinition, FieldValue, ModuleRecordReference } from "@crm/core/records";
@@ -52,6 +54,8 @@ export function formatFieldValue(
     /** ISO 4217 code; when omitted, currency values use plain number formatting. */
     currencyCode?: string;
     orgSlug?: string;
+    /** Activities list cells: zero-padded `dd.mm.yyyy` dates and 12-hour times. */
+    numericDates?: boolean;
   },
 ): FieldFormattedValue {
   if (value === null || value === "") return { kind: "empty" };
@@ -118,6 +122,7 @@ function valueText(
   format: FormatOptions,
   options?: {
     currencyCode?: string;
+    numericDates?: boolean;
   },
 ): string | null {
   if (value === null || value === "") return null;
@@ -127,11 +132,13 @@ function valueText(
   }
 
   if (field.dataType === "date" && typeof value === "string") {
-    return formatDate(value, format);
+    return options?.numericDates ? formatNumericDate(value, format) : formatDate(value, format);
   }
 
   if (field.dataType === "datetime" && typeof value === "string") {
-    return formatDateTime(value, format);
+    return options?.numericDates
+      ? formatNumericDateTime(value, format)
+      : formatDateTime(value, format);
   }
 
   if (field.dataType === "picklist" && typeof value === "string") {

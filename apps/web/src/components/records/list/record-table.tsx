@@ -50,6 +50,8 @@ export interface RecordTableProps {
   format: FormatOptions;
   /** ISO 4217 code for currency cells; plain number when omitted. */
   currencyCode?: string;
+  /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
+  numericDates?: boolean;
   footer: RecordTableFooterProps;
 }
 
@@ -110,6 +112,7 @@ export function RecordTable({
   ownerNames,
   format,
   currencyCode,
+  numericDates,
   footer,
 }: RecordTableProps) {
   const empty = records.length === 0;
@@ -305,6 +308,7 @@ export function RecordTable({
                             ownerNames={ownerNames}
                             format={format}
                             currencyCode={currencyCode}
+                            numericDates={numericDates}
                           />
                         </div>
                         {phoneLaterModule &&

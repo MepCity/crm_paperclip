@@ -64,6 +64,7 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   filterGroups: meetingsFilterGroups,
   sortFieldLabels: MEETINGS_SORT_FIELD_LABELS,
   pinnedViews: ["All Meetings"],
+  listVariant: "activities",
   viewMenuSearch: true,
   viewTypeTileIds: MEETINGS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,

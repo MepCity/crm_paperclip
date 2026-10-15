@@ -110,6 +110,8 @@ export interface ModuleListScreenConfig {
   viewMenuSearch?: boolean;
   /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
   viewTypeTileIds?: readonly string[];
+  /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
+  listVariant?: "activities";
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -636,7 +638,11 @@ function ModuleListScreenLoaded({
   ];
 
   return (
-    <div className="module-list-page">
+    <div
+      className="module-list-page"
+      data-list-variant={config.listVariant}
+      data-list-module={config.listVariant ? config.module : undefined}
+    >
       <ViewTabStrip
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
@@ -791,6 +797,7 @@ function ModuleListScreenLoaded({
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}
+              numericDates={config.listVariant === "activities"}
               columns={columns}
               records={records}
               linkField={config.linkField}

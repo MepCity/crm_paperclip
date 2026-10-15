@@ -27,6 +27,8 @@ export interface CellValueProps {
   orgSlug?: string;
   /** ISO 4217 code for currency cells; plain number when omitted. */
   currencyCode?: string;
+  /** Activities list cells: numeric `dd.mm.yyyy` dates. */
+  numericDates?: boolean;
 }
 
 /**
@@ -43,6 +45,7 @@ export function CellValue({
   orgSlug,
   laterModule,
   currencyCode,
+  numericDates,
 }: CellValueProps) {
   const contextOrgSlug = useOptionalOrgSlug();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
@@ -62,6 +65,7 @@ export function CellValue({
     linkWebsite,
     orgSlug: effectiveOrgSlug,
     currencyCode,
+    numericDates,
   });
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {
