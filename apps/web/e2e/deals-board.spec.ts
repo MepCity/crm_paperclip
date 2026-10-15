@@ -39,7 +39,7 @@ test("Deals opens in board presentation by default with toolbar and view switche
   // DP-70, DP-71: Board toolbar controls
   const stageviewSelect = list.getByRole("combobox", { name: "Board grouping" });
   await expect(stageviewSelect).toBeVisible();
-  await expect(stageviewSelect).toHaveValue("STAGEVIEW");
+  await expect(stageviewSelect.locator("option:checked")).toHaveText("STAGEVIEW");
   await expect(list.getByRole("button", { name: "Board settings" })).toBeVisible();
 
   // Pagination and row selection bar are omitted in board presentation
