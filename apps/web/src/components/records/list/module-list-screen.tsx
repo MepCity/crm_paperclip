@@ -106,6 +106,8 @@ export interface ModuleListScreenConfig {
   /** ISO 4217 code for currency cells of the table; plain number when omitted. */
   cellCurrencyCode?: string;
   badgeColumn?: boolean;
+  /** L-41 is visible in this module’s saved list evidence. */
+  activityRibbon?: boolean;
   /** Interim: Search box in the view menu, filtering the view rows by name (Tasks). */
   viewMenuSearch?: boolean;
   /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
@@ -264,10 +266,12 @@ function ModuleListScreenLoaded({
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
     columnApiNames,
+    config.activityRibbon,
     eligibleSortFields,
     listCriteria,
     searchState,
@@ -812,6 +816,7 @@ function ModuleListScreenLoaded({
             <RecordTable
               laterInventory={Boolean(config.inventory)}
               badgeColumn={config.badgeColumn}
+              activitySummaries={config.activityRibbon ? listPage.activitySummaries : undefined}
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}

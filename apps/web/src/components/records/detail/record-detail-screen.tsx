@@ -70,11 +70,11 @@ export type RecordDetailSlotsContext = {
 export type RecordDetailSlots = {
   overviewPrefix?: ReactNode;
   contactSummary?: ReactNode;
-  relatedRailAfterFooter?: ReactNode;
   /** Right-hand panel; when present the related list rail and its toggle are not drawn. */
   sidePanel?: ReactNode;
   /** Commands drawn before Edit in the record header. */
   headerCommands?: readonly RecordCommand[];
+  relatedRailAfterFooter?: ReactNode;
 };
 
 export type RecordDetailScreenProps = {
