@@ -20,7 +20,6 @@ import {
   TASKS_TIMELINE_SOURCE_OPTIONS,
   TASKS_TIMELINE_SUBTABS,
 } from "./tasks-timeline";
-import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
 
 export const tasksScreenDefinition: ModuleScreenDefinition = {
   apiName: "Tasks",
