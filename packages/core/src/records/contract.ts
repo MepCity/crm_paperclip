@@ -1,4 +1,5 @@
 import type { OrgContext } from "../tenancy/types";
+import type { KanbanView, KanbanViewInput } from "./kanban-views";
 
 export type ModuleApiName = string;
 /** Opaque; callers never parse or construct record identifiers. */
@@ -309,6 +310,10 @@ export interface RecordService {
   massUpdate(module: ModuleApiName, ids: readonly RecordId[], input: RecordInput): Promise<void>;
   changeOwner(module: ModuleApiName, ids: readonly RecordId[], ownerId: string): Promise<void>;
   delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void>;
+  listKanbanViews(module: ModuleApiName): Promise<readonly KanbanView[]>;
+  getKanbanView(module: ModuleApiName, id: string): Promise<KanbanView>;
+  createKanbanView(module: ModuleApiName, input: KanbanViewInput): Promise<KanbanView>;
+  updateKanbanView(module: ModuleApiName, id: string, input: KanbanViewInput): Promise<KanbanView>;
 }
 
 export type RecordServiceFactory = (ctx: OrgContext) => RecordService;
