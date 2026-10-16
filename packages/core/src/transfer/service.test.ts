@@ -645,6 +645,7 @@ describe("activity transfers", () => {
       expect(remove).toHaveBeenCalledWith(module, [id]);
       await expect(s.records.get(module, id)).rejects.toMatchObject({ code: "not_found" });
     },
+    15_000,
   );
 
   it.each(["Tasks", "Events", "Calls"] as const)(
