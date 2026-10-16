@@ -1,34 +1,26 @@
-import type { RecordData } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
-import {
-  buildDealsBusinessCardFields,
-  buildDealsDetailSections,
-} from "../deals/deals-detail-sections";
+import { ActivitySidePanel } from "../activity-detail";
 import { isDealInlineEditable } from "../deals/deals-inline-edit";
 import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
-import { buildDealsRecordMoreMenuGroups } from "../deals/deals-record-more-options";
-import {
-  DEALS_TIMELINE_EMPTY_EVENTS,
-  DEALS_TIMELINE_MODULE_OPTIONS,
-  DEALS_TIMELINE_SOURCE_OPTIONS,
-  DEALS_TIMELINE_SUBTABS,
-  normalizeDealsEventKind,
-} from "../deals/deals-timeline";
 import type { ModuleScreenDefinition } from "../types";
 import { TASKS_LIST_CURRENCY_CODE, tasksListPageConfig } from "./list-config";
 import { buildTasksFilterGroups } from "./list-filters";
+import { closeTaskPatch, isCloseTaskButtonVisible } from "./tasks-closing";
+import { buildTasksBusinessCardFields, buildTasksDetailSections } from "./tasks-detail-sections";
 import { TASKS_FORM_INFORMATION_COLUMNS, tasksFormRules } from "./tasks-form-rules";
-
-/**
- * Interim: the Tasks detail research is still open, so the detail screen
- * below borrows the module-neutral Deals builders (layout-driven sections, shared
- * inline edit, last-update label, empty timeline, More Options). Only the header title
- * is Tasks-specific.
- */
-function tasksRecordHeaderIdentity(record: RecordData) {
-  const title = typeof record.fields.Subject === "string" ? record.fields.Subject : "";
-  return { title, hasPortrait: false, recordNavigation: false };
-}
+import { tasksRecordHeaderIdentity } from "./tasks-record-header";
+import {
+  buildTasksRecordMoreMenuGroups,
+  TASKS_DELETE_CONFIRM_MESSAGE,
+  TASKS_DELETE_CONFIRM_TITLE,
+} from "./tasks-record-more-options";
+import {
+  normalizeTasksEventKind,
+  TASKS_TIMELINE_EMPTY_EVENTS,
+  TASKS_TIMELINE_MODULE_OPTIONS,
+  TASKS_TIMELINE_SOURCE_OPTIONS,
+  TASKS_TIMELINE_SUBTABS,
+} from "./tasks-timeline";
 
 export const tasksScreenDefinition: ModuleScreenDefinition = {
   apiName: "Tasks",
@@ -48,22 +40,41 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
     inventoryChrome: true,
   },
   detail: {
+    layout: "activity",
+    titleGlyph: Icons.checkSquare,
     header: tasksRecordHeaderIdentity,
     hasPortrait: false,
-    recordNavigation: false,
-    businessCard: buildDealsBusinessCardFields,
-    sections: buildDealsDetailSections,
+    recordNavigation: true,
+    addTags: { label: "Add Tags", laterModule: "M5" },
+    buildHeaderCommands: (record, { editHref, save }) => [
+      ...(isCloseTaskButtonVisible(record)
+        ? [
+            {
+              id: "close-task",
+              label: "Close Task",
+              variant: "primary" as const,
+              onPress: () => void save(closeTaskPatch()),
+            },
+          ]
+        : []),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
+    businessCard: buildTasksBusinessCardFields,
+    sections: buildTasksDetailSections,
     inlineEditable: isDealInlineEditable,
     lastUpdate: formatDealsLastUpdateLabel,
-    moreOptions: buildDealsRecordMoreMenuGroups,
-    deleteTitle: "Delete Task",
-    deleteMessage: "Are you sure you want to delete this Task?",
+    lastUpdatePlacement: "tab-row",
+    moreOptions: buildTasksRecordMoreMenuGroups,
+    deleteTitle: TASKS_DELETE_CONFIRM_TITLE,
+    deleteMessage: TASKS_DELETE_CONFIRM_MESSAGE,
+    SidePanel: ActivitySidePanel,
     timeline: {
-      subtabs: DEALS_TIMELINE_SUBTABS,
-      modules: DEALS_TIMELINE_MODULE_OPTIONS,
-      sources: DEALS_TIMELINE_SOURCE_OPTIONS,
-      events: DEALS_TIMELINE_EMPTY_EVENTS,
-      normalizeEventKind: normalizeDealsEventKind,
+      subtabs: TASKS_TIMELINE_SUBTABS,
+      modules: TASKS_TIMELINE_MODULE_OPTIONS,
+      sources: TASKS_TIMELINE_SOURCE_OPTIONS,
+      events: TASKS_TIMELINE_EMPTY_EVENTS,
+      normalizeEventKind: normalizeTasksEventKind,
+      upcomingAutomatedActions: { label: "Upcoming Automated Actions", laterModule: "M11" },
     },
   },
 };
