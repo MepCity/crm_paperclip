@@ -13,7 +13,8 @@ Screenshots remain in the local research workspace and are never committed.
 | Print View submenu | Leads, Contacts, Accounts | Existing capture and inventory preserved below; destination pending |
 | Record header | Leads | Existing capture and inventory preserved below |
 | Recycle Bin list and initial Search | Shared Setup | Existing capture and inventory preserved below |
-| Add Tags initial dialog | Four record modules | Unobserved; approved Leads continuation pending |
+| Add Tags initial dialog | Leads | Initial empty popover observed below; background-request stop condition triggered |
+| Add Tags initial dialog | Contacts, Accounts, Deals | Unobserved |
 | Share initial dialog | Four record modules | Unobserved; approved Leads continuation pending |
 | Record Print Preview destination | Four record modules | Unobserved; approved Leads continuation pending |
 | Print Default view destination | Table modules | Unobserved; approved Leads continuation pending |
@@ -1360,3 +1361,24 @@ Non-interactive content: title, explanatory retention/permission notices, displa
 | 74 | Operator row far right | Search button | Visible; never pressed |
 
 Ready passed, cache enabled, one click and Escape completed, no skipped step or visible dialog after close. Four automatic reminder/status and telemetry POSTs blocked. No option selection, input or search submission. Two pages remained and the lock was released. No tab was closed by the analyst.
+
+
+## m6-leads-add-tags-v2 — initial popover
+
+Observed on 2026-10-17 from `step-2.png` and `step-2.yml`. The final screenshot
+is after Escape; use the step evidence for the opening. Existing record-header
+and shared-shell inventories above apply to the unchanged surrounding surface.
+No record values or images are reproduced here.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Under record identity, popover top | Enter Tags combobox / textbox | Empty, focused; no suggestions visible; no input |
+| 2 | Popover bottom right | Cancel | Enabled-looking dismissal affordance; not clicked |
+| 3 | Popover bottom right, after Cancel | Save | Disabled; never clicked |
+
+The tag glyph is decorative. There is no visible close icon or dim backdrop.
+Escape was pressed. All three requested steps completed, ready passed, one CDP
+attach; 19 blocked background POST requests, zero print calls and zero window
+requests. The stop condition prevents treating this as an approved continuation.
+More, Share and Print Preview remain unobserved in this pass. Print Default view
+was not run: a subsequent load check was 55.98, above the approved limit of 50.

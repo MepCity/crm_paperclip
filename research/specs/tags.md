@@ -1,7 +1,7 @@
 # Tags
 
 Status: partial research for MEP-629; not implementation-ready. Existing and fresh captures
-were inspected on 2026-10-15. The Leads list and all four Manage Tags initial empty states were freshly
+were inspected on 2026-10-15, with the Leads Add Tags opening inspected on 2026-10-17. The Leads list and all four Manage Tags initial empty states were freshly
 captured. Record dialog and filter coverage remains partial. No reference data or preferences were changed.
 
 ## Purpose and scope
@@ -24,7 +24,7 @@ Sources are local capture slugs; screenshots remain outside the repository.
 | TAG-05 | Open operator menu under Tag | Options: `is`, `is not`, `is empty`, `is not empty`; `is` is marked selected. | `w2d-filter-tag-ops` / Tags |
 | TAG-06 | Under the operator, Leads filter | Value combobox contains a `Type here` textbox. No value was entered for this research. | `w2d-filter-tag` accessibility evidence / Tags |
 | TAG-07 | Filter panel footer | Apply Filter and Clear are visible; effects not exercised. | `w2d-filter-tag-ops` / shared filters |
-| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; dialog opening not yet observed. | `w2f-detail-more`, `m6-leads-detail` / Tags |
+| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; initial Leads opening observed; other modules unobserved. | `w2f-detail-more`, `m6-leads-detail` / Tags |
 
 The inherited and freshly inspected Leads record show the Add Tags entry
 rather than an existing tag
@@ -60,7 +60,7 @@ reference Save, Add, Remove or tag selection to discover write behaviour.
 
 Manage Tags was reached through Actions in all four modules without submitting.
 MEP-638 permits one exact-name Add Tags initial opening followed by Escape.
-The dialog has not yet been observed successfully. MEP-765 approves reaching
+The Leads initial popover was observed on 2026-10-17; see the bounded evidence below. MEP-765 approves reaching
 the record through the previously captured list link; sanitized record URLs
 containing `:id` must never be used as navigation targets. No alternate selector
 or guard change may be used to bypass a restriction. Filter checkbox inspection may
@@ -146,7 +146,7 @@ state, not established module behaviour.
 
 ## Open questions
 
-1. Initial Add Tags fields, suggestion list, buttons and empty state in each module.
+1. Initial Add Tags state in Contacts, Accounts and Deals; populated suggestions in every module. Leads empty opening is observed below.
 2. Existing tag chips in list rows and record headers, overflow and removal affordances.
 3. Populated tag management and batch actions with no selection; all four
    modules’ initial empty management pages are observed. No tags may be created
@@ -193,6 +193,32 @@ attachments; they are not additional screen observations.
 
 The existing per-state numbered inventories are preserved in
 [m6-tags-print-share-recycle-inventory.md](m6-tags-print-share-recycle-inventory.md).
-No fresh capture was launched on 2026-10-17: the one-minute machine load
-exceeded the approved limit of 50. This remains a partial spec. The approved
-MEP-765 continuation has not been consumed; no new dialog state is claimed.
+The Leads Add Tags continuation was consumed on 2026-10-17. Its opening is
+observed below; blocked background requests triggered the approved stop rule.
+The remaining record-path captures are pending Platform Lead review.
+
+
+## Leads Add Tags initial opening (2026-10-17)
+
+Source: `m6-leads-add-tags-v2/step-2.png` and `step-2.yml`. A white,
+shadowed popover anchors beneath the record identity, overlapping the header
+and content without a dimmed backdrop. A tag icon precedes a wide focused
+combobox containing an empty textbox with placeholder Enter Tags. No suggested
+tags, chips, validation message or colour selector is visible initially.
+Cancel and Save align at the lower right; Save is disabled. No input or
+submission was attempted. The capture pressed Escape after the opening.
+
+| ID | Position | Control / observed state |
+| --- | --- | --- |
+| TAG-12 | Popover top row | Tag entry combobox; empty Enter Tags textbox, focus outline |
+| TAG-13 | Popover lower right, before Save | Cancel button; enabled-looking, not clicked |
+| TAG-14 | Popover lower right | Save button; disabled in accessibility evidence |
+
+Preflight: one-minute load 25.64, no capture lock, two page targets. One CDP
+attach completed. Ready passed with no failed scripts; record link and Add Tags
+clicks completed, followed by Escape. No print call or new-window request was
+recorded. The tool blocked 19 background POST requests (16 telemetry, two legacy
+background actions and one other request). This triggers the MEP-765 stop rule:
+no retry or further record-path capture until Platform Lead review. The visual
+opening is evidence; it is not proof of successful tag persistence or a clean
+continuation gate. Guard settings remain unchanged.

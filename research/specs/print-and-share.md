@@ -131,6 +131,8 @@ are unobserved; this spec remains partial.
 
 The existing per-state numbered inventories are preserved in
 [m6-tags-print-share-recycle-inventory.md](m6-tags-print-share-recycle-inventory.md).
-No fresh capture was launched on 2026-10-17: the one-minute machine load
-exceeded the approved limit of 50. This remains a partial spec. The approved
-MEP-765 continuation has not been consumed; no new dialog state is claimed.
+A fresh Leads Add Tags capture was completed on 2026-10-17; its 19 blocked
+background POST requests triggered the MEP-765 stop rule. More, Share and
+Print Preview were not attempted. A later one-minute load of 55.98 exceeded
+the limit of 50, so the independent Print Default view run was not launched.
+No new print or sharing state is claimed; this spec remains partial.
