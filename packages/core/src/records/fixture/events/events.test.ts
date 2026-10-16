@@ -119,8 +119,8 @@ describe("Events", () => {
     expect(meta.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
       "Remind_At",
       "Participants",
-      "Remind_Participants",
       "Tag",
+      "Remind_Participants",
     ]);
     expect(meta.fields.find((f) => f.apiName === "Participants")?.dataType).toBe("bigint");
     expect(meta.fields.find((f) => f.apiName === "Meeting_Provider__s")?.picklist).toEqual([]);
