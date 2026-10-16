@@ -79,7 +79,7 @@ export function ManageTagsPage({
       <div className="mt-2 overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
         <table aria-label="Tags table" className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border bg-surface-hover/50 text-xs font-medium text-text">
+            <tr className="border-b border-border bg-surface-hover/50 text-xs font-semibold text-text">
               <th scope="col" className="px-6 py-3 font-semibold text-text">
                 Tag Color
               </th>

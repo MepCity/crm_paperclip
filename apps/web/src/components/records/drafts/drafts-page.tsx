@@ -72,7 +72,7 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
             type="button"
             aria-label={isCriteriaExpanded ? "Hide criteria" : "Show criteria"}
             onClick={() => setIsCriteriaExpanded(!isCriteriaExpanded)}
-            className="inline-flex items-center gap-1 rounded text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+            className="inline-flex items-center gap-1 rounded text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           >
             <span>{isCriteriaExpanded ? "Hide" : "Show"}</span>
             {isCriteriaExpanded ? (
@@ -92,7 +92,7 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
                 readOnly
                 value="1"
                 aria-label="Criterion index"
-                className="h-8 w-8 select-none rounded border border-border bg-surface text-center text-sm font-medium text-text focus:outline-none"
+                className="h-8 w-8 select-none rounded border border-border bg-surface text-center text-sm font-semibold text-text focus:outline-none"
               />
 
               {/* PS-12: Field selector showing None */}
