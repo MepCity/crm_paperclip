@@ -99,7 +99,7 @@ test("creates a scheduled call and opens its detail", async ({ page, pageErrors 
     timeout: 60_000,
   });
   const header = page.locator("[data-record-header]");
-  await expect(header.getByRole("button", { name: "Reschedule Call" })).toBeVisible();
+  await expect(header.getByRole("link", { name: "Reschedule Call" })).toBeVisible();
   ignoreFailedResponses(pageErrors, [400]);
 });
 
@@ -107,7 +107,7 @@ test("Reschedule Call opens Edit with the start time focused", async ({ page }) 
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
-  await page.getByRole("button", { name: "Reschedule Call" }).click();
+  await page.getByRole("link", { name: "Reschedule Call" }).click();
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Call Start Time date" })).toBeFocused();
   await page.getByRole("textbox", { name: "Call Start Time date" }).fill("2030-11-30");
@@ -115,14 +115,14 @@ test("Reschedule Call opens Edit with the start time focused", async ({ page }) 
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/${SCHEDULED_CALL_ID}$`), {
     timeout: 60_000,
   });
-  await expect(page.getByRole("button", { name: "Reschedule Call" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Reschedule Call" })).toBeVisible();
 });
 
 test("Mark as Completed asks for a duration and hides Reschedule Call", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
-  await page.getByRole("button", { name: "Down arrow" }).click();
+  await page.getByRole("button", { name: "Reschedule options" }).click();
   await page.getByRole("menuitem", { name: "Mark as Completed" }).click();
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
   await expect(
@@ -135,19 +135,19 @@ test("Mark as Completed asks for a duration and hides Reschedule Call", async ({
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/${SCHEDULED_CALL_ID}$`), {
     timeout: 60_000,
   });
-  await expect(page.getByRole("button", { name: "Reschedule Call" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Reschedule Call" })).toHaveCount(0);
 });
 
 test("Cancel Call confirms, keeps the record and sets Cancelled", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
-  await page.getByRole("button", { name: "Down arrow" }).click();
+  await page.getByRole("button", { name: "Reschedule options" }).click();
   await page.getByRole("menuitem", { name: "Cancel Call" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Cancel Call" }).click();
-  await expect(page.getByRole("button", { name: "Reschedule Call" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Reschedule Call" })).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/Calls/${SCHEDULED_CALL_ID}$`));
   await expect(page.getByText("Cancelled").first()).toBeVisible();
 });

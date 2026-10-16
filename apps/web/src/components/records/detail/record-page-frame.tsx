@@ -45,7 +45,7 @@ export interface RecordPageFrameProps {
   scrollTopLabel: string;
   relatedRailHeaderAction?: ReactNode;
   relatedRailFooter?: ReactNode;
-  /** Optional right-hand panel beside the tab column (activity records). */
+  /** Activities variant: white panel to the right of the tabs (300 px). */
   sidePanel?: ReactNode;
 }
 
@@ -359,7 +359,7 @@ export function RecordPageFrame({
         {sidePanel ? (
           <div
             data-record-side-panel
-            className="w-75 shrink-0 overflow-y-auto border-l border-panel-border bg-surface px-3 pt-(--size-record-tab-top) pb-3"
+            className="w-(--size-record-side-panel-width) shrink-0 overflow-y-auto bg-surface"
           >
             {sidePanel}
           </div>

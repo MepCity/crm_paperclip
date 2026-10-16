@@ -8,10 +8,8 @@ export interface MeetingsParticipant {
 }
 
 export interface MeetingsParticipantsCardProps {
-  /** null means a populated opaque array whose item schema is not agreed. */
-  participants: readonly MeetingsParticipant[] | null;
+  participants: readonly MeetingsParticipant[];
   onAdd?: () => void;
-  addDisabled?: boolean;
 }
 
 /**
@@ -24,11 +22,7 @@ export interface MeetingsParticipantsCardProps {
  * Add behaviour (provisional rule — not observed in reference): calls onAdd
  * when provided; renders a handler-less button when omitted.
  */
-export function MeetingsParticipantsCard({
-  participants,
-  onAdd,
-  addDisabled,
-}: MeetingsParticipantsCardProps) {
+export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsParticipantsCardProps) {
   return (
     <section
       aria-label="Participants card"
@@ -42,7 +36,7 @@ export function MeetingsParticipantsCard({
           variant="secondary"
           size="compact"
           data-control="MD-47"
-          isDisabled={addDisabled}
+          className="border-primary text-primary"
           onPress={onAdd}
         >
           Add
@@ -50,9 +44,7 @@ export function MeetingsParticipantsCard({
       </div>
 
       {/* Card body */}
-      {participants === null ? (
-        <div data-part="opaque" className="py-8" />
-      ) : participants.length === 0 ? (
+      {participants.length === 0 ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
           No participant found
         </div>
