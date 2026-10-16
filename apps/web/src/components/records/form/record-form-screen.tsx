@@ -147,9 +147,16 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
   if (!metadata.data || !users.data || (needsRecord && !record.data))
     return <p role="status">Loading...</p>;
   const intent: FormIntent = props.cloneSourceId ? "clone" : props.recordId ? "edit" : "create";
+  const formKey =
+    intent !== "create"
+      ? (props.cloneSourceId ?? props.recordId ?? "edit")
+      : `create:${JSON.stringify(
+          Object.entries(props.config.createPrefill ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+        )}`;
+
   return (
     <LoadedRecordForm
-      key={props.cloneSourceId ?? props.recordId ?? "create"}
+      key={formKey}
       {...props}
       intent={intent}
       metadata={metadata.data}
