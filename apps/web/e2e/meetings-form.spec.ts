@@ -23,14 +23,20 @@ function meetingIdFromPath(pathname: string): string {
   return id;
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
+test.use({
+  viewport: { width: 1470, height: 835 },
+  deviceScaleFactor: 2,
 });
 
 test("the Meeting Information window shows its fields in order with the defaults", async ({
   page,
 }) => {
   const { dialog } = await openDialog(page);
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/activity-meeting-window.png`,
+    });
+  }
   const order = await dialog
     .locator("[data-form-field]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
@@ -102,6 +108,11 @@ test("Add more details opens the full form with the typed values", async ({ page
   await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Participants Reminder" })).toBeVisible();
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/activity-meeting-create.png`,
+    });
+  }
 });
 
 test("adds a participant in the window and edits the meeting from the record", async ({ page }) => {
@@ -124,6 +135,11 @@ test("adds a participant in the window and edits the meeting from the record", a
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(
     "Customer call",
   );
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/activity-meeting-edit.png`,
+    });
+  }
   await page.getByRole("textbox", { name: "Title", exact: true }).fill("Customer call (moved)");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/${id}$`), {
