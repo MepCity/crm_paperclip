@@ -36,6 +36,22 @@ interface RootMenuTriggerStateWithBlockedKeys {
   __laterModuleBlockedKeys?: Set<string>;
 }
 
+let lastSubmenuKeyTime = 0;
+let lastSubmenuKeyTarget: Element | null = null;
+
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        lastSubmenuKeyTime = Date.now();
+        lastSubmenuKeyTarget = e.target instanceof Element ? e.target : null;
+      }
+    },
+    { capture: true },
+  );
+}
+
 export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
@@ -74,17 +90,22 @@ export function MenuItem<T extends object>({
 
         if (typeof document !== "undefined") {
           const activeEl = document.activeElement;
-          const isActionOnNormalItem = Boolean(
-            activeEl &&
-              activeEl.getAttribute("role") === "menuitem" &&
-              !activeEl.hasAttribute("data-later-module"),
+          const isDirectKeyOnNormalItem = Boolean(
+            Date.now() - lastSubmenuKeyTime < 150 &&
+              lastSubmenuKeyTarget &&
+              lastSubmenuKeyTarget.getAttribute("role") === "menuitem" &&
+              !lastSubmenuKeyTarget.hasAttribute("data-later-module") &&
+              (lastSubmenuKeyTarget === activeEl || lastSubmenuKeyTarget.contains(activeEl)),
           );
 
-          if (isActionOnNormalItem) {
+          if (isDirectKeyOnNormalItem) {
+            lastSubmenuKeyTime = 0;
+            lastSubmenuKeyTarget = null;
             return origOpenSubmenu(triggerKey, level);
           }
 
           if (activeEl?.hasAttribute("data-later-module")) {
+            rootMenuTriggerState.__laterModuleBlockedKeys?.add(keyStr);
             return;
           }
 
@@ -92,6 +113,7 @@ export function MenuItem<T extends object>({
             document.querySelector("[data-later-module][data-hovered]") ??
             document.querySelector("[data-later-module]:hover");
           if (hoveredLater) {
+            rootMenuTriggerState.__laterModuleBlockedKeys?.add(keyStr);
             return;
           }
         }
