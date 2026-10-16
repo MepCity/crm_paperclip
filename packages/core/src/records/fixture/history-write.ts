@@ -96,6 +96,7 @@ export function historyBatch(
     for (const id of new Set([...previous.records.keys(), ...store.records.keys()])) {
       const old = previous.records.get(id);
       const next = store.records.get(id);
+      if (old === next) continue;
       if (operation.kind === "records_merged" && module === operation.module && !next) continue;
       if (
         old &&

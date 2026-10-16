@@ -117,8 +117,8 @@ describe("fixture atomic history", () => {
   it("correlates owner/mass batches and merge while preserving typed null diffs", async () => {
     const ctx = context();
     const records = createFixtureRecordService(ctx);
-    const a = await records.create("Leads", input());
-    const b = await records.create("Leads", input("Second Person"));
+    const a = await records.create("Leads", { ...input(), Phone: "5550101" });
+    const b = await records.create("Leads", { ...input("Second Person"), Phone: "5550101" });
     createFixtureRecordService({ ...ctx, userId: "second-owner" });
     await records.changeOwner("Leads", [a.id, b.id], "second-owner");
     const first = (await records.history.list("Leads", a.id, { perPage: 25 })).events[0];
@@ -129,19 +129,19 @@ describe("fixture atomic history", () => {
     expect(first?.changes).toEqual([
       expect.objectContaining({ apiName: "Owner", old: ctx.userId, new: "second-owner" }),
     ]);
-    await records.massUpdate("Leads", [a.id, b.id], { Company: null });
+    await records.massUpdate("Leads", [a.id, b.id], { Phone: null });
     expect((await records.history.list("Leads", a.id, { perPage: 25 })).events[0]?.changes).toEqual(
-      [expect.objectContaining({ apiName: "Company", new: null, newDisplay: null })],
+      [expect.objectContaining({ apiName: "Phone", new: null, newDisplay: null })],
     );
     await records.merge("Leads", {
       masterId: a.id,
       duplicateIds: [b.id],
-      values: { Company: "Merged Company" },
+      values: { Phone: "5550102" },
     });
     expect((await records.history.list("Leads", a.id, { perPage: 25 })).events[0]).toMatchObject({
       kind: "records_merged",
       mechanism: "merge",
-      changes: [expect.objectContaining({ apiName: "Company", old: null, new: "Merged Company" })],
+      changes: [expect.objectContaining({ apiName: "Phone", old: null, new: "5550102" })],
     });
     await expect(records.history.list("Leads", b.id, { perPage: 25 })).rejects.toBeInstanceOf(
       NotFoundError,

@@ -209,18 +209,28 @@ export function createFixtureRecordService(
   const bundleFor = (module: string) => moduleBundle(module);
   const kanbanViews = createFixtureKanbanViews(ctx, bundleFor);
   let transactionOriginal: Map<string, FixtureModuleStore> | undefined;
+  let hookCopies = new Set<string>();
   const moduleStore = (module: string) => {
     moduleExists(module);
     const moduleState = state.modules.get(module);
     if (!moduleState) throw new NotFoundError("Module not found.");
-    // Clone a module on first transactional access. Hooks only receive this
-    // accessor, so cross-module mutations stay isolated without cloning unrelated seeds.
+    // Generic writes replace rows; copy the map without duplicating untouched rows.
     if (transactionOriginal?.get(module) === moduleState) {
-      const staged = copy(moduleState);
+      const staged = { ...moduleState, records: new Map(moduleState.records) };
       state.modules.set(module, staged);
       return staged;
     }
     return moduleState;
+  };
+  const hookModuleStore = (module: string) => {
+    const staged = moduleStore(module);
+    // Hooks may mutate rows in place, including cross-module records. Give them
+    // owned rows once per module, before any mutable access is returned.
+    if (transactionOriginal && !hookCopies.has(module)) {
+      staged.records = copy(staged.records);
+      hookCopies.add(module);
+    }
+    return staged;
   };
   const viewFor = (module: string, id: string) => {
     const bundle = bundleFor(module);
@@ -257,7 +267,7 @@ export function createFixtureRecordService(
     if (bundleFor(module).readOnly) throw new ForbiddenError("This module is read-only.");
   };
   const hookContext: FixtureHookContext = {
-    moduleStore,
+    moduleStore: hookModuleStore,
     registeredModules: Object.keys(fixtureModules),
   };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
@@ -327,6 +337,7 @@ export function createFixtureRecordService(
     const staged = new Map(previous);
     state.modules = staged;
     transactionOriginal = previous;
+    hookCopies = new Set();
     try {
       const result = write();
       const events = historyBatch(previous, state.modules, fixtureModules, operation, {
@@ -335,7 +346,7 @@ export function createFixtureRecordService(
         actor: { id: ctx.userId, name: options?.actorName ?? ctx.userId },
         source: options?.source ?? "manual",
       });
-      const nextHistory = copy(state.history);
+      const nextHistory = new Map(state.history);
       if (events.length) options?.beforeHistoryAppend?.(copy(events));
       fixtureHistoryStore(nextHistory).appendBatch(events);
       state.history = nextHistory;
@@ -364,12 +375,12 @@ export function createFixtureRecordService(
       const overrides = new Map<string, Record<string, FieldValue>>();
       const updates = records.map((record) => {
         const fields: Record<string, FieldValue> = {
-          ...record.fields,
+          ...copy(record.fields),
           ...input,
           Modified_By: ctx.userId,
           Modified_Time: stamp,
         };
-        bundle.applyRules?.(fields, input, record.fields, hookContext);
+        bundle.applyRules?.(fields, input, copy(record.fields), hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         overrides.set(record.id, fields);
         return { id: record.id, fields };
@@ -378,8 +389,9 @@ export function createFixtureRecordService(
         bundle.metadata.fields,
         projectRecordsWithOverrides(moduleState.records, overrides),
       );
+      if (bundle.afterWrite) hookModuleStore(module);
       for (const record of updates) {
-        bundle.afterWrite?.(record, moduleState.records.get(record.id), hookContext);
+        bundle.afterWrite?.(record, copy(moduleState.records.get(record.id)), hookContext);
         moduleState.records.set(record.id, record);
       }
     });
@@ -420,14 +432,14 @@ export function createFixtureRecordService(
           String(a.fields.Created_Time).localeCompare(String(b.fields.Created_Time)),
         )[0] as RecordData;
         const fields: Record<string, FieldValue> = {
-          ...master.fields,
+          ...copy(master.fields),
           ...normalized,
           Created_By: oldest.fields.Created_By ?? null,
           Created_Time: oldest.fields.Created_Time ?? null,
           Modified_By: ctx.userId,
           Modified_Time: clock().toISOString(),
         };
-        bundle.applyRules?.(fields, normalized, master.fields, hookContext);
+        bundle.applyRules?.(fields, normalized, copy(master.fields), hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const removed = new Set(ids);
         const updated = { id: master.id, fields };
@@ -482,7 +494,8 @@ export function createFixtureRecordService(
           projected.set(name, next);
         }
         for (const [name, records] of projected) moduleStore(name).records = records;
-        bundle.afterWrite?.(updated, master, hookContext);
+        if (bundle.afterWrite) hookModuleStore(module);
+        bundle.afterWrite?.(recordFor(module, master.id), copy(master), hookContext);
         return copy(resolveRead(module, recordFor(module, master.id)));
       },
     );
@@ -772,6 +785,7 @@ export function createFixtureRecordService(
           bundle.metadata.fields,
           projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
         );
+        if (bundle.afterWrite) hookModuleStore(module);
         moduleState.records.set(id, record);
         bundle.afterWrite?.(record, undefined, hookContext);
         return copy(resolveRead(module, record));
@@ -791,12 +805,12 @@ export function createFixtureRecordService(
         const record = recordFor(module, id);
         assertWritable(record);
         const fields: Record<string, FieldValue> = {
-          ...record.fields,
+          ...copy(record.fields),
           ...normalized,
           Modified_By: ctx.userId,
           Modified_Time: clock().toISOString(),
         };
-        bundle.applyRules?.(fields, normalized, record.fields, hookContext);
+        bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const updated = { id, fields };
         const moduleState = moduleStore(module);
@@ -804,7 +818,8 @@ export function createFixtureRecordService(
           bundle.metadata.fields,
           projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
         );
-        bundle.afterWrite?.(updated, record, hookContext);
+        if (bundle.afterWrite) hookModuleStore(module);
+        bundle.afterWrite?.(updated, copy(record), hookContext);
         moduleState.records.set(id, updated);
         return copy(resolveRead(module, updated));
       });
