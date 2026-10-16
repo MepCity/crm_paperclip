@@ -1,6 +1,15 @@
 import { ValidationError } from "@crm/core/errors";
+import type { RecordHistoryEvent, RecordHistoryPage } from "@crm/core/records";
 import { describe, expect, it } from "vitest";
-import { decodeTimelineQuery, encodeTimelineFilters, type TimelineSelection } from "./timelines";
+import {
+  decodeTimelineQuery,
+  decodeTimelinesPage,
+  encodeTimelineEvent,
+  encodeTimelineFilters,
+  encodeTimelineQuery,
+  encodeTimelinesPage,
+  type TimelineSelection,
+} from "./timelines";
 
 const decode = (filters?: unknown, extra = "") => {
   const params = new URLSearchParams(extra);
@@ -175,5 +184,269 @@ describe("encodeTimelineFilters", () => {
       "UTC",
     );
     expect(JSON.parse(jsonDedup ?? "")).toEqual(leaf("record.module.api_name", "in", ["Events"]));
+  });
+});
+
+describe("encodeTimelineEvent", () => {
+  const baseEvent: RecordHistoryEvent = {
+    id: "evt-1",
+    schemaVersion: 1,
+    stream: { module: "Leads", recordId: "rec-1", name: "Alice" },
+    subject: { module: "Leads", recordId: "rec-1", name: "Alice" },
+    kind: "fields_updated",
+    actor: { id: "user-1", name: "Agent User" },
+    occurredAt: "2026-10-16T12:00:00.000Z",
+    sequence: 1,
+    operationId: "op-1",
+    ordinal: 0,
+    source: "manual",
+    mechanism: null,
+    changes: [
+      {
+        apiName: "Company",
+        label: "Company",
+        dataType: "text",
+        old: "Old Co",
+        new: "New Co",
+        oldDisplay: "Old Co",
+        newDisplay: "New Co",
+      },
+    ],
+    payload: { note: "sample" },
+  };
+
+  it("encodes standard field update event with same stream and subject", () => {
+    const encoded = encodeTimelineEvent(baseEvent);
+    expect(encoded).toEqual({
+      id: "evt-1",
+      audited_time: "2026-10-16T12:00:00.000Z",
+      done_by: { id: "user-1", name: "Agent User" },
+      record: { module: { api_name: "Leads" }, id: "rec-1", name: "Alice" },
+      related_record: null,
+      action: "updated",
+      source: "crm_ui",
+      field_history: [
+        {
+          api_name: "Company",
+          field_label: "Company",
+          data_type: "text",
+          _value: { old: "Old Co", new: "New Co" },
+        },
+      ],
+      automation: null,
+      extension: null,
+      type: null,
+      event_kind: "fields_updated",
+      event_details: { note: "sample" },
+    });
+  });
+
+  it("encodes child event with stream distinct from subject", () => {
+    const childEvent: RecordHistoryEvent = {
+      ...baseEvent,
+      kind: "note_added",
+      subject: { module: "Notes", recordId: "note-1", name: "Note title" },
+      changes: [],
+    };
+    const encoded = encodeTimelineEvent(childEvent);
+    expect(encoded.action).toBe("added");
+    expect(encoded.record).toEqual({
+      module: { api_name: "Notes" },
+      id: "note-1",
+      name: "Note title",
+    });
+    expect(encoded.related_record).toEqual({
+      module: { api_name: "Leads" },
+      id: "rec-1",
+      name: "Alice",
+    });
+  });
+
+  it("maps action literals correctly according to ADR 0006 §3", () => {
+    expect(encodeTimelineEvent({ ...baseEvent, kind: "record_created", changes: [] }).action).toBe(
+      "added",
+    );
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "attachment_added", changes: [] }).action,
+    ).toBe("added");
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "related_record_added", changes: [] }).action,
+    ).toBe("relatedrecords_added");
+    expect(encodeTimelineEvent({ ...baseEvent, kind: "record_deleted", changes: [] }).action).toBe(
+      "deleted",
+    );
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "related_record_removed", changes: [] }).action,
+    ).toBe("deleted");
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "attachment_deleted", changes: [] }).action,
+    ).toBe("deleted");
+    expect(encodeTimelineEvent({ ...baseEvent, kind: "records_merged", changes: [] }).action).toBe(
+      "merged",
+    );
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "record_converted", changes: [] }).action,
+    ).toBe("converted");
+    expect(encodeTimelineEvent({ ...baseEvent, kind: "record_restored", changes: [] }).action).toBe(
+      "restored",
+    );
+
+    // owner_assigned only when single change is Owner
+    const ownerChange = {
+      apiName: "Owner",
+      label: "Owner",
+      dataType: "ownerlookup" as const,
+      old: "u1",
+      new: "u2",
+      oldDisplay: "User 1",
+      newDisplay: "User 2",
+    };
+    expect(
+      encodeTimelineEvent({ ...baseEvent, kind: "fields_updated", changes: [ownerChange] }).action,
+    ).toBe("owner_assigned");
+
+    // mixed fields update stays updated
+    expect(
+      encodeTimelineEvent({
+        ...baseEvent,
+        kind: "fields_updated",
+        changes: [ownerChange, { ...ownerChange, apiName: "Company", label: "Company" }],
+      }).action,
+    ).toBe("updated");
+  });
+
+  it("maps sources to wire tokens", () => {
+    expect(encodeTimelineEvent({ ...baseEvent, source: "manual" }).source).toBe("crm_ui");
+    expect(encodeTimelineEvent({ ...baseEvent, source: "api" }).source).toBe("crm_api");
+    expect(encodeTimelineEvent({ ...baseEvent, source: "import" }).source).toBe("import");
+  });
+});
+
+describe("encodeTimelinesPage and decodeTimelinesPage", () => {
+  const event: RecordHistoryEvent = {
+    id: "evt-1",
+    schemaVersion: 1,
+    stream: { module: "Leads", recordId: "rec-1", name: null },
+    subject: { module: "Leads", recordId: "rec-1", name: null },
+    kind: "fields_updated",
+    actor: { id: "user-1", name: "Agent User" },
+    occurredAt: "2026-10-16T12:00:00.000Z",
+    sequence: 0,
+    operationId: "evt-1",
+    ordinal: 0,
+    source: "api",
+    mechanism: null,
+    changes: [
+      {
+        apiName: "Company",
+        label: "Company",
+        dataType: "text",
+        old: "A",
+        new: "B",
+        oldDisplay: "A",
+        newDisplay: "B",
+      },
+    ],
+    payload: null,
+  };
+
+  it("returns null for empty page (204 wire representation)", () => {
+    const encoded = encodeTimelinesPage(
+      { events: [], nextPageToken: null, moreRecords: false },
+      { perPage: 25, pageToken: null },
+    );
+    expect(encoded).toBeNull();
+  });
+
+  it("decodes null into an empty page", () => {
+    expect(decodeTimelinesPage(null)).toEqual({
+      events: [],
+      nextPageToken: null,
+      moreRecords: false,
+    });
+  });
+
+  it("round-trips a non-empty page", () => {
+    const page: RecordHistoryPage = {
+      events: [event],
+      nextPageToken: "next-tok",
+      moreRecords: true,
+    };
+    const wire = encodeTimelinesPage(page, { perPage: 10, pageToken: "prev-tok" });
+    expect(wire).toMatchObject({
+      info: {
+        count: 1,
+        more_records: true,
+        page: 1,
+        per_page: 10,
+        next_page_token: "next-tok",
+        previous_page_token: "prev-tok",
+      },
+    });
+    const decoded = decodeTimelinesPage(wire);
+    expect(decoded.nextPageToken).toBe("next-tok");
+    expect(decoded.moreRecords).toBe(true);
+    expect(decoded.events).toHaveLength(1);
+    expect(decoded.events[0]).toMatchObject({
+      id: "evt-1",
+      kind: "fields_updated",
+      source: "api",
+      stream: { module: "Leads", recordId: "rec-1", name: null },
+      subject: { module: "Leads", recordId: "rec-1", name: null },
+      changes: [{ apiName: "Company", oldDisplay: "A", newDisplay: "B" }],
+    });
+  });
+});
+
+describe("encodeTimelineQuery", () => {
+  it("encodes minimal query", () => {
+    const params = encodeTimelineQuery({ perPage: 25, pageToken: null });
+    expect(params.get("per_page")).toBe("25");
+    expect(params.get("page_token")).toBeNull();
+    expect(params.get("filters")).toBeNull();
+  });
+
+  it("encodes page token and single filter", () => {
+    const params = encodeTimelineQuery({
+      perPage: 50,
+      pageToken: "cursor-1",
+      actorId: "usr-9",
+    });
+    expect(params.get("per_page")).toBe("50");
+    expect(params.get("page_token")).toBe("cursor-1");
+    expect(JSON.parse(params.get("filters") ?? "")).toEqual({
+      field: { api_name: "done_by.id" },
+      comparator: "equal",
+      value: "usr-9",
+    });
+  });
+
+  it("maps Meetings and meetings to Events and combines multiple filters with AND", () => {
+    const params = encodeTimelineQuery({
+      perPage: 25,
+      pageToken: null,
+      modules: ["Meetings", "Leads", "meetings"],
+      sources: ["manual", "import"],
+      from: "2026-10-10T00:00:00+03:00",
+      to: "2026-10-17T00:00:00+03:00",
+    });
+    const filters = JSON.parse(params.get("filters") ?? "");
+    expect(filters.group_operator).toBe("AND");
+    expect(filters.group).toHaveLength(3);
+    expect(filters.group[0]).toEqual({
+      field: { api_name: "record.module.api_name" },
+      comparator: "in",
+      value: ["Events", "Leads"],
+    });
+    expect(filters.group[1]).toEqual({
+      field: { api_name: "audited_time" },
+      comparator: "between",
+      value: ["2026-10-10T00:00:00+03:00", "2026-10-17T00:00:00+03:00"],
+    });
+    expect(filters.group[2]).toEqual({
+      field: { api_name: "source" },
+      comparator: "in",
+      value: ["crm_ui", "import"],
+    });
   });
 });

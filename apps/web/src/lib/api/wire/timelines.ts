@@ -397,7 +397,12 @@ export function encodeTimelineQuery(query: TimelineQuery): URLSearchParams {
   const leaves: Record<string, unknown>[] = [];
   const leaf = (api_name: string, comparator: string, value: unknown) =>
     leaves.push({ field: { api_name }, comparator, value });
-  if (query.modules?.length) leaf("record.module.api_name", "in", query.modules);
+  if (query.modules?.length) {
+    const modules = Array.from(
+      new Set(query.modules.map((m) => (m === "Meetings" || m === "meetings" ? "Events" : m))),
+    );
+    leaf("record.module.api_name", "in", modules);
+  }
   if (query.actorId) leaf("done_by.id", "equal", query.actorId);
   if (query.from && query.to) leaf("audited_time", "between", [query.from, query.to]);
   if (query.sources?.length)
