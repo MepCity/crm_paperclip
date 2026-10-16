@@ -29,24 +29,32 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * 3. The `X-CRM-ORG` header must be present.
  * 4. `requireOrgContext` must resolve that organization for this session.
  *
+ * A returned `Response` (CSV downloads) is passed through as is; it sets its own headers.
  * `null` becomes 204 with no body. Any other return value becomes 200 JSON.
  * An `AppError` uses the shared error codec. Any other throw is 500 with empty
  * `details`; the cause is logged and is not written on the response.
  * Every response is `Cache-Control: no-store`. No CORS header is set.
  */
-export function apiRoute<Params extends Record<string, string>>(handler: ApiHandler<Params>) {
+export function apiRoute<Params extends Record<string, string>>(
+  handler: ApiHandler<Params>,
+  options: { orgFromQuery?: boolean } = {},
+) {
   return async (request: Request, context: { params?: Promise<Params> }): Promise<Response> => {
     try {
       assertSameOrigin(request);
       const session = await getSession(request.headers);
       if (!session) throw new UnauthenticatedError();
-      const orgSlug = request.headers.get("X-CRM-ORG");
+      // Only anchor-download routes opt in: a link cannot send the header.
+      const orgSlug =
+        request.headers.get("X-CRM-ORG") ??
+        (options.orgFromQuery ? new URL(request.url).searchParams.get("org") : null);
       if (orgSlug === null || orgSlug.trim() === "") {
         throw new ValidationError({ organization: ["An organization header is required."] });
       }
       const ctx = await requireOrgContext(request.headers, orgSlug);
       const params = (await context.params) ?? ({} as Params);
       const result = await handler({ ctx, request, params, query: readQuery(request) });
+      if (result instanceof Response) return result;
       if (result === null) return new Response(null, { status: 204, headers: NO_STORE });
       return Response.json(result, { status: 200, headers: NO_STORE });
     } catch (error) {
