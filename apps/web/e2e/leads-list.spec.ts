@@ -2102,3 +2102,55 @@ test.describe("Leads list page", () => {
     expect(Math.abs(firstItem.height - 32)).toBeLessThanOrEqual(0.5);
   });
 });
+
+test("Print View exposes a left flyout without printing or navigating", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+  const initialUrl = page.url();
+  await page.evaluate(() => {
+    Object.assign(window, { printCalls: 0, openCalls: 0 });
+    window.print = () => {
+      Object.assign(window, { printCalls: Reflect.get(window, "printCalls") + 1 });
+    };
+    window.open = () => {
+      Object.assign(window, { openCalls: Reflect.get(window, "openCalls") + 1 });
+      return null;
+    };
+  });
+  await page.getByRole("button", { name: "Actions", exact: true }).click();
+  const printView = page.getByRole("menuitem", { name: "Print View", exact: true });
+  await printView.hover();
+  const defaultItem = page.getByRole("menuitem", { name: "Print Default view" });
+  const canvasItem = page.getByRole("menuitem", { name: "Print Using Canvas" });
+  await expect(defaultItem).toBeVisible();
+  await expect(canvasItem).toBeVisible();
+  const parentBox = requireBox(await printView.boundingBox());
+  const childBox = requireBox(await defaultItem.boundingBox());
+  expect(childBox.x + childBox.width).toBeLessThanOrEqual(parentBox.x);
+  await page.screenshot({ path: test.info().outputPath("print-view-submenu.png") });
+  for (const item of [defaultItem, canvasItem]) {
+    await expect(item).toHaveAttribute("data-later-module", "M6");
+    await item.click();
+    await expect(defaultItem).toBeVisible();
+  }
+  expect(page.url()).toBe(initialUrl);
+  expect(
+    await page.evaluate(() => [
+      Reflect.get(window, "printCalls"),
+      Reflect.get(window, "openCalls"),
+    ]),
+  ).toEqual([0, 0]);
+  await defaultItem.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(defaultItem).toHaveCount(0);
+  await expect(printView).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(defaultItem).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(defaultItem).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Actions", exact: true })).toBeFocused();
+});

@@ -102,3 +102,47 @@ test("refresh button is not drawn without onRefresh", () => {
   render(<ListToolbar {...base} onRefresh={undefined} />);
   expect(screen.queryByRole("button", { name: "Refresh Custom View" })).toBeNull();
 });
+
+test("Print View opens on hover, delegates child callbacks and returns focus with arrows/Escape", async () => {
+  const user = userEvent.setup();
+  const parent = vi.fn();
+  const print = vi.fn();
+  render(
+    <ListToolbar
+      {...base}
+      actions={[
+        {
+          id: "print",
+          label: "Print View",
+          onAction: parent,
+          submenu: [
+            { id: "default", label: "Print Default view", onAction: print },
+            { id: "canvas", label: "Print Using Canvas", laterModule: "M6", accent: true },
+          ],
+        },
+      ]}
+    />,
+  );
+  const trigger = screen.getByRole("button", { name: "Actions" });
+  await user.click(trigger);
+  const row = screen.getByRole("menuitem", { name: "Print View" });
+  await user.hover(row);
+  const defaultItem = await screen.findByRole("menuitem", { name: "Print Default view" });
+  await user.hover(defaultItem);
+  await user.click(defaultItem);
+  expect(print).toHaveBeenCalledTimes(1);
+  expect(parent).not.toHaveBeenCalled();
+  await user.click(trigger);
+  await user.keyboard("{ArrowDown}{ArrowRight}");
+  await screen.findByRole("menuitem", { name: "Print Default view" });
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.queryByRole("menuitem", { name: "Print Default view" })).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Print View" }));
+  await user.keyboard("{ArrowRight}");
+  await screen.findByRole("menuitem", { name: "Print Default view" });
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menuitem", { name: "Print Default view" })).toBeNull();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("menu")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+});
