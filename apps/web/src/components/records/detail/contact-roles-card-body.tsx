@@ -6,7 +6,7 @@ import { RelatedRecordsListError } from "@/components/records/detail/related-rec
 import { Link } from "@/components/ui/link";
 import { useRecordList, useViews } from "@/lib/api/client/hooks";
 
-const LIST_PAGE_SIZE = 200;
+const LIST_PAGE_SIZE = 100;
 
 export interface ContactRolesCardBodyProps {
   dealId: RecordId;

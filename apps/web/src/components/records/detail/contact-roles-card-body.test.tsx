@@ -86,12 +86,14 @@ test("batches only the linked contact IDs and scopes roles to the deal", () => {
       expect.objectContaining({
         module: "Contact_Roles",
         query: expect.objectContaining({
+          perPage: 100,
           filters: { field: "Deal", comparator: "equal", value: "d1" },
         }),
       }),
       expect.objectContaining({
         module: "Contacts",
         query: expect.objectContaining({
+          perPage: 100,
           filters: {
             groupOperator: "or",
             group: [{ field: "id", comparator: "equal", value: "c1" }],
