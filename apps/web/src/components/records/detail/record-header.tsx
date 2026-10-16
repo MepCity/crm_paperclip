@@ -46,7 +46,6 @@ export interface RecordHeaderProps {
   nextHref?: string;
   addTags?: { label: string; laterModule: ModuleKey };
   showPortrait?: boolean;
-  portraitAppearance?: "tile" | "inline";
   showRecordNavigation?: boolean;
   /** Static glyph before the title (activities variant). */
   titleGlyph?: import("@/components/ui/icon").Icon;
@@ -61,7 +60,6 @@ export function RecordHeader({
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
-  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
@@ -104,11 +102,7 @@ export function RecordHeader({
         <div
           data-record-portrait
           aria-hidden
-          className={
-            portraitAppearance === "inline"
-              ? "shrink-0 size-6 mr-2 text-text"
-              : "shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
-          }
+          className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
         >
           {PortraitIcon ? (
             <PortraitIcon className="h-full w-full" />
@@ -117,9 +111,7 @@ export function RecordHeader({
           )}
         </div>
       ) : null}
-      <div
-        className={`min-w-0 flex-1 ${showPortrait && portraitAppearance === "tile" ? "ml-(--size-record-title-gap)" : ""} mr-3`}
-      >
+      <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
         <h1
           className={`min-w-0 truncate text-text${TitleGlyph ? " flex items-center gap-2" : ""}`}
           title={accessibleTitle}
