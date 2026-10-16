@@ -24,10 +24,7 @@ export function isEmailFormatValid(value: string): boolean {
 
 function skippedField(field: FieldDefinition): boolean {
   return (
-    field.readOnly ||
-    field.dataType === "profileimage" ||
-    field.dataType === "multi_module_lookup" ||
-    field.dataType === "datetime"
+    field.readOnly || field.dataType === "profileimage" || field.dataType === "multi_module_lookup"
   );
 }
 
@@ -54,6 +51,11 @@ function validateField(
       return validationFormatMessage(label);
   }
 
+  if (field.dataType === "datetime") {
+    if (typeof normalized !== "string" || !Number.isFinite(Date.parse(normalized)))
+      return validationFormatMessage(label);
+  }
+
   if (field.dataType === "integer") {
     if (typeof value === "number" && !Number.isInteger(value))
       return validationFormatMessage(label);
@@ -62,6 +64,8 @@ function validateField(
   // A long integer stays digit text in the form, so anything else that was typed — a letter, a
   // decimal separator, an inner space — is reported here instead of reaching the service.
   if (field.dataType === "bigint") {
+    // A record-array field (Meeting participants) carries its own list shape.
+    if (field.acceptsJsonArray && Array.isArray(normalized)) return undefined;
     if (typeof normalized !== "string" || !/^\d+$/.test(normalized))
       return validationFormatMessage(label);
   }
@@ -84,4 +88,23 @@ export function validateRecordForm(
     if (message) errors[field.apiName] = message;
   }
   return errors;
+}
+
+/** The end of a range (To) may not be earlier than its start (From); the message sits under the end. */
+export function validateRanges(
+  ranges: readonly { start: string; end: string }[] | undefined,
+  values: Record<string, FieldValue | undefined>,
+  errors: Record<string, string>,
+  resolveLabel: (apiName: string) => string,
+): Record<string, string> {
+  const next = { ...errors };
+  for (const range of ranges ?? []) {
+    if (next[range.start] || next[range.end]) continue;
+    const start = values[range.start];
+    const end = values[range.end];
+    if (typeof start !== "string" || typeof end !== "string") continue;
+    if (Date.parse(end) < Date.parse(start))
+      next[range.end] = validationFormatMessage(resolveLabel(range.end));
+  }
+  return next;
 }
