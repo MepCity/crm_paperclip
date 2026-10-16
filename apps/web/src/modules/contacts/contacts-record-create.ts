@@ -14,6 +14,9 @@ function contactDisplayName(fields: RecordData["fields"]): string {
 
 function accountLookupOfContact(fields: RecordData["fields"]): ModuleRecordReference | null {
   const value = fields.Account_Name as FieldValue | undefined;
+  if (typeof value === "string" && value.length > 0) {
+    return { module: "Accounts", id: value, name: value };
+  }
   if (typeof value !== "object" || value === null || !("id" in value)) return null;
   const ref = value as ModuleRecordReference;
   if (typeof ref.id !== "string" || ref.id.length === 0) return null;

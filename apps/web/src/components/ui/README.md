@@ -719,6 +719,7 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-header-end` | `24px` | record-detail.md › Record header › Next chevron centred 35.5 px from header right edge | from spec |
 | `--radius-record-menu-row` | `5px` | record-detail.md › More Options menu › Rows and groups › highlighted row corners | from spec |
 | `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
+| `--size-record-side-panel-width` | `300px` | activities-record-detail.md › Visual layout V11 › white panel x=1170–1470 | from spec |
 | `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
 | `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
 | `--size-record-tab-row-height` | `62px` | record-detail.md › Canvas and tab row; Status strip › 185 − 123 card offset | from spec |

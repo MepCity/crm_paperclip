@@ -341,6 +341,7 @@ const SIZE_GROUPS = [
       "--size-record-header-end",
       "--radius-record-menu-row",
       "--size-record-rail-width",
+      "--size-record-side-panel-width",
       "--size-record-rail-heading-height",
       "--size-record-rail-text-inset",
       "--size-record-tab-row-height",
