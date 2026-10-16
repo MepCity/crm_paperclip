@@ -25,6 +25,12 @@ export interface FixtureModuleHooks {
     ctx: FixtureHookContext,
   ) => void;
   afterDelete?: (ids: readonly string[], ctx: FixtureHookContext) => void;
+  /** Transfer children on staged stores, before generic lookup reassignment. */
+  transferMergedRecords?: (
+    ids: readonly string[],
+    masterId: string,
+    ctx: FixtureHookContext,
+  ) => void;
   afterSeed?: (ctx: FixtureHookContext) => void;
   orderRows?: (rows: RecordData[]) => void;
   /** Delete these related rows when their parent is removed by a merge. */

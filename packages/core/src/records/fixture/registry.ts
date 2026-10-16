@@ -7,6 +7,13 @@ import { callsHooks } from "./calls/hooks";
 import { callsMetadata } from "./calls/metadata";
 import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
 import { callsViews } from "./calls/views";
+import {
+  contactRolesHooks,
+  removeContactRolesFor,
+  transferContactRolesToMaster,
+} from "./contact-roles/hooks";
+import { contactRolesMetadata } from "./contact-roles/metadata";
+import { contactRolesIdBase, generateFixtureContactRoles } from "./contact-roles/seed";
 import { contactsMetadata } from "./contacts/metadata";
 import { fullName as contactsFullName, generateFixtureContacts } from "./contacts/seed";
 import { contactsViews } from "./contacts/views";
@@ -21,10 +28,9 @@ import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed
 import { eventsViews } from "./events/views";
 import type { FixtureModuleHooks } from "./hooks";
 import { leadsMetadata } from "./metadata";
-import { notesHooks } from "./notes/hooks";
+import { notesHooks, removeNotesForParents, transferNotesToMaster } from "./notes/hooks";
 import { notesMetadata } from "./notes/metadata";
 import { generateFixtureNotes } from "./notes/seed";
-import { notesViews } from "./notes/views";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
@@ -34,6 +40,8 @@ import { leadsViews } from "./views";
 
 export interface FixtureModuleBundle extends FixtureModuleHooks {
   readOnly?: boolean;
+  /** Related-list records remain available to CRUD, but not discovery surfaces. */
+  childModule?: boolean;
   metadata: ModuleMetadata;
   views: readonly ListView[];
   displayNameField: string;
@@ -67,7 +75,74 @@ const contactsManaged = new Set([
   "id",
 ]);
 
+function parentDeleteHook(module: string, existing?: FixtureModuleHooks["afterDelete"]) {
+  return activityDeleteHook(module, (ids, ctx) => {
+    existing?.(ids, ctx);
+    removeNotesForParents(module, ids, ctx);
+    if (module === "Deals" || module === "Contacts")
+      removeContactRolesFor(module === "Deals" ? "Deal" : "Contact", ids, ctx);
+  });
+}
+
+function parentMergeHook(module: string): NonNullable<FixtureModuleHooks["transferMergedRecords"]> {
+  return (ids, masterId, ctx) => {
+    transferNotesToMaster(module, ids, masterId, ctx);
+    if (module === "Contacts") transferContactRolesToMaster(ids, masterId, ctx);
+  };
+}
+
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+  Notes: {
+    ...notesHooks,
+    childModule: true,
+    metadata: notesMetadata,
+    views: [
+      {
+        id: "all-notes",
+        name: "All Notes",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["Note_Title", "Note_Content", "Parent_Id"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "id",
+    fullName: (fields) => String(fields.id),
+    generateSeed: (now) => generateFixtureNotes(68, now),
+    managedFields: new Set(["id", "Created_By", "Modified_By", "Created_Time", "Modified_Time"]),
+    searchFields: [],
+    initialNextId: 180000000000001000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Contact_Roles: {
+    ...contactRolesHooks,
+    childModule: true,
+    metadata: contactRolesMetadata,
+    views: [
+      {
+        id: "all-contact-roles",
+        name: "All Contact Roles",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["Deal", "Contact", "Contact_Role"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "id",
+    fullName: (fields) => String(fields.id),
+    generateSeed: (now) =>
+      generateFixtureContactRoles(
+        generateFixtureDeals(68, now),
+        generateFixtureContacts(68, now),
+        now,
+      ),
+    managedFields: new Set(["id", "Created_By", "Modified_By", "Created_Time", "Modified_Time"]),
+    searchFields: [],
+    initialNextId: contactRolesIdBase + 1000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
   Events: {
     ...eventsHooks,
     metadata: eventsMetadata,
@@ -78,18 +153,6 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
     searchFields: ["Event_Title", "Description", "Venue"],
     initialNextId: 140000000000000000n,
-    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
-  },
-  Notes: {
-    ...notesHooks,
-    metadata: notesMetadata,
-    views: notesViews,
-    displayNameField: "Note_Title",
-    generateSeed: (now) => generateFixtureNotes(68, now),
-    fullName: (fields) => String(fields.Note_Title ?? ""),
-    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
-    searchFields: ["Note_Title", "Note_Content"],
-    initialNextId: 195000000000000000n,
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Calls: {
@@ -117,7 +180,8 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Leads: {
-    afterDelete: activityDeleteHook("Leads"),
+    transferMergedRecords: parentMergeHook("Leads"),
+    afterDelete: parentDeleteHook("Leads"),
     metadata: leadsMetadata,
     views: leadsViews,
     displayNameField: "Full_Name",
@@ -134,7 +198,8 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     }),
   },
   Accounts: {
-    afterDelete: activityDeleteHook("Accounts"),
+    transferMergedRecords: parentMergeHook("Accounts"),
+    afterDelete: parentDeleteHook("Accounts"),
     metadata: accountsMetadata,
     views: accountsViews,
     displayNameField: "Account_Name",
@@ -160,7 +225,8 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   },
   Deals: {
     ...dealsHooks,
-    afterDelete: activityDeleteHook("Deals", dealsHooks.afterDelete),
+    transferMergedRecords: parentMergeHook("Deals"),
+    afterDelete: parentDeleteHook("Deals", dealsHooks.afterDelete),
     metadata: dealsMetadata,
     views: dealsViews,
     displayNameField: "Deal_Name",
@@ -172,7 +238,8 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Contacts: {
-    afterDelete: activityDeleteHook("Contacts"),
+    transferMergedRecords: parentMergeHook("Contacts"),
+    afterDelete: parentDeleteHook("Contacts"),
     metadata: contactsMetadata,
     views: contactsViews,
     displayNameField: "Full_Name",
@@ -189,4 +256,6 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
   },
 };
 
-export const supportedModules = Object.keys(fixtureModules);
+export const supportedModules = Object.keys(fixtureModules).filter(
+  (name) => !fixtureModules[name]?.childModule,
+);

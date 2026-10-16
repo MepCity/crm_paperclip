@@ -119,7 +119,7 @@ describe("ActivityRelationPanel", () => {
     const p = props({ deals: [] });
     p.persons = [{ id: "p1", name: "Ada Test", moduleLabel: "Contact" }];
     render(<ActivityRelationPanel {...p} />);
-    expect(screen.getByText("No records found")).toBeTruthy();
+    expect(screen.getByText("No Deals found")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Call phone" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Call mobile" })).toBeNull();
     expect(screen.queryByText("ada@example.test")).toBeNull();
