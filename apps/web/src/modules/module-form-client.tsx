@@ -2,12 +2,15 @@
 
 import type { FieldValue } from "@crm/core/records";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RecordFormScreen } from "@/components/records/form/record-form-screen";
 import { SelectUserDialog } from "@/components/records/form/select-user-dialog";
 import { useHomeCurrency } from "@/lib/api/client/hooks";
 import { moduleCreatePath, moduleListDefaultPath, moduleRecordPath } from "@/lib/crm-paths";
-import { consumeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
+import {
+  consumeRecordCreatePrefill,
+  readRecordCreatePrefill,
+} from "@/lib/records/record-create-prefill";
 import { readRecordListContext } from "@/lib/records/record-list-context";
 import { resolveModuleScreenByApiName } from "./registry";
 import type { ModuleScreenDefinition } from "./types";
@@ -31,16 +34,31 @@ export function ModuleFormClient({
   const moduleApiName = definition.apiName;
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
-  const [prefill] = useState(() =>
-    !recordId && !cloneSourceId
-      ? { ...consumeRecordCreatePrefill(orgSlug, moduleApiName)?.fields, ...createPrefill }
-      : undefined,
+  const [sessionPrefill, setSessionPrefill] = useState<Readonly<Record<string, FieldValue>> | null>(
+    () => {
+      if (recordId || cloneSourceId) return null;
+      return readRecordCreatePrefill(orgSlug, moduleApiName)?.fields ?? null;
+    },
   );
   // Read from the router, not the window: during a client navigation the window URL lags behind.
   const intentName = useSearchParams().get("intent");
   const [editIntent] = useState(() =>
     recordId && intentName ? definition.form.editIntents?.[intentName] : undefined,
   );
+
+  useEffect(() => {
+    if (recordId || cloneSourceId) return;
+    const consumed = consumeRecordCreatePrefill(orgSlug, moduleApiName);
+    if (consumed?.fields) {
+      setSessionPrefill(consumed.fields);
+    }
+  }, [orgSlug, moduleApiName, recordId, cloneSourceId]);
+
+  const prefill = useMemo(() => {
+    if (recordId || cloneSourceId) return undefined;
+    const combined = { ...sessionPrefill, ...createPrefill };
+    return Object.keys(combined).length > 0 ? combined : undefined;
+  }, [recordId, cloneSourceId, sessionPrefill, createPrefill]);
   const hasPrefill = prefill && Object.keys(prefill).length > 0;
   const defaultCancel = cloneSourceId
     ? moduleRecordPath(orgSlug, definition.tab, cloneSourceId)
