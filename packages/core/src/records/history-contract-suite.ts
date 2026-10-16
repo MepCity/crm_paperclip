@@ -59,12 +59,28 @@ export function describeRecordHistoryContract(
       }
     });
     it("groups changes in metadata order, ignores no-op saves and audit fields", async () => {
-      await records.update(api, record.id, { [field]: module.filterMarker.updated });
+      const moduleMetadata = await records.getModule(api);
+      const secondField = moduleMetadata.fields.find(
+        (candidate) =>
+          candidate.apiName !== field &&
+          !candidate.readOnly &&
+          ["text", "textarea"].includes(candidate.dataType),
+      );
+      if (!secondField)
+        throw new Error("A second editable text field is required by the history contract.");
+      await records.update(api, record.id, {
+        [field]: module.filterMarker.updated,
+        [secondField.apiName]: "Grouped history change",
+      });
       const first = await history.list(api, record.id, { perPage: 25 });
       expect(first.events).toHaveLength(2);
       const event = first.events[0];
       if (!event) throw new Error("Missing update event");
       expect(event.kind).toBe("fields_updated");
+      expect(event.changes.length).toBeGreaterThanOrEqual(2);
+      expect(event.changes.find((change) => change.apiName === secondField.apiName)?.new).toBe(
+        "Grouped history change",
+      );
       expect(event.changes.find((change) => change.apiName === field)?.new).toEqual(
         module.filterMarker.updated,
       );
