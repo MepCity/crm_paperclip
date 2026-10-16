@@ -115,6 +115,7 @@ test("adds a participant in the window and edits the meeting from the record", a
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Customer call");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   const picker = page.getByRole("dialog").last();
+  await expect(picker.getByRole("button", { name: /Module/ })).toBeVisible();
   await picker.locator("label.table-radio").first().click();
   await picker.getByRole("button", { name: "Done" }).click();
   await expect(dialog.getByText("1 selected")).toBeVisible();

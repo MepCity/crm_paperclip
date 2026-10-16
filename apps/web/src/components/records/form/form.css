@@ -616,9 +616,6 @@
   align-items: center;
   gap: 10px;
 }
-[data-form-variant="activity"] .record-form-participants__bar .record-choice-trigger {
-  display: none;
-}
 [data-form-variant="activity"] .record-form-participants__bar button {
   height: auto;
   min-height: 0;
