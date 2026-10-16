@@ -60,8 +60,8 @@ test("detail sections: Call Information first, same order, single column", () =>
 });
 
 test("link fields get module suffixes; plain fields none", () => {
-  expect(callReferenceSuffix(record, "Who_Id")).toBe("- Contacts");
-  expect(callReferenceSuffix(record, "What_Id")).toBe("- Deals");
+  expect(callReferenceSuffix(record, "Who_Id")).toBe("Contact");
+  expect(callReferenceSuffix(record, "What_Id")).toBe("Deal");
   expect(callReferenceSuffix({ id: "c", fields: { Who_Id: null } }, "Who_Id")).toBeUndefined();
 });
 

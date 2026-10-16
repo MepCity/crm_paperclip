@@ -7,7 +7,7 @@ import type {
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
-import { taskRelatedToSuffix } from "../tasks/tasks-detail-sections";
+import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -94,10 +94,12 @@ export function buildMeetingsBusinessCardFields(
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
     if (!field || !visible(field, record)) return [];
-    const value = record.fields[name] ?? null;
-    const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
     return [
-      { field: { ...field, readOnly: true }, value, ...(valueSuffix ? { valueSuffix } : {}) },
+      {
+        field: { ...field, readOnly: true },
+        value: record.fields[name] ?? null,
+        suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
+      },
     ];
   });
 }
@@ -136,6 +138,7 @@ export function buildMeetingsDetailSections(
                   : "right",
             field,
             value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
         }

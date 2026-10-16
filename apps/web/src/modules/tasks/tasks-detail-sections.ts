@@ -21,30 +21,30 @@ export const TASKS_BUSINESS_CARD_FIELDS = [
   "Owner",
 ] as const;
 
-/** Known plural labels for modules that may not yet be loaded in the client registry. */
-const KNOWN_MODULE_PLURAL_LABELS: Readonly<Record<string, string>> = {
-  Leads: "Leads",
-  Contacts: "Contacts",
-  Accounts: "Accounts",
-  Deals: "Deals",
-  Tasks: "Tasks",
-  Events: "Meetings",
-  Meetings: "Meetings",
-  Calls: "Calls",
-  Campaigns: "Campaigns",
-  Cases: "Cases",
-  Solutions: "Solutions",
-  Products: "Products",
-  Vendors: "Vendors",
-  Price_Books: "Price Books",
-  Quotes: "Quotes",
-  Sales_Orders: "Sales Orders",
-  Purchase_Orders: "Purchase Orders",
-  Invoices: "Invoices",
+/** Known singular labels for modules that may not yet be loaded in the client registry. */
+const KNOWN_MODULE_SINGULAR_LABELS: Readonly<Record<string, string>> = {
+  Leads: "Lead",
+  Contacts: "Contact",
+  Accounts: "Account",
+  Deals: "Deal",
+  Tasks: "Task",
+  Events: "Meeting",
+  Meetings: "Meeting",
+  Calls: "Call",
+  Campaigns: "Campaign",
+  Cases: "Case",
+  Solutions: "Solution",
+  Products: "Product",
+  Vendors: "Vendor",
+  Price_Books: "Price Book",
+  Quotes: "Quote",
+  Sales_Orders: "Sales Order",
+  Purchase_Orders: "Purchase Order",
+  Invoices: "Invoice",
 };
 
 /**
- * Produces the unlinked module suffix for the What_Id relation (" - " plus the plural module label).
+ * Produces the unlinked module suffix for the What_Id relation (e.g. singular module label).
  * Used by record detail rendering to display alongside the related record link (TD-39, TD-46).
  */
 export function taskRelatedToSuffix(record: RecordData): string | undefined {
@@ -60,7 +60,19 @@ export function taskRelatedToSuffix(record: RecordData): string | undefined {
     return undefined;
   }
   const screen = resolveModuleScreenByApiName(ref.module);
-  return `- ${screen?.pluralLabel ?? KNOWN_MODULE_PLURAL_LABELS[ref.module] ?? ref.module}`;
+  if (screen?.singularLabel) {
+    return screen.singularLabel;
+  }
+  return KNOWN_MODULE_SINGULAR_LABELS[ref.module] ?? ref.module;
+}
+
+/** " - Contacts" style suffix (plural module label) shown after a relation link. */
+export function referenceModuleSuffix(value: unknown): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const ref = value as Partial<ModuleRecordReference>;
+  if (!ref.module || (!ref.id && !ref.name?.trim())) return undefined;
+  const screen = resolveModuleScreenByApiName(ref.module);
+  return ` - ${screen?.pluralLabel ?? ref.module}`;
 }
 
 /**
@@ -76,9 +88,15 @@ export function buildTasksBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    if (!field || !visible(field, record)) return [];
-    const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
-    return [{ field, value: record.fields[name] ?? null, ...(valueSuffix ? { valueSuffix } : {}) }];
+    return field && visible(field, record)
+      ? [
+          {
+            field,
+            value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
+          },
+        ]
+      : [];
   });
 }
 
@@ -108,13 +126,12 @@ export function buildTasksDetailSections(
               : name === "Modified_By"
                 ? record.fields.Modified_Time
                 : undefined;
-          const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
           fields.push({
-            ...(valueSuffix ? { valueSuffix } : {}),
             column:
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field,
             value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
         }

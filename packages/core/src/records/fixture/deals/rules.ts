@@ -32,7 +32,9 @@ export function applyDealRules(
     fields.Reason_For_Loss__s = null;
   }
   const revenue =
-    typeof fields.Amount === "number" ? (fields.Amount * Number(fields.Probability)) / 100 : null;
+    typeof fields.Amount === "number" && typeof fields.Probability === "number"
+      ? (fields.Amount * fields.Probability) / 100
+      : null;
   fields.Expected_Revenue = revenue === null ? null : roundMoneyTwoDecimals(revenue);
   if (!previous || previous.Stage !== fields.Stage)
     fields.Stage_Modified_Time = fields.Modified_Time ?? null;

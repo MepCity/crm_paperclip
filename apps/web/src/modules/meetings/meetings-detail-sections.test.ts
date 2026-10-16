@@ -381,7 +381,7 @@ test("business card stays static and adds the shared plural Related To suffix", 
     metadata,
     meetingRecord({ What_Id: { id: "deal-1", name: "Planning Deal", module: "Deals" } }),
   );
-  expect(fields[0]?.valueSuffix).toBe("- Deals");
+  expect(fields[0]?.suffix).toBe(" - Deals");
   expect(fields[0]?.field.readOnly).toBe(true);
   expect(metadata.fields[0]?.readOnly).toBe(false);
 });

@@ -1,15 +1,18 @@
+import type { RecordData } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
 import { accountsFormRules } from "../accounts/accounts-form-rules";
-import { isDealInlineEditable } from "../deals/deals-inline-edit";
-import { formatDealsLastUpdateLabel } from "../deals/deals-last-update";
+import { isAccountInlineEditable } from "../accounts/accounts-inline-edit";
+import { formatAccountsLastUpdateLabel } from "../accounts/accounts-last-update";
+import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
 import { MEETINGS_LIST_CURRENCY_CODE, meetingsListPageConfig } from "./list-config";
 import { buildMeetingsFilterGroups } from "./list-filters";
-import { MeetingRecordScreen } from "./meeting-record-screen";
+import { meetingParticipants } from "./meeting-participants";
 import {
   buildMeetingsBusinessCardFields,
   buildMeetingsDetailSections,
 } from "./meetings-detail-sections";
+import { MeetingsParticipantsCard } from "./meetings-participants-card";
 import { meetingsRecordHeaderIdentity } from "./meetings-record-header";
 import {
   buildMeetingsRecordMoreMenuGroups,
@@ -24,6 +27,7 @@ import {
   normalizeMeetingsEventKind,
 } from "./meetings-timeline";
 
+/** Interim: the Meetings form still borrows the neutral Accounts form rules. */
 export const meetingsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Events",
   tab: "Meetings",
@@ -40,25 +44,31 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
     inventoryChrome: true,
   },
   detail: {
+    layout: "activity",
+    titleGlyph: Icons.calendar,
     header: meetingsRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
-    lastUpdatePlacement: "tab-row",
-    addTags: { label: "Add Tags", laterModule: "M6" },
-    Screen: MeetingRecordScreen,
+    addTags: { label: "Add Tags", laterModule: "M5" },
     businessCard: buildMeetingsBusinessCardFields,
     sections: buildMeetingsDetailSections,
-    inlineEditable: isDealInlineEditable,
-    lastUpdate: formatDealsLastUpdateLabel,
+    inlineEditable: isAccountInlineEditable,
+    lastUpdate: formatAccountsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildMeetingsRecordMoreMenuGroups,
     deleteTitle: MEETINGS_DELETE_CONFIRM_TITLE,
     deleteMessage: MEETINGS_DELETE_CONFIRM_MESSAGE,
+    BetweenCards: ({ record }: { record: RecordData }) => (
+      <MeetingsParticipantsCard participants={meetingParticipants(record.fields.Participants)} />
+    ),
+    SidePanel: ActivitySidePanel,
     timeline: {
       subtabs: MEETINGS_TIMELINE_SUBTABS,
       modules: MEETINGS_TIMELINE_MODULE_OPTIONS,
       sources: MEETINGS_TIMELINE_SOURCE_OPTIONS,
       events: MEETINGS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeMeetingsEventKind,
+      upcomingAutomatedActions: { label: "Upcoming Automated Actions", laterModule: "M11" },
     },
   },
 };
