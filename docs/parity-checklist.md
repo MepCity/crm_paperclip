@@ -676,3 +676,13 @@ Related To and Contact Name link to the related record when the target module is
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
 
+
+### Notes in Timeline History — MEP-580
+
+| Inventory | Behaviour | Status |
+| --- | --- | --- |
+| 80 | "Note added" event per note, merged chronologically with other history events; Modules filter "Notes" keeps only note events | Done |
+| 81 | Long note body clamped with Show More / Show Less (inline) | Done |
+| 108 | "Add Note" + down indicator under a note event | Interim: non-interactive label (behaviour unobserved) — gate list |
+
+Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. The applied history filter (Modules, Users, Time) now filters events client-side; Sources has no effect yet.
