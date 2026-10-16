@@ -62,6 +62,7 @@ export function RecordHeader({
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
+  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
