@@ -43,7 +43,7 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { moduleDeduplicatePath, moduleRecordEditPath, withSearchParams } from "@/lib/crm-paths";
+import { moduleDeduplicatePath, withSearchParams } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -819,7 +819,7 @@ function ModuleListScreenLoaded({
               allDayField={config.allDayField}
               rowEditHref={
                 config.rowEditLink
-                  ? (record) => moduleRecordEditPath(orgSlug, config.module, record.id)
+                  ? (record) => `${config.paths.record(orgSlug, config.module, record.id)}/edit`
                   : undefined
               }
               columns={columns}

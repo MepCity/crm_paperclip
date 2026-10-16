@@ -1650,10 +1650,25 @@ it("requests the hidden all-day field for Meetings without adding a visible colu
   const service = createClientRecordService(records, {
     listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
   });
-  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={meetingsListPageConfig} />, {
-    wrapper: wrapper(service),
-  });
+  render(
+    <ModuleListScreen
+      orgSlug={ctx.orgSlug}
+      config={{
+        ...meetingsListPageConfig,
+        paths: {
+          ...meetingsListPageConfig.paths,
+          record: (slug, _module, id) => `/crm/${slug}/tab/Meetings/${id}`,
+        },
+      }}
+    />,
+    {
+      wrapper: wrapper(service),
+    },
+  );
   await screen.findByRole("table", { name: "Records" });
   await waitFor(() => expect(listSpy.mock.calls.at(-1)?.[1]?.fields).toContain("All_day"));
   expect(screen.queryByRole("columnheader", { name: "All day" })).toBeNull();
+  expect(screen.getAllByRole("link", { name: "Edit record" })[0]?.getAttribute("href")).toMatch(
+    /\/tab\/Meetings\/[^/]+\/edit$/,
+  );
 });
