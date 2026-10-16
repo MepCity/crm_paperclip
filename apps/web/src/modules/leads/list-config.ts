@@ -2,9 +2,11 @@ import type { ModuleApiName } from "@crm/core/records";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
+  moduleDraftsPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordPath,
+  moduleTagsPath,
 } from "@/lib/crm-paths";
 import { leadsFilterGroups } from "./list-filters";
 
@@ -77,7 +79,7 @@ export const leadsListPageConfig: ModuleListScreenConfig = {
     { id: "mass-delete", label: "Mass Delete" },
     { id: "mass-update", label: "Mass Update" },
     { id: "mass-convert", label: "Mass Convert" },
-    { id: "tags", label: "Manage Tags", laterModule: "M11" },
+    { id: "tags", label: "Manage Tags" },
     { id: "assignment-rules", label: "Assignment Rules", laterModule: "M12" },
     { id: "drafts", label: "Drafts" },
     { id: "mass-email", label: "Mass Email", laterModule: "M10" },
@@ -94,5 +96,7 @@ export const leadsListPageConfig: ModuleListScreenConfig = {
     customList: moduleListCustomPath,
     record: moduleRecordPath,
     create: moduleCreatePath,
+    tags: moduleTagsPath,
+    drafts: moduleDraftsPath,
   },
 };

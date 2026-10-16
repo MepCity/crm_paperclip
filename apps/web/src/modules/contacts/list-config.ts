@@ -1,9 +1,11 @@
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
+  moduleDraftsPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordPath,
+  moduleTagsPath,
 } from "@/lib/crm-paths";
 import { contactsFilterGroups } from "./list-filters";
 
@@ -83,7 +85,7 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
       { id: "mass-transfer", label: "Mass Transfer" },
       { id: "mass-delete", label: "Mass Delete" },
       { id: "mass-update", label: "Mass Update" },
-      { id: "tags", label: "Manage Tags", laterModule: "M6" },
+      { id: "tags", label: "Manage Tags" },
       { id: "drafts", label: "Drafts" },
       { id: "mass-email", label: "Mass Email", laterModule: "M10" },
       { id: "approve", label: "Approve Contacts" },
@@ -100,5 +102,7 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
     customList: moduleListCustomPath,
     record: moduleRecordPath,
     create: moduleCreatePath,
+    tags: moduleTagsPath,
+    drafts: moduleDraftsPath,
   },
 };

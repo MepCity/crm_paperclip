@@ -40,7 +40,10 @@ test("keeps the Deals Actions inventory in reference order and assigns later mod
   ).toBe("P3");
   expect(
     dealsListPageConfig.inventory?.actions.find((item) => item.id === "tags")?.laterModule,
-  ).toBe("M6");
+  ).toBeUndefined();
+  expect(
+    dealsListPageConfig.inventory?.actions.find((item) => item.id === "drafts")?.laterModule,
+  ).toBeUndefined();
   expect(
     dealsListPageConfig.inventory?.actions.find((item) => item.id === "export")?.laterModule,
   ).toBe("M6");

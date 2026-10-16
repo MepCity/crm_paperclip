@@ -1689,3 +1689,35 @@ it("applies and clears activities system filter on module list", async () => {
     expect(countQuery?.activityFilter).toBeUndefined();
   });
 });
+
+it("navigates to Manage Tags when Manage Tags is clicked in Actions menu", async () => {
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  const user = userEvent.setup();
+
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+
+  await user.click(screen.getByRole("button", { name: "Actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Manage Tags" }));
+
+  expect(navigation.push).toHaveBeenCalledWith(`/crm/${ctx.orgSlug}/tab/Leads/tags`);
+});
+
+it("navigates to Drafts when Drafts is clicked in Actions menu", async () => {
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  const user = userEvent.setup();
+
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+
+  await user.click(screen.getByRole("button", { name: "Actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Drafts" }));
+
+  expect(navigation.push).toHaveBeenCalledWith(`/crm/${ctx.orgSlug}/tab/Leads/drafts`);
+});

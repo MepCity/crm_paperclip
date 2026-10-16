@@ -1,9 +1,12 @@
 "use client";
 
 import type { FieldValue } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-conflict-route";
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
+import { DraftsPage } from "@/components/records/drafts/drafts-page";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
+import { ManageTagsPage } from "@/components/records/tags/manage-tags-page";
 import {
   moduleListDefaultPath,
   moduleRecordClonePath,
@@ -22,7 +25,9 @@ export type ModuleRouteKind =
   | "edit"
   | "clone"
   | "merge"
-  | "deduplicate";
+  | "deduplicate"
+  | "tags"
+  | "drafts";
 
 export function ModuleRouteClient({
   moduleTab,
@@ -43,6 +48,17 @@ export function ModuleRouteClient({
 }) {
   const definition = resolveModuleScreen(moduleTab);
   if (!definition) throw new Error("Unknown module screen.");
+  const router = useRouter();
+  if (kind === "tags") {
+    const listHref = moduleListDefaultPath(orgSlug, definition.tab);
+    return (
+      <ManageTagsPage moduleName={definition.pluralLabel} onBack={() => router.push(listHref)} />
+    );
+  }
+  if (kind === "drafts") {
+    const listHref = moduleListDefaultPath(orgSlug, definition.tab);
+    return <DraftsPage onBack={() => router.push(listHref)} />;
+  }
   if (kind === "list")
     return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
   if (kind === "deduplicate")
