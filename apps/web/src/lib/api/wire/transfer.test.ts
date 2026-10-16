@@ -71,7 +71,15 @@ function runImportWith(body: unknown, svc = service()) {
 
 describe("constants and paths", () => {
   it("exposes the modules and the file budget", () => {
-    expect(TRANSFER_MODULES).toEqual(["Leads", "Contacts", "Accounts", "Deals"]);
+    expect(TRANSFER_MODULES).toEqual([
+      "Leads",
+      "Contacts",
+      "Accounts",
+      "Deals",
+      "Tasks",
+      "Events",
+      "Calls",
+    ]);
     expect(TRANSFER_FILE_BYTES).toBe(25_000_000);
   });
 
