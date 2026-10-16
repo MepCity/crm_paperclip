@@ -59,6 +59,24 @@ test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
   await expect(page).toHaveURL(/sort_by=Account_Name/);
 });
 
+test("Accounts view menu: show custom views as Dropdown stays inert (AL-02.10)", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Accounts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("[data-view-pill]")).toHaveText("All Accounts");
+  const url = page.url();
+  await list.getByRole("button", { name: "Custom views" }).click();
+  await page.getByRole("menuitem", { name: "Show custom views as Dropdown" }).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(0);
+  await expect(page).toHaveURL(url);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(list.locator("[data-view-pill]")).toHaveText("All Accounts");
+  await expect(list.getByRole("button", { name: "All Locked Accounts" })).toBeVisible();
+});
+
 test("Accounts filters, alphabet, paging and record route", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);

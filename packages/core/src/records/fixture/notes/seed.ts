@@ -20,7 +20,7 @@ export function generateFixtureNotes(
   return notesParentModules.map((module, index) => {
     const parent = parentGenerators[module](seed, now)[0];
     if (!parent) throw new Error(`Missing fixture parent for ${module}.`);
-    const id = String(140000000000000000n + BigInt(index));
+    const id = String(180000000000000000n + BigInt(index));
     const fields: Record<string, FieldValue> = Object.fromEntries(
       notesMetadata.fields.map((field) => [field.apiName, null]),
     );
