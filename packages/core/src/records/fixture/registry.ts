@@ -3,6 +3,9 @@ import { accountsMetadata } from "./accounts/metadata";
 import { fullName as accountsFullName, generateFixtureAccounts } from "./accounts/seed";
 import { accountsViews } from "./accounts/views";
 import { activityDeleteHook } from "./activity-hooks";
+import { attachmentsHooks, removeAttachmentsForParents } from "./attachments/hooks";
+import { attachmentsMetadata } from "./attachments/metadata";
+import { generateFixtureAttachments } from "./attachments/seed";
 import { callsHooks } from "./calls/hooks";
 import { callsMetadata } from "./calls/metadata";
 import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
@@ -91,6 +94,7 @@ function parentDeleteHook(module: string, existing?: FixtureModuleHooks["afterDe
         ids,
         ctx,
       );
+    removeAttachmentsForParents(module, ids, ctx);
     removeNotesForParents(module, ids, ctx);
     if (module === "Deals" || module === "Contacts")
       removeContactRolesFor(module === "Deals" ? "Deal" : "Contact", ids, ctx);
@@ -146,6 +150,29 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     managedFields: new Set(["id", "Created_By", "Modified_By", "Created_Time", "Modified_Time"]),
     searchFields: [],
     initialNextId: 240000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Attachments: {
+    ...attachmentsHooks,
+    childModule: true,
+    metadata: attachmentsMetadata,
+    views: [
+      {
+        id: "all-attachments",
+        name: "All Attachments",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["File_Name", "Size", "Parent_Id"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "File_Name",
+    generateSeed: generateFixtureAttachments,
+    fullName: (fields) => String(fields.File_Name ?? ""),
+    managedFields: new Set(["Created_By", "Modified_By", "Created_Time", "Modified_Time", "id"]),
+    searchFields: ["File_Name"],
+    initialNextId: 190000000000000000n,
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Notes: {
