@@ -406,7 +406,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
     }
   });
 
-  const cases: { operator: string; fill: () => Promise<void>; body: unknown }[] = [
+  const cases: { operator: string; fill: () => Promise<void>; body: Record<string, unknown> }[] = [
     {
       operator: "On",
       fill: async () => {
@@ -499,7 +499,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
     );
     await apply.click();
     await bulkResponse;
-    expect(lastBulkBody).toEqual(body);
+    expect(lastBulkBody).toEqual({ ...body, include_activity_summary: true });
     void operator;
   }
 });
