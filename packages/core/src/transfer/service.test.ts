@@ -69,7 +69,7 @@ async function data(
     Account_Name: account.id,
   };
 }
-const modules: TransferModule[] = ["Leads", "Contacts", "Accounts", "Deals"];
+const modules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 const match = { Leads: "Email", Contacts: "Email", Accounts: "Account_Name", Deals: "Deal_Name" };
 
 describe("transfer record-service integration", () => {
@@ -573,4 +573,150 @@ describe("transfer budgets", () => {
       ).rejects.toMatchObject({ code, name: "AppError" });
     }
   });
+});
+
+const activityInputs = {
+  Tasks: { Subject: "Transfer task", Due_Date: "2026-12-01" },
+  Events: {
+    Event_Title: "Transfer meeting",
+    Start_DateTime: "2026-12-01T12:00:00.000Z",
+    End_DateTime: "2026-12-01T13:00:00.000Z",
+    Meeting_Venue__s: "Client location",
+  },
+  Calls: {
+    Subject: "Transfer call",
+    Call_Type: "Outbound",
+    Call_Start_Time: "2026-12-01T12:00:00.000Z",
+    Call_Duration: "05:00",
+  },
+} satisfies Record<string, Record<string, string>>;
+
+describe("activity transfers", () => {
+  it.each(["Tasks", "Events", "Calls"] as const)(
+    "%s imports, exports, updates by Record Id and undoes through generic delete",
+    async (module) => {
+      const s = setup();
+      const parent = await s.records.create("Accounts", { Account_Name: "Transfer parent" });
+      const person = await s.records.create("Contacts", { Last_Name: "Transfer person" });
+      const input: Record<string, string> = {
+        ...activityInputs[module],
+        What_Id: parent.id,
+        Who_Id: person.id,
+        $se_module: "Accounts",
+        ...(module === "Calls" ? {} : { Owner: s.ctx.userId }),
+      };
+      const preview = await s.preview(module, Object.keys(input), [Object.values(input)]);
+      expect(preview.matchFields).toEqual([{ field: "id", label: "Record Id" }]);
+      const job = await s.run(module, [input]);
+      expect(job).toMatchObject({ module, status: "completed", counts: { created: 1, errors: 0 } });
+      const exported = await s.service.runExport(s.ctx, { module, fields: "all" });
+      const csv = parseCsv(
+        new TextEncoder().encode((await s.service.downloadExport(s.ctx, exported.id)).body),
+        {
+          charset: "UTF-8",
+          maxColumns: 500,
+          maxRows: 5000,
+        },
+      );
+      const metadata = await s.records.getModule(module);
+      const title = module === "Events" ? "Event_Title" : "Subject";
+      const label = metadata.fields.find((field) => field.apiName === title)?.label ?? "";
+      const row = csv.rows.find((row) => row[csv.headers.indexOf(label)] === input[title]);
+      expect(row).toBeDefined();
+      const id = row?.[0] ?? "";
+      for (const [key, value] of Object.entries(input)) {
+        if (key === "$se_module") continue;
+        const field = metadata.fields.find((field) => field.apiName === key);
+        expect(row?.[csv.headers.indexOf(field?.label ?? "")]).toBe(value);
+      }
+      const updated = await s.run(module, [{ id, [title]: "Updated transfer" }], {
+        mode: "update",
+      });
+      expect(updated.counts.updated).toBe(1);
+      expect((await s.records.get(module, id)).fields[title]).toBe("Updated transfer");
+      expect(await s.service.listImports(s.ctx)).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: job.id, module })]),
+      );
+      expect(await s.service.listExports(s.ctx)).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: exported.id, module })]),
+      );
+      const remove = vi.spyOn(s.records, "delete");
+      expect((await s.service.undoImport(s.ctx, job.id)).status).toBe("undone");
+      expect(remove).toHaveBeenCalledWith(module, [id]);
+      await expect(s.records.get(module, id)).rejects.toMatchObject({ code: "not_found" });
+    },
+    15_000,
+  );
+
+  it.each(["Tasks", "Events", "Calls"] as const)(
+    "%s enforces metadata required fields and rejects subject matching",
+    async (module) => {
+      const s = setup();
+      const metadata = await s.records.getModule(module);
+      const required = metadata.fields.find(
+        (field) => field.required && field.views.create && !field.readOnly,
+      );
+      expect(required).toBeDefined();
+      const input: Record<string, string> = { ...activityInputs[module] };
+      delete input[required?.apiName ?? ""];
+      await expect(s.run(module, [input])).rejects.toMatchObject({
+        code: "mapping_missing_required",
+      });
+      await expect(
+        s.run(module, [activityInputs[module]], {
+          matchField: module === "Events" ? "Event_Title" : "Subject",
+        }),
+      ).rejects.toMatchObject({ code: "invalid_match_field" });
+    },
+  );
+
+  it("keeps Call Owner outside writable import fields", async () => {
+    const s = setup();
+    await expect(
+      s.run("Calls", [{ ...activityInputs.Calls, Owner: s.ctx.userId }]),
+    ).rejects.toMatchObject({ code: "mapping_system_field" });
+  });
+
+  it.each(["Tasks", "Events", "Calls"] as const)(
+    "%s rejects parent names, unknown and unreadable IDs with row errors",
+    async (module) => {
+      const s = setup();
+      const parent = await s.records.create("Accounts", { Account_Name: "Named parent" });
+      const get = s.records.get.bind(s.records);
+      vi.spyOn(s.records, "get").mockImplementation(async (name, id) => {
+        if (name === "Accounts" && id === parent.id) throw new ForbiddenError();
+        return get(name, id);
+      });
+      for (const [value, code] of [
+        ["Named parent", "not_found"],
+        ["missing-id", "not_found"],
+        [parent.id, "permission_denied"],
+      ]) {
+        const job = await s.run(module, [
+          { ...activityInputs[module], What_Id: value ?? "", $se_module: "Accounts" },
+        ]);
+        expect(job.counts).toEqual({ created: 0, updated: 0, skipped: 0, errors: 1 });
+        expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "What_Id" }]);
+      }
+      const person = await s.records.create("Contacts", { Last_Name: "Named person" });
+      for (const [value, code] of [
+        ["Named person", "not_found"],
+        ["missing-person-id", "not_found"],
+        [person.id, "permission_denied"],
+      ]) {
+        vi.mocked(s.records.get).mockImplementation(async (name, id) => {
+          if (name === "Contacts" && id === person.id) throw new ForbiddenError();
+          return get(name, id);
+        });
+        const job = await s.run(module, [{ ...activityInputs[module], Who_Id: value ?? "" }]);
+        expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "Who_Id" }]);
+      }
+      const invalid = await s.run(module, [
+        { ...activityInputs[module], What_Id: parent.id, $se_module: "Tasks" },
+      ]);
+      expect(invalid.rows).toEqual([
+        { row: 2, outcome: "error", code: "invalid_value", field: "$se_module" },
+      ]);
+    },
+  );
 });

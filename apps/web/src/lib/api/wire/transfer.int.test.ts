@@ -137,10 +137,11 @@ describe("transfer routes", () => {
     });
     expect(json.status).toBe(400);
     const badModule = await call("runExport", a, {
-      params: { module: "Tasks" },
+      params: { module: "Unsupported" },
       json: { fields: "all" },
     });
     expect(badModule.status).toBe(400);
+    expect(await badModule.json()).toMatchObject({ code: "INVALID_DATA" });
     const badSettings = await call("runImport", a, {
       params,
       json: { uploadId: "u", settings: { mode: "nope" } },
@@ -149,6 +150,28 @@ describe("transfer routes", () => {
     const expired = await call("runImport", a, { params, json: { uploadId: "u", settings } });
     expect(expired.status).toBeGreaterThanOrEqual(400);
     expect(await expired.json()).toMatchObject({ details: expect.anything() });
+  });
+
+  it.each(["Tasks", "Events", "Calls"])("%s accepts activity module API names", async (module) => {
+    const params = { module };
+    const preview = await call("previewImport", a, {
+      params,
+      body: upload("Subject\nActivity transfer\n"),
+    });
+    expect(preview.status).toBe(200);
+    expect(await preview.json()).toMatchObject({
+      matchFields: [{ field: "id", label: "Record Id" }],
+    });
+    const sample = await call("sampleCsv", a, { params });
+    expect(sample.status).toBe(200);
+    const exported = await call("runExport", a, { params, json: { fields: "all" } });
+    expect(exported.status).toBe(200);
+    expect(await exported.json()).toMatchObject({ module, status: "completed" });
+    const expired = await call("runImport", a, {
+      params,
+      json: { uploadId: "expired", settings },
+    });
+    expect(await expired.json()).toMatchObject({ code: "upload_expired" });
   });
 
   it("cuts a multipart body at the budget while streaming", async () => {
