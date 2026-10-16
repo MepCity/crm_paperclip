@@ -85,3 +85,67 @@ test("search finds a Task by subject and opens the Tasks record detail", async (
   await expect(page).toHaveURL(/\/tab\/Tasks\/[^/]+$/);
   await expect(page.locator("[data-record-header]")).toContainText("Zephyrquartz follow-up");
 });
+
+test("search finds a Meeting by title and opens the Meetings record detail", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  // Meetings use the Events API endpoint; Event_Title is the searchable title field.
+  const response = await page.request.post("/crm/v2.2/Events", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: {
+      data: [
+        {
+          Event_Title: "Zephrysearch Meeting",
+          Start_DateTime: "2026-06-01T10:00:00.000Z",
+          End_DateTime: "2026-06-01T11:00:00.000Z",
+          All_day: false,
+          Meeting_Venue__s: "In-office",
+        },
+      ],
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  await page.getByRole("button", { name: "Search records" }).click();
+  const dialog = page.getByRole("dialog", { name: "Search records" });
+  await dialog.getByRole("textbox", { name: "Search records" }).fill("Zephrysearch");
+  await expect(dialog.getByRole("region", { name: "Meetings" })).toBeVisible();
+  // Detail screen for Meetings is still being built (MEP-507): assert URL only.
+  // Interim record header yields an empty result title, so click the (empty) group link.
+  await dialog
+    .getByRole("region", { name: "Meetings" })
+    .getByRole("link")
+    .first()
+    .dispatchEvent("click");
+  await expect(page).toHaveURL(/\/tab\/Meetings\/[^/]+$/);
+});
+
+test("search finds a Call by subject and opens the Calls record detail", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Calls", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: {
+      data: [
+        {
+          Subject: "Zephrysearch Call",
+          Call_Type: "Outbound",
+          Call_Start_Time: "2026-06-01T10:00:00.000Z",
+          Call_Duration: "00:30",
+        },
+      ],
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  await page.getByRole("button", { name: "Search records" }).click();
+  const dialog = page.getByRole("dialog", { name: "Search records" });
+  await dialog.getByRole("textbox", { name: "Search records" }).fill("Zephrysearch");
+  await expect(dialog.getByRole("region", { name: "Calls" })).toBeVisible();
+  // Detail screen for Calls is still being built (MEP-508): assert URL only.
+  // Interim record header yields an empty result title, so click the (empty) group link.
+  await dialog
+    .getByRole("region", { name: "Calls" })
+    .getByRole("link")
+    .first()
+    .dispatchEvent("click");
+  await expect(page).toHaveURL(/\/tab\/Calls\/[^/]+$/);
+});
