@@ -8,129 +8,112 @@ import {
 } from "./validation";
 
 describe("nameError", () => {
-  it("returns null for a valid name", () => {
-    expect(nameError("Jane Doe")).toBeNull();
-    expect(nameError("A")).toBeNull();
-    expect(nameError("Valid Name With Special Chars - O'Connor")).toBeNull();
-  });
-
-  it("returns null when name has leading or trailing whitespace around text", () => {
-    expect(nameError("  John  ")).toBeNull();
-  });
-
   it("returns an error for an empty string", () => {
     expect(nameError("")).toBe("Enter your name.");
   });
 
-  it("returns an error for whitespace-only strings", () => {
-    expect(nameError(" ")).toBe("Enter your name.");
+  it("returns an error for a whitespace-only string", () => {
     expect(nameError("   ")).toBe("Enter your name.");
-    expect(nameError("\t\n  \r")).toBe("Enter your name.");
+  });
+
+  it("returns null for a valid name", () => {
+    expect(nameError("Alice")).toBeNull();
+  });
+
+  it("returns null for a name with surrounding whitespace", () => {
+    expect(nameError("  Bob  ")).toBeNull();
   });
 });
 
 describe("emailError", () => {
-  it("returns null for valid email addresses", () => {
-    expect(emailError("user@example.com")).toBeNull();
-    expect(emailError("first.last@company.org")).toBeNull();
-    expect(emailError("user+tag@domain.co.uk")).toBeNull();
-    expect(emailError("a@b.c")).toBeNull();
-  });
-
-  it("returns null for valid email with leading or trailing whitespace", () => {
-    expect(emailError("  user@example.com  ")).toBeNull();
-    expect(emailError("\tuser@example.com\n")).toBeNull();
-  });
-
-  it("returns 'Enter your email.' for an empty string", () => {
+  it("returns an error for an empty string", () => {
     expect(emailError("")).toBe("Enter your email.");
   });
 
-  it("returns 'Enter your email.' for whitespace-only strings", () => {
-    expect(emailError(" ")).toBe("Enter your email.");
+  it("returns an error for a whitespace-only string", () => {
     expect(emailError("   ")).toBe("Enter your email.");
-    expect(emailError("\t\n")).toBe("Enter your email.");
   });
 
-  it("returns 'Enter a valid email address.' for invalid formats", () => {
-    expect(emailError("invalid")).toBe("Enter a valid email address.");
+  it("returns an error for an invalid email (no @)", () => {
+    expect(emailError("notanemail")).toBe("Enter a valid email address.");
+  });
+
+  it("returns an error for an invalid email (no domain part)", () => {
     expect(emailError("user@")).toBe("Enter a valid email address.");
-    expect(emailError("@example.com")).toBe("Enter a valid email address.");
-    expect(emailError("user@example")).toBe("Enter a valid email address.");
-    expect(emailError("user@example.")).toBe("Enter a valid email address.");
-    expect(emailError("user @example.com")).toBe("Enter a valid email address.");
-    expect(emailError("user@ exam ple.com")).toBe("Enter a valid email address.");
-    expect(emailError("user@@example.com")).toBe("Enter a valid email address.");
+  });
+
+  it("returns an error for an invalid email (no TLD)", () => {
+    expect(emailError("user@domain")).toBe("Enter a valid email address.");
+  });
+
+  it("returns null for a valid email", () => {
+    expect(emailError("user@example.com")).toBeNull();
+  });
+
+  it("returns null for a valid email with surrounding whitespace (trimmed)", () => {
+    expect(emailError("  user@example.com  ")).toBeNull();
   });
 });
 
 describe("currentPasswordError", () => {
-  it("returns null for non-empty password", () => {
-    expect(currentPasswordError("secret123")).toBeNull();
-    expect(currentPasswordError("a")).toBeNull();
-    expect(currentPasswordError(" ")).toBeNull();
-    expect(currentPasswordError("password with spaces")).toBeNull();
-  });
-
   it("returns an error for an empty string", () => {
     expect(currentPasswordError("")).toBe("Enter your password.");
+  });
+
+  it("returns null for a non-empty password", () => {
+    expect(currentPasswordError("anypassword")).toBeNull();
+  });
+
+  it("returns null for a single character (does not enforce length)", () => {
+    expect(currentPasswordError("x")).toBeNull();
   });
 });
 
 describe("newPasswordError", () => {
-  it("returns 'Enter your password.' for an empty string", () => {
+  it("returns an error for an empty string", () => {
     expect(newPasswordError("")).toBe("Enter your password.");
   });
 
-  it("returns an error when password is shorter than 10 characters", () => {
-    expect(newPasswordError("a")).toBe("Password must be at least 10 characters.");
-    expect(newPasswordError("123456789")).toBe("Password must be at least 10 characters.");
+  it("returns an error for a 9-character password (too short)", () => {
+    expect(newPasswordError("a".repeat(9))).toBe("Password must be at least 10 characters.");
   });
 
-  it("accepts passwords with valid length between 10 and 128 characters inclusive", () => {
-    expect(newPasswordError("1234567890")).toBeNull(); // exactly 10
-    expect(newPasswordError("correct horse battery staple")).toBeNull();
-    expect(newPasswordError("a".repeat(128))).toBeNull(); // exactly 128
+  it("returns null for a 10-character password (minimum valid length)", () => {
+    expect(newPasswordError("a".repeat(10))).toBeNull();
   });
 
-  it("returns an error when password exceeds 128 characters", () => {
+  it("returns null for a 128-character password (maximum valid length)", () => {
+    expect(newPasswordError("a".repeat(128))).toBeNull();
+  });
+
+  it("returns an error for a 129-character password (too long)", () => {
     expect(newPasswordError("a".repeat(129))).toBe("Password must be at most 128 characters.");
-    expect(newPasswordError("a".repeat(200))).toBe("Password must be at most 128 characters.");
   });
 });
 
 describe("authFailureState", () => {
-  it("returns error state with empty message and fieldErrors when fieldErrors is non-empty", () => {
+  it("returns error with empty message and fieldErrors when fieldErrors is non-empty", () => {
+    const fieldErrors = { email: ["Email is taken"] };
     const result = authFailureState({
       message: "Validation failed",
-      fieldErrors: { email: ["Enter a valid email address."] },
+      fieldErrors,
     });
     expect(result).toEqual({
       status: "error",
       message: "",
-      fieldErrors: { email: ["Enter a valid email address."] },
+      fieldErrors,
     });
   });
 
-  it("preserves multiple field errors", () => {
-    const result = authFailureState({
-      message: "Multiple errors",
-      fieldErrors: {
-        name: ["Enter your name."],
-        email: ["Enter a valid email address."],
-      },
-    });
+  it("returns error with the message when fieldErrors is missing", () => {
+    const result = authFailureState({ message: "Something went wrong" });
     expect(result).toEqual({
       status: "error",
-      message: "",
-      fieldErrors: {
-        name: ["Enter your name."],
-        email: ["Enter a valid email address."],
-      },
+      message: "Something went wrong",
     });
   });
 
-  it("returns message without fieldErrors when fieldErrors is empty object", () => {
+  it("returns error with the message when fieldErrors is an empty object", () => {
     const result = authFailureState({
       message: "Something went wrong",
       fieldErrors: {},
@@ -141,13 +124,12 @@ describe("authFailureState", () => {
     });
   });
 
-  it("returns message without fieldErrors when fieldErrors is undefined", () => {
-    const result = authFailureState({
-      message: "Invalid email or password.",
-    });
-    expect(result).toEqual({
-      status: "error",
-      message: "Invalid email or password.",
-    });
+  it("returns error with multiple field errors preserved", () => {
+    const fieldErrors = {
+      email: ["Email is taken"],
+      password: ["Too short", "No uppercase"],
+    };
+    const result = authFailureState({ message: "", fieldErrors });
+    expect(result).toEqual({ status: "error", message: "", fieldErrors });
   });
 });

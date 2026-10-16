@@ -32,6 +32,7 @@ const expectedIcons = [
   "columnSortDesc",
   "building",
   "check",
+  "checkSquare",
   "chevronUp",
   "folder",
   "home",

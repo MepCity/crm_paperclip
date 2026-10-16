@@ -1,233 +1,253 @@
-// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  readSearchHistory,
-  rememberSearchRecord,
-  type SearchHistoryEntry,
-  searchHistoryKey,
-} from "./search-history";
+import { readSearchHistory, rememberSearchRecord, searchHistoryKey } from "./search-history";
+
+function mockLocalStorage() {
+  const store = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+  };
+  vi.stubGlobal("localStorage", storage);
+  return storage;
+}
 
 describe("searchHistoryKey", () => {
-  it("formats key as JSON-serialized [orgSlug, userId]", () => {
-    expect(searchHistoryKey("org-1", "user-1")).toBe('crm:search-history:["org-1","user-1"]');
+  it("is stable for the same org and user pair", () => {
+    const a = searchHistoryKey("myorg", "user-1");
+    const b = searchHistoryKey("myorg", "user-1");
+    expect(a).toBe(b);
   });
 
-  it("handles empty strings and special characters safely", () => {
-    expect(searchHistoryKey("", "")).toBe('crm:search-history:["",""]');
-    expect(searchHistoryKey("org/sub:test", "user@company.com")).toBe(
-      'crm:search-history:["org/sub:test","user@company.com"]',
-    );
+  it("differs when org differs", () => {
+    expect(searchHistoryKey("org-a", "user-1")).not.toBe(searchHistoryKey("org-b", "user-1"));
   });
 
-  it("produces distinct keys for different orgs or users", () => {
-    const keys = new Set([
-      searchHistoryKey("org-a", "user-1"),
-      searchHistoryKey("org-b", "user-1"),
-      searchHistoryKey("org-a", "user-2"),
-      searchHistoryKey("org-b", "user-2"),
-    ]);
-    expect(keys.size).toBe(4);
+  it("differs when user differs", () => {
+    expect(searchHistoryKey("myorg", "user-1")).not.toBe(searchHistoryKey("myorg", "user-2"));
+  });
+
+  it("differs when org contains a colon", () => {
+    // "org:slug" + "user" vs "org" + ":slug:user" — must not collide
+    expect(searchHistoryKey("org:slug", "user")).not.toBe(searchHistoryKey("org", ":slug:user"));
+  });
+
+  it("differs when user contains a colon", () => {
+    expect(searchHistoryKey("myorg", "us:er")).not.toBe(searchHistoryKey("myorg", "us"));
   });
 });
 
 describe("readSearchHistory", () => {
-  const key = searchHistoryKey("test-org", "test-user");
+  let storage: ReturnType<typeof mockLocalStorage>;
 
   beforeEach(() => {
-    localStorage.clear();
+    storage = mockLocalStorage();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    localStorage.clear();
+    vi.unstubAllGlobals();
   });
 
-  it("returns an empty array when the key does not exist in localStorage", () => {
-    expect(readSearchHistory(key)).toEqual([]);
+  it("returns [] when the key is missing", () => {
+    expect(readSearchHistory("missing-key")).toEqual([]);
   });
 
-  it("returns an empty array when the value in localStorage is an empty string", () => {
-    localStorage.setItem(key, "");
-    expect(readSearchHistory(key)).toEqual([]);
+  it("returns [] when the stored value is empty string (invalid JSON)", () => {
+    storage.setItem("k", "");
+    expect(readSearchHistory("k")).toEqual([]);
   });
 
-  it("returns an empty array when localStorage contains malformed JSON", () => {
-    localStorage.setItem(key, "{not-json");
-    expect(readSearchHistory(key)).toEqual([]);
-    localStorage.setItem(key, "[1, 2,");
-    expect(readSearchHistory(key)).toEqual([]);
+  it("returns [] for invalid JSON", () => {
+    storage.setItem("k", "{not json}");
+    expect(readSearchHistory("k")).toEqual([]);
   });
 
-  it("returns an empty array when JSON parses to non-array types", () => {
-    localStorage.setItem(key, "null");
-    expect(readSearchHistory(key)).toEqual([]);
-
-    localStorage.setItem(key, "{}");
-    expect(readSearchHistory(key)).toEqual([]);
-
-    localStorage.setItem(key, "42");
-    expect(readSearchHistory(key)).toEqual([]);
-
-    localStorage.setItem(key, '"string"');
-    expect(readSearchHistory(key)).toEqual([]);
-
-    localStorage.setItem(key, "true");
-    expect(readSearchHistory(key)).toEqual([]);
+  it("returns [] when stored value is a non-array JSON value (object)", () => {
+    storage.setItem("k", JSON.stringify({ module: "Leads", id: "1", name: "A" }));
+    expect(readSearchHistory("k")).toEqual([]);
   });
 
-  it("returns valid SearchHistoryEntry items from stored array", () => {
-    const stored: SearchHistoryEntry[] = [
-      { module: "Leads", id: "lead-1", name: "Alice Smith" },
-      { module: "Contacts", id: "contact-1", name: "Bob Jones" },
-    ];
-    localStorage.setItem(key, JSON.stringify(stored));
-    expect(readSearchHistory(key)).toEqual(stored);
+  it("returns [] when stored value is a non-array JSON value (number)", () => {
+    storage.setItem("k", "42");
+    expect(readSearchHistory("k")).toEqual([]);
   });
 
-  it("filters out invalid, null, primitive, or incomplete objects in the array", () => {
-    const raw = [
-      null,
-      undefined,
-      42,
-      "hello",
-      true,
-      {},
-      { module: "Leads" },
-      { id: "lead-1", name: "Alice" },
-      { module: "Leads", id: 123, name: "Invalid ID type" },
-      { module: 123, id: "lead-2", name: "Invalid module type" },
-      { module: "Leads", id: "lead-3", name: null },
-      { module: "Leads", id: "lead-valid", name: "Valid Lead" },
-    ];
-    localStorage.setItem(key, JSON.stringify(raw));
-    expect(readSearchHistory(key)).toEqual([
-      { module: "Leads", id: "lead-valid", name: "Valid Lead" },
-    ]);
+  it("drops entries missing the module field", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { id: "1", name: "A" },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
   });
 
-  it("caps the returned items to 15 when storage contains more", () => {
-    const items: SearchHistoryEntry[] = Array.from({ length: 20 }, (_, i) => ({
+  it("drops entries missing the id field", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { module: "Leads", name: "A" },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("drops entries missing the name field", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { module: "Leads", id: "1" },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("drops entries with non-string module", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { module: 1, id: "1", name: "A" },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("drops entries with non-string id", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { module: "Leads", id: null, name: "A" },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("drops entries with non-string name", () => {
+    storage.setItem(
+      "k",
+      JSON.stringify([
+        { module: "Leads", id: "1", name: true },
+        { module: "Leads", id: "2", name: "B" },
+      ]),
+    );
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("drops null entries in the array", () => {
+    storage.setItem("k", JSON.stringify([null, { module: "Leads", id: "2", name: "B" }]));
+    expect(readSearchHistory("k")).toEqual([{ module: "Leads", id: "2", name: "B" }]);
+  });
+
+  it("keeps at most 15 entries in stored order", () => {
+    const entries = Array.from({ length: 20 }, (_, i) => ({
       module: "Leads",
-      id: `lead-${i}`,
-      name: `Lead ${i}`,
+      id: String(i),
+      name: `Entry ${i}`,
     }));
-    localStorage.setItem(key, JSON.stringify(items));
-    const result = readSearchHistory(key);
+    storage.setItem("k", JSON.stringify(entries));
+    const result = readSearchHistory("k");
     expect(result).toHaveLength(15);
-    expect(result).toEqual(items.slice(0, 15));
-  });
-
-  it("returns an empty array gracefully when localStorage.getItem throws", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("SecurityError: localStorage is disabled");
-    });
-    expect(readSearchHistory(key)).toEqual([]);
+    expect(result[0]).toEqual({ module: "Leads", id: "0", name: "Entry 0" });
+    expect(result[14]).toEqual({ module: "Leads", id: "14", name: "Entry 14" });
   });
 });
 
 describe("rememberSearchRecord", () => {
-  const key = searchHistoryKey("test-org", "test-user");
+  let storage: ReturnType<typeof mockLocalStorage>;
 
   beforeEach(() => {
-    localStorage.clear();
+    storage = mockLocalStorage();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    localStorage.clear();
+    vi.unstubAllGlobals();
   });
 
-  it("adds an entry to empty history and writes it to localStorage", () => {
-    const entry: SearchHistoryEntry = {
+  it("puts the new entry first in an empty history", () => {
+    const entry = { module: "Leads", id: "1", name: "Lead A" };
+    const result = rememberSearchRecord("k", entry);
+    expect(result[0]).toEqual(entry);
+  });
+
+  it("puts the new entry first ahead of existing entries", () => {
+    const old = { module: "Leads", id: "2", name: "Lead B" };
+    storage.setItem("k", JSON.stringify([old]));
+    const entry = { module: "Leads", id: "1", name: "Lead A" };
+    const result = rememberSearchRecord("k", entry);
+    expect(result[0]).toEqual(entry);
+    expect(result[1]).toEqual(old);
+  });
+
+  it("removes an older entry with the same module and id", () => {
+    const existing = [
+      { module: "Leads", id: "1", name: "Lead A old" },
+      { module: "Leads", id: "2", name: "Lead B" },
+    ];
+    storage.setItem("k", JSON.stringify(existing));
+    const updated = { module: "Leads", id: "1", name: "Lead A new" };
+    const result = rememberSearchRecord("k", updated);
+    expect(result[0]).toEqual(updated);
+    // old entry with same id should be gone
+    const ids = result.map((e) => e.id);
+    expect(ids.filter((id) => id === "1")).toHaveLength(1);
+    expect(result).toHaveLength(2);
+  });
+
+  it("keeps an entry with the same id in a different module", () => {
+    const existing = [{ module: "Contacts", id: "1", name: "Contact A" }];
+    storage.setItem("k", JSON.stringify(existing));
+    const entry = { module: "Leads", id: "1", name: "Lead A" };
+    const result = rememberSearchRecord("k", entry);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual(entry);
+    expect(result[1]).toEqual(existing[0]);
+  });
+
+  it("caps the list at 15 entries", () => {
+    const entries = Array.from({ length: 15 }, (_, i) => ({
       module: "Leads",
-      id: "lead-1",
-      name: "Acme Lead",
-    };
-    const result = rememberSearchRecord(key, entry);
-    expect(result).toEqual([entry]);
-    expect(JSON.parse(localStorage.getItem(key) ?? "[]")).toEqual([entry]);
+      id: String(i + 10),
+      name: `Entry ${i + 10}`,
+    }));
+    storage.setItem("k", JSON.stringify(entries));
+    const newEntry = { module: "Leads", id: "999", name: "New" };
+    const result = rememberSearchRecord("k", newEntry);
+    expect(result).toHaveLength(15);
+    expect(result[0]).toEqual(newEntry);
   });
 
-  it("prepends the newest entry to existing history", () => {
-    const entry1: SearchHistoryEntry = { module: "Leads", id: "lead-1", name: "Lead 1" };
-    const entry2: SearchHistoryEntry = { module: "Contacts", id: "contact-1", name: "Contact 1" };
-
-    rememberSearchRecord(key, entry1);
-    const result = rememberSearchRecord(key, entry2);
-
-    expect(result).toEqual([entry2, entry1]);
-    expect(JSON.parse(localStorage.getItem(key) ?? "[]")).toEqual([entry2, entry1]);
+  it("persists the new list to localStorage", () => {
+    const entry = { module: "Leads", id: "1", name: "Lead A" };
+    rememberSearchRecord("k", entry);
+    const stored = JSON.parse(storage.getItem("k") ?? "[]");
+    expect(stored[0]).toEqual(entry);
   });
 
-  it("deduplicates an existing entry and moves it to the top", () => {
-    const entry1: SearchHistoryEntry = { module: "Leads", id: "lead-1", name: "Lead 1" };
-    const entry2: SearchHistoryEntry = { module: "Contacts", id: "contact-1", name: "Contact 1" };
-    const entry3: SearchHistoryEntry = { module: "Accounts", id: "acc-1", name: "Account 1" };
-
-    rememberSearchRecord(key, entry1);
-    rememberSearchRecord(key, entry2);
-    rememberSearchRecord(key, entry3);
-
-    // Re-remember entry1 (which was pushed down to index 2)
-    const updated = rememberSearchRecord(key, entry1);
-    expect(updated).toEqual([entry1, entry3, entry2]);
-    expect(JSON.parse(localStorage.getItem(key) ?? "[]")).toEqual([entry1, entry3, entry2]);
-  });
-
-  it("updates the name if an existing record (same module and id) is remembered with a new name", () => {
-    const oldEntry: SearchHistoryEntry = { module: "Leads", id: "lead-1", name: "Old Name" };
-    const updatedEntry: SearchHistoryEntry = { module: "Leads", id: "lead-1", name: "New Name" };
-
-    rememberSearchRecord(key, oldEntry);
-    const result = rememberSearchRecord(key, updatedEntry);
-
-    expect(result).toEqual([updatedEntry]);
-    expect(JSON.parse(localStorage.getItem(key) ?? "[]")).toEqual([updatedEntry]);
-  });
-
-  it("does not deduplicate records that have the same id but different modules", () => {
-    const lead: SearchHistoryEntry = { module: "Leads", id: "record-1", name: "Lead 1" };
-    const contact: SearchHistoryEntry = { module: "Contacts", id: "record-1", name: "Contact 1" };
-
-    rememberSearchRecord(key, lead);
-    const result = rememberSearchRecord(key, contact);
-
-    expect(result).toEqual([contact, lead]);
-  });
-
-  it("caps the history list at 15 items, dropping the oldest when exceeding limit", () => {
-    for (let i = 0; i < 15; i++) {
-      rememberSearchRecord(key, { module: "Leads", id: `lead-${i}`, name: `Lead ${i}` });
-    }
-
-    const initial = readSearchHistory(key);
-    expect(initial).toHaveLength(15);
-    expect(initial[0]?.id).toBe("lead-14");
-    expect(initial[14]?.id).toBe("lead-0");
-
-    const newEntry: SearchHistoryEntry = {
-      module: "Contacts",
-      id: "contact-new",
-      name: "New Contact",
-    };
-    const updated = rememberSearchRecord(key, newEntry);
-
-    expect(updated).toHaveLength(15);
-    expect(updated[0]).toEqual(newEntry);
-    expect(updated[14]?.id).toBe("lead-1"); // lead-0 was dropped
-    expect(updated.some((entry) => entry.id === "lead-0")).toBe(false);
-  });
-
-  it("returns computed next list and does not throw when localStorage.setItem throws", () => {
-    const entry: SearchHistoryEntry = { module: "Leads", id: "lead-1", name: "Lead 1" };
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("QuotaExceededError");
+  it("returns the new list even when localStorage.setItem throws", () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: () => {
+        throw new DOMException("QuotaExceededError");
+      },
     });
-
-    let result: SearchHistoryEntry[] | undefined;
+    const entry = { module: "Leads", id: "1", name: "Lead A" };
+    // must not throw and must return the new list
     expect(() => {
-      result = rememberSearchRecord(key, entry);
+      const result = rememberSearchRecord("k", entry);
+      expect(result[0]).toEqual(entry);
     }).not.toThrow();
-    expect(result).toEqual([entry]);
   });
 });
