@@ -1247,7 +1247,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1282,7 +1285,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1306,13 +1312,17 @@ test.describe("Leads list page", () => {
     expect(todayCount.ok()).toBe(true);
     await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
+      include_activity_summary: true,
       filters: {
         field: { api_name: "Created_Time" },
         comparator: "equal",
         value: `\${TODAY}`,
       },
     });
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1393,9 +1403,13 @@ test.describe("Leads list page", () => {
         activity_filter: {
           choice: "without_open_activity",
         },
+        include_activity_summary: true,
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     const clearResponses = waitForFilteredListResponses(page);
     await panel.getByRole("button", { name: "Clear" }).click();
@@ -1454,7 +1468,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
     expect(await alphabetControl(page).innerText()).toBe("L");
     const names = await leadNameColumnTexts(page);
     expect(names.length).toBeGreaterThan(0);
