@@ -221,14 +221,11 @@ describe("Calls activity foundation", () => {
     }
     for (const { name, next, ids } of entries) {
       for (const id of ids) expect(id < next, `${name} seed id ${id} >= its next id`).toBe(true);
-      for (const other of entries) {
-        for (let offset = 0n; offset < 1000n; offset += 1n) {
-          const candidate = other.next + offset;
-          expect(
-            owner.has(candidate),
-            `${other.name} next-id window hits ${owner.get(candidate)}`,
-          ).toBe(false);
-        }
+      for (let offset = 0n; offset < 1000n; offset += 1n) {
+        const candidate = next + offset;
+        expect(owner.has(candidate), `${name} next-id window hits ${owner.get(candidate)}`).toBe(
+          false,
+        );
       }
     }
   });
