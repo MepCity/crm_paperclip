@@ -1,6 +1,6 @@
 # CSV import and export — control inventory
 
-Status: MEP-578 baseline; MEP-658 read-only opening research; initial export inventory accepted for four modules; history navigation awaiting reviewed continuation, Module 6. Scope: Leads, Contacts, Accounts and Deals. No measurements or frontend request contract.
+Status: MEP-578 baseline; MEP-658 read-only opening research; initial export inventory accepted for four modules; final bounded history research complete for UI Lead review, Module 6. Scope: Leads, Contacts, Accounts and Deals. No measurements or frontend request contract.
 
 ## Purpose and evidence boundary
 
@@ -8,7 +8,7 @@ Identify module-list entry points, the initial import/export configuration, late
 
 MEP-657 permits exact-name initial CSV openings with the write guard unchanged. MEP-708 permits the creation chevron through the exact `CSV Import Menu` exception. In the MEP-658 Leads trial, the chevron and `Import Leads` menu item were opened and Escape returned to the list. The initial import screen did not render: opening attempted a blocked import-collection POST and a blocked persisted-preference PUT. MEP-739 classifies these as forbidden writes, not reads. Neither request reached the server. Import openings must not be repeated for Leads or the other modules; no replay or allowlist is authorized. Initial import content remains documentation evidence, not observed UI.
 
-MEP-740 clarifies the acceptance boundary: history captures permit only GET additions and the same blocked method/path set as the same settings/module click-free baseline. The known Deals baseline also blocks grouped-counts POST and module-settings PUT; neither is permitted or replayed. A new write path stops that capture without retry. Each history target has at most one capture; an absent target remains an open question.
+MEP-741 establishes the final history boundary: one click-free direct capture each of `/crm/<org>/settings/import-history` and `/crm/<org>/settings/export`, with no retry or tab/navigation click. A failed gate permits local evidence review only. The accepted baseline is H-0, including its blocked telemetry; blocked method/path sets must be a subset of H-0, and the only permitted non-GET network entry is the known automatic support visitor notification already present in that baseline. New write paths stop the capture. No request is replayed or allowlisted. The known Deals baseline also blocks grouped-counts POST and module-settings PUT; neither is permitted or replayed. A new write path stops that capture without retry. Each history target has at most one capture; an absent target remains an open question.
 
 ## Layout
 
@@ -24,6 +24,8 @@ Leads uses the current list view; Deals opens in its already-saved stage board. 
 - O-A: `m6-csv-open-accounts-export-approved`, step-2 screenshot/accessibility tree and final metadata; same export dialog as O-E with Account/All Accounts labels, same defaults and limit.
 - O-C: `m6-csv-open-contacts-export-approved`, step-2 screenshot/accessibility tree and final metadata; same export dialog as O-E with Contact/All Contacts labels, same defaults and limit.
 - O-E: `m6-csv-open-leads-export-approved`, step-2 screenshot/accessibility tree and final metadata; initial export dialog observed, Escape closure verified.
+- H-I: `m6-csv-open-import-history-final`, screenshot/accessibility tree and metadata; actual Import History empty state accepted under MEP-741 despite a heading-role probe mismatch.
+- H-E: `m6-csv-open-export-history-final`, diagnostic screenshot/accessibility tree and metadata; export landing only, rejected as history evidence because a blocked POST path is outside H-0.
 - O-I: `m6-csv-open-leads-menuitem-approved`, step-1/step-2 accessibility trees and screenshots, final metadata; import menu observed, initial screen blocked. MEP-739 safety decision is authoritative for the stop boundary.
 - D-I: reference CRM public help, “Import data into a CRM module”, accessed 2026-10-15; neutral help path `/portal/en/kb/crm/data-administration/import-data/articles/import-data-into-a-crm-module`; sections “Prepare the import files”, “Upload the files”, “Choose whether records need to be created, updated, or both”, “Mapping files and fields”, “Undo an import”, “View history of imports”.
 - D-F: reference CRM public help, “FAQs: Import”, accessed 2026-10-15; neutral help path `/portal/en/kb/crm/faqs/data-administration/import/articles/faqs-import`; duplicate detection, import failure, Leads import and undo sections.
@@ -87,7 +89,7 @@ Stable CSV numbers below cover CSV-specific controls. Repeated module controls r
 | CSV-24 | CSV / XLSX and charset | Preferences, below Configure | Observed CSV selected, XLSX unselected; charset UTF-8 (Unicode); not changed (O-E) | M6 |
 | CSV-25 | Set Password | Preferences, below charset | Observed switch off; no password input in initial state (O-E). Rich-text option documentation-only (D-E) | M6 |
 | CSV-26 | Export | Dialog footer right, primary button | Observed, never clicked; starts export per D-E (O-E, D-E) | M6 |
-| CSV-27 | Import History | Data administration | History entry; not yet observed (D-I) | M6 |
+| CSV-27 | Import History | Data administration | Active navigation and empty history observed (H-I); populated controls remain D-I only | M6 |
 | CSV-28 | View Imported Modules / summary counts | Import history | Summary and skipped-row errors (D-I) | M6 |
 | CSV-29 | Undo Import | Import history row | Deletes additions; never used (D-I) | M6 |
 | CSV-30 | Confirmation / proceed | Undo dialog | Destructive; never opened (D-I) | M6 |
@@ -191,16 +193,16 @@ Documentation-only export: configure module, record scope, fields and format →
 
 | Module | Entry evidence | Initial screens | History |
 | --- | --- | --- | --- |
-| Leads | C-L; O-I creation menu | Import blocked by required write (O-I); initial export observed (O-E) | Documentation only |
-| Contacts | C-C: Create split-button and Export Contacts in Actions; first baseline attempt failed to render | Import not retried per MEP-739; initial export matches Leads (O-C) | Documentation only |
-| Accounts | C-A: Create split-button and Export Accounts in Actions; first baseline attempt timed out | Import not retried per MEP-739; initial export matches Leads (O-A) | Documentation only |
-| Deals | C-D: Create split-button and Export Deals in Actions; existing stage board | Import not retried per MEP-739; initial export appearance accepted from final evidence (O-D); Escape closure unverified | Documentation only |
+| Leads | C-L; O-I creation menu | Import blocked by required write (O-I); initial export observed (O-E) | Shared Import History empty state observed (H-I); populated import and export history documentation-only |
+| Contacts | C-C: Create split-button and Export Contacts in Actions; first baseline attempt failed to render | Import not retried per MEP-739; initial export matches Leads (O-C) | Shared Import History empty state observed (H-I); populated import and export history documentation-only |
+| Accounts | C-A: Create split-button and Export Accounts in Actions; first baseline attempt timed out | Import not retried per MEP-739; initial export matches Leads (O-A) | Shared Import History empty state observed (H-I); populated import and export history documentation-only |
+| Deals | C-D: Create split-button and Export Deals in Actions; existing stage board | Import not retried per MEP-739; initial export appearance accepted from final evidence (O-D); Escape closure unverified | Shared Import History empty state observed (H-I); populated import and export history documentation-only |
 
-A loading skeleton or missing artifact is an evidence failure, not an empty-module state. Import source variants and history access remain unverified. Leads, Contacts and Accounts initial export defaults match; Deals final evidence shows the same defaults and is accepted for appearance/fields by MEP-740; closure remains unverified. No history control was clicked: no evidenced safe route was obtained from the CSV launchers. The public navigation is Setup → Data Administration → Import → Import History; the later click-free settings entry capture H-0 did not reach the history list. Undo and confirmation remain strictly unexercised.
+A loading skeleton or missing artifact is an evidence failure, not an empty-module state. Import source variants remain unverified; the Import History empty state is observed (H-I). Leads, Contacts and Accounts initial export defaults match; Deals final evidence shows the same defaults and is accepted for appearance/fields by MEP-740; closure remains unverified. No history control was clicked; the history routes were accessed directly under MEP-741. The public navigation is Setup → Data Administration → Import → Import History; the later click-free settings entry capture H-0 did not reach the history list. Undo and confirmation remain strictly unexercised.
 
 ## Empty, validation and error states
 
-No-file wizard defaults, disabled Next, inline error placement and empty history copy were not observed. Escape closes the observed Leads, Contacts and Accounts export dialogs; Deals remains open in final evidence (O-D); Cancel is visible but was not clicked. D-F documents missing headers, required values, encoding, type/length, date-format and picklist mismatches as failure causes. D-I documents skipped-row error summaries; D-E documents export processing error and retry. These are behavioural evidence only; no exact UI messages or success state were reproduced. Import and export permissions may suppress entries. An absent entry is not proof of missing functionality.
+No-file wizard defaults, disabled Next and inline error placement were not observed. Import History empty copy and layout are observed in H-I; populated history and job errors remain unobserved. Escape closes the observed Leads, Contacts and Accounts export dialogs; Deals remains open in final evidence (O-D); Cancel is visible but was not clicked. D-F documents missing headers, required values, encoding, type/length, date-format and picklist mismatches as failure causes. D-I documents skipped-row error summaries; D-E documents export processing error and retry. These are behavioural evidence only; no exact UI messages or success state were reproduced. Import and export permissions may suppress entries. An absent entry is not proof of missing functionality.
 
 ## Open questions
 
@@ -210,7 +212,7 @@ No-file wizard defaults, disabled Next, inline error placement and empty history
 4. Which edition/file row limits apply? D-I and D-F differ.
 5. Is undo available for seven or thirty days, and which detailed summaries remain accessible? D-I contradicts itself; no destructive verification permitted.
 6. Exact initial-file validation, empty histories, permission errors, asynchronous job errors and cancellation behaviour are not observable without a write or blocked screen opening.
-7. History lists and exact undo affordances remain documentation-only. H-0 exposes the Import History navigation route, but its paint gate failed and no navigation click ran. Platform Lead continuation review is required before another capture; Export History has not been attempted.
+7. Populated import history columns, status types, summary/detail and undo affordances remain documentation-only: H-I shows an empty history. The final history boundary permits no further access or control click; remaining gaps require a separate evidence decision.
 8. Import opening cannot be studied under the read-only rule: MEP-739 forbids the required POST and persisted-preference PUT. Any separate board-provided evidence decision belongs to the CTO/parent issue owner; no such evidence or write is authorized here.
 
 ## Baseline MEP-578 capture refs and safety checks
@@ -274,6 +276,45 @@ The passive probe `text="Import History"` matched two elements, so `ready.ok=fal
 
 The migration-provider tile grid belongs to the separate migration flow and is outside this CSV history-list inventory. Provider names, logos and assets are not copied. The sidebar and utility strip are settings-shell controls, not history controls; no history-screen parity is asserted from this diagnostic capture.
 
-H-0 audit: `clicks=[]`, `steps=[]`, `allowedOpenClicks=[]`; nine blocked requests (seven automatic telemetry requests, reminder-status and notification-status). The older `m6-setup` baseline contains only the two legacy status paths, so the exact blocked method/path set differs; H-0 is not accepted under MEP-740. No request was replayed or allowlisted. `cacheEnabled=true`, failed scripts empty; file chooser/download flags false, `printCalls=0`, open/popup arrays empty, dialog-after-close false. Seven evidence files were saved; final progress is done at 102471 ms. No manual browser/profile/tab/lock intervention occurred.
+H-0 audit: `clicks=[]`, `steps=[]`, `allowedOpenClicks=[]`; nine blocked requests (seven automatic telemetry requests, reminder-status and notification-status). The older `m6-setup` baseline contains only the two legacy status paths, so the exact blocked method/path set differs; H-0 was not accepted under the original MEP-740 comparison. MEP-741 subsequently confirms that the additions are blocked telemetry only, finds no new business-operation path, and adopts H-0 as the final Settings comparison baseline. No request was replayed or allowlisted. `cacheEnabled=true`, failed scripts empty; file chooser/download flags false, `printCalls=0`, open/popup arrays empty, dialog-after-close false. Seven evidence files were saved; final progress is done at 102471 ms. No manual browser/profile/tab/lock intervention occurred.
 
-Following the readiness failure, no Export History capture was started. Existing capture guidance requires a reviewed continuation after gate failure. Platform Lead must settle the remaining bounded history navigation; no new import opening, operation, guard change or history retry is implied. Public-documentation history statements remain documentation-only and no new documentation discrepancy is claimed.
+No Export History capture was started in the H-0 run. MEP-741 subsequently authorized exactly one direct capture of each actual history target, with no retry, tab click, import opening, operation or guard change. Results follow below; public-documentation claims become observed only where target evidence supports them.
+
+
+### Import History empty state (H-I)
+
+Source H-I: `m6-csv-open-import-history-final`, screenshot, accessibility tree, controls, network and metadata. Direct neutral route: `/crm/<org>/settings/import-history`. Observed: a white main panel inside the Settings shell, Import and Import History navigation across its top, the latter active with an accent underline. Help is right-aligned below the navigation. A lightly tinted bordered strip beneath Help displays “No recent imports”, centered; the remaining content area is blank. No history column headings, rows, row actions, filters, counts or pagination are visible in this empty state. No populated-state absence is inferred.
+
+| # | Control / state | Position | Function / evidence |
+| --- | --- | --- | --- |
+| CSV-H-04 | Import navigation link | Main panel top left | Return to import landing; visible, not clicked |
+| CSV-H-05 | Import History active navigation link | After Import | Current route, accent underline; visible, not clicked |
+| CSV-H-06 | Help link | Below navigation, right | Assistance; visible, not opened |
+| CSV-H-07 | Empty-history message | Bordered strip beneath Help, centered | Observed “No recent imports”; static state, not an action |
+
+The heading-role probe matched zero elements: `ready.ok=false`, waited 90019 ms, timeout 90000 ms, failed scripts empty. This is a probe mismatch, not an empty-screen or reference product error. MEP-741 explicitly accepts target screenshot/aria evidence after a failed gate; both show the actual target and its empty state. No retry ran.
+
+Safety audit: `clicks=[]`, `steps=[]`, `allowedOpenClicks=[]`; seven blocked requests (five telemetry, reminder-status, notification-status), method/path set a subset of H-0 after telemetry normalization. Network non-GET entries contain only the same known automatic support visitor notification as H-0. `cacheEnabled=true`; script loads 2 cache / 256 network / 0 failed; file chooser/download flags false, print zero, open/popup arrays empty, dialog-after-close false. Seven files saved; final stage done at 118970 ms. No request replay, tool/guard change or manual browser intervention occurred.
+
+Documentation reconciliation: D-I's populated-history summary and undo descriptions remain documentation-only. The empty-history layout and copy are now observed; the empty state neither confirms nor contradicts the documented populated columns, retention or undo period.
+
+
+### Export History final boundary (H-E)
+
+Source H-E: `m6-csv-open-export-history-final`, direct neutral route `/crm/<org>/settings/export`. The diagnostic screenshot/accessibility tree shows an export landing panel, not a history list. The panel has an Export Data title, a 200,000-record informational limit with a data-backup navigation link, Help at the upper right, and Start an Export below the introductory text. No control was clicked. In particular, Start an Export was never used to seek a history screen.
+
+| # | Diagnostic control | Position | Function / evidence boundary |
+| --- | --- | --- | --- |
+| CSV-H-08 | Help | Landing panel upper right | Visible assistance button; not opened |
+| CSV-H-09 | Data backup navigation | Within introductory limit text | Visible link to separate administration flow; not clicked |
+| CSV-H-10 | Start an Export | Beneath introductory text, left | Visible operation entry; strictly not clicked |
+
+These entries identify diagnostic controls only; H-E is not accepted history-screen parity evidence. No history columns, statuses, empty-history message, filters, download or retry controls were observed. Do not implement this landing as an empty Export History list from this capture.
+
+Audit: `clicks=[]`, `steps=[]`, `allowedOpenClicks=[]`; `ready.ok=false`, heading probe `role=heading[name="Export"]` matched zero elements after 90025 ms, failed scripts empty. Nine requests were blocked: seven telemetry/exception-reporting requests, reminder-status and notification-status. The new blocked `POST /murphy/:id/ingest/exceptions` is outside H-0's normalized method/path set; it remained blocked, was not replayed, and is not granted read status. Per MEP-741 the target remains “not observable read-only”. The network non-GET set contains only the known support visitor notification, matching H-0; this does not override the new blocked-path stop.
+
+Cache enabled; script loads 3 cache / 262 network / 0 failed; file chooser/download flags false, print zero, open/popup arrays empty, dialog-after-close false. Seven files saved; done at 119392 ms, exit 2. No retry, tab click, new route, operation, allowlist change or manual browser intervention followed. Both final target-access allowances are exhausted; no new capture is implied by an open question.
+
+## Final research disposition
+
+The bounded research is complete for review, with limitations retained rather than replaced by invented UI. Initial export appearance/defaults are observed in all four modules, with Deals closure unverified. Import first-screen access is forbidden by MEP-739; its content remains public-documentation evidence. Import History is observed only in its empty state (H-I). Export History remains unobserved (H-E); populated histories, status rows, retention, undo and download behaviour remain documentation-only. UI Lead should compare the numbered inventories with the local evidence, then the parent implementation owner can reconcile CSV tasks against these observed defaults and explicit open questions. Any further evidence access requires a separate decision; this specification authorizes none.
