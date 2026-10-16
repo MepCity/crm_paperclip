@@ -21,6 +21,9 @@ export const defaultMatch: Record<TransferModule, string> = {
   Contacts: "Email",
   Accounts: "Account_Name",
   Deals: "Deal_Name",
+  Tasks: "id",
+  Events: "id",
+  Calls: "id",
 };
 const managed = new Set([
   "id",
@@ -32,12 +35,37 @@ const managed = new Set([
 ]);
 export const writable = (field: FieldDefinition) =>
   !field.readOnly && !managed.has(field.apiName) && (field.views.create || field.views.edit);
+const activityModule = (module: TransferModule) => ["Tasks", "Events", "Calls"].includes(module);
+
+/** The CSV discriminator narrows What_Id; it is never stored as a record field. */
+export function importMetadata(metadata: ModuleMetadata, module: TransferModule): ModuleMetadata {
+  const parent = metadata.fields.find((field) => field.apiName === "What_Id" && writable(field));
+  if (!activityModule(module) || !parent) return metadata;
+  return {
+    ...metadata,
+    fields: [
+      ...metadata.fields,
+      {
+        ...parent,
+        apiName: "$se_module",
+        label: "Related Module",
+        dataType: "text",
+        required: false,
+        unique: false,
+        lookup: undefined,
+      },
+    ],
+  };
+}
 export const normalizeHeader = (value: string) => value.toLowerCase().replace(/[\s_]/g, "");
 export function matchFields(metadata: ModuleMetadata, module: TransferModule) {
   return [
     { field: "id", label: "Record Id" },
     ...metadata.fields
-      .filter((field) => field.unique || field.apiName === defaultMatch[module])
+      .filter(
+        (field) =>
+          field.apiName !== "id" && (field.unique || field.apiName === defaultMatch[module]),
+      )
       .map((field) => ({ field: field.apiName, label: field.label })),
   ];
 }
@@ -143,6 +171,8 @@ async function convert(
   raw: string,
   records: RecordService,
   actors: readonly Actor[],
+  idOnly = false,
+  moduleHint?: string,
 ): Promise<FieldValue> {
   if (raw === "") return null;
   if (["integer", "double", "currency"].includes(field.dataType)) {
@@ -165,13 +195,25 @@ async function convert(
   }
   if (field.dataType === "lookup" || field.dataType === "multi_module_lookup") {
     const modules = field.lookup?.modules ?? (field.lookup ? [field.lookup.module] : []);
+    if (moduleHint && !modules.includes(moduleHint))
+      throw new RowError("invalid_value", "$se_module");
     const candidates: { module: string; id: string }[] = [];
+    let unreadable = false;
     for (const module of modules) {
-      const ids = await matching(records, module, "id", raw);
+      if (moduleHint && module !== moduleHint) continue;
+      let ids: readonly RecordData[];
+      try {
+        ids = await matching(records, module, "id", raw);
+      } catch (error) {
+        if (!idOnly || !isAppError(error) || error.code !== "forbidden") throw error;
+        unreadable = true;
+        continue;
+      }
       if (ids.length) {
         candidates.push(...ids.map((record) => ({ module, id: record.id })));
         continue;
       }
+      if (idOnly) continue;
       const metadata = await records.getModule(module);
       const name =
         metadata.fields.find(
@@ -188,7 +230,10 @@ async function convert(
         );
     }
     if (candidates.length !== 1)
-      throw new RowError(candidates.length ? "multiple_matches" : "not_found", field.apiName);
+      throw new RowError(
+        candidates.length ? "multiple_matches" : unreadable ? "permission_denied" : "not_found",
+        field.apiName,
+      );
     return candidates[0] ?? null;
   }
   return raw;
@@ -248,13 +293,20 @@ export async function importRows(
       const values: Record<string, FieldValue> = Object.create(null);
       for (const field of metadata.fields) {
         // The identifier is a matching key, never a writable record field.
-        if (field.apiName === "id") continue;
+        if (field.apiName === "id" || field.apiName === "$se_module") continue;
         const value = raw[field.apiName];
         if (value === undefined || (target && settings.ignoreEmptyOnUpdate && value === ""))
           continue;
         if (!field.views[target ? "edit" : "create"])
           throw new RowError("permission_denied", field.apiName);
-        values[field.apiName] = await convert(field, value, records, actors);
+        values[field.apiName] = await convert(
+          field,
+          value,
+          records,
+          actors,
+          activityModule(upload.module) && ["What_Id", "Who_Id"].includes(field.apiName),
+          activityModule(upload.module) && field.apiName === "What_Id" ? raw.$se_module : undefined,
+        );
       }
       const result = target
         ? await records.update(upload.module, target.id, values)
