@@ -10,44 +10,182 @@ import type { TimelineFilterOption } from "./types";
 
 afterEach(cleanup);
 
-const sampleModules: TimelineFilterOption[] = [
+const moduleOptions: readonly TimelineFilterOption[] = [
   { id: "notes", label: "Notes" },
   { id: "tasks", label: "Tasks" },
   { id: "deals", label: "Deals" },
 ];
 
-const sampleUsers: TimelineFilterOption[] = [
-  { id: "u1", label: "User One" },
-  { id: "u2", label: "User Two" },
+const userOptions: readonly TimelineFilterOption[] = [
+  { id: "u1", label: "Sample User" },
+  { id: "u2", label: "Second User" },
 ];
 
-const sampleSources: TimelineFilterOption[] = [
+const sourceOptions: readonly TimelineFilterOption[] = [
   { id: "manual", label: "Manual" },
-  { id: "import", label: "Import" },
+  { id: "api", label: "API" },
   { id: "webform", label: "Web Form" },
 ];
 
-function renderFilterPanel(overrides: Partial<TimelineHistoryFilterProps> = {}) {
+function renderFilterPanel(overrides?: Partial<TimelineHistoryFilterProps>) {
   const onApply = vi.fn();
-  const defaultProps: TimelineHistoryFilterProps = {
+  const props: TimelineHistoryFilterProps = {
     modulesLabel: "Modules",
     modulesAllLabel: "All Modules",
-    moduleOptions: sampleModules,
+    moduleOptions,
     usersLabel: "Users",
     usersAllLabel: "All Users",
-    userOptions: sampleUsers,
+    userOptions,
     timeLabel: "Time",
     sourcesLabel: "Sources",
     sourcesAllLabel: "All Sources",
-    sourceOptions: sampleSources,
+    sourceOptions,
     applyLabel: "Apply Filter",
     onApply,
     ...overrides,
   };
 
-  render(<TimelineHistoryFilterPanel {...defaultProps} />);
-  return { onApply };
+  render(<TimelineHistoryFilterPanel {...props} />);
+  return { onApply, props };
 }
+
+test("four selectors show the given labels with initial placeholder or default values", () => {
+  renderFilterPanel();
+
+  const fieldLabels = [...document.querySelectorAll(".timeline-history-filter-field-label")].map(
+    (node) => node.textContent,
+  );
+  expect(fieldLabels).toEqual(["Modules", "Users", "Time", "Sources"]);
+
+  expect(screen.getByRole("button", { name: "Modules All Modules" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Users All Users" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Time Any Time" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Sources All Sources" })).toBeTruthy();
+});
+
+test("apply button is initially disabled", () => {
+  renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+});
+
+test("choosing a time preset enables apply and pressing it calls onApply with preset value", async () => {
+  const user = userEvent.setup();
+  const { onApply } = renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+
+  await user.click(screen.getByRole("button", { name: "Time Any Time" }));
+  await user.click(screen.getByRole("menuitem", { name: "Last 7 days" }));
+
+  expect(screen.getByRole("button", { name: "Time Last 7 days" })).toBeTruthy();
+  expect(applyButton.disabled).toBe(false);
+
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledTimes(1);
+  expect(onApply).toHaveBeenCalledWith({
+    moduleIds: [],
+    userId: null,
+    time: "last7",
+    sourceIds: [],
+  });
+});
+
+test("selecting one module option enables apply and passes that id in moduleIds", async () => {
+  const user = userEvent.setup();
+  const { onApply } = renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+
+  await user.click(screen.getByRole("button", { name: "Modules All Modules" }));
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+
+  expect(applyButton.disabled).toBe(false);
+
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledTimes(1);
+  expect(onApply).toHaveBeenCalledWith({
+    moduleIds: ["notes"],
+    userId: null,
+    time: "any",
+    sourceIds: [],
+  });
+});
+
+test("selecting a user passes its id as userId", async () => {
+  const user = userEvent.setup();
+  const { onApply } = renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+
+  await user.click(screen.getByRole("button", { name: "Users All Users" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sample User" }));
+
+  expect(screen.getByRole("button", { name: "Users Sample User" })).toBeTruthy();
+  expect(applyButton.disabled).toBe(false);
+
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledTimes(1);
+  expect(onApply).toHaveBeenCalledWith({
+    moduleIds: [],
+    userId: "u1",
+    time: "any",
+    sourceIds: [],
+  });
+});
+
+test("isDirty behavior: selecting a user then re-selecting all users resets dirty and disables apply", async () => {
+  const user = userEvent.setup();
+  renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+
+  // Select a user -> dirty, apply enabled
+  await user.click(screen.getByRole("button", { name: "Users All Users" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sample User" }));
+  expect(applyButton.disabled).toBe(false);
+  expect(screen.getByRole("button", { name: "Users Sample User" })).toBeTruthy();
+
+  // Select the "all" user entry -> userId becomes null, state is no longer dirty, apply disabled
+  await user.click(screen.getByRole("button", { name: "Users Sample User" }));
+  await user.click(screen.getByRole("menuitem", { name: "All Users" }));
+  expect(screen.getByRole("button", { name: "Users All Users" })).toBeTruthy();
+  expect(applyButton.disabled).toBe(true);
+});
+
+test("isDirty behavior: toggling checkboxes or time preset restores clean state and disables apply", async () => {
+  const user = userEvent.setup();
+  renderFilterPanel();
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+
+  // Toggle module checkbox on and off
+  await user.click(screen.getByRole("button", { name: "Modules All Modules" }));
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  expect(applyButton.disabled).toBe(false);
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  expect(applyButton.disabled).toBe(true);
+  await user.keyboard("{Escape}");
+
+  // Toggle source checkbox on and off
+  await user.click(screen.getByRole("button", { name: "Sources All Sources" }));
+  await user.click(screen.getByRole("checkbox", { name: "Manual" }));
+  expect(applyButton.disabled).toBe(false);
+  await user.click(screen.getByRole("checkbox", { name: "Manual" }));
+  expect(applyButton.disabled).toBe(true);
+  await user.keyboard("{Escape}");
+
+  // Change time preset and reset to "Any Time"
+  await user.click(screen.getByRole("button", { name: "Time Any Time" }));
+  await user.click(screen.getByRole("menuitem", { name: "Today" }));
+  expect(applyButton.disabled).toBe(false);
+  await user.click(screen.getByRole("button", { name: "Time Today" }));
+  await user.click(screen.getByRole("menuitem", { name: "Any Time" }));
+  expect(applyButton.disabled).toBe(true);
+});
 
 test("users selector: choosing a user enables Apply and sends userId; choosing all sets userId null and disables Apply", async () => {
   const user = userEvent.setup();
@@ -58,9 +196,9 @@ test("users selector: choosing a user enables Apply and sends userId; choosing a
   const usersTrigger = screen.getByRole("button", { name: "Users All Users" });
   await user.click(usersTrigger);
 
-  await user.click(screen.getByRole("menuitem", { name: "User One" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sample User" }));
   expect(applyButton.disabled).toBe(false);
-  expect(screen.getByRole("button", { name: "Users User One" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Users Sample User" })).toBeTruthy();
 
   await user.click(applyButton);
   expect(onApply).toHaveBeenCalledWith({
@@ -70,7 +208,7 @@ test("users selector: choosing a user enables Apply and sends userId; choosing a
     sourceIds: [],
   });
 
-  await user.click(screen.getByRole("button", { name: "Users User One" }));
+  await user.click(screen.getByRole("button", { name: "Users Sample User" }));
   await user.click(screen.getByRole("menuitem", { name: "All Users" }));
 
   expect(applyButton.disabled).toBe(true);
@@ -174,13 +312,13 @@ test("combined: module + user + time + source together results in one onApply ca
   await user.keyboard("{Escape}");
 
   await user.click(screen.getByRole("button", { name: "Users All Users" }));
-  await user.click(screen.getByRole("menuitem", { name: "User Two" }));
+  await user.click(screen.getByRole("menuitem", { name: "Second User" }));
 
   await user.click(screen.getByRole("button", { name: "Time Any Time" }));
   await user.click(screen.getByRole("menuitem", { name: "Last 7 days" }));
 
   await user.click(screen.getByRole("button", { name: "Sources All Sources" }));
-  await user.click(screen.getByRole("checkbox", { name: "Import" }));
+  await user.click(screen.getByRole("checkbox", { name: "API" }));
   await user.keyboard("{Escape}");
 
   expect(applyButton.disabled).toBe(false);
@@ -191,7 +329,7 @@ test("combined: module + user + time + source together results in one onApply ca
     moduleIds: ["tasks"],
     userId: "u2",
     time: "last7",
-    sourceIds: ["import"],
+    sourceIds: ["api"],
   });
 });
 
@@ -211,9 +349,9 @@ test("keyboard: selectors open with Enter and close with Escape", async () => {
   usersTrigger.focus();
   expect(document.activeElement).toBe(usersTrigger);
   await user.keyboard("{Enter}");
-  expect(screen.getByRole("menuitem", { name: "User One" })).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "Sample User" })).toBeTruthy();
   await user.keyboard("{Escape}");
-  expect(screen.queryByRole("menuitem", { name: "User One" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Sample User" })).toBeNull();
 
   const timeTrigger = screen.getByRole("button", { name: "Time Any Time" });
   timeTrigger.focus();
@@ -246,9 +384,9 @@ test("keyboard: selectors open with Space and close with Escape", async () => {
   const usersTrigger = screen.getByRole("button", { name: "Users All Users" });
   usersTrigger.focus();
   await user.keyboard(" ");
-  expect(screen.getByRole("menuitem", { name: "User One" })).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "Sample User" })).toBeTruthy();
   await user.keyboard("{Escape}");
-  expect(screen.queryByRole("menuitem", { name: "User One" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Sample User" })).toBeNull();
 
   const timeTrigger = screen.getByRole("button", { name: "Time Any Time" });
   timeTrigger.focus();
