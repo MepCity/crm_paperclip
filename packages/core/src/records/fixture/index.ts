@@ -27,6 +27,7 @@ import type {
   RecordInput,
   RecordService,
 } from "../contract";
+import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import {
@@ -37,6 +38,9 @@ import {
   matchesGlobalSearch,
   pointsAtGroupMember,
 } from "./discovery";
+import { type FixtureHistoryPermissions, fixtureHistoryReader } from "./history-read";
+import { fixtureHistoryStore } from "./history-store";
+import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
@@ -49,6 +53,9 @@ interface FixtureStore {
   modules: Map<string, FixtureModuleStore>;
   memberIds: Set<string>;
   deduplicating: Set<string>;
+  history: Map<string, RecordHistoryEvent>;
+  sequence: number;
+  cursors: Parameters<typeof fixtureHistoryReader>[6];
 }
 
 const storeKey = Symbol.for("mepcity.records.fixture.stores");
@@ -105,7 +112,11 @@ const normalizeInput = (
   );
 };
 
-export interface FixtureRecordServiceOptions {
+export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  actorName?: string;
+  source?: HistorySource;
+  /** Internal synchronous failure seam; runs before staged history publication. */
+  beforeHistoryAppend?: (events: readonly RecordHistoryEvent[]) => void;
   /** Clock for seed times, write timestamps and date tokens. Defaults to the system clock. */
   now?: () => Date;
   /** Live membership source; defaults to authorized contexts opened in this fixture org. */
@@ -121,7 +132,7 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService {
+): RecordService & { readonly history: RecordHistoryService } {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -154,6 +165,9 @@ export function createFixtureRecordService(
       ),
       memberIds: new Set(),
       deduplicating: new Set(),
+      history: new Map(),
+      sequence: 0,
+      cursors: new Map(),
     };
     const seededModules = store.modules;
     const seedContext: FixtureHookContext = {
@@ -170,17 +184,19 @@ export function createFixtureRecordService(
   const state = store;
   // A development hot reload may retain a store from before discovery was added.
   state.deduplicating ??= new Set();
+  state.history ??= new Map();
+  state.sequence ??= 0;
+  state.cursors ??= new Map();
   state.memberIds.add(ctx.userId);
 
   const referenceModules = (): Map<string, FixtureReferenceModule> => {
     const entries: [string, FixtureReferenceModule][] = [];
     for (const [name, bundle] of Object.entries(fixtureModules)) {
-      const moduleState = state.modules.get(name);
       entries.push([
         name,
         {
           displayNameField: bundle.displayNameField,
-          getRecord: (id: string) => moduleState?.records.get(id),
+          getRecord: (id: string) => state.modules.get(name)?.records.get(id),
         },
       ]);
     }
@@ -192,10 +208,18 @@ export function createFixtureRecordService(
   };
   const bundleFor = (module: string) => moduleBundle(module);
   const kanbanViews = createFixtureKanbanViews(ctx, bundleFor);
+  let transactionOriginal: Map<string, FixtureModuleStore> | undefined;
   const moduleStore = (module: string) => {
     moduleExists(module);
     const moduleState = state.modules.get(module);
     if (!moduleState) throw new NotFoundError("Module not found.");
+    // Clone a module on first transactional access. Hooks only receive this
+    // accessor, so cross-module mutations stay isolated without cloning unrelated seeds.
+    if (transactionOriginal?.get(module) === moduleState) {
+      const staged = copy(moduleState);
+      state.modules.set(module, staged);
+      return staged;
+    }
     return moduleState;
   };
   const viewFor = (module: string, id: string) => {
@@ -298,35 +322,67 @@ export function createFixtureRecordService(
     if (ids.length < 1 || ids.length > 500)
       throw new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit");
   };
-  const writeBatch = (module: string, ids: readonly string[], input: RecordInput) => {
-    // Resolve every target after asynchronous membership checks, before any write.
-    const bundle = bundleFor(module);
-    const records = [...new Set(ids)].map((id) => recordFor(module, id));
-    for (const record of records) assertWritable(record);
-    const stamp = clock().toISOString();
-    const moduleState = moduleStore(module);
-    const overrides = new Map<string, Record<string, FieldValue>>();
-    const updates = records.map((record) => {
-      const fields: Record<string, FieldValue> = {
-        ...record.fields,
-        ...input,
-        Modified_By: ctx.userId,
-        Modified_Time: stamp,
-      };
-      bundle.applyRules?.(fields, input, record.fields, hookContext);
-      fields[bundle.displayNameField] = bundle.fullName(fields);
-      overrides.set(record.id, fields);
-      return { id: record.id, fields };
-    });
-    assertUniqueFieldValues(
-      bundle.metadata.fields,
-      projectRecordsWithOverrides(moduleState.records, overrides),
-    );
-    for (const record of updates) {
-      bundle.afterWrite?.(record, moduleState.records.get(record.id), hookContext);
-      moduleState.records.set(record.id, record);
+  const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
+    const previous = state.modules;
+    const staged = new Map(previous);
+    state.modules = staged;
+    transactionOriginal = previous;
+    try {
+      const result = write();
+      const events = historyBatch(previous, state.modules, fixtureModules, operation, {
+        sequence: state.sequence + 1,
+        occurredAt: clock().toISOString(),
+        actor: { id: ctx.userId, name: options?.actorName ?? ctx.userId },
+        source: options?.source ?? "manual",
+      });
+      const nextHistory = copy(state.history);
+      if (events.length) options?.beforeHistoryAppend?.(copy(events));
+      fixtureHistoryStore(nextHistory).appendBatch(events);
+      state.history = nextHistory;
+      if (events.length) state.sequence++;
+      return result;
+    } catch (error) {
+      state.modules = previous;
+      throw error;
+    } finally {
+      transactionOriginal = undefined;
     }
   };
+  const writeBatch = (
+    module: string,
+    ids: readonly string[],
+    input: RecordInput,
+    mechanism = "update",
+  ) =>
+    atomic({ module, mechanism }, () => {
+      // Resolve every target after asynchronous membership checks, before any write.
+      const bundle = bundleFor(module);
+      const records = [...new Set(ids)].map((id) => recordFor(module, id));
+      for (const record of records) assertWritable(record);
+      const stamp = clock().toISOString();
+      const moduleState = moduleStore(module);
+      const overrides = new Map<string, Record<string, FieldValue>>();
+      const updates = records.map((record) => {
+        const fields: Record<string, FieldValue> = {
+          ...record.fields,
+          ...input,
+          Modified_By: ctx.userId,
+          Modified_Time: stamp,
+        };
+        bundle.applyRules?.(fields, input, record.fields, hookContext);
+        fields[bundle.displayNameField] = bundle.fullName(fields);
+        overrides.set(record.id, fields);
+        return { id: record.id, fields };
+      });
+      assertUniqueFieldValues(
+        bundle.metadata.fields,
+        projectRecordsWithOverrides(moduleState.records, overrides),
+      );
+      for (const record of updates) {
+        bundle.afterWrite?.(record, moduleState.records.get(record.id), hookContext);
+        moduleState.records.set(record.id, record);
+      }
+    });
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertModuleWritable(module);
@@ -350,85 +406,86 @@ export function createFixtureRecordService(
     validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
     validateReferences(module, normalized);
     await validateOwner(normalized);
-    // Resolve again after the asynchronous membership check, then commit without yielding.
-    const master = recordFor(module, input.masterId);
-    const group = [master, ...ids.map((id) => recordFor(module, id))];
-    for (const record of group) {
-      assertWritable(record, "update");
-      assertWritable(record, "delete");
-    }
-    const oldest = [...group].sort((a, b) =>
-      String(a.fields.Created_Time).localeCompare(String(b.fields.Created_Time)),
-    )[0] as RecordData;
-    const fields: Record<string, FieldValue> = {
-      ...master.fields,
-      ...normalized,
-      Created_By: oldest.fields.Created_By ?? null,
-      Created_Time: oldest.fields.Created_Time ?? null,
-      Modified_By: ctx.userId,
-      Modified_Time: clock().toISOString(),
-    };
-    bundle.applyRules?.(fields, normalized, master.fields, hookContext);
-    fields[bundle.displayNameField] = bundle.fullName(fields);
-    const removed = new Set(ids);
-    const updated = { id: master.id, fields };
-    const projected = new Map<string, Map<string, RecordData>>();
-    const staged = new Map(
-      [...state.modules].map(
-        ([name, store]) => [name, { ...store, records: new Map(store.records) }] as const,
-      ),
-    );
-    bundle.transferMergedRecords?.(ids, master.id, {
-      registeredModules: hookContext.registeredModules,
-      moduleStore: (name) => {
-        const store = staged.get(name);
-        if (!store) throw new NotFoundError("Module not found.");
-        return store;
-      },
-    });
-    for (const [name, moduleState] of staged) {
-      const next = new Map<string, RecordData>();
-      for (const record of moduleState.records.values()) {
-        if (name === module && removed.has(record.id)) continue;
-        if (
-          bundle.mergeRelatedRecords?.some(
-            (relation) =>
-              name === relation.module &&
-              pointsAtGroupMember(record.fields[relation.field], module, removed),
-          )
-        )
-          continue;
-        const source = name === module && record.id === master.id ? updated : record;
-        const nextFields = { ...source.fields };
-        for (const field of bundleFor(name).metadata.fields) {
-          const value = nextFields[field.apiName];
-          if (
-            (field.dataType === "lookup" || field.dataType === "multi_module_lookup") &&
-            typeof value === "object" &&
-            value !== null &&
-            "module" in value &&
-            "id" in value &&
-            value.module === module &&
-            typeof value.id === "string" &&
-            removed.has(value.id)
-          )
-            nextFields[field.apiName] =
-              name === module && record.id === master.id
-                ? null
-                : {
-                    module,
-                    id: master.id,
-                    name: String(fields[bundle.displayNameField]),
-                  };
+    return atomic(
+      { module, recordId: input.masterId, kind: "records_merged", mechanism: "merge" },
+      () => {
+        // Resolve again after the asynchronous membership check, then commit without yielding.
+        const master = recordFor(module, input.masterId);
+        const group = [master, ...ids.map((id) => recordFor(module, id))];
+        for (const record of group) {
+          assertWritable(record, "update");
+          assertWritable(record, "delete");
         }
-        next.set(source.id, { id: source.id, fields: nextFields });
-      }
-      assertUniqueFieldValues(bundleFor(name).metadata.fields, next.values());
-      projected.set(name, next);
-    }
-    for (const [name, records] of projected) moduleStore(name).records = records;
-    bundle.afterWrite?.(updated, master, hookContext);
-    return copy(resolveRead(module, recordFor(module, master.id)));
+        const oldest = [...group].sort((a, b) =>
+          String(a.fields.Created_Time).localeCompare(String(b.fields.Created_Time)),
+        )[0] as RecordData;
+        const fields: Record<string, FieldValue> = {
+          ...master.fields,
+          ...normalized,
+          Created_By: oldest.fields.Created_By ?? null,
+          Created_Time: oldest.fields.Created_Time ?? null,
+          Modified_By: ctx.userId,
+          Modified_Time: clock().toISOString(),
+        };
+        bundle.applyRules?.(fields, normalized, master.fields, hookContext);
+        fields[bundle.displayNameField] = bundle.fullName(fields);
+        const removed = new Set(ids);
+        const updated = { id: master.id, fields };
+        const projected = new Map<string, Map<string, RecordData>>();
+        const staged = copy(state.modules);
+        bundle.transferMergedRecords?.(ids, master.id, {
+          registeredModules: hookContext.registeredModules,
+          moduleStore: (name) => {
+            const store = staged.get(name);
+            if (!store) throw new NotFoundError("Module not found.");
+            return store;
+          },
+        });
+        for (const [name, moduleState] of staged) {
+          const next = new Map<string, RecordData>();
+          for (const record of moduleState.records.values()) {
+            if (name === module && removed.has(record.id)) continue;
+            if (
+              bundle.mergeRelatedRecords?.some(
+                (relation) =>
+                  name === relation.module &&
+                  pointsAtGroupMember(record.fields[relation.field], module, removed),
+              )
+            )
+              continue;
+            const source = name === module && record.id === master.id ? updated : record;
+            const nextFields = { ...source.fields };
+            for (const field of bundleFor(name).metadata.fields) {
+              const value = nextFields[field.apiName];
+              if (
+                (field.dataType === "lookup" || field.dataType === "multi_module_lookup") &&
+                typeof value === "object" &&
+                value !== null &&
+                "module" in value &&
+                "id" in value &&
+                value.module === module &&
+                typeof value.id === "string" &&
+                removed.has(value.id)
+              )
+                nextFields[field.apiName] =
+                  name === module && record.id === master.id
+                    ? null
+                    : {
+                        module,
+                        id: master.id,
+                        name: String(fields[bundle.displayNameField]),
+                      };
+            }
+            next.set(source.id, { id: source.id, fields: nextFields });
+          }
+          assertUniqueFieldValues(bundleFor(name).metadata.fields, next.values());
+          projected.set(name, next);
+        }
+        for (const [name, records] of projected) moduleStore(name).records = records;
+        bundle.afterWrite?.(updated, master, hookContext);
+        return copy(resolveRead(module, recordFor(module, master.id)));
+      },
+    );
   };
   const findDuplicateGroups = async (
     module: string,
@@ -447,6 +504,22 @@ export function createFixtureRecordService(
   };
 
   return {
+    history: fixtureHistoryReader(
+      ctx,
+      () => fixtureHistoryStore(state.history),
+      () => state.sequence,
+      (module, id) => {
+        recordFor(module, id);
+      },
+      (module) => Object.hasOwn(fixtureModules, module),
+      {
+        canReadRecord: options?.canReadRecord,
+        canReadField: (module, apiName) =>
+          bundleFor(module).metadata.fields.some((field) => field.apiName === apiName) &&
+          (options?.canReadField?.(module, apiName) ?? true),
+      },
+      state.cursors,
+    ),
     merge,
     findDuplicateGroups,
     async deduplicate(module, fields) {
@@ -677,30 +750,32 @@ export function createFixtureRecordService(
       validateInput(normalized, false, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      const moduleState = moduleStore(module);
-      const id = String(moduleState.nextId++);
-      const fields: Record<string, FieldValue> = Object.fromEntries(
-        bundle.metadata.fields.map((field) => [field.apiName, null]),
-      );
-      const stamp = clock().toISOString();
-      Object.assign(fields, normalized, bundle.createDefaults(stamp), {
-        id,
-        ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
-          ? { Owner: normalized.Owner ?? ctx.userId }
-          : {}),
-        Created_By: ctx.userId,
-        Modified_By: ctx.userId,
+      return atomic({ module, mechanism: "create" }, () => {
+        const moduleState = moduleStore(module);
+        const id = String(moduleState.nextId++);
+        const fields: Record<string, FieldValue> = Object.fromEntries(
+          bundle.metadata.fields.map((field) => [field.apiName, null]),
+        );
+        const stamp = clock().toISOString();
+        Object.assign(fields, normalized, bundle.createDefaults(stamp), {
+          id,
+          ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+            ? { Owner: normalized.Owner ?? ctx.userId }
+            : {}),
+          Created_By: ctx.userId,
+          Modified_By: ctx.userId,
+        });
+        bundle.applyRules?.(fields, normalized, undefined, hookContext);
+        fields[bundle.displayNameField] = bundle.fullName(fields);
+        const record = { id, fields };
+        assertUniqueFieldValues(
+          bundle.metadata.fields,
+          projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+        );
+        moduleState.records.set(id, record);
+        bundle.afterWrite?.(record, undefined, hookContext);
+        return copy(resolveRead(module, record));
       });
-      bundle.applyRules?.(fields, normalized, undefined, hookContext);
-      fields[bundle.displayNameField] = bundle.fullName(fields);
-      const record = { id, fields };
-      assertUniqueFieldValues(
-        bundle.metadata.fields,
-        projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
-      );
-      moduleState.records.set(id, record);
-      bundle.afterWrite?.(record, undefined, hookContext);
-      return copy(resolveRead(module, record));
     },
     async update(module, id, input) {
       assertModuleWritable(module);
@@ -711,26 +786,28 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      // Membership resolution may yield; preserve intervening partial writes/deletes.
-      const record = recordFor(module, id);
-      assertWritable(record);
-      const fields: Record<string, FieldValue> = {
-        ...record.fields,
-        ...normalized,
-        Modified_By: ctx.userId,
-        Modified_Time: clock().toISOString(),
-      };
-      bundle.applyRules?.(fields, normalized, record.fields, hookContext);
-      fields[bundle.displayNameField] = bundle.fullName(fields);
-      const updated = { id, fields };
-      const moduleState = moduleStore(module);
-      assertUniqueFieldValues(
-        bundle.metadata.fields,
-        projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
-      );
-      bundle.afterWrite?.(updated, record, hookContext);
-      moduleState.records.set(id, updated);
-      return copy(resolveRead(module, updated));
+      return atomic({ module, mechanism: "update" }, () => {
+        // Membership resolution may yield; preserve intervening partial writes/deletes.
+        const record = recordFor(module, id);
+        assertWritable(record);
+        const fields: Record<string, FieldValue> = {
+          ...record.fields,
+          ...normalized,
+          Modified_By: ctx.userId,
+          Modified_Time: clock().toISOString(),
+        };
+        bundle.applyRules?.(fields, normalized, record.fields, hookContext);
+        fields[bundle.displayNameField] = bundle.fullName(fields);
+        const updated = { id, fields };
+        const moduleState = moduleStore(module);
+        assertUniqueFieldValues(
+          bundle.metadata.fields,
+          projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+        );
+        bundle.afterWrite?.(updated, record, hookContext);
+        moduleState.records.set(id, updated);
+        return copy(resolveRead(module, updated));
+      });
     },
     async massUpdate(module, ids, input) {
       assertModuleWritable(module);
@@ -748,7 +825,7 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      writeBatch(module, targets, normalized);
+      writeBatch(module, targets, normalized, "mass_update");
     },
     async changeOwner(module, ids, ownerId) {
       assertModuleWritable(module);
@@ -758,7 +835,7 @@ export function createFixtureRecordService(
       const input = { Owner: ownerId };
       validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
       await validateOwner(input);
-      writeBatch(module, targets, input);
+      writeBatch(module, targets, input, "change_owner");
     },
     async delete(module, ids) {
       assertModuleWritable(module);
@@ -766,9 +843,19 @@ export function createFixtureRecordService(
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
-      const moduleState = moduleStore(module);
-      for (const id of ids) moduleState.records.delete(id);
-      bundleFor(module).afterDelete?.(ids, hookContext);
+      atomic({ module, mechanism: "delete" }, () => {
+        const moduleState = moduleStore(module);
+        for (const id of ids) moduleState.records.delete(id);
+        bundleFor(module).afterDelete?.(ids, hookContext);
+      });
     },
   };
+}
+
+/** Read-only history facade sharing the tenant's atomic fixture state. */
+export function createFixtureRecordHistoryService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): RecordHistoryService {
+  return createFixtureRecordService(context, options).history;
 }
