@@ -15,10 +15,12 @@ export function ModuleListClient({
   orgSlug,
   viewId,
   definition,
+  currentUserId,
 }: {
   orgSlug: string;
   viewId?: string;
   definition: ModuleScreenDefinition;
+  currentUserId?: string;
 }) {
   const listConfig = definition.list;
   const module = useModule(definition.apiName);
@@ -57,5 +59,12 @@ export function ModuleListClient({
     return <div className="module-list-page" aria-hidden="true" />;
   }
 
-  return <ModuleListScreen orgSlug={orgSlug} config={config} viewId={viewId} />;
+  return (
+    <ModuleListScreen
+      orgSlug={orgSlug}
+      config={config}
+      viewId={viewId}
+      currentUserId={currentUserId}
+    />
+  );
 }
