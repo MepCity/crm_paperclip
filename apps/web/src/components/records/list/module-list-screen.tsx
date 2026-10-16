@@ -255,7 +255,11 @@ function ModuleListScreenLoaded({
 
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
-    const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
+    // Row presentation may need a field that is not a visible column.
+    const queryFields = config.allDayField
+      ? [...new Set([...columnApiNames, config.allDayField])]
+      : columnApiNames;
+    const base = listQueryFromSearchState(viewId, queryFields, searchState, eligibleSortFields);
     return {
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
@@ -264,6 +268,7 @@ function ModuleListScreenLoaded({
   }, [
     appliedActivityFilter,
     columnApiNames,
+    config.allDayField,
     eligibleSortFields,
     listCriteria,
     searchState,

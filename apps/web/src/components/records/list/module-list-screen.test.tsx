@@ -10,6 +10,7 @@ import { resetPreferenceStoreForTests } from "@/lib/preferences";
 import { recordListContextKey } from "@/lib/records/record-list-context";
 import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
 import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
+import { meetingsListPageConfig } from "@/modules/meetings/list-config";
 import { ModuleListScreen } from "./module-list-screen";
 
 const ctx = {
@@ -1641,4 +1642,18 @@ it("applies and clears activities system filter on module list", async () => {
     expect(listQuery?.activityFilter).toBeUndefined();
     expect(countQuery?.activityFilter).toBeUndefined();
   });
+});
+
+it("requests the hidden all-day field for Meetings without adding a visible column", async () => {
+  const records = createFixtureRecordService(ctx);
+  const listSpy = vi.spyOn(records, "list");
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+  });
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={meetingsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+  await waitFor(() => expect(listSpy.mock.calls.at(-1)?.[1]?.fields).toContain("All_day"));
+  expect(screen.queryByRole("columnheader", { name: "All day" })).toBeNull();
 });

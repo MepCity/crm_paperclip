@@ -131,7 +131,13 @@ test("Meetings filters, paging, record route and related record link", async ({ 
   await expect(page).toHaveURL(/page=2/);
 
   // ML-38: Title opens the meeting record route
-  await list.locator("tbody tr").first().getByRole("link").first().click();
+  await list
+    .locator("tbody tr")
+    .first()
+    .locator('td[data-part="column"]')
+    .first()
+    .getByRole("link")
+    .click();
   await expect(page).toHaveURL(/\/tab\/Meetings\/[^/?]+/);
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
