@@ -153,11 +153,11 @@ export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
     },
     /** Server-only: link attachments and published files are ready; staged uploads are not. */
     isReady(id: string): boolean {
-      return store.records.get(id)?.fields.$state === "ready";
+      return ctx.moduleStore("Attachments").records.get(id)?.fields.$state === "ready";
     },
     /** Server-only: the media type recorded at publish time, if any. */
     mediaType(id: string): string | null {
-      const value = store.records.get(id)?.fields.$media_type;
+      const value = ctx.moduleStore("Attachments").records.get(id)?.fields.$media_type;
       return typeof value === "string" && value ? value : null;
     },
     cleanupIntents(): readonly AttachmentCleanupIntent[] {
