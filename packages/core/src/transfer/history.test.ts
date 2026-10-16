@@ -61,8 +61,7 @@ describe("newest", () => {
     expect(first).not.toBe(a);
   });
 
-  // Known defect in history.ts: `jobs.reverse()` mutates the caller's array.
-  it.fails("does not mutate the input array", () => {
+  it("does not mutate the input array", () => {
     const input = [a, b, c];
     newest(input);
     expect(input.map((j) => j.n)).toEqual(["a", "b", "c"]);
