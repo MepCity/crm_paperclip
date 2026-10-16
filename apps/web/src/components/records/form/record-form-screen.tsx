@@ -17,6 +17,11 @@ import {
   useUsers,
 } from "@/lib/api/client/hooks";
 import { addressSubfieldApiNames } from "@/lib/records/composite-address";
+import {
+  allDayClearedTime,
+  dateTimePartsToIso,
+  isoToDateTimeParts,
+} from "@/lib/records/datetime-parts";
 import { buildCloneInput } from "./build-clone-input";
 import {
   AddressFieldGroups,
@@ -48,7 +53,7 @@ import {
 import { FormRow, type FormRowColumn } from "./form-row";
 import { formSaveBannerMessage, formSaveFieldErrors } from "./form-save-error";
 import { FormSection } from "./form-section";
-import { validateRecordForm } from "./form-validation";
+import { validateRanges, validateRecordForm } from "./form-validation";
 import { RECORD_FORM_COPY } from "./record-form-copy";
 import {
   RecordFormClientScriptTab,
@@ -318,6 +323,17 @@ function LoadedRecordForm({
     for (const dependent of clears) writes[dependent] = null;
     const probability = stageProbabilityWrite(rules, metadata, name, value);
     if (probability) writes[probability.field] = probability.value;
+    const allDay = rules.allDay;
+    if (allDay && name === allDay.flag) {
+      const dayOnly = value === true;
+      allDay.fields.forEach((apiName, index) => {
+        const current = values[apiName];
+        if (typeof current !== "string") return;
+        const parts = isoToDateTimeParts(current, !dayOnly);
+        const time = dayOnly ? "" : allDayClearedTime(index === 0 ? 0 : 1);
+        writes[apiName] = dateTimePartsToIso({ date: parts.date, time }, dayOnly);
+      });
+    }
     setValues((previous) => ({ ...previous, ...writes }));
     setErrors((previous) => {
       const next = { ...previous };
@@ -337,9 +353,15 @@ function LoadedRecordForm({
       values,
       (field) => labelsByField.get(field.apiName) ?? field.label,
     );
-    if (Object.keys(messages).length === 0) return true;
+    const checked = validateRanges(
+      rules.ranges,
+      values,
+      messages,
+      (apiName) => labelsByField.get(apiName) ?? apiName,
+    );
+    if (Object.keys(checked).length === 0) return true;
     errorFocusPending.current = true;
-    setErrors(messages);
+    setErrors(checked);
     return false;
   }
 
@@ -564,6 +586,11 @@ function LoadedRecordForm({
               : undefined
           }
           lookupOwnerNames={ownerNames}
+          dateOnly={Boolean(
+            rules.allDay?.fields.includes(field.apiName) && values[rules.allDay.flag] === true,
+          )}
+          participantModules={rules.participantModules?.[field.apiName]}
+          laterModule={rules.laterModuleFields?.[field.apiName]}
           currencyPrefix={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? config.currencyPrefix
