@@ -8,19 +8,26 @@ const state = vi.hoisted(() => ({
   roles: [] as RecordData[],
   contacts: [] as RecordData[],
   error: false,
+  loading: false,
+  calls: [] as { module: string; query: unknown; options: unknown }[],
 }));
 
 vi.mock("@/lib/api/client/hooks", () => ({
   useViews: () => ({ data: [{ id: "all", isDefault: true }], isLoading: false, isError: false }),
-  useRecordList: (module: string) => ({
-    data: { records: module === "Contact_Roles" ? state.roles : state.contacts },
-    isLoading: false,
-    isError: state.error,
-  }),
+  useRecordList: (module: string, query: unknown, options: unknown) => {
+    state.calls.push({ module, query, options });
+    return {
+      data: { records: module === "Contact_Roles" ? state.roles : state.contacts },
+      isLoading: state.loading,
+      isError: state.error,
+    };
+  },
 }));
 
 beforeEach(() => {
   state.error = false;
+  state.loading = false;
+  state.calls = [];
   state.roles = [
     {
       id: "r1",
@@ -69,5 +76,53 @@ test("shows the empty state without rows", () => {
 test("shows the shared error state when a read fails", () => {
   state.error = true;
   render(<ContactRolesCardBody {...props} />);
-  expect(screen.queryByText("Ada Lovelace")).toBeNull();
+  expect(screen.getByText("Unable to load records.")).toBeTruthy();
+});
+
+test("batches only the linked contact IDs and scopes roles to the deal", () => {
+  render(<ContactRolesCardBody {...props} />);
+  expect(state.calls).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        module: "Contact_Roles",
+        query: expect.objectContaining({
+          filters: { field: "Deal", comparator: "equal", value: "d1" },
+        }),
+      }),
+      expect.objectContaining({
+        module: "Contacts",
+        query: expect.objectContaining({
+          filters: {
+            groupOperator: "or",
+            group: [{ field: "id", comparator: "equal", value: "c1" }],
+          },
+        }),
+        options: { enabled: true },
+      }),
+    ]),
+  );
+});
+
+test("does not read contacts for an empty deal", () => {
+  state.roles = [];
+  render(<ContactRolesCardBody {...props} />);
+  expect(state.calls.find((call) => call.module === "Contacts")?.options).toEqual({
+    enabled: false,
+  });
+});
+
+test("shows loading before rendering rows", () => {
+  state.loading = true;
+  render(<ContactRolesCardBody {...props} />);
+  expect(screen.getByText("Loading...")).toBeTruthy();
+});
+
+test("keeps a missing role blank and preserves a contact link without enrichment", () => {
+  state.roles = [
+    { id: "r1", fields: { Contact: { module: "Contacts", id: "c1" }, Contact_Role: null } },
+  ];
+  state.contacts = [];
+  render(<ContactRolesCardBody {...props} />);
+  expect(screen.getByRole("link", { name: "c1" }).getAttribute("href")).toBe("/contacts/c1");
+  expect(screen.getAllByRole("cell").at(-1)?.textContent).toBe("");
 });

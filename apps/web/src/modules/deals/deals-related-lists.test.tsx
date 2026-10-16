@@ -76,6 +76,16 @@ describe("createDealsRelatedLists definition", () => {
     ).toBeUndefined();
   });
 
+  it("draws the Contact Roles rail badge only for positive counts", () => {
+    for (const count of [undefined, 0, 2]) {
+      expect(
+        createDealsRelatedLists({ badges: { contactRoles: count } }).find(
+          (card) => card.id === "contact-roles",
+        )?.countBadge,
+      ).toBe(count ? count : undefined);
+    }
+  });
+
   it("omits activity rail badges when card holds zero records", () => {
     expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
     expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();

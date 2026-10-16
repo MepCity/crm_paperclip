@@ -225,8 +225,31 @@ test.describe("Deals record detail", () => {
     const org = await createOrganization(page);
     await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
     const card = page.locator("#related-list-contact-roles");
-    await expect(card.locator("tbody tr").first()).toBeVisible({ timeout: 15_000 });
-    await expect(card.locator("tbody tr td a").first()).toBeVisible();
+    await expect(card.locator("tbody tr")).toHaveCount(2);
+    const railRow = page
+      .locator("[data-record-rail]")
+      .getByRole("link", { name: "Contact Roles", exact: true })
+      .locator("..");
+    await expect(railRow.getByText("2", { exact: true })).toBeVisible();
+    const contactLink = card.getByRole("link", { name: "Sample 001 Contact 001", exact: true });
+    await expect(contactLink).toHaveAttribute(
+      "href",
+      moduleRecordPath(org.slug, "Contacts", "300000000000000000"),
+    );
+    const accountLink = card.getByRole("link").filter({ hasText: "Account 001" }).first();
+    await expect(accountLink).toHaveAttribute(
+      "href",
+      moduleRecordPath(org.slug, "Accounts", "500000000000000000"),
+    );
+    await contactLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, "Contacts", "300000000000000000"));
+    await openDealDetail(page, org.slug, "700000000000000020");
+    await expect(page.locator("#related-list-contact-roles")).toContainText("No records found");
+    const emptyRailRow = page
+      .locator("[data-record-rail]")
+      .getByRole("link", { name: "Contact Roles", exact: true })
+      .locator("..");
+    await expect(emptyRailRow).toHaveText("Contact Roles");
     ignoreFailedResponses(pageErrors, [400]);
   });
 

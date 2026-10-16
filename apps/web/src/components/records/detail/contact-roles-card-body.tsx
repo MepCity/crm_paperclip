@@ -53,21 +53,41 @@ export function ContactRolesCardBody({
     [contactViews.data],
   );
   const roleRows = roles.data?.records ?? [];
+  const contactFilter = useMemo<Criteria>(
+    () => ({
+      groupOperator: "or",
+      group: [
+        ...new Set(
+          (roles.data?.records ?? []).flatMap((row) => {
+            const contact = reference(row.fields.Contact);
+            return contact ? [contact.id] : [];
+          }),
+        ),
+      ].map((id) => ({ field: "id", comparator: "equal", value: id })),
+    }),
+    [roles.data],
+  );
+  const hasContacts = "group" in contactFilter && contactFilter.group.length > 0;
   // One batched read for the people on this deal; no per-row requests.
   const contacts = useRecordList(
     "Contacts",
-    { viewId: contactsViewId ?? "pending", page: 1, perPage: LIST_PAGE_SIZE },
-    { enabled: contactsViewId !== null && roleRows.length > 0 },
+    {
+      viewId: contactsViewId ?? "pending",
+      page: 1,
+      perPage: LIST_PAGE_SIZE,
+      filters: contactFilter,
+    },
+    { enabled: contactsViewId !== null && hasContacts },
   );
   const contactsById = useMemo(
     () => new Map((contacts.data?.records ?? []).map((record) => [record.id, record])),
     [contacts.data],
   );
 
-  if (roles.isLoading || contactViews.isLoading || (roleRows.length > 0 && contacts.isLoading)) {
+  if (roles.isLoading || (hasContacts && (contactViews.isLoading || contacts.isLoading))) {
     return <EmptyState>Loading...</EmptyState>;
   }
-  if (roles.isError || contactViews.isError || contacts.isError) {
+  if (roles.isError || (hasContacts && (contactViews.isError || contacts.isError))) {
     return <RelatedRecordsListError />;
   }
   if (roleRows.length === 0) return <EmptyState>No records found</EmptyState>;
