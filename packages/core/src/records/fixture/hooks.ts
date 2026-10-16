@@ -3,6 +3,7 @@ import type { FieldValue, RecordData, RecordInput } from "../contract";
 export interface FixtureModuleStore {
   records: Map<string, RecordData>;
   nextId: bigint;
+  attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 
 /** Internal fixture access shared by synchronous module lifecycle hooks. */
