@@ -686,10 +686,8 @@ Tasks detail and form tasks land.
 | Business card, detail sections, Related To suffix | TD-36–TD-46 | `tasks-detail.spec.ts`, `tasks-detail-sections.test.ts` |
 | Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
 
-Open (main's screen lacks them): inline task icon beside the Subject (TD-01) and
-visible call icons in the panel (TD-58, TD-59); the buttons exist but the icon draws zero-width.
-
 Interim rules: Close Task shows only while the task is open, opens no confirmation and
-updates Status through the record service (errors show a toast); Meetings and Calls open
-counts show 0 until those modules are registered; "+ New" and the panel search icons draw
-without handlers; Add Tags and Conversations are drawn as later-module controls.
+updates Status through the record service (errors show a toast); the right panel's Deal
+Summary and the Open Activities counts are read live for the related Contact (Deals through
+the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ New" and the
+panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.

@@ -228,6 +228,7 @@ export interface ModuleScreenDefinition {
     /** Right-hand panel of the activities variant (300 px, white). */
     SidePanel?: ComponentType<{ record: RecordData; orgSlug: string }>;
     hasPortrait?: boolean;
+    portraitAppearance?: "tile" | "inline";
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     addTags?: { label: string; laterModule: ModuleKey };
