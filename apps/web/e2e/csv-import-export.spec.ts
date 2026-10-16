@@ -147,15 +147,18 @@ test.describe("CSV import and export", () => {
     const selected = page.getByRole("dialog", { name: "Export Leads" });
     await expect(selected.getByText("Selected records (2)")).toBeVisible();
     await selected.getByRole("button", { name: "Export", exact: true }).click();
-    await expect(page.getByText(/2 records exported/)).toBeVisible({ timeout: 15_000 });
+    const notification = page
+      .getByRole("alertdialog", { name: "Export completed" })
+      .filter({ hasText: /2 records exported/ });
+    await expect(notification).toBeVisible({ timeout: 15_000 });
     const [selectedDownload] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("link", { name: "Download", exact: true }).last().click(),
+      notification.getByRole("link", { name: "Download", exact: true }).click(),
     ]);
     const selectedRows = parseCsv(await readFile(await selectedDownload.path(), "utf8"));
     expect(selectedRows).toHaveLength(3);
     expect(new Set(selectedRows.slice(1).map((row) => row[0])).size).toBe(2);
-    await page.getByRole("link", { name: "View export history" }).last().click();
+    await notification.getByRole("link", { name: "View export history" }).click();
     await expect(page).toHaveURL(/\/settings\/export-history/);
     await expect(page.getByRole("row", { name: /Selected records/ })).toBeVisible();
   });
