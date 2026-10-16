@@ -5,12 +5,12 @@ import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
 import { MEETINGS_LIST_CURRENCY_CODE, meetingsListPageConfig } from "./list-config";
 import { buildMeetingsFilterGroups } from "./list-filters";
+import { MeetingParticipantsSlot } from "./meeting-participants-slot";
 import {
   buildMeetingsBusinessCardFields,
   buildMeetingsDetailSections,
 } from "./meetings-detail-sections";
 import { meetingsFormRules } from "./meetings-form-rules";
-import { MeetingsParticipantsCard } from "./meetings-participants-card";
 import { meetingsRecordHeaderIdentity } from "./meetings-record-header";
 import {
   buildMeetingsRecordMoreMenuGroups,
@@ -25,7 +25,6 @@ import {
   normalizeMeetingsEventKind,
 } from "./meetings-timeline";
 
-/** Interim: the Meetings form still borrows the neutral Accounts form rules. */
 export const meetingsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Events",
   tab: "Meetings",
@@ -56,7 +55,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildMeetingsRecordMoreMenuGroups,
     deleteTitle: MEETINGS_DELETE_CONFIRM_TITLE,
     deleteMessage: MEETINGS_DELETE_CONFIRM_MESSAGE,
-    BetweenCards: () => <MeetingsParticipantsCard participants={[]} />,
+    BetweenCards: ({ record }) => <MeetingParticipantsSlot record={record} />,
     SidePanel: ActivitySidePanel,
     timeline: {
       subtabs: MEETINGS_TIMELINE_SUBTABS,

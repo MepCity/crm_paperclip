@@ -6,6 +6,7 @@ import { exportFields, exportRecords } from "./export";
 import { createHistory, newest, stored } from "./history";
 import {
   allView,
+  importMetadata,
   importRows,
   matchFields,
   normalizeHeader,
@@ -74,7 +75,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         if (error instanceof CsvError) throw new AppError(error.code, "The CSV file is invalid.");
         throw error;
       }
-      const metadata = await deps.records(ctx).getModule(module);
+      const metadata = importMetadata(await deps.records(ctx).getModule(module), module);
       const fields = metadata.fields.filter(writable).map((field) => ({
         apiName: field.apiName,
         label: field.label,
@@ -131,7 +132,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       if (!upload || upload.userId !== ctx.userId || upload.module !== module)
         throw new AppError("upload_expired", "Upload again to continue.");
       const records = deps.records(ctx);
-      const metadata = await records.getModule(module);
+      const metadata = importMetadata(await records.getModule(module), module);
       const matchField = validateMapping(metadata, module, upload, settings);
       // Claim once after asynchronous preflight, preventing concurrent reuse.
       if (state(ctx).uploads.get(uploadId) !== upload)
