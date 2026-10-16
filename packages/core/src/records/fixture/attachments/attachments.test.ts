@@ -274,6 +274,33 @@ describe("Attachments record contract", () => {
       { attachmentId: second.id, storageKey: "second-key" },
     ]);
   });
+  it("rolls back attachment deletion and cleanup when parent history cannot commit", async () => {
+    const { context, lifecycle } = make();
+    let rejectHistory = false;
+    const service = createFixtureRecordService(context, {
+      beforeHistoryAppend() {
+        if (rejectHistory) throw new Error("History unavailable");
+      },
+    });
+    const parent = await lead(service);
+    const attachment = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(attachment.id, published);
+    rejectHistory = true;
+    await expect(service.delete("Leads", [parent.id])).rejects.toThrow("History unavailable");
+    expect((await service.get("Attachments", attachment.id)).id).toBe(attachment.id);
+    expect((await service.get("Leads", parent.id)).id).toBe(parent.id);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    rejectHistory = false;
+    await service.delete("Leads", [parent.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([
+      { attachmentId: attachment.id, storageKey: published.storageKey },
+    ]);
+    // A later transaction must retain committed cleanup until acknowledged.
+    await lead(service, "Another");
+    expect(lifecycle.cleanupIntents()).toHaveLength(1);
+    lifecycle.acknowledgeCleanup(attachment.id);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+  });
   it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
     const { service, lifecycle } = make();
     const parent = await lead(service);

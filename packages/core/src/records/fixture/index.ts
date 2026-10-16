@@ -32,7 +32,6 @@ import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
 import {
   attachmentUltimateParent,
-  copyAttachmentCleanup,
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
 } from "./attachments/hooks";
@@ -223,7 +222,6 @@ export function createFixtureRecordService(
     // Generic writes replace rows; copy the map without duplicating untouched rows.
     if (transactionOriginal?.get(module) === moduleState) {
       const staged = { ...moduleState, records: new Map(moduleState.records) };
-      if (module === "Attachments") copyAttachmentCleanup(moduleState, staged);
       state.modules.set(module, staged);
       return staged;
     }

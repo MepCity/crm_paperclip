@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "../../../errors";
 import type { FieldValue, ModuleRecordReference, RecordData } from "../../contract";
-import type { FixtureHookContext, FixtureModuleHooks, FixtureModuleStore } from "../hooks";
+import type { FixtureHookContext, FixtureModuleHooks } from "../hooks";
 import { attachmentParentModules } from "./metadata";
 
 export function attachmentParent(value: FieldValue | undefined): ModuleRecordReference | undefined {
@@ -95,19 +95,12 @@ export interface AttachmentCleanupIntent {
   attachmentId: string;
   storageKey: string | null;
 }
-const cleanup = new WeakMap<FixtureModuleStore, AttachmentCleanupIntent[]>();
-
-/** Carry cleanup state into the transaction without sharing its mutable queue. */
-export function copyAttachmentCleanup(previous: FixtureModuleStore, staged: FixtureModuleStore) {
-  const intents = cleanup.get(previous);
-  if (intents) cleanup.set(staged, [...intents]);
-}
 
 export function removeAttachmentIds(ids: readonly string[], ctx: FixtureHookContext): void {
   if (!ctx.registeredModules.includes("Attachments")) return;
   const store = ctx.moduleStore("Attachments");
-  const intents = cleanup.get(store) ?? [];
-  cleanup.set(store, intents);
+  const intents = [...(store.attachmentCleanupIntents ?? [])];
+  store.attachmentCleanupIntents = intents;
   for (const id of new Set(ids)) {
     const record = store.records.get(id);
     if (!record) continue;
@@ -159,13 +152,12 @@ export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
       });
     },
     cleanupIntents(): readonly AttachmentCleanupIntent[] {
-      return structuredClone(cleanup.get(ctx.moduleStore("Attachments")) ?? []);
+      return structuredClone(ctx.moduleStore("Attachments").attachmentCleanupIntents ?? []);
     },
     acknowledgeCleanup(id: string) {
       const store = ctx.moduleStore("Attachments");
-      cleanup.set(
-        store,
-        (cleanup.get(store) ?? []).filter((intent) => intent.attachmentId !== id),
+      store.attachmentCleanupIntents = (store.attachmentCleanupIntents ?? []).filter(
+        (intent) => intent.attachmentId !== id,
       );
     },
   };
