@@ -411,6 +411,7 @@ export const callsRecordServiceContractModule: RecordServiceContractModuleDefini
     Call_Type: "Outbound",
     Call_Start_Time: "2026-01-15T10:00:00.000Z",
     Call_Duration: "05:00",
+    Outgoing_Call_Status: "Completed",
     Subject: "Contract Call",
     ...extra,
   }),

@@ -28,6 +28,11 @@ function skippedField(field: FieldDefinition): boolean {
   );
 }
 
+/** A required `MM:SS` duration of 0:00 counts as empty. */
+function isZeroDuration(value: FieldValue): boolean {
+  return typeof value === "string" && /^0+:0+$/.test(value);
+}
+
 function validateField(
   field: FieldDefinition,
   value: FieldValue | undefined,
@@ -35,7 +40,8 @@ function validateField(
 ): string | undefined {
   if (skippedField(field)) return undefined;
   const normalized = normalizeFormValue(field, value);
-  if (field.required && normalized === null) return validationEmptyMessage(label);
+  if (field.required && (normalized === null || isZeroDuration(normalized)))
+    return validationEmptyMessage(label);
   if (normalized === null) return undefined;
 
   if (field.dataType === "email") {

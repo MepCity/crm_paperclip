@@ -72,4 +72,10 @@ test("Inbound switches the form to record mode", async () => {
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByText(/Call From\/To cannot be empty/)).toBeTruthy();
   expect(screen.getByText(/Call Duration cannot be empty/)).toBeTruthy();
+  const minutes = screen.getByLabelText("Call Duration minutes");
+  const seconds = screen.getByLabelText("Call Duration seconds");
+  await user.type(minutes, "0");
+  await user.type(seconds, "0");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(screen.getByText(/Call Duration cannot be empty/)).toBeTruthy();
 });
