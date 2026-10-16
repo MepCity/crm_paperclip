@@ -42,6 +42,7 @@ export function MeetingsParticipantsCard({
           variant="secondary"
           size="compact"
           data-control="MD-47"
+          className="border-primary text-primary"
           isDisabled={addDisabled}
           onPress={onAdd}
         >

@@ -19,8 +19,8 @@ export interface DetailFieldRowProps {
   auditTimestamp?: string | null;
   layout: "business" | "details" | "details-full" | "details-full-description";
   callAction?: boolean;
-  /** Unlinked text drawn after the value, e.g. the module label of a related record. */
-  valueSuffix?: string;
+  /** Plain text after the value, e.g. " - Contacts" after a relation link. */
+  suffix?: string;
   onEdit?: (apiName: string) => void;
 }
 
@@ -32,7 +32,7 @@ export function DetailFieldRow({
   auditTimestamp,
   layout,
   callAction,
-  valueSuffix,
+  suffix,
   onEdit,
 }: DetailFieldRowProps) {
   const inline = useInlineEdit();
@@ -160,8 +160,10 @@ export function DetailFieldRow({
                 auditTimestamp={auditTimestamp}
               />
             )}
-            {valueSuffix && !isFieldValueEmpty(field, value) ? (
-              <span className="ms-1.5 text-text-muted">{valueSuffix}</span>
+            {suffix && !isFieldValueEmpty(field, value) ? (
+              <span className="detail-field-value" data-field-suffix style={{ whiteSpace: "pre" }}>
+                {` ${suffix.trimStart()}`}
+              </span>
             ) : null}
             {callAction && !isFieldValueEmpty(field, value) ? (
               <Button

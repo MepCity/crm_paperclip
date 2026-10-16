@@ -30,6 +30,7 @@ describe("Notes metadata and seed", () => {
     ]);
     expect(notesMetadata.fields.find((field) => field.apiName === "Note_Title")).toMatchObject({
       dataType: "text",
+      massUpdate: true,
       maxLength: 120,
       required: false,
     });

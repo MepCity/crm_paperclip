@@ -1,10 +1,9 @@
 import type { RecordData } from "@crm/core/records";
-import type { ComponentType, SVGProps } from "react";
-import { Icons } from "@/components/ui/icon";
 
 /**
- * Record header identity: static task icon (not a portrait upload) plus the Subject title.
- * Previous / next record arrows follow the shared header default (TD-08, TD-09).
+ * Record header identity: Subject title (TD-43).
+ * No portrait / placeholder icon is used.
+ * Previous / next record arrows are present (V07).
  */
 export function tasksRecordHeaderIdentity(
   record: RecordData,
@@ -13,13 +12,13 @@ export function tasksRecordHeaderIdentity(
   title: string;
   subtitle?: string;
   hasPortrait?: boolean;
-  portraitIcon?: ComponentType<SVGProps<SVGSVGElement>>;
+  recordNavigation?: boolean;
 } {
   const title = typeof record.fields.Subject === "string" ? (record.fields.Subject as string) : "";
 
   return {
     title,
-    hasPortrait: true,
-    portraitIcon: Icons.check,
+    hasPortrait: false,
+    recordNavigation: true,
   };
 }

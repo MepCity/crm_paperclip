@@ -45,7 +45,7 @@ export interface RecordPageFrameProps {
   scrollTopLabel: string;
   relatedRailHeaderAction?: ReactNode;
   relatedRailFooter?: ReactNode;
-  /** Optional right-hand panel beside the tab column (activity records). */
+  /** Activities variant: white panel to the right of the tabs (300 px). */
   sidePanel?: ReactNode;
 }
 
@@ -92,6 +92,26 @@ export function getActiveRelatedEntryId(
   const firstItem = items[0];
   if (!firstItem) return currentSelectedId ?? entries[0]?.id;
 
+  const scrollerHeight = hasRealGeometry ? scrollerRect.height : scroller.clientHeight;
+  const atBottom =
+    scroller.scrollTop > 0 &&
+    scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24;
+
+  if (atBottom) {
+    if (currentSelectedId) {
+      const currentItem = items.find((item) => item.id === currentSelectedId);
+      if (currentItem && currentItem.top < scrollerHeight && currentItem.bottom > 0) {
+        return currentSelectedId;
+      }
+    }
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item && item.top < scrollerHeight && item.bottom > 0) {
+        return item.id;
+      }
+    }
+  }
+
   for (let i = items.length - 1; i >= 0; i--) {
     const item = items[i];
     if (item && item.top <= OFFSET && item.bottom > 0) {
@@ -101,15 +121,6 @@ export function getActiveRelatedEntryId(
 
   if (firstItem.top > OFFSET) {
     return firstItem.id;
-  }
-
-  const lastItem = items[items.length - 1];
-  if (
-    lastItem &&
-    scroller.scrollTop > 0 &&
-    scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 2
-  ) {
-    return lastItem.id;
   }
 
   let closestId = firstItem.id;
@@ -153,6 +164,7 @@ export function RecordPageFrame({
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingTargetRef = useRef<RelatedListEntry | null>(null);
+  const programmaticTargetRef = useRef<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [uncontrolledSelectedId, setUncontrolledSelectedId] = useState<string | undefined>(
     selectedRelatedId ?? relatedEntries[0]?.id,
@@ -175,6 +187,7 @@ export function RecordPageFrame({
     );
     if (!target) return;
 
+    programmaticTargetRef.current = pending.id;
     if (scroller) {
       scrollScrollerToTarget(scroller, target);
     }
@@ -182,10 +195,34 @@ export function RecordPageFrame({
     onRelatedSelectionChange?.(pending.id);
   }, [selectedTabId, tabs, onRelatedSelectionChange]);
 
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const clearProgrammatic = () => {
+      programmaticTargetRef.current = null;
+    };
+    scroller.addEventListener("wheel", clearProgrammatic, { passive: true });
+    scroller.addEventListener("touchmove", clearProgrammatic, { passive: true });
+    scroller.addEventListener("pointerdown", clearProgrammatic, { passive: true });
+    scroller.addEventListener("keydown", clearProgrammatic, { passive: true });
+    return () => {
+      scroller.removeEventListener("wheel", clearProgrammatic);
+      scroller.removeEventListener("touchmove", clearProgrammatic);
+      scroller.removeEventListener("pointerdown", clearProgrammatic);
+      scroller.removeEventListener("keydown", clearProgrammatic);
+    };
+  }, []);
+
   function handleScroll(event: React.UIEvent<HTMLDivElement>) {
     const scroller = event.currentTarget;
     setScrolled(scroller.scrollTop > 0);
     if (relatedEntries.length > 0) {
+      if (programmaticTargetRef.current) {
+        if (programmaticTargetRef.current === activeSelectedId) {
+          return;
+        }
+        programmaticTargetRef.current = null;
+      }
       const activeId = getActiveRelatedEntryId(scroller, relatedEntries, activeSelectedId);
       if (activeId && activeId !== activeSelectedId) {
         setUncontrolledSelectedId(activeId);
@@ -214,6 +251,7 @@ export function RecordPageFrame({
     if (!target) {
       return;
     }
+    programmaticTargetRef.current = entry.id;
     if (scroller) {
       scrollScrollerToTarget(scroller, target);
     }
@@ -359,7 +397,7 @@ export function RecordPageFrame({
         {sidePanel ? (
           <div
             data-record-side-panel
-            className="w-75 shrink-0 overflow-y-auto border-l border-panel-border bg-surface px-3 pt-(--size-record-tab-top) pb-3"
+            className="w-(--size-record-side-panel-width) shrink-0 overflow-y-auto bg-surface"
           >
             {sidePanel}
           </div>

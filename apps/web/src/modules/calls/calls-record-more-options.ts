@@ -5,7 +5,7 @@ export const CALLS_DELETE_CONFIRM_TITLE = "Delete Call";
 export const CALLS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete this Call?";
 
 type Handlers = {
-  onEdit?: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };

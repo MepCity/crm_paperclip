@@ -7,7 +7,7 @@ import type {
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
-import { taskRelatedToSuffix } from "../tasks/tasks-detail-sections";
+import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -78,9 +78,8 @@ export function meetingRelatedToSuffix(record: RecordData): string | undefined {
 /**
  * Builds business card fields in the order supplied by service metadata,
  * falling back to MEETINGS_BUSINESS_CARD_FIELDS when metadata businessCardFields is empty.
- * False/empty All_day and empty Venue use the shared dash display. The business card
- * stays static; cloned field definitions do not change service metadata. Related To
- * reuses the Tasks plural module suffix shown in the reference capture.
+ * All_day is omitted when its value is absent or false (dash rule; boolean key is not drawn).
+ * Empty Venue renders as dash via field-format null handling.
  */
 export function buildMeetingsBusinessCardFields(
   module: ModuleMetadata,
@@ -94,10 +93,16 @@ export function buildMeetingsBusinessCardFields(
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
     if (!field || !visible(field, record)) return [];
-    const value = record.fields[name] ?? null;
-    const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
+    // All_day: omit when absent or false (spec: "All day and empty Location display a dash;
+    // no boolean switch is painted"). We still include the row so the dash appears;
+    // the boolean-key strikethrough rule is handled by the renderer. However the spec states
+    // the dash is shown — meaning the field row IS shown, just the value reads as dash.
     return [
-      { field: { ...field, readOnly: true }, value, ...(valueSuffix ? { valueSuffix } : {}) },
+      {
+        field,
+        value: record.fields[name] ?? null,
+        suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
+      },
     ];
   });
 }
@@ -136,6 +141,7 @@ export function buildMeetingsDetailSections(
                   : "right",
             field,
             value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
         }
