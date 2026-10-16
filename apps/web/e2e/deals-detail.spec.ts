@@ -248,7 +248,7 @@ test.describe("Deals record detail", () => {
     const emptyRailRow = page
       .locator("[data-record-rail]")
       .getByRole("link", { name: "Contact Roles", exact: true })
-      .locator("..");
+      .locator("xpath=ancestor-or-self::*[contains(@class, 'h-(--size-menu-item-height)')][1]");
     await expect(emptyRailRow).toHaveText("Contact Roles");
     ignoreFailedResponses(pageErrors, [400]);
   });
