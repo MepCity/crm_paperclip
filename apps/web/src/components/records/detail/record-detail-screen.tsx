@@ -138,7 +138,9 @@ export function RecordDetailScreen({
   const router = useRouter();
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
-  const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const [railPreference, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const activityLayout = rules.layout === "activity";
+  const railVisible = activityLayout ? false : railPreference;
   const [selectedRelatedId, setSelectedRelatedId] = useState<string | undefined>(
     rules.relatedLists?.[0]?.id,
   );
@@ -261,6 +263,8 @@ export function RecordDetailScreen({
     portraitIcon,
     hasPortrait,
     recordNavigation,
+    titleHref,
+    titleSuffix,
   } = rules.header(record, {
     orgSlug,
     currency: homeCurrencyQuery.data,
@@ -348,6 +352,7 @@ export function RecordDetailScreen({
       >
         {detailSlots?.overviewPrefix}
         <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+        {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
         {detailSlots?.contactSummary ??
           (rules.linkedContactSummary && linkedContactSummaryPath ? (
             <AccountsLinkedContactSummary
@@ -478,19 +483,29 @@ export function RecordDetailScreen({
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
+            titleGlyph={rules.titleGlyph}
+            titleHref={titleHref}
+            titleSuffix={titleSuffix}
             commands={[
-              ...(rules.headerCommands ?? []),
+              ...(rules.buildHeaderCommands
+                ? rules.buildHeaderCommands(displayRecord, {
+                    editHref: paths.edit(orgSlug, definition.tab, recordId),
+                    save: persistRecord,
+                  })
+                : [
+                    ...(rules.headerCommands ?? []),
+                    ...(!detailSlots?.suppressEditCommand
+                      ? [
+                          {
+                            id: "edit",
+                            label: "Edit",
+                            variant: "secondary" as const,
+                            href: paths.edit(orgSlug, definition.tab, recordId),
+                          },
+                        ]
+                      : []),
+                  ]),
               ...(detailSlots?.headerCommands ?? []),
-              ...(!detailSlots?.suppressEditCommand
-                ? [
-                    {
-                      id: "edit",
-                      label: "Edit",
-                      variant: "secondary" as const,
-                      href: paths.edit(orgSlug, definition.tab, recordId),
-                    },
-                  ]
-                : []),
             ]}
             menuGroups={moreMenuGroups}
             moreLabel="More Options"
@@ -520,12 +535,15 @@ export function RecordDetailScreen({
           { id: "overview", label: "Overview", content: overview },
           { id: "timeline", label: "Timeline", content: timeline },
         ]}
-        relatedRailVisible={railVisible && !detailSlots?.sidePanel}
-        sidePanel={detailSlots?.sidePanel}
+        relatedRailVisible={railVisible && !detailSlots?.sidePanel && !activityLayout}
         railControl={
-          detailSlots?.sidePanel ? undefined : (
+          detailSlots?.sidePanel || activityLayout ? undefined : (
             <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
           )
+        }
+        sidePanel={
+          detailSlots?.sidePanel ??
+          (rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined)
         }
         scrollTopLabel="Scroll To Top"
       />

@@ -1,8 +1,7 @@
-import type { ModuleApiName, ModuleRecordReference, RecordData } from "@crm/core/records";
-import type { ComponentType, SVGProps } from "react";
-import { Icons } from "@/components/ui/icon";
+import type { ModuleRecordReference, RecordData } from "@crm/core/records";
 import { moduleRecordPath } from "@/lib/crm-paths";
-import { callReferenceSuffix } from "./calls-detail-sections";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
+import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined {
   const who = record.fields.Who_Id;
@@ -17,30 +16,24 @@ export function callsRecordHeaderIdentity(
   context?: { orgSlug?: string },
 ): {
   title: string;
-  titleHref?: string;
   subtitle?: string;
   hasPortrait?: boolean;
-  portraitIcon?: ComponentType<SVGProps<SVGSVGElement>>;
   recordNavigation?: boolean;
+  titleHref?: string;
+  titleSuffix?: string;
 } {
-  const link = callsHeaderTitleLink(record);
+  const ref = whoRef(record);
   const subject = typeof record.fields.Subject === "string" ? record.fields.Subject : "";
-  const title = link?.name ?? subject;
-  const orgSlug = context?.orgSlug ?? "";
-  const titleHref =
-    link?.id && orgSlug
-      ? moduleRecordPath(orgSlug, (link.module ?? "Contacts") as ModuleApiName, link.id)
-      : undefined;
-  const suffix = link?.suffix ?? "";
-  const cleanSuffix = suffix.startsWith("- ") ? suffix.slice(2).trim() : suffix.trim();
-
+  const link = callsHeaderTitleLink(record);
+  const tab = link ? (resolveModuleScreenByApiName(link.module)?.tab ?? link.module) : undefined;
   return {
-    title,
-    ...(titleHref ? { titleHref } : {}),
-    ...(cleanSuffix ? { subtitle: cleanSuffix } : {}),
-    hasPortrait: true,
-    portraitIcon: Icons.phone,
+    title: ref?.name ?? subject,
+    hasPortrait: false,
     recordNavigation: true,
+    ...(link && tab && context?.orgSlug
+      ? { titleHref: moduleRecordPath(context.orgSlug, tab, link.id) }
+      : {}),
+    ...(link?.suffix ? { titleSuffix: link.suffix } : {}),
   };
 }
 
@@ -54,6 +47,6 @@ export function callsHeaderTitleLink(
     name: ref.name,
     module: ref.module,
     id: ref.id,
-    suffix: callReferenceSuffix(record, "Who_Id"),
+    suffix: referenceModuleSuffix(record.fields.Who_Id),
   };
 }

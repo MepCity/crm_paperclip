@@ -9,6 +9,7 @@ export type BusinessCardField = {
   field: FieldDefinition;
   value: FieldValue;
   callAction?: boolean;
+  suffix?: string;
   valueSuffix?: string;
 };
 
@@ -21,13 +22,13 @@ export interface BusinessCardProps {
 export function BusinessCard({ fields, ownerNames, format }: BusinessCardProps) {
   return (
     <section className="detail-card detail-business-card" aria-label="Business card">
-      {fields.map(({ field, value, callAction, valueSuffix }) => (
+      {fields.map(({ field, value, callAction, suffix, valueSuffix }) => (
         <DetailFieldRow
           key={field.apiName}
           field={field}
           value={value}
           callAction={callAction}
-          valueSuffix={valueSuffix}
+          suffix={suffix ?? valueSuffix}
           ownerNames={ownerNames}
           format={format}
           layout="business"

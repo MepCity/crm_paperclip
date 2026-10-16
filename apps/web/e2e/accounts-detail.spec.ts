@@ -163,6 +163,31 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  // AD-159 – AD-162: an inline edit should leave a History row. The Accounts Timeline never
+  // receives events (ACCOUNTS_TIMELINE_EMPTY_EVENTS), so the row is missing; bug reported on MEP-672.
+  test.fixme("Timeline History shows a row after an inline edit (AD-159 – AD-162)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const siteRow = page.locator('[data-detail-field="Account_Site"]');
+    await siteRow.hover();
+    await siteRow.getByRole("button", { name: "Edit Account Site value" }).click();
+    const input = siteRow.getByRole("textbox");
+    await input.fill("History Site");
+    await input.press("Enter");
+    await expect(siteRow).toContainText("History Site");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Account Site/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Contacts card lists related contacts and supports New", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);

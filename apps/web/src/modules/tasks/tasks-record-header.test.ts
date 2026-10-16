@@ -11,15 +11,27 @@ test("builds record header with Subject title, static task icon and default reco
   const result = tasksRecordHeaderIdentity(taskRecord({ Subject: "Call with Client" }));
 
   expect(result.title).toBe("Call with Client");
-  expect(result.hasPortrait).toBe(true);
-  expect(result.portraitIcon).toBe(Icons.check);
-  expect("recordNavigation" in result).toBe(false);
+  expect(result.hasPortrait).toBe(false);
+  expect(result.recordNavigation).toBe(true);
   expect(result.subtitle).toBeUndefined();
 });
 
 test("handles empty or missing Subject safely with empty string title", () => {
-  for (const subject of [undefined, null, ""]) {
-    expect(tasksRecordHeaderIdentity(taskRecord({ Subject: subject ?? null })).title).toBe("");
-  }
-  expect(tasksRecordHeaderIdentity(taskRecord({})).title).toBe("");
+  expect(tasksRecordHeaderIdentity(taskRecord({}))).toEqual({
+    title: "",
+    hasPortrait: false,
+    recordNavigation: true,
+  });
+
+  expect(tasksRecordHeaderIdentity(taskRecord({ Subject: null }))).toEqual({
+    title: "",
+    hasPortrait: false,
+    recordNavigation: true,
+  });
+
+  expect(tasksRecordHeaderIdentity(taskRecord({ Subject: "" }))).toEqual({
+    title: "",
+    hasPortrait: false,
+    recordNavigation: true,
+  });
 });

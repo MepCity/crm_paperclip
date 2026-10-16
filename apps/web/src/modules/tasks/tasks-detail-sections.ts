@@ -63,6 +63,15 @@ export function taskRelatedToSuffix(record: RecordData): string | undefined {
   return `- ${screen?.pluralLabel ?? KNOWN_MODULE_PLURAL_LABELS[ref.module] ?? ref.module}`;
 }
 
+/** " - Contacts" style suffix (plural module label) shown after a relation link. */
+export function referenceModuleSuffix(value: unknown): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const ref = value as Partial<ModuleRecordReference>;
+  if (!ref.module || (!ref.id && !ref.name?.trim())) return undefined;
+  const screen = resolveModuleScreenByApiName(ref.module);
+  return ` - ${screen?.pluralLabel ?? ref.module}`;
+}
+
 /**
  * Builds business card fields in the order supplied by service metadata,
  * falling back to TASKS_BUSINESS_CARD_FIELDS when metadata businessCardFields is empty.
@@ -76,9 +85,15 @@ export function buildTasksBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    if (!field || !visible(field, record)) return [];
-    const valueSuffix = name === "What_Id" ? taskRelatedToSuffix(record) : undefined;
-    return [{ field, value: record.fields[name] ?? null, ...(valueSuffix ? { valueSuffix } : {}) }];
+    return field && visible(field, record)
+      ? [
+          {
+            field,
+            value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
+          },
+        ]
+      : [];
   });
 }
 
@@ -115,6 +130,7 @@ export function buildTasksDetailSections(
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field,
             value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
         }

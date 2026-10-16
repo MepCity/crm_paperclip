@@ -18,8 +18,8 @@ export interface DetailFieldRowProps {
   format: FormatOptions;
   auditTimestamp?: string | null;
   layout: "business" | "details" | "details-full" | "details-full-description";
-  callAction?: boolean;
-  /** Unlinked text drawn after the value, e.g. the module label of a related record. */
+  /** Plain text after the value, e.g. " - Contacts" after a relation link. */
+  suffix?: string;
   valueSuffix?: string;
   onEdit?: (apiName: string) => void;
 }
@@ -32,6 +32,7 @@ export function DetailFieldRow({
   auditTimestamp,
   layout,
   callAction,
+  suffix,
   valueSuffix,
   onEdit,
 }: DetailFieldRowProps) {
@@ -160,8 +161,10 @@ export function DetailFieldRow({
                 auditTimestamp={auditTimestamp}
               />
             )}
-            {valueSuffix && !isFieldValueEmpty(field, value) ? (
-              <span className="ms-1.5 text-text-muted">{valueSuffix}</span>
+            {(suffix ?? valueSuffix) && !isFieldValueEmpty(field, value) ? (
+              <span className="detail-field-value" data-field-suffix>
+                {suffix ?? valueSuffix}
+              </span>
             ) : null}
             {callAction && !isFieldValueEmpty(field, value) ? (
               <Button

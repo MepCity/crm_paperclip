@@ -7,6 +7,9 @@ function root(orgSlug: string) {
 export const apiKeys = {
   root,
   homeCurrency: (orgSlug: string) => [...root(orgSlug), "homeCurrency"] as const,
+  imports: (orgSlug: string) => [...root(orgSlug), "imports"] as const,
+  importJob: (orgSlug: string, id: string) => [...root(orgSlug), "imports", id] as const,
+  exports: (orgSlug: string) => [...root(orgSlug), "exports"] as const,
   users: (orgSlug: string) => [...root(orgSlug), "users"] as const,
   module: (orgSlug: string, module: string) => [...root(orgSlug), "module", module] as const,
   views: (orgSlug: string, module: string) =>

@@ -533,3 +533,22 @@ Reuse the missing-shell list in global-search.md. Documentary My Requ… (SH-49)
 5. Hover-only row actions were not observed; no duplicate screen was opened live, and no additional toolbar/menu labels are inferred.
 6. Unknown ownership: hover-only actions (X-61), spreadsheet view, announcement-count badge (SH-40.1), trash bin (SH-50), shared utilities from global-search.md and documentary My Requ… (SH-49). Deduplicate's later email notification delivery belongs to M10; the job remains M2.
 7. D3 contains selected-field-only wording alongside conflict checks for other values; preserve the explicit conflict resolution rule, but exact blank-value and conflict evaluation needs clarification before automatic merge.
+
+
+## Child-record integration boundary
+
+Notes transfer to the merge master without changing their IDs. Contact merge
+transfers Contact_Roles, retaining the master's existing row for repeated deals
+and retaining one transferred row when multiple duplicates share another deal.
+The fixture applies transfers on staged stores before committing the merge.
+
+Open question: Lead conversion has no record-service operation yet, and the
+reference behavior for notes on conversion remains unresearched. No conversion
+transfer is implemented; updating an already converted Lead retains its notes
+on that Lead. This regression test does not establish actual conversion parity.
+
+Notes and Contact_Roles are child modules: generic CRUD and criteria-based
+listing remain available, while global/advanced search, selectable module lists
+and duplicate discovery exclude them. Export is not implemented on the current
+RecordService port; any future export module picker must use the child-module
+exclusion rather than all registered bundles.

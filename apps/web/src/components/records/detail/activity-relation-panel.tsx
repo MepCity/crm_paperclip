@@ -137,7 +137,7 @@ export function ActivityRelationPanel({
     <aside
       aria-label="Related information"
       data-activity-relation-panel
-      className="flex flex-col gap-4 bg-surface py-1"
+      className="flex flex-col gap-4 bg-surface px-2.5 pb-4 pt-[15px]"
     >
       <Select
         label="Related person"
@@ -179,8 +179,8 @@ export function ActivityRelationPanel({
                 <div className="flex items-center gap-2">
                   <Link
                     href={contactRecordPath(person.id)}
-                    variant="body"
-                    className="detail-field-value-link font-semibold hover:underline"
+                    variant="text"
+                    className="font-semibold hover:underline"
                   >
                     {person.name}
                   </Link>
@@ -246,9 +246,7 @@ export function ActivityRelationPanel({
           <section aria-label="Deal Summary" className="flex flex-col gap-2">
             <SectionHeader title="Deal Summary" actionLabel="New" onAction={onNewDeal} />
             {deals.length === 0 ? (
-              <p className="py-2 text-center text-md text-text-empty">
-                {dealEmptyText ?? "No records found"}
-              </p>
+              <p className="text-md text-text">{dealEmptyText ?? "No Deals found"}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {deals.map((deal) => (
