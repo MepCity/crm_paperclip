@@ -45,3 +45,9 @@
     gap: 0.5rem;
   }
 }
+.kanban-manage-panel {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(100%, 64rem);
+  border-radius: var(--radius-lg);
+}

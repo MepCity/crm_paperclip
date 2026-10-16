@@ -39,6 +39,8 @@ export function buildTasksFormDefaults(metadata?: ModuleMetadata): Record<string
 export const tasksFormRules: FormRules = {
   owner: "Owner",
   omitted: TASKS_FORM_OMITTED_FIELDS,
+  lookupLabelFields: ["Who_Id", "What_Id"],
+  subduedToggles: ["Recurring_Activity"],
   defaultValues: buildTasksFormDefaults,
 };
 

@@ -201,6 +201,10 @@ export interface FormRules {
   numberLimits?: Readonly<Record<string, NumberLimits>>;
   stageConditionalFields?: readonly StageConditionalField[];
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
+  /** Activity lookups whose module selector replaces the static row label. */
+  lookupLabelFields?: readonly string[];
+  /** Subdued off-state appearance; selection and editability are unchanged. */
+  subduedToggles?: readonly string[];
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);

@@ -235,7 +235,7 @@ remain authoritative.
 | D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row; Send Email as primary later-module command (M10); prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
 | D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
-| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card; Deals rail row active (D-14, MEP-415) | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): not walked** in MEP-355 (card not reopened after the fix landed) |
+| D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card; Deals rail row active (D-14, MEP-415) | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): covered by e2e "Reporting Contacts filters by manager id, not by a shared Full Name"** (not walked in MEP-355; card not reopened after the fix landed) |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View opens Contact Hierarchy modal (D-90, MEP-421) | Contacts detail e2e |
 | D-14, D-56 | Deals card lists the Deals whose Contact Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Contact Name, and Account Name when the contact has an account (MEP-415) | `e2e/contacts-detail.spec.ts`; `contacts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
 | AD-163–AD-164 | Contact Hierarchy modal Close Modal button (AD-163) and indented contact links (AD-164, MEP-421) | `contact-hierarchy-modal.test.tsx`, `e2e/contacts-detail.spec.ts` |
@@ -262,7 +262,7 @@ follows layout metadata (interim rule).
 | X-45.1 – X-45.4, X-46, X-47 | Select Field panel: unique fields first, then the documented order, then the module's other text, email and phone fields; Email preselected; a fourth field is refused | `dedup-config.test.ts`, `dedup-job.test.tsx` |
 | X-48 – X-50 | Deduplicate confirmation with the Auto-Merge and Resolve Conflicts notes and Learn More | `dedup-job.test.tsx`; e2e |
 | X-51 | Running notice with OK; the result waits for it | `dedup-job.test.tsx`; e2e |
-| X-52 – X-54 | Conflict popup: merged groups and removed records, Do it later, Resolve Now | `dedup-job.test.tsx`; e2e (Resolve Now walked in MEP-355; **Do it later: not walked**, test-only) |
+| X-52 – X-54 | Conflict popup: merged groups and removed records, Do it later, Resolve Now | `dedup-job.test.tsx`; e2e (Resolve Now walked in MEP-355; **Do it later: e2e "Contacts: Do it later closes the notice and keeps the list"**) |
 | X-55 – X-60 | Conflict groups page: field tabs, range with arrows, match value and Duplicates columns, View; groups over three ask for three records first; the shared comparison merges | `dedup-conflict-screen.test.tsx`; e2e |
 
 Later-module controls: none on these screens; the Leads menu rows of later modules
@@ -356,7 +356,7 @@ and the reference captures.
 | AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link; Send Email as primary later-module command (M10, MEP-394); Last Update on the tab row with clock icon (MEP-394); prev/next from list context | `e2e/accounts-detail.spec.ts`; `accounts-last-update.test.ts` |
 | AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete; Find and Merge Duplicates opens the shared merge flow (MEP-393, after MEP-384 walk) | Accounts detail e2e; `accounts-record-more-options.test.ts` |
 | AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
-| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: not walked** (seed record has no history) |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: e2e "Timeline History shows a row after an inline edit" (`test.fixme`, Accounts Timeline receives no events; bug reported on MEP-672)** |
 | AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
 | AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View opens Contact Hierarchy modal (AD-115, MEP-421) | Accounts detail e2e |
 | AD-112–AD-114 | Deals rail plus and Deals card: the Deals whose Account Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Account Name prefilled; Assign is handler-less like the Contacts card Assign (MEP-415) | `e2e/accounts-detail.spec.ts`; `accounts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
@@ -381,7 +381,7 @@ detail were walked in MEP-384 (L-43 / D-03 / D-39 cross-check).
 | AF-25–AF-43 | Billing and Shipping address groups; Copy Address; Clear All per group | Dual-address rendering; accounts form e2e |
 | AF-30.1, AF-35.1–AF-35.8 | State list with only `-None-` while Country is unset; country panel search and options | Shared composite input tests |
 | AF-44 | Description Information textarea | Shared form section |
-| AF-45–AF-46 | Form footer view controls (M11, inert) | Inventory footer on the Accounts form. **AF-45 – AF-46: not walked** in MEP-384 (below the fold) |
+| AF-45–AF-46 | Form footer view controls (M11, inert) | Inventory footer on the Accounts form. **AF-45 – AF-46: e2e "form footer view controls draw below the fold and stay inert"** |
 
 Connected To is omitted on create (metadata-enabled but absent from the reference form captures).
 Registering Accounts retires the transitional inert state of Account Name references: the Contacts
@@ -406,7 +406,7 @@ Save and New reset, the whole Edit Account form and the clone rule.
 | SH-15 | Registered in registry.ts beneath Contacts; list and detail routes resolve Accounts definition | `registry.test.ts`, `definition.test.ts`, `accounts-list.spec.ts` |
 | AL-01, AL-52 | Pinned view tab strip supporting "All Accounts" and "All Locked Accounts" tabs alongside view pill | `view-tab-strip.test.tsx`, `accounts-list.spec.ts` |
 | AL-02, AL-02.2–AL-02.9 | View ellipsis menu with 8 stock views in reference CRM order; custom view switching | `view-tab-strip.test.tsx`, `accounts-list.spec.ts` |
-| AL-02.10–AL-02.12 | Customization items in view menu: Dropdown toggle, New Custom View (M11), Manage Custom View (M11) | `view-tab-strip.test.tsx`. **AL-02.10: not walked** (strip did not return to dropdown in this pass) |
+| AL-02.10–AL-02.12 | Customization items in view menu: Dropdown toggle, New Custom View (M11), Manage Custom View (M11) | `view-tab-strip.test.tsx`. **AL-02.10: e2e "Accounts view menu: show custom views as Dropdown stays inert"** (item is inert; the strip never switches to a dropdown) |
 | AL-03, AL-64 | Filter toggle button, list refresh button | `accounts-list.spec.ts` |
 | AL-04 | Sort popover by Account Name and field dictionary labels | `accounts-list.spec.ts`, `list-config.test.ts` |
 | AL-05–AL-11 | Seven shared view type icons: List, Kanban, Sheet, Chart, Timeline, Two horizontal bars, Down chevron | Shared component tests. AL-06 – AL-11: drawn inert; only list presentation is active (interim rule) |
@@ -623,10 +623,10 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - **Later-module controls (M5+):** activity, note, attachment, campaign, cases, email, customization, automation, and commerce controls (M5–M12, P2, P3) remain drawn in place and inert when clicked (`data-later-module`).
 - **Contact Roles card (DD-125–DD-132):** table headers, columns, and structural row links are drawn; upper actions (Add Contacts Roles, Edit All, table icon) and rail count badge (DD-58) remain handler-less until the deal–contact role relation service ships.
 - **Accounts Deals card Assign (AD-113):** drawn handler-less, mirroring the Contacts card Assign.
-- **Expected Revenue on form (DF-21):** read-only and uncomputed on client; server-side pipeline formula evaluation deferred.
+- **Expected Revenue on form (DF-21):** read-only without a live client preview; the server computes `Amount × Probability / 100`, rounded to two decimals, after stage probability defaults, and returns the value after saving. Blank Amount yields `null`. This is an interim CTO rule because the exported metadata provides no formula. Seed, create, update, mass update and merge use the same Deals rule. CSV persistence is not implemented yet. Per Platform Lead decision MEP-673, client-supplied Expected_Revenue is rejected by shared read-only validation and stored values remain unchanged. Open gate question: this retains existing validation rather than the CTO wording requesting silent ignoring; confirm this interim difference at the module gate. Blank Probability follows existing stage-default rules; revenue uses the stored Probability.
 - **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
 - **Advanced search stage chip (S-42):** chip renders stage label for display only; no interactive filtering.
-- **Kanban configuration and multi-pipeline:** Kanban settings window (DP-90–DP-93, DP-103) is done; Stage is the only Categorize By option and Mono Color the only Header Style (DP-94, DP-95 pending), and the multi-pipeline selector (DP-96) and pipeline management remain out of scope for Module 4.
+- **Kanban configuration and multi-pipeline:** Kanban settings window (DP-90–DP-93, DP-103), Manage Kanban Views window (DP-95, DP-111, DP-112) and the create-mode Share this with choice (DP-110) are done; Stage is the only Categorize By option and Mono Color the only Header Style (DP-94 pending). Gaps: Manage Kanban Views has no reordering or deleting (movements not observed), Selected users is drawn disabled (user picker not observed), and the multi-pipeline selector (DP-96) and pipeline management remain out of scope for Module 4.
 - **Timeline history:** empty shell walked (seed deal record carries no prior audit events).
 - **Leads converted deal:** generic lookup display resolves the registered Deals route; seeded Leads records carry no converted references.
 

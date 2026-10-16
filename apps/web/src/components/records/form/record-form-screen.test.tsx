@@ -741,3 +741,25 @@ test("updates initial values when createPrefill arrives after initial mount", as
     expect(updatedInput.value).toBe("Account 001");
   });
 });
+
+test("activity variant removes inventory chrome and the enclosing card", async () => {
+  harness(undefined, { variant: "activity", inventoryChrome: true });
+  await ready();
+  expect(screen.queryByRole("button", { name: "Client Script" })).toBeNull();
+  expect(screen.queryByText("Create Form Views :")).toBeNull();
+  expect(screen.getByRole("button", { name: "Edit Page Layout" })).toBeTruthy();
+  const form = screen.getByRole("form", { name: "Create Lead" });
+  expect(form.parentElement?.className).toBe("record-form-activity-body");
+  const subject = screen.getByRole("textbox", { name: "Last Name" });
+  expect(subject.closest("[data-record-form-row]")?.hasAttribute("data-required")).toBe(true);
+});
+
+test("default variant retains inventory chrome and the enclosing card", async () => {
+  harness(undefined, { inventoryChrome: true });
+  await ready();
+  expect(screen.getByRole("button", { name: "Client Script" })).toBeTruthy();
+  expect(screen.getByText("Create Form Views :")).toBeTruthy();
+  expect(screen.getByRole("form", { name: "Create Lead" }).parentElement?.className).toBe(
+    "record-form-card",
+  );
+});

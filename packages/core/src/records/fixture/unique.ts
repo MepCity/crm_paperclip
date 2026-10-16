@@ -17,9 +17,10 @@ export function assertUniqueFieldValues(
 ): void {
   const uniqueFields = fields.filter((field) => field.unique);
   if (!uniqueFields.length) return;
+  const list = [...records];
   for (const field of uniqueFields) {
     const seen = new Map<string, string>();
-    for (const record of records) {
+    for (const record of list) {
       const value = record.fields[field.apiName] ?? null;
       const key = uniqueComparableKey(field, value);
       if (key === null) continue;
