@@ -266,3 +266,12 @@
   margin-block-end: 0;
   white-space: nowrap;
 }
+
+.detail-details-card--activity .detail-details-row,
+.detail-details-card--activity .detail-details-row-full {
+  grid-template-columns: 153.5px 31.5px minmax(0, 1fr);
+}
+
+.detail-details-card--activity .detail-field-label {
+  white-space: nowrap;
+}
