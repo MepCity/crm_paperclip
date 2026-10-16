@@ -412,10 +412,7 @@ function LoadedRecordForm({
         values,
         editing ? baseline : undefined,
       );
-      const fill = editing || !dynamic?.hiddenFill ? {} : dynamic.hiddenFill;
-      const input = { ...payload };
-      for (const [name, value] of Object.entries(fill))
-        if (isHidden(name) && input[name] == null) input[name] = value;
+      const input = payload;
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);

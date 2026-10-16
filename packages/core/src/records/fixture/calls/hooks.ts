@@ -2,8 +2,12 @@ import { ValidationError } from "../../../errors";
 import type { FixtureModuleHooks } from "../hooks";
 
 export const callsHooks: FixtureModuleHooks = {
+  optionalFields: (fields) =>
+    fields.Call_Type === "Inbound" || fields.Outgoing_Call_Status === "Completed"
+      ? []
+      : ["Call_Duration"],
   applyRules(fields) {
-    if (fields.Outgoing_Call_Status !== "Completed") return;
+    if (fields.Outgoing_Call_Status !== "Completed" && fields.Call_Type !== "Inbound") return;
     const duration = fields.Call_Duration;
     if (typeof duration !== "string" || !/^\d{2,}:[0-5]\d$/.test(duration))
       throw new ValidationError({ Call_Duration: ["Enter a duration in mm:ss format."] });

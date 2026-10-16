@@ -198,3 +198,26 @@ test("optional lookup fields accept null or populated references", () => {
     ),
   ).toEqual({});
 });
+
+test("required duration treats zero duration (00:00) as empty", () => {
+  const required = [field("Call_Duration", "Call Duration", "text", true)];
+  for (const zero of ["00:00", "0:00", "00:0", "000:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: zero }, (f) => f.label)).toEqual({
+      Call_Duration: "Call Duration cannot be empty.",
+    });
+  }
+  expect(validateRecordForm(required, { Call_Duration: null }, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  for (const valid of ["00:05", "01:00", "05:30", "120:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: valid }, (f) => f.label)).toEqual({});
+  }
+
+  const optional = [field("Call_Duration", "Call Duration", "text", false)];
+  for (const val of ["00:00", null, "05:30"]) {
+    expect(validateRecordForm(optional, { Call_Duration: val }, (f) => f.label)).toEqual({});
+  }
+});
