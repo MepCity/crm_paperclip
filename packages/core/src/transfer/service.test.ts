@@ -603,7 +603,7 @@ describe("activity transfers", () => {
         What_Id: parent.id,
         Who_Id: person.id,
         $se_module: "Accounts",
-        Owner: s.ctx.userId,
+        ...(module === "Calls" ? {} : { Owner: s.ctx.userId }),
       };
       const preview = await s.preview(module, Object.keys(input), [Object.values(input)]);
       expect(preview.matchFields).toEqual([{ field: "id", label: "Record Id" }]);
@@ -648,6 +648,35 @@ describe("activity transfers", () => {
   );
 
   it.each(["Tasks", "Events", "Calls"] as const)(
+    "%s enforces metadata required fields and rejects subject matching",
+    async (module) => {
+      const s = setup();
+      const metadata = await s.records.getModule(module);
+      const required = metadata.fields.find(
+        (field) => field.required && field.views.create && !field.readOnly,
+      );
+      expect(required).toBeDefined();
+      const input: Record<string, string> = { ...activityInputs[module] };
+      delete input[required?.apiName ?? ""];
+      await expect(s.run(module, [input])).rejects.toMatchObject({
+        code: "mapping_missing_required",
+      });
+      await expect(
+        s.run(module, [activityInputs[module]], {
+          matchField: module === "Events" ? "Event_Title" : "Subject",
+        }),
+      ).rejects.toMatchObject({ code: "invalid_match_field" });
+    },
+  );
+
+  it("keeps Call Owner outside writable import fields", async () => {
+    const s = setup();
+    await expect(
+      s.run("Calls", [{ ...activityInputs.Calls, Owner: s.ctx.userId }]),
+    ).rejects.toMatchObject({ code: "mapping_system_field" });
+  });
+
+  it.each(["Tasks", "Events", "Calls"] as const)(
     "%s rejects parent names, unknown and unreadable IDs with row errors",
     async (module) => {
       const s = setup();
@@ -667,6 +696,19 @@ describe("activity transfers", () => {
         ]);
         expect(job.counts).toEqual({ created: 0, updated: 0, skipped: 0, errors: 1 });
         expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "What_Id" }]);
+      }
+      const person = await s.records.create("Contacts", { Last_Name: "Named person" });
+      for (const [value, code] of [
+        ["Named person", "not_found"],
+        ["missing-person-id", "not_found"],
+        [person.id, "permission_denied"],
+      ]) {
+        vi.mocked(s.records.get).mockImplementation(async (name, id) => {
+          if (name === "Contacts" && id === person.id) throw new ForbiddenError();
+          return get(name, id);
+        });
+        const job = await s.run(module, [{ ...activityInputs[module], Who_Id: value ?? "" }]);
+        expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "Who_Id" }]);
       }
       const invalid = await s.run(module, [
         { ...activityInputs[module], What_Id: parent.id, $se_module: "Tasks" },
