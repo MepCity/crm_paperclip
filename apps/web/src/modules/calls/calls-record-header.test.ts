@@ -1,5 +1,4 @@
 import { expect, test } from "vitest";
-import { Icons } from "@/components/ui/icon";
 import { callsHeaderTitleLink, callsRecordHeaderIdentity } from "./calls-record-header";
 
 const who = { id: "p1", name: "Ada Sample", module: "Contacts" };

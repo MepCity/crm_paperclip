@@ -71,7 +71,7 @@ test.describe("Calls record detail", () => {
     await expect(card).toBeVisible();
     const cardText = (await card.innerText()).replace(/\s+/g, " ");
     const positions = [
-      "Contact Name",
+      "Call For",
       "Related To",
       "Call Type",
       "Outgoing Call Status",

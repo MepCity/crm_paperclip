@@ -6,6 +6,7 @@ import type {
 } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function visible(field: FieldDefinition, record: RecordData) {

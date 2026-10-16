@@ -45,14 +45,14 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     recordNavigation: true,
     addTags: { label: "Add Tags", laterModule: "M6" },
     // Scheduled calls: Reschedule Call split button and Down arrow; other states have no header command.
-    buildHeaderCommands: (record, { editHref }) =>
+    buildHeaderCommands: (record) =>
       isCallScheduled(record)
         ? [
             {
               id: "reschedule-call",
               label: "Reschedule Call",
               variant: "primary" as const,
-              href: editHref,
+              onPress: () => {},
               splitLabel: "Down arrow",
             },
           ]

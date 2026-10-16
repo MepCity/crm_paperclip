@@ -198,7 +198,6 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
-      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
@@ -248,7 +247,6 @@ export interface ModuleScreenDefinition {
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
-      onEdit?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

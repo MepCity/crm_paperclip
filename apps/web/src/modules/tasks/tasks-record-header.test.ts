@@ -1,6 +1,5 @@
 import type { RecordData } from "@crm/core/records";
 import { expect, test } from "vitest";
-import { Icons } from "@/components/ui/icon";
 import { tasksRecordHeaderIdentity } from "./tasks-record-header";
 
 function taskRecord(fields: RecordData["fields"] = {}): RecordData {

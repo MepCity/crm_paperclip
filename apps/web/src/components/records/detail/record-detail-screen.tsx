@@ -263,7 +263,6 @@ export function RecordDetailScreen({
     portraitIcon,
     hasPortrait,
     recordNavigation,
-    titleHref,
     titleSuffix,
   } = rules.header(record, {
     orgSlug,
@@ -484,7 +483,6 @@ export function RecordDetailScreen({
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
             titleGlyph={rules.titleGlyph}
-            titleHref={titleHref}
             titleSuffix={titleSuffix}
             commands={[
               ...(rules.buildHeaderCommands
@@ -543,7 +541,9 @@ export function RecordDetailScreen({
         }
         sidePanel={
           detailSlots?.sidePanel ??
-          (rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined)
+          (rules.SidePanel ? (
+            <rules.SidePanel record={displayRecord} orgSlug={orgSlug} />
+          ) : undefined)
         }
         scrollTopLabel="Scroll To Top"
       />

@@ -18,6 +18,7 @@ export interface DetailFieldRowProps {
   format: FormatOptions;
   auditTimestamp?: string | null;
   layout: "business" | "details" | "details-full" | "details-full-description";
+  callAction?: boolean;
   /** Plain text after the value, e.g. " - Contacts" after a relation link. */
   suffix?: string;
   valueSuffix?: string;

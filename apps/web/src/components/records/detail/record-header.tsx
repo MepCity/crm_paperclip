@@ -33,7 +33,6 @@ export interface RecordMenuGroup {
 }
 export interface RecordHeaderProps {
   title: string;
-  titleHref?: string;
   subtitle?: string;
   subtitleLaterModule?: ModuleKey;
   subtitleHref?: string;
@@ -61,7 +60,6 @@ export interface RecordHeaderProps {
 
 export function RecordHeader({
   title,
-  titleHref,
   subtitle,
   subtitleLaterModule,
   subtitleHref,
@@ -132,7 +130,12 @@ export function RecordHeader({
           aria-label={accessibleTitle}
         >
           {TitleGlyph ? (
-            <TitleGlyph aria-hidden data-record-title-glyph data-record-portrait className="size-4 shrink-0" />
+            <TitleGlyph
+              aria-hidden
+              data-record-title-glyph
+              data-record-portrait
+              className="size-4 shrink-0"
+            />
           ) : null}
           {titleHref ? (
             <Link href={titleHref} className="text-2xl font-bold hover:underline">
