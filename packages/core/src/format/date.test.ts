@@ -283,6 +283,8 @@ describe("formatNumericDate / formatNumericDateTime", () => {
 
   it("returns an empty string for null and undefined", () => {
     expect(formatNumericDate(null, utc)).toBe("");
+    expect(formatNumericDate(undefined, utc)).toBe("");
+    expect(formatNumericDateTime(null, utc)).toBe("");
     expect(formatNumericDateTime(undefined, utc)).toBe("");
   });
 });

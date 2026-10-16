@@ -543,3 +543,65 @@ test("row hover tools follow rowTools; the edit tool links to the edit page", ()
     "/records/rec-001/edit",
   );
 });
+
+test.each([
+  { rowTools: ["edit", "note"] as const, expected: ["Edit record", "Notes"] },
+  {
+    rowTools: ["edit", "note", "ellipsis"] as const,
+    expected: ["Edit record", "Notes", "Record actions"],
+  },
+])("Activities tool sequence $expected", ({ rowTools, expected }) => {
+  render(
+    <Harness
+      records={[record("rec-001", "Meeting")]}
+      extra={{
+        laterInventory: true,
+        rowTools,
+        rowEditHref: (item) => `/records/${item.id}/edit`,
+      }}
+    />,
+  );
+  const row = document.querySelector("[data-part=row]") as HTMLElement;
+  expect(
+    Array.from(row.querySelectorAll("td:first-child [aria-label]"), (node) =>
+      node.getAttribute("aria-label"),
+    ),
+  ).toEqual(expected);
+  expect(within(row).getByRole("link", { name: "Edit record" }).getAttribute("href")).toBe(
+    "/records/rec-001/edit",
+  );
+});
+
+test("all-day formatting comes from each row and leaves ordinary lists unchanged", () => {
+  const datetime = {
+    ...columns[0],
+    apiName: "Start_DateTime",
+    label: "From",
+    dataType: "datetime",
+  } as FieldDefinition;
+  const rows = [true, false].map((allDay, i) => ({
+    id: `row-${i}`,
+    fields: {
+      Full_Name: `Meeting ${i}`,
+      Start_DateTime: "2026-03-01T14:05:00Z",
+      All_day: allDay,
+    },
+  }));
+  const { rerender } = render(
+    <Harness
+      records={rows}
+      extra={{
+        columns: [columns[0] as FieldDefinition, datetime],
+        numericDates: true,
+        allDayField: "All_day",
+      }}
+    />,
+  );
+  const cells = () =>
+    Array.from(document.querySelectorAll("tbody tr td:last-child"), (node) => node.textContent);
+  expect(cells()).toEqual(["01.03.2026", "01.03.2026 5:05 PM"]);
+  rerender(
+    <Harness records={rows} extra={{ columns: [columns[0] as FieldDefinition, datetime] }} />,
+  );
+  expect(cells()).toEqual(["Mar 1, 2026, 5:05 PM", "Mar 1, 2026, 5:05 PM"]);
+});

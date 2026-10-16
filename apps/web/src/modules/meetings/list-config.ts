@@ -66,6 +66,7 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   pinnedViews: ["All Meetings"],
   listVariant: "activities",
   actionsMenuWidth: 160,
+  rowEditLink: true,
   rowTools: ["edit", "note"],
   relatedToPictogram: true,
   allDayField: "All_day",

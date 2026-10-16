@@ -57,6 +57,7 @@ export const callsListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: CALLS_SORT_FIELD_LABELS,
   pinnedViews: ["All Calls"],
   listVariant: "activities",
+  rowEditLink: true,
   rowTools: ["edit", "note", "ellipsis"],
   actionsMenuWidth: 143,
   viewMenuSearch: true,

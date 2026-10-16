@@ -53,13 +53,13 @@ export interface RecordTableProps {
   currencyCode?: string;
   /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
   numericDates?: boolean;
-  /** Hover tool sequence before the checkbox (Activities rows 32-33); default ellipsis + note. */
   /** Activities list: draw the Related To module pictogram (Meetings). */
   relatedToPictogram?: boolean;
   /** Activities list: boolean field marking all-day rows, whose datetime cells show only the date. */
   allDayField?: string;
   /** Edit page of a row; the `edit` hover tool links there. */
   rowEditHref?: (record: RecordData) => string;
+  /** Hover tool sequence before the checkbox; default ellipsis + note. */
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   footer: RecordTableFooterProps;
 }
