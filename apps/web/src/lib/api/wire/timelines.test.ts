@@ -61,6 +61,8 @@ describe("decodeTimelineQuery", () => {
     rejects(leaf("record.module.api_name", "equal", ["Leads"]));
     rejects(leaf("record.module.api_name", "in", []));
     rejects(leaf("record.module.api_name", "in", "Leads"));
+    rejects(leaf("record.module.api_name", "in", ["Meetings"]));
+    rejects(leaf("record.module.api_name", "in", ["Events", "Meetings"]));
     rejects(leaf("done_by.id", "equal", 5));
     rejects(leaf("done_by.id", "in", ["a", "b"]));
     rejects(leaf("done_by.id", "starts_with", "a"));
@@ -159,5 +161,19 @@ describe("encodeTimelineFilters", () => {
   it("omits empty selectors and uses a bare leaf for one", () => {
     const json = encodeTimelineFilters({ ...none, userId: "u1" }, new Date(), "UTC");
     expect(JSON.parse(json ?? "")).toEqual(leaf("done_by.id", "equal", "u1"));
+  });
+  it("maps meetings and Meetings module selection to Events", () => {
+    const jsonLower = encodeTimelineFilters({ ...none, modules: ["meetings"] }, new Date(), "UTC");
+    expect(JSON.parse(jsonLower ?? "")).toEqual(leaf("record.module.api_name", "in", ["Events"]));
+
+    const jsonUpper = encodeTimelineFilters({ ...none, modules: ["Meetings"] }, new Date(), "UTC");
+    expect(JSON.parse(jsonUpper ?? "")).toEqual(leaf("record.module.api_name", "in", ["Events"]));
+
+    const jsonDedup = encodeTimelineFilters(
+      { ...none, modules: ["Events", "meetings"] },
+      new Date(),
+      "UTC",
+    );
+    expect(JSON.parse(jsonDedup ?? "")).toEqual(leaf("record.module.api_name", "in", ["Events"]));
   });
 });

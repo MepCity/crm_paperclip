@@ -69,7 +69,10 @@ function applyLeaf(query: TimelineQuery, leaf: Record<string, unknown>, seen: Se
   switch (name) {
     case "record.module.api_name": {
       if (comparator !== "in") invalid(name, "Unsupported comparator.");
-      query.modules = stringArray(value, name);
+      const modules = stringArray(value, name);
+      if (modules.includes("Meetings"))
+        invalid(name, "Wire module Meetings is not valid — modules are API names (Events).");
+      query.modules = modules;
       return;
     }
     case "done_by.id": {
@@ -187,7 +190,12 @@ export function encodeTimelineFilters(
   const leaves: Record<string, unknown>[] = [];
   const leaf = (api_name: string, comparator: string, value: unknown) =>
     leaves.push({ field: { api_name }, comparator, value });
-  if (selection.modules.length) leaf("record.module.api_name", "in", selection.modules);
+  if (selection.modules.length) {
+    const modules = Array.from(
+      new Set(selection.modules.map((m) => (m === "Meetings" || m === "meetings" ? "Events" : m))),
+    );
+    leaf("record.module.api_name", "in", modules);
+  }
   if (selection.userId) leaf("done_by.id", "equal", selection.userId);
   if (selection.time !== "any") {
     const today = localDate(now.getTime(), timeZone);
