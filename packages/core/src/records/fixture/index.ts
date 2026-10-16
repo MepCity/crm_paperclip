@@ -227,7 +227,13 @@ export function createFixtureRecordService(
     // Hooks may mutate rows in place, including cross-module records. Give them
     // owned rows once per module, before any mutable access is returned.
     if (transactionOriginal && !hookCopies.has(module)) {
-      staged.records = copy(staged.records);
+      const original = transactionOriginal.get(module);
+      staged.records = new Map(
+        [...staged.records].map(([id, record]) => [
+          id,
+          original?.records.get(id) === record ? copy(record) : record,
+        ]),
+      );
       hookCopies.add(module);
     }
     return staged;
@@ -389,7 +395,6 @@ export function createFixtureRecordService(
         bundle.metadata.fields,
         projectRecordsWithOverrides(moduleState.records, overrides),
       );
-      if (bundle.afterWrite) hookModuleStore(module);
       for (const record of updates) {
         bundle.afterWrite?.(record, copy(moduleState.records.get(record.id)), hookContext);
         moduleState.records.set(record.id, record);
@@ -494,7 +499,6 @@ export function createFixtureRecordService(
           projected.set(name, next);
         }
         for (const [name, records] of projected) moduleStore(name).records = records;
-        if (bundle.afterWrite) hookModuleStore(module);
         bundle.afterWrite?.(recordFor(module, master.id), copy(master), hookContext);
         return copy(resolveRead(module, recordFor(module, master.id)));
       },
@@ -785,7 +789,6 @@ export function createFixtureRecordService(
           bundle.metadata.fields,
           projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
         );
-        if (bundle.afterWrite) hookModuleStore(module);
         moduleState.records.set(id, record);
         bundle.afterWrite?.(record, undefined, hookContext);
         return copy(resolveRead(module, record));
@@ -818,7 +821,6 @@ export function createFixtureRecordService(
           bundle.metadata.fields,
           projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
         );
-        if (bundle.afterWrite) hookModuleStore(module);
         bundle.afterWrite?.(updated, copy(record), hookContext);
         moduleState.records.set(id, updated);
         return copy(resolveRead(module, updated));
