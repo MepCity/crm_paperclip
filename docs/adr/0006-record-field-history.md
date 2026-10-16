@@ -1,6 +1,6 @@
 # ADR 0006 — Record field history and the Timeline event stream
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-10-15
 - Decider: CTO
 - Issue: MEP-692
@@ -163,7 +163,7 @@ Return known optional unpopulated automation/extension/type details as null
 | --- | --- |
 | Modules | `record.module.api_name` + `in` + selected API-name array. Notes, Attachments, Tasks, Calls, Events, Emails; direct parent field events match the parent module. Empty array omits the condition. Meetings maps to Events. |
 | Users | `done_by.id` + `equal` + selected actor ID; All Users omits it. The current component supports one user; the service may support documented `in` for future callers. Never resolve a display name as identity. |
-| Time | `audited_time` + `between` + two ISO timestamps. Any Time omits it. Interim intervals are UTC calendar days: Today `[today,tomorrow)`, Yesterday `[yesterday,today)`, Last 7/30 days include today and the preceding 6/29 days. Resolve once when Apply is pressed. Custom Range/Specific date remain disabled until scoped UI work. |
+| Time | `audited_time` + `between` + two ISO timestamps. Any Time omits it. Interim intervals use day boundaries in the user's display time zone: Today `[today,tomorrow)`, Yesterday `[yesterday,today)`, Last 7/30 days include today and the preceding 6/29 days. The client computes offset ISO timestamps once when Apply is pressed; the server compares instants in UTC. Custom Range/Specific date remain disabled until scoped UI work. |
 | Sources | `source` + `in` + selected channel tokens. Empty array omits it. Interim Manual maps to `crm_ui`, API to `crm_api`, Import to `import`; the latter is a local wire proposal. Mass update/owner/conversion keep initiating channel, with mechanism retained internally. Unimplemented automation source labels produce no synthetic events. |
 
 Combine nonempty selectors with `{group_operator:"AND",group:[...]}`; leaves
@@ -288,8 +288,10 @@ adapters, then the SQL adapter when ADR 0002 lands. Cover:
 3. Tenant/record/child/field/lookup visibility, permission changes between pages,
    removed actors, deleted parents, safe text rendering and no hidden-value leaks
    in counts, cursor payloads, event details or filter options.
-4. Combined four-filter semantics, Meetings-to-Events mapping, UTC midnight and
-   exact interval bounds, invalid filters, empty 204, page sizes, same-time order,
+4. Combined four-filter semantics, Meetings-to-Events mapping, display-time-zone
+   day boundaries computed by the client at Apply as offset ISO timestamps,
+   server UTC instant comparisons and exact interval bounds, invalid filters,
+   empty 204, page sizes, same-time order,
    insertions while paging, permission-driven page refill and token scope checks.
 5. Idempotent append retry versus intentionally repeated operations, import row
    partial success, upload ready/failure/delete races and no cleanup/download rows.
@@ -327,3 +329,15 @@ review checks scope, links, whitespace and consistency with the cited contracts.
 
 CTO acceptance must resolve or explicitly defer these questions and identify the
 accepted local deviations before implementation tasks use this ADR as a contract.
+
+## CTO disposition
+
+Accepted on MEP-692 (2026-10-15):
+
+1. Interim sentence templates, action literals, local event extensions and source mapping accepted as Interim.
+2. Live note body, deletion suppression and merge relocation accepted as Interim.
+3. No automatic age expiry accepted as Interim; revisit before the persistent adapter.
+4. Record keys/references and transaction coordinator deferred to ADR 0002 / MEP-40.
+5. v9 filter codec, null clearing, cursor rules and source grouping accepted as Interim. Time windows use the user's display-time-zone day boundaries, computed by the client at Apply as offset ISO timestamps; the server compares UTC instants.
+6. Restore/conversion/merge permissions deferred to their own flows.
+7. Cross-request idempotency deferred to persistent write work.
