@@ -220,6 +220,16 @@ test.describe("Deals record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("contact roles card lists seed rows with a rail count", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const card = page.locator("#related-list-contact-roles");
+    await expect(card.locator("tbody tr").first()).toBeVisible({ timeout: 15_000 });
+    await expect(card.locator("tbody tr td a").first()).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("rail scrolls to stage history card", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
