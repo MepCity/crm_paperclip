@@ -1,7 +1,8 @@
 # Recycle Bin
 
 Status: partial research for MEP-629. Initial populated screen observed on
-2026-10-15; module filtering and a naturally empty state remain unverified.
+2026-10-15; Search initial state observed on 2026-10-16. Filter execution and
+a naturally empty state remain unverified.
 No record was restored, deleted or selected; no preference was changed.
 
 ## Purpose and scope
@@ -39,7 +40,7 @@ omitted from this spec. The content has its own vertical scroll container.
 | RB-08 | Toolbar right | Empty Recycle Bin | Visible outlined destructive button; not marked disabled; never pressed | Recycle Bin |
 | RB-09 | Table header first column | Select all | Unchecked; never selected | Recycle Bin |
 | RB-10 | Every visible row first column | Row selection checkbox | Unchecked; one control per visible row; never selected | Recycle Bin |
-| RB-11 | Table header far right | Funnel / Search | Exported name Search; stable selector is evidenced, but panel opening was not attempted | Recycle Bin |
+| RB-11 | Table header far right | Funnel / Search | Exported name Search; initial inline search rows observed on 2026-10-16 | Recycle Bin |
 | RB-12 | Content right edge | Scroll container | Independent content scrolling; no sort/filter preference changed | Setup shell |
 
 The capture folder's `inventory.md` separately numbers every visible row
@@ -83,10 +84,9 @@ repository content describes structure only.
 
 ## Open questions
 
-1. Search panel opening, module selector options and whether changing it persists
-   a preference. The MEP-638 exception permits initial opening only. The continuation
-   failed before opening; module selection and preference persistence remain
-   unobserved and must not be tested by changing a selection.
+1. Search operator options, Type selector options and whether changing a selection
+   persists a preference. Initial opening is now observed; no selector was opened
+   or changed, and no search was submitted.
 2. Module-specific filtered states for Leads, Contacts, Accounts and Deals.
 3. Naturally empty state and its toolbar availability; not observable by creating
    or removing data under the read-only rule.
@@ -147,12 +147,61 @@ network guard or reference preference was changed.
 
 ## Current continuation gate (2026-10-16)
 
-MEP-718 remains in review with a pending board confirmation. The Platform
-Lead requires that decision before another capture. Do not retry merely
-because the task is resumed. After approval, follow the single-attempt
-preconditions and stop rules recorded on MEP-718.
+The board accepted the MEP-718 confirmation on 2026-10-16 and reported
+closing stale capture tabs, leaving two pages open. The single permitted
+retry still requires at most two page targets, one-minute load at most 50,
+no capture lock and one CDP attach only. If a second attach starts, stop
+the capture process and report the result without another attempt.
 
 The three partial specs are already committed on the dedicated research
 branch. Observed control inventories remain valid partial evidence; missing
 dialogs and print destinations remain unobserved. No new capture or reference
-interaction was performed during this checkpoint.
+interaction was performed during that earlier checkpoint.
+
+
+## Successful bounded continuation (2026-10-16 17:15 UTC)
+
+The accepted MEP-718 retry completed as `m6-recycle-bin-search-cached`.
+Preflight found two page targets, no capture lock and one-minute load 18.10
+(after an earlier load of 60.69 prevented starting). The single CDP attach
+completed in 23 seconds. The capture exited 0 with `ready.ok=true`,
+`cacheEnabled=true`, no failed scripts and no skipped steps. Search was opened
+once and Escape was pressed; `dialogVisibleAfterClose=false`. No file chooser,
+download, popup or print call occurred. Four automatic reminder/status and
+telemetry POSTs were blocked; no record operation was attempted.
+
+Postflight found two page targets and no capture lock. No stale tabs were
+closed by the analyst. This establishes only the initial Recycle Bin Search
+state described in [recycle-bin.md](recycle-bin.md#initial-search-state).
+Other missing dialogs, print destinations, populated/empty states and write
+outcomes remain unobserved. Further captures have not been attempted in this
+checkpoint.
+
+
+## Initial Search state
+
+Source: `m6-recycle-bin-search-cached/step-1.png` and `step-1.yml`.
+Search expands two inline rows beneath the table headers and above records;
+it is not a separate modal. Filters align with Name, Type, Deleted By and
+Deleted Time. The existing toolbar and records remain visible. The first row
+contains operators and a Search button at the far right; the second holds
+values. No field was filled, no option menu was opened and Search was not
+submitted. Escape is evidenced as pressed, but does not establish that an
+inline panel collapses or that its visibility is persisted.
+
+| ID | Position | Control | Initial observed state / constraint |
+| --- | --- | --- | --- |
+| RB-13 | Name column, first search row | Operator combobox | `contains`; options unobserved |
+| RB-14 | Name column, second search row | Textbox | Empty; no input |
+| RB-15 | Type column, first search row | Operator combobox | `is`; options unobserved |
+| RB-16 | Type column, second search row | Type combobox | `Select`; choices unobserved; no module selected |
+| RB-17 | Deleted By column, first search row | Operator combobox | `contains`; options unobserved |
+| RB-18 | Deleted By column, second search row | Textbox | Empty; no input |
+| RB-19 | Deleted Time column, first search row | Operator combobox | `is`; options unobserved |
+| RB-20 | Deleted Time column, second search row | Date textbox | Empty with `DD.MM.YYYY` placeholder |
+| RB-21 | After date textbox | Time textbox | `01:00` with adjacent AM indicator; not changed |
+| RB-22 | Far right of first search row | Search button | Visible primary button; never pressed |
+
+A standalone numbered inventory in this capture folder includes the shell,
+unchanged toolbar, visible row checkboxes and all ten additional controls.
+Raw captures remain local because they contain customer data.

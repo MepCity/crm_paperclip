@@ -213,12 +213,32 @@ network guard or reference preference was changed.
 
 ## Current continuation gate (2026-10-16)
 
-MEP-718 remains in review with a pending board confirmation. The Platform
-Lead requires that decision before another capture. Do not retry merely
-because the task is resumed. After approval, follow the single-attempt
-preconditions and stop rules recorded on MEP-718.
+The board accepted the MEP-718 confirmation on 2026-10-16 and reported
+closing stale capture tabs, leaving two pages open. The single permitted
+retry still requires at most two page targets, one-minute load at most 50,
+no capture lock and one CDP attach only. If a second attach starts, stop
+the capture process and report the result without another attempt.
 
 The three partial specs are already committed on the dedicated research
 branch. Observed control inventories remain valid partial evidence; missing
 dialogs and print destinations remain unobserved. No new capture or reference
-interaction was performed during this checkpoint.
+interaction was performed during that earlier checkpoint.
+
+
+## Successful bounded continuation (2026-10-16 17:15 UTC)
+
+The accepted MEP-718 retry completed as `m6-recycle-bin-search-cached`.
+Preflight found two page targets, no capture lock and one-minute load 18.10
+(after an earlier load of 60.69 prevented starting). The single CDP attach
+completed in 23 seconds. The capture exited 0 with `ready.ok=true`,
+`cacheEnabled=true`, no failed scripts and no skipped steps. Search was opened
+once and Escape was pressed; `dialogVisibleAfterClose=false`. No file chooser,
+download, popup or print call occurred. Four automatic reminder/status and
+telemetry POSTs were blocked; no record operation was attempted.
+
+Postflight found two page targets and no capture lock. No stale tabs were
+closed by the analyst. This establishes only the initial Recycle Bin Search
+state described in [recycle-bin.md](recycle-bin.md#initial-search-state).
+Other missing dialogs, print destinations, populated/empty states and write
+outcomes remain unobserved. Further captures have not been attempted in this
+checkpoint.
