@@ -35,6 +35,7 @@ import { notesHooks, removeNotesForParents, transferNotesToMaster } from "./note
 import { notesMetadata } from "./notes/metadata";
 import { generateFixtureNotes } from "./notes/seed";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
+import { removeRecordTags } from "./tags";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
 import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";
@@ -95,7 +96,7 @@ function parentMergeHook(module: string): NonNullable<FixtureModuleHooks["transf
   };
 }
 
-export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
   Attachments: {
     ...attachmentsHooks,
     childModule: true,
@@ -282,6 +283,32 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     }),
   },
 };
+
+/** Tag support follows metadata, including modules added after this slice. */
+export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = Object.fromEntries(
+  Object.entries(moduleBundles).map(([module, bundle]) => {
+    if (!bundle.metadata.fields.some((field) => field.apiName === "Tag")) return [module, bundle];
+    return [
+      module,
+      {
+        ...bundle,
+        metadata: {
+          ...bundle.metadata,
+          fields: bundle.metadata.fields.map((field) =>
+            field.apiName === "Tag" ? { ...field, acceptsJsonArray: true } : field,
+          ),
+        },
+        afterDelete(
+          ids: readonly string[],
+          ctx: Parameters<NonNullable<FixtureModuleHooks["afterDelete"]>>[1],
+        ) {
+          bundle.afterDelete?.(ids, ctx);
+          removeRecordTags(ctx.moduleStore(module), ids);
+        },
+      },
+    ];
+  }),
+);
 
 export const supportedModules = Object.keys(fixtureModules).filter(
   (name) => !fixtureModules[name]?.childModule,
