@@ -1,7 +1,7 @@
 "use client";
 
-import type { FormatOptions } from "@crm/core/format";
-import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
+import { type FormatOptions, formatDate } from "@crm/core/format";
+import type { FieldDefinition, ListResult, RecordData, SortSpec } from "@crm/core/records";
 import { type ReactNode, useState } from "react";
 import { AlphabetFilter } from "@/components/ui/alphabet-filter";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { ActivityRibbon } from "./activity-ribbon";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
 
 export interface RecordTableProps {
   laterInventory?: boolean;
   badgeColumn?: boolean;
+  activitySummaries?: ListResult["activitySummaries"];
   phoneLaterModule?: ModuleKey;
   linkWebsite?: boolean;
   /** Columns in screen order. Labels come from the field, not from a module. */
@@ -103,6 +105,7 @@ const cellLine = [
 export function RecordTable({
   laterInventory = false,
   badgeColumn = true,
+  activitySummaries,
   phoneLaterModule,
   linkWebsite = false,
   columns,
@@ -129,6 +132,7 @@ export function RecordTable({
   footer,
 }: RecordTableProps) {
   const empty = records.length === 0;
+
   const selected = new Set(selectedIds);
   const pageIds = records.map((record) => record.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
@@ -314,6 +318,7 @@ export function RecordTable({
                       data-part="badge"
                       className={`${badgeColumnClass} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
                     >
+                      <SummaryRibbon summary={activitySummaries?.[record.id]} format={format} />
                       {laterInventory ? (
                         <Button
                           variant="ghost"
@@ -488,6 +493,25 @@ function SelectionBox({
   return (
     <div data-part="checkbox" className="w-fit">
       <Checkbox hideLabel label={label} isSelected={isSelected} onChange={onChange} />
+    </div>
+  );
+}
+
+function SummaryRibbon({
+  summary,
+  format,
+}: {
+  summary: NonNullable<ListResult["activitySummaries"]>[string] | undefined;
+  format: FormatOptions;
+}) {
+  if (!summary) return null;
+  const date = summary.date;
+  return (
+    <div className="py-(--size-list-row-pad) pe-2">
+      <ActivityRibbon
+        kind={summary.kind}
+        dateText={formatDate(date && date.length !== 10 ? new Date(date) : date, format) || null}
+      />
     </div>
   );
 }

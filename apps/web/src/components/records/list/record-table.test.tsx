@@ -48,6 +48,7 @@ function record(id: string, name: string, email: string | null = `${id}@example.
 
 function Harness({
   records,
+  activitySummaries,
   emptyMessage = "No records found.",
   wrapText = false,
   settings,
@@ -59,6 +60,7 @@ function Harness({
   extra,
 }: {
   records: readonly RecordData[];
+  activitySummaries?: RecordTableProps["activitySummaries"];
   emptyMessage?: string;
   wrapText?: boolean;
   settings?: RecordTableProps["settings"];
@@ -74,6 +76,7 @@ function Harness({
     <RecordTable
       columns={columns}
       records={records}
+      activitySummaries={activitySummaries}
       linkField="Full_Name"
       linkFieldLabel={linkFieldLabel}
       rowHref={(item) => `/records/${item.id}`}
@@ -604,4 +607,41 @@ test("all-day formatting comes from each row and leaves ordinary lists unchanged
     <Harness records={rows} extra={{ columns: [columns[0] as FieldDefinition, datetime] }} />,
   );
   expect(cells()).toEqual(["Mar 1, 2026, 5:05 PM", "Mar 1, 2026, 5:05 PM"]);
+});
+
+test("places open activity summaries between selection and record name, with no click action", () => {
+  render(
+    <Harness
+      records={[record("one", "First"), record("two", "Second"), record("three", "Third")]}
+      activitySummaries={{
+        one: { kind: "task", activityId: "task-one", date: "2026-10-14" },
+        two: { kind: "meeting", activityId: "meeting-two", date: null },
+      }}
+    />,
+  );
+  const ribbon = screen.getByRole("img", { name: "Open task, due Oct 14, 2026" });
+  const cell = ribbon.closest("td");
+  expect(cell?.dataset.part).toBe("badge");
+  expect(cell?.previousElementSibling?.querySelector("input[type=checkbox]")).toBeTruthy();
+  expect(cell?.nextElementSibling?.textContent).toBe("First");
+  expect(ribbon.hasAttribute("href")).toBe(false);
+  expect(ribbon.hasAttribute("tabindex")).toBe(false);
+  expect(
+    screen.getByRole("img", { name: "Open meeting" }).querySelector("[data-part=date]"),
+  ).toBeNull();
+  expect(
+    screen.getByRole("row", { name: /Third/ }).querySelector("[data-part=activity-ribbon]"),
+  ).toBeNull();
+});
+
+test("formats timestamp summaries in the configured time zone", () => {
+  render(
+    <Harness
+      records={[record("call", "Caller")]}
+      activitySummaries={{
+        call: { kind: "call", activityId: "call-one", date: "2026-10-13T22:30:00Z" },
+      }}
+    />,
+  );
+  expect(screen.getByRole("img", { name: "Open call, due Oct 14, 2026" })).toBeTruthy();
 });
