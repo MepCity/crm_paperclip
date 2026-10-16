@@ -364,6 +364,7 @@ export function RecordDetailScreen({
           ownerNames={ownerNames}
           format={DEFAULT_FORMAT}
           railLayout={railVisible ? "shown" : "hidden"}
+          activity={activityLayout}
         />
         {relatedLists.length > 0 ? (
           <RelatedCardsContainer
