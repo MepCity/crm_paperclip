@@ -208,6 +208,8 @@ export interface ModuleScreenDefinition {
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
+      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
+      titleHref?: string;
       titleSuffix?: string;
     };
     /**
@@ -247,6 +249,7 @@ export interface ModuleScreenDefinition {
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
+      onEdit?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

@@ -45,11 +45,7 @@ import {
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
-import type {
-  HeaderConfirmRequest,
-  ModuleScreenDefinition,
-  RelatedListDefinition,
-} from "@/modules/types";
+import type { ModuleScreenDefinition, RelatedListDefinition } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
 import { RelatedCardsContainer } from "./related-cards-container";
@@ -142,9 +138,6 @@ export function RecordDetailScreen({
     rules.relatedLists?.[0]?.id,
   );
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [headerConfirm, setHeaderConfirm] = useState<HeaderConfirmRequest | null>(null);
-  const [headerConfirmBusy, setHeaderConfirmBusy] = useState(false);
-  const [headerConfirmError, setHeaderConfirmError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const updateRecord = useUpdateRecord(moduleApiName);
   const deleteRecords = useDeleteRecords(moduleApiName);
@@ -453,32 +446,6 @@ export function RecordDetailScreen({
 
   return (
     <>
-      {headerConfirm ? (
-        <ConfirmDialog
-          isOpen
-          onOpenChange={(open) => {
-            if (!open && !headerConfirmBusy) setHeaderConfirm(null);
-          }}
-          title={headerConfirm.title}
-          message={headerConfirm.message}
-          confirmLabel={headerConfirm.confirmLabel}
-          cancelLabel="Close"
-          busy={headerConfirmBusy}
-          errorMessage={headerConfirmError}
-          onConfirm={async () => {
-            setHeaderConfirmBusy(true);
-            setHeaderConfirmError(null);
-            try {
-              await headerConfirm.onConfirm();
-              setHeaderConfirm(null);
-            } catch (error) {
-              setHeaderConfirmError(error instanceof Error ? error.message : "Action failed.");
-            } finally {
-              setHeaderConfirmBusy(false);
-            }
-          }}
-        />
-      ) : null}
       {deleteOpen ? (
         <ConfirmDialog
           isOpen
@@ -515,11 +482,6 @@ export function RecordDetailScreen({
                 ? rules.buildHeaderCommands(displayRecord, {
                     editHref: paths.edit(orgSlug, definition.tab, recordId),
                     save: persistRecord,
-                    navigate: (href) => router.push(href),
-                    confirm: (request) => {
-                      setHeaderConfirmError(null);
-                      setHeaderConfirm(request);
-                    },
                   })
                 : [
                     ...(rules.headerCommands ?? []),

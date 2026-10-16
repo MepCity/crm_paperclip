@@ -27,7 +27,7 @@ test("tasks detail buildHeaderCommands includes Close Task only on uncompleted t
   const save = () => Promise.resolve();
   const openTaskCommands = tasksScreenDefinition.detail.buildHeaderCommands?.(
     { id: "t1", fields: { Status: "In Progress" } },
-    { editHref: "/edit", save, navigate: () => {}, confirm: () => {} },
+    { editHref: "/edit", save },
   );
   expect(openTaskCommands).toEqual([
     expect.objectContaining({ id: "close-task", label: "Close Task", variant: "primary" }),
@@ -36,7 +36,7 @@ test("tasks detail buildHeaderCommands includes Close Task only on uncompleted t
 
   const closedTaskCommands = tasksScreenDefinition.detail.buildHeaderCommands?.(
     { id: "t2", fields: { Status: "Completed" } },
-    { editHref: "/edit", save, navigate: () => {}, confirm: () => {} },
+    { editHref: "/edit", save },
   );
   expect(closedTaskCommands).toEqual([
     expect.objectContaining({ id: "edit", label: "Edit", href: "/edit" }),

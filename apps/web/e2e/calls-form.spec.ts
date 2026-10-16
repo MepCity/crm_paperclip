@@ -122,7 +122,7 @@ test("Mark as Completed asks for a duration and hides Reschedule Call", async ({
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
-  await page.getByRole("button", { name: "Reschedule options" }).click();
+  await page.getByRole("button", { name: "Down arrow" }).click();
   await page.getByRole("menuitem", { name: "Mark as Completed" }).click();
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
   await expect(
@@ -142,7 +142,7 @@ test("Cancel Call confirms, keeps the record and sets Cancelled", async ({ page 
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
-  await page.getByRole("button", { name: "Reschedule options" }).click();
+  await page.getByRole("button", { name: "Down arrow" }).click();
   await page.getByRole("menuitem", { name: "Cancel Call" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();
