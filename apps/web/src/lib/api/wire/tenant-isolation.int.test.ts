@@ -131,9 +131,18 @@ describe.each(screens.map(({ apiName }) => ({ module: apiName })))(
         throw new Error(`Add a minimal-input contract for registered module ${module}`);
       minimal = contract.buildMinimalValidInput;
       const metadata = await serviceA.getModule(module);
-      const text = metadata.fields.find(
-        (field) => field.required && field.dataType === "text" && !field.readOnly,
-      );
+      // Call_Duration is a formatted mm:ss text field, so it cannot carry a marker.
+      const text =
+        metadata.fields.find(
+          (field) =>
+            field.required &&
+            field.dataType === "text" &&
+            !field.readOnly &&
+            field.apiName !== "Call_Duration",
+        ) ??
+        metadata.fields.find(
+          (field) => field.apiName === "Subject" && field.dataType === "text" && !field.readOnly,
+        );
       const mass = metadata.fields.find(
         (field) =>
           field.massUpdate &&
