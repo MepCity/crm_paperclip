@@ -198,14 +198,13 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
+      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
-      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
-      titleHref?: string;
       titleSuffix?: string;
     };
     /**
@@ -230,6 +229,7 @@ export interface ModuleScreenDefinition {
     hasPortrait?: boolean;
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
+    portraitAppearance?: "tile" | "inline";
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
@@ -242,10 +242,10 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
-      onEdit?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

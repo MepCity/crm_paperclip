@@ -123,6 +123,12 @@ export interface ModuleListScreenConfig {
    * list does; `inventory.actions` wins when both are given.
    */
   toolbarActions?: readonly Omit<MenuAction, "onAction">[];
+  /** Create opens this dialog over the list instead of the create page (Meetings). */
+  quickCreate?: (props: {
+    orgSlug: string;
+    currentUserId: string;
+    onClose: () => void;
+  }) => ReactNode;
 }
 
 const MAX_EXPORT_SELECTION = 500;
@@ -137,6 +143,8 @@ export interface ModuleListScreenProps {
   config: ModuleListScreenConfig;
   /** When omitted, the default view from `useViews` is used. */
   viewId?: string;
+  /** The signed-in user; a quick-create dialog uses it as the default Host. */
+  currentUserId?: string;
 }
 
 function ListNotFound() {
@@ -147,7 +155,12 @@ function ListNotFound() {
   );
 }
 
-export function ModuleListScreen({ orgSlug, config, viewId: routeViewId }: ModuleListScreenProps) {
+export function ModuleListScreen({
+  orgSlug,
+  config,
+  viewId: routeViewId,
+  currentUserId,
+}: ModuleListScreenProps) {
   const viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
     if (routeViewId) return routeViewId;
@@ -168,6 +181,7 @@ export function ModuleListScreen({ orgSlug, config, viewId: routeViewId }: Modul
       config={config}
       routeViewId={routeViewId}
       viewId={resolvedViewId}
+      currentUserId={currentUserId}
     />
   );
 }
@@ -177,6 +191,7 @@ function ModuleListScreenLoaded({
   config,
   routeViewId,
   viewId,
+  currentUserId,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
@@ -212,6 +227,7 @@ function ModuleListScreenLoaded({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [massUpdateOpen, setMassUpdateOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -738,7 +754,8 @@ function ModuleListScreenLoaded({
           }))}
           create={{
             label: config.createLabel,
-            href: config.paths.create(orgSlug, config.module),
+            href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
+            onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
             moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
           }}
@@ -749,6 +766,13 @@ function ModuleListScreenLoaded({
           {config.boardToolbar ?? boardProps?.toolbar}
         </div>
       ) : null}
+      {quickCreateOpen
+        ? config.quickCreate?.({
+            orgSlug,
+            currentUserId: currentUserId ?? "",
+            onClose: () => setQuickCreateOpen(false),
+          })
+        : null}
       {massUpdateOpen && massUpdateFields.length > 0 ? (
         <MassUpdateDialog
           isOpen
