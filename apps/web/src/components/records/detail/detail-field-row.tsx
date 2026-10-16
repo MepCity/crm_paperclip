@@ -161,8 +161,8 @@ export function DetailFieldRow({
               />
             )}
             {suffix && !isFieldValueEmpty(field, value) ? (
-              <span className="detail-field-value" data-field-suffix>
-                {suffix}
+              <span className="detail-field-value" data-field-suffix style={{ whiteSpace: "pre" }}>
+                {` ${suffix.trimStart()}`}
               </span>
             ) : null}
             {callAction && !isFieldValueEmpty(field, value) ? (
