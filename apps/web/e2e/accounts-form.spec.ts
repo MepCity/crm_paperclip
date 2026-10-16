@@ -392,3 +392,22 @@ test("title strip row and Account Image placeholder match the reference", async 
     });
   }
 });
+
+test("form footer view controls draw below the fold and stay inert (AF-45, AF-46)", async ({
+  page,
+}) => {
+  await openCreate(page);
+  const url = page.url();
+  const footer = page.locator("[data-record-form-inventory-footer]");
+  await footer.scrollIntoViewIfNeeded();
+  await expect(footer).toBeVisible();
+  await expect(footer.getByText("Create Form Views :")).toBeVisible();
+  const standard = footer.getByRole("button", { name: "Standard View", exact: true });
+  const custom = footer.getByRole("button", { name: "Create a custom form page", exact: true });
+  await expect(standard).toBeVisible();
+  await expect(custom).toBeVisible();
+  for (const control of [standard, custom]) await control.click({ force: true });
+  await expect(page).toHaveURL(url);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Create Account" })).toBeVisible();
+});

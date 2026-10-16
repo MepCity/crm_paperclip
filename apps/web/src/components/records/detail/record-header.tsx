@@ -20,10 +20,8 @@ export type RecordCommand = {
   variant?: "primary" | "secondary";
   isDisabled?: boolean;
   laterModule?: ModuleKey;
-  icon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
-  iconOnly?: boolean;
-  ariaLabel?: string;
-  size?: keyof typeof import("@/components/ui/button-styles").buttonSizes;
+  /** Attached dropdown segment (e.g. Reschedule Call); label is its accessible name. */
+  splitLabel?: string;
 } & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
 export interface RecordMenuGroup {
   id: string;
@@ -31,7 +29,6 @@ export interface RecordMenuGroup {
 }
 export interface RecordHeaderProps {
   title: string;
-  titleHref?: string;
   subtitle?: string;
   subtitleLaterModule?: ModuleKey;
   subtitleHref?: string;
@@ -49,19 +46,20 @@ export interface RecordHeaderProps {
   nextHref?: string;
   addTags?: { label: string; laterModule: ModuleKey };
   showPortrait?: boolean;
-  portraitAppearance?: "tile" | "inline";
   showRecordNavigation?: boolean;
+  /** Static glyph before the title (activities variant). */
+  titleGlyph?: import("@/components/ui/icon").Icon;
+  titleHref?: string;
+  titleSuffix?: string;
 }
 
 export function RecordHeader({
   title,
-  titleHref,
   subtitle,
   subtitleLaterModule,
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
-  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
@@ -72,6 +70,9 @@ export function RecordHeader({
   previousHref,
   nextHref,
   addTags,
+  titleGlyph: TitleGlyph,
+  titleHref,
+  titleSuffix,
 }: RecordHeaderProps) {
   const groups = menuGroups.filter((group) => group.items.length > 0);
   const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
@@ -101,11 +102,7 @@ export function RecordHeader({
         <div
           data-record-portrait
           aria-hidden
-          className={
-            portraitAppearance === "inline"
-              ? "shrink-0 size-6 mr-2 text-text"
-              : "shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
-          }
+          className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
         >
           {PortraitIcon ? (
             <PortraitIcon className="h-full w-full" />
@@ -114,21 +111,27 @@ export function RecordHeader({
           )}
         </div>
       ) : null}
-      <div
-        className={`min-w-0 flex-1 ${showPortrait && portraitAppearance === "tile" ? "ml-(--size-record-title-gap)" : ""} mr-3`}
-      >
+      <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
         <h1
-          className="min-w-0 truncate text-text"
+          className={`min-w-0 truncate text-text${TitleGlyph ? " flex items-center gap-2" : ""}`}
           title={accessibleTitle}
           aria-label={accessibleTitle}
         >
+          {TitleGlyph ? (
+            <TitleGlyph aria-hidden data-record-title-glyph className="size-4 shrink-0" />
+          ) : null}
           {titleHref ? (
-            <Link href={titleHref} className="text-2xl font-bold hover:underline">
+            <Link href={titleHref} className="text-2xl font-bold">
               {title}
             </Link>
           ) : (
             <span className="text-2xl font-bold">{title}</span>
           )}
+          {titleSuffix ? (
+            <span className="text-md font-normal text-text" data-record-title-suffix>
+              {titleSuffix}
+            </span>
+          ) : null}
           {subtitle ? (
             <>
               <span
@@ -163,34 +166,66 @@ export function RecordHeader({
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
           const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
-          const size = command.size ?? (command.iconOnly ? "actions" : "record");
-          const ariaLabel = command.ariaLabel ?? (command.iconOnly ? command.label : undefined);
-          const CommandIcon = command.icon;
+          if (command.splitLabel) {
+            return (
+              <div key={command.id} data-record-split className="flex items-center">
+                {command.href ? (
+                  <Link
+                    href={command.href}
+                    variant={variant}
+                    size="record"
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
+                  </Link>
+                ) : (
+                  <Button
+                    variant={variant}
+                    size="record"
+                    onPress={command.onPress}
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
+                  </Button>
+                )}
+                <Button
+                  variant={variant}
+                  size="actions"
+                  aria-label={command.splitLabel}
+                  isDisabled={command.isDisabled}
+                  laterModule={command.laterModule}
+                  className="rounded-l-none border-l border-l-white/40"
+                >
+                  <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          }
           return command.href ? (
             <Link
               key={command.id}
               href={command.href}
               variant={variant}
-              size={size}
-              aria-label={ariaLabel}
+              size="record"
               isDisabled={command.isDisabled}
               laterModule={command.laterModule}
             >
-              {CommandIcon ? <CommandIcon aria-hidden className="size-3.5" /> : null}
-              {!command.iconOnly ? command.label : null}
+              {command.label}
             </Link>
           ) : (
             <Button
               key={command.id}
               variant={variant}
-              size={size}
-              aria-label={ariaLabel}
+              size="record"
               onPress={command.onPress}
               isDisabled={command.isDisabled}
               laterModule={command.laterModule}
             >
-              {CommandIcon ? <CommandIcon aria-hidden className="size-3.5" /> : null}
-              {!command.iconOnly ? command.label : null}
+              {command.label}
             </Button>
           );
         })}
