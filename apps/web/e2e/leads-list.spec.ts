@@ -2132,7 +2132,8 @@ test("Print View exposes a left flyout without printing or navigating", async ({
   await page.screenshot({ path: test.info().outputPath("print-view-submenu.png") });
   for (const item of [defaultItem, canvasItem]) {
     await expect(item).toHaveAttribute("data-later-module", "M6");
-    await item.click();
+    // Placeholder rows are aria-disabled; dispatch a pointer click to verify their event guard.
+    await item.click({ force: true });
     await expect(defaultItem).toBeVisible();
   }
   expect(page.url()).toBe(initialUrl);
