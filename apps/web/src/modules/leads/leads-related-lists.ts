@@ -1,4 +1,5 @@
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListDefinition } from "../types";
@@ -72,6 +73,16 @@ export function createLeadsRelatedLists(
       targetId: "related-list-closed-activities",
       countBadge: badgeValue(badges.closedActivities),
       upperControls: [...viewControls("closed")],
+    },
+    {
+      id: "attachments",
+      renderCard: attachmentsCard("Leads"),
+      title: "Attachments",
+      moduleKey: "M6",
+      order: 3,
+      targetId: "related-list-attachments",
+      upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+      emptyStateText: "No Attachment",
     },
   ];
 }
