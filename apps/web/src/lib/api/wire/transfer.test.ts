@@ -127,7 +127,7 @@ describe("csvDownload", () => {
 
 describe("module and id params", () => {
   it("rejects an unknown or missing module", async () => {
-    for (const params of [{ module: "Nope" }, {}]) {
+    for (const params of [{ module: "Nope" }, {}] as Record<string, string>[]) {
       expect(
         await fieldErrors(transferOperations.runExport.run(service(), input({ params }))),
       ).toEqual({ module: ["Choose a module."] });
