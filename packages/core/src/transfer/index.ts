@@ -18,3 +18,5 @@ export type {
   TransferModule,
   TransferService,
 } from "./types";
+
+export { TRANSFER_MODULES } from "./types";

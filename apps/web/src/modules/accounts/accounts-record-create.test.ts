@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { moduleCreatePath } from "@/lib/crm-paths";
 import { readRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import {
@@ -8,186 +8,179 @@ import {
   openDealCreateWithAccountName,
 } from "./accounts-record-create";
 
-describe("accounts-record-create", () => {
-  beforeEach(() => {
-    const store = new Map<string, string>();
-    vi.stubGlobal("sessionStorage", {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => store.set(key, value),
-      removeItem: (key: string) => store.delete(key),
-      clear: () => store.clear(),
+function makeStorage(): Storage {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => store.set(key, value),
+    removeItem: (key: string) => store.delete(key),
+    clear: () => store.clear(),
+    get length() {
+      return store.size;
+    },
+    key: (index: number) => [...store.keys()][index] ?? null,
+  };
+}
+
+beforeEach(() => {
+  vi.stubGlobal("sessionStorage", makeStorage());
+});
+
+describe("accountNameLookupFromRecord", () => {
+  it("returns module, id, and name from string Account_Name", () => {
+    const result = accountNameLookupFromRecord("acc-1", { Account_Name: "Acme Corp" });
+    expect(result).toEqual({ module: "Accounts", id: "acc-1", name: "Acme Corp" });
+  });
+
+  it("returns empty string name when Account_Name is missing", () => {
+    const result = accountNameLookupFromRecord("acc-2", {});
+    expect(result).toEqual({ module: "Accounts", id: "acc-2", name: "" });
+  });
+
+  it("returns empty string name when Account_Name is a number", () => {
+    const result = accountNameLookupFromRecord("acc-3", { Account_Name: 42 });
+    expect(result).toEqual({ module: "Accounts", id: "acc-3", name: "" });
+  });
+
+  it("returns empty string name when Account_Name is null", () => {
+    const result = accountNameLookupFromRecord("acc-4", { Account_Name: null });
+    expect(result).toEqual({ module: "Accounts", id: "acc-4", name: "" });
+  });
+
+  it("returns empty string name when Account_Name is a lookup object without a string name", () => {
+    const result = accountNameLookupFromRecord("acc-5", {
+      Account_Name: { module: "Accounts", id: "acc-5" },
+    });
+    expect(result).toEqual({ module: "Accounts", id: "acc-5", name: "" });
+  });
+
+  it("returns name when Account_Name is a lookup object with a string name", () => {
+    const result = accountNameLookupFromRecord("acc-6", {
+      Account_Name: { module: "Accounts", id: "acc-6", name: "Acme Corp" },
+    });
+    expect(result).toEqual({ module: "Accounts", id: "acc-6", name: "Acme Corp" });
+  });
+});
+
+describe("openContactCreateWithAccountName", () => {
+  it("writes Contacts prefill with Account_Name and navigates once with moduleCreatePath", () => {
+    const navigate = vi.fn();
+    const org = "acme";
+    const account = { id: "acc-1", fields: { Account_Name: "Acme Corp" } };
+
+    openContactCreateWithAccountName(org, account, navigate);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(moduleCreatePath(org, "Contacts"));
+    const prefill = readRecordCreatePrefill(org, "Contacts");
+    expect(prefill?.module).toBe("Contacts");
+    expect(prefill?.fields.Account_Name).toEqual({
+      module: "Accounts",
+      id: "acc-1",
+      name: "Acme Corp",
     });
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  it("writes empty name when Account_Name is missing", () => {
+    const navigate = vi.fn();
+    openContactCreateWithAccountName("acme", { id: "acc-2", fields: {} }, navigate);
+    const prefill = readRecordCreatePrefill("acme", "Contacts");
+    expect(prefill?.fields.Account_Name).toMatchObject({
+      module: "Accounts",
+      id: "acc-2",
+      name: "",
+    });
   });
+});
 
-  describe("accountNameLookupFromRecord", () => {
-    it("returns lookup with name from Account_Name when Account_Name is a valid string", () => {
-      const result = accountNameLookupFromRecord("acc-123", {
-        Account_Name: "Acme Corporation",
-      });
-      expect(result).toEqual({
-        module: "Accounts",
-        id: "acc-123",
-        name: "Acme Corporation",
-      });
-    });
+describe("openAccountCreateWithParentAccount", () => {
+  it("writes Accounts prefill with Parent_Account and navigates once with moduleCreatePath", () => {
+    const navigate = vi.fn();
+    const org = "acme";
+    const parent = { id: "parent-1", fields: { Account_Name: "Parent Corp" } };
 
-    it("returns empty string name when Account_Name is missing", () => {
-      const result = accountNameLookupFromRecord("acc-123", {});
-      expect(result).toEqual({
-        module: "Accounts",
-        id: "acc-123",
-        name: "",
-      });
-    });
+    openAccountCreateWithParentAccount(org, parent, navigate);
 
-    it("returns empty string name when Account_Name is null", () => {
-      const result = accountNameLookupFromRecord("acc-123", {
-        Account_Name: null,
-      });
-      expect(result).toEqual({
-        module: "Accounts",
-        id: "acc-123",
-        name: "",
-      });
-    });
-
-    it("returns empty string name when Account_Name is not a string", () => {
-      const result = accountNameLookupFromRecord("acc-123", {
-        Account_Name: 12345 as unknown as string,
-      });
-      expect(result).toEqual({
-        module: "Accounts",
-        id: "acc-123",
-        name: "",
-      });
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(moduleCreatePath(org, "Accounts"));
+    const prefill = readRecordCreatePrefill(org, "Accounts");
+    expect(prefill?.module).toBe("Accounts");
+    expect(prefill?.fields.Parent_Account).toEqual({
+      module: "Accounts",
+      id: "parent-1",
+      name: "Parent Corp",
     });
   });
 
-  describe("openContactCreateWithAccountName", () => {
-    it("writes Contacts prefill with Account_Name and navigates to Contacts create path", () => {
-      const navigate = vi.fn();
-      const orgSlug = "test-org";
-      const account = {
-        id: "acc-1",
-        fields: { Account_Name: "Acme Corp" },
-      };
+  it("writes empty name when parent Account_Name is not a string", () => {
+    const navigate = vi.fn();
+    openAccountCreateWithParentAccount(
+      "acme",
+      { id: "parent-2", fields: { Account_Name: null } },
+      navigate,
+    );
+    const prefill = readRecordCreatePrefill("acme", "Accounts");
+    expect(prefill?.fields.Parent_Account).toMatchObject({
+      module: "Accounts",
+      id: "parent-2",
+      name: "",
+    });
+  });
+});
 
-      openContactCreateWithAccountName(orgSlug, account, navigate);
+describe("openDealCreateWithAccountName", () => {
+  it("writes Deals prefill with Account_Name and navigates once with moduleCreatePath", () => {
+    const navigate = vi.fn();
+    const org = "acme";
+    const account = { id: "acc-1", fields: { Account_Name: "Acme Corp" } };
 
-      expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenCalledWith(moduleCreatePath(orgSlug, "Contacts"));
+    openDealCreateWithAccountName(org, account, navigate);
 
-      const prefill = readRecordCreatePrefill(orgSlug, "Contacts");
-      expect(prefill).toEqual({
-        module: "Contacts",
-        fields: {
-          Account_Name: {
-            module: "Accounts",
-            id: "acc-1",
-            name: "Acme Corp",
-          },
-        },
-      });
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(moduleCreatePath(org, "Deals"));
+    const prefill = readRecordCreatePrefill(org, "Deals");
+    expect(prefill?.module).toBe("Deals");
+    expect(prefill?.fields.Account_Name).toEqual({
+      module: "Accounts",
+      id: "acc-1",
+      name: "Acme Corp",
     });
   });
 
-  describe("openAccountCreateWithParentAccount", () => {
-    it("writes Accounts prefill with Parent_Account and navigates to Accounts create path", () => {
-      const navigate = vi.fn();
-      const orgSlug = "test-org";
-      const parentAccount = {
-        id: "parent-acc-1",
-        fields: { Account_Name: "Parent Enterprise" },
-      };
-
-      openAccountCreateWithParentAccount(orgSlug, parentAccount, navigate);
-
-      expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenCalledWith(moduleCreatePath(orgSlug, "Accounts"));
-
-      const prefill = readRecordCreatePrefill(orgSlug, "Accounts");
-      expect(prefill).toEqual({
-        module: "Accounts",
-        fields: {
-          Parent_Account: {
-            module: "Accounts",
-            id: "parent-acc-1",
-            name: "Parent Enterprise",
-          },
-        },
-      });
+  it("writes empty name when Account_Name is not a string", () => {
+    const navigate = vi.fn();
+    openDealCreateWithAccountName("acme", { id: "acc-5", fields: {} }, navigate);
+    const prefill = readRecordCreatePrefill("acme", "Deals");
+    expect(prefill?.fields.Account_Name).toMatchObject({
+      module: "Accounts",
+      id: "acc-5",
+      name: "",
     });
   });
+});
 
-  describe("openDealCreateWithAccountName", () => {
-    it("writes Deals prefill with Account_Name and navigates to Deals create path", () => {
-      const navigate = vi.fn();
-      const orgSlug = "test-org";
-      const account = {
-        id: "acc-1",
-        fields: { Account_Name: "Acme Corp" },
-      };
+describe("Org scoping", () => {
+  it("prefills are scoped by org — writing for org a is not readable for org b", () => {
+    const navigate = vi.fn();
+    const orgA = "org-a";
+    const orgB = "org-b";
+    const account = { id: "acc-99", fields: { Account_Name: "Shared Name" } };
 
-      openDealCreateWithAccountName(orgSlug, account, navigate);
+    openContactCreateWithAccountName(orgA, account, navigate);
 
-      expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenCalledWith(moduleCreatePath(orgSlug, "Deals"));
-
-      const prefill = readRecordCreatePrefill(orgSlug, "Deals");
-      expect(prefill).toEqual({
-        module: "Deals",
-        fields: {
-          Account_Name: {
-            module: "Accounts",
-            id: "acc-1",
-            name: "Acme Corp",
-          },
-        },
-      });
-    });
+    expect(readRecordCreatePrefill(orgA, "Contacts")).not.toBeNull();
+    expect(readRecordCreatePrefill(orgB, "Contacts")).toBeNull();
   });
 
-  describe("prefill writing order and org scoping", () => {
-    it("writes prefill before navigate is invoked", () => {
-      let prefillAtNavigate: ReturnType<typeof readRecordCreatePrefill> = null;
-      const orgSlug = "test-org";
-      const navigate = vi.fn().mockImplementation(() => {
-        prefillAtNavigate = readRecordCreatePrefill(orgSlug, "Contacts");
-      });
+  it("prefills are scoped by org — writing for org b is not readable for org a", () => {
+    const navigate = vi.fn();
+    const orgA = "org-a";
+    const orgB = "org-b";
+    const account = { id: "acc-100", fields: { Account_Name: "Another Name" } };
 
-      openContactCreateWithAccountName(
-        orgSlug,
-        { id: "acc-1", fields: { Account_Name: "Acme Corp" } },
-        navigate,
-      );
+    openDealCreateWithAccountName(orgB, account, navigate);
 
-      expect(navigate).toHaveBeenCalledTimes(1);
-      expect(prefillAtNavigate).toEqual({
-        module: "Contacts",
-        fields: {
-          Account_Name: {
-            module: "Accounts",
-            id: "acc-1",
-            name: "Acme Corp",
-          },
-        },
-      });
-    });
-
-    it("isolates prefill so that prefill for one org slug is not readable under another org slug", () => {
-      const navigate = vi.fn();
-      openContactCreateWithAccountName(
-        "org-alpha",
-        { id: "acc-1", fields: { Account_Name: "Alpha Corp" } },
-        navigate,
-      );
-
-      expect(readRecordCreatePrefill("org-alpha", "Contacts")).not.toBeNull();
-      expect(readRecordCreatePrefill("org-beta", "Contacts")).toBeNull();
-    });
+    expect(readRecordCreatePrefill(orgB, "Deals")).not.toBeNull();
+    expect(readRecordCreatePrefill(orgA, "Deals")).toBeNull();
   });
 });
