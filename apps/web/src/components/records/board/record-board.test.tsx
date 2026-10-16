@@ -273,3 +273,42 @@ it("keeps each column body as its own vertical scroll region", () => {
   expect(rule("record-board-scroll")).toMatch(/max-height:/);
   expect(rule("record-board-scroll")).toMatch(/overflow-x:\s*auto/);
 });
+it("emphasises only non-title rows that set strong", () => {
+  const strongColumns: readonly BoardColumn[] = [
+    {
+      key: "a",
+      label: "First",
+      count: 1,
+      cards: [
+        {
+          id: "card",
+          rows: [
+            { text: "Title row", href: "#title" },
+            { text: "Plain row" },
+            { text: "Strong row", strong: true },
+            { text: "Strong link row", href: "#strong-link", strong: true },
+            { text: "Plain link row", href: "#plain-link" },
+          ],
+        },
+      ],
+    },
+  ];
+  render(
+    <RecordBoard
+      columns={strongColumns}
+      createLabel="Create Record"
+      onCreate={vi.fn()}
+      onMove={vi.fn()}
+    />,
+  );
+  const rowOf = (text: string) => {
+    const row = screen.getByText(text).closest("[data-board-card] > div");
+    if (!row) throw new Error(`Missing row ${text}`);
+    return row;
+  };
+  expect(rowOf("Strong row").className).toContain("font-semibold");
+  expect(rowOf("Plain row").className).not.toContain("font-semibold");
+  expect(screen.getByText("Strong link row").className).toContain("font-semibold");
+  expect(screen.getByText("Plain link row").className).not.toContain("font-semibold");
+  expect(screen.getByText("Title row").className).toContain("font-semibold");
+});

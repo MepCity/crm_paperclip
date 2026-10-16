@@ -45,6 +45,8 @@ export interface RecordPageFrameProps {
   scrollTopLabel: string;
   relatedRailHeaderAction?: ReactNode;
   relatedRailFooter?: ReactNode;
+  /** Activities variant: white panel to the right of the tabs (300 px). */
+  sidePanel?: ReactNode;
 }
 
 export function getActiveRelatedEntryId(
@@ -158,6 +160,7 @@ export function RecordPageFrame({
   scrollTopLabel,
   relatedRailHeaderAction,
   relatedRailFooter,
+  sidePanel,
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingTargetRef = useRef<RelatedListEntry | null>(null);
@@ -355,9 +358,11 @@ export function RecordPageFrame({
             data-record-tab-row
             className="flex shrink-0 items-start gap-3 h-(--size-record-tab-row-height) px-3 pt-(--size-record-tab-top)"
           >
-            <div data-record-rail-control className="shrink-0 size-(--size-record-toggle-slot)">
-              {railControl}
-            </div>
+            {railControl ? (
+              <div data-record-rail-control className="shrink-0 size-(--size-record-toggle-slot)">
+                {railControl}
+              </div>
+            ) : null}
             <TabList aria-label={tabsLabel} appearance="record">
               {tabs.map((tab) => (
                 <Tab key={tab.id} id={tab.id} appearance="record">
@@ -389,6 +394,14 @@ export function RecordPageFrame({
             ))}
           </div>
         </Tabs>
+        {sidePanel ? (
+          <div
+            data-record-side-panel
+            className="w-(--size-record-side-panel-width) shrink-0 overflow-y-auto bg-surface"
+          >
+            {sidePanel}
+          </div>
+        ) : null}
       </div>
       {scrolled && (
         <Button
