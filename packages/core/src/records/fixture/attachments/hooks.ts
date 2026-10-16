@@ -97,6 +97,12 @@ export interface AttachmentCleanupIntent {
 }
 const cleanup = new WeakMap<FixtureModuleStore, AttachmentCleanupIntent[]>();
 
+/** Carry cleanup state into the transaction without sharing its mutable queue. */
+export function copyAttachmentCleanup(previous: FixtureModuleStore, staged: FixtureModuleStore) {
+  const intents = cleanup.get(previous);
+  if (intents) cleanup.set(staged, [...intents]);
+}
+
 export function removeAttachmentIds(ids: readonly string[], ctx: FixtureHookContext): void {
   if (!ctx.registeredModules.includes("Attachments")) return;
   const store = ctx.moduleStore("Attachments");
@@ -134,10 +140,9 @@ export function removeAttachmentsForParents(
 
 /** Server-only fixture lifecycle, with no blob I/O or public wire fields. */
 export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
-  const store = ctx.moduleStore("Attachments");
   return {
     publish(id: string, data: { storageKey: string; checksum: string; mediaType: string }) {
-      const record = store.records.get(id);
+      const record = ctx.moduleStore("Attachments").records.get(id);
       if (!record) throw new NotFoundError("Attachment not found.");
       attachmentUltimateParent(record.fields, ctx);
       if (record.fields.$type !== "file" || record.fields.$state !== "pending")
@@ -154,9 +159,10 @@ export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
       });
     },
     cleanupIntents(): readonly AttachmentCleanupIntent[] {
-      return structuredClone(cleanup.get(store) ?? []);
+      return structuredClone(cleanup.get(ctx.moduleStore("Attachments")) ?? []);
     },
     acknowledgeCleanup(id: string) {
+      const store = ctx.moduleStore("Attachments");
       cleanup.set(
         store,
         (cleanup.get(store) ?? []).filter((intent) => intent.attachmentId !== id),

@@ -246,6 +246,34 @@ describe("Attachments record contract", () => {
     lifecycle.acknowledgeCleanup(direct.id);
     expect(lifecycle.cleanupIntents()).toHaveLength(2);
   });
+  it("keeps cleanup intents across store replacements and rolls back failed cascades", async () => {
+    const { service, lifecycle, context } = make();
+    const parent = await lead(service);
+    const first = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(first.id, published);
+    await service.delete("Attachments", [first.id]);
+    const second = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(second.id, { ...published, storageKey: "second-key" });
+    const expected = [{ attachmentId: first.id, storageKey: "opaque-key" }];
+    expect(lifecycle.cleanupIntents()).toEqual(expected);
+    const failingService = createFixtureRecordService(context, {
+      beforeHistoryAppend() {
+        throw new Error("History unavailable");
+      },
+    });
+    await expect(failingService.delete("Leads", [parent.id])).rejects.toThrow(
+      "History unavailable",
+    );
+    expect(lifecycle.cleanupIntents()).toEqual(expected);
+    expect((await service.get("Attachments", second.id)).id).toBe(second.id);
+    const freshLifecycle = createFixtureAttachmentLifecycle(context);
+    freshLifecycle.acknowledgeCleanup(first.id);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await service.delete("Leads", [parent.id]);
+    expect(freshLifecycle.cleanupIntents()).toEqual([
+      { attachmentId: second.id, storageKey: "second-key" },
+    ]);
+  });
   it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
     const { service, lifecycle } = make();
     const parent = await lead(service);
