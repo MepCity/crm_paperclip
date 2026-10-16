@@ -144,3 +144,15 @@ not be attributed to this retry; use `capturedAt` and `steps` in the fresh meta.
 No Search-panel inventory or new dialog behaviour is established. Research
 stopped at the failed gate pending Platform Lead review; no browser, profile,
 network guard or reference preference was changed.
+
+## Current continuation gate (2026-10-16)
+
+MEP-718 remains in review with a pending board confirmation. The Platform
+Lead requires that decision before another capture. Do not retry merely
+because the task is resumed. After approval, follow the single-attempt
+preconditions and stop rules recorded on MEP-718.
+
+The three partial specs are already committed on the dedicated research
+branch. Observed control inventories remain valid partial evidence; missing
+dialogs and print destinations remain unobserved. No new capture or reference
+interaction was performed during this checkpoint.
