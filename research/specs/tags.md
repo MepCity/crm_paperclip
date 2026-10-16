@@ -59,10 +59,11 @@ validation and add/remove success or failure remain unverified. Never use
 reference Save, Add, Remove or tag selection to discover write behaviour.
 
 Manage Tags was reached through Actions in all four modules without submitting.
-The earlier Record Add Tags attempt was rejected by the static dangerous-text
-guard. MEP-638 subsequently added a bounded initial-opening exception; the
-dialog has not yet been observed successfully. No alternate selector or guard
-change may be used to bypass that restriction. Filter checkbox inspection may
+MEP-638 permits one exact-name Add Tags initial opening followed by Escape.
+The dialog has not yet been observed successfully. MEP-765 approves reaching
+the record through the previously captured list link; sanitized record URLs
+containing `:id` must never be used as navigation targets. No alternate selector
+or guard change may be used to bypass a restriction. Filter checkbox inspection may
 use `--allow-toggle`; never apply or save a filter.
 
 ## Capture refs
@@ -162,83 +163,28 @@ MEP-637 routed the bounded opening decision to MEP-638, which is now approved
 for initial Add Tags / Share and Recycle Bin Search openings. Static guard
 results are tooling evidence, not observed dialog contents. No guard was bypassed.
 
-## Continuation evidence (2026-10-15)
+## Current research continuation
 
-The three partial specs were preserved on the dedicated `mep/MEP-629` branch;
-the source drafts in the ancestor worktree were retained. Existing numbered
-inventories cover the four Drafts and four Manage Tags states, three Print View
-submenus, Leads detail and the initial Recycle Bin screen. These inventories
-remain research evidence, not proof of the missing dialog contents.
+MEP-765 (2026-10-16) supplies the approved continuation for Add Tags, record
+More, Share, Print Preview and Print Default view, in that order. Use the list
+route and exact record-link selector from `m6-leads-detail/meta.json` locally;
+never copy the record name or address into this spec. Each capture is permitted
+once, with a 15-second paint wait between steps and the record link as the ready
+probe. Share and Print Preview depend on exported selectors from a successfully
+captured More menu. Print Default view is independent of that record path.
 
-The bounded opening decision MEP-638 now permits one initial Add Tags, Share
-or Recycle Bin Search opening per capture, followed by Escape. This supersedes
-the earlier static-guard limitation noted above for those three controls only.
-It does not authorize field input, module selection, searching or submission.
+Before each run: no capture lock, at most two browser page targets and one-minute
+load at most 50. Use one CDP attach; stop this capture process if a second attach
+starts. A failed ready gate, skipped/error/not-run step, invalid-address page or
+any blocked request stops that run and requires Platform Lead review. The latest
+rule includes automatic background requests in that stop condition; previous
+successful captures with blocked background requests do not relax it. No field
+input, submission or preference change is authorized.
 
-A fresh no-click `m6-recycle-bin-search-base` capture rendered the initial list.
-Its screenshot and exported Search selector were checked. Three automatic
-requests were blocked: reminder status, notification status and telemetry.
-The subsequent `m6-recycle-bin-search` attempt stayed on the loading skeleton;
-the Search click was skipped because the selector matched zero elements.
-Escape was pressed; no allowed opening was consumed and no dialog remained.
-The attempt blocked two telemetry requests and recorded static-resource
-HTTP/2 protocol failures. It proves no Search-panel state. In accordance with
-the tool owner's stop-on-skipped instruction, no further opening was attempted.
-
-Research is incomplete. Resume with a fully rendered no-click baseline and
-resolve the page-load/tooling failure before any additional allowed opening.
-Print Preview remains separately guard-blocked; no alternate selector was used.
-Do not treat any missing initial state, populated state or write outcome as
-implementation-ready. No reference record or saved preference was changed.
-
-## Reviewed ready-gate retry (2026-10-15 10:08 UTC)
-
-Following the reviewed MEP-655 / MEP-656 continuation, the single permitted
-`m6-recycle-bin-search` retry used the explicit probe
-`[data-zcqa="rclBnAdvSearchEnable"]`. It exited 2 with
-`NOT RENDERED — no steps ran`: `ready.ok=false`, `waitedMs=30006`, zero probe
-matches and ten failed script requests (`net::ERR_HTTP2_PROTOCOL_ERROR`).
-The newly inspected screenshot and accessibility snapshot show only the loading
-skeleton. Both requested steps (Search click and Escape) are `not-run`.
-`clicks` is the requested selector list, not an executed-click log.
-No allowed opening, file chooser, download, popup or print call occurred.
-Six automatic telemetry POSTs were blocked; no record operation was attempted.
-
-The six base files were refreshed in that existing capture folder. Older
-`step-1` / `step-2` files left there belong to the preceding attempt and must
-not be attributed to this retry; use `capturedAt` and `steps` in the fresh meta.
-No Search-panel inventory or new dialog behaviour is established. Research
-stopped at the failed gate pending Platform Lead review; no browser, profile,
-network guard or reference preference was changed.
-
-## Current continuation gate (2026-10-16)
-
-The board accepted the MEP-718 confirmation on 2026-10-16 and reported
-closing stale capture tabs, leaving two pages open. The single permitted
-retry still requires at most two page targets, one-minute load at most 50,
-no capture lock and one CDP attach only. If a second attach starts, stop
-the capture process and report the result without another attempt.
-
-The three partial specs are already committed on the dedicated research
-branch. Observed control inventories remain valid partial evidence; missing
-dialogs and print destinations remain unobserved. No new capture or reference
-interaction was performed during that earlier checkpoint.
-
-
-## Successful bounded continuation (2026-10-16 17:15 UTC)
-
-The accepted MEP-718 retry completed as `m6-recycle-bin-search-cached`.
-Preflight found two page targets, no capture lock and one-minute load 18.10
-(after an earlier load of 60.69 prevented starting). The single CDP attach
-completed in 23 seconds. The capture exited 0 with `ready.ok=true`,
-`cacheEnabled=true`, no failed scripts and no skipped steps. Search was opened
-once and Escape was pressed; `dialogVisibleAfterClose=false`. No file chooser,
-download, popup or print call occurred. Four automatic reminder/status and
-telemetry POSTs were blocked; no record operation was attempted.
-
-Postflight found two page targets and no capture lock. No stale tabs were
-closed by the analyst. This establishes only the initial Recycle Bin Search
-state described in [recycle-bin.md](recycle-bin.md#initial-search-state).
-Other missing dialogs, print destinations, populated/empty states and write
-outcomes remain unobserved. Further captures have not been attempted in this
-checkpoint.
+The prior Add Tags continuation used a sanitized record address and rendered an
+invalid-address page. It established no dialog state. The correct route is list
+navigation followed by the captured record link, not reconstruction of an ID.
+See [print-and-share.md](print-and-share.md#capture-tool-boundary) for the print
+boundary and [recycle-bin.md](recycle-bin.md#initial-search-state) for the
+successfully observed Search panel. Historical failures are preserved in task
+attachments; they are not additional screen observations.

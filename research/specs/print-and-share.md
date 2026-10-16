@@ -104,86 +104,25 @@ persisted preference. Capture each initial state before Escape.
 5. See each capture folder’s `inventory.md` and the shared shell inventory
    in [tags.md](tags.md#shared-shell-control-inventory). No populated Drafts state
    can be manufactured under the read-only rule.
-6. If dialog opening is rejected, record the exact guard result and route the
-   bounded tooling question through MEP-562; do not substitute a selector to bypass it.
+6. If an opening fails, follow the MEP-765 stop conditions and route the
+   evidence to Platform Lead; do not substitute a selector to bypass a guard.
 
-## Continuation evidence (2026-10-15)
+## Capture tool boundary
 
-The three partial specs were preserved on the dedicated `mep/MEP-629` branch;
-the source drafts in the ancestor worktree were retained. Existing numbered
-inventories cover the four Drafts and four Manage Tags states, three Print View
-submenus, Leads detail and the initial Recycle Bin screen. These inventories
-remain research evidence, not proof of the missing dialog contents.
+MEP-765 clarifies that Print text is not blocked by the dangerous-text guard.
+The approved capture tool replaces `window.print` with a counter, records and
+refuses `window.open`, and closes popups. The bounded Print Preview and Print
+Default view clicks are permitted under those guards; Print Using Canvas is
+excluded. This permission establishes no print destination layout.
 
-The bounded opening decision MEP-638 now permits one initial Add Tags, Share
-or Recycle Bin Search opening per capture, followed by Escape. This supersedes
-the earlier static-guard limitation noted above for those three controls only.
-It does not authorize field input, module selection, searching or submission.
+If a destination opens in the current tab, its screenshot and final route are
+evidence. If it requests another window, record that fact from `openRequests`;
+never navigate to its sanitized `:id` address or infer the hidden print layout.
+A nonzero `printCalls` count is a suppressed call, not proof of an opened browser
+print dialog. No browser print dialog may be opened.
 
-A fresh no-click `m6-recycle-bin-search-base` capture rendered the initial list.
-Its screenshot and exported Search selector were checked. Three automatic
-requests were blocked: reminder status, notification status and telemetry.
-The subsequent `m6-recycle-bin-search` attempt stayed on the loading skeleton;
-the Search click was skipped because the selector matched zero elements.
-Escape was pressed; no allowed opening was consumed and no dialog remained.
-The attempt blocked two telemetry requests and recorded static-resource
-HTTP/2 protocol failures. It proves no Search-panel state. In accordance with
-the tool owner's stop-on-skipped instruction, no further opening was attempted.
-
-Research is incomplete. Resume with a fully rendered no-click baseline and
-resolve the page-load/tooling failure before any additional allowed opening.
-Print Preview remains separately guard-blocked; no alternate selector was used.
-Do not treat any missing initial state, populated state or write outcome as
-implementation-ready. No reference record or saved preference was changed.
-
-## Reviewed ready-gate retry (2026-10-15 10:08 UTC)
-
-Following the reviewed MEP-655 / MEP-656 continuation, the single permitted
-`m6-recycle-bin-search` retry used the explicit probe
-`[data-zcqa="rclBnAdvSearchEnable"]`. It exited 2 with
-`NOT RENDERED — no steps ran`: `ready.ok=false`, `waitedMs=30006`, zero probe
-matches and ten failed script requests (`net::ERR_HTTP2_PROTOCOL_ERROR`).
-The newly inspected screenshot and accessibility snapshot show only the loading
-skeleton. Both requested steps (Search click and Escape) are `not-run`.
-`clicks` is the requested selector list, not an executed-click log.
-No allowed opening, file chooser, download, popup or print call occurred.
-Six automatic telemetry POSTs were blocked; no record operation was attempted.
-
-The six base files were refreshed in that existing capture folder. Older
-`step-1` / `step-2` files left there belong to the preceding attempt and must
-not be attributed to this retry; use `capturedAt` and `steps` in the fresh meta.
-No Search-panel inventory or new dialog behaviour is established. Research
-stopped at the failed gate pending Platform Lead review; no browser, profile,
-network guard or reference preference was changed.
-
-## Current continuation gate (2026-10-16)
-
-The board accepted the MEP-718 confirmation on 2026-10-16 and reported
-closing stale capture tabs, leaving two pages open. The single permitted
-retry still requires at most two page targets, one-minute load at most 50,
-no capture lock and one CDP attach only. If a second attach starts, stop
-the capture process and report the result without another attempt.
-
-The three partial specs are already committed on the dedicated research
-branch. Observed control inventories remain valid partial evidence; missing
-dialogs and print destinations remain unobserved. No new capture or reference
-interaction was performed during that earlier checkpoint.
-
-
-## Successful bounded continuation (2026-10-16 17:15 UTC)
-
-The accepted MEP-718 retry completed as `m6-recycle-bin-search-cached`.
-Preflight found two page targets, no capture lock and one-minute load 18.10
-(after an earlier load of 60.69 prevented starting). The single CDP attach
-completed in 23 seconds. The capture exited 0 with `ready.ok=true`,
-`cacheEnabled=true`, no failed scripts and no skipped steps. Search was opened
-once and Escape was pressed; `dialogVisibleAfterClose=false`. No file chooser,
-download, popup or print call occurred. Four automatic reminder/status and
-telemetry POSTs were blocked; no record operation was attempted.
-
-Postflight found two page targets and no capture lock. No stale tabs were
-closed by the analyst. This establishes only the initial Recycle Bin Search
-state described in [recycle-bin.md](recycle-bin.md#initial-search-state).
-Other missing dialogs, print destinations, populated/empty states and write
-outcomes remain unobserved. Further captures have not been attempted in this
-checkpoint.
+The approved list-to-record path, ready probe, preflight and stop conditions are
+summarized in [tags.md](tags.md#current-research-continuation). Share still permits
+only its initial exact-name opening and Escape. No recipient or permission field
+may be changed and no sharing may be submitted. The remaining initial states
+are unobserved; this spec remains partial.
