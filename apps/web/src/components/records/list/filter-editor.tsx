@@ -15,6 +15,7 @@ import {
   filterOperators,
   operatorsWithoutCriteriaSupport,
 } from "@/lib/records/filter-operators";
+import type { TagModule } from "@/lib/records/tags";
 
 const defaultConnectedModule = "contacts";
 const defaultAddressRadius = "2.00_mi";
@@ -29,6 +30,8 @@ export interface FilterEditorDefinition {
   fieldType: FilterFieldType;
   options?: readonly MultiSelectOption[];
   currencyCode?: string;
+  tagModule?: TagModule;
+  tagStatus?: "loading" | "ready" | "error";
 }
 // NaN represents an empty number input; it is never emitted by onApply.
 export interface FilterDraft {
@@ -76,6 +79,7 @@ export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDr
       );
     case "choices":
     case "users":
+    case "tag":
       return (
         Array.isArray(value) &&
         value.length > 0 &&
@@ -84,7 +88,6 @@ export function isFilterComplete(editor: FilterEditorDefinition, draft: FilterDr
         )
       );
     case "role_search":
-    case "tag":
     case "connected_to":
     case "address_nearby":
       return false;
@@ -213,8 +216,25 @@ export function FilterEditor({
             <MultiSelect
               variant={control === "users" ? "users" : "choices"}
               label={`${label} value`}
-              placeholder={control === "users" ? "Click to Select Users." : "None"}
-              options={control === "tag" ? [] : (editor.options ?? [])}
+              placeholder={
+                control === "users"
+                  ? "Click to Select Users."
+                  : control === "tag"
+                    ? "Type here"
+                    : "None"
+              }
+              options={editor.options ?? []}
+              statusMessage={
+                control === "tag"
+                  ? editor.tagStatus === "loading"
+                    ? "Loading tags…"
+                    : editor.tagStatus === "error"
+                      ? "Could not load tags."
+                      : !editor.options?.length
+                        ? "No tags available."
+                        : undefined
+                  : undefined
+              }
               value={
                 Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : []
               }
