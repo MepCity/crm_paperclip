@@ -17,6 +17,7 @@ test("defines Leads identity labels, default view and routes using the Full_Name
   expect(leadsListPageConfig.filterTitle).toBe("Filter Leads by");
   expect(leadsListPageConfig.filterGroups.length).toBeGreaterThan(0);
   expect(leadsListPageConfig.defaultPresentation).toBeUndefined();
+  expect(leadsListPageConfig.activityRibbon).toBe(true);
   expect(LEADS_LIST_CURRENCY_CODE).toBe("TRY");
 
   expect(leadsListPageConfig.paths.defaultList("sample-org", "Leads")).toContain("/tab/Leads/list");
