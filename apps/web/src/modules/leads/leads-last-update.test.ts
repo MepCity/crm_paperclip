@@ -1,22 +1,46 @@
-import { type FormatOptions, formatRelativeTime } from "@crm/core/format";
+import { formatRelativeTime } from "@crm/core/format";
+import type { RecordData } from "@crm/core/records";
 import { describe, expect, it } from "vitest";
-import { formatLeadsLastUpdateLabel } from "./leads-last-update";
+import { LEADS_DETAIL_FIELD_API_NAMES } from "@/modules/leads/leads-detail.constants";
+import { formatLeadsLastUpdateLabel } from "@/modules/leads/leads-last-update";
 
-const now = new Date("2026-03-10T12:00:00Z");
-const format: FormatOptions = { locale: "en-US", timeZone: "UTC" };
-const record = (fields: Record<string, string | null>) => ({ id: "lead-1", fields });
+const now = new Date("2026-03-15T12:00:00.000Z");
+const format = { locale: "en-US", timeZone: "UTC" };
+const key = LEADS_DETAIL_FIELD_API_NAMES.Modified_Time;
+
+function record(fields: Record<string, unknown>): RecordData {
+  return { id: "lead-1", fields } as unknown as RecordData;
+}
 
 describe("formatLeadsLastUpdateLabel", () => {
-  it("returns null when Modified_Time is null, missing or empty", () => {
-    expect(formatLeadsLastUpdateLabel(record({ Modified_Time: null }), now, format)).toBeNull();
-    expect(formatLeadsLastUpdateLabel(record({}), now, format)).toBeNull();
-    expect(formatLeadsLastUpdateLabel(record({ Modified_Time: "" }), now, format)).toBeNull();
+  it.each([
+    ["missing", {}],
+    ["null", { [key]: null }],
+    ["undefined", { [key]: undefined }],
+    ["empty string", { [key]: "" }],
+  ])("returns null when the modified time is %s", (_name, fields) => {
+    expect(formatLeadsLastUpdateLabel(record(fields), now, format)).toBeNull();
   });
 
-  it("prefixes the relative time from the real formatter", () => {
-    const modified = "2026-03-10T09:00:00Z";
-    expect(formatLeadsLastUpdateLabel(record({ Modified_Time: modified }), now, format)).toBe(
-      `Last Update : ${formatRelativeTime(modified, now, format)}`,
+  it.each([
+    ["minutes ago", "2026-03-15T11:45:00.000Z"],
+    ["days ago", "2026-03-10T12:00:00.000Z"],
+  ])("prefixes the relative time (%s)", (_name, value) => {
+    const expected = `Last Update : ${formatRelativeTime(value, now, format)}`;
+    expect(formatLeadsLastUpdateLabel(record({ [key]: value }), now, format)).toBe(expected);
+  });
+
+  it("gives different labels for different distances", () => {
+    const a = formatLeadsLastUpdateLabel(
+      record({ [key]: "2026-03-15T11:45:00.000Z" }),
+      now,
+      format,
     );
+    const b = formatLeadsLastUpdateLabel(
+      record({ [key]: "2026-03-10T12:00:00.000Z" }),
+      now,
+      format,
+    );
+    expect(a).not.toBe(b);
   });
 });

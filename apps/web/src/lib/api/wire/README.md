@@ -236,3 +236,41 @@ across all branches and starts fresh for each decode; it allows nearly twenty
 full 500-leaf groups, well above current panel and saved-view criteria. These are local input bounds,
 not claims about observed reference CRM limits. Rejections retain the existing
 four-key error envelope with `details.fields.search` or `details.fields.filters`.
+
+## CSV import and export (Module 6)
+
+Bodies use the port types of `@crm/core` (`ImportPreview`, `ImportSettings`, `ImportJob`,
+`ExportRequest`, `ExportJob`) as plain camelCase JSON; the reference's request shapes are
+not imitated. Operations live in `wire/transfer.ts` (`transferOperations`).
+
+| Operation | Method and path | Body |
+| --- | --- | --- |
+| Import preview | `POST /crm/v2.2/{module}/actions/import_preview` | `multipart/form-data`: one `file`, optional `charset` (`UTF-8` default, `ISO-8859-1`) |
+| Run import | `POST /crm/v2.2/{module}/actions/import` | `{ uploadId, settings }` |
+| Run export | `POST /crm/v2.2/{module}/actions/export` | `{ viewId?, ids?, fields }` |
+| Sample CSV | `GET /crm/v2.2/{module}/actions/import_sample` | CSV download |
+| Import history | `GET /crm/v9/settings/imports` | list of `ImportJob` |
+| Import detail | `GET /crm/v9/settings/imports/{importId}` | `ImportJob` |
+| Undo import | `POST /crm/v9/settings/imports/{importId}/actions/undo` | `ImportJob` |
+| Export history | `GET /crm/v9/settings/exports` | list of `ExportJob` |
+| Export download | `GET /crm/v9/settings/exports/{exportId}/download` | CSV download |
+
+- The two CSV `GET` downloads also accept the organization as `?org=<slug>` when the
+  `X-CRM-ORG` header is absent (a link cannot send headers); every other route still needs the header.
+- `{module}` is `Leads`, `Contacts`, `Accounts` or `Deals`; anything else is `INVALID_DATA`.
+- The multipart body is cut off while streaming at 25 MB plus framing (`file_too_large`);
+  `Content-Length` is not trusted. Exactly one file field is accepted; other fields except
+  `charset` are rejected.
+- A job from another organization is `404`. A failed export (for example `export_too_large`)
+  is a `200` job with `status: "failed"` and `code`.
+- Downloads: `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`
+  (ASCII `filename` plus encoded `filename*`), `X-Content-Type-Options: nosniff`,
+  `Cache-Control: no-store`, UTF-8 BOM.
+- Error codes returned through the shared codec: `file_too_large`, `too_many_columns`,
+  `too_many_rows`, `malformed_csv`, `empty_file`, `no_header`, `duplicate_header`,
+  `bad_encoding`, `upload_expired`, `mapping_duplicate_field`, `mapping_missing_required`,
+  `mapping_system_field`, `match_field_required`, `invalid_match_field`,
+  `export_too_large`, `field_not_allowed`, `not_undoable`. Row codes appear inside jobs.
+- The service is one process-local instance (`getTransferService`); history is lost on restart.
+- Client: `createHttpTransferClient(orgSlug)` (`TransferClient`) and the `useTransferClient`,
+  `useImportHistory`, `useExportHistory` hooks.

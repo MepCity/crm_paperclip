@@ -60,3 +60,18 @@ export function removeNotesForParents(
     if (parent?.module === parentModule && targets.has(parent.id)) notes.delete(id);
   }
 }
+
+/** Preserve child identities while moving notes from duplicate parents. */
+export function transferNotesToMaster(
+  module: string,
+  ids: readonly string[],
+  masterId: string,
+  ctx: FixtureHookContext,
+): void {
+  const notes = ctx.moduleStore("Notes").records;
+  for (const [id, note] of notes) {
+    const parent = parentReference(note.fields.Parent_Id);
+    if (parent?.module === module && ids.includes(parent.id))
+      notes.set(id, { id, fields: { ...note.fields, Parent_Id: { module, id: masterId } } });
+  }
+}
