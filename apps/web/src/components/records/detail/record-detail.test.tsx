@@ -5,7 +5,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { LastUpdateLabel } from "./last-update-label";
 import { RecordHeader, type RecordHeaderProps } from "./record-header";
-import { RecordPageFrame } from "./record-page-frame";
+import { getActiveRelatedEntryId, RecordPageFrame } from "./record-page-frame";
 import { RecordRailToggle } from "./record-rail-toggle";
 
 const base: RecordHeaderProps = {
@@ -513,4 +513,38 @@ test("rail link does not become selected if target cannot be found in any tab", 
   await user.click(invalidTab);
   expect(invalidTab.hasAttribute("aria-current")).toBe(false);
   expect(onTabChangeSpy).not.toHaveBeenCalled();
+});
+
+test("getActiveRelatedEntryId preserves selected entry visible in viewport when at bottom of scroller", () => {
+  const container = document.createElement("div");
+  Object.defineProperty(container, "clientHeight", { value: 600, configurable: true });
+  Object.defineProperty(container, "scrollHeight", { value: 900, configurable: true });
+  Object.defineProperty(container, "scrollTop", { value: 300, configurable: true }); // at bottom: 900 - 300 - 600 = 0
+
+  const invoices = document.createElement("section");
+  invoices.id = "target-invoices";
+  Object.defineProperty(invoices, "offsetTop", { value: 200, configurable: true });
+  Object.defineProperty(invoices, "offsetHeight", { value: 120, configurable: true }); // top = -100, bottom = 20
+
+  const memberAccounts = document.createElement("section");
+  memberAccounts.id = "target-member-accounts";
+  Object.defineProperty(memberAccounts, "offsetTop", { value: 350, configurable: true });
+  Object.defineProperty(memberAccounts, "offsetHeight", { value: 250, configurable: true }); // top = 50, bottom = 300
+
+  const cases = document.createElement("section");
+  cases.id = "target-cases";
+  Object.defineProperty(cases, "offsetTop", { value: 620, configurable: true });
+  Object.defineProperty(cases, "offsetHeight", { value: 280, configurable: true }); // top = 320, bottom = 600
+
+  container.append(invoices, memberAccounts, cases);
+
+  const entries = [
+    { id: "invoices", label: "Invoices", targetId: "target-invoices" },
+    { id: "member-accounts", label: "Member Accounts", targetId: "target-member-accounts" },
+    { id: "cases", label: "Cases", targetId: "target-cases" },
+  ];
+
+  // User clicked member-accounts; it is in view at the bottom, so it must stay selected
+  const activeId = getActiveRelatedEntryId(container, entries, "member-accounts");
+  expect(activeId).toBe("member-accounts");
 });

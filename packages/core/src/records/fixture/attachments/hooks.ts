@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "../../../errors";
 import type { FieldValue, ModuleRecordReference, RecordData } from "../../contract";
-import type { FixtureHookContext, FixtureModuleHooks, FixtureModuleStore } from "../hooks";
+import type { FixtureHookContext, FixtureModuleHooks } from "../hooks";
 import { attachmentParentModules } from "./metadata";
 
 export function attachmentParent(value: FieldValue | undefined): ModuleRecordReference | undefined {
@@ -95,13 +95,12 @@ export interface AttachmentCleanupIntent {
   attachmentId: string;
   storageKey: string | null;
 }
-const cleanup = new WeakMap<FixtureModuleStore, AttachmentCleanupIntent[]>();
 
 export function removeAttachmentIds(ids: readonly string[], ctx: FixtureHookContext): void {
   if (!ctx.registeredModules.includes("Attachments")) return;
   const store = ctx.moduleStore("Attachments");
-  const intents = cleanup.get(store) ?? [];
-  cleanup.set(store, intents);
+  const intents = [...(store.attachmentCleanupIntents ?? [])];
+  store.attachmentCleanupIntents = intents;
   for (const id of new Set(ids)) {
     const record = store.records.get(id);
     if (!record) continue;
@@ -134,10 +133,9 @@ export function removeAttachmentsForParents(
 
 /** Server-only fixture lifecycle, with no blob I/O or public wire fields. */
 export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
-  const store = ctx.moduleStore("Attachments");
   return {
     publish(id: string, data: { storageKey: string; checksum: string; mediaType: string }) {
-      const record = store.records.get(id);
+      const record = ctx.moduleStore("Attachments").records.get(id);
       if (!record) throw new NotFoundError("Attachment not found.");
       attachmentUltimateParent(record.fields, ctx);
       if (record.fields.$type !== "file" || record.fields.$state !== "pending")
@@ -163,12 +161,12 @@ export function fixtureAttachmentLifecycle(ctx: FixtureHookContext) {
       return typeof value === "string" && value ? value : null;
     },
     cleanupIntents(): readonly AttachmentCleanupIntent[] {
-      return structuredClone(cleanup.get(store) ?? []);
+      return structuredClone(ctx.moduleStore("Attachments").attachmentCleanupIntents ?? []);
     },
     acknowledgeCleanup(id: string) {
-      cleanup.set(
-        store,
-        (cleanup.get(store) ?? []).filter((intent) => intent.attachmentId !== id),
+      const store = ctx.moduleStore("Attachments");
+      store.attachmentCleanupIntents = (store.attachmentCleanupIntents ?? []).filter(
+        (intent) => intent.attachmentId !== id,
       );
     },
   };
