@@ -121,6 +121,7 @@ async function list(deps: AttachmentDeps, params: AttachmentParams, url: URL): P
     if (!result.moreRecords) break;
   }
   const rows = records
+    .filter((record) => deps.lifecycle.isReady(record.id))
     .map((record) => row(record, names))
     .sort((a, b) => String(b.Created_Time).localeCompare(String(a.Created_Time)));
   const start = (page - 1) * perPage;
@@ -240,7 +241,8 @@ async function download(deps: AttachmentDeps, params: AttachmentParams): Promise
   await requireParent(deps, params);
   const record = await requireAttachment(deps, params);
   if (record.fields.$type !== "file")
-    return error(409, "DUPLICATE_DATA", "Link attachments cannot be downloaded.");
+    return error(409, "INVALID_DATA", "Link attachments cannot be downloaded.");
+  if (!deps.lifecycle.isReady(record.id)) throw new NotFoundError();
   let body: ReadableStream<Uint8Array>;
   try {
     body = await deps.blobs.read({ orgId: deps.ctx.orgId, attachmentId: record.id });
@@ -249,11 +251,13 @@ async function download(deps: AttachmentDeps, params: AttachmentParams): Promise
     throw failure;
   }
   const fileName = String(record.fields.File_Name ?? "");
-  let mediaType = "application/octet-stream";
-  try {
-    mediaType = resolveAllowedType({ fileName }).mediaType;
-  } catch {
-    // Unknown extension: keep the generic type; nosniff and attachment still apply.
+  let mediaType = deps.lifecycle.mediaType(record.id) ?? "application/octet-stream";
+  if (!deps.lifecycle.mediaType(record.id)) {
+    try {
+      mediaType = resolveAllowedType({ fileName }).mediaType;
+    } catch {
+      // Unknown extension: keep the generic type; nosniff and attachment still apply.
+    }
   }
   return new Response(body, {
     status: 200,

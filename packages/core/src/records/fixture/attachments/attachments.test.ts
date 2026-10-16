@@ -144,6 +144,10 @@ describe("Attachments record contract", () => {
     const parent = await lead(service);
     const record = await service.create("Attachments", file("Leads", parent.id));
     expect(record.fields.$state).toBeUndefined();
+    expect(lifecycle.isReady(record.id)).toBe(false);
+    expect(lifecycle.mediaType(record.id)).toBeNull();
+    expect(lifecycle.isReady("unknown-id")).toBe(false);
+    expect(lifecycle.mediaType("unknown-id")).toBeNull();
     await expect(service.get("Attachments", record.id)).rejects.toBeInstanceOf(NotFoundError);
     expect((await service.list("Attachments", listQuery)).records.length).toBe(0);
     expect(await service.search({ text: "example.pdf", modules: ["Attachments"] })).toEqual([]);
@@ -151,6 +155,8 @@ describe("Attachments record contract", () => {
       lifecycle.publish(record.id, { ...published, storageKey: "../private-file" }),
     ).toThrow(ValidationError);
     lifecycle.publish(record.id, published);
+    expect(lifecycle.isReady(record.id)).toBe(true);
+    expect(lifecycle.mediaType(record.id)).toBe("application/pdf");
     expect((await service.get("Attachments", record.id)).fields.$link_url).toBeUndefined();
     expect((await service.list("Attachments", listQuery)).records.length).toBe(1);
     expect((await service.get("Attachments", record.id)).fields).toMatchObject({
