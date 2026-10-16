@@ -6,7 +6,6 @@ import {
   moduleRecordPath,
 } from "@/lib/crm-paths";
 import { meetingsFilterGroups } from "./list-filters";
-import { renderMeetingQuickCreate } from "./meeting-quick-create";
 
 export const MEETINGS_LIST_CURRENCY_CODE = "TRY";
 
@@ -61,7 +60,6 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   pluralLabel: "Meetings",
   singularLabel: "Meeting",
   createLabel: "Create Meeting",
-  quickCreate: renderMeetingQuickCreate,
   filterTitle: "Filter Meetings by",
   filterGroups: meetingsFilterGroups,
   sortFieldLabels: MEETINGS_SORT_FIELD_LABELS,

@@ -7,6 +7,7 @@ import type {
   ModuleMetadata,
   RecordData,
   RecordId,
+  RecordInput,
 } from "@crm/core/records";
 import type { ComponentType, ReactNode } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
@@ -201,18 +202,38 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
-      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
+      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
+      titleHref?: string;
+      titleSuffix?: string;
     };
+    /**
+     * Activities variant (MEP-591): no related-list rail or rail toggle, the update label in
+     * the tab row, and the relation panel to the right of the overview.
+     */
+    layout?: "activity";
+    /** Small static glyph before the title (activities variant). */
+    titleGlyph?: Icon;
+    /**
+     * Replaces the default header Edit command (and `headerCommands`) when set.
+     * `save` patches the record; `editHref` is the edit form path.
+     */
+    buildHeaderCommands?: (
+      record: RecordData,
+      actions: { editHref: string; save: (input: RecordInput) => Promise<void> },
+    ) => readonly RecordCommand[];
+    /** Extra card rendered between the business card and the details card. */
+    BetweenCards?: ComponentType<{ record: RecordData }>;
+    /** Right-hand panel of the activities variant (300 px, white). */
+    SidePanel?: ComponentType<{ record: RecordData; orgSlug: string }>;
     hasPortrait?: boolean;
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
-    portraitAppearance?: "tile" | "inline";
     addTags?: { label: string; laterModule: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
@@ -225,10 +246,10 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
-      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
+      onEdit?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

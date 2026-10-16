@@ -12,7 +12,7 @@ export type DetailFieldEntry = {
   auditTimestamp?: string | null;
   column: "left" | "right" | "full";
   callAction?: boolean;
-  valueSuffix?: string;
+  suffix?: string;
 };
 
 export type DetailSection = {
@@ -28,6 +28,8 @@ export interface DetailsCardProps {
   onEdit?: (apiName: string) => void;
   /** Rail-hidden canvas uses a wider card and alternate pencil geometry. */
   railLayout?: "shown" | "hidden";
+  /** Activities layout: label/value columns match the summary card. */
+  activity?: boolean;
 }
 
 export function DetailsCard({
@@ -37,13 +39,14 @@ export function DetailsCard({
   defaultDetailsHidden = false,
   onEdit,
   railLayout = "shown",
+  activity = false,
 }: DetailsCardProps) {
   const [expanded, setExpanded] = useState(!defaultDetailsHidden);
   const toggleLabel = expanded ? "Hide Details" : "Show Details";
 
   return (
     <section
-      className={`detail-card detail-details-card${railLayout === "hidden" ? " detail-details-card--rail-hidden" : ""}`}
+      className={`detail-card detail-details-card${railLayout === "hidden" ? " detail-details-card--rail-hidden" : ""}${activity ? " detail-details-card--activity" : ""}`}
       aria-label="Details card"
       data-detail-rail={railLayout}
     >
@@ -158,7 +161,7 @@ function FieldEntry({
       value={entry.value}
       auditTimestamp={entry.auditTimestamp}
       callAction={entry.callAction}
-      valueSuffix={entry.valueSuffix}
+      suffix={entry.suffix}
       ownerNames={ownerNames}
       format={format}
       layout={layout}

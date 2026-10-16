@@ -151,3 +151,27 @@ test("full-width Address row does not use the description label modifier", () =>
   );
   expect(container.querySelector(".detail-details-row-description")).toBeNull();
 });
+
+test("relation suffix keeps a visible space before the dash", () => {
+  const { container } = render(
+    <DetailsCard
+      format={DEFAULT_FORMAT}
+      activity
+      sections={[
+        {
+          title: "Info",
+          fields: [
+            {
+              column: "left",
+              field: textField("Who", "Who"),
+              value: "Sample",
+              suffix: "- Contacts",
+            },
+          ],
+        },
+      ]}
+    />,
+  );
+  expect(container.querySelector("[data-field-suffix]")?.textContent).toBe(" - Contacts");
+  expect(container.querySelector(".detail-details-card--activity")).not.toBeNull();
+});

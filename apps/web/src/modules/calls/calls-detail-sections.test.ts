@@ -53,16 +53,15 @@ test("business card order", () => {
 });
 
 test("detail sections: Call Information first, same order, single column", () => {
-  const [first] = buildCallsDetailSections(metadata, record);
-  expect(first).toBeDefined();
-  expect(first?.title).toBe("Call Information");
-  expect(first?.fields.map((f) => f.field.apiName)).toEqual(names);
-  expect(new Set(first?.fields.map((f) => f.column))).toEqual(new Set(["full"]));
+  const first = buildCallsDetailSections(metadata, record)[0]!;
+  expect(first.title).toBe("Call Information");
+  expect(first.fields.map((f) => f.field.apiName)).toEqual(names);
+  expect(new Set(first.fields.map((f) => f.column))).toEqual(new Set(["full"]));
 });
 
 test("link fields get module suffixes; plain fields none", () => {
-  expect(callReferenceSuffix(record, "Who_Id")).toBe("- Contacts");
-  expect(callReferenceSuffix(record, "What_Id")).toBe("- Deals");
+  expect(callReferenceSuffix(record, "Who_Id")).toBe("Contact");
+  expect(callReferenceSuffix(record, "What_Id")).toBe("Deal");
   expect(callReferenceSuffix({ id: "c", fields: { Who_Id: null } }, "Who_Id")).toBeUndefined();
 });
 

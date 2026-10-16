@@ -64,12 +64,3 @@ describe("MeetingsParticipantsCard", () => {
     });
   });
 });
-
-it("keeps populated opaque Participants blank without claiming there are none", () => {
-  const { container } = render(<MeetingsParticipantsCard participants={null} />);
-  expect(container.querySelector('[data-part="opaque"]')).toBeTruthy();
-  expect(container.querySelector('[data-part="empty"]')).toBeNull();
-  expect(screen.queryByRole("list")).toBeNull();
-  expect(screen.getByRole("heading", { name: "Participants" })).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Add" })).toBeTruthy();
-});

@@ -8,6 +8,8 @@ export const CALLS_FORM_TYPE_DEFAULT = "Outbound";
 export const CALLS_FORM_STATUS_DEFAULT = "Scheduled";
 export const CALLS_FORM_COMPLETED_STATUS = "Completed";
 export const CALLS_FORM_CANCELLED_STATUS = "Cancelled";
+export const CALLS_CANCEL_CONFIRM_TITLE = "Cancel Call";
+export const CALLS_CANCEL_CONFIRM_MESSAGE = "Are you sure you want to cancel this Call?";
 
 /** Fields the exported layout carries but the call form never paints (`activities-form.md`). */
 export const CALLS_FORM_OMITTED_FIELDS = [

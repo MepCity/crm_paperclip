@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 import { MAX_SELECTED_COLUMNS } from "./constants";
-import { ManageColumnsDialog } from "./manage-columns-dialog";
+import { ManageColumnsDialog, type ManageColumnsDialogProps } from "./manage-columns-dialog";
 
 function makeField(apiName: string, label: string): FieldDefinition {
   return {
@@ -27,8 +27,8 @@ const fields: FieldDefinition[] = [
   ),
 ];
 
-function renderDialog(overrides: Partial<Parameters<typeof ManageColumnsDialog>[0]> = {}) {
-  const props = {
+function renderDialog(overrides: Partial<ManageColumnsDialogProps> = {}) {
+  const props: ManageColumnsDialogProps = {
     isOpen: true,
     onClose: vi.fn(),
     onSave: vi.fn(),
@@ -62,6 +62,9 @@ describe("ManageColumnsDialog", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog", { name: "Manage Columns Leads" });
     expect(dialog).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Manage Columns Leads" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Search fields" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Available columns" })).toBeTruthy();
     expect(checkboxes()).toHaveLength(fields.length);
     for (const f of fields) {
       expect(checkbox(f.label).checked).toBe(["Last Name", "Field 1"].includes(f.label));
@@ -99,6 +102,16 @@ describe("ManageColumnsDialog", () => {
       expect(c.disabled).toBe(!c.checked);
     }
     expect(checkboxes().filter((c) => c.checked)).toHaveLength(MAX_SELECTED_COLUMNS);
+
+    // Clicking disabled checkbox does not toggle it
+    const uncheckedField = fields.find((f) => !selected.includes(f.apiName));
+    if (uncheckedField) {
+      const disabledBox = checkbox(uncheckedField.label);
+      expect(disabledBox.disabled).toBe(true);
+      await user.click(disabledBox);
+      expect(disabledBox.checked).toBe(false);
+    }
+
     await user.click(checkbox("First Name"));
     expect(checkboxes().every((c) => !c.disabled)).toBe(true);
   });
@@ -120,6 +133,14 @@ describe("ManageColumnsDialog", () => {
     const { props } = renderDialog();
     await user.click(checkbox("First Name"));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(props.onClose).toHaveBeenCalledTimes(1);
+    expect(props.onSave).not.toHaveBeenCalled();
+  });
+
+  it("dismissing dialog with Escape calls onClose and does not call onSave", async () => {
+    const user = userEvent.setup();
+    const { props } = renderDialog();
+    await user.keyboard("{Escape}");
     expect(props.onClose).toHaveBeenCalledTimes(1);
     expect(props.onSave).not.toHaveBeenCalled();
   });

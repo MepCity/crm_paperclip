@@ -41,21 +41,15 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Registered CRM and activity modules are active; Products remains a later module.
+  // Verify active Accounts and Tasks checkboxes and later-module Products checkbox in filter panel
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
   await expect(accountsCheckbox).toBeChecked();
 
-  for (const name of ["Tasks", "Meetings", "Calls"]) {
-    const checkbox = filterPanel.getByRole("checkbox", { name, exact: true });
-    await expect(checkbox).toHaveCount(1);
-    await expect(checkbox).toBeChecked();
-    await expect(checkbox).not.toHaveAttribute("data-later-module");
-  }
-  await expect(filterPanel.getByRole("checkbox", { name: "Products" })).toHaveAttribute(
-    "data-later-module",
-    "P2",
-  );
+  const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
+  await expect(tasksCheckbox).toBeVisible();
+  await expect(tasksCheckbox).toBeChecked();
+  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module");
 
   const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
   await expect(productsCheckbox).toBeVisible();

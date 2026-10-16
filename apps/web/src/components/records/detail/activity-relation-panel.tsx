@@ -49,7 +49,6 @@ export interface ActivityRelationPanelProps {
   contactRecordPath: (contactId: string) => string;
   accountRecordPath: (accountId: string) => string;
   dealRecordPath: (dealId: string) => string;
-  dealEmptyText?: string;
   onCall?: (phone: string) => void;
   onNewDeal?: () => void;
   onNewActivity?: () => void;
@@ -72,7 +71,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="whitespace-nowrap text-md font-semibold text-text-strong">{title}</h3>
+      <h3 className="text-md font-semibold text-text-strong">{title}</h3>
       <Button variant="ghost" size="sm" className="text-primary" onPress={onAction}>
         <Icons.plus className="size-3" aria-hidden />
         {actionLabel}
@@ -93,9 +92,9 @@ function CallButton({
   return (
     <Button
       variant="icon"
-      size="compact"
+      size="sm"
       aria-label={label}
-      className="size-5 shrink-0 text-text-muted"
+      className="size-5"
       onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
@@ -117,7 +116,6 @@ export function ActivityRelationPanel({
   contactRecordPath,
   accountRecordPath,
   dealRecordPath,
-  dealEmptyText,
   onCall,
   onNewDeal,
   onNewActivity,
@@ -137,7 +135,7 @@ export function ActivityRelationPanel({
     <aside
       aria-label="Related information"
       data-activity-relation-panel
-      className="flex flex-col gap-4 bg-surface py-1"
+      className="flex flex-col gap-4 bg-surface px-2.5 pb-4 pt-[15px]"
     >
       <Select
         label="Related person"
@@ -179,8 +177,8 @@ export function ActivityRelationPanel({
                 <div className="flex items-center gap-2">
                   <Link
                     href={contactRecordPath(person.id)}
-                    variant="body"
-                    className="detail-field-value-link font-semibold hover:underline"
+                    variant="text"
+                    className="font-semibold"
                   >
                     {person.name}
                   </Link>
@@ -199,7 +197,7 @@ export function ActivityRelationPanel({
                 <Link
                   href={accountRecordPath(person.accountId)}
                   variant="body"
-                  className="detail-field-value-link hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {person.accountName}
                 </Link>
@@ -212,7 +210,7 @@ export function ActivityRelationPanel({
                   href={`mailto:${person.email}`}
                   variant="body"
                   laterModule="M10"
-                  className="detail-field-value-link hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {person.email}
                 </Link>
@@ -236,7 +234,7 @@ export function ActivityRelationPanel({
               <Link
                 href={contactRecordPath(person.id)}
                 variant="body"
-                className="detail-field-value-link hover:underline"
+                className="text-primary hover:underline"
               >
                 More Info
               </Link>
@@ -246,9 +244,7 @@ export function ActivityRelationPanel({
           <section aria-label="Deal Summary" className="flex flex-col gap-2">
             <SectionHeader title="Deal Summary" actionLabel="New" onAction={onNewDeal} />
             {deals.length === 0 ? (
-              <p className="py-2 text-center text-md text-text-empty">
-                {dealEmptyText ?? "No records found"}
-              </p>
+              <p className="text-md text-text">No Deals found</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {deals.map((deal) => (
@@ -256,7 +252,7 @@ export function ActivityRelationPanel({
                     <Link
                       href={dealRecordPath(deal.id)}
                       variant="body"
-                      className="detail-field-value-link hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {deal.name}
                     </Link>

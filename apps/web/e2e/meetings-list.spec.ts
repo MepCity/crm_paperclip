@@ -38,12 +38,10 @@ test("Meetings shell entry, single tab, view menu with search, columns and sorti
   for (const name of ["Title", "From", "To", "Related To"]) {
     await expect(list.getByRole("columnheader", { name, exact: true })).toBeVisible();
   }
-  // MEP-509: Create Meeting opens the Meeting Information window instead of the create page.
-  await list.getByRole("button", { name: "Create Meeting", exact: true }).click();
-  const information = page.getByRole("dialog", { name: "Meeting Information" });
-  await expect(information).toBeVisible();
-  await information.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(information).toBeHidden();
+  await expect(list.getByRole("link", { name: "Create Meeting" })).toHaveAttribute(
+    "href",
+    /\/tab\/Meetings\/create$/,
+  );
 
   // ML-02: view menu
   await list.getByRole("button", { name: "Custom views" }).click();
