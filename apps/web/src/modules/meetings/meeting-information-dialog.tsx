@@ -2,7 +2,7 @@
 
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { FieldInput } from "@/components/records/form/field-input";
 import { formPayload, initialFormValues } from "@/components/records/form/form-model";
@@ -135,6 +135,17 @@ export function MeetingInformationDialog({
   }
 
   const ready = Boolean(metadata.data && users.data);
+  const formRef = useRef<HTMLFormElement>(null);
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!ready || focused.current) return;
+    focused.current = true;
+    const title = formRef.current?.querySelector<HTMLInputElement>(
+      `#meeting-information-${MEETING_INFORMATION_FIELDS[0]}`,
+    );
+    title?.focus();
+    title?.select();
+  }, [ready]);
   const ownerOptions = (users.data ?? []).map((u) => ({
     id: u.userId,
     name: u.name,
@@ -160,6 +171,7 @@ export function MeetingInformationDialog({
             Meeting Information
           </Heading>
           <form
+            ref={formRef}
             className="meeting-window__form flex min-h-0 flex-col"
             data-form-variant="activity"
             noValidate
@@ -207,6 +219,7 @@ export function MeetingInformationDialog({
                 type="button"
                 variant="ghost"
                 size="md"
+                className="meeting-window__more"
                 onPress={addMoreDetails}
                 isDisabled={!ready}
               >

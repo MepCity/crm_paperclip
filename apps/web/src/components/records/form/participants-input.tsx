@@ -63,9 +63,10 @@ export function ParticipantsInput({
           variant="ghost"
           size="md"
           isDisabled={disabled || full}
+          aria-label="Add"
           onPress={() => setPickerOpen(true)}
         >
-          Add
+          + Add
         </Button>
       </div>
       {entries.length > 0 ? (

@@ -595,3 +595,41 @@
 .meeting-window__form[data-form-variant="activity"] .record-form-row {
   grid-template-columns: var(--size-meeting-window-label-width, 167px) minmax(0, 1fr);
 }
+
+/* activities-form.md → Visual layout — Meeting form (measured): From/To on one line, Participants line. */
+[data-form-variant="activity"] .record-form-datetime {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-form-variant="activity"] .record-form-datetime > :first-child {
+  width: 110px;
+}
+[data-form-variant="activity"] .record-form-datetime > :nth-child(2) {
+  width: 80px;
+}
+[data-form-variant="activity"] .record-form-datetime input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+[data-form-variant="activity"] .record-form-participants__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-form-variant="activity"] .record-form-participants__bar .record-choice-trigger {
+  display: none;
+}
+[data-form-variant="activity"] .record-form-participants__bar button {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+}
+.meeting-window__footer .meeting-window__more {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+}
