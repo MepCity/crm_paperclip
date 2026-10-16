@@ -30,7 +30,7 @@ test.describe("Tasks record detail", () => {
     await openTaskFromList(page, org.slug);
     const header = page.locator("[data-record-header]");
     await expect(header.getByText("Task 250")).toBeVisible();
-    await expect(header.locator("[data-record-portrait]")).toHaveCount(1);
+    await expect(header.locator("[data-record-portrait]")).toHaveCount(0);
     await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
     // Close Task comes before Edit, More Options last.
     const labels = await header.getByRole("button").or(header.getByRole("link")).allInnerTexts();
