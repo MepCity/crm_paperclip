@@ -172,7 +172,9 @@ test("Meetings list measured evidence and row configuration", async ({ page }) =
   await page.setViewportSize({ width: 1470, height: 835 });
   await signUpNewUser(page);
   const org = await createOrganization(page);
-  await page.goto(moduleListDefaultPath(org.slug, "Meetings"));
+  await page.goto(
+    `${moduleListDefaultPath(org.slug, "Meetings")}?sort_by=Event_Title&sort_order=asc`,
+  );
   const list = page.locator(".module-list-page");
   await expect(list.locator("tbody tr").first()).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
@@ -185,6 +187,9 @@ test("Meetings list measured evidence and row configuration", async ({ page }) =
   const dates = row.locator("td[data-part=column]");
   await expect(dates.nth(1)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
   await expect(dates.nth(2)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
+  await expect(list.locator("tbody tr").nth(1).locator("td[data-part=column]").nth(1)).toHaveText(
+    /^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} (AM|PM)$/,
+  );
   await expect(list.locator("[data-part=related-pictogram]").first()).toBeVisible();
 
   if (process.env.MEP_LIST_EVIDENCE_DIR) {
