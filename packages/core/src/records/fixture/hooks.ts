@@ -3,6 +3,7 @@ import type { FieldValue, RecordData, RecordInput } from "../contract";
 export interface FixtureModuleStore {
   records: Map<string, RecordData>;
   nextId: bigint;
+  attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 
 /** Internal fixture access shared by synchronous module lifecycle hooks. */
@@ -25,6 +26,12 @@ export interface FixtureModuleHooks {
     ctx: FixtureHookContext,
   ) => void;
   afterDelete?: (ids: readonly string[], ctx: FixtureHookContext) => void;
+  /** Transfer children on staged stores, before generic lookup reassignment. */
+  transferMergedRecords?: (
+    ids: readonly string[],
+    masterId: string,
+    ctx: FixtureHookContext,
+  ) => void;
   afterSeed?: (ctx: FixtureHookContext) => void;
   orderRows?: (rows: RecordData[]) => void;
   /** Delete these related rows when their parent is removed by a merge. */

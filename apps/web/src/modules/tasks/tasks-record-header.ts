@@ -3,7 +3,7 @@ import type { RecordData } from "@crm/core/records";
 /**
  * Record header identity: Subject title (TD-43).
  * No portrait / placeholder icon is used.
- * Previous / next record arrows are disabled (matching Deals behavior).
+ * Previous / next record arrows are present (V07).
  */
 export function tasksRecordHeaderIdentity(
   record: RecordData,
@@ -19,6 +19,6 @@ export function tasksRecordHeaderIdentity(
   return {
     title,
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
   };
 }
