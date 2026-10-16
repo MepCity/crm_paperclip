@@ -147,9 +147,17 @@ test("required date reports the empty message before the format", () => {
   });
 });
 
-test("datetime keeps being skipped until its own form task", () => {
-  const fields = [field("Created_Time", "Created Time", "datetime", true)];
-  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
+test("a required datetime must be filled and a filled one must be a real timestamp", () => {
+  const fields = [field("Start_DateTime", "From", "datetime", true)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({
+    Start_DateTime: "From cannot be empty.",
+  });
+  expect(validateRecordForm(fields, { Start_DateTime: "nope" }, (f) => f.label)).toEqual({
+    Start_DateTime: "Please enter a valid From.",
+  });
+  expect(
+    validateRecordForm(fields, { Start_DateTime: "2026-10-14T09:00:00.000Z" }, (f) => f.label),
+  ).toEqual({});
 });
 
 test("required lookup fields require a populated reference", () => {

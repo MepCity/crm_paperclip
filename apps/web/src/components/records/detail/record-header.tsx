@@ -62,7 +62,6 @@ export function RecordHeader({
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
-  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
@@ -115,9 +114,7 @@ export function RecordHeader({
           )}
         </div>
       ) : null}
-      <div
-        className={`min-w-0 flex-1 ${showPortrait && portraitAppearance === "tile" ? "ml-(--size-record-title-gap)" : ""} mr-3`}
-      >
+      <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
         <h1
           className={`min-w-0 truncate text-text${TitleGlyph || inlinePortrait ? " flex items-center gap-2" : ""}`}
           title={accessibleTitle}
