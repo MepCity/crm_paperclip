@@ -817,6 +817,13 @@
 /* activities-form.md → Visual layout — Task form (measured). Row height/gap
    allocate the observed 50px separator pitch; CSS row boxes were not observed. */
 :root {
+  --size-meeting-window-width: 500px;
+  --size-meeting-window-title-inset: 30px;
+  --size-meeting-window-title-top: 24px;
+  --size-meeting-window-content-inset: 30px;
+  --size-meeting-window-content-end: 52px;
+  --size-meeting-window-footer-height: 77px;
+  --size-meeting-window-footer-inset: 25px;
   --size-activity-form-width: 548px;
   --size-activity-form-inset: 12px;
   --size-activity-form-label-width: 219px;

@@ -285,6 +285,13 @@ const SIZE_GROUPS = [
   {
     label: "Activity forms",
     tokens: [
+      "--size-meeting-window-width",
+      "--size-meeting-window-title-inset",
+      "--size-meeting-window-title-top",
+      "--size-meeting-window-content-inset",
+      "--size-meeting-window-content-end",
+      "--size-meeting-window-footer-height",
+      "--size-meeting-window-footer-inset",
       "--size-activity-form-width",
       "--size-activity-form-inset",
       "--size-activity-form-label-width",

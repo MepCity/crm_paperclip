@@ -36,6 +36,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Event_Title", "Start_DateTime", "End_DateTime", "What_Id", "Who_Id", "Owner"],
   buildFilterGroups: buildMeetingsFilterGroups,
   form: {
+    variant: "activity",
     rules: meetingsFormRules,
     inventoryChrome: true,
   },
