@@ -75,7 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         <a
                           key={action.label}
                           href={action.href}
-                          className="font-medium text-primary underline"
+                          className="font-semibold text-primary underline"
                         >
                           {action.label}
                         </a>
@@ -83,7 +83,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         <button
                           key={action.label}
                           type="button"
-                          className="font-medium text-primary underline"
+                          className="font-semibold text-primary underline"
                           onClick={action.onPress}
                         >
                           {action.label}
