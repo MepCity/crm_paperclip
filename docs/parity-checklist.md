@@ -656,6 +656,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - Database adapter remains unwired (ADR 0002, MEP-40); Deals runs on fixture record service.
 - Record detail fixes after closing QA (stage terminal buttons, rail order, Contact Person title, Stage History cells): resolved in MEP-493.
 
+
 ## Module 5 — Activities
 
 ### Tasks list — implemented; QA pending (MEP-459)
@@ -675,6 +676,78 @@ Interim rules: selection bar, page size, empty state and row actions follow Acco
 Related To and Contact Name link to the related record when the target module is registered.
 The detail and form parts of the definition borrow module-neutral Deals builders until the
 Tasks detail and form tasks land.
+
+
+### Tasks record detail — implemented; QA pending (MEP-473)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Header, tags, Close Task, Edit, More Options | TD-01, TD-04–TD-09 | `tasks-detail.spec.ts` |
+| Tabs, last update, Timeline empty state | TD-33–TD-35 | `tasks-detail.spec.ts` |
+| Business card, detail sections, Related To suffix | TD-36–TD-46 | `tasks-detail.spec.ts`, `tasks-detail-sections.test.ts` |
+| Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
+
+Interim rules: Close Task shows only while the task is open, opens no confirmation and
+updates Status through the record service (errors show a toast); Meetings and Calls open
+counts show 0 until those modules are registered; "+ New" and the panel search icons draw
+without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+
+### Calls record detail — implemented; QA pending (MEP-508)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Header, title link, phone glyph, tags, Reschedule Call, Down arrow, More Options | CD-01, CD-02, CD-04, CD-05, CD-05.1, CD-07, CD-08, CD-09 | `calls-detail.spec.ts`, `calls-record-header.test.ts`, `calls-reschedule.test.ts` |
+| More Options menu (Edit, Share, Delete, Print Preview, Send Email) | CD-07.1–CD-07.5 | `calls-detail.spec.ts`, `calls-record-more-options.test.ts` |
+| Tabs, last update, Timeline empty state | CD-33–CD-35 | `calls-detail.spec.ts`, `calls-timeline.test.ts` |
+| Business card, detail sections, Call For / Related To suffixes | CD-36, CD-39, CD-41, CD-42, CD-46 | `calls-detail.spec.ts`, `calls-detail-sections.test.ts` |
+| Right panel: person, Deal Summary ("No Deals found"), Open Activities, phone call icon | CD-50–CD-52, CD-54–CD-58, CD-60, CD-61, CD-63–CD-70 | `calls-detail.spec.ts` |
+
+Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
+
+### Meetings record detail — implemented; QA pending (MEP-507)
+
+| Area | Inventory | Evidence |
+| --- | --- | --- |
+| Back, tags, Edit, More Options and record navigation | MD-01, MD-04, MD-06–MD-09 | `meetings-detail.spec.ts` |
+| Overview, Timeline and tab-row Last Update | MD-33–MD-35 | `meetings-detail.spec.ts` |
+| Static business card, Related To suffix and Contact Name link | MD-39, MD-45 | `meetings-detail.spec.ts`, `meetings-detail-sections.test.ts` |
+| Participants between business card and details; Add without handler | MD-47, MD-41 | `meetings-detail.spec.ts` |
+| More Options: six rows, separators after Delete and Export Meeting | MD-07.1–MD-07.6 | `meetings-detail.spec.ts`, `meetings-record-more-options.test.ts` |
+| Person, Info/Conversations, Deal Summary and Open Activities | MD-50–MD-52, MD-54–MD-70 | `meetings-detail.spec.ts`; existing Tasks relation panel |
+
+Edit uses the registered shared Meetings form route. Inline editing in detail sections and
+Last Update reuse Deals rules; the business card is static. Add Tags is M6; the existing
+menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
+and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
+counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
+Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+
+Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
+show No participant found; a populated opaque array shows a blank body with heading/Add,
+without interpreting any entries or inventing names. The populated appearance/item schema
+remains an open question for the corresponding research/contract work.
+
+### Meetings create and edit — implemented; QA pending (MEP-509)
+
+Inventory is MF-01 – MF-15 and MF-02.1 – MF-02.3.
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Meeting Information window: Title, Meeting Venue and its three options, Location, All day, From and To (date + time), Host, Participants + Add | MF-01 – MF-11, MF-02.1 – MF-02.3 | `meetings-form.spec.ts`, `meetings-form-rules.test.ts` |
+| Footer: Add more details, Cancel, Save; body scroll | MF-12 – MF-15 | `meetings-form.spec.ts` |
+| Full form (Add more details, Edit): metadata layout order, values carried over | Meeting form fields vs metadata | `meetings-form.spec.ts` |
+
+Provisional rules: From and To are required, To before From blocks Save with the shared
+"Please enter a valid To." under To; a new window starts at the next full hour with To one
+hour later and Host the signed-in user; All day hides the time entries and stores the day at
+UTC midnight; no provider choice (Online adds no field), Location is always shown;
+Participants Add opens the existing record picker for Contacts or Leads, at most 50, rows can
+be removed, no invitation is sent; Reminder and Participants Reminder are selects (At start,
+5/10/15/30 minutes, 1/2 hours, 1/2 days before) that only store the value; Repeat is drawn
+in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
+Cancel creates nothing. The record's Participants Add opens the same picker and writes the
+list. Provider and the audit, check-in and tag fields are not drawn.
 
 
 ### Notes in Timeline History — MEP-580
