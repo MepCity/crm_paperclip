@@ -6,15 +6,11 @@ import type {
   TransferModule,
   TransferService,
 } from "@crm/core";
+import { TRANSFER_MODULES } from "@crm/core";
 import { AppError } from "@crm/core/errors";
 import { invalid, object } from "./codec";
 
-export const TRANSFER_MODULES: readonly TransferModule[] = [
-  "Leads",
-  "Contacts",
-  "Accounts",
-  "Deals",
-];
+export { TRANSFER_MODULES } from "@crm/core";
 export const TRANSFER_FILE_BYTES = 25_000_000;
 /** Allowance for multipart framing around the file bytes. */
 const MULTIPART_OVERHEAD = 64 * 1024;
