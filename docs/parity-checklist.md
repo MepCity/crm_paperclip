@@ -534,7 +534,7 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 | Lower detail sections | Deal Information, Description Information | `deals-detail-sections.test.ts`, `deals-detail.spec.ts` |
 | SALES SUMMARY | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
-**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
+**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions remain inert pending the dialog implementation (MEP-544).
 
 ### Deals create / edit / clone form — done; QA MEP-453 (MEP-440)
 
