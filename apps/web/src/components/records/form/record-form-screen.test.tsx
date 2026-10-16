@@ -712,6 +712,7 @@ test("default variant retains inventory chrome and the enclosing card", async ()
   );
 });
 
+test("changing the label-side Who type clears the value and retargets the lookup", async () => {
   harness(
     {
       id: "task-1",
