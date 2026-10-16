@@ -58,6 +58,7 @@ export const LEADS_SORT_FIELD_LABELS = [
 
 export const leadsListPageConfig: ModuleListScreenConfig = {
   module: LEADS_MODULE,
+  activityRibbon: true,
   linkField: "Full_Name",
   // The reference names the record title field "Lead Name" in Sort By.
   linkFieldLabel: "Lead Name",

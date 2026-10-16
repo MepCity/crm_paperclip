@@ -66,6 +66,7 @@ export const CONTACTS_SORT_FIELD_LABELS = [
 ] as const;
 export const contactsListPageConfig: ModuleListScreenConfig = {
   module: "Contacts",
+  activityRibbon: true,
   linkField: "Full_Name",
   linkFieldLabel: "Contact Name",
   pluralLabel: "Contacts",

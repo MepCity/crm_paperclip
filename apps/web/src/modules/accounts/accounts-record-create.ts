@@ -3,7 +3,17 @@ import { moduleCreatePath } from "@/lib/crm-paths";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 
 function accountDisplayName(fields: RecordData["fields"]): string {
-  return typeof fields.Account_Name === "string" ? fields.Account_Name : "";
+  const val = fields.Account_Name;
+  if (typeof val === "string") return val;
+  if (
+    typeof val === "object" &&
+    val !== null &&
+    "name" in val &&
+    typeof (val as { name?: unknown }).name === "string"
+  ) {
+    return (val as { name: string }).name;
+  }
+  return "";
 }
 
 export function accountNameLookupFromRecord(
