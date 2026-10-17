@@ -145,6 +145,7 @@ describe("Calls sanitized metadata source", () => {
       "Quotes",
       "Sales_Orders",
       "Vendors",
+      "Solutions",
     ]);
   });
 

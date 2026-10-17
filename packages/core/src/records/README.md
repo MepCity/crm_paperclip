@@ -772,3 +772,50 @@ Interim/open questions:
   to the resulting Contact remains open; no conversion code is added here.
 - Unread Campaigns retains the exported Common_Status criterion although that
   field is absent from public metadata, following existing saved-view policy.
+
+## Cases
+
+`Cases` publishes all 30 exported fields, layout sections/columns, five picklists
+and eight saved views. Null sorting uses the common default. Subject, Status and
+Case_Origin are required. The seed contains 60 synthetic cases (IDs from
+250000000000000000; create range 260000000000000000), covers all picklist values,
+locked/open/closed/escalated cases and today's view, and links seeded Accounts,
+Contacts and Deals. List/count filters on Account_Name, Related_To and Deal_Name
+provide related reads. Deleting a registered target uses the existing dangling
+lookup read policy (null); it does not delete the case. Solution is text: there
+is no Cases–Solutions relation. Comment fields retain their exported scalar types;
+no comment, closure or escalation workflow is added.
+
+## Solutions
+
+`Solutions` publishes all 20 exported fields, layout sections/columns, Status
+picklist and four saved views. Solution_Title is required. The seed contains 25
+synthetic solutions (IDs from 270000000000000000; create range
+280000000000000000), every status and both Published states. Published remains
+a stored boolean; no publishing workflow is added. Existing module seed counts
+are unchanged. Tasks, Events, Calls, Notes and Attachments accept both new modules
+as parents through their existing lookup/parent mechanisms.
+
+### Auto-number (interim)
+
+CTO's interim fixture decision enables a generic helper through the bundle's
+`autoNumberField`. Case_Number and Solution_Number remain read-only autonumber
+fields (length 25) and are managed. Each module has an independent nextAutoNumber
+counter alongside nextId. Seed records receive unprefixed decimal strings 1..N
+in Created_Time ascending order (ID breaks ties); create continues at N+1 inside
+the common atomic write. Rollback restores the counter. Deletion never reuses a
+number. Update/mass update/merge retain the master's number. Client numbers are
+rejected like other managed fields. Clone/import use the same create path and
+must omit managed fields. No separate clone/convert service exists here.
+
+Interim/open questions:
+
+- Confirm actual auto-number prefix/suffix/start when research supplies evidence;
+  the export has null for each, so the approved fallback starts at 1.
+- Product_Name points to unregistered Products (Phase 2). The existing shared
+  reference policy preserves its reference unchanged; existence/name validation
+  starts when that module is registered. No synthetic Products module is added.
+- Unread views preserve Common_Status although it is absent from exported fields,
+  following the existing shared saved-view policy.
+- Layout-required Question/Answer do not change Solutions' module-level required
+  fields; the record contract follows the exported system_mandatory flags.

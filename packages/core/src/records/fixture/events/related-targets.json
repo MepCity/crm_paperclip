@@ -128,5 +128,10 @@
     "sourceModule": "Vendors",
     "module": "Events",
     "href": "Vendors/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Solutions",
+    "module": "Events",
+    "href": "Solutions/{ENTITYID}/Events"
   }
 ]
