@@ -1,0 +1,543 @@
+{
+  "fields": [
+    {
+      "apiName": "Owner",
+      "label": "Campaign Owner",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Type",
+      "label": "Type",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Campaign_Name",
+      "label": "Campaign Name",
+      "dataType": "text",
+      "required": true,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Status",
+      "label": "Status",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Start_Date",
+      "label": "Start Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "End_Date",
+      "label": "End Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Expected_Revenue",
+      "label": "Expected Revenue",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Budgeted_Cost",
+      "label": "Budgeted Cost",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Actual_Cost",
+      "label": "Actual Cost",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Expected_Response",
+      "label": "Expected Response",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Num_sent",
+      "label": "Numbers sent",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Created_By",
+      "label": "Created By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_By",
+      "label": "Modified By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Created_Time",
+      "label": "Created Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_Time",
+      "label": "Modified Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Description",
+      "label": "Description",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "quickCreate": false
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Tag",
+      "label": "Tag",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "Parent_Campaign",
+      "label": "Parent Campaign",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Campaigns"
+      }
+    },
+    {
+      "apiName": "id",
+      "label": "Record Id",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 18
+    },
+    {
+      "apiName": "Last_Activity_Time",
+      "label": "Last Activity Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Connected_To__s",
+      "label": "Connected To",
+      "dataType": "multi_module_lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "create": true,
+        "edit": false,
+        "quickCreate": false
+      },
+      "maxLength": 120
+    }
+  ],
+  "layout": [
+    {
+      "label": "Campaign Information",
+      "columnCount": 2,
+      "columns": [
+        [
+          "Owner",
+          "Campaign_Name",
+          "Start_Date",
+          "Expected_Revenue",
+          "Actual_Cost",
+          "Num_sent",
+          "Modified_By",
+          "Modified_Time",
+          "Last_Activity_Time",
+          "Connected_To__s"
+        ],
+        [
+          "Type",
+          "Status",
+          "End_Date",
+          "Budgeted_Cost",
+          "Expected_Response",
+          "Created_By",
+          "Created_Time",
+          "Tag",
+          "Parent_Campaign",
+          "id"
+        ]
+      ],
+      "fields": [
+        "Owner",
+        "Type",
+        "Campaign_Name",
+        "Status",
+        "Start_Date",
+        "End_Date",
+        "Expected_Revenue",
+        "Budgeted_Cost",
+        "Actual_Cost",
+        "Expected_Response",
+        "Num_sent",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "Tag",
+        "Parent_Campaign",
+        "id",
+        "Last_Activity_Time",
+        "Connected_To__s"
+      ]
+    },
+    {
+      "label": "Description Information",
+      "columnCount": 1,
+      "columns": [["Description"]],
+      "fields": ["Description"]
+    }
+  ],
+  "picklists": {
+    "Type": [
+      {
+        "displayValue": "-None-",
+        "storedValue": "-None-"
+      },
+      {
+        "displayValue": "Conference",
+        "storedValue": "Conference"
+      },
+      {
+        "displayValue": "Webinar",
+        "storedValue": "Webinar"
+      },
+      {
+        "displayValue": "Trade Show",
+        "storedValue": "Trade Show"
+      },
+      {
+        "displayValue": "Public Relations",
+        "storedValue": "Public Relations"
+      },
+      {
+        "displayValue": "Partners",
+        "storedValue": "Partners"
+      },
+      {
+        "displayValue": "Referral Program",
+        "storedValue": "Referral Program"
+      },
+      {
+        "displayValue": "Advertisement",
+        "storedValue": "Advertisement"
+      },
+      {
+        "displayValue": "Banner Ads",
+        "storedValue": "Banner Ads"
+      },
+      {
+        "displayValue": "Direct mail",
+        "storedValue": "Direct mail"
+      },
+      {
+        "displayValue": "Email",
+        "storedValue": "Email"
+      },
+      {
+        "displayValue": "Telemarketing",
+        "storedValue": "Telemarketing"
+      },
+      {
+        "displayValue": "Others",
+        "storedValue": "Others"
+      }
+    ],
+    "Status": [
+      {
+        "displayValue": "-None-",
+        "storedValue": "-None-"
+      },
+      {
+        "displayValue": "Planning",
+        "storedValue": "Planning"
+      },
+      {
+        "displayValue": "Active",
+        "storedValue": "Active"
+      },
+      {
+        "displayValue": "Inactive",
+        "storedValue": "Inactive"
+      },
+      {
+        "displayValue": "Complete",
+        "storedValue": "Complete"
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "all-active-campaigns",
+      "name": "All Active Campaigns",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Campaign_Name", "Type", "Status", "Start_Date", "End_Date", "Owner"],
+      "criteria": {
+        "field": "Status",
+        "comparator": "equal",
+        "value": "Active"
+      },
+      "sort": null
+    },
+    {
+      "id": "all-campaigns",
+      "name": "All Campaigns",
+      "systemDefined": true,
+      "isDefault": true,
+      "columns": ["Campaign_Name", "Type", "Status", "Start_Date", "End_Date", "Owner"],
+      "criteria": null,
+      "sort": null
+    },
+    {
+      "id": "my-active-campaigns",
+      "name": "My Active Campaigns",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Campaign_Name", "Type", "Status", "Start_Date", "End_Date"],
+      "criteria": {
+        "groupOperator": "and",
+        "group": [
+          {
+            "field": "Owner",
+            "comparator": "equal",
+            "value": {
+              "token": "CURRENTUSER"
+            }
+          },
+          {
+            "field": "Status",
+            "comparator": "equal",
+            "value": "Active"
+          }
+        ]
+      },
+      "sort": null
+    },
+    {
+      "id": "unread-campaigns",
+      "name": "Unread Campaigns",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Campaign_Name", "Type", "Status", "Start_Date", "End_Date", "Owner"],
+      "criteria": {
+        "field": "Common_Status",
+        "comparator": "not_contains",
+        "value": "v"
+      },
+      "sort": null
+    }
+  ]
+}

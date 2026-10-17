@@ -121,6 +121,7 @@ what the "no colour constants" rule forbids.
 | `--color-text-placeholder` | `#8c91ab` | app-shell.md › Colour summary › "`#8C91AB` › Global search placeholder, approx."; list-views.md › Text roles › "Placeholder and subdued text `#8C91AB`" | from spec |
 | `--color-border` | `#ced0e1` | app-shell.md › Colour summary › "`#CED0E1` › More Actions menu edge and dividers" | from spec |
 | `--color-primary` | `#5464f2` | app-shell.md › Colour summary › "`#5464F2` › Sales folder icon, quick-create border, and open search outline"; list-views.md › Selected / disabled › "glyph `#5464F2`" | from spec |
+| `--color-list-row-hover-activities` | `#f5f7fc` | activities.md › Difference table — Activities lists › row 31 "`#F5F7FC`, with highlighted link `#5464F2`" | from spec |
 | `--color-primary-text` | `#ffffff` | list-views.md › Create and action buttons › "white `#FFFFFF` label" | from spec |
 | `--color-primary-hover` | `#1d4ed8` | No hover state was captured. The list spec does not measure a primary hover either | not yet measured |
 | `--color-primary-pressed` | `#1e40af` | No pressed state was captured. The list spec does not measure a primary pressed state either | not yet measured |
@@ -796,6 +797,13 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-detail-inline-save-check-width` | `10px` | record-detail.md › Inline editor › Save button / checkmark width |
 | `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
 | `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
+| `--size-meeting-window-width` | `500px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-top` | `24px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-end` | `52px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-height` | `77px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-inset` | `25px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
 | `--size-activity-form-width` | `548px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
 | `--size-activity-form-inset` | `12px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
 | `--size-activity-form-label-width` | `219px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |

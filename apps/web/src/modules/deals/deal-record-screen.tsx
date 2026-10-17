@@ -3,6 +3,7 @@
 import type { ModuleMetadata, RecordData, RecordInput } from "@crm/core/records";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { contactRolesOfDeal } from "@/components/records/detail/contact-roles-card-body";
 import {
   RecordDetailScreen,
   type RecordDetailScreenProps,
@@ -43,6 +44,13 @@ function useDealStageHistoryCount(dealId: string) {
   });
 }
 
+function useContactRolesCount(dealId: string) {
+  return useRecordCount("Contact_Roles", {
+    viewId: "all-contact-roles",
+    filters: contactRolesOfDeal(dealId),
+  });
+}
+
 export function DealRecordScreen({
   definition,
   recordId,
@@ -52,6 +60,7 @@ export function DealRecordScreen({
   const queryClient = useQueryClient();
   const resolvedOrgSlug = useOrgSlug();
   const historyCount = useDealStageHistoryCount(recordId);
+  const contactRolesCount = useContactRolesCount(recordId);
   const updateRecord = useUpdateRecord("Deals");
   const homeCurrency = useHomeCurrency();
 
@@ -64,8 +73,12 @@ export function DealRecordScreen({
 
   const activityBadges = useParentActivityBadges("Deals", recordId);
   const badges = useMemo(
-    () => ({ stageHistory: historyCount.data ?? 0, ...activityBadges }),
-    [historyCount.data, activityBadges],
+    () => ({
+      stageHistory: historyCount.data ?? 0,
+      contactRoles: contactRolesCount.data ?? 0,
+      ...activityBadges,
+    }),
+    [historyCount.data, contactRolesCount.data, activityBadges],
   );
 
   const buildRelatedLists = useCallback(() => createDealsRelatedLists({ badges }), [badges]);

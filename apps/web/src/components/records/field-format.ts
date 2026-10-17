@@ -4,6 +4,8 @@ import {
   formatDate,
   formatDateTime,
   formatNumber,
+  formatNumericDate,
+  formatNumericDateTime,
   formatRecordAuditDateTime,
 } from "@crm/core/format";
 import type { FieldDefinition, FieldValue, ModuleRecordReference } from "@crm/core/records";
@@ -52,6 +54,10 @@ export function formatFieldValue(
     /** ISO 4217 code; when omitted, currency values use plain number formatting. */
     currencyCode?: string;
     orgSlug?: string;
+    /** Activities list cells: zero-padded `dd.mm.yyyy` dates and 12-hour times. */
+    numericDates?: boolean;
+    /** With `numericDates`, datetime cells show only the date (all-day events). */
+    dateOnly?: boolean;
   },
 ): FieldFormattedValue {
   if (value === null || value === "") return { kind: "empty" };
@@ -118,6 +124,8 @@ function valueText(
   format: FormatOptions,
   options?: {
     currencyCode?: string;
+    numericDates?: boolean;
+    dateOnly?: boolean;
   },
 ): string | null {
   if (value === null || value === "") return null;
@@ -127,10 +135,15 @@ function valueText(
   }
 
   if (field.dataType === "date" && typeof value === "string") {
-    return formatDate(value, format);
+    return options?.numericDates ? formatNumericDate(value, format) : formatDate(value, format);
   }
 
   if (field.dataType === "datetime" && typeof value === "string") {
+    if (options?.numericDates) {
+      return options.dateOnly
+        ? formatNumericDate(value, format)
+        : formatNumericDateTime(value, format);
+    }
     return formatDateTime(value, format);
   }
 
