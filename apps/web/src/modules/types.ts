@@ -202,7 +202,6 @@ export interface ModuleScreenDefinition {
       },
     ) => {
       title: string;
-      titleHref?: string;
       subtitle?: string;
       subtitleLaterModule?: ModuleKey;
       subtitleHref?: string;
