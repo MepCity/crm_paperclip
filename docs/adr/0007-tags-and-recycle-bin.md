@@ -1,6 +1,6 @@
 # ADR 0007 — Module-scoped tags and recoverable record deletion
 
-- Status: Proposed
+- Status: Partially accepted (MEP-771): §1–§2 logical boundary; §3–§5 remain Proposed
 - Date: 2026-10-15
 - Decider: CTO
 - Issue: MEP-693
@@ -106,6 +106,25 @@ Capabilities are conceptual policy inputs, not a new API or exported profile
 permission name. Until grants are approved, no implementation may equate all
 members with managers or use creator identity as the entire permission model.
 Reject foreign tag/record references without revealing their existence.
+
+### Slice 1 interim rules
+
+Implementation: `packages/core/src/records/tags/policy.ts` (MEP-771).
+
+- T1: trim and NFC-normalize names; reject empty or over 50 characters;
+  module-local uniqueness uses NFC plus lowercase.
+- T2/R1: 100 catalogue entries per module; no per-record cap.
+- T3: optional `#RRGGBB` colour, default null.
+- T4/T5: project `{id, name}` in name order, empty null; ID any-of filtering,
+  negative membership includes untagged records; list/count share a predicate.
+- T6: idempotent membership addition; catalogue rename preserves links;
+  permanent record deletion and catalogue deletion remove affected links.
+- T7: no manage capability exists in `auth`; use the existing module-write
+  check for catalogue writes, and ordinary record/lock checks for membership.
+  This does not introduce a role or capability grant.
+
+All are interim, pending MEP-629. Transport, storage and recoverable deletion
+remain Proposed and outside this slice.
 
 ## 3. Recycle Bin: proposed retention boundary
 
