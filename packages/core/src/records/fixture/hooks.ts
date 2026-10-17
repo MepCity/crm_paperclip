@@ -3,6 +3,7 @@ import type { FieldValue, RecordData, RecordInput } from "../contract";
 export interface FixtureModuleStore {
   records: Map<string, RecordData>;
   nextId: bigint;
+  nextAutoNumber?: bigint;
   attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 

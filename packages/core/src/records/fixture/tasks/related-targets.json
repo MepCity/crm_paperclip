@@ -58,5 +58,10 @@
     "sourceModule": "Vendors",
     "module": "Tasks",
     "href": "Vendors/{ENTITYID}/Tasks"
+  },
+  {
+    "sourceModule": "Solutions",
+    "module": "Tasks",
+    "href": "Solutions/{ENTITYID}/Tasks"
   }
 ]
