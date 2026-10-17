@@ -476,6 +476,7 @@ export function RecordDetailScreen({
             subtitleHref={subtitleHref}
             portraitIcon={portraitIcon ?? rules.portraitIcon}
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
+            portraitAppearance={rules.portraitAppearance}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
