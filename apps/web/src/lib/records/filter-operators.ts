@@ -201,7 +201,6 @@ export type FilterFieldType = keyof typeof filterOperators;
 
 /** Field types with observed editors but no Apply criteria contract yet. */
 export const filterFieldTypesWithApplyBlocked = new Set<FilterFieldType>([
-  "tag",
   "multilookup",
   "compound_address",
 ]);
