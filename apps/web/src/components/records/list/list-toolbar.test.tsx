@@ -146,3 +146,23 @@ test("Print View opens on hover, delegates child callbacks and returns focus wit
   expect(screen.queryByRole("menu")).toBeNull();
   await waitFor(() => expect(document.activeElement).toBe(trigger));
 });
+
+test("Actions menu honours actionsMenuWidth and draws a separator before flagged items", async () => {
+  const user = userEvent.setup();
+  render(
+    <ListToolbar
+      {...base}
+      actionsMenuWidth={143}
+      actions={[
+        { id: "a", label: "First", onAction: vi.fn() },
+        { id: "b", label: "Print View", separatorBefore: true, onAction: vi.fn() },
+      ]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Actions" }));
+  expect((screen.getByRole("menu").closest("[style*=width]") as HTMLElement).style.width).toBe(
+    "143px",
+  );
+  expect(screen.getByRole("menuitem", { name: "First" }).className).not.toContain("border-t");
+  expect(screen.getByRole("menuitem", { name: "Print View" }).className).toContain("border-t");
+});

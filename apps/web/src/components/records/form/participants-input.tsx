@@ -3,14 +3,12 @@
 import type { FieldValue, ModuleRecordReference } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RecordChoice } from "@/components/ui/record-choice";
 import {
   addParticipant,
   MEETING_PARTICIPANTS_MAX,
   participantEntries,
   participantValue,
 } from "@/lib/records/meeting-participants";
-import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface ParticipantsInputProps {
@@ -35,7 +33,6 @@ export function ParticipantsInput({
   disabled,
 }: ParticipantsInputProps) {
   const entries = participantEntries(value);
-  const [module, setModule] = useState(modules[0] ?? "");
   const [pickerOpen, setPickerOpen] = useState(false);
   const full = entries.length >= MEETING_PARTICIPANTS_MAX;
   const write = (next: readonly ModuleRecordReference[]) => onChange(participantValue(next));
@@ -45,27 +42,15 @@ export function ParticipantsInput({
         <span id={id} className="record-form-participants__value">
           {entries.length === 0 ? "None" : `${entries.length} selected`}
         </span>
-        {modules.length > 1 ? (
-          <RecordChoice
-            label={`${label} module`}
-            hideLabel
-            value={module}
-            onChange={(next) => setModule(next ?? modules[0] ?? "")}
-            options={modules.map((m) => ({
-              value: m,
-              label: resolveModuleScreenByApiName(m)?.pluralLabel ?? m,
-            }))}
-            disabled={disabled}
-          />
-        ) : null}
         <Button
           type="button"
           variant="ghost"
           size="md"
           isDisabled={disabled || full}
+          aria-label="Add"
           onPress={() => setPickerOpen(true)}
         >
-          Add
+          + Add
         </Button>
       </div>
       {entries.length > 0 ? (
@@ -95,7 +80,8 @@ export function ParticipantsInput({
       ) : null}
       {pickerOpen ? (
         <SelectRecordDialog
-          module={module}
+          module={modules[0] ?? ""}
+          modules={modules}
           onCancel={() => setPickerOpen(false)}
           onDone={(selected) => {
             write(addParticipant(entries, selected));

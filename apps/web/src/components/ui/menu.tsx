@@ -36,22 +36,6 @@ interface RootMenuTriggerStateWithBlockedKeys {
   __laterModuleBlockedKeys?: Set<string>;
 }
 
-let lastSubmenuKeyTime = 0;
-let lastSubmenuKeyTarget: Element | null = null;
-
-if (typeof document !== "undefined") {
-  document.addEventListener(
-    "keydown",
-    (e) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-        lastSubmenuKeyTime = Date.now();
-        lastSubmenuKeyTarget = e.target instanceof Element ? e.target : null;
-      }
-    },
-    { capture: true },
-  );
-}
-
 export function MenuItem<T extends object>({
   variant = "default",
   appearance = "default",
@@ -90,22 +74,17 @@ export function MenuItem<T extends object>({
 
         if (typeof document !== "undefined") {
           const activeEl = document.activeElement;
-          const isDirectKeyOnNormalItem = Boolean(
-            Date.now() - lastSubmenuKeyTime < 150 &&
-              lastSubmenuKeyTarget &&
-              lastSubmenuKeyTarget.getAttribute("role") === "menuitem" &&
-              !lastSubmenuKeyTarget.hasAttribute("data-later-module") &&
-              (lastSubmenuKeyTarget === activeEl || lastSubmenuKeyTarget.contains(activeEl)),
+          const isActionOnNormalItem = Boolean(
+            activeEl &&
+              activeEl.getAttribute("role") === "menuitem" &&
+              !activeEl.hasAttribute("data-later-module"),
           );
 
-          if (isDirectKeyOnNormalItem) {
-            lastSubmenuKeyTime = 0;
-            lastSubmenuKeyTarget = null;
+          if (isActionOnNormalItem) {
             return origOpenSubmenu(triggerKey, level);
           }
 
           if (activeEl?.hasAttribute("data-later-module")) {
-            rootMenuTriggerState.__laterModuleBlockedKeys?.add(keyStr);
             return;
           }
 
@@ -113,7 +92,6 @@ export function MenuItem<T extends object>({
             document.querySelector("[data-later-module][data-hovered]") ??
             document.querySelector("[data-later-module]:hover");
           if (hoveredLater) {
-            rootMenuTriggerState.__laterModuleBlockedKeys?.add(keyStr);
             return;
           }
         }
@@ -157,6 +135,8 @@ export interface MenuAction {
     onAction?: () => void;
     accent?: boolean;
   }[];
+  /** Draws a divider above the row (Activities Actions menu, MEP-590 row 40). */
+  separatorBefore?: boolean;
   id: string;
   label: string;
   onAction: () => void;
@@ -204,8 +184,11 @@ export function Menu<T extends object>({
   placement,
   header,
   shouldCloseOnInteractOutside,
+  widthPx,
   ...props
 }: AriaMenuProps<T> & {
+  /** Measured outer width in px; overrides the named `width` (Activities Actions menu). */
+  widthPx?: number;
   width?: "create" | "actions" | "settings" | "columnOptions";
   appearance?: "default" | "measured" | "record";
   placement?: ComponentProps<typeof Popover>["placement"];
@@ -232,6 +215,7 @@ export function Menu<T extends object>({
       placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
       className={menuPopoverClass(widthClass, appearance)}
+      {...(widthPx ? { style: { width: widthPx } } : {})}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}
