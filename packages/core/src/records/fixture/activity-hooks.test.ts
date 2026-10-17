@@ -33,20 +33,20 @@ describe("activityDeleteHook", () => {
   it("removes activities whose parent was deleted", () => {
     const { stores, ctx } = setup();
     activityDeleteHook("Deals")(["d1"], ctx);
-    expect([...stores.Tasks?.records.keys()]).toEqual(["t2", "t3"]);
-    expect(stores.Calls?.records.size).toBe(0);
+    expect([...stores.Tasks.records.keys()]).toEqual(["t2", "t3"]);
+    expect(stores.Calls.records.size).toBe(0);
   });
 
   it("ignores non-activity modules", () => {
     const { stores, ctx } = setup();
     activityDeleteHook("Deals")(["d1"], ctx);
-    expect(stores.Notes?.records.size).toBe(1);
+    expect(stores.Notes.records.size).toBe(1);
   });
 
   it("does nothing for a module that cannot parent activities", () => {
     const { stores, ctx } = setup();
     activityDeleteHook("Notes")(["d1"], ctx);
-    expect(stores.Tasks?.records.size).toBe(3);
+    expect(stores.Tasks.records.size).toBe(3);
   });
 
   it("chains the wrapped afterDelete hook", () => {
