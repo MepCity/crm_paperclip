@@ -133,10 +133,15 @@ export function RecordHeader({
             </span>
           ) : null}
           {TitleGlyph ? (
-            <TitleGlyph aria-hidden data-record-title-glyph className="size-4 shrink-0" />
+            <TitleGlyph
+              aria-hidden
+              data-record-title-glyph
+              data-record-portrait
+              className="size-4 shrink-0"
+            />
           ) : null}
           {titleHref ? (
-            <Link href={titleHref} className="text-2xl font-bold">
+            <Link href={titleHref} className="text-2xl font-bold hover:underline">
               {title}
             </Link>
           ) : (

@@ -30,6 +30,7 @@ import type {
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
 import { roundMoneyTwoDecimals } from "../rounding";
+import type { TagService } from "../tags";
 import {
   attachmentUltimateParent,
   fixtureAttachmentLifecycle,
@@ -51,6 +52,7 @@ import { createFixtureKanbanViews } from "./kanban-views";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
@@ -137,7 +139,7 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService & { readonly history: RecordHistoryService } {
+): RecordService & { readonly history: RecordHistoryService; readonly tags: TagService } {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -258,7 +260,9 @@ export function createFixtureRecordService(
     const bundle = bundleFor(module);
     if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     return resolveRecordReferences(
-      bundle.readRecord?.(record, now) ?? record,
+      bundle.metadata.fields.some((field) => field.apiName === "Tag")
+        ? projectTags(moduleStore(module), bundle.readRecord?.(record, now) ?? record)
+        : (bundle.readRecord?.(record, now) ?? record),
       bundle.metadata.fields,
       referenceModules(),
     );
@@ -384,6 +388,22 @@ export function createFixtureRecordService(
       transactionOriginal = undefined;
     }
   };
+  const tags = fixtureTagService({
+    ctx,
+    now: clock,
+    moduleStore,
+    assertModule(module, write) {
+      const bundle = bundleFor(module);
+      if (!bundle.metadata.fields.some((field) => field.apiName === "Tag"))
+        throw new NotFoundError("Module not found.");
+      if (write) assertModuleWritable(module);
+    },
+    assertRecord(module, id, write) {
+      const record = recordFor(module, id);
+      if (write) assertWritable(record);
+    },
+    atomic: (module, write) => atomic({ module, mechanism: "tags" }, write),
+  });
   const writeBatch = (
     module: string,
     ids: readonly string[],
@@ -540,6 +560,7 @@ export function createFixtureRecordService(
   };
 
   return {
+    tags,
     history: fixtureHistoryReader(
       ctx,
       () => fixtureHistoryStore(state.history),
@@ -918,4 +939,12 @@ export function createFixtureRecordHistoryService(
   options?: FixtureRecordServiceOptions,
 ): RecordHistoryService {
   return createFixtureRecordService(context, options).history;
+}
+
+/** Organization-bound tag facade sharing record transactions and lifecycle hooks. */
+export function createFixtureTagService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): TagService {
+  return createFixtureRecordService(context, options).tags;
 }
