@@ -780,3 +780,21 @@ authenticated request; delete asks for confirmation and is permanent; Timeline H
 "Attachment added: <name>" (from the stored row) and "Attachment deleted: <name>" (kept only for
 the browser session, attributed to "You", because a deleted row leaves no record); Documents is
 inert (M9); Leads card sits after Closed Activities (order 3, as on the other modules).
+
+## Module 7 — Campaigns
+
+### Campaigns list
+
+Not started.
+
+### Campaigns create / edit form
+
+Not started.
+
+### Campaigns record detail
+
+Not started.
+
+### Campaigns links in earlier modules
+
+Not started.
