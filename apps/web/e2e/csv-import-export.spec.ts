@@ -169,7 +169,7 @@ for (const { label, csv } of [
   {
     module: "Events",
     label: "Meetings",
-    csv: "Event_Title,Start_DateTime,End_DateTime\nCSV Meeting,2026-11-01T09:00:00Z,2026-11-01T10:00:00Z\n",
+    csv: "Event_Title,Start_DateTime,End_DateTime,Meeting_Venue__s\nCSV Meeting,2026-11-01T09:00:00Z,2026-11-01T10:00:00Z,Client location\n",
   },
   {
     module: "Calls",
