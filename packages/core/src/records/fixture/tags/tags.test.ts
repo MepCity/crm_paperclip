@@ -75,6 +75,39 @@ describe("organization-bound fixture tags", () => {
     expect(await tags.listTags(module)).toHaveLength(1);
   });
 
+  it("composes Campaigns registration, tag projection and campaign-member cleanup", async () => {
+    const { records, tags } = setup();
+    const campaign = await records.create("Campaigns", { Campaign_Name: "Synthetic campaign" });
+    const lead = await records.create("Leads", {
+      Last_Name: "Synthetic lead",
+      Company: "Synthetic company",
+    });
+    const member = await records.create("Campaign_Members", {
+      Campaign: { module: "Campaigns", id: campaign.id },
+      Lead: { module: "Leads", id: lead.id },
+    });
+    const tag = await tags.createTag("Campaigns", { name: "Campaign tag" });
+    await tags.addTags("Campaigns", campaign.id, [tag.id]);
+    expect((await records.get("Campaigns", campaign.id)).fields.Tag).toEqual([
+      { id: tag.id, name: "Campaign tag" },
+    ]);
+    const viewId = (await records.listViews("Campaigns")).find((view) => view.isDefault)?.id;
+    if (!viewId) throw new Error("Missing view");
+    expect(
+      await records.count("Campaigns", {
+        viewId,
+        filters: { field: "Tag", comparator: "equal", value: tag.id },
+      }),
+    ).toBe(1);
+    await records.delete("Campaigns", [campaign.id]);
+    await expect(records.get("Campaign_Members", member.id)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(tags.listRecordTags("Campaigns", campaign.id)).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+    expect(await tags.listTags("Campaigns")).toEqual([tag]);
+    expect((await records.get("Leads", lead.id)).id).toBe(lead.id);
+  });
+
   it("isolates tenants and modules and validates every reference before mutation", async () => {
     const a = setup();
     const b = setup();

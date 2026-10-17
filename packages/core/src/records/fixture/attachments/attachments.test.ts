@@ -144,6 +144,10 @@ describe("Attachments record contract", () => {
     const parent = await lead(service);
     const record = await service.create("Attachments", file("Leads", parent.id));
     expect(record.fields.$state).toBeUndefined();
+    expect(lifecycle.isReady(record.id)).toBe(false);
+    expect(lifecycle.mediaType(record.id)).toBeNull();
+    expect(lifecycle.isReady("unknown-id")).toBe(false);
+    expect(lifecycle.mediaType("unknown-id")).toBeNull();
     await expect(service.get("Attachments", record.id)).rejects.toBeInstanceOf(NotFoundError);
     expect((await service.list("Attachments", listQuery)).records.length).toBe(0);
     expect(await service.search({ text: "example.pdf", modules: ["Attachments"] })).toEqual([]);
@@ -151,6 +155,8 @@ describe("Attachments record contract", () => {
       lifecycle.publish(record.id, { ...published, storageKey: "../private-file" }),
     ).toThrow(ValidationError);
     lifecycle.publish(record.id, published);
+    expect(lifecycle.isReady(record.id)).toBe(true);
+    expect(lifecycle.mediaType(record.id)).toBe("application/pdf");
     expect((await service.get("Attachments", record.id)).fields.$link_url).toBeUndefined();
     expect((await service.list("Attachments", listQuery)).records.length).toBe(1);
     expect((await service.get("Attachments", record.id)).fields).toMatchObject({
@@ -246,6 +252,34 @@ describe("Attachments record contract", () => {
     lifecycle.acknowledgeCleanup(direct.id);
     expect(lifecycle.cleanupIntents()).toHaveLength(2);
   });
+  it("keeps cleanup intents across store replacements and rolls back failed cascades", async () => {
+    const { service, lifecycle, context } = make();
+    const parent = await lead(service);
+    const first = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(first.id, published);
+    await service.delete("Attachments", [first.id]);
+    const second = await service.create("Attachments", file("Leads", parent.id));
+    lifecycle.publish(second.id, { ...published, storageKey: "second-key" });
+    const expected = [{ attachmentId: first.id, storageKey: "opaque-key" }];
+    expect(lifecycle.cleanupIntents()).toEqual(expected);
+    const failingService = createFixtureRecordService(context, {
+      beforeHistoryAppend() {
+        throw new Error("History unavailable");
+      },
+    });
+    await expect(failingService.delete("Leads", [parent.id])).rejects.toThrow(
+      "History unavailable",
+    );
+    expect(lifecycle.cleanupIntents()).toEqual(expected);
+    expect((await service.get("Attachments", second.id)).id).toBe(second.id);
+    const freshLifecycle = createFixtureAttachmentLifecycle(context);
+    freshLifecycle.acknowledgeCleanup(first.id);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await service.delete("Leads", [parent.id]);
+    expect(freshLifecycle.cleanupIntents()).toEqual([
+      { attachmentId: second.id, storageKey: "second-key" },
+    ]);
+  });
   it("rolls back attachment deletion and cleanup when parent history cannot commit", async () => {
     const { context, lifecycle } = make();
     let rejectHistory = false;
@@ -273,6 +307,32 @@ describe("Attachments record contract", () => {
     lifecycle.acknowledgeCleanup(attachment.id);
     expect(lifecycle.cleanupIntents()).toEqual([]);
   });
+  it.each(["Leads", "Contacts"])(
+    "cascades campaign memberships and attachments together when deleting %s",
+    async (module) => {
+      const { service, lifecycle } = make();
+      const parent = await service.create(module, {
+        Last_Name: "Synthetic Member",
+        ...(module === "Leads" ? { Company: "Synthetic Company" } : {}),
+      });
+      const campaign = await service.create("Campaigns", { Campaign_Name: "Synthetic Campaign" });
+      const membership = await service.create("Campaign_Members", {
+        Campaign: { module: "Campaigns", id: campaign.id },
+        [module === "Leads" ? "Lead" : "Contact"]: { module, id: parent.id },
+      });
+      const attachment = await service.create("Attachments", file(module, parent.id));
+      lifecycle.publish(attachment.id, published);
+      await service.delete(module, [parent.id]);
+      await expect(service.get("Campaign_Members", membership.id)).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
+      expect(lifecycle.cleanupIntents()).toEqual([
+        { attachmentId: attachment.id, storageKey: published.storageKey },
+      ]);
+      expect((await service.get("Campaigns", campaign.id)).id).toBe(campaign.id);
+    },
+  );
   it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
     const { service, lifecycle } = make();
     const parent = await lead(service);

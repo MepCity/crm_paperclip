@@ -139,6 +139,21 @@ test("module search filters choices, future modules stay inert and Contacts rest
   );
 });
 
+test("Meetings selection restricts search requests to Events", async () => {
+  const user = userEvent.setup();
+  mount();
+  await open(user);
+  await user.click(screen.getByRole("button", { name: "Search module" }));
+  const menu = await screen.findByRole("dialog", { name: "Search Modules" });
+  await user.click(within(menu).getByRole("button", { name: "Meetings" }));
+  await user.type(screen.getByRole("textbox", { name: "Search records" }), "Search");
+  await waitFor(() =>
+    expect(search).toHaveBeenCalledWith(
+      expect.objectContaining({ modules: ["Events"], perPage: 5 }),
+    ),
+  );
+});
+
 test("short queries make no request; debounce calls once and groups lead/contact links", async () => {
   const user = userEvent.setup();
   mount();

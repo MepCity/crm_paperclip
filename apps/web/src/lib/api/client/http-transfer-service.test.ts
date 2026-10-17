@@ -63,6 +63,24 @@ describe("http transfer client", () => {
     expect(calls[4]?.options?.body).toEqual({ fields: "all", ids: ["1"] });
   });
 
+  it.each(["Tasks", "Events", "Calls"] as const)("%s uses activity API paths", async (module) => {
+    const { client, calls } = setup();
+    await client.previewImport(module, { file: new Blob(["Subject\nExample"]), charset: "UTF-8" });
+    await client.runImport(module, "upload", {
+      mode: "add",
+      ignoreEmptyOnUpdate: false,
+      mapping: [],
+      defaults: [],
+    });
+    await client.runExport({ module, fields: "all" });
+    expect(calls.map((call) => call.path)).toEqual([
+      `/crm/v2.2/${module}/actions/import_preview`,
+      `/crm/v2.2/${module}/actions/import`,
+      `/crm/v2.2/${module}/actions/export`,
+    ]);
+    expect(client.sampleCsvUrl(module)).toBe(`/crm/v2.2/${module}/actions/import_sample?org=acme`);
+  });
+
   it("builds download URLs and reads the decoded file name", async () => {
     const { client, raw } = setup();
     expect(client.exportDownloadUrl("e1")).toBe("/crm/v9/settings/exports/e1/download?org=acme");
