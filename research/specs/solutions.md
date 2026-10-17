@@ -505,7 +505,7 @@ Edit, More Options (including its opened contents), previous/next, Overview, Tim
 
 ## Create and edit form
 
-Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. Open Status and Product lookup states and final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
+Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. The Status menu is now observed; Product lookup and final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
 
 ### Sources and limits
 
@@ -519,7 +519,7 @@ M1 defines 20 fields. Solution Number is an auto-number and read-only in the Sta
 
 The field dictionary marks Solution Title as system mandatory; the Standard layout additionally marks Question and Answer required. D1 also describes all three as mandatory. Implementation must consider layout requirements as well as system requirements; m8f-solutions-create confirms required input-edge markers on all three. Exact error behaviour remains unobserved.
 
-Configured Status options are Draft, Reviewed, Duplicate; the closed form displays Draft. The open dropdown is not yet observed. Published exists as a boolean in the field dictionary but is absent from the Standard layout sections. It must not be invented as a Create form checkbox.
+Configured Status options are Draft, Reviewed, Duplicate; the closed form displays Draft. The open dropdown in m8f-solutions-status confirms that order, with Draft initially checked; no option was selected. Published exists as a boolean in the field dictionary but is absent from the Standard layout sections. It must not be invented as a Create form checkbox.
 
 D1 describes Add Comment as available in edit mode and absent during creation. Metadata places Add Comment in Description Information, while read-only Comments has its own section. This is documented/configured information only; no comment action is permitted in this research.
 
@@ -644,6 +644,100 @@ Self-audit: 225 entries → 61 numbered controls (126 mapped entries); 99 exclud
 
 Capture safety: zero clicks and skipped clicks; only one expected shell trigger POST, no new unexpected non-GET path or count increase relative to the prior Solutions list baseline. Reminder, notification and three telemetry calls were blocked. API calls 49; pre-capture 1-minute load 64.60. No typing, selection, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
 
+### Control inventory — m8f-solutions-status
+
+Only the Status list was opened. Draft is checked initially, followed by Reviewed and Duplicate; no blank/None option or search input is visible. No option was selected. The list opens beneath SF-08 in the gap before Description Information; it covers no other input. The status control has the focus outline; the owner control no longer has it.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SF-08.1 | Status list | Draft | menu item | option 1 | Initially checked; no selection | seen (m8f-solutions-status) | M8 | new |
+| SF-08.2 | Status list | Reviewed | menu item | option 2 | not observed; no selection | seen (m8f-solutions-status) | M8 | new |
+| SF-08.3 | Status list | Duplicate | menu item | option 3 | not observed; no selection | seen (m8f-solutions-status) | M8 | new |
+| SF-S01 | Shell connection notice | Circular reconnect symbol | icon button | bottom-left notice, after countdown | not observed; no click; may be a status indicator | seen (m8f-solutions-status), image only | ? | new |
+
+Rest: as in m8f-solutions-create; covered by overlay: none of the numbered controls. The bottom-left chat connection notice and countdown are transient shell text. SF-S01 is recorded conservatively because its interactivity is not established. My Pins / Chats / Contacts remain the painted footer controls. Channels and Threads occur only in the later DOM snapshot, not in the screenshot; they are excluded from this visual inventory. No footer control was used. Shell ownership and whether SF-S01 is actionable remain open questions for shared-shell research.
+
+### Source reconciliation — m8f-solutions-status
+
+One-based ordinals below account for every controls.json item. Base entries through 205 retain their source positions; later footer items shift by two because Channels / Threads entered the DOM, and the lookup/scroll duplicates shift again after the dropdown nodes and promotional fragment. The table follows the screenshot rather than treating a later DOM-only item as painted evidence.
+
+| Inventory number or exclusion | Source ordinals |
+| --- | --- |
+| SH-01 | 2, 3 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30, 31, 32 |
+| SH-10 | 34 |
+| SH-11 | 35, 36 |
+| SH-24 | 60, 61, 62 |
+| SH-25 | 63, 64, 65 |
+| SL-41 | 66, 67, 68 |
+| SL-42 | 69, 70, 71 |
+| SL-43 | 72, 73, 74 |
+| SL-44 | 75, 76, 77 |
+| SL-45 | 78, 79, 80 |
+| SL-46 | 81, 82, 83 |
+| SL-47 | 84, 85, 86 |
+| SL-48 | 87, 88, 89 |
+| SL-49 | 90, 91, 92 |
+| SL-50 | 93, 94, 95 |
+| SL-51 | 96, 97, 98 |
+| SL-52 | 107 |
+| SH-26 | 110 |
+| SH-27 | 111 |
+| SH-28 | 113 |
+| SH-29 | 114 |
+| SH-30 | 115 |
+| SH-31 | 118 |
+| SH-32 | 121 |
+| SH-33 | 124, 125 |
+| SH-34 | 128, 129, 130, 131 |
+| SF-01 | 135, 136 |
+| SF-02 | 142, 143 |
+| SF-03 | 140, 141 |
+| SF-04 | 138, 139 |
+| SF-05 | 151, 152 |
+| SF-07 | 153, 154 |
+| SF-08 | 155, 156 |
+| SF-09 | 158, 159 |
+| SF-10 | 157, 222, 223, 224 |
+| SF-11 | 160, 161, 162, 163 |
+| SF-12 | 164, 225, 226, 227 |
+| SF-13 | 167, 168, 230 |
+| SF-14 | 169, 170, 231 |
+| SF-17 | 172, 173, 174, 232 |
+| SF-18 | 175, 176 |
+| SF-19 | 187 |
+| SH-35 | 204 |
+| SH-36 | 205 |
+| SH-37 | 208 |
+| SH-38 | 209 |
+| SH-39 | 210 |
+| SH-40 | 211 |
+| SH-41 | 212 |
+| SH-42 | 213 |
+| SH-43 | 214 |
+| SH-44 | 215 |
+| SH-45 | 216 |
+| Excluded: structural wrapper, heading, duplicate decoration or non-control text | 1, 4, 109, 112, 133, 134, 137, 149, 150, 166, 171, 203, 228, 229 |
+| Excluded: zero-area hidden node | 5, 6, 7, 8, 9, 10, 13, 16, 19, 22, 25, 28, 33, 106, 108, 116, 117, 119, 120, 122, 123, 126, 127, 144, 145, 146, 147, 148, 165, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202 |
+| Excluded: clipped, offscreen or covered by fixed rail header | 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 99, 100, 101, 102, 103, 104, 105, 132 |
+| SF-08.1 | 218 |
+| SF-08.2 | 219 |
+| SF-08.3 | 220 |
+| Excluded: chat footer entries appear in DOM after screenshot but are not painted there | 206, 207 |
+| Excluded: listbox wrapper / scrollable duplicate, no separate control | 217, 233 |
+| Excluded: bottom-edge promotional fragment, not painted in screenshot | 221 |
+
+Self-audit: 233 source entries → 64 numbered controls (129 mapped entries); 104 excluded entries. Image-only additions: SF-06, SF-15, SF-16, SH-46 and SF-S01. Screenshot opened and checked across the full shell, right edge, form and footer; no other image-only control found. Each ordinal is accounted for exactly once.
+
+Capture safety: one click, zero skipped; ready probe succeeded and form/menu painted. Non-GET path/count matches m8f-solutions-create: one expected shell trigger POST (200). Reminder, notification and six telemetry requests blocked; no unexpected path or count increase. API calls 48; pre-capture 1-minute load 22.43. No option selection, typing, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -651,6 +745,7 @@ Numbers below count distinct inventory references receiving source items; image-
 | Slug | controls.json items | Distinct mapped numbers | Excluded items | Image-only additions |
 | --- | --- | --- | --- | --- |
 | m8f-solutions-create | 225 | 61 | 99 | 4 (lock, two resize grips, trash) |
+| m8f-solutions-status | 233 | 64 | 104 | 5 (base four plus reconnect symbol) |
 | m8-solutions-list-base | 285 | 86 | 128 | 1 (trash) |
 | m8-solutions-list-views | 303 | 95 | 132 | 1 (trash) |
 | m8-solutions-list-actions | 299 | 94 | 127 | 3 (trash, Sheet view, Print View) |
@@ -663,6 +758,7 @@ Shell differences are covered by SL-41–SL-53 and the Cases shell-gap list; Ser
 ## Capture refs
 
 - `m8f-solutions-create` — painted Create form and footer; zero clicks.
+- `m8f-solutions-status` — open Status menu; one click, no option selected.
 
 - `m8-solutions-list-base` — painted default empty list, filter panel already open.
 - `m8-solutions-list-views` — open system-view menu; no view selected.
@@ -693,7 +789,8 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | --- | --- | --- |
 | Create form | observed in m8f-solutions-create, SF-01–SF-19 | Seven fields, default Draft, three required markers, title actions and footer established above. |
 | Edit form | not observed; prior painted All Solutions list and detail-empty capture establish zero records | Empty-list fallback applies; no sample record may be created. Final passive comparison remains pending. |
-| Status dropdown and Product lookup interior | not observed; capture pending | No selection or search is allowed. |
+| Status dropdown | observed in m8f-solutions-status, SF-08.1–SF-08.3 | Draft, Reviewed, Duplicate; initial Draft checked; no selection. |
+| Product lookup interior | not observed; capture pending | No selection or search is allowed. |
 | Empty required-field errors | M1 layout and D1 require Solution Title, Question, Answer; Save is forbidden | Ref: record-detail.md, Layout / Flows, Leads invalid-create evidence. Exact messages, timing and focus remain not observable without a write. |
 | Save / Save and New success, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Solutions-specific outcome. |
 | Published field and comment editing | absent in observed Create; Edit not observed | D1 documents edit-mode Add Comment only; no toggling, publishing or comment submission. |
@@ -727,9 +824,10 @@ These are CTO gate inputs under MEP-837, not questions submitted to the board. P
 
 ## Open questions
 
-- Complete the screenshot-backed Create inventory and the permitted Status / Product picker captures.
-- Establish whether a record exists before attempting detail → Edit; do not infer an empty list from Cases.
-- Confirm the actual required markers against M1's layout requirements; keep validation messages as evidence gaps.
+- Complete the Product picker capture and final passive list comparisons; Create inventory and Status menu are complete.
+- SF-S01: transient chat reconnect symbol; action versus indicator and shell ownership remain unestablished. DOM-only Channels / Threads are not treated as painted evidence.
+- Prior painted Solutions list establishes zero records independently of Cases; final passive comparison remains pending before closing the Edit evidence gap.
+- Create required markers are confirmed against M1; exact validation messages remain evidence gaps.
 
 - Exact populated row-end and hover-only controls remain not observed because both default lists are empty. CTO collects the evidence-gap decisions at the module gate; no board question is opened in this slice.
 - Sheet view attribution remains unresolved (`?`), pending the module gate.
