@@ -189,9 +189,13 @@ describe("Deals export and fixture", () => {
       }),
     ).toBe(0);
   });
-  it("keeps unregistered campaign references and applies changed-stage probability", async () => {
+  it("resolves registered campaign references and applies changed-stage probability", async () => {
     const service = make();
-    const campaign = { module: "Campaigns", id: "synthetic-campaign", name: "Synthetic campaign" };
+    const target = await service.create("Campaigns", { Campaign_Name: "Synthetic campaign" });
+    const campaign = { module: "Campaigns", id: target.id, name: "Synthetic campaign" };
+    await expect(
+      service.create("Deals", input({ Campaign_Source: { module: "Campaigns", id: "missing" } })),
+    ).rejects.toBeInstanceOf(ValidationError);
     const deal = await service.create(
       "Deals",
       input({ Campaign_Source: campaign, Probability: 17 }),

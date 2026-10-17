@@ -275,3 +275,51 @@ test("Contacts Account Name links to registered Accounts detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
   expect(screen.queryByText("synthetic-account")).toBeNull();
 });
+
+test("Related To pictogram only draws when asked, by the related module", () => {
+  const related = field("lookup", { apiName: "What_Id", label: "Related To" });
+  const account = { module: "Accounts", id: "a1", name: "Acme" };
+  const { container, rerender } = render(
+    <CellValue field={related} value={account} format={DEFAULT_FORMAT} numericDates />,
+  );
+  expect(container.querySelector("[data-part=related-pictogram]")).toBeNull();
+
+  rerender(
+    <CellValue field={related} value={account} format={DEFAULT_FORMAT} relatedToPictogram />,
+  );
+  const building = container.querySelector("[data-part=related-pictogram]");
+  expect(building).toBeTruthy();
+
+  rerender(
+    <CellValue
+      field={related}
+      value={{ module: "Deals", id: "d1", name: "Big" }}
+      format={DEFAULT_FORMAT}
+      relatedToPictogram
+    />,
+  );
+  const generic = container.querySelector("[data-part=related-pictogram]");
+  expect(generic).toBeTruthy();
+  expect(generic?.innerHTML).not.toBe(building?.innerHTML);
+
+  rerender(<CellValue field={related} value={null} format={DEFAULT_FORMAT} relatedToPictogram />);
+  expect(container.querySelector("[data-part=related-pictogram]")).toBeNull();
+});
+
+test("numeric dates show date and time, or only the date on all-day rows", () => {
+  const start = field("datetime");
+  const { rerender } = render(
+    <CellValue field={start} value="2026-03-01T14:05:00Z" format={DEFAULT_FORMAT} numericDates />,
+  );
+  expect(screen.getByText(/^01\.03\.2026 \d{1,2}:05 (AM|PM)$/)).toBeTruthy();
+  rerender(
+    <CellValue
+      field={start}
+      value="2026-03-01T14:05:00Z"
+      format={DEFAULT_FORMAT}
+      numericDates
+      dateOnly
+    />,
+  );
+  expect(screen.getByText("01.03.2026")).toBeTruthy();
+});

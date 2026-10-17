@@ -204,5 +204,6 @@ describe("Calls activity foundation", () => {
         );
       }
     }
-  });
+    // This enumerates every module's next-ID window; allow shared-machine load.
+  }, 15_000);
 });

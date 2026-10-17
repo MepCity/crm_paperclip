@@ -42,6 +42,8 @@ export const tasksListPageConfig: ModuleListScreenConfig = {
   filterGroups: tasksFilterGroups,
   sortFieldLabels: TASKS_SORT_FIELD_LABELS,
   pinnedViews: ["All Tasks"],
+  listVariant: "activities",
+  actionsMenuWidth: 143,
   viewMenuSearch: true,
   viewTypeTileIds: TASKS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,
@@ -52,7 +54,7 @@ export const tasksListPageConfig: ModuleListScreenConfig = {
       { id: "mass-update", label: "Mass Update" },
       { id: "tags", label: "Manage Tags", laterModule: "M6" },
       { id: "export", label: "Export Tasks", laterModule: "M6" },
-      { id: "print", label: "Print View", submenuIndicator: true },
+      { id: "print", label: "Print View", submenuIndicator: true, separatorBefore: true },
     ],
   },
   paths: {
