@@ -754,7 +754,19 @@ list. Provider and the audit, check-in and tag fields are not drawn.
 
 ### Campaigns list
 
-Not started.
+Implemented; QA pending (MEP-805).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-18 | Registered in registry.ts after Calls; shell entry and create-records row live | `registry.test.ts`, `shell.test.tsx`, `campaigns-list.spec.ts` |
+| CL-01, CL-02, CL-02.1 – CL-02.8 | Single All Campaigns tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `campaigns-list.spec.ts` |
+| CL-03 – CL-11, CL-40 | Filter, Sort, presentation icons and refresh as in Accounts | `campaigns-list.spec.ts` |
+| CL-12, CL-13 | Create Campaign opens the create route; arrow is `laterModule` M6 | `campaigns-list.spec.ts` |
+| CL-14, CL-14.1 – CL-14.9 | Nine Actions rows in reference order, no Deduplicate; Sheet view `laterModule` P3 | `campaigns-list.spec.ts` |
+| CL-15 – CL-31 | Filter panel groups from the module definition | `list-filters.test.ts`, `campaigns-list.spec.ts` |
+| CL-32 – CL-39 | View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `campaigns-list.spec.ts` |
+
+Provisional rules: the populated table body is the Accounts table (not observed in the reference).
 
 ### Campaigns create / edit form
 
@@ -762,7 +774,10 @@ Not started.
 
 ### Campaigns record detail
 
-Not started.
+- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; QA pending (MEP-812).
+- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
+- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
+- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
 
 ### Campaigns links in earlier modules
 
