@@ -288,4 +288,29 @@ test.describe("Deals record detail", () => {
     await expect(page).toHaveURL(url);
     ignoreFailedResponses(pageErrors, [400]);
   });
+
+  test("Campaign Source detail value links to campaign when populated and displays dash when empty", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    // PRIMARY_DEAL_ID (Deal 001) has Campaign 001 (id: 210000000000000000)
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const campaignField = page.locator("[data-detail-field='Campaign_Source']");
+    await expect(campaignField).toBeVisible();
+    const campaignLink = campaignField.getByRole("link", { name: "Campaign 001", exact: true });
+    await expect(campaignLink).toBeVisible();
+    await expect(campaignLink).toHaveAttribute(
+      "href",
+      moduleRecordPath(org.slug, "Campaigns", "210000000000000000"),
+    );
+
+    // Deal 021 ("700000000000000020") has null Campaign_Source
+    await openDealDetail(page, org.slug, "700000000000000020");
+    const emptyField = page.locator("[data-detail-field='Campaign_Source']");
+    await expect(emptyField).toBeVisible();
+    await expect(emptyField).toContainText("—");
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });

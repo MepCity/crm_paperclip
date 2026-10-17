@@ -1,118 +1,107 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { type ShellUser, UserMenu } from "./user-menu";
 
-const navigation = vi.hoisted(() => ({
+const router = vi.hoisted(() => ({
+  push: vi.fn(),
   replace: vi.fn(),
   refresh: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => navigation,
+  useRouter: () => router,
 }));
 
-describe("UserMenu", () => {
-  const testUser: ShellUser = {
-    id: "user-1",
-    name: "Jane Doe",
-    email: "jane.doe@example.com",
-  };
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+beforeEach(() => {
+  router.push.mockReset();
+  router.replace.mockReset();
+  router.refresh.mockReset();
+});
+
+const defaultUser: ShellUser = {
+  id: "user-1",
+  name: "Ada Lovelace",
+  email: "ada@example.test",
+};
+
+test("button User menu shows uppercase initials for two words, and ? for blank names", () => {
+  const { rerender } = render(<UserMenu user={defaultUser} />);
+  expect(screen.getByRole("button", { name: "User menu" }).textContent).toBe("AL");
+
+  rerender(<UserMenu user={{ id: "user-2", name: "grace hopper", email: "grace@example.test" }} />);
+  expect(screen.getByRole("button", { name: "User menu" }).textContent).toBe("GH");
+
+  rerender(<UserMenu user={{ id: "user-3", name: "", email: "blank@example.test" }} />);
+  expect(screen.getByRole("button", { name: "User menu" }).textContent).toBe("?");
+
+  rerender(<UserMenu user={{ id: "user-4", name: "   ", email: "spaces@example.test" }} />);
+  expect(screen.getByRole("button", { name: "User menu" }).textContent).toBe("?");
+});
+
+test("opening the menu shows the user name, email, and a Sign out item", async () => {
+  const user = userEvent.setup();
+  render(<UserMenu user={defaultUser} />);
+
+  await user.click(screen.getByRole("button", { name: "User menu" }));
+
+  expect(screen.getByText("Ada Lovelace")).toBeTruthy();
+  expect(screen.getByText("ada@example.test")).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeTruthy();
+});
+
+test("signing out with ok: true redirects to /sign-in and refreshes", async () => {
+  const user = userEvent.setup();
+  const onSignOut = vi.fn(async () => ({ ok: true as const }));
+
+  render(<UserMenu user={defaultUser} onSignOut={onSignOut} />);
+
+  await user.click(screen.getByRole("button", { name: "User menu" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
+
+  await waitFor(() => expect(onSignOut).toHaveBeenCalledTimes(1));
+  expect(router.replace).toHaveBeenCalledWith("/sign-in");
+  expect(router.refresh).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+test("signing out with ok: false displays the returned error message and does not redirect", async () => {
+  const user = userEvent.setup();
+  const onSignOut = vi.fn(async () => ({
+    ok: false as const,
+    message: "Invalid session token.",
+  }));
+
+  render(<UserMenu user={defaultUser} onSignOut={onSignOut} />);
+
+  await user.click(screen.getByRole("button", { name: "User menu" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
+
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Invalid session token.");
+  expect(router.replace).not.toHaveBeenCalled();
+  expect(router.refresh).not.toHaveBeenCalled();
+});
+
+test("signing out when onSignOut throws displays a generic error message and does not redirect", async () => {
+  const user = userEvent.setup();
+  const onSignOut = vi.fn(async () => {
+    throw new Error("Network crash");
   });
 
-  afterEach(() => {
-    cleanup();
-  });
+  render(<UserMenu user={defaultUser} onSignOut={onSignOut} />);
 
-  it("displays user initials on the avatar trigger button", () => {
-    render(<UserMenu user={testUser} />);
+  await user.click(screen.getByRole("button", { name: "User menu" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    expect(trigger).toBeTruthy();
-    expect(trigger.textContent).toBe("JD");
-  });
-
-  it("displays fallback initial when user name is empty", () => {
-    render(<UserMenu user={{ id: "user-2", name: "", email: "anonymous@example.com" }} />);
-
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    expect(trigger.textContent).toBe("?");
-  });
-
-  it("displays user name, email and sign out menu item when menu opens", async () => {
-    const user = userEvent.setup();
-    render(<UserMenu user={testUser} />);
-
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    await user.click(trigger);
-
-    expect(screen.getByRole("menu")).toBeTruthy();
-    expect(screen.getByText("Jane Doe")).toBeTruthy();
-    expect(screen.getByText("jane.doe@example.com")).toBeTruthy();
-
-    const signOutItem = screen.getByRole("menuitem", { name: "Sign out" });
-    expect(signOutItem).toBeTruthy();
-  });
-
-  it("calls onSignOut and redirects on successful sign out", async () => {
-    const user = userEvent.setup();
-    const onSignOut = vi.fn(async () => ({ ok: true as const }));
-
-    render(<UserMenu user={testUser} onSignOut={onSignOut} />);
-
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    await user.click(trigger);
-
-    const signOutItem = screen.getByRole("menuitem", { name: "Sign out" });
-    await user.click(signOutItem);
-
-    await waitFor(() => {
-      expect(onSignOut).toHaveBeenCalledOnce();
-    });
-    expect(navigation.replace).toHaveBeenCalledWith("/sign-in");
-    expect(navigation.refresh).toHaveBeenCalledOnce();
-  });
-
-  it("displays an error alert when sign out returns ok: false", async () => {
-    const user = userEvent.setup();
-    const onSignOut = vi.fn(async () => ({
-      ok: false as const,
-      message: "Session expired.",
-    }));
-
-    render(<UserMenu user={testUser} onSignOut={onSignOut} />);
-
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    await user.click(trigger);
-
-    const signOutItem = screen.getByRole("menuitem", { name: "Sign out" });
-    await user.click(signOutItem);
-
-    const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain("Session expired.");
-    expect(navigation.replace).not.toHaveBeenCalled();
-  });
-
-  it("displays fallback error alert when sign out rejects", async () => {
-    const user = userEvent.setup();
-    const onSignOut = vi.fn(async () => {
-      throw new Error("Network crash");
-    });
-
-    render(<UserMenu user={testUser} onSignOut={onSignOut} />);
-
-    const trigger = screen.getByRole("button", { name: "User menu" });
-    await user.click(trigger);
-
-    const signOutItem = screen.getByRole("menuitem", { name: "Sign out" });
-    await user.click(signOutItem);
-
-    const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain("Sign out failed. Please try again.");
-    expect(navigation.replace).not.toHaveBeenCalled();
-  });
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Sign out failed. Please try again.");
+  expect(router.replace).not.toHaveBeenCalled();
+  expect(router.refresh).not.toHaveBeenCalled();
 });
