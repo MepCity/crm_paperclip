@@ -29,9 +29,10 @@ export function addPendingFiles(
   current: readonly File[],
   incoming: readonly File[],
   alreadyAttached = 0,
+  alreadyBytes = 0,
 ): { files: File[]; overBudget: boolean } {
   const next = [...current, ...incoming];
-  const total = next.reduce((sum, file) => sum + file.size, 0);
+  const total = alreadyBytes + next.reduce((sum, file) => sum + file.size, 0);
   if (alreadyAttached + next.length > NOTE_ATTACH_MAX_FILES || total > NOTE_ATTACH_MAX_BYTES)
     return { files: [...current], overBudget: true };
   return { files: next, overBudget: false };
