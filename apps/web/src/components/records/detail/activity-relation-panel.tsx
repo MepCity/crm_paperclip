@@ -94,7 +94,6 @@ function CallButton({
       variant="icon"
       size="sm"
       aria-label={label}
-      className="size-5"
       onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
