@@ -474,27 +474,22 @@ export function RecordDetailScreen({
             back={{ label: "Back", href: backHref }}
             titleGlyph={rules.titleGlyph}
             titleSuffix={titleSuffix}
-            commands={[
-              ...(rules.buildHeaderCommands
+            commands={
+              rules.buildHeaderCommands
                 ? rules.buildHeaderCommands(displayRecord, {
                     editHref: paths.edit(orgSlug, definition.tab, recordId),
                     save: persistRecord,
                   })
                 : [
                     ...(rules.headerCommands ?? []),
-                    ...(!detailSlots?.suppressEditCommand
-                      ? [
-                          {
-                            id: "edit",
-                            label: "Edit",
-                            variant: "secondary" as const,
-                            href: paths.edit(orgSlug, definition.tab, recordId),
-                          },
-                        ]
-                      : []),
-                  ]),
-              ...(detailSlots?.headerCommands ?? []),
-            ]}
+                    {
+                      id: "edit",
+                      label: "Edit",
+                      variant: "secondary",
+                      href: paths.edit(orgSlug, definition.tab, recordId),
+                    },
+                  ]
+            }
             menuGroups={moreMenuGroups}
             moreLabel="More Options"
             previousLabel="Previous Record"
@@ -523,17 +518,14 @@ export function RecordDetailScreen({
           { id: "overview", label: "Overview", content: overview },
           { id: "timeline", label: "Timeline", content: timeline },
         ]}
-        relatedRailVisible={railVisible && !detailSlots?.sidePanel && !activityLayout}
+        relatedRailVisible={railVisible && !activityLayout}
         railControl={
-          detailSlots?.sidePanel || activityLayout ? undefined : (
+          activityLayout ? undefined : (
             <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
           )
         }
         sidePanel={
-          detailSlots?.sidePanel ??
-          (rules.SidePanel ? (
-            <rules.SidePanel record={displayRecord} orgSlug={orgSlug} />
-          ) : undefined)
+          rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined
         }
         scrollTopLabel="Scroll To Top"
       />
