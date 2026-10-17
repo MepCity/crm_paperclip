@@ -97,3 +97,7 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+.select-record-module-choice {
+  padding: 0 var(--size-select-user-padding-x, 24px) 8px;
+}

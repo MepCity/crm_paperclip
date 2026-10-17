@@ -71,7 +71,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="whitespace-nowrap text-md font-semibold text-text-strong">{title}</h3>
+      <h3 className="text-md font-semibold text-text-strong">{title}</h3>
       <Button variant="ghost" size="sm" className="text-primary" onPress={onAction}>
         <Icons.plus className="size-3" aria-hidden />
         {actionLabel}
@@ -92,9 +92,9 @@ function CallButton({
   return (
     <Button
       variant="icon"
-      size="compact"
+      size="sm"
       aria-label={label}
-      className="size-5 shrink-0 text-text-muted"
+      className="size-5"
       onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
@@ -197,7 +197,7 @@ export function ActivityRelationPanel({
                 <Link
                   href={accountRecordPath(person.accountId)}
                   variant="body"
-                  className="detail-field-value-link hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {person.accountName}
                 </Link>
@@ -210,7 +210,7 @@ export function ActivityRelationPanel({
                   href={`mailto:${person.email}`}
                   variant="body"
                   laterModule="M10"
-                  className="detail-field-value-link hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {person.email}
                 </Link>
@@ -234,7 +234,7 @@ export function ActivityRelationPanel({
               <Link
                 href={contactRecordPath(person.id)}
                 variant="body"
-                className="detail-field-value-link hover:underline"
+                className="text-primary hover:underline"
               >
                 More Info
               </Link>
@@ -252,7 +252,7 @@ export function ActivityRelationPanel({
                     <Link
                       href={dealRecordPath(deal.id)}
                       variant="body"
-                      className="detail-field-value-link hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {deal.name}
                     </Link>

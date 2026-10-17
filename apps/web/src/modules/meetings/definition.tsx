@@ -1,18 +1,16 @@
-import type { RecordData } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
-import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { isAccountInlineEditable } from "../accounts/accounts-inline-edit";
 import { formatAccountsLastUpdateLabel } from "../accounts/accounts-last-update";
 import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
 import { MEETINGS_LIST_CURRENCY_CODE, meetingsListPageConfig } from "./list-config";
 import { buildMeetingsFilterGroups } from "./list-filters";
-import { meetingParticipants } from "./meeting-participants";
+import { MeetingParticipantsSlot } from "./meeting-participants-slot";
 import {
   buildMeetingsBusinessCardFields,
   buildMeetingsDetailSections,
 } from "./meetings-detail-sections";
-import { MeetingsParticipantsCard } from "./meetings-participants-card";
+import { meetingsFormRules } from "./meetings-form-rules";
 import { meetingsRecordHeaderIdentity } from "./meetings-record-header";
 import {
   buildMeetingsRecordMoreMenuGroups,
@@ -27,7 +25,6 @@ import {
   normalizeMeetingsEventKind,
 } from "./meetings-timeline";
 
-/** Interim: the Meetings form still borrows the neutral Accounts form rules. */
 export const meetingsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Events",
   tab: "Meetings",
@@ -40,7 +37,8 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Event_Title", "Start_DateTime", "End_DateTime", "What_Id", "Who_Id", "Owner"],
   buildFilterGroups: buildMeetingsFilterGroups,
   form: {
-    rules: accountsFormRules,
+    variant: "activity",
+    rules: meetingsFormRules,
     inventoryChrome: true,
   },
   detail: {
@@ -58,9 +56,7 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildMeetingsRecordMoreMenuGroups,
     deleteTitle: MEETINGS_DELETE_CONFIRM_TITLE,
     deleteMessage: MEETINGS_DELETE_CONFIRM_MESSAGE,
-    BetweenCards: ({ record }: { record: RecordData }) => (
-      <MeetingsParticipantsCard participants={meetingParticipants(record.fields.Participants)} />
-    ),
+    BetweenCards: ({ record }) => <MeetingParticipantsSlot record={record} />,
     SidePanel: ActivitySidePanel,
     timeline: {
       subtabs: MEETINGS_TIMELINE_SUBTABS,

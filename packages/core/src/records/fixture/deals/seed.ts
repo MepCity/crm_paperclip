@@ -1,5 +1,6 @@
 import type { FieldValue, RecordData } from "../../contract";
 import { fixtureAccountId } from "../accounts/seed";
+import { fixtureCampaignId } from "../campaigns/seed";
 import { dealsMetadata } from "./metadata";
 import { dealsPicklists } from "./picklists";
 import { applyDealRules } from "./rules";
@@ -34,6 +35,7 @@ export function generateFixtureDeals(
         .slice(0, 10),
       Account_Name: { module: "Accounts", id: fixtureAccountId(index % 125) },
       Contact_Name: { module: "Contacts", id: String(300000000000000000n + BigInt(index % 125)) },
+      Campaign_Source: index < 6 ? { module: "Campaigns", id: fixtureCampaignId(index % 3) } : null,
       Locked__s: index > 10 && index % 13 === 0,
       Created_Time: stamp,
       Modified_Time: stamp,

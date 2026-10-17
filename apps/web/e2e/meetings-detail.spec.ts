@@ -78,6 +78,10 @@ test.describe("Meetings record detail", () => {
     await participants.getByRole("button", { name: "Add", exact: true }).click();
     await expect(participants.getByText("No participant found")).toBeVisible();
     expect(page.url()).toBe(before);
+    const cancelModal = page.getByRole("button", { name: "Cancel" });
+    if (await cancelModal.isVisible()) {
+      await cancelModal.click();
+    }
     expect(
       await page
         .locator(".detail-card")
