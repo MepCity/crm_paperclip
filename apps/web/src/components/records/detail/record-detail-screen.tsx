@@ -257,7 +257,6 @@ export function RecordDetailScreen({
     portraitIcon,
     hasPortrait,
     recordNavigation,
-    titleHref,
     titleSuffix,
   } = rules.header(record, {
     orgSlug,
@@ -306,7 +305,6 @@ export function RecordDetailScreen({
   const moreMenuGroups = rules.moreOptions({
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
-    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     ...(definition.merge
       ? {
           onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
@@ -481,7 +479,6 @@ export function RecordDetailScreen({
             addTags={rules.addTags}
             back={{ label: "Back", href: backHref }}
             titleGlyph={rules.titleGlyph}
-            titleHref={titleHref}
             titleSuffix={titleSuffix}
             commands={
               rules.buildHeaderCommands
@@ -527,7 +524,7 @@ export function RecordDetailScreen({
           { id: "overview", label: "Overview", content: overview },
           { id: "timeline", label: "Timeline", content: timeline },
         ]}
-        relatedRailVisible={railVisible}
+        relatedRailVisible={railVisible && !activityLayout}
         railControl={
           activityLayout ? undefined : (
             <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
