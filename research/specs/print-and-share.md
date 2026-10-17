@@ -156,4 +156,42 @@ All nine modal controls are numbered in the shared evidence inventory. Twenty-on
 blocked POSTs match the MEP-787 allowance: eighteen telemetry, three baseline
 non-telemetry paths once each. No new unblocked non-GET request, print call or
 window request. This establishes initial state only, not sharing outcomes.
-Subsequent load 101.77 prevents starting the remaining print captures.
+The subsequent load of 101.77 delayed print captures until a later valid preflight.
+
+
+## Print Preview bounded attempt (2026-10-17)
+
+`m6-leads-print-preview-v2` is a tooling stop, not a preview observation.
+Preflight passed: load 9.60, no capture lock, two page targets. One CDP attach
+completed; ready passed without failed scripts. The record link and More Options
+clicks completed. The exported Print Preview selector matched, but the tool
+skipped its click because the element attributes triggered the dangerous-action
+guard. No preview page was opened. Exit code zero does not override a skipped
+step: the MEP-765 stop condition applies, and this one permitted attempt is
+consumed. No retry or alternate selector is allowed without Platform Lead review.
+
+Eighteen POSTs were blocked: fifteen telemetry plus the three detail-baseline
+non-telemetry requests, each once. No unexpected blocked request or new unblocked
+non-GET request occurred. Print calls, window requests, popups, downloads and
+file choosers were all zero. The unchanged record menu remains the visible state;
+its numbered inventory is reused rather than claiming a new preview inventory.
+The independent Print Default view attempt is recorded separately below.
+
+
+## Print Default view bounded attempt (2026-10-17)
+
+Source: `m6-leads-print-default-v2`, step screenshots and metadata. Preflight
+passed at load 9.87 with no lock and two page targets. Ready passed without
+failed scripts; one CDP attach. Actions opened, Print View was hovered and
+Print Default view was clicked. The capture guard recorded and refused one
+new-window request. The current tab returned to the Leads list with the action
+menu closed. No destination page or print controls were visible; no browser
+print dialog opened (`printCalls=0`). The captured window address was not
+navigated to, including its apparently static path. No retry was attempted.
+
+Fifteen POSTs were blocked: thirteen telemetry and the two list-baseline legacy
+requests, each once. No unexpected blocked path or new unblocked non-GET request;
+zero popups, downloads and file choosers. The attempt establishes that this
+entry requests another window under the guard, not the contents of that window.
+Destination inspection requires a separate Platform Lead decision. Contacts and
+Accounts destinations, and Deals table availability, remain unobserved.

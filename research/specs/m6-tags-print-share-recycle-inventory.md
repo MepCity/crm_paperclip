@@ -13,12 +13,12 @@ Screenshots remain in the local research workspace and are never committed.
 | Print View submenu | Leads, Contacts, Accounts | Existing capture and inventory preserved below; destination pending |
 | Record header | Leads | Existing capture and inventory preserved below |
 | Recycle Bin list and initial Search | Shared Setup | Existing capture and inventory preserved below |
-| Add Tags initial dialog | Leads | Initial empty popover observed below; background-request stop condition triggered |
+| Add Tags initial dialog | Leads | Initial empty popover observed below; MEP-787 accepted baseline background requests |
 | Add Tags initial dialog | Contacts, Accounts, Deals | Unobserved |
 | Share initial dialog | Leads | Initial private-sharing modal observed below |
 | Share initial dialog | Contacts, Accounts, Deals | Unobserved |
-| Record Print Preview destination | Four record modules | Unobserved; approved Leads continuation pending |
-| Print Default view destination | Table modules | Unobserved; approved Leads continuation pending |
+| Record Print Preview destination | Four record modules | Unobserved; Leads bounded attempt skipped by attribute guard |
+| Print Default view destination | Table modules | Leads requests a guarded new window; destination unobserved |
 | Tagged records, populated Drafts, naturally empty bin | Applicable modules | No state may be manufactured by a write |
 
 ## Continuation preflight (2026-10-17)
@@ -1449,9 +1449,50 @@ non-telemetry paths, each once. No unexpected blocked path or new unblocked
 non-GET request. Zero print calls/window requests/downloads/file choosers.
 No input, recipient, access-level, related-list or preference change.
 
-## Latest continuation preflight
+## Earlier continuation preflight
 
 After Share completed, one-minute load was 101.77 (approved limit 50).
 Print Preview and independent Print Default view were not started. Neither
 approved attempt is consumed. Other module initial dialogs and filter details
 remain unobserved. Existing completed captures must not be repeated.
+
+
+## m6-leads-print-preview-v2 — guarded attempt, no destination
+
+Observed on 2026-10-17. This capture establishes no Print Preview state.
+Ready passed; record link and More Options clicks completed, then the exported
+Print Preview control was skipped by the dangerous-attribute guard. The visible
+state remains the record action menu inventoried under `m6-leads-detail-more`.
+There are no newly observed destination controls to number. The permitted
+attempt is consumed; the skipped step requires Platform Lead review, despite
+capture exit zero. No alternate selector or retry was attempted.
+
+Preflight: load 9.60, lock absent, two page targets; single CDP attach. Eighteen
+blocked POSTs (fifteen telemetry; each of the three detail-baseline requests once).
+No unexpected blocked request or new unblocked non-GET request; zero print calls,
+window requests, popups, downloads and file choosers. No input or preference change.
+
+
+## m6-leads-print-default-v2 — guarded new-window request
+
+Observed on 2026-10-17 from step screenshots, accessibility snapshots and
+metadata. The existing Print View submenu inventory applies to steps 1–2;
+the final screenshot is the original Leads list with menus closed. Shared shell
+inventory and the list inventory in [leads.md](leads.md) apply to that background.
+No destination surface was visible, so no destination controls can be numbered.
+The controls exercised in this attempt are:
+
+| No. | Location | Control | Observed behaviour |
+| --- | --- | --- | --- |
+| 1 | List toolbar upper right | Actions | Opens module menu |
+| 2 | Actions menu bottom | Print View | Hover opens submenu |
+| 3 | Submenu top | Print Default view | Click requests another window; capture refuses it |
+
+Ready passed; all three steps completed; single CDP attach. Preflight load 9.87,
+no lock, two page targets. Fifteen blocked POSTs: thirteen telemetry and each of
+two list-baseline legacy requests once. No unexpected blocked request or new
+unblocked non-GET request. One window request refused, zero print calls, popups,
+downloads and file choosers. No target navigation, input or preference change.
+Both approved print attempts are now consumed. Print Preview needs guard review;
+Print Default view needs a decision about destination inspection. Neither target
+layout is inferred from the originating page or recorded address.
