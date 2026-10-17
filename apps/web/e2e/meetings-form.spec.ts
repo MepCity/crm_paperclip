@@ -23,14 +23,20 @@ function meetingIdFromPath(pathname: string): string {
   return id;
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
+test.use({
+  viewport: { width: 1470, height: 835 },
 });
 
 test("the Meeting Information window shows its fields in order with the defaults", async ({
   page,
 }) => {
   const { dialog } = await openDialog(page);
+  await expect(dialog.getByRole("textbox", { name: "Title", exact: true })).toBeFocused();
+  const fromDate = await dialog.getByLabel("From date", { exact: true }).boundingBox();
+  const fromTime = await dialog.getByLabel("From time", { exact: true }).boundingBox();
+  expect(Math.abs((fromDate?.y ?? 0) - (fromTime?.y ?? 99))).toBeLessThan(2);
+  expect(fromTime?.x ?? 0).toBeGreaterThan(fromDate?.x ?? 0);
+  await expect(dialog.getByRole("button", { name: "Add", exact: true })).toHaveText("+ Add");
   const order = await dialog
     .locator("[data-form-field]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-form-field")));
@@ -109,6 +115,7 @@ test("adds a participant in the window and edits the meeting from the record", a
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Customer call");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   const picker = page.getByRole("dialog").last();
+  await expect(picker.getByRole("button", { name: /Module/ })).toBeVisible();
   await picker.locator("label.table-radio").first().click();
   await picker.getByRole("button", { name: "Done" }).click();
   await expect(dialog.getByText("1 selected")).toBeVisible();
