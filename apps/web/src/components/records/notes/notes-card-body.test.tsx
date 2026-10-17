@@ -15,7 +15,18 @@ vi.mock("@/lib/api/client/hooks", () => {
   return {
     useViews: () => ({ data: [{ id: "v1", isDefault: true }], isLoading: false, isError: false }),
     useUsers: () => ({ data: [{ userId: "u1", name: "Alex Morgan" }] }),
-    useRecordList: () => ({ data: { records: state.records }, isLoading: false, isError: false }),
+    useRecordList: (_module?: string, query?: { page?: number; perPage?: number }) => {
+      const page = query?.page ?? 1;
+      const perPage = query?.perPage ?? 100;
+      const start = (page - 1) * perPage;
+      const pagedRecords = state.records.slice(start, start + perPage);
+      const moreRecords = start + perPage < state.records.length;
+      return {
+        data: { records: pagedRecords, moreRecords },
+        isLoading: false,
+        isError: false,
+      };
+    },
     useCreateRecord: () => ({
       mutateAsync: (data: unknown) => {
         state.created.push(data);
@@ -154,5 +165,93 @@ describe("NotesCardBody", () => {
 
     await user.click(screen.getByRole("button", { name: /^Delete$/ }));
     expect(state.deleted).toEqual([["n1"]]);
+  });
+
+  it("handles 101 notes: shows first 100, View more appends the 101st, and deleting from page 2 works", () => {
+    state.records = Array.from({ length: 101 }, (_, i) => ({
+      id: `n${i + 1}`,
+      fields: {
+        Note_Title: `Note ${i + 1}`,
+        Note_Content: `Content ${i + 1}`,
+        Created_By: "u1",
+        Created_Time: new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString(),
+      },
+    }));
+
+    render(<NotesCardBody {...props} />);
+
+    // First page shows exactly 100 notes
+    const initialRows = screen.getAllByRole("listitem");
+    expect(initialRows).toHaveLength(100);
+    expect(screen.getByText("Note 1")).toBeTruthy();
+    expect(screen.getByText("Note 100")).toBeTruthy();
+    expect(screen.queryByText("Note 101")).toBeNull();
+
+    // "View more" button is visible
+    const viewMoreButton = screen.getByRole("button", { name: "View more" });
+    expect(viewMoreButton).toBeTruthy();
+
+    // Click "View more" to reveal page 2 (Note 101)
+    fireEvent.click(viewMoreButton);
+
+    const expandedRows = screen.getAllByRole("listitem");
+    expect(expandedRows).toHaveLength(101);
+    expect(screen.getByText("Note 101")).toBeTruthy();
+
+    // "View more" is gone since page 2 had moreRecords: false
+    expect(screen.queryByRole("button", { name: "View more" })).toBeNull();
+
+    // Delete note 101 from page 2
+    const deleteButtons = screen.getAllByRole("button", { name: "Delete note" });
+    expect(deleteButtons).toHaveLength(101);
+    const deleteBtn = deleteButtons[100];
+    if (!deleteBtn) {
+      throw new Error("Expected 101st delete button");
+    }
+    fireEvent.click(deleteBtn);
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Delete$/ }));
+    expect(state.deleted).toEqual([["n101"]]);
+  });
+
+  it("handles 250 notes: shows 100 notes, second click reveals 200, third click reveals all 250", () => {
+    state.records = Array.from({ length: 250 }, (_, i) => ({
+      id: `n${i + 1}`,
+      fields: {
+        Note_Title: `Note ${i + 1}`,
+        Note_Content: `Content ${i + 1}`,
+        Created_By: "u1",
+        Created_Time: new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString(),
+      },
+    }));
+
+    render(<NotesCardBody {...props} />);
+
+    // Page 1: 100 notes
+    expect(screen.getAllByRole("listitem")).toHaveLength(100);
+    expect(screen.getByText("Note 1")).toBeTruthy();
+    expect(screen.getByText("Note 100")).toBeTruthy();
+    expect(screen.queryByText("Note 101")).toBeNull();
+
+    // Click "View more" for page 2
+    fireEvent.click(screen.getByRole("button", { name: "View more" }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(200);
+    expect(screen.getByText("Note 101")).toBeTruthy();
+    expect(screen.getByText("Note 200")).toBeTruthy();
+    expect(screen.queryByText("Note 201")).toBeNull();
+
+    // "View more" is still present because moreRecords is true
+    const secondViewMore = screen.getByRole("button", { name: "View more" });
+    expect(secondViewMore).toBeTruthy();
+
+    // Click "View more" for page 3
+    fireEvent.click(secondViewMore);
+    expect(screen.getAllByRole("listitem")).toHaveLength(250);
+    expect(screen.getByText("Note 201")).toBeTruthy();
+    expect(screen.getByText("Note 250")).toBeTruthy();
+
+    // "View more" is now gone since page 3 was the final page
+    expect(screen.queryByRole("button", { name: "View more" })).toBeNull();
   });
 });

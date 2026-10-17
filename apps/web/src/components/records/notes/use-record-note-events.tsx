@@ -1,9 +1,12 @@
 "use client";
 
-import type { Criteria, FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
+import type { Criteria, FieldValue, ListQuery, ModuleApiName, RecordData } from "@crm/core/records";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { TimelineEvent } from "@/components/records/detail/timeline";
-import { useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
+import { useUsers, useViews } from "@/lib/api/client/hooks";
+import { useClientRecordService, useOrgSlug } from "@/lib/api/client/provider";
+import { apiKeys } from "@/lib/api/client/query-keys";
 import { NoteContent } from "./note-content";
 
 // Same page size and filter as the Notes card so both share one cached list.
@@ -43,6 +46,10 @@ export function useRecordNoteEvents(
 ): readonly TimelineEvent[] {
   const views = useViews("Notes");
   const users = useUsers();
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+
   const viewId = useMemo(
     () => views.data?.find((view) => view.isDefault)?.id ?? views.data?.[0]?.id ?? null,
     [views.data],
@@ -56,14 +63,50 @@ export function useRecordNoteEvents(
       }) as Criteria,
     [parentModule, parentId],
   );
-  const query = useMemo(
-    () => ({ viewId: viewId ?? "pending", page: 1, perPage: PAGE_SIZE, filters }),
-    [viewId, filters],
+
+  const queryKey = useMemo(
+    () =>
+      [
+        ...apiKeys.module(orgSlug, "Notes"),
+        "list",
+        "timeline-all",
+        viewId,
+        JSON.stringify(filters),
+      ] as const,
+    [orgSlug, viewId, filters],
   );
-  const list = useRecordList("Notes", query, { enabled: viewId !== null });
+
+  const list = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!viewId) return [];
+      let page = 1;
+      const records: RecordData[] = [];
+      const seen = new Set<string>();
+      while (true) {
+        const query: ListQuery = { viewId, page, perPage: PAGE_SIZE, filters };
+        const pageKey = apiKeys.list(orgSlug, "Notes", query);
+        const result = await queryClient.fetchQuery({
+          queryKey: pageKey,
+          queryFn: () => service.list("Notes", query),
+        });
+        for (const record of result.records ?? []) {
+          if (!seen.has(record.id)) {
+            seen.add(record.id);
+            records.push(record);
+          }
+        }
+        if (!result.moreRecords) break;
+        page++;
+      }
+      return records;
+    },
+    enabled: viewId !== null,
+  });
+
   return useMemo(() => {
     const names = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
-    return ((list.data?.records ?? []) as readonly RecordData[]).map((record) =>
+    return ((list.data ?? []) as readonly RecordData[]).map((record) =>
       noteToTimelineEvent(record, names),
     );
   }, [list.data, users.data]);
