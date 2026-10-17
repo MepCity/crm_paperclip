@@ -70,6 +70,22 @@ const post = (deps: AttachmentDeps, id: string, body: FormData, batch?: string, 
     },
   );
 
+function expectWindowArgs(
+  seen: { page?: number; perPage?: number; sort?: unknown; filters?: unknown }[],
+  parentId: string,
+  pages: number[],
+) {
+  expect(seen.map((q) => q.page)).toEqual(pages);
+  for (const q of seen) {
+    expect(q.sort).toEqual({ field: "Created_Time", order: "desc" });
+    expect(q.filters).toEqual({
+      field: "Parent_Id",
+      comparator: "equal",
+      value: { module: "Leads", id: parentId },
+    });
+  }
+}
+
 describe("Attachments HTTP handlers", () => {
   it("uploads a file, lists it, downloads it and deletes it", async () => {
     const deps = setup();
@@ -328,10 +344,15 @@ describe("Attachments HTTP handlers", () => {
       },
     })) as unknown as RecordData[];
     let calls = 0;
+    const seen: { page?: number; perPage?: number; sort?: unknown; filters?: unknown }[] = [];
     const realList = deps.records.list.bind(deps.records);
-    deps.records.list = (async (module: string, query: { page?: number; perPage?: number }) => {
+    deps.records.list = (async (
+      module: string,
+      query: { page?: number; perPage?: number; sort?: unknown; filters?: unknown },
+    ) => {
       if (module !== "Attachments") return realList(module, query as never);
       calls++;
+      seen.push(query);
       const perPage = query.perPage ?? 100;
       const from = ((query.page ?? 1) - 1) * perPage;
       return { records: all.slice(from, from + perPage), moreRecords: from + perPage < total };
@@ -339,6 +360,7 @@ describe("Attachments HTTP handlers", () => {
     deps.lifecycle.isReady = () => true;
     const run = async (query: string) => {
       calls = 0;
+      seen.length = 0;
       const res = await call(deps, { module: "Leads", recordId: id }, { query });
       return { body: await res.json(), calls };
     };
@@ -347,11 +369,37 @@ describe("Attachments HTTP handlers", () => {
     expect(first.body.data[0].id).toBe("att-0");
     expect(first.body.info.more_records).toBe(true);
     expect(first.calls).toBeLessThanOrEqual(3);
+    expectWindowArgs(seen, id, [1, 2]);
     const last = await run("?page=25&per_page=200");
     expect(last.body.data).toHaveLength(200);
     expect(last.body.data[199].id).toBe("att-4999");
     expect(last.body.info.more_records).toBe(false);
     expect(last.calls).toBeLessThanOrEqual(3);
+    expectWindowArgs(seen, id, [49, 50]);
+  });
+
+  it("returns 200 with empty data when the whole window is not ready but more rows exist", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const all = Array.from({ length: 3 }, (_, i) => ({
+      id: `att-${i}`,
+      fields: { File_Name: `f${i}.pdf`, Size: 1, $type: "file", Created_Time: "t" },
+    })) as unknown as RecordData[];
+    const realList = deps.records.list.bind(deps.records);
+    deps.records.list = (async (module: string, query: { page?: number; perPage?: number }) =>
+      module !== "Attachments"
+        ? realList(module, query as never)
+        : { records: all, moreRecords: false }) as never;
+    deps.lifecycle.isReady = () => false;
+    const res = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?page=1&per_page=2" },
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data).toEqual([]);
+    expect(body.info).toEqual({ page: 1, per_page: 2, count: 0, more_records: true });
   });
 
   it("accepts every supported parent module", async () => {

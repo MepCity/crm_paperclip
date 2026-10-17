@@ -135,6 +135,8 @@ export function useAttachments(
     },
     getNextPageParam: (last, all) => (last.more ? all.length + 1 : undefined),
   });
+  // Timeline "added" events derive from `loaded`, so they cover only the pages fetched so far
+  // (the first 20 until "Show more"), not the whole list.
   const loaded = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
   const [uploading, setUploading] = useState<UploadState[]>([]);
   const deleted = useSyncExternalStore(

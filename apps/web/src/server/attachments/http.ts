@@ -144,7 +144,8 @@ async function list(deps: AttachmentDeps, params: AttachmentParams, url: URL): P
   const items = window
     .filter((record) => deps.lifecycle.isReady(record.id))
     .map((record) => row(record, names));
-  if (!items.length) return new Response(null, { status: 204, headers: NO_STORE });
+  // A fully not-ready window with more rows behind it must still say so (200, empty data).
+  if (!items.length && !more) return new Response(null, { status: 204, headers: NO_STORE });
   return ok(200, {
     data: items,
     info: { page, per_page: perPage, count: items.length, more_records: more },
