@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
 import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { Icons } from "@/components/ui/icon";
@@ -16,6 +17,7 @@ export const dealsRelatedListRail: RelatedListRailChromeDefinition = {
 
 export type DealsRelatedListBadges = {
   stageHistory?: number;
+  contactRoles?: number;
   openActivities?: number;
   closedActivities?: number;
 };
@@ -337,7 +339,16 @@ export function createDealsRelatedLists(
     },
     {
       id: "contact-roles",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(ContactRolesCardBody, {
+              dealId: record.id,
+              contactPath: (id) => recordPath("Contacts", id),
+              accountPath: (id) => recordPath("Accounts", id),
+            })
+          : undefined,
       showEmptyTable: true,
+      countBadge: badgeValue(badges.contactRoles),
       title: "Contact Roles",
       moduleKey: "M2",
       order: 12,

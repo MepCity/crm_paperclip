@@ -113,6 +113,18 @@ export interface ModuleListScreenConfig {
   viewMenuSearch?: boolean;
   /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
   viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px (Activities rows 38-39). */
+  actionsMenuWidth?: number;
+  /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
+  listVariant?: "activities";
+  /** Row hover tools in order (Activities rows 32-33); omitted draws ellipsis + note. */
+  /** Meetings: draw the Related To module pictogram. */
+  relatedToPictogram?: boolean;
+  /** Boolean field marking all-day rows (date-only Start/End cells). */
+  allDayField?: string;
+  /** Row edit pencil links to the record edit page; leave off until the module has an edit form. */
+  rowEditLink?: boolean;
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -271,7 +283,11 @@ function ModuleListScreenLoaded({
 
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
-    const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
+    // Row presentation may need a field that is not a visible column.
+    const queryFields = config.allDayField
+      ? [...new Set([...columnApiNames, config.allDayField])]
+      : columnApiNames;
+    const base = listQueryFromSearchState(viewId, queryFields, searchState, eligibleSortFields);
     return {
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
@@ -281,6 +297,7 @@ function ModuleListScreenLoaded({
   }, [
     appliedActivityFilter,
     columnApiNames,
+    config.allDayField,
     config.activityRibbon,
     eligibleSortFields,
     listCriteria,
@@ -695,7 +712,11 @@ function ModuleListScreenLoaded({
   ];
 
   return (
-    <div className="module-list-page">
+    <div
+      className="module-list-page"
+      data-list-variant={config.listVariant}
+      data-list-module={config.listVariant ? config.module : undefined}
+    >
       <ViewTabStrip
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
@@ -720,6 +741,7 @@ function ModuleListScreenLoaded({
       ) : (
         <ListToolbar
           viewTypeTileIds={config.viewTypeTileIds}
+          actionsMenuWidth={config.actionsMenuWidth}
           presentation={hasBoard ? presentation : undefined}
           onPresentationChange={
             hasBoard
@@ -870,6 +892,15 @@ function ModuleListScreenLoaded({
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}
+              numericDates={config.listVariant === "activities"}
+              rowTools={config.rowTools}
+              relatedToPictogram={config.relatedToPictogram}
+              allDayField={config.allDayField}
+              rowEditHref={
+                config.rowEditLink
+                  ? (record) => `${config.paths.record(orgSlug, config.module, record.id)}/edit`
+                  : undefined
+              }
               columns={columns}
               records={records}
               linkField={config.linkField}

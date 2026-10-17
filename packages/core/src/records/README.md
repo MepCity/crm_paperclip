@@ -738,3 +738,37 @@ multi-activity badge precedence/date selection remain unobserved. The UTC bounda
 and task/meeting/call tie order require confirmation at the module board gate.
 
 Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent; child locks are ignored temporarily, merge and conversion do not cascade, and restore is out of scope.
+
+## Campaigns
+
+`Campaigns` publishes the 21 exported fields, two layout sections, Type/Status
+picklists and four saved views. Null view sorting uses the common default sort.
+The source table contains only sanitized field/layout/view structure. Tag keeps
+the common text policy; Connected_To__s keeps the common multi-module lookup
+shape. Expected_Response and Num_sent are stored bigint strings, not computed
+statistics. Parent_Campaign is a self lookup; list/count with Parent_Campaign
+equal to a campaign ID returns its immediate children. Interim cycle protection
+rejects self-parenting and descendant-parenting with ValidationError.
+
+`Campaign_Members` is a hidden child module, like Contact_Roles, available through
+the existing generic CRUD, list and count paths. Campaign is required and exactly
+one of Lead or Contact must be populated. Composite uniqueness uses the same
+lifecycle validation mechanism as Contact_Roles: a campaign/member pair cannot
+repeat, including on update. Campaign, Lead and Contact deletion removes its
+membership rows atomically. Filter Campaign plus nonempty Lead/Contact for the
+campaign's members, or filter Lead/Contact for the member's campaigns; each row
+contains Campaign, the member reference and Member_Status. Deals.Campaign_Source
+resolves Campaigns; filtering it returns campaign deals. Deleting a campaign
+uses the common dangling-reference read policy (null) for Deals and child
+campaigns, without deleting those records.
+
+Interim/open questions:
+
+- Member_Status has no default. Its single provisional constant lists Planned,
+  Invited, Sent, Received, Opened, Responded, Bounced and Opted Out; replace it
+  when membership research confirms the real options (MEP-755).
+- Confirm the provisional campaign ancestor-cycle validation against research.
+- Lead conversion is not implemented in this service. Transferring memberships
+  to the resulting Contact remains open; no conversion code is added here.
+- Unread Campaigns retains the exported Common_Status criterion although that
+  field is absent from public metadata, following existing saved-view policy.

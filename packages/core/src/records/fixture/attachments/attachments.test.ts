@@ -307,6 +307,32 @@ describe("Attachments record contract", () => {
     lifecycle.acknowledgeCleanup(attachment.id);
     expect(lifecycle.cleanupIntents()).toEqual([]);
   });
+  it.each(["Leads", "Contacts"])(
+    "cascades campaign memberships and attachments together when deleting %s",
+    async (module) => {
+      const { service, lifecycle } = make();
+      const parent = await service.create(module, {
+        Last_Name: "Synthetic Member",
+        ...(module === "Leads" ? { Company: "Synthetic Company" } : {}),
+      });
+      const campaign = await service.create("Campaigns", { Campaign_Name: "Synthetic Campaign" });
+      const membership = await service.create("Campaign_Members", {
+        Campaign: { module: "Campaigns", id: campaign.id },
+        [module === "Leads" ? "Lead" : "Contact"]: { module, id: parent.id },
+      });
+      const attachment = await service.create("Attachments", file(module, parent.id));
+      lifecycle.publish(attachment.id, published);
+      await service.delete(module, [parent.id]);
+      await expect(service.get("Campaign_Members", membership.id)).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
+      expect(lifecycle.cleanupIntents()).toEqual([
+        { attachmentId: attachment.id, storageKey: published.storageKey },
+      ]);
+      expect((await service.get("Campaigns", campaign.id)).id).toBe(campaign.id);
+    },
+  );
   it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
     const { service, lifecycle } = make();
     const parent = await lead(service);
