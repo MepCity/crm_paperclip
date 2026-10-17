@@ -398,3 +398,111 @@ test("switches between the offered modules inside the picker and lists the chose
   await user.click(await screen.findByRole("option", { name: "Leads" }));
   await waitFor(() => expect(service.list).toHaveBeenCalledWith("Leads", expect.anything()));
 });
+
+test("multiple selection toggles rows, preserves named references through search, and returns an array", async () => {
+  const user = userEvent.setup();
+  const onDone = vi.fn();
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      selection="multiple"
+      recordService={createMockService()}
+      onDone={onDone}
+      onCancel={vi.fn()}
+    />,
+  );
+  const alice = await screen.findByRole("checkbox", { name: "Alice Smith" });
+  const done = screen.getByRole("button", { name: "Done" }) as HTMLButtonElement;
+  expect(done.disabled).toBe(true);
+  await user.click(alice);
+  await user.click(alice);
+  expect(done.disabled).toBe(true);
+  await user.click(alice);
+  await user.type(screen.getByRole("textbox", { name: "Search" }), "Bob");
+  await waitFor(() => expect(screen.queryByRole("checkbox", { name: "Alice Smith" })).toBeNull());
+  await user.click(screen.getByRole("checkbox", { name: "Bob Jones" }));
+  expect(screen.getByText("2 selected")).toBeTruthy();
+  await user.click(done);
+  expect(onDone).toHaveBeenCalledWith([
+    { module: "Contacts", id: "c-1", name: "Alice Smith" },
+    { module: "Contacts", id: "c-2", name: "Bob Jones" },
+  ]);
+});
+
+test("multiple select-all selects and clears only the visible page", async () => {
+  const user = userEvent.setup();
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      selection="multiple"
+      selectedIds={["off-page"]}
+      recordService={createMockService()}
+      onDone={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+  await screen.findByRole("checkbox", { name: "Alice Smith" });
+  await user.click(screen.getByRole("checkbox", { name: "Select all on this page" }));
+  expect(screen.getByText("3 selected")).toBeTruthy();
+  await user.click(screen.getByRole("checkbox", { name: "Select all on this page" }));
+  expect(screen.getByText("1 selected")).toBeTruthy();
+});
+
+test("multiple selection survives pagination and works from the keyboard", async () => {
+  const service = createMockService();
+  vi.mocked(service.list).mockImplementation(async (_module, query) => ({
+    records:
+      query.page === 2
+        ? [{ id: "c-2", fields: { Full_Name: "Second page" } }]
+        : [{ id: "c-1", fields: { Full_Name: "First page" } }],
+    moreRecords: query.page !== 2,
+    page: query.page,
+    perPage: query.perPage,
+    sort: { field: "Full_Name", order: "asc" },
+  }));
+  const user = userEvent.setup();
+  const onDone = vi.fn();
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      selection="multiple"
+      recordService={service}
+      onDone={onDone}
+      onCancel={vi.fn()}
+    />,
+  );
+  const first = await screen.findByRole("checkbox", { name: "First page" });
+  first.focus();
+  await user.keyboard(" ");
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await user.click(await screen.findByRole("checkbox", { name: "Second page" }));
+  await user.click(screen.getByRole("button", { name: "Previous" }));
+  expect(
+    ((await screen.findByRole("checkbox", { name: "First page" })) as HTMLInputElement).checked,
+  ).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(onDone).toHaveBeenCalledWith([
+    { module: "Contacts", id: "c-1", name: "First page" },
+    { module: "Contacts", id: "c-2", name: "Second page" },
+  ]);
+});
+
+test("initial multiple selection resolves record names and retains them after searching", async () => {
+  const user = userEvent.setup();
+  const onDone = vi.fn();
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      selection="multiple"
+      selectedIds={["c-1"]}
+      recordService={createMockService()}
+      onDone={onDone}
+      onCancel={vi.fn()}
+    />,
+  );
+  await screen.findByRole("checkbox", { name: "Alice Smith" });
+  await user.type(screen.getByRole("textbox", { name: "Search" }), "Bob");
+  await waitFor(() => expect(screen.queryByRole("checkbox", { name: "Alice Smith" })).toBeNull());
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(onDone).toHaveBeenCalledWith([{ module: "Contacts", id: "c-1", name: "Alice Smith" }]);
+});
