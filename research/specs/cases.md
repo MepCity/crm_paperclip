@@ -775,6 +775,35 @@ The lower rail is visible without a user preference change. These shell differen
 
 The rail resize handle is reported in controls.json but no separate handle is painted over the boundary. It is not operated. No Channels or Threads shortcut is painted. The shared utility trash icon SH-46 is image-only.
 
+### Control inventory — m8f-cases-contact
+
+The Related To lookup opens **Choose Contact**, with five data columns and nine fully visible rows. No search, row selection, record opening, pagination, filter, column menu or New action was performed. The search field has the opening focus outline; no field was filled. No module-type switch is visible.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-12.1 | Contact popup | Close cross | icon button | header, far right | same | seen (m8f-cases-contact) | M2 | AF-11.1 |
+| KF-12.2 | Contact popup | Search by Contact Name | input | below title, left | same; no search | seen (m8f-cases-contact) | M2 | AF-11.2 |
+| KF-12.3 | Contact popup | New Contact | button | below title, right | same; not used | seen (m8f-cases-contact) | M2 | AF-11.3 |
+| KF-12.4 | Contact popup | Table with down arrow icon | icon button | table header, first | same; not used | seen (m8f-cases-contact) | M2 | AF-11.4 |
+| KF-12.5 | Contact popup | Contact Name | column header | table header, text column 1 | Identifies column; sorting not used | seen (m8f-cases-contact) | M2 | AF-11.5 |
+| KF-12.6 | Contact popup | Column options | icon button | text column 1, right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.6 |
+| KF-12.7 | Contact popup | Account Name | column header | table header, text column 2 | Identifies column; sorting not used | seen (m8f-cases-contact) | M2 | AF-11.5 moved |
+| KF-12.8 | Contact popup | Column options | icon button | text column 2, right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.8 |
+| KF-12.9 | Contact popup | Email | column header | table header, text column 3 | Identifies column; sorting not used | seen (m8f-cases-contact) | M2 | new |
+| KF-12.10 | Contact popup | Column options | icon button | text column 3, right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.10 |
+| KF-12.11 | Contact popup | Phone | column header | table header, text column 4 | Identifies column; sorting not used | seen (m8f-cases-contact) | M2 | AF-11.7 moved |
+| KF-12.12 | Contact popup | Column options | icon button | text column 4, right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.12 |
+| KF-12.13 | Contact popup | Contact Owner | column header | table header, text column 5 | Identifies column; sorting not used | seen (m8f-cases-contact) | M2 | AF-11.11 moved |
+| KF-12.14 | Contact popup | Column options | icon button | text column 5, right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.6 moved |
+| KF-12.15 | Contact popup | Filter | icon button | table header, far right | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.13 |
+| KF-12.16 | Contact popup | Row selection circle | toggle | each fully visible row, first | same; no selection | seen (m8f-cases-contact) | M2 | AF-11.14 |
+| KF-12.17 | Contact popup | Contact record link | link | each fully visible row, Contact Name | same; not opened | seen (m8f-cases-contact) | M2 | AF-11.15 |
+| KF-12.18 | Contact popup | Previous | icon button | footer, right group, first | same; visibly dimmed; not used | seen (m8f-cases-contact) | M2 | AF-11.17 |
+| KF-12.19 | Contact popup | Next | icon button | footer, right group, second | same; not used | seen (m8f-cases-contact) | M2 | AF-11.18 |
+| KF-12.20 | Contact popup | Phone handset icon | icon button | each populated Phone cell, after value | same; never used | seen (m8f-cases-contact) | M5 | AF-11.16 moved |
+
+Rest: as in m8f-cases-create; covered by the overlay: KF-01–KF-25 and the upper shell. Retained controls remain dimmed behind the modal. KF-26, KF-27, their resize grips, the lower rail, utility strip and Client Script are visible behind it. The table has a visible vertical scroll thumb; it is a container affordance, not an extra action. KF-12.20 is image-only, repeated in the nine visible Phone cells; the controls exporter contains no separate handset entries. No call was initiated.
+
 ### Form fields versus metadata
 
 M1 configures 30 fields. Case Number is an auto-number; Owner is an owner lookup; Status / Type / Priority / Case Reason / Case Origin are picklists; Product Name targets Products, Related To targets Contacts, Account Name targets Accounts, and Deal Name targets Deals. The rendered Related To and Reported By controls are distinct. Case Number is locked on Create. The metadata requirements Status / Case Origin / Subject agree with their three visible markers. No values from an existing record were copied.
@@ -1343,6 +1372,111 @@ Source ordinals are one-based. Covered form and shell controls retain their base
 
 Self-audit: 460 entries → 95 numbered controls (212 mapped entries); 248 excluded entries. Missing / duplicate ordinals: 0. Seven complete rows have unselected circles and record links. Image-only base KF-33, KF-34 and SH-46 remain visible; KF-06 is covered. No additional image-only popup control was found. Screenshot opened as an image.
 
+### Reconciliation — m8f-cases-contact
+
+Source ordinals are one-based. Form and shell retain their base mapping behind the modal. Row values are excluded; the tenth extracted row is below the painted table cutoff. Screenshot opened as an image.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| Excluded: structural wrapper, duplicate decoration or non-control text | 1, 4, 109, 111, 114, 135–136, 139, 151–152, 200, 241, 253, 261–265, 277, 280, 401–402, 421–422, 426 |
+| SH-01 | 2–3 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 108, 110, 118–119, 121–122, 124–125, 128–129, 146–150, 160, 170, 176, 182, 213–224, 226–240, 259, 278–279 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| Excluded: clipped or outside viewport | 37–65, 134, 205–212, 425 |
+| KF-S01 | 66–68 |
+| KF-S02 | 69–71 |
+| KF-S03 | 72–74 |
+| KF-S04 | 75–77 |
+| KF-S05 | 78–80 |
+| KF-S06 | 81–83 |
+| KF-S07 | 84–86 |
+| KF-S08 | 87–89 |
+| KF-S09 | 90–92 |
+| KF-S10 | 93–95 |
+| KF-S11 | 96–98 |
+| KF-S12 | 99–101 |
+| KF-S13 | 102–104 |
+| KF-S14 | 105–107 |
+| SH-26 | 112 |
+| SH-27 | 113 |
+| SH-28 | 115 |
+| SH-29 | 116 |
+| SH-30 | 117 |
+| SH-31 | 120 |
+| SH-32 | 123 |
+| SH-33 | 126–127 |
+| SH-34 | 130–133 |
+| KF-01 | 137–138 |
+| KF-04 | 140–141 |
+| KF-03 | 142–143 |
+| KF-02 | 144–145 |
+| KF-05 | 153–154 |
+| KF-07 | 155–158 |
+| KF-08 | 159, 405–407 |
+| KF-09 | 161–162 |
+| KF-10 | 163–164 |
+| KF-11 | 165–168 |
+| KF-12 | 169, 408–410 |
+| KF-13 | 171–174 |
+| KF-14 | 175, 411–413 |
+| KF-15 | 177–180 |
+| KF-16 | 181, 414–416 |
+| KF-17 | 183–184 |
+| KF-19 | 185, 417–419 |
+| KF-18 | 186–187 |
+| KF-20 | 188–189 |
+| KF-21 | 190–191 |
+| KF-22 | 192–193 |
+| KF-23 | 194–195 |
+| KF-24 | 196–197 |
+| KF-25 | 198–199 |
+| KF-26 | 201–202, 423 |
+| KF-27 | 203–204, 424 |
+| KF-32 | 225 |
+| SH-35 | 242 |
+| SH-36 | 243 |
+| SH-37 | 244 |
+| SH-38 | 245 |
+| SH-39 | 246 |
+| SH-40 | 247 |
+| SH-41 | 248 |
+| SH-42 | 249 |
+| SH-43 | 250 |
+| SH-44 | 251 |
+| SH-45 | 252 |
+| KF-12.1 | 254 |
+| KF-12.2 | 255–256, 420 |
+| KF-12.3 | 257–258 |
+| KF-12.15 | 260 |
+| KF-12.4 | 266 |
+| KF-12.5 | 267 |
+| KF-12.6 | 268 |
+| KF-12.7 | 269 |
+| KF-12.8 | 270 |
+| KF-12.9 | 271 |
+| KF-12.10 | 272 |
+| KF-12.11 | 273 |
+| KF-12.12 | 274 |
+| KF-12.13 | 275 |
+| KF-12.14 | 276 |
+| Excluded: row wrapper, non-interactive record cell or duplicate decoration | 281–282, 285, 288–294, 297, 300–306, 309, 312–318, 321, 324–330, 333, 336–342, 345, 348–354, 357, 360–366, 369, 372–378, 381, 384–388 |
+| KF-12.16 | 283–284, 295–296, 307–308, 319–320, 331–332, 343–344, 355–356, 367–368, 379–380 |
+| KF-12.17 | 286–287, 298–299, 310–311, 322–323, 334–335, 346–347, 358–359, 370–371, 382–383 |
+| Excluded: clipped or outside popup viewport | 389–400 |
+| KF-12.18 | 403 |
+| KF-12.19 | 404 |
+
+Self-audit: 426 entries → 91 numbered controls (216 mapped entries); 210 excluded entries. Missing / duplicate ordinals: 0. Screenshot-only: base KF-06, KF-33, KF-34 and SH-46, plus KF-12.20 (nine handsets). Nine unselected circles and nine contact links are visible. No other image-only popup action was found. Capture safety: one opening click, zero skipped clicks; the single Contacts lookup read and single shell trigger match the permitted path/count set. Reminder, notification and nine telemetry requests were blocked; no unexpected non-GET path, selection, search or record write was observed. API calls: 54. Pre-capture 1-minute load: 75.04. No tabs were closed.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -1392,7 +1526,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | Origin Email conditional validation | D1 describes an email requirement for email-origin cases; no option was selected | Gate question: confirm conditional rule against the current layout; do not claim an observed marker or message. |
 | Successful Save / Save and New, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Cases-specific outcome. |
 | Lower form and repeated footer buttons | not observed: below the initial viewport | Solution Information is extracted and configured, but its rendered field and footer positions need a permitted scroll capture; KF-28–KF-31 remain unassigned. |
-| Contact and Product picker interiors | pending capture; Account and Deal popups observed in m8f-cases-account and m8f-cases-deal | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
+| Product picker interior | pending capture; Account, Deal and Contact popups observed in m8f-cases-account, m8f-cases-deal and m8f-cases-contact | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
 | Field hover affordances and validation tooltips | not observed | Shared form pattern only, pending evidence. |
 | Shell ownership for My Jobs, Services, Projects and utility shortcuts | visible labels / icons; destination not opened | Keep unknown module attribution until scope is decided. |
 
