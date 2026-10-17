@@ -1,10 +1,12 @@
 import type { ModuleKey } from "@/components/ui/later-module";
 import { accountsScreenDefinition } from "./accounts/definition";
 import { callsScreenDefinition } from "./calls/definition";
+import { casesScreenDefinition } from "./cases/definition";
 import { contactsScreenDefinition } from "./contacts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { meetingsScreenDefinition } from "./meetings/definition";
+import { solutionsScreenDefinition } from "./solutions/definition";
 import { tasksScreenDefinition } from "./tasks/definition";
 import type { ModuleScreenDefinition } from "./types";
 
@@ -48,6 +50,8 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
       tasksScreenDefinition,
       meetingsScreenDefinition,
       callsScreenDefinition,
+      casesScreenDefinition,
+      solutionsScreenDefinition,
     ];
   }
   return cachedModuleScreens;
