@@ -98,10 +98,7 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
     () => ({ viewId: viewId ?? "pending", page: 1, perPage: PAGE_SIZE, filters }),
     [viewId, filters],
   );
-  const isSupportedParent = parentModule !== "Campaigns";
-  const list = useRecordList("Notes", query, {
-    enabled: viewId !== null && isSupportedParent,
-  });
+  const list = useRecordList("Notes", query, { enabled: viewId !== null });
   const create = useCreateRecord("Notes");
   const update = useUpdateRecord("Notes");
   const remove = useDeleteRecords("Notes");
@@ -158,10 +155,6 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   };
 
   const saveNew = async (draft: NoteDraft) => {
-    if (!isSupportedParent) {
-      setComposing(false);
-      return;
-    }
     setError(null);
     try {
       const created = await create.mutateAsync({

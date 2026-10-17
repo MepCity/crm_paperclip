@@ -44,6 +44,16 @@ describe("Notes parent and content rules", () => {
     expect(() => apply(fields(module))).not.toThrow();
     expect(() => apply({ ...fields(module), Note_Title: null })).not.toThrow();
   });
+  it("accepts creating notes with a Campaigns parent record", () => {
+    expect(() => apply(fields("Campaigns"))).not.toThrow();
+    expect(() =>
+      apply({
+        Parent_Id: { module: "Campaigns", id: "parent" },
+        Note_Title: "Campaign strategy",
+        Note_Content: "Q1 Campaign roadmap note",
+      }),
+    ).not.toThrow();
+  });
   it.each(["Tasks", "Events", "Calls", "Notes", "Unknown"])("rejects %s parents", (module) => {
     expectFieldError(fields(module), "Parent_Id");
   });

@@ -123,11 +123,18 @@ test.describe("Campaigns record detail (provisional rules, MEP-812)", () => {
     await page.goto(moduleRecordPath(org.slug, "Campaigns", SEED_CAMPAIGN_ID));
     await expect(page.locator("[data-record-frame]")).toBeVisible();
 
-    // GK-8 Notes card like Accounts
+    // GK-8 Notes card like Accounts: add, save and verify listed
     const notesCard = page.locator('[data-related-card="notes"]');
     await expect(notesCard.getByTestId("note-composer-collapsed")).toBeVisible();
     await notesCard.getByTestId("note-composer-collapsed").click();
     await expect(notesCard.getByTestId("note-composer")).toBeVisible();
+    await notesCard.getByLabel("Title").fill("Campaign kickoff note");
+    await notesCard
+      .getByRole("textbox", { name: "Note content" })
+      .fill("Kickoff details and targets");
+    await notesCard.getByRole("button", { name: "Save" }).click();
+    await expect(notesCard.getByText("Campaign kickoff note")).toBeVisible();
+    await expect(notesCard.getByTestId("note-composer")).toHaveCount(0);
 
     // GK-6 Deals card with Campaign Source matching deals
     const dealsCard = page.locator('[data-related-card="deals"]');
