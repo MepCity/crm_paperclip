@@ -2,7 +2,7 @@ import type { RecordData } from "@crm/core/records";
 
 /**
  * Record header identity: Subject title (TD-43).
- * No portrait / placeholder icon is used.
+ * The task icon is an inline glyph before the title (TD-01).
  * Previous / next record arrows are present (V07).
  */
 export function tasksRecordHeaderIdentity(
@@ -18,7 +18,7 @@ export function tasksRecordHeaderIdentity(
 
   return {
     title,
-    hasPortrait: false,
+    hasPortrait: true,
     recordNavigation: true,
   };
 }
