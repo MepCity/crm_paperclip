@@ -13,7 +13,14 @@ export const activityRules: Readonly<Record<string, { kind: ActivityKind; dateFi
   Events: { kind: "meeting", dateField: "Start_DateTime" },
   Calls: { kind: "call", dateField: "Call_Start_Time" },
 };
-export const activityParentModules = new Set(["Leads", "Contacts", "Accounts", "Deals"]);
+export const activityParentModules = new Set([
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Cases",
+  "Solutions",
+]);
 
 /** Shared parent identity matching for activity reads and cascading deletion. */
 export function activityParentIds(module: ModuleApiName, record: RecordData): string[] {
