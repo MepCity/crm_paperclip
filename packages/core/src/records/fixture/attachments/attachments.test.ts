@@ -161,7 +161,11 @@ describe("Attachments record contract", () => {
       for (const activity of ["Tasks", "Events", "Calls"]) {
         const view = requireValue((await service.listViews(activity))[0]);
         const rows = await service.list(activity, { ...listQuery, viewId: view.id });
-        activityPeers.push({ module: activity, id: requireValue(rows.records[0]).id });
+        activityPeers.push({
+          module: activity,
+          id: requireValue(rows.records.find((row) => activity !== module || row.id !== parent.id))
+            .id,
+        });
       }
       await service.delete(module, [parent.id]);
       for (const peer of activityPeers)
