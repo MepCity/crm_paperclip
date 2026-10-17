@@ -17,7 +17,7 @@ export interface ManageTagsPageProps {
   onDelete?: (id: string) => Promise<boolean>;
   /** Name of the module whose tags are being managed. Defaults to "Leads". */
   moduleName?: string;
-  /** Number of tags currently used. Defaults to 0. */
+  /** Number of tags currently used. Defaults to the catalogue size. */
   tagsUsed?: number;
   /** Total tag capacity. Defaults to 100. */
   tagsCapacity?: number;
@@ -40,7 +40,7 @@ export function ManageTagsPage({
   onSave,
   onDelete,
   moduleName = "Leads",
-  tagsUsed = 0,
+  tagsUsed = tags.length,
   tagsCapacity = 100,
   onBack,
   onHelp,
@@ -109,7 +109,7 @@ export function ManageTagsPage({
 
       {/* Usage counter */}
       <div className="mt-4 text-right text-sm text-text">
-        Tags used : {onSave ? tags.length : tagsUsed} / {tagsCapacity}
+        Tags used : {tagsUsed} / {tagsCapacity}
       </div>
 
       {error && !editing && !deleting ? (
