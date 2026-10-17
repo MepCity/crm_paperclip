@@ -722,6 +722,36 @@ Rest: as in m8f-cases-create; covered by the overlay: KF-22–KF-23 and the uppe
 
 Rest: as in m8f-cases-create; covered by the overlay: all or part of KF-01–KF-25, and part of the shell. KF-26–KF-27 and KF-32 remain visible; underlying controls are inactive. The modal title is Choose Account. Five complete rows are visible, followed by a clipped row edge; record values are omitted. Previous is disabled and Next is enabled. Search has the initial focus ring without user typing. The table has an internal scrollbar; it was not scrolled. No popup action, row, column option, filter or pagination control was used. KF-14.16 is image-only. Absent here: multi-select confirmation buttons.
 
+### Control inventory — m8f-cases-deal
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-16.1 | Deal popup | Close cross | icon button | header, far right | same | seen (m8f-cases-deal) | M4 | AF-11.1 |
+| KF-16.2 | Deal popup | Search by Deal Name | input | below title, left | same | seen (m8f-cases-deal) | M4 | AF-11.2 |
+| KF-16.3 | Deal popup | New Deal | button | below title, right | same; not used | seen (m8f-cases-deal) | M4 | AF-11.3 |
+| KF-16.4 | Deal popup | Table with down arrow icon | icon button | table header, first | same | seen (m8f-cases-deal) | M4 | AF-11.4 |
+| KF-16.5 | Deal popup | Deal Name | column header | table header, text column 1 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | AF-11.5 |
+| KF-16.6 | Deal popup | Column options | icon button | text column 1, right | same | seen (m8f-cases-deal) | M4 | AF-11.6 |
+| KF-16.7 | Deal popup | Amount | column header | table header, text column 2 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.8 | Deal popup | Column options | icon button | text column 2, right | same | seen (m8f-cases-deal) | M4 | AF-11.8 |
+| KF-16.9 | Deal popup | Stage | column header | table header, text column 3 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.10 | Deal popup | Column options | icon button | text column 3, right | same | seen (m8f-cases-deal) | M4 | AF-11.10 |
+| KF-16.11 | Deal popup | Closing Date | column header | table header, text column 4 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.12 | Deal popup | Column options | icon button | text column 4, right | same | seen (m8f-cases-deal) | M4 | AF-11.12 |
+| KF-16.13 | Deal popup | Account Name | column header | table header, text column 5 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.14 | Deal popup | Column options | icon button | text column 5, right | same | seen (m8f-cases-deal) | M4 | AF-11.6 moved |
+| KF-16.15 | Deal popup | Contact Name | column header | table header, text column 6 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.16 | Deal popup | Column options | icon button | text column 6, right | same | seen (m8f-cases-deal) | M4 | AF-11.6 moved |
+| KF-16.17 | Deal popup | Deal Owner | column header | table header, text column 7 | Identifies column; sorting not used | seen (m8f-cases-deal) | M4 | new |
+| KF-16.18 | Deal popup | Column options | icon button | text column 7, right | same | seen (m8f-cases-deal) | M4 | AF-11.6 moved |
+| KF-16.19 | Deal popup | Filter | icon button | table header, far right | same | seen (m8f-cases-deal) | M4 | AF-11.13 |
+| KF-16.20 | Deal popup | Row selection circle | toggle | each fully visible row, first | same; no selection | seen (m8f-cases-deal) | M4 | AF-11.14 |
+| KF-16.21 | Deal popup | Deal record link | link | each fully visible row, Deal Name | same; not opened | seen (m8f-cases-deal) | M4 | AF-11.15 |
+| KF-16.22 | Deal popup | Previous | icon button | footer, right group, first | same | seen (m8f-cases-deal) | M4 | AF-11.17 |
+| KF-16.23 | Deal popup | Next | icon button | footer, right group, second | same | seen (m8f-cases-deal) | M4 | AF-11.18 |
+
+Rest: as in m8f-cases-create; covered by the overlay: all or part of KF-01–KF-25 and part of the shell. KF-26–KF-27 and KF-32 remain visible; underlying controls are inactive. The title is Choose Deal. Seven complete rows are visible; values are omitted. All row circles are unselected. Previous is disabled and Next is enabled. The empty search has the initial focus ring. The table has an internal scrollbar; it was not scrolled. Column order is Deal Name, Amount, Stage, Closing Date, Account Name, Contact Name, Deal Owner. No popup action, row, column option, filter or pagination control was used. Absent here: Account popup Phone and Website columns, phone handset icons and multi-select confirmation buttons.
+
 ### Shell controls missing from app-shell.md
 
 The lower rail is visible without a user preference change. These shell differences are recorded once; all have untested navigation behaviour. Module names are labels, not copied assets.
@@ -1205,6 +1235,114 @@ Source ordinals are one-based. Underlying form and shell entries retain their ba
 
 Self-audit: 414 entries → 89 numbered controls (198 mapped entries); 216 excluded entries. Missing / duplicate ordinals: 0. Screenshot-only: KF-14.16 (five handsets); base image-only KF-33, KF-34 and SH-46 remain visible, while KF-06 is covered. The five complete rows have unselected circles and record links. The clipped sixth row is excluded rather than inferred from the DOM.
 
+### Reconciliation — m8f-cases-deal
+
+Source ordinals are one-based. Covered form and shell controls retain their base mapping; they are inactive behind the modal. Record values and rows outside the painted table viewport are excluded.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| Excluded: structural wrapper, duplicate decoration or non-control text | 1, 4, 109, 111, 114, 135–136, 139, 151–152, 200, 241, 249–253, 269, 272, 423–424, 427, 455–456, 460 |
+| SH-01 | 2–3 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 108, 110, 118–119, 121–122, 124–125, 128–129, 146–150, 160, 170, 176, 182, 213–224, 226–240, 247, 270–271 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| Excluded: clipped or outside viewport | 37–65, 134, 205–212, 378–422, 459 |
+| KF-S01 | 66–68 |
+| KF-S02 | 69–71 |
+| KF-S03 | 72–74 |
+| KF-S04 | 75–77 |
+| KF-S05 | 78–80 |
+| KF-S06 | 81–83 |
+| KF-S07 | 84–86 |
+| KF-S08 | 87–89 |
+| KF-S09 | 90–92 |
+| KF-S10 | 93–95 |
+| KF-S11 | 96–98 |
+| KF-S12 | 99–101 |
+| KF-S13 | 102–104 |
+| KF-S14 | 105–107 |
+| SH-26 | 112 |
+| SH-27 | 113 |
+| SH-28 | 115 |
+| SH-29 | 116 |
+| SH-30 | 117 |
+| SH-31 | 120 |
+| SH-32 | 123 |
+| SH-33 | 126–127 |
+| SH-34 | 130–133 |
+| KF-01 | 137–138 |
+| KF-04 | 140–141 |
+| KF-03 | 142–143 |
+| KF-02 | 144–145 |
+| KF-05 | 153–154 |
+| KF-07 | 155–158 |
+| KF-08 | 159, 439–441 |
+| KF-09 | 161–162 |
+| KF-10 | 163–164 |
+| KF-11 | 165–168 |
+| KF-12 | 169, 442–444 |
+| KF-13 | 171–174 |
+| KF-14 | 175, 445–447 |
+| KF-15 | 177–180 |
+| KF-16 | 181, 448–450 |
+| KF-17 | 183–184 |
+| KF-19 | 185, 451–453 |
+| KF-18 | 186–187 |
+| KF-20 | 188–189 |
+| KF-21 | 190–191 |
+| KF-22 | 192–193 |
+| KF-23 | 194–195 |
+| KF-24 | 196–197 |
+| KF-25 | 198–199 |
+| KF-26 | 201–202, 457 |
+| KF-27 | 203–204, 458 |
+| KF-32 | 225 |
+| KF-16.1 | 242 |
+| KF-16.2 | 243–244, 454 |
+| KF-16.3 | 245–246 |
+| KF-16.19 | 248 |
+| KF-16.4 | 254 |
+| KF-16.5 | 255 |
+| KF-16.6 | 256 |
+| KF-16.7 | 257 |
+| KF-16.8 | 258 |
+| KF-16.9 | 259 |
+| KF-16.10 | 260 |
+| KF-16.11 | 261 |
+| KF-16.12 | 262 |
+| KF-16.13 | 263 |
+| KF-16.14 | 264 |
+| KF-16.15 | 265 |
+| KF-16.16 | 266 |
+| KF-16.17 | 267 |
+| KF-16.18 | 268 |
+| Excluded: record-row wrappers and non-interactive record cell data | 273–274, 277, 280–289, 292, 295–304, 307, 310–319, 322, 325–334, 337, 340–349, 352, 355–364, 367, 370–377 |
+| KF-16.20 | 275–276, 290–291, 305–306, 320–321, 335–336, 350–351, 365–366 |
+| KF-16.21 | 278–279, 293–294, 308–309, 323–324, 338–339, 353–354, 368–369 |
+| KF-16.22 | 425 |
+| KF-16.23 | 426 |
+| SH-35 | 428 |
+| SH-36 | 429 |
+| SH-37 | 430 |
+| SH-38 | 431 |
+| SH-39 | 432 |
+| SH-40 | 433 |
+| SH-41 | 434 |
+| SH-42 | 435 |
+| SH-43 | 436 |
+| SH-44 | 437 |
+| SH-45 | 438 |
+
+Self-audit: 460 entries → 95 numbered controls (212 mapped entries); 248 excluded entries. Missing / duplicate ordinals: 0. Seven complete rows have unselected circles and record links. Image-only base KF-33, KF-34 and SH-46 remain visible; KF-06 is covered. No additional image-only popup control was found. Screenshot opened as an image.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -1254,7 +1392,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | Origin Email conditional validation | D1 describes an email requirement for email-origin cases; no option was selected | Gate question: confirm conditional rule against the current layout; do not claim an observed marker or message. |
 | Successful Save / Save and New, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Cases-specific outcome. |
 | Lower form and repeated footer buttons | not observed: below the initial viewport | Solution Information is extracted and configured, but its rendered field and footer positions need a permitted scroll capture; KF-28–KF-31 remain unassigned. |
-| Deal, Contact and Product picker interiors | pending capture; Account popup observed in m8f-cases-account | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
+| Contact and Product picker interiors | pending capture; Account and Deal popups observed in m8f-cases-account and m8f-cases-deal | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
 | Field hover affordances and validation tooltips | not observed | Shared form pattern only, pending evidence. |
 | Shell ownership for My Jobs, Services, Projects and utility shortcuts | visible labels / icons; destination not opened | Keep unknown module attribution until scope is decided. |
 
