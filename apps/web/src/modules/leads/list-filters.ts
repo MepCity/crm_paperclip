@@ -80,6 +80,7 @@ function editorForField(
       ...(user.email ? { detail: user.email } : {}),
     }));
   }
+  if (fieldType === "tag") editor.tagModule = "Leads";
   if (fieldType === "currency") {
     editor.currencyCode = currencyCode;
   }
