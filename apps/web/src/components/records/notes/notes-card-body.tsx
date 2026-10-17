@@ -11,6 +11,7 @@ import {
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
+import { NoteAttachmentList, useUploadNoteAttachments } from "./note-attachments";
 import { NoteColorPicker } from "./note-color-picker";
 import { NoteComposer, type NoteDraft } from "./note-composer";
 import { NoteContent } from "./note-content";
@@ -79,6 +80,8 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   const [composing, setComposing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const upload = useUploadNoteAttachments();
 
   const records = (list.data?.records ?? []) as readonly RecordData[];
   const items = useMemo<NoteListItem[]>(() => {
@@ -99,25 +102,40 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
         parentLabel: label,
         parentHref: href,
         createdAt: text(record.fields.Created_Time) ?? new Date(0).toISOString(),
+        attachments: (
+          <NoteAttachmentList noteId={record.id} uploadError={uploadErrors[record.id]} />
+        ),
         authorName: name,
         canEdit: true,
         canDelete: true,
       };
     });
-  }, [records, users.data, parentModule, parentRecord, recordPath]);
+  }, [records, users.data, parentModule, parentRecord, recordPath, uploadErrors]);
 
   const fail = useCallback((e: unknown) => {
     setError(e instanceof Error && e.message ? e.message : "Unable to save the note.");
   }, []);
 
+  const sendFiles = async (noteId: string, files: File[] | undefined) => {
+    if (!files || files.length === 0) return;
+    const failed = await upload(noteId, files);
+    setUploadErrors((current) => {
+      const { [noteId]: _drop, ...rest } = current;
+      return failed.length === 0
+        ? rest
+        : { ...rest, [noteId]: `Unable to upload: ${failed.join(", ")}` };
+    });
+  };
+
   const saveNew = async (draft: NoteDraft) => {
     setError(null);
     try {
-      await create.mutateAsync({
+      const created = await create.mutateAsync({
         Parent_Id: { module: parentModule, id: parentRecord.id },
         Note_Title: draft.title === "" ? null : draft.title,
         Note_Content: draft.content,
       });
+      if (created) await sendFiles(created.id, draft.files);
     } catch (e) {
       fail(e);
       throw e;
@@ -135,6 +153,7 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
           Note_Content: draft.content,
         },
       });
+      await sendFiles(id, draft.files);
     } catch (e) {
       fail(e);
       throw e;
@@ -207,6 +226,7 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
                 setError(null);
                 setEditingId(null);
               }}
+              attachments={<NoteAttachmentList noteId={id} editable />}
               onSave={saveEdit(id)}
               saving={update.isPending}
               error={error}
