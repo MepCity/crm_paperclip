@@ -1,5 +1,6 @@
 import KanbanSettingsDialogDemo from "@/components/records/board/kanban-settings-dialog.demo";
 import RecordBoardDemo from "@/components/records/board/record-board.demo";
+import AddToCampaignsDialogDemo from "@/components/records/campaigns/add-to-campaigns-dialog.demo";
 import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
@@ -57,6 +58,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "add-to-campaigns": AddToCampaignsDialogDemo,
   "recycle-bin": RecycleBinDemo,
   "record-board": RecordBoardDemo,
   "kanban-settings": KanbanSettingsDialogDemo,
