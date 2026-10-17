@@ -13,6 +13,7 @@ export type DetailFieldEntry = {
   column: "left" | "right" | "full";
   callAction?: boolean;
   suffix?: string;
+  valueSuffix?: string;
 };
 
 export type DetailSection = {
@@ -161,7 +162,7 @@ function FieldEntry({
       value={entry.value}
       auditTimestamp={entry.auditTimestamp}
       callAction={entry.callAction}
-      suffix={entry.suffix}
+      suffix={entry.suffix ?? entry.valueSuffix}
       ownerNames={ownerNames}
       format={format}
       layout={layout}
