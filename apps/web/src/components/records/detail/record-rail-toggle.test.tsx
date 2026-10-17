@@ -1,37 +1,31 @@
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { RecordRailToggle } from "./record-rail-toggle";
 
 afterEach(cleanup);
 
-describe("RecordRailToggle", () => {
-  it("offers to hide the rail when it is visible", () => {
-    render(<RecordRailToggle railVisible onRailVisibleChange={() => {}} />);
-    const button = screen.getByRole("button", { name: "Hide Related List" });
-    expect(button.getAttribute("aria-expanded")).toBe("true");
-    expect(button.getAttribute("aria-pressed")).toBe("true");
-  });
+test("when railVisible is true: button is named 'Hide Related List', aria-pressed and aria-expanded are true, and pressing toggles to false", async () => {
+  const user = userEvent.setup();
+  const onRailVisibleChange = vi.fn();
+  render(<RecordRailToggle railVisible={true} onRailVisibleChange={onRailVisibleChange} />);
+  const button = screen.getByRole("button", { name: "Hide Related List" });
+  expect(button.getAttribute("aria-pressed")).toBe("true");
+  expect(button.getAttribute("aria-expanded")).toBe("true");
+  expect(button.getAttribute("aria-controls")).toBe("record-related-rail");
+  await user.click(button);
+  expect(onRailVisibleChange).toHaveBeenCalledExactlyOnceWith(false);
+});
 
-  it("offers to show the rail when it is hidden", () => {
-    render(<RecordRailToggle railVisible={false} onRailVisibleChange={() => {}} />);
-    const button = screen.getByRole("button", { name: "Show Related List" });
-    expect(button.getAttribute("aria-expanded")).toBe("false");
-    expect(button.getAttribute("aria-pressed")).toBe("false");
-  });
-
-  it("reports hiding when pressed while visible", async () => {
-    const onChange = vi.fn();
-    render(<RecordRailToggle railVisible onRailVisibleChange={onChange} />);
-    await userEvent.setup().click(screen.getByRole("button", { name: "Hide Related List" }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(false);
-  });
-
-  it("reports showing when pressed while hidden", async () => {
-    const onChange = vi.fn();
-    render(<RecordRailToggle railVisible={false} onRailVisibleChange={onChange} />);
-    await userEvent.setup().click(screen.getByRole("button", { name: "Show Related List" }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(true);
-  });
+test("when railVisible is false: button is named 'Show Related List', aria-pressed and aria-expanded are false, and pressing toggles to true", async () => {
+  const user = userEvent.setup();
+  const onRailVisibleChange = vi.fn();
+  render(<RecordRailToggle railVisible={false} onRailVisibleChange={onRailVisibleChange} />);
+  const button = screen.getByRole("button", { name: "Show Related List" });
+  expect(button.getAttribute("aria-pressed")).toBe("false");
+  expect(button.getAttribute("aria-expanded")).toBe("false");
+  expect(button.getAttribute("aria-controls")).toBe("record-related-rail");
+  await user.click(button);
+  expect(onRailVisibleChange).toHaveBeenCalledExactlyOnceWith(true);
 });
