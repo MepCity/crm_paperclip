@@ -41,9 +41,10 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
   },
   detail: {
     layout: "activity",
-    titleGlyph: Icons.checkSquare,
     header: tasksRecordHeaderIdentity,
-    hasPortrait: false,
+    hasPortrait: true,
+    portraitAppearance: "inline",
+    portraitIcon: Icons.checkSquare,
     recordNavigation: true,
     addTags: { label: "Add Tags", laterModule: "M5" },
     buildHeaderCommands: (record, { editHref, save }) => [
