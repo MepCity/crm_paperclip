@@ -15,7 +15,7 @@ test("exports a complete Deals module screen definition", () => {
   expect(dealsScreenDefinition.detail.recordNavigation).toBe(false);
   expect(dealsScreenDefinition.detail.headerCurrency).toBe(true);
   expect(dealsScreenDefinition.detail.statusRibbon).toBeUndefined();
-  expect(dealsScreenDefinition.detail.addTags).toEqual({ label: "Add Tags", laterModule: "M6" });
+  expect(dealsScreenDefinition.detail.addTags).toEqual({ label: "Add Tags" });
   expect(dealsScreenDefinition.detail.headerCommands).toEqual([
     { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
   ]);

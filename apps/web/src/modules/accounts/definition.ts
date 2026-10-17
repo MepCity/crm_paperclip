@@ -63,7 +63,7 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
     Screen: AccountRecordScreen,
     header: accountsRecordHeaderIdentity,
     portraitIcon: AccountBuildingPlaceholder,
-    addTags: { label: "Add Tags", laterModule: "M6" },
+    addTags: { label: "Add Tags" },
     headerCommands: [
       { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
     ],
