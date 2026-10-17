@@ -443,3 +443,44 @@ export const callsRecordServiceContractModule: RecordServiceContractModuleDefini
     },
   },
 };
+
+export const campaignsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Campaigns",
+  singularLabel: "Campaign",
+  pluralLabel: "Campaigns",
+  expectedFieldCount: 21,
+  buildMinimalValidInput: (extra = {}) => ({
+    Campaign_Name: "Contract Campaign",
+    Description: "Contract marker",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Description",
+    sample: "Contract marker",
+    updated: "Updated marker",
+    tenantOther: "Other marker",
+  },
+  duplicatePermittedField: "Campaign_Name",
+  sortFields: ["Campaign_Name", "Start_Date"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Campaign_Name", 3],
+    ["Num_sent", 3],
+    ["Expected_Revenue", "3"],
+    ["Parent_Campaign", "campaign"],
+  ],
+  optional: {
+    date: { field: "Start_Date" },
+    lengthValidationField: "Campaign_Name",
+    massUpdateScenario: { field: "Status", value: "Active" },
+    massUpdateInvalidPicklist: { field: "Status", value: "Unknown" },
+    connectedLookup: {
+      field: "Connected_To__s",
+      linkedModuleApiName: "Contacts",
+      syntheticReferenceId: "synthetic-contact",
+      updatedReferenceId: "updated-contact",
+      contractLinkedReferenceId: "contract-linked-contact",
+    },
+  },
+};
