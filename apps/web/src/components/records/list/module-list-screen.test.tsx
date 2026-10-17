@@ -1751,4 +1751,3 @@ it("requests the hidden all-day field for Meetings without adding a visible colu
     /\/tab\/Meetings\/[^/]+\/edit$/,
   );
 });
-
