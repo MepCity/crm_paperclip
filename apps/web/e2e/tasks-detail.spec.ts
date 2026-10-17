@@ -30,10 +30,8 @@ test.describe("Tasks record detail", () => {
     await openTaskFromList(page, org.slug);
     const header = page.locator("[data-record-header]");
     await expect(header.getByText("Task 250")).toBeVisible();
-    await expect(header.locator("[data-record-portrait]")).toHaveCount(0);
     await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
     // Close Task comes before Edit, More Options last.
-    const labels = await header.getByRole("button").or(header.getByRole("link")).allInnerTexts();
     const wanted = ["Close Task", "Edit", "More Options", "Previous Record", "Next Record"];
     const names = await header
       .locator("button, a")
@@ -41,7 +39,7 @@ test.describe("Tasks record detail", () => {
         els.map((el) => (el.textContent?.trim() || el.getAttribute("aria-label") || "").trim()),
       );
     expect(names.filter((n) => wanted.includes(n))).toEqual(wanted);
-    expect(labels.length).toBeGreaterThan(0);
+    await expect(header.locator("[data-record-portrait]")).toBeVisible();
     // Last Update sits in the tab row, at its end.
     await expect(page.locator("[data-record-tab-row]").getByText(/Last Update/i)).toBeVisible();
     await expect(page.locator("[data-record-rail-control]")).toHaveCount(0);
@@ -54,6 +52,13 @@ test.describe("Tasks record detail", () => {
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
     await expect(page.getByText("Task Information")).toBeVisible();
+    const infoText = (await page.locator("[data-record-frame]").innerText()).replace(/\s+/g, " ");
+    const infoStart = infoText.indexOf("Task Information");
+    const infoPositions = ["Task Owner", "Subject", "Due Date", "Contact Name", "Related To"].map(
+      (label) => infoText.indexOf(label, infoStart),
+    );
+    expect(infoPositions.every((p) => p >= 0)).toBe(true);
+    expect(infoPositions).toEqual([...infoPositions].sort((x, y) => x - y));
     // No related list rail on activity records.
     await expect(page.locator("[data-record-rail]")).toHaveCount(0);
     ignoreFailedResponses(pageErrors, [400]);
@@ -118,9 +123,17 @@ test.describe("Tasks record detail", () => {
     for (const name of ["Tasks", "Meetings", "Calls"]) {
       await expect(open.getByRole("button", { name })).toBeVisible();
     }
-    await expect(open.getByRole("button", { name: /Meetings/ })).toContainText("0");
     const callButtons = panel.getByRole("button", { name: /^Call (phone|mobile)$/ });
     await expect(callButtons).toHaveCount(2);
+    for (const index of [0, 1]) {
+      const box = await callButtons.nth(index).locator("svg").boundingBox();
+      expect(box?.width ?? 0).toBeGreaterThan(0);
+    }
+    // The seeded contact has Deals and open tasks, so the panel is live.
+    const dealSummary = panel.getByRole("region", { name: "Deal Summary" });
+    await expect(dealSummary.getByRole("link").first()).toBeVisible({ timeout: 15_000 });
+    const tasksCount = open.getByRole("button", { name: /Tasks/ }).locator("[data-count-badge]");
+    await expect(tasksCount).not.toHaveText("0");
     ignoreFailedResponses(pageErrors, [400]);
   });
 
