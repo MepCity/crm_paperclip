@@ -20,6 +20,7 @@ import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
 import { RecordTags } from "@/components/records/tags/record-tags";
+import { useRecordNoteEvents } from "@/components/records/notes/use-record-note-events";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -147,6 +148,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const noteEvents = useRecordNoteEvents(moduleApiName, recordId);
   const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
@@ -378,10 +380,13 @@ export function RecordDetailScreen({
       <TimelineHistory
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={rules.timeline.events.map((event) => ({
-          ...event,
-          kind: rules.timeline.normalizeEventKind(event.kind),
-        }))}
+        events={[
+          ...rules.timeline.events.map((event) => ({
+            ...event,
+            kind: rules.timeline.normalizeEventKind(event.kind),
+          })),
+          ...noteEvents,
+        ]}
         format={DEFAULT_FORMAT}
         initialFilterExpanded={false}
         modulesLabel="Modules"
