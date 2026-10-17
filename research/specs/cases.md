@@ -90,6 +90,17 @@ Rest: as in m8f-cases-create; covered by the overlay: KF-21–KF-23. No search b
 
 Rest: as in m8f-cases-create; covered by the overlay: KF-11–KF-16. No search box is painted. The selected row has a check mark. Display label Web agrees with M1; D1 uses a longer channel name.
 
+### Control inventory — m8f-cases-priority
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-21.1 | Priority list | -None- | menu item | option 1 | Initially checked; no selection | seen (m8f-cases-priority) | M8 | new |
+| KF-21.2 | Priority list | High | menu item | option 2 | not observed | seen (m8f-cases-priority) | M8 | new |
+| KF-21.3 | Priority list | Medium | menu item | option 3 | not observed | seen (m8f-cases-priority) | M8 | new |
+| KF-21.4 | Priority list | Low | menu item | option 4 | not observed | seen (m8f-cases-priority) | M8 | new |
+
+Rest: as in m8f-cases-create; covered by the overlay: KF-22–KF-23 and the upper edge of KF-24. No search box is painted. The selected row has a check mark. Options agree with M1; no option was selected.
+
 ### Shell controls missing from app-shell.md
 
 The lower rail is visible without a user preference change. These shell differences are recorded once; all have untested navigation behaviour. Module names are labels, not copied assets.
@@ -128,7 +139,7 @@ The initial viewport visually establishes KF-05–KF-27. Solution, Add Comment a
 | Origin Email conditional validation | D1 describes an email requirement for email-origin cases; no option was selected | Gate question: confirm conditional rule against the current layout; do not claim an observed marker or message. |
 | Successful Save / Save and New, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Cases-specific outcome. |
 | Lower form and repeated footer buttons | not observed: below the initial viewport | Solution Information is extracted and configured, but its rendered field and footer positions need a permitted scroll capture; KF-28–KF-31 remain unassigned. |
-| Account, Deal, Contact and Product picker interiors; Priority options | pending capture after interrupted picker sequence | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
+| Account, Deal, Contact and Product picker interiors | pending capture after interrupted picker sequence | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
 | Field hover affordances and validation tooltips | not observed | Shared form pattern only, pending evidence. |
 | Shell ownership for My Jobs, Services, Projects and utility shortcuts | visible labels / icons; destination not opened | Keep unknown module attribution until scope is decided. |
 
@@ -391,6 +402,95 @@ Source ordinals are one-based in controls.json; duplicate wrappers map to the sa
 | KF-10.2 | 253 |
 | KF-10.3 | 254 |
 | KF-10.4 | 255 |
+
+Self-audit: 276 entries → 76 numbered controls (159 mapped entries); 117 excluded entries. Screenshot-only: KF-06, KF-33, KF-34 and SH-46.
+
+
+### Reconciliation — m8f-cases-priority
+
+Source ordinals are one-based in controls.json; duplicate wrappers map to the same logical control. All source entries are covered. Screenshot-only controls are stated separately.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| Excluded: structural wrapper, duplicate decoration or non-control text | 1, 4, 109, 111, 114, 135–136, 139, 151–152, 200, 251, 256, 259, 262, 265, 268, 271–272, 276 |
+| SH-01 | 2–3 |
+| KF-15 | 177–180 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 108, 110, 118–119, 121–122, 124–125, 128–129, 146–150, 160, 170, 176, 182, 213–222, 224–238 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| Excluded: clipped or outside viewport | 37–65, 134, 205–212, 239, 275 |
+| KF-S01 | 66–68 |
+| KF-S02 | 69–71 |
+| KF-S03 | 72–74 |
+| KF-S04 | 75–77 |
+| KF-S05 | 78–80 |
+| KF-S06 | 81–83 |
+| KF-S07 | 84–86 |
+| KF-S08 | 87–89 |
+| KF-S09 | 90–92 |
+| KF-S10 | 93–95 |
+| KF-S11 | 96–98 |
+| KF-S12 | 99–101 |
+| KF-S13 | 102–104 |
+| KF-S14 | 105–107 |
+| SH-26 | 112 |
+| SH-27 | 113 |
+| SH-28 | 115 |
+| SH-29 | 116 |
+| SH-30 | 117 |
+| SH-31 | 120 |
+| SH-32 | 123 |
+| SH-33 | 126–127 |
+| SH-34 | 130–133 |
+| KF-01 | 137–138 |
+| KF-04 | 140–141 |
+| KF-03 | 142–143 |
+| KF-02 | 144–145 |
+| KF-05 | 153–154 |
+| KF-07 | 155–158 |
+| KF-08 | 159, 257–258 |
+| KF-09 | 161–162 |
+| KF-10 | 163–164 |
+| KF-11 | 165–168 |
+| KF-12 | 169, 260–261 |
+| KF-13 | 171–174 |
+| KF-14 | 175, 263–264 |
+| KF-16 | 181, 266–267 |
+| KF-17 | 183–184 |
+| KF-19 | 185, 269–270 |
+| KF-18 | 186–187 |
+| KF-20 | 188–189 |
+| KF-21 | 190–191 |
+| KF-22 | 192–193 |
+| KF-23 | 194–195 |
+| KF-24 | 196–197 |
+| KF-25 | 198–199 |
+| KF-26 | 201–202, 273 |
+| KF-27 | 203–204, 274 |
+| KF-32 | 223 |
+| SH-35 | 240 |
+| SH-36 | 241 |
+| SH-37 | 242 |
+| SH-38 | 243 |
+| SH-39 | 244 |
+| SH-40 | 245 |
+| SH-41 | 246 |
+| SH-42 | 247 |
+| SH-43 | 248 |
+| SH-44 | 249 |
+| SH-45 | 250 |
+| KF-21.1 | 252 |
+| KF-21.2 | 253 |
+| KF-21.3 | 254 |
+| KF-21.4 | 255 |
 
 Self-audit: 276 entries → 76 numbered controls (159 mapped entries); 117 excluded entries. Screenshot-only: KF-06, KF-33, KF-34 and SH-46.
 
