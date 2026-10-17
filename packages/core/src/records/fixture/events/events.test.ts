@@ -119,6 +119,7 @@ describe("Events", () => {
     expect(meta.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
       "Remind_At",
       "Participants",
+      "Tag",
       "Remind_Participants",
     ]);
     expect(meta.fields.find((f) => f.apiName === "Participants")?.dataType).toBe("bigint");
@@ -250,10 +251,10 @@ describe("Events", () => {
     group = groups.find((g) => g.records.some((r) => r.id === second.id));
     expect(group?.conflictFields).toContain("Participants");
   });
-  it("rejects arrays on Tag and other unmarked fields", async () => {
-    const tag = fields.get("Tag");
+  it("rejects direct writes to managed Tag and arrays on unmarked fields", async () => {
+    const tag = (await make().getModule("Events")).fields.find((field) => field.apiName === "Tag");
     if (!tag) throw new Error("Missing Tag");
-    expect(acceptsFieldValue(tag, [])).toBe(false);
+    expect(acceptsFieldValue(tag, [])).toBe(true);
     await expect(make().create("Events", input({ Tag: [] }))).rejects.toBeInstanceOf(
       ValidationError,
     );

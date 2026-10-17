@@ -1,5 +1,6 @@
 import { activityParentIds, activityRules } from "../activities";
 import type { FixtureModuleHooks } from "./hooks";
+import { removeRecordTags } from "./tags";
 
 /** Attach to parent bundles; merge intentionally does not dispatch delete hooks. */
 export function activityDeleteHook(
@@ -15,6 +16,7 @@ export function activityDeleteHook(
         if (activityParentIds(module, record).some((id) => removed.has(id))) {
           // All children are removed, including locked and completed activities.
           activities.delete(record.id);
+          removeRecordTags(ctx.moduleStore(activityModule), [record.id]);
         }
       }
     }
