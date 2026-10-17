@@ -1,10 +1,12 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { Button, DialogTrigger } from "react-aria-components";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { render } from "@/test/render";
 import { SearchLayer } from "./search-layer";
 
 describe("SearchLayer", () => {
+  afterEach(cleanup);
+
   it("renders nothing until its trigger opens it", () => {
     render(
       <DialogTrigger>
