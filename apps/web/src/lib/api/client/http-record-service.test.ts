@@ -304,8 +304,8 @@ describe("HTTP record service", () => {
       "/crm/v2.2/Leads/bulk?cvid=view-1&page=2&per_page=30&sort_by=Last_Name&sort_order=asc&fields=Last_Name",
       "POST",
       {
-        activity_filter: { choice: "overdue" },
         campaign_filter: { campaign_ids: ["synthetic"], member_statuses: ["Opened"] },
+        activity_filter: { choice: "overdue" },
         include_activity_summary: true,
         filters: wireFilter,
         search: "A & B",
