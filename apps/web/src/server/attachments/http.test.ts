@@ -87,6 +87,27 @@ function expectWindowArgs(
 }
 
 describe("Attachments HTTP handlers", () => {
+  it("rejects Calls before reading records or processing attachment inputs", async () => {
+    const deps = setup();
+    deps.records.get = async () => {
+      throw new Error("Unsupported attachment parents must not reach record lookup.");
+    };
+    const parent = { module: "Calls", recordId: randomUUID() };
+    const attachment = { ...parent, attachmentId: randomUUID() };
+    for (const [params, init] of [
+      [parent, {}],
+      [parent, { method: "POST", body: form({ file: pdf() }) }],
+      [parent, { method: "POST", body: form({ attachmentUrl: "https://example.test/doc" }) }],
+      [attachment, {}],
+      [attachment, { method: "DELETE" }],
+    ] as const) {
+      const response = await call(deps, params, init);
+      expect(response.status).toBe(404);
+      expect((await response.json()).code).toBe("not_found");
+    }
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+  });
+
   it("uploads a file, lists it, downloads it and deletes it", async () => {
     const deps = setup();
     const id = await lead(deps);
