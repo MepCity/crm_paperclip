@@ -505,7 +505,7 @@ Edit, More Options (including its opened contents), previous/next, Overview, Tim
 
 ## Create and edit form
 
-Research in progress for MEP-841. No completed Solutions form capture is available in this worktree yet. There is no observed SF inventory; reserve SF-01 onward for screenshot-backed controls. Do not treat the configuration below as a rendered form or copy the Cases field order into this module.
+Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. Open Status and Product lookup states and final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
 
 ### Sources and limits
 
@@ -515,13 +515,134 @@ Research in progress for MEP-841. No completed Solutions form capture is availab
 
 ### Form fields versus metadata
 
-M1 defines 20 fields. Solution Number is an auto-number and read-only in the Standard layout. Solution Owner is an owner lookup, Product Name targets Products, Solution Title is text, Status is a picklist, and Question / Answer are multiline fields. These types do not prove their rendered positions or controls.
+M1 defines 20 fields. Solution Number is an auto-number and read-only in the Standard layout. Solution Owner is an owner lookup, Product Name targets Products, Solution Title is text, Status is a picklist, and Question / Answer are multiline fields. Rendered positions are established independently by m8f-solutions-create below.
 
-The field dictionary marks Solution Title as system mandatory; the Standard layout additionally marks Question and Answer required. D1 also describes all three as mandatory. Implementation must consider layout requirements as well as system requirements; visible markers and exact error behaviour remain unobserved.
+The field dictionary marks Solution Title as system mandatory; the Standard layout additionally marks Question and Answer required. D1 also describes all three as mandatory. Implementation must consider layout requirements as well as system requirements; m8f-solutions-create confirms required input-edge markers on all three. Exact error behaviour remains unobserved.
 
-Configured Status options are Draft, Reviewed, Duplicate; no open dropdown or default has been observed. Published exists as a boolean in the field dictionary but is absent from the Standard layout sections. It must not be invented as a Create form checkbox.
+Configured Status options are Draft, Reviewed, Duplicate; the closed form displays Draft. The open dropdown is not yet observed. Published exists as a boolean in the field dictionary but is absent from the Standard layout sections. It must not be invented as a Create form checkbox.
 
 D1 describes Add Comment as available in edit mode and absent during creation. Metadata places Add Comment in Description Information, while read-only Comments has its own section. This is documented/configured information only; no comment action is permitted in this research.
+
+### Layout — m8f-solutions-create
+
+Full-page Create Solution form. Solution Information has three left-column rows (Solution Number, Solution Title, Status) and two right-column rows (Solution Owner, Product Name). Description Information follows with Question then Answer. All seven fields and the footer are painted in the initial viewport. No lower form capture is needed to establish these controls.
+
+The owner control has a focus outline on initial rendering; no field was focused by the researcher. Solution Number is blank with a lock, Status displays Draft, and the other editable fields are blank except the prefilled owner. Required input-edge markers appear on Solution Title, Question and Answer. Question and Answer have resize grips. No validation message is painted. Cancel / Save and New / Save occur only in the title strip; no repeated bottom action group is visible.
+
+Absent here: image section/upload, Published checkbox, Add Comment, Comments section, Created/Modified fields and other system fields in metadata. This absence applies to the rendered Create form, not Edit. Standard View and Create a custom form page are visible but never used. Form view changes are persisted preferences and remain forbidden.
+
+### Control inventory — m8f-solutions-create
+
+Shell: SH-01–SH-11, SH-24–SH-25 and SH-26–SH-46 as in [contacts.md](contacts.md); SH-08 reads MCP. Lower rail: SL-41–SL-52 as in this file, with Solutions active. SH-23 is only a clipped fragment beneath Search; SH-12–SH-22 are covered by the fixed rail header. My Jobs is only a bottom-edge fragment; Services and Projects are outside the visible rail. No shell rows are repeated and no shell control was used.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SF-01 | Header | Edit Page Layout | link | after title | same | seen (m8f-solutions-create) | M11 | AF-01 (accounts-form.md) |
+| SF-02 | Header | Cancel | button | right group, first | same | seen (m8f-solutions-create) | M8 | AF-02 (accounts-form.md) |
+| SF-03 | Header | Save and New | button | right group, second | same | seen (m8f-solutions-create) | M8 | AF-03 (accounts-form.md) |
+| SF-04 | Header | Save | button | right group, third | same | seen (m8f-solutions-create) | M8 | AF-04 (accounts-form.md) |
+| SF-05 | Solution Information | Solution Number | input | left, row 1 | Blank and locked; not editable | seen (m8f-solutions-create) | M8 | KF-05 (cases.md) |
+| SF-06 | Solution Information | Lock icon | badge | left, row 1, input right edge | Read-only indicator | seen (m8f-solutions-create) | M8 | KF-06 (cases.md) |
+| SF-07 | Solution Information | Solution Title | input | left, row 2 | Blank; required input-edge marker | seen (m8f-solutions-create) | M8 | new |
+| SF-08 | Solution Information | Status | select | left, row 3 | Displays Draft; not opened in this capture | seen (m8f-solutions-create) | M8 | KF-20 moved (cases.md) |
+| SF-09 | Solution Information | Solution Owner | select | right, row 1 | Prefilled; identity omitted; not opened | seen (m8f-solutions-create) | M8 | KF-18 (cases.md) |
+| SF-10 | Solution Information | User lookup icon | icon button | right, row 1, input right edge | same | seen (m8f-solutions-create) | M8 | AF-07 moved (accounts-form.md) |
+| SF-11 | Solution Information | Product Name | input | right, row 2 | Blank lookup input; no typing | seen (m8f-solutions-create) | P2 | KF-07 moved (cases.md) |
+| SF-12 | Solution Information | Product lookup icon | icon button | right, row 2, input right edge | not observed; not opened | seen (m8f-solutions-create) | P2 | KF-08 moved (cases.md) |
+| SF-13 | Description Information | Question | input | first full-width row | Blank multiline editor; required input-edge marker | seen (m8f-solutions-create) | M8 | new |
+| SF-14 | Description Information | Answer | input | second full-width row | Blank multiline editor; required input-edge marker | seen (m8f-solutions-create) | M8 | new |
+| SF-15 | Description Information | Resize grip | icon button | Question editor, lower-right corner | not operated | seen (m8f-solutions-create) | M8 | DF-29 moved (deals-form.md) |
+| SF-16 | Description Information | Resize grip | icon button | Answer editor, lower-right corner | not operated | seen (m8f-solutions-create) | M8 | DF-29 moved (deals-form.md) |
+| SF-17 | Form footer | Create Form Views / Standard View | select | right group, before custom-page action | Current form view; never opened or changed | seen (m8f-solutions-create) | M11 | DF-26 (deals-form.md) |
+| SF-18 | Form footer | Create a custom form page | button | far right | Form customization entry; never used | seen (m8f-solutions-create) | M11 | DF-27 (deals-form.md) |
+| SF-19 | Right edge | Client Script | tab | page right edge | same | seen (m8f-solutions-create) | M11 | AF-47 (accounts-form.md) |
+
+### Form fields versus metadata — observed Create
+
+| Field | Metadata | Rendered control / position |
+| --- | --- | --- |
+| Solution_Number | autonumber | SF-05, left row 1, locked |
+| Solution_Title | required text | SF-07, left row 2, required marker |
+| Status | picklist | SF-08, left row 3, Draft displayed |
+| Owner | ownerlookup | SF-09–SF-10, right row 1 |
+| Product_Name | Products lookup | SF-11–SF-12, right row 2 |
+| Question | textarea, Standard layout required | SF-13, first Description Information row, required marker |
+| Answer | textarea, Standard layout required | SF-14, second Description Information row, required marker |
+
+### Reconciliation — m8f-solutions-create
+
+Source ordinals are one-based in controls.json. Multiple source nodes for one visible control share one number; hidden nodes remain exclusions even when another wrapper is mapped.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| SH-01 | 2–3 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| SH-24 | 60–62 |
+| SH-25 | 63–65 |
+| SL-41 | 66–68 |
+| SL-42 | 69–71 |
+| SL-43 | 72–74 |
+| SL-44 | 75–77 |
+| SL-45 | 78–80 |
+| SL-46 | 81–83 |
+| SL-47 | 84–86 |
+| SL-48 | 87–89 |
+| SL-49 | 90–92 |
+| SL-50 | 93–95 |
+| SL-51 | 96–98 |
+| SL-52 | 107 |
+| SH-26 | 110 |
+| SH-27 | 111 |
+| SH-28 | 113 |
+| SH-29 | 114 |
+| SH-30 | 115 |
+| SH-31 | 118 |
+| SH-32 | 121 |
+| SH-33 | 124–125 |
+| SH-34 | 128–131 |
+| SF-01 | 135–136 |
+| SF-02 | 142–143 |
+| SF-03 | 140–141 |
+| SF-04 | 138–139 |
+| SF-05 | 151–152 |
+| SF-07 | 153–154 |
+| SF-08 | 155–156 |
+| SF-09 | 158–159 |
+| SF-10 | 157, 215–217 |
+| SF-11 | 160–163 |
+| SF-12 | 164, 218–220 |
+| SF-13 | 167–168, 223 |
+| SF-14 | 169–170, 224 |
+| SF-17 | 172–174, 225 |
+| SF-18 | 175–176 |
+| SF-19 | 187 |
+| SH-35 | 204 |
+| SH-36 | 205 |
+| SH-37 | 206 |
+| SH-38 | 207 |
+| SH-39 | 208 |
+| SH-40 | 209 |
+| SH-41 | 210 |
+| SH-42 | 211 |
+| SH-43 | 212 |
+| SH-44 | 213 |
+| SH-45 | 214 |
+| Excluded: structural wrapper, heading, duplicate decoration or non-control text | 1, 4, 109, 112, 133–134, 137, 149–150, 166, 171, 203, 221–222 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 106, 108, 116–117, 119–120, 122–123, 126–127, 144–148, 165, 177–186, 188–202 |
+| Excluded: clipped, offscreen or covered by fixed rail header | 37–59, 99–105, 132 |
+
+Self-audit: 225 entries → 61 numbered controls (126 mapped entries); 99 excluded entries. Image-only: SF-06, SF-15, SF-16 and SH-46. The screenshot was opened and checked across the full shell, form, right edge and footer. All 225 source entries are accounted for exactly once. No extra image-only control was found.
+
+Capture safety: zero clicks and skipped clicks; only one expected shell trigger POST, no new unexpected non-GET path or count increase relative to the prior Solutions list baseline. Reminder, notification and three telemetry calls were blocked. API calls 49; pre-capture 1-minute load 64.60. No typing, selection, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
 
 ## Capture self-audit
 
@@ -529,6 +650,7 @@ Numbers below count distinct inventory references receiving source items; image-
 
 | Slug | controls.json items | Distinct mapped numbers | Excluded items | Image-only additions |
 | --- | --- | --- | --- | --- |
+| m8f-solutions-create | 225 | 61 | 99 | 4 (lock, two resize grips, trash) |
 | m8-solutions-list-base | 285 | 86 | 128 | 1 (trash) |
 | m8-solutions-list-views | 303 | 95 | 132 | 1 (trash) |
 | m8-solutions-list-actions | 299 | 94 | 127 | 3 (trash, Sheet view, Print View) |
@@ -539,6 +661,8 @@ All capture safety comparisons were posted to the issue before the next capture.
 Shell differences are covered by SL-41–SL-53 and the Cases shell-gap list; Services and Projects are not visible here.
 
 ## Capture refs
+
+- `m8f-solutions-create` — painted Create form and footer; zero clicks.
 
 - `m8-solutions-list-base` — painted default empty list, filter panel already open.
 - `m8-solutions-list-views` — open system-view menu; no view selected.
@@ -567,12 +691,12 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 
 | Gap | Evidence | Temporary implementation reference / question |
 | --- | --- | --- |
-| Create sections, field order, default Status, required markers and buttons | not observed; capture pending | Use M1 for the data model, not the screen inventory. Establish SF numbers only from a completed image and controls reconciliation. |
-| Edit form and availability of an existing record | not observed; list baseline pending | No sample record may be created. Apply the parent research issue's empty-list fallback only if a painted list establishes zero records. |
+| Create form | observed in m8f-solutions-create, SF-01–SF-19 | Seven fields, default Draft, three required markers, title actions and footer established above. |
+| Edit form | not observed; prior painted All Solutions list and detail-empty capture establish zero records | Empty-list fallback applies; no sample record may be created. Final passive comparison remains pending. |
 | Status dropdown and Product lookup interior | not observed; capture pending | No selection or search is allowed. |
 | Empty required-field errors | M1 layout and D1 require Solution Title, Question, Answer; Save is forbidden | Ref: record-detail.md, Layout / Flows, Leads invalid-create evidence. Exact messages, timing and focus remain not observable without a write. |
 | Save / Save and New success, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Solutions-specific outcome. |
-| Published field and comment editing | metadata / D1 only | Confirm the rendered form without toggling, publishing or submitting comments. |
+| Published field and comment editing | absent in observed Create; Edit not observed | D1 documents edit-mode Add Comment only; no toggling, publishing or comment submission. |
 
 | Item | Source | Provisional rule proposal |
 | --- | --- | --- |
