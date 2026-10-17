@@ -5,6 +5,7 @@ import {
   SOLUTIONS_DELETE_CONFIRM_TITLE,
   SOLUTIONS_FORM_CREATE_TITLE,
   SOLUTIONS_FORM_EDIT_TITLE,
+  SOLUTIONS_FORM_PICKLIST_NONE,
   SOLUTIONS_FORM_SYSTEM_FIELDS,
   solutionsFormRules,
 } from "./solutions-form-rules";
@@ -14,6 +15,7 @@ test("Solutions form rules configure owner, defaults, omitted fields, and titles
   expect(SOLUTIONS_FORM_EDIT_TITLE).toBe("Edit Solution");
   expect(SOLUTIONS_DELETE_CONFIRM_TITLE).toBe("Delete Solution");
   expect(SOLUTIONS_DELETE_CONFIRM_MESSAGE).toBe("Are you sure you want to delete this Solution?");
+  expect(SOLUTIONS_FORM_PICKLIST_NONE).toBe("-None-");
 
   expect(solutionsFormRules.owner).toBe("Owner");
   expect(solutionsFormRules.laterModuleFields).toEqual({ Product_Name: "P2" });

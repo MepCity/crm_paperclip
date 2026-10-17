@@ -4,10 +4,10 @@ import { solutionRecord } from "./test-metadata";
 
 test("solutionsRecordHeaderIdentity returns Solution_Title as title and disables portrait and recordNavigation", () => {
   const result = solutionsRecordHeaderIdentity(
-    solutionRecord({ Solution_Title: "Email Sync Solution" }),
+    solutionRecord({ Solution_Title: "How to reset router" }),
   );
   expect(result).toEqual({
-    title: "Email Sync Solution",
+    title: "How to reset router",
     hasPortrait: false,
     recordNavigation: false,
   });

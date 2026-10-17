@@ -9,14 +9,15 @@ test("buildSolutionsBusinessCardFields returns empty array", () => {
   expect(buildSolutionsBusinessCardFields(solutionMetadata(), solutionRecord())).toEqual([]);
 });
 
-test("buildSolutionsDetailSections builds layout sections; 1-column sections and description span full width", () => {
+test("buildSolutionsDetailSections builds layout sections; 1-column sections and description/comment span full width", () => {
   const metadata = {
     ...solutionMetadata([
       solutionField("Solution_Number"),
       solutionField("Solution_Title"),
       solutionField("Status"),
       solutionField("Description"),
-      solutionField("Solution"),
+      solutionField("Question"),
+      solutionField("Answer"),
     ]),
     layout: [
       {
@@ -32,10 +33,10 @@ test("buildSolutionsDetailSections builds layout sections; 1-column sections and
         fields: ["Description"],
       },
       {
-        label: "Solution Information Full",
-        columnCount: 1,
-        columns: [["Solution"]],
-        fields: ["Solution"],
+        label: "Comment Information",
+        columnCount: 2,
+        columns: [["Question"], ["Answer"]],
+        fields: ["Question", "Answer"],
       },
     ],
   };
@@ -43,20 +44,21 @@ test("buildSolutionsDetailSections builds layout sections; 1-column sections and
   const sections = buildSolutionsDetailSections(
     metadata,
     solutionRecord({
-      Solution_Number: "201",
-      Solution_Title: "Known Workaround",
+      Solution_Number: "SOL-001",
+      Solution_Title: "Network Setup",
       Status: "Draft",
-      Description: "Issue description",
-      Solution: "Steps to resolve",
+      Description: "Setup steps",
+      Question: "How to connect?",
+      Answer: "Follow instructions",
     }),
   );
 
   expect(sections.map((s) => s.title)).toEqual([
     "Solution Information",
     "Description Information",
-    "Solution Information Full",
+    "Comment Information",
   ]);
   expect(sections[0]?.fields.map((f) => f.column)).toEqual(["left", "left", "right"]);
   expect(sections[1]?.fields[0]?.column).toBe("full");
-  expect(sections[2]?.fields[0]?.column).toBe("full");
+  expect(sections[2]?.fields.map((f) => f.column)).toEqual(["full", "full"]);
 });
