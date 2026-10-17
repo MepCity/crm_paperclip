@@ -101,3 +101,33 @@
 .select-record-module-choice {
   padding: 0 var(--size-select-user-padding-x, 24px) 8px;
 }
+
+/* Optional controls use normal flow so errors and wrapped labels cannot overlap the table. */
+.select-record-modal-panel--with-options {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.select-record-modal-panel--with-options .top-aligned-modal-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.select-record-modal-panel--with-options .select-user-title,
+.select-record-modal-panel--with-options .select-user-search-row,
+.select-record-modal-panel--with-options .select-user-table-wrap,
+.select-record-modal-panel--with-options .select-record-pagination,
+.select-record-modal-panel--with-options .select-user-footer {
+  position: static;
+}
+
+.select-record-modal-panel--with-options .select-user-table-wrap {
+  max-height: 40vh;
+  flex-shrink: 0;
+}
+
+.select-record-modal-panel--with-options .select-user-footer {
+  justify-content: flex-end;
+}
