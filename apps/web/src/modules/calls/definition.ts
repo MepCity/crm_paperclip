@@ -53,7 +53,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     header: callsRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
-    addTags: { label: "Add Tags", laterModule: "M5" },
+    addTags: { label: "Add Tags", laterModule: "M6" },
     // Scheduled calls: Reschedule Call split button and Edit in More; other states keep Edit.
     buildHeaderCommands: (record, { editHref, save }) =>
       isCallScheduled(record)
