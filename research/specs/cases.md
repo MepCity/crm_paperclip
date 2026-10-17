@@ -101,6 +101,31 @@ Rest: as in m8f-cases-create; covered by the overlay: KF-11–KF-16. No search b
 
 Rest: as in m8f-cases-create; covered by the overlay: KF-22–KF-23 and the upper edge of KF-24. No search box is painted. The selected row has a check mark. Options agree with M1; no option was selected.
 
+### Control inventory — m8f-cases-account
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-14.1 | Account popup | Close cross | icon button | header, far right | same | seen (m8f-cases-account) | M3 | AF-11.1 |
+| KF-14.2 | Account popup | Search by Account Name | input | below title, left | same | seen (m8f-cases-account) | M3 | AF-11.2 |
+| KF-14.3 | Account popup | New Account | button | below title, right | same | seen (m8f-cases-account) | M3 | AF-11.3 |
+| KF-14.4 | Account popup | Table with down arrow icon | icon button | table header, first | same | seen (m8f-cases-account) | M3 | AF-11.4 |
+| KF-14.5 | Account popup | Account Name | column header | table header, text column 1 | same | seen (m8f-cases-account) | M3 | AF-11.5 |
+| KF-14.6 | Account popup | Column options | icon button | text column 1, right | same | seen (m8f-cases-account) | M3 | AF-11.6 |
+| KF-14.7 | Account popup | Phone | column header | table header, text column 2 | same | seen (m8f-cases-account) | M3 | AF-11.7 |
+| KF-14.8 | Account popup | Column options | icon button | text column 2, right | same | seen (m8f-cases-account) | M3 | AF-11.8 |
+| KF-14.9 | Account popup | Website | column header | table header, text column 3 | same | seen (m8f-cases-account) | M3 | AF-11.9 |
+| KF-14.10 | Account popup | Column options | icon button | text column 3, right | same | seen (m8f-cases-account) | M3 | AF-11.10 |
+| KF-14.11 | Account popup | Account Owner | column header | table header, text column 4 | same | seen (m8f-cases-account) | M3 | AF-11.11 |
+| KF-14.12 | Account popup | Column options | icon button | text column 4, right | same | seen (m8f-cases-account) | M3 | AF-11.12 |
+| KF-14.13 | Account popup | Filter | icon button | table header, far right | same | seen (m8f-cases-account) | M3 | AF-11.13 |
+| KF-14.14 | Account popup | Row selection circle | toggle | each fully visible row, first | same | seen (m8f-cases-account) | M3 | AF-11.14 |
+| KF-14.15 | Account popup | Account record link | link | each fully visible row, Account Name | same | seen (m8f-cases-account) | M3 | AF-11.15 |
+| KF-14.16 | Account popup | Phone handset icon | icon button | populated Phone cells, after value | same | seen (m8f-cases-account) | M5 | AF-11.16 |
+| KF-14.17 | Account popup | Previous | icon button | footer, right group, first | same | seen (m8f-cases-account) | M3 | AF-11.17 |
+| KF-14.18 | Account popup | Next | icon button | footer, right group, second | same | seen (m8f-cases-account) | M3 | AF-11.18 |
+
+Rest: as in m8f-cases-create; covered by the overlay: all or part of KF-01–KF-25, and part of the shell. KF-26–KF-27 and KF-32 remain visible; underlying controls are inactive. The modal title is Choose Account. Five complete rows are visible, followed by a clipped row edge; record values are omitted. Previous is disabled and Next is enabled. Search has the initial focus ring without user typing. The table has an internal scrollbar; it was not scrolled. No popup action, row, column option, filter or pagination control was used. KF-14.16 is image-only. Absent here: multi-select confirmation buttons.
+
 ### Shell controls missing from app-shell.md
 
 The lower rail is visible without a user preference change. These shell differences are recorded once; all have untested navigation behaviour. Module names are labels, not copied assets.
@@ -139,7 +164,7 @@ The initial viewport visually establishes KF-05–KF-27. Solution, Add Comment a
 | Origin Email conditional validation | D1 describes an email requirement for email-origin cases; no option was selected | Gate question: confirm conditional rule against the current layout; do not claim an observed marker or message. |
 | Successful Save / Save and New, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Cases-specific outcome. |
 | Lower form and repeated footer buttons | not observed: below the initial viewport | Solution Information is extracted and configured, but its rendered field and footer positions need a permitted scroll capture; KF-28–KF-31 remain unassigned. |
-| Account, Deal, Contact and Product picker interiors | pending capture after interrupted picker sequence | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
+| Deal, Contact and Product picker interiors | pending capture; Account popup observed in m8f-cases-account | Partial step files without meta.json/network.json are excluded; do not infer popup controls from metadata. |
 | Field hover affordances and validation tooltips | not observed | Shared form pattern only, pending evidence. |
 | Shell ownership for My Jobs, Services, Projects and utility shortcuts | visible labels / icons; destination not opened | Keep unknown module attribution until scope is decided. |
 
@@ -494,3 +519,105 @@ Source ordinals are one-based in controls.json; duplicate wrappers map to the sa
 
 Self-audit: 276 entries → 76 numbered controls (159 mapped entries); 117 excluded entries. Screenshot-only: KF-06, KF-33, KF-34 and SH-46.
 
+
+### Reconciliation — m8f-cases-account
+
+Source ordinals are one-based. Underlying form and shell entries retain their base mapping, including entries covered by the modal; this does not claim they are operable. Repeated row controls share a number; record values are excluded.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| Excluded: structural wrapper, duplicate decoration or non-control text | 1, 4, 109, 111, 114, 135–136, 139, 151–152, 200, 253, 261–265, 275, 278, 389–390, 409–410, 414 |
+| SH-01 | 2–3 |
+| KF-15 | 177–180 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 108, 110, 118–119, 121–122, 124–125, 128–129, 146–150, 160, 170, 176, 182, 213–224, 226–240, 259, 276–277 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| Excluded: clipped or outside viewport | 37–65, 134, 205–212, 241, 334–388, 413 |
+| KF-S01 | 66–68 |
+| KF-S02 | 69–71 |
+| KF-S03 | 72–74 |
+| KF-S04 | 75–77 |
+| KF-S05 | 78–80 |
+| KF-S06 | 81–83 |
+| KF-S07 | 84–86 |
+| KF-S08 | 87–89 |
+| KF-S09 | 90–92 |
+| KF-S10 | 93–95 |
+| KF-S11 | 96–98 |
+| KF-S12 | 99–101 |
+| KF-S13 | 102–104 |
+| KF-S14 | 105–107 |
+| SH-26 | 112 |
+| SH-27 | 113 |
+| SH-28 | 115 |
+| SH-29 | 116 |
+| SH-30 | 117 |
+| SH-31 | 120 |
+| SH-32 | 123 |
+| SH-33 | 126–127 |
+| SH-34 | 130–133 |
+| KF-01 | 137–138 |
+| KF-04 | 140–141 |
+| KF-03 | 142–143 |
+| KF-02 | 144–145 |
+| KF-05 | 153–154 |
+| KF-07 | 155–158 |
+| KF-08 | 159, 393–395 |
+| KF-09 | 161–162 |
+| KF-10 | 163–164 |
+| KF-11 | 165–168 |
+| KF-12 | 169, 396–398 |
+| KF-13 | 171–174 |
+| KF-14 | 175, 399–401 |
+| KF-16 | 181, 402–404 |
+| KF-17 | 183–184 |
+| KF-19 | 185, 405–407 |
+| KF-18 | 186–187 |
+| KF-20 | 188–189 |
+| KF-21 | 190–191 |
+| KF-22 | 192–193 |
+| KF-23 | 194–195 |
+| KF-24 | 196–197 |
+| KF-25 | 198–199 |
+| KF-26 | 201–202, 411 |
+| KF-27 | 203–204, 412 |
+| KF-32 | 225 |
+| SH-35 | 242 |
+| SH-36 | 243 |
+| SH-37 | 244 |
+| SH-38 | 245 |
+| SH-39 | 246 |
+| SH-40 | 247 |
+| SH-41 | 248 |
+| SH-42 | 249 |
+| SH-43 | 250 |
+| SH-44 | 251 |
+| SH-45 | 252 |
+| KF-14.1 | 254 |
+| KF-14.2 | 255–256, 408 |
+| KF-14.3 | 257–258 |
+| KF-14.4 | 266 |
+| KF-14.5 | 267 |
+| KF-14.6 | 268 |
+| KF-14.7 | 269 |
+| KF-14.8 | 270 |
+| KF-14.9 | 271 |
+| KF-14.10 | 272 |
+| KF-14.11 | 273 |
+| KF-14.12 | 274 |
+| KF-14.13 | 260 |
+| KF-14.17 | 391 |
+| KF-14.18 | 392 |
+| KF-14.14 | 281–282, 292–293, 303–304, 314–315, 325–326 |
+| KF-14.15 | 284–285, 295–296, 306–307, 317–318, 328–329 |
+| Excluded: record-row wrappers and non-interactive record cell data | 279–280, 283, 286–291, 294, 297–302, 305, 308–313, 316, 319–324, 327, 330–333 |
+
+Self-audit: 414 entries → 89 numbered controls (198 mapped entries); 216 excluded entries. Missing / duplicate ordinals: 0. Screenshot-only: KF-14.16 (five handsets); base image-only KF-33, KF-34 and SH-46 remain visible, while KF-06 is covered. The five complete rows have unselected circles and record links. The clipped sixth row is excluded rather than inferred from the DOM.
