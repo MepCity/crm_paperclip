@@ -18,7 +18,7 @@ destination layouts remain unobserved.
 | ID | Position / state | Control and observed behaviour | Source / owner |
 | --- | --- | --- | --- |
 | PS-01 | Leads record header, upper right | More menu is open beside primary record actions. | `w2f-detail-more` / record detail |
-| PS-02 | Record More menu, after Clone | Share entry is visible. Initial dialog and permissions not observed. | `w2f-detail-more` / Share |
+| PS-02 | Record More menu, after Clone | Share entry is visible. Leads initial dialog observed below; permission outcomes unverified. | `w2f-detail-more` / Share |
 | PS-03 | Record More menu, below Delete and a separator | Print Preview entry is visible. Destination not observed. | `w2f-detail-more` / Print |
 | PS-04 | List toolbar, upper right | Actions opens the module menu. | Four Actions captures below / module list |
 | PS-05 | Actions menu, below Manage Tags | Drafts is a module-scoped navigation link in all four modules. | Four Actions captures / Drafts |
@@ -59,7 +59,7 @@ In `m6-leads-print-menu`, `m6-contacts-print-menu` and
 `m6-accounts-print-menu`, hovering Print View opens a compact submenu to the left
 of the Actions menu.
 The first row is Print Default view and the second is Print Using Canvas with
-an accent marker. These are action entries; neither was activated. The capture
+an accent marker. These are action entries; neither was activated in these three submenu captures. The later bounded Leads Default view attempt is recorded below. The capture
 therefore proves submenu structure, not whether either opens a preview page or
 immediately requests the browser print dialog. That distinction must be resolved
 before activation because this task excludes the print dialog.
@@ -195,3 +195,30 @@ zero popups, downloads and file choosers. The attempt establishes that this
 entry requests another window under the guard, not the contents of that window.
 Destination inspection requires a separate Platform Lead decision. Contacts and
 Accounts destinations, and Deals table availability, remain unobserved.
+
+
+## Reviewed print observation boundary (MEP-793, 2026-10-17)
+
+Platform Lead reviewed the local tool and both bounded attempts. The Preview
+selector exported by the menu is `[data-zcqa="print_preview"]`; Default view
+is `[data-zcqa="canvas-print-default-action"]`. Preview was skipped because
+the guard inspects attribute values as well as visible text. The earlier
+MEP-765 statement about Print text does not exempt these attributes. No retry,
+alternate selector or guard exception is approved.
+
+Default view requests a static shell in a new window; the originating script
+would populate it. Navigating directly to that shell is neither approved nor
+evidence of the print layout. Request blocking and the print counter currently
+apply only to the capture page, so permitting a popup would leave those
+protections behind. There is no safe destination observation with this tool.
+
+Both print destination layouts are explicitly outside this research pass and
+remain open questions. Existing menu evidence is the deliverable for this
+boundary. The same restriction applies to Contacts and Accounts: menu evidence
+only; do not click Preview or Default view. Deals remains in its existing
+stage-board state; do not switch views. No print destination is inferred.
+
+The platform decision proposes an implementation using our own tokens; it does
+not establish reference layout parity or grant board approval for a design
+deviation. Any later destination-parity work needs the board decision and a
+separate bounded tool change before further observation.

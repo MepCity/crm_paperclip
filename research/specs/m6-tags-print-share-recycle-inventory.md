@@ -1452,8 +1452,8 @@ No input, recipient, access-level, related-list or preference change.
 ## Earlier continuation preflight
 
 After Share completed, one-minute load was 101.77 (approved limit 50).
-Print Preview and independent Print Default view were not started. Neither
-approved attempt is consumed. Other module initial dialogs and filter details
+Print Preview and independent Print Default view were not started. At that earlier checkpoint neither
+approved attempt had been consumed; both were later consumed as recorded below. Other module initial dialogs and filter details
 remain unobserved. Existing completed captures must not be repeated.
 
 
@@ -1496,3 +1496,35 @@ downloads and file choosers. No target navigation, input or preference change.
 Both approved print attempts are now consumed. Print Preview needs guard review;
 Print Default view needs a decision about destination inspection. Neither target
 layout is inferred from the originating page or recorded address.
+
+
+## Reviewed print inventory boundary — MEP-793
+
+Platform Lead accepted menu-only evidence for this research pass. Preview's
+exported selector is `[data-zcqa="print_preview"]`; Default view's exported
+selector is `[data-zcqa="canvas-print-default-action"]`. Existing menu locations
+and numbered controls above remain the observed inventory. Neither destination
+has visible controls to inventory. Preview's attribute guard and Default view's
+refused static-shell window are technical limits, not destination observations.
+No retry or direct shell navigation is approved; Contacts and Accounts may only
+contribute menu evidence. Later layout parity requires a board decision followed
+by a separately bounded context-level protection change.
+
+
+## m6-contacts-tags-initial — ready failure, no dialog inventory (2026-10-17)
+
+`m6-contacts-tags-initial` reused the previously captured list-to-record link
+from `m6-notes-contacts-open`, without copying its record identity here.
+The ready probe now matches two elements. Ready failed after 30010 ms, with no
+failed scripts; cache was enabled. Exit code was 2 and all three requested steps
+were `not-run`. No record navigation, Add Tags opening or Escape occurred.
+One CDP attach completed; no print call, window request, popup, download or file
+chooser occurred. Fourteen POSTs were blocked: twelve telemetry and the two
+list-baseline legacy requests, once each. No retry or replacement selector was
+used. No new dialog state or numbered dialog inventory can be claimed.
+
+Preflight passed at load 21.41, no capture lock and two page targets. The
+Platform Lead must review the exported list controls and give a unique
+non-positional record-link continuation before this path resumes. Contacts,
+Accounts and Deals Add Tags / Share coverage remains incomplete; it is not
+inferred from the Leads dialog. Existing completed observations remain intact.

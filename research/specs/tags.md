@@ -223,3 +223,22 @@ background actions and one other request). The original stop rule was applied. M
 19 blocked requests match expected background traffic and accepted this opening
 as complete evidence. No Add Tags retry is permitted. This does not establish
 successful tag persistence. Guard settings remain unchanged.
+
+
+## Contacts continuation stop (2026-10-17)
+
+`m6-contacts-tags-initial` reused the previously captured list-to-record link
+from `m6-notes-contacts-open`, without copying its record identity here.
+The ready probe now matches two elements. Ready failed after 30010 ms, with no
+failed scripts; cache was enabled. Exit code was 2 and all three requested steps
+were `not-run`. No record navigation, Add Tags opening or Escape occurred.
+One CDP attach completed; no print call, window request, popup, download or file
+chooser occurred. Fourteen POSTs were blocked: twelve telemetry and the two
+list-baseline legacy requests, once each. No retry or replacement selector was
+used. No new dialog state or numbered dialog inventory can be claimed.
+
+Preflight passed at load 21.41, no capture lock and two page targets. The
+Platform Lead must review the exported list controls and give a unique
+non-positional record-link continuation before this path resumes. Contacts,
+Accounts and Deals Add Tags / Share coverage remains incomplete; it is not
+inferred from the Leads dialog. Existing completed observations remain intact.
