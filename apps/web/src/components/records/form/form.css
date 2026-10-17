@@ -575,3 +575,58 @@
 [data-form-variant="activity"] [data-form-toggle-subdued] [data-switch-track]:not([data-selected]) {
   background: var(--color-activity-form-switch-subdued);
 }
+
+/* activities-form.md → Visual layout — Meeting form (measured): Meeting Information window. */
+.meeting-window__title {
+  margin: 0;
+  padding: var(--size-meeting-window-title-top) var(--size-meeting-window-title-inset) 12px;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 500;
+}
+.meeting-window__body {
+  padding: 0 var(--size-meeting-window-content-end) 12px var(--size-meeting-window-content-inset);
+}
+.meeting-window__footer {
+  min-height: var(--size-meeting-window-footer-height);
+  padding: 0 var(--size-meeting-window-footer-inset) 0 var(--size-meeting-window-content-inset);
+  box-shadow: 0 -2px 4px rgb(0 0 0 / 6%);
+}
+.meeting-window__form[data-form-variant="activity"] .record-form-row {
+  grid-template-columns: var(--size-meeting-window-label-width, 167px) minmax(0, 1fr);
+}
+
+/* activities-form.md → Visual layout — Meeting form (measured): From/To on one line, Participants line. */
+[data-form-variant="activity"] .record-form-datetime {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-form-variant="activity"] .record-form-datetime > :first-child {
+  width: 110px;
+}
+[data-form-variant="activity"] .record-form-datetime > :nth-child(2) {
+  width: 80px;
+}
+[data-form-variant="activity"] .record-form-datetime input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+[data-form-variant="activity"] .record-form-participants__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-form-variant="activity"] .record-form-participants__bar button {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+}
+.meeting-window__footer .meeting-window__more {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary);
+}
