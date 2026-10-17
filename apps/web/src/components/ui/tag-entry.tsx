@@ -37,7 +37,7 @@ export function TagEntry({
       <Input
         autoFocus
         placeholder="Enter Tags"
-        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-md text-text outline-none focus:border-primary focus:ring-2 focus:ring-focus-ring"
+        className="w-full rounded-md border border-border bg-surface px-3 py-1.5 text-md text-text outline-none focus:border-primary focus:ring-1 focus:ring-focus-ring"
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing) return;
           if (

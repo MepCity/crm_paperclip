@@ -110,11 +110,13 @@ export function RecordTags({
           title="Add Tags"
           hideTitle
           placement="bottom start"
+          offset={-16}
+          crossOffset={-20}
           className="w-150 max-w-full"
           isNonModal
         >
           <div className="flex items-start gap-2">
-            <Icons.recordTag aria-hidden className="mt-2 size-5 shrink-0 text-text-muted" />
+            <Icons.recordTag aria-hidden className="mt-2 size-4 shrink-0 text-text-muted" />
             <div className="min-w-0 flex-1">
               {pending.length ? (
                 <div className="mb-2 flex flex-wrap gap-1">
