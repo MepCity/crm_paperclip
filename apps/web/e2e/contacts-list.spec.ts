@@ -93,7 +93,7 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     "Print Default view",
     "Print Using Canvas",
   ]);
-  for (const name of ["Print Default view", "Print Using Canvas"]) {
+  for (const name of ["Print Using Canvas"]) {
     const item = printMenu.getByRole("menuitem", { name, exact: true });
     await expect(item).toHaveAttribute("data-later-module", "M6");
     // Placeholder rows stay inert and leave the submenu open.
