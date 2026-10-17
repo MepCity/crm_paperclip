@@ -623,7 +623,7 @@ The full-page Create Case form retains the shell and bottom utility strip. Its t
 | 7 | Deal Name, lookup | Email |
 | 8 | Phone | No field |
 
-Status, Case Origin and Subject have a required input-edge marker. Description Information follows, with Description then Internal Comments as full-width multiline controls with resize grips. Solution Information and the form footer are below the initial viewport; their presence in extracted text alone is not a visual observation. Client Script occupies the right edge. No Case Image section is painted in the initial viewport.
+Status, Case Origin and Subject have a required input-edge marker. Description Information follows, with Description then Internal Comments as full-width multiline controls with resize grips. Solution Information and the form footer are below the initial viewport; m8f-cases-lower establishes their rendering after scrolling, as inventoried below. Client Script occupies the right edge. No Case Image section is painted in the initial viewport.
 
 ### Control inventory — m8f-cases-create
 
@@ -662,7 +662,24 @@ Shell: SH-01–SH-46 as in [contacts.md](contacts.md), with Cases active. The ra
 | KF-33 | Description Information | Resize grip | icon button | Description, lower-right corner | not operated | seen (m8f-cases-create) | M8 | DF-29 moved |
 | KF-34 | Description Information | Resize grip | icon button | Internal Comments, lower-right corner | not operated | seen (m8f-cases-create) | M8 | DF-29 moved |
 
-KF-06, KF-33 and KF-34 are image-only. A select includes its arrow; a required marker is a field state, not an extra control. KF-28–KF-31 are reserved for the lower form. Absent here: account image, address blocks, Copy Address, account-specific commercial fields.
+KF-06, KF-33 and KF-34 are image-only. A select includes its arrow; a required marker is a field state, not an extra control. KF-28–KF-31 are established separately by m8f-cases-lower. Absent here: account image, address blocks, Copy Address, account-specific commercial fields.
+
+### Control inventory — m8f-cases-lower
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-28 | Solution Information | Solution | input | full-width row below Description Information | Empty multiline editor; no typing | seen (m8f-cases-lower) | M8 | AF-44 moved |
+| KF-29 | Form footer | Create Form Views / Standard View | select | footer, right group, before custom-page action | Current form view; never opened or changed | seen (m8f-cases-lower) | M11 | AF-45 |
+| KF-30 | Form footer | Create a custom form page | button | footer, far right | Form customization entry; never used | seen (m8f-cases-lower) | M11 | AF-46 |
+| KF-31 | Solution Information | Resize grip | icon button | Solution editor, lower-right corner | not operated | seen (m8f-cases-lower) | M8 | DF-29 moved |
+
+Rest: as in m8f-cases-create; covered by the overlay: none. Scrolling the form leaves KF-01–KF-04 fixed at the top. KF-05–KF-09 and KF-18–KF-21 are outside the form clip or covered by that sticky header; only unlabelled lower edges of Type and Priority remain. KF-10–KF-17, KF-22–KF-27, KF-32–KF-34 remain visible. Solution Information follows Description Information. The footer contains the form-view selector and custom-page action; there is no second Save, Save and New or Cancel group at the bottom. No Case Image, Add Comment or Comments control is painted. KF-31 is image-only. Footer references AF-45–AF-46 were reserved but unobserved in accounts-form.md; this image establishes their rendering here.
+
+Shell: the rail, top bar and right utility shortcuts retain the base positions. The left utility controls are covered by a connection-status strip with an automatic retry countdown and refresh icon. No chat action was used; its appearance is incidental background state, not an outcome of scrolling.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KF-S15 | Utility strip | Refresh icon | icon button | left group, after connection-status countdown | Accessible name Try Now; not used | seen (m8f-cases-lower) | ? | new |
 
 ### Control inventory — m8f-cases-status
 
@@ -808,7 +825,7 @@ Rest: as in m8f-cases-create; covered by the overlay: KF-01–KF-25 and the uppe
 
 M1 configures 30 fields. Case Number is an auto-number; Owner is an owner lookup; Status / Type / Priority / Case Reason / Case Origin are picklists; Product Name targets Products, Related To targets Contacts, Account Name targets Accounts, and Deal Name targets Deals. The rendered Related To and Reported By controls are distinct. Case Number is locked on Create. The metadata requirements Status / Case Origin / Subject agree with their three visible markers. No values from an existing record were copied.
 
-The initial viewport visually establishes KF-05–KF-27. Solution, Add Comment and Comments are not established by that image. Metadata-only system fields, tags, timestamps, comment counts and connection fields must not be inferred as create inputs. A Case Image section exists in M1 but has no fields and is not painted here.
+The initial viewport visually establishes KF-05–KF-27. Solution is established separately by m8f-cases-lower (KF-28). Add Comment and Comments are not painted in either form image. Metadata-only system fields, tags, timestamps, comment counts and connection fields must not be inferred as create inputs. A Case Image section exists in M1 but has no fields and is not painted here.
 
 ## Form capture reconciliation
 
@@ -1593,6 +1610,85 @@ Source ordinals are one-based. Form and shell mapping is retained behind the mod
 
 Self-audit: 299 entries → 83 numbered controls (175 mapped entries); 124 excluded entries. Missing / duplicate ordinals: 0. Image-only base KF-33, KF-34 and SH-46 remain visible; KF-06 is covered. No additional image-only popup control was found. One opening click, zero skipped clicks. Only the single shell trigger is a non-GET response; reminder, notification and seven telemetry requests were blocked within the permitted set. No selection, search or record write was observed. API calls: 54. Pre-capture 1-minute load: 40.52. No tabs were closed.
 
+### Reconciliation — m8f-cases-lower
+
+Every one-based source ordinal is assigned exactly once below. Header clipping and the incidental connection-status strip are checked against the final screenshot.
+
+| Inventory / exclusion | Source ordinals |
+| --- | --- |
+| Excluded: structural wrapper, duplicate decoration or non-control text | 1, 4, 109, 111, 114, 135–136, 139, 151–152, 200, 205, 208, 240, 270–271 |
+| SH-01 | 2–3 |
+| Excluded: zero-area hidden node | 5–10, 13, 16, 19, 22, 25, 28, 33, 108, 110, 118–119, 121–122, 124–125, 128–129, 146–150, 160, 170, 176, 182, 214–223, 225–239 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30–32 |
+| SH-10 | 34 |
+| SH-11 | 35–36 |
+| Excluded: clipped or outside viewport | 37–65, 134 |
+| KF-S01 | 66–68 |
+| KF-S02 | 69–71 |
+| KF-S03 | 72–74 |
+| KF-S04 | 75–77 |
+| KF-S05 | 78–80 |
+| KF-S06 | 81–83 |
+| KF-S07 | 84–86 |
+| KF-S08 | 87–89 |
+| KF-S09 | 90–92 |
+| KF-S10 | 93–95 |
+| KF-S11 | 96–98 |
+| KF-S12 | 99–101 |
+| KF-S13 | 102–104 |
+| KF-S14 | 105–107 |
+| SH-26 | 112 |
+| SH-27 | 113 |
+| SH-28 | 115 |
+| SH-29 | 116 |
+| SH-30 | 117 |
+| SH-31 | 120 |
+| SH-32 | 123 |
+| SH-33 | 126–127 |
+| SH-34 | 130–133 |
+| KF-01 | 137–138 |
+| KF-04 | 140–141 |
+| KF-03 | 142–143 |
+| KF-02 | 144–145 |
+| Excluded: outside the form clip or covered by the sticky header | 153–159, 161–162, 185–191, 255–257, 267–269 |
+| KF-10 | 163–164 |
+| KF-11 | 165–168 |
+| KF-12 | 169, 258–260 |
+| KF-13 | 171–174 |
+| KF-14 | 175, 261–263 |
+| KF-15 | 177–180 |
+| KF-16 | 181, 264–266 |
+| KF-17 | 183–184 |
+| KF-22 | 192–193 |
+| KF-23 | 194–195 |
+| KF-24 | 196–197 |
+| KF-25 | 198–199 |
+| KF-26 | 201–202, 272 |
+| KF-27 | 203–204, 273 |
+| KF-28 | 206–207, 274 |
+| KF-29 | 209–211, 275 |
+| KF-30 | 212–213 |
+| KF-32 | 224 |
+| Excluded: covered by the chat connection-status strip | 241–245 |
+| SH-38 | 246 |
+| SH-39 | 247 |
+| SH-40 | 248 |
+| SH-41 | 249 |
+| SH-42 | 250 |
+| SH-43 | 251 |
+| SH-44 | 252 |
+| SH-45 | 253 |
+| KF-S15 | 254 |
+
+Self-audit: 275 entries → 65 numbered controls (145 mapped entries); 130 excluded entries. Missing / duplicate ordinals: 0. Image-only: KF-31, KF-33, KF-34 and SH-46. KF-06 is offscreen. Screenshot opened as an image. One scroll executed to the form bottom, zero clicks and zero skipped clicks; no form value or persistent preference was changed. Only the single shell trigger is a non-GET response; reminder, notification and eight telemetry requests remained blocked. No tabs were closed. The load reading was taken after capture start, not before; the timing omission is recorded in the issue comment.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -1641,7 +1737,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | Empty required-field errors | M1 requires Status, Case Origin, Subject; D1 agrees; Save is forbidden | Ref: record-detail.md, Layout / Flows, Leads invalid-create evidence. Reuse shared inline required-field feedback provisionally; exact Cases messages, focus and timing remain not observed. |
 | Origin Email conditional validation | D1 describes an email requirement for email-origin cases; no option was selected | Gate question: confirm conditional rule against the current layout; do not claim an observed marker or message. |
 | Successful Save / Save and New, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Cases-specific outcome. |
-| Lower form and repeated footer buttons | not observed: below the initial viewport | Solution Information is extracted and configured, but its rendered field and footer positions need a permitted scroll capture; KF-28–KF-31 remain unassigned. |
+| Lower form and footer buttons | seen (m8f-cases-lower): Solution and form-view footer; header actions remain fixed | KF-28–KF-31 establish the lower controls. No repeated bottom Save, Save and New or Cancel group is painted. |
 | Populated Product picker rows and pagination | not observed: m8f-cases-product paints an empty table; Account, Deal and Contact popups are observed separately | Do not infer populated-row controls from metadata or create reference products. |
 | Field hover affordances and validation tooltips | not observed | Shared form pattern only, pending evidence. |
 | Shell ownership for My Jobs, Services, Projects and utility shortcuts | visible labels / icons; destination not opened | Keep unknown module attribution until scope is decided. |
