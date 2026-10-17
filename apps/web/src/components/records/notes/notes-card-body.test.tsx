@@ -40,6 +40,12 @@ vi.mock("@/lib/api/client/hooks", () => {
   };
 });
 
+vi.mock("./note-attachments", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./note-attachments")>()),
+  NoteAttachmentList: () => null,
+  useUploadNoteAttachments: () => async () => [],
+}));
+
 const parent = { id: "p1", fields: { Account_Name: "Acme" } };
 const props = { parentModule: "Accounts" as const, parentRecord: parent, recordPath: () => "#" };
 
