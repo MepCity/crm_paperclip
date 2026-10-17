@@ -157,7 +157,15 @@ describe("Attachments record contract", () => {
       await expect(other.service.delete("Attachments", [attachment.id])).rejects.toBeInstanceOf(
         NotFoundError,
       );
+      const activityPeers = [];
+      for (const activity of ["Tasks", "Events", "Calls"]) {
+        const view = requireValue((await service.listViews(activity))[0]);
+        const rows = await service.list(activity, { ...listQuery, viewId: view.id });
+        activityPeers.push({ module: activity, id: requireValue(rows.records[0]).id });
+      }
       await service.delete(module, [parent.id]);
+      for (const peer of activityPeers)
+        expect((await service.get(peer.module, peer.id)).id).toBe(peer.id);
       await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
       expect(lifecycle.cleanupIntents()).toEqual([
         { attachmentId: attachment.id, storageKey: published.storageKey },
@@ -180,10 +188,7 @@ describe("Attachments record contract", () => {
       for (const activity of ["Tasks", "Events", "Calls"]) {
         moduleStore(activity).records.set("retained", {
           id: "retained",
-          fields:
-            module === "Cases"
-              ? { Subject: "Synthetic", Status: "New", Case_Origin: "Phone" }
-              : { Subject: "Synthetic" },
+          fields: { Subject: "Synthetic" },
         });
       }
       moduleStore("Notes").records.set("note", {
