@@ -35,7 +35,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByRole("dialog", { name: "Create Records" });
 }
 
-test("The registry holds Lead, Contact, Account, Deal, Task, Meeting and Call entries pointing at their create pages", () => {
+test("The registry holds CRM and activity entries pointing at their create pages", () => {
   expect(createRecordsNav.map((entry) => entry.label)).toEqual([
     "Lead",
     "Contact",
