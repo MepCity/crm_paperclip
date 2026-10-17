@@ -1,6 +1,6 @@
 # Campaigns — list screen and module inventory
 
-Status: partial research for MEP-754 / Module 7; menu captures paused at the inherited painting gate. CTO decision required before completion and UI Lead review.
+Status: research for MEP-754 / Module 7; empty-state painting gate accepted by the CTO in MEP-803. Menu evidence is recorded below for UI Lead review.
 
 ## Purpose
 
@@ -85,12 +85,12 @@ The default All Campaigns view is empty. The filter panel is already open; no pa
 
 Shell: SH-01–SH-46 as in [contacts.md](contacts.md); SH-18 is active. SH-08 is labelled MCP here. The image-only trash icon SH-46 is present. No new shell control was found relative to Contacts, including the bottom utility strip and upper-right shortcuts.
 
-`seen` establishes presence only. All controls remained unclicked, so behaviour is `not observed`, including inherited controls. The Ref column points to the closest existing inventory; module-name equivalents are identified by the Campaigns label.
+`seen` establishes presence only. The base capture contains no clicks; later menu-opening observations are recorded separately. Other behaviour is `not observed`, including inherited controls. The Ref column points to the closest existing inventory; module-name equivalents are identified by the Campaigns label.
 
 | # | Region | Control | Type | Position | What it does | Source | Module | Ref |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CL-01 | View strip | All Campaigns | tab | left, first | not observed | seen (m7-list-base) | M7 | AL-01 (accounts.md) |
-| CL-02 | View strip | Three dots / More Custom View | icon button | after current view | not observed | seen (m7-list-base) | M7 | AL-02 (accounts.md) |
+| CL-02 | View strip | Three dots / More Custom View | icon button | after current view | Opens the system-view menu (m7-list-views) | seen (m7-list-base) | M7 | AL-02 (accounts.md) |
 | CL-03 | Toolbar | Filter | button | left, first | not observed | seen (m7-list-base) | M7 | AL-03 (accounts.md) |
 | CL-04 | Toolbar | Sort | button | left, second | not observed | seen (m7-list-base) | M7 | AL-04 (accounts.md) |
 | CL-05 | Toolbar | List view icon | icon button | view group, item 1 | not observed | seen (m7-list-base) | M7 | AL-05 (accounts.md) |
@@ -235,19 +235,102 @@ Image inspection adds SH-46 (trash bin), absent from controls.json. The populate
 
 No changed visible controls: CL-01–CL-40 and shell refs remain as in m7-list-base. Both images were opened. Total Records remains 0; no record link disappeared. The 287 controls.json entries reconcile as above with one ordering change: retry item 267 is the hidden live-chat widget (base 279, excluded); retry 268 is the utility-strip wrapper (base 267, excluded); retry 269–279 map to base 268–278, respectively (SH-35–SH-45). All other ordinals retain their base mapping. Rest: as in m7-list-base; covered by overlay: none.
 
-The second click-free capture was taken after the required five-minute interval, with the same command and 25-second wait. Both captures have 56 API calls and a module-specific title, but zero record links. The literal record-link condition of the inherited painting gate is therefore unsatisfied; no menu capture follows. This is an empty-state gate ambiguity, not evidence of a reference change.
+The second click-free capture was taken after the required five-minute interval, with the same command and 25-second wait. Both captures have 56 API calls and a module-specific title, but zero record links. The CTO resolved the empty-state gate in MEP-803: successful count plus empty bulk response, visible empty text and zero total, repeated after five minutes, replace the record-link condition. The module title and API-call conditions still apply. Both existing captures satisfy this exception; m7-list-base remains the base. No further full recapture was required. Populated list structure is derived only from the metadata columns above and the Module 1–4 list patterns, not observed Campaigns rows.
+
+### Control inventory — m7-list-views
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CL-02.1 | View menu | Public Views | toggle | popup, row 1 | not observed; not selected | seen (m7-list-views) | M7 | AL-02.1 (accounts.md) |
+| CL-02.2 | View menu | All Active Campaigns | menu item | popup, row 2 | not observed; not selected | seen (m7-list-views) | M7 | new |
+| CL-02.3 | View menu | All Campaigns | menu item | popup, row 3 | not observed; not selected | seen (m7-list-views) | M7 | AL-02.2 moved (accounts.md) |
+| CL-02.4 | View menu | My Active Campaigns | menu item | popup, row 4 | not observed; not selected | seen (m7-list-views) | M7 | new |
+| CL-02.5 | View menu | Unread Campaigns | menu item | popup, row 5 | not observed; not selected | seen (m7-list-views) | M7 | AL-02.9 moved (accounts.md) |
+| CL-02.6 | View menu | Show custom views as Dropdown | button | popup, row 6 | not observed; not selected | seen (m7-list-views) | M7 | AL-02.10 moved (accounts.md) |
+| CL-02.7 | View menu | New Custom View | menu item | popup, row 7 | not observed; not selected | seen (m7-list-views) | M11 | AL-02.11 moved (accounts.md) |
+| CL-02.8 | View menu | Manage Custom View | menu item | popup, row 8 | not observed; not selected | seen (m7-list-views) | M11 | AL-02.12 moved (accounts.md) |
+
+All Campaigns is visibly checked. No view was selected; criteria remain metadata evidence. Absent here: locked, recently created/modified and weekly views from Accounts. Rest: as in m7-list-base; covered by the overlay: CL-04–CL-11, part of CL-15–CL-20 and the left edge of CL-33.
+
+### Control inventory — m7-list-create-menu
+
+No new controls. One requested click, zero executed, one skipped by the tool's dangerous-attribute guard. The page is painted, so this is not a loading retry case. No alternative selector was attempted. Create-menu contents remain `not observed`; Ref: AL-13 / m3-list-create-menu (accounts.md), the same guarded opening.
+
+Rest: as in m7-list-base; covered by the overlay: none. The image was opened and confirms the same empty list and zero total.
+
+### Control inventory — m7-list-actions
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CL-14.1 | Actions menu | Mass Transfer | menu item | popup, row 1 | not observed; not selected | seen (m7-list-actions) | M7 | AL-14.1 (accounts.md) |
+| CL-14.2 | Actions menu | Mass Delete | menu item | popup, row 2 | not observed; not selected | seen (m7-list-actions) | M7 | AL-14.2 (accounts.md) |
+| CL-14.3 | Actions menu | Mass Update | menu item | popup, row 3 | not observed; not selected | seen (m7-list-actions) | M7 | AL-14.3 (accounts.md) |
+| CL-14.4 | Actions menu | Manage Tags | menu item | popup, row 4 | not observed; not selected | seen (m7-list-actions) | M6 | AL-14.4 (accounts.md) |
+| CL-14.5 | Actions menu | Drafts | menu item | popup, row 5 | not observed; not selected | seen (m7-list-actions) | M7 | AL-14.5 (accounts.md) |
+| CL-14.6 | Actions menu | Create Client Script | menu item | popup, row 6 | not observed; not selected | seen (m7-list-actions) | M11 | AL-14.7 moved (accounts.md) |
+| CL-14.7 | Actions menu | Export Campaigns | menu item | popup, row 7 | not observed; not selected | seen (m7-list-actions) | M6 | AL-14.8 moved (accounts.md) |
+| CL-14.8 | Actions menu | Sheet view | menu item | popup, row 8 | not observed; not selected | seen (m7-list-actions) | ? | AL-14.9 moved (accounts.md) |
+| CL-14.9 | Actions menu | Print View | menu item | popup, row 9 | not observed; not selected | seen (m7-list-actions) | M7 | AL-14.10 moved (accounts.md) |
+| CL-40 | Toolbar | Refresh Custom View | icon button | after view-group down chevron | not observed; not clicked | seen (m7-list-actions) | M7 | AL-64 (accounts.md) |
+
+Print View has a right-facing submenu arrow; no submenu was opened. Decorative sparkle marks accompany Create Client Script and Print View. Sheet view uses a neutral label here; its visible branded prefix is intentionally omitted. Its module attribution remains unresolved, as in Accounts. Absent here: Deduplicate Accounts. Rest: as in m7-list-base; covered by the overlay: CL-37 and right-hand empty table area. No menu row was selected. CL-40 is now painted; this does not change the base-image absence.
+
+### Reconciliation of menu and final captures
+
+Source ordinals below are offline evidence only. Every inherited ordinal uses the exact assignment or exclusion in the base reconciliation. Tag, name, kind and selector were checked; the generated Sort selector suffix changes without changing the control. Each screenshot was opened. No additional shell control was found.
+
+| Capture | Source items | Inventory / exclusion |
+| --- | --- | --- |
+| m7-list-views | 1–263 | Same ordinal assignments as base |
+| m7-list-views | 264, 265, 266 | Base 265, 266, 264: hidden overlays, excluded |
+| m7-list-views | 267, 268 | Base 279, 267: hidden chat / structural utility wrapper, excluded |
+| m7-list-views | 269–279 | Base 268–278: SH-35–SH-45 |
+| m7-list-views | 280–282, 284 | Menu and accordion containers, excluded as structural duplicates |
+| m7-list-views | 283 | CL-02.1 |
+| m7-list-views | 285, 286, 287, 288 | CL-02.2, CL-02.3, CL-02.4, CL-02.5 |
+| m7-list-views | 289 | CL-02.6 |
+| m7-list-views | 290, 291 | CL-02.7, nested duplicate |
+| m7-list-views | 292–294 | CL-02.8, nested / hidden wrappers included |
+| m7-list-views | 295 | CL-40 icon duplicate; covered by menu |
+| m7-list-views | 296–303 | Base 280–287 assignments / exclusions |
+| m7-list-views | 304, 305 | Nonoverflowing menu / accordion scroll containers, excluded as structural duplicates |
+| m7-list-create-menu | 1–287 | Same ordinal assignments as base; no menu opened |
+| m7-list-actions | 1–266 | Same ordinal assignments as base; CL-40 now visibly painted |
+| m7-list-actions | 267, 268 | CL-14.1, hidden link wrapper + visible anchor |
+| m7-list-actions | 269, 270 | CL-14.2, hidden link wrapper + visible anchor |
+| m7-list-actions | 271, 272 | CL-14.3, hidden link wrapper + visible anchor |
+| m7-list-actions | 273, 274 | CL-14.4, hidden link wrapper + visible anchor |
+| m7-list-actions | 275, 276 | CL-14.5, hidden link wrapper + visible anchor |
+| m7-list-actions | 277 | CL-14.6 |
+| m7-list-actions | 278 | CL-14.7 |
+| m7-list-actions | 279–291 | Base 267–279 assignments / exclusions |
+| m7-list-actions | 292 | CL-40 icon duplicate |
+| m7-list-actions | 293–300 | Base 280–287 assignments / exclusions |
+| m7-list-actions | 301 | Nonoverflowing menu body, excluded as structural duplicate |
+| m7-list-after | 1–287 | Same ordinal assignments as base |
+
+Image-only additions: CL-14.8 (Sheet view) and CL-14.9 (Print View, including its submenu arrow) are absent from controls.json, but visible in m7-list-actions. SH-46 remains image-only in every capture. Decorative sparkle marks are not separate controls.
+
+### Control inventory — m7-list-after
+
+No changed controls relative to the base. CL-01–CL-40 retain their base visibility, including the unpainted CL-40; no menu is open. Rest: as in m7-list-base; covered by the overlay: none. The final image confirms the empty state and Total Records 0. Record links remain 0 → 0 and total remains 0 → 0; no evidence of a reference change.
 
 ## Actions and flows
 
-No write, menu item, preference or filter was exercised. System-view, Create and Actions menu contents remain `not observed` pending the painting-gate decision. No success, validation, error-after-write or populated-row behaviour can be inferred from the empty result.
+No write, menu item, preference or filter was exercised. The system-view and Actions menus were opened without selecting any item. Create-menu contents remain `not observed` because the tool blocked the opening control. No success, validation, error-after-write or populated-row behaviour can be inferred from the empty result.
 
 ## Open questions
 
-- The page is visibly painted with an empty list and a module-specific title, but MEP-427 rule 11 additionally requires a record link. Can a proven zero-record state satisfy the gate so the authorized menus can be inspected? No exception is assumed.
-- Row-end controls, populated pagination and bulk selection remain not observed because the module is empty. Do not create reference records to research them.
+- Row-end controls, populated pagination, cell contents and bulk selection: not visible in an empty list; metadata / public documentation and inherited list patterns are the available evidence. Campaigns-specific behaviour remains not observed. Do not create reference records to research it.
+- Create-menu contents: not observed because the capture guard rejected the opening control. No alternative route or selector was attempted.
+- Sheet view module attribution remains `?`, inherited from Accounts; destination behaviour and the Print View submenu were not observed.
 - Hidden/offscreen filter rows and table headers are not visual observations. Their DOM presence is kept separate from metadata and the visible inventory.
 
 ## Capture refs
 
 - `m7-list-base` — empty All Campaigns list; image opened and compared to controls.json.
 - `m7-list-base-retry` — same empty state after the mandated retry; image opened; no menu clicked.
+- `m7-list-views` — Public Views menu; one executed opening click, no selection; image opened.
+- `m7-list-create-menu` — one requested opening click skipped by the guard; unchanged empty list; image opened.
+- `m7-list-actions` — nine Actions rows, refresh icon visible; one executed opening click; image opened.
+- `m7-list-after` — final click-free empty list; image opened; total and record-link counts unchanged.
