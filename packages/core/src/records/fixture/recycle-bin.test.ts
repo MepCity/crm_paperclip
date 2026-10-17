@@ -447,4 +447,25 @@ describe("recoverable fixture record deletion contract", () => {
     await service.recycleBin.empty();
     expect(batches).toEqual([]);
   });
+
+  it("isolates recycle bin entries and operations across tenants", async () => {
+    const a = make();
+    const b = make();
+    const leadRecord = await lead(a.service, "Tenant Isolation");
+    await a.service.delete("Leads", [leadRecord.id]);
+    const aEntries = await entries(a.service);
+    expect(aEntries).toHaveLength(1);
+    const entryIdOfA = aEntries[0]?.id ?? "";
+
+    expect((await b.service.recycleBin.list()).total).toBe(0);
+    await expect(b.service.recycleBin.restore([entryIdOfA])).rejects.toBeInstanceOf(NotFoundError);
+    await expect(b.service.recycleBin.purge([entryIdOfA])).rejects.toBeInstanceOf(NotFoundError);
+    await b.service.recycleBin.empty();
+    expect(await entries(a.service)).toEqual(aEntries);
+
+    expect(await entries(a.service)).toHaveLength(1);
+    await a.service.recycleBin.restore([entryIdOfA]);
+    expect(await a.service.get("Leads", leadRecord.id)).toEqual(leadRecord);
+    expect(await entries(a.service)).toEqual([]);
+  });
 });
