@@ -376,7 +376,7 @@ test("observed picker resolves the owner column to the member name and marks a p
   const handsets = screen.getAllByRole("button", { name: /^Phone$/ });
   expect(handsets).toHaveLength(2);
   expect(handsets[0]?.getAttribute("data-later-module")).toBe("M5");
-  expect(handsets[0]?.getAttribute("aria-disabled")).toBe(true);
+  expect(handsets[0]?.getAttribute("aria-disabled")).toBe("true");
 });
 
 test("switches between the offered modules inside the picker and lists the chosen one", async () => {
@@ -456,6 +456,9 @@ test("multiple selection survives pagination and works from the keyboard", async
         ? [{ id: "c-2", fields: { Full_Name: "Second page" } }]
         : [{ id: "c-1", fields: { Full_Name: "First page" } }],
     moreRecords: query.page !== 2,
+    page: query.page,
+    perPage: query.perPage,
+    sort: { field: "Full_Name", order: "asc" },
   }));
   const user = userEvent.setup();
   const onDone = vi.fn();
