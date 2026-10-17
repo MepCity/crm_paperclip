@@ -11,7 +11,11 @@ import {
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
-import { NoteAttachmentList, useUploadNoteAttachments } from "./note-attachments";
+import {
+  NoteAttachmentList,
+  useNoteAttachments,
+  useUploadNoteAttachments,
+} from "./note-attachments";
 import { NoteColorPicker } from "./note-color-picker";
 import { NoteComposer, type NoteDraft } from "./note-composer";
 import { NoteContent } from "./note-content";
@@ -47,6 +51,22 @@ function toolbar(exec: (command: string, value?: string, text?: string) => void)
       onCommand={exec}
       colorPicker={NoteColorPicker}
       linkPopover={NoteLinkPopover}
+    />
+  );
+}
+
+function EditComposerWithBudget({
+  noteId,
+  ...props
+}: { noteId: string } & React.ComponentProps<typeof NoteComposer>) {
+  const query = useNoteAttachments(noteId);
+  const existing = query.data ?? [];
+  return (
+    <NoteComposer
+      {...props}
+      attachments={<NoteAttachmentList noteId={noteId} editable />}
+      attachedCount={existing.length}
+      attachedBytes={existing.reduce((sum, a) => sum + a.size, 0)}
     />
   );
 }
@@ -214,7 +234,8 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
           onDelete={onDelete}
           editingId={editingId}
           renderEditor={(id) => (
-            <NoteComposer
+            <EditComposerWithBudget
+              noteId={id}
               mode="edit"
               expanded
               initial={{
@@ -226,7 +247,6 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
                 setError(null);
                 setEditingId(null);
               }}
-              attachments={<NoteAttachmentList noteId={id} editable />}
               onSave={saveEdit(id)}
               saving={update.isPending}
               error={error}
