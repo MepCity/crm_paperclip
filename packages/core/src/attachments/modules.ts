@@ -5,8 +5,16 @@
  */
 export const ATTACHMENT_CARD_MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
-/** Modules that accept attachments over the API: the card modules plus Notes (composer). */
-export const ATTACHMENT_PARENT_MODULES: readonly string[] = [...ATTACHMENT_CARD_MODULES, "Notes"];
+/** API parents include additional record modules and Notes (composer), without mounting cards. */
+export const ATTACHMENT_PARENT_MODULES: readonly string[] = [
+  ...ATTACHMENT_CARD_MODULES,
+  "Notes",
+  "Tasks",
+  "Events",
+  "Campaigns",
+  "Cases",
+  "Solutions",
+];
 
 export type AttachmentCardModule = (typeof ATTACHMENT_CARD_MODULES)[number];
 
