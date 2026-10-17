@@ -164,18 +164,16 @@ test.describe("CSV import and export", () => {
   });
 });
 
-for (const { module, label, csv } of [
+for (const { label, csv } of [
   { module: "Tasks", label: "Tasks", csv: "Subject\nCSV Task\n" },
   {
     module: "Events",
     label: "Meetings",
-
     csv: "Event_Title,Start_DateTime,End_DateTime\nCSV Meeting,2026-11-01T09:00:00Z,2026-11-01T10:00:00Z\n",
   },
   {
     module: "Calls",
     label: "Calls",
-
     csv: "Subject,Call_Type,Call_Start_Time,Call_Duration\nCSV Call,Outbound,2026-11-01T09:00:00Z,01:00\n",
   },
 ]) {
@@ -188,7 +186,7 @@ for (const { module, label, csv } of [
       Account_Name: "CSV Parent",
     });
     const contactId = await createRecord(page, "Contacts", org.slug, { Last_Name: "CSV Contact" });
-    await page.goto(moduleListDefaultPath(org.slug, module));
+    await page.goto(moduleListDefaultPath(org.slug, label));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     await page.getByRole("button", { name: "More", exact: true }).click();
     await page.getByRole("menuitem", { name: `Import ${label}`, exact: true }).click();
