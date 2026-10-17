@@ -3,14 +3,22 @@ import { Icons } from "@/components/ui/icon";
 import { createLeadsRelatedLists } from "./leads-related-lists";
 
 describe("createLeadsRelatedLists", () => {
-  it("defines open-activities and closed-activities cards in reference order", () => {
+  it("defines notes, open-activities and closed-activities cards in reference order", () => {
     const lists = createLeadsRelatedLists();
-    expect(lists).toHaveLength(2);
+    expect(lists).toHaveLength(3);
 
-    const [openActivities, closedActivities] = lists;
+    const [notes, openActivities, closedActivities] = lists;
+    expect(notes).toBeDefined();
     expect(openActivities).toBeDefined();
     expect(closedActivities).toBeDefined();
-    if (!openActivities || !closedActivities) return;
+    if (!notes || !openActivities || !closedActivities) return;
+
+    expect(notes.order).toBe(0);
+    expect(notes.id).toBe("notes");
+    expect(notes.title).toBe("Notes");
+    expect(notes.moduleKey).toBe("M6");
+    expect(notes.targetId).toBe("related-list-notes");
+    expect(notes.emptyStateText).toBe("No records found");
 
     expect(openActivities.order).toBe(1);
     expect(openActivities.id).toBe("open-activities");
@@ -26,7 +34,7 @@ describe("createLeadsRelatedLists", () => {
   });
 
   it("configures upper controls for open-activities and closed-activities as defined", () => {
-    const [openActivities, closedActivities] = createLeadsRelatedLists();
+    const [, openActivities, closedActivities] = createLeadsRelatedLists();
     expect(openActivities).toBeDefined();
     expect(closedActivities).toBeDefined();
     if (!openActivities || !closedActivities) return;

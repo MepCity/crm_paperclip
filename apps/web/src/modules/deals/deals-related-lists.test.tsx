@@ -76,6 +76,16 @@ describe("createDealsRelatedLists definition", () => {
     ).toBeUndefined();
   });
 
+  it("draws the Contact Roles rail badge only for positive counts", () => {
+    for (const count of [undefined, 0, 2]) {
+      expect(
+        createDealsRelatedLists({ badges: { contactRoles: count } }).find(
+          (card) => card.id === "contact-roles",
+        )?.countBadge,
+      ).toBe(count ? count : undefined);
+    }
+  });
+
   it("omits activity rail badges when card holds zero records", () => {
     expect(structuralLists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
     expect(structuralLists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
@@ -134,8 +144,6 @@ describe("RelatedCardsContainer with Deals card set", () => {
   it("marks laterModule targets on non-working cards", async () => {
     const user = userEvent.setup();
     render(<RelatedCardsContainer relatedLists={dealsRelatedLists} />);
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    await user.click(within(notesSection).getByRole("button", { name: "Recent Last" }));
     const cadences = screen.getByRole("region", { name: "Cadences" });
     await user.click(within(cadences).getByRole("button", { name: "Enroll" }));
     const products = screen.getByRole("region", { name: "Products" });

@@ -204,14 +204,8 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const socialSection = screen.getByRole("region", { name: "Social" });
     expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
 
-    // Notes card (M6): Recent Last selector button and active-styled Add a note textarea
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    const recentLastBtn = within(notesSection).getByRole("button", { name: "Recent Last" });
-    expect(recentLastBtn.getAttribute("data-later-module")).toBe("M6");
-    const notesTextarea = within(notesSection).getByRole("textbox", { name: "Add a note" });
-    expect(notesTextarea.hasAttribute("disabled")).toBe(false);
-    expect(notesTextarea.getAttribute("data-later-module")).toBe("M6");
-    expect(notesTextarea.getAttribute("aria-disabled")).toBe("true");
+    // Notes card (M6): the body needs a record; the card itself is rendered
+    expect(screen.getByRole("region", { name: "Notes" })).toBeTruthy();
 
     // D-92 Voice of the Customer Enable feature (P3)
     const enableFeatureBtn = screen.getByRole("button", { name: "Enable feature" });
