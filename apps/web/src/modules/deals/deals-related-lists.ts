@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -129,6 +130,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Deals"),
       title: "Attachments",
       moduleKey: "M6",
       order: 3,

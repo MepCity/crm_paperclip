@@ -11,6 +11,10 @@ import type {
 } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  ATTACHMENT_PARENTS,
+  useAttachments,
+} from "@/components/records/attachments/use-attachments";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
@@ -149,6 +153,9 @@ export function RecordDetailScreen({
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
   const noteEvents = useRecordNoteEvents(moduleApiName, recordId);
+  const attachmentEvents = useAttachments(moduleApiName, recordId, {
+    enabled: ATTACHMENT_PARENTS.includes(moduleApiName),
+  }).events;
   const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
@@ -386,6 +393,7 @@ export function RecordDetailScreen({
             kind: rules.timeline.normalizeEventKind(event.kind),
           })),
           ...noteEvents,
+          ...attachmentEvents,
         ]}
         format={DEFAULT_FORMAT}
         initialFilterExpanded={false}

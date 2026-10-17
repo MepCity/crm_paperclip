@@ -28,6 +28,8 @@ export interface AttachmentsCardProps {
   onDownload: (row: AttachmentRow) => void;
   onDelete: (row: AttachmentRow) => Promise<void> | void;
   canEdit?: boolean;
+  /** Rail jump target (AT-01). */
+  targetId?: string;
 }
 
 /** Decimal sizes: KB below 1 MB, MB above. */
@@ -46,6 +48,7 @@ export function AttachmentsCard({
   onDownload,
   onDelete,
   canEdit = true,
+  targetId = "attachments",
 }: AttachmentsCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<AttachmentRow | null>(null);
@@ -59,7 +62,7 @@ export function AttachmentsCard({
 
   return (
     <section
-      id="attachments"
+      id={targetId}
       aria-label="Attachments"
       data-related-card="attachments"
       className="detail-card border border-panel-border"
