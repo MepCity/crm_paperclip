@@ -5,7 +5,7 @@ export interface BinSearch {
   nameOperator: "contains";
   module: string;
   deletedBy: string;
-  deletedByOperator: "contains" | "is";
+  deletedByOperator: "contains";
   date: string;
   time: string;
 }
