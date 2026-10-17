@@ -10,6 +10,13 @@ import { callsHooks } from "./calls/hooks";
 import { callsMetadata } from "./calls/metadata";
 import { fullName as callsFullName, generateFixtureCalls } from "./calls/seed";
 import { callsViews } from "./calls/views";
+import { campaignMembersHooks, removeCampaignMembersFor } from "./campaign-members/hooks";
+import { campaignMembersMetadata } from "./campaign-members/metadata";
+import { generateFixtureCampaignMembers } from "./campaign-members/seed";
+import { campaignsHooks } from "./campaigns/hooks";
+import { campaignsMetadata } from "./campaigns/metadata";
+import { fullName as campaignsFullName, generateFixtureCampaigns } from "./campaigns/seed";
+import { campaignsViews } from "./campaigns/views";
 import {
   contactRolesHooks,
   removeContactRolesFor,
@@ -81,6 +88,12 @@ const contactsManaged = new Set([
 function parentDeleteHook(module: string, existing?: FixtureModuleHooks["afterDelete"]) {
   return activityDeleteHook(module, (ids, ctx) => {
     existing?.(ids, ctx);
+    if (module === "Campaigns" || module === "Leads" || module === "Contacts")
+      removeCampaignMembersFor(
+        module === "Campaigns" ? "Campaign" : module === "Leads" ? "Lead" : "Contact",
+        ids,
+        ctx,
+      );
     removeAttachmentsForParents(module, ids, ctx);
     removeNotesForParents(module, ids, ctx);
     if (module === "Deals" || module === "Contacts")
@@ -96,6 +109,49 @@ function parentMergeHook(module: string): NonNullable<FixtureModuleHooks["transf
 }
 
 export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+  Campaigns: {
+    ...campaignsHooks,
+    afterDelete: parentDeleteHook("Campaigns"),
+    metadata: campaignsMetadata,
+    views: campaignsViews,
+    displayNameField: "Campaign_Name",
+    generateSeed: (now) => generateFixtureCampaigns(68, now),
+    fullName: campaignsFullName,
+    managedFields: new Set([
+      "id",
+      "Created_By",
+      "Modified_By",
+      "Created_Time",
+      "Modified_Time",
+      "Last_Activity_Time",
+    ]),
+    searchFields: ["Campaign_Name", "Description"],
+    initialNextId: 220000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
+  Campaign_Members: {
+    ...campaignMembersHooks,
+    childModule: true,
+    metadata: campaignMembersMetadata,
+    views: [
+      {
+        id: "all-campaign-members",
+        name: "All Campaign Members",
+        systemDefined: true,
+        isDefault: true,
+        columns: ["Campaign", "Lead", "Contact", "Member_Status"],
+        criteria: null,
+        sort: null,
+      },
+    ],
+    displayNameField: "id",
+    generateSeed: generateFixtureCampaignMembers,
+    fullName: (fields) => String(fields.id),
+    managedFields: new Set(["id", "Created_By", "Modified_By", "Created_Time", "Modified_Time"]),
+    searchFields: [],
+    initialNextId: 240000000000000000n,
+    createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
+  },
   Attachments: {
     ...attachmentsHooks,
     childModule: true,

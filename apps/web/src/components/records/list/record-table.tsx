@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { ActivityRibbon } from "./activity-ribbon";
 import { CellValue } from "./cell-value";
@@ -52,6 +53,16 @@ export interface RecordTableProps {
   format: FormatOptions;
   /** ISO 4217 code for currency cells; plain number when omitted. */
   currencyCode?: string;
+  /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
+  numericDates?: boolean;
+  /** Activities list: draw the Related To module pictogram (Meetings). */
+  relatedToPictogram?: boolean;
+  /** Activities list: boolean field marking all-day rows, whose datetime cells show only the date. */
+  allDayField?: string;
+  /** Edit page of a row; the `edit` hover tool links there. */
+  rowEditHref?: (record: RecordData) => string;
+  /** Hover tool sequence before the checkbox; default ellipsis + note. */
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   footer: RecordTableFooterProps;
 }
 
@@ -113,6 +124,11 @@ export function RecordTable({
   ownerNames,
   format,
   currencyCode,
+  numericDates,
+  relatedToPictogram,
+  allDayField,
+  rowEditHref,
+  rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
   const empty = records.length === 0;
@@ -244,12 +260,44 @@ export function RecordTable({
                   >
                     {laterInventory ? (
                       <div className="flex pt-(--size-list-checkbox-offset) opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
-                        <Button variant="ghost" size="compact" aria-label="Record actions">
-                          <Icons.ellipsis aria-hidden className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="compact" aria-label="Notes" laterModule="M6">
-                          <Icons.messageSquare aria-hidden className="h-4 w-4" />
-                        </Button>
+                        {rowTools.map((tool) =>
+                          tool === "note" ? (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Notes"
+                              laterModule="M6"
+                            >
+                              <Icons.messageSquare aria-hidden className="h-4 w-4" />
+                            </Button>
+                          ) : tool === "edit" && rowEditHref ? (
+                            <Link
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Edit record"
+                              href={rowEditHref(record)}
+                              prefetch={false}
+                            >
+                              <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label={tool === "edit" ? "Edit record" : "Record actions"}
+                              laterModule={tool === "edit" ? "M6" : undefined}
+                            >
+                              {tool === "edit" ? (
+                                <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                              ) : (
+                                <Icons.ellipsis aria-hidden className="h-4 w-4" />
+                              )}
+                            </Button>
+                          ),
+                        )}
                       </div>
                     ) : null}
                   </td>
@@ -310,6 +358,9 @@ export function RecordTable({
                             ownerNames={ownerNames}
                             format={format}
                             currencyCode={currencyCode}
+                            numericDates={numericDates}
+                            dateOnly={allDayField ? record.fields[allDayField] === true : false}
+                            relatedToPictogram={relatedToPictogram && field.apiName === "What_Id"}
                           />
                         </div>
                         {phoneLaterModule &&

@@ -11,6 +11,7 @@ import type { ModuleKey } from "@/components/ui/later-module";
 import { TextField } from "@/components/ui/text-field";
 import { activityFilterToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { useModuleTags } from "@/lib/records/tags";
 import { ActivityFilterEditor } from "./activity-filter-editor";
 import {
   draftOperator,
@@ -70,6 +71,25 @@ export function FilterPanel({
   onClear,
   applyErrorMessage,
 }: FilterPanelProps) {
+  const tagModule = groups
+    .flatMap((group) => group.items)
+    .find((item) => selectedIds.includes(item.id) && item.editor?.tagModule)?.editor?.tagModule;
+  const tags = useModuleTags(tagModule);
+  const resolvedGroups = groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) =>
+      item.editor?.tagModule
+        ? {
+            ...item,
+            editor: {
+              ...item.editor,
+              tagStatus: tags.status,
+              options: tags.tags.map((tag) => ({ id: tag.id, label: tag.name, color: tag.color })),
+            },
+          }
+        : item,
+    ),
+  }));
   const titleId = useId();
   const [drafts, setDrafts] = useState<Record<string, FilterDraft>>(() =>
     Object.fromEntries(initialFilters.map(({ itemId, ...draft }) => [itemId, draft])),
@@ -96,7 +116,7 @@ export function FilterPanel({
     item.id === "activities" ||
     (item.label === "Activities" && !item.laterModule && !item.disabled);
 
-  const selectedFieldItems = groups
+  const selectedFieldItems = resolvedGroups
     .flatMap((group) => group.items)
     .filter((item) => selectedIds.includes(item.id) && item.editor);
   const selectedActivityItem = groups
@@ -110,7 +130,7 @@ export function FilterPanel({
   );
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
-  const visibleGroups = groups
+  const visibleGroups = resolvedGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),

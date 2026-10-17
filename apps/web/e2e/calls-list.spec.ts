@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
@@ -133,7 +134,13 @@ test("Calls filters, paging, record route and related record link", async ({ pag
   await expect(page).toHaveURL(/page=2/);
 
   // CL-38: Subject opens the call record route
-  await list.locator("tbody tr").first().getByRole("link").first().click();
+  await list
+    .locator("tbody tr")
+    .first()
+    .locator('td[data-part="column"]')
+    .first()
+    .getByRole("link")
+    .click();
   await expect(page).toHaveURL(/\/tab\/Calls\/[^/?]+/);
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
@@ -166,4 +173,29 @@ test("Calls later-module controls stay inert and Actions lists the six rows", as
   await page.getByRole("menuitem", { name: "Export Calls", exact: true }).click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Calls list measured evidence and row configuration", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Calls"));
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  const row = list.locator("tbody tr").first();
+  await row.hover();
+  const edit = row.getByRole("link", { name: "Edit record" });
+  await expect(edit).toHaveAttribute("href", /\/edit$/);
+  await expect(list.locator("[data-part=related-pictogram]")).toHaveCount(0);
+
+  if (process.env.MEP_LIST_EVIDENCE_DIR) {
+    await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "calls-list.png") });
+  }
+
+  await edit.click();
+  await expect(page).toHaveURL(/\/tab\/Calls\/[^/]+\/edit$/);
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Subject", exact: true })).not.toHaveValue("");
 });
