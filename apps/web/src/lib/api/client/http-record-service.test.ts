@@ -289,6 +289,7 @@ describe("HTTP record service", () => {
         filters: filter,
         search: "A & B",
         activityFilter: { choice: "overdue" },
+        campaignFilter: { campaignIds: ["synthetic"], memberStatuses: ["Opened"] },
         includeActivitySummary: true,
       }),
     ).resolves.toEqual({
@@ -304,6 +305,7 @@ describe("HTTP record service", () => {
       "POST",
       {
         activity_filter: { choice: "overdue" },
+        campaign_filter: { campaign_ids: ["synthetic"], member_statuses: ["Opened"] },
         include_activity_summary: true,
         filters: wireFilter,
         search: "A & B",
