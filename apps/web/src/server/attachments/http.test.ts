@@ -3,7 +3,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createUploadBatchRegistry, LocalDiskBlobStore } from "@crm/core/attachments";
-import type { OrgContext } from "@crm/core/records";
+import { ATTACHMENT_PARENT_MODULES } from "@crm/core/attachments/modules";
+import type { OrgContext, RecordData } from "@crm/core/records";
 import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
@@ -302,6 +303,64 @@ describe("Attachments HTTP handlers", () => {
       { query: "?page=3&per_page=1" },
     );
     expect(page3.status).toBe(204);
+  });
+
+  it("rejects per_page above the cap with INVALID_DATA", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const res = await call(deps, { module: "Leads", recordId: id }, { query: "?per_page=201" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("INVALID_DATA");
+  });
+
+  it("serves any page of 5,000 attachments with a constant number of list calls", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const total = 5000;
+    const all: RecordData[] = Array.from({ length: total }, (_, i) => ({
+      id: `att-${i}`,
+      fields: {
+        File_Name: `f${i}.pdf`,
+        Size: 1,
+        $type: "file",
+        Created_Time: "t",
+        Modified_Time: "t",
+      },
+    })) as unknown as RecordData[];
+    let calls = 0;
+    const realList = deps.records.list.bind(deps.records);
+    deps.records.list = (async (module: string, query: { page?: number; perPage?: number }) => {
+      if (module !== "Attachments") return realList(module, query as never);
+      calls++;
+      const perPage = query.perPage ?? 100;
+      const from = ((query.page ?? 1) - 1) * perPage;
+      return { records: all.slice(from, from + perPage), moreRecords: from + perPage < total };
+    }) as never;
+    deps.lifecycle.isReady = () => true;
+    const run = async (query: string) => {
+      calls = 0;
+      const res = await call(deps, { module: "Leads", recordId: id }, { query });
+      return { body: await res.json(), calls };
+    };
+    const first = await run("?page=1&per_page=200");
+    expect(first.body.data).toHaveLength(200);
+    expect(first.body.data[0].id).toBe("att-0");
+    expect(first.body.info.more_records).toBe(true);
+    expect(first.calls).toBeLessThanOrEqual(3);
+    const last = await run("?page=25&per_page=200");
+    expect(last.body.data).toHaveLength(200);
+    expect(last.body.data[199].id).toBe("att-4999");
+    expect(last.body.info.more_records).toBe(false);
+    expect(last.calls).toBeLessThanOrEqual(3);
+  });
+
+  it("accepts every supported parent module", async () => {
+    const deps = setup();
+    for (const module of ATTACHMENT_PARENT_MODULES) {
+      const res = await call(deps, { module, recordId: randomUUID() });
+      expect(res.status, module).toBe(404); // reaches the parent lookup, not module rejection
+    }
+    expect(ATTACHMENT_PARENT_MODULES).toContain("Leads");
   });
 
   it("rejects invalid upload batch header and unsupported methods", async () => {
