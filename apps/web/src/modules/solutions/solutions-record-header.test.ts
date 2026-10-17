@@ -2,14 +2,14 @@ import { expect, test } from "vitest";
 import { solutionsRecordHeaderIdentity } from "./solutions-record-header";
 import { solutionRecord } from "./test-metadata";
 
-test("solutionsRecordHeaderIdentity returns Solution_Title as title and disables portrait and recordNavigation", () => {
+test("solutionsRecordHeaderIdentity returns Solution_Title as title, disables portrait and enables recordNavigation", () => {
   const result = solutionsRecordHeaderIdentity(
     solutionRecord({ Solution_Title: "How to reset router" }),
   );
   expect(result).toEqual({
     title: "How to reset router",
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
   });
 
   const empty = solutionsRecordHeaderIdentity(solutionRecord());

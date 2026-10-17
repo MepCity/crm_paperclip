@@ -788,11 +788,19 @@ Provisional rules: the populated table body is the Campaigns table (not observed
 
 ### Cases record detail
 
-Not started.
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Subject title, previous / next arrows, Edit, More Options; case-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments, Open Activities, Closed Activities, Emails; metadata order): implemented by provisional rule; QA pending (MEP-863).
 
 ### Solutions record detail
 
-Not started.
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Solution Title title, previous / next arrows, Edit, More Options; solution-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments; metadata order): implemented by provisional rule; QA pending (MEP-863).
 
 ### Cases and Solutions create / edit forms
 
