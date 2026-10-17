@@ -377,6 +377,13 @@ test("observed operator value editors cover date, range, days unit, role search 
   );
   await panel.getByText("Sample tag", { exact: true }).click();
   await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Sample tag value", exact: true }).click();
+  await page.getByRole("textbox", { name: "Search Sample tag value", exact: true }).fill("follow");
+  await page.getByRole("option", { name: "Follow up", exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toContainText(
+    "Follow up",
+  );
   await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
 });
 
