@@ -3,6 +3,7 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type {
   ActivityFilterValue,
+  CampaignFilterValue,
   Criteria,
   FieldDefinition,
   ListResult,
@@ -221,6 +222,9 @@ function ModuleListScreenLoaded({
   const [appliedActivityFilter, setAppliedActivityFilter] = useState<ActivityFilterValue | null>(
     null,
   );
+  const [appliedCampaignFilter, setAppliedCampaignFilter] = useState<CampaignFilterValue | null>(
+    null,
+  );
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
@@ -258,6 +262,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
+    setAppliedCampaignFilter(null);
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -282,10 +287,12 @@ function ModuleListScreenLoaded({
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
+    appliedCampaignFilter,
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
@@ -300,8 +307,9 @@ function ModuleListScreenLoaded({
       viewId,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
     }),
-    [appliedActivityFilter, listCriteria, viewId],
+    [appliedActivityFilter, appliedCampaignFilter, listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -344,7 +352,10 @@ function ModuleListScreenLoaded({
   const serverFilterMessage = useMemo(() => {
     const error = listValidationError ?? countValidationError;
     if (!error) return null;
-    const messages = error.fieldErrors.filters ?? error.fieldErrors.activityFilter;
+    const messages =
+      error.fieldErrors.filters ??
+      error.fieldErrors.activityFilter ??
+      error.fieldErrors.campaignFilter;
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
 
@@ -480,6 +491,7 @@ function ModuleListScreenLoaded({
   function applyPanelFilters(
     applied: AppliedFilter[],
     activityFilter?: ActivityFilterValue | null,
+    campaignFilter?: CampaignFilterValue | null,
   ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
@@ -491,6 +503,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters(applied);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setAppliedActivityFilter(activityFilter ?? null);
+    setAppliedCampaignFilter(campaignFilter ?? null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -501,6 +514,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
+    setAppliedCampaignFilter(null);
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -510,13 +524,22 @@ function ModuleListScreenLoaded({
 
   function handleFilterSelectionChange(next: string[]) {
     setFilterSelection(next);
-    if (next.length === 0 && (appliedCriteria !== undefined || appliedActivityFilter !== null)) {
+    if (
+      next.length === 0 &&
+      (appliedCriteria !== undefined ||
+        appliedActivityFilter !== null ||
+        appliedCampaignFilter !== null)
+    ) {
       clearPanelFilters();
     }
   }
 
   function handleFilterClear() {
-    if (appliedCriteria === undefined && appliedActivityFilter === null) {
+    if (
+      appliedCriteria === undefined &&
+      appliedActivityFilter === null &&
+      appliedCampaignFilter === null
+    ) {
       clearPanelFilters();
     }
   }
@@ -563,7 +586,8 @@ function ModuleListScreenLoaded({
 
   const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
   const countSettled = count.isSuccess && !count.isFetching;
-  const hasActiveFilter = listCriteria !== undefined || appliedActivityFilter !== null;
+  const hasActiveFilter =
+    listCriteria !== undefined || appliedActivityFilter !== null || appliedCampaignFilter !== null;
   const awaitingFilteredPair =
     hasActiveFilter && !(listSettled && countSettled && !hasFilterValidationError);
   const useAcceptedSnapshot =
@@ -813,6 +837,7 @@ function ModuleListScreenLoaded({
             groups={config.filterGroups}
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
+            initialCampaignFilter={appliedCampaignFilter}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
