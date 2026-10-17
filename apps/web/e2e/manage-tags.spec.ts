@@ -26,10 +26,16 @@ test("Manage Tags shares the catalogue with record tags and list filter options"
   await expect(page.getByText("Shared catalogue", { exact: true })).toBeVisible();
   await page.goto(moduleRecordPath(org.slug, "Leads", "100000000000000000"));
   const header = page.locator("[data-record-header]");
+  const catalogueRead = page.waitForResponse(
+    (response) => response.request().method() === "POST" && response.url().includes("/tab/Leads/"),
+  );
   await header.getByRole("button", { name: "Add Tags" }).click();
+  await catalogueRead;
   const dialog = page.getByRole("dialog", { name: "Add Tags" });
-  await dialog.getByRole("combobox", { name: "Enter Tags" }).fill("Shared");
-  await dialog.getByRole("option", { name: "Shared catalogue" }).click();
+  const entry = dialog.getByRole("combobox", { name: "Enter Tags" });
+  await entry.fill("Shared");
+  await entry.press("ArrowDown");
+  await page.getByRole("option", { name: "Shared catalogue" }).click();
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(header.getByRole("button", { name: "Remove tag Shared catalogue" })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Leads/tags`);
