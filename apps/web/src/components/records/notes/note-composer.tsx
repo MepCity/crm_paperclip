@@ -4,6 +4,7 @@ import { Paperclip, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { addPendingFiles, notifyOverBudget, PendingFileChips } from "./note-attachments";
+import { sanitizeNoteHtml } from "./note-content-policy";
 import {
   applyNoteEditorCommand,
   isNoteContentEmpty,
@@ -69,8 +70,9 @@ export function NoteComposer({
     const editor = editorRef.current;
     if (!editor) return;
     const seed = initialRef.current;
-    editor.innerHTML = seed?.content ?? "";
-    setContent(seed?.content ?? "");
+    const clean = sanitizeNoteHtml(seed?.content ?? "");
+    editor.innerHTML = clean;
+    setContent(clean);
     setTitle(seed?.title ?? "");
     editor.focus();
   }, [expanded]);
