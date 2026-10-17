@@ -69,6 +69,7 @@ const COLOUR_GROUPS = [
     label: "Primary",
     tokens: [
       "--color-primary",
+      "--color-list-row-hover-activities",
       "--color-primary-text",
       "--color-primary-hover",
       "--color-primary-pressed",
@@ -285,6 +286,13 @@ const SIZE_GROUPS = [
   {
     label: "Activity forms",
     tokens: [
+      "--size-meeting-window-width",
+      "--size-meeting-window-title-inset",
+      "--size-meeting-window-title-top",
+      "--size-meeting-window-content-inset",
+      "--size-meeting-window-content-end",
+      "--size-meeting-window-footer-height",
+      "--size-meeting-window-footer-inset",
       "--size-activity-form-width",
       "--size-activity-form-inset",
       "--size-activity-form-label-width",
@@ -340,6 +348,7 @@ const SIZE_GROUPS = [
       "--size-record-header-end",
       "--radius-record-menu-row",
       "--size-record-rail-width",
+      "--size-record-side-panel-width",
       "--size-record-rail-heading-height",
       "--size-record-rail-text-inset",
       "--size-record-tab-row-height",

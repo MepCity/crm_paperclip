@@ -106,10 +106,24 @@ export interface ModuleListScreenConfig {
   /** ISO 4217 code for currency cells of the table; plain number when omitted. */
   cellCurrencyCode?: string;
   badgeColumn?: boolean;
+  /** L-41 is visible in this module’s saved list evidence. */
+  activityRibbon?: boolean;
   /** Interim: Search box in the view menu, filtering the view rows by name (Tasks). */
   viewMenuSearch?: boolean;
   /** View type tile ids to draw (see `ViewTypeSwitcher`); omitted draws all six. */
   viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px (Activities rows 38-39). */
+  actionsMenuWidth?: number;
+  /** Activities-only list look (MEP-590 difference table); other modules keep the shared look. */
+  listVariant?: "activities";
+  /** Row hover tools in order (Activities rows 32-33); omitted draws ellipsis + note. */
+  /** Meetings: draw the Related To module pictogram. */
+  relatedToPictogram?: boolean;
+  /** Boolean field marking all-day rows (date-only Start/End cells). */
+  allDayField?: string;
+  /** Row edit pencil links to the record edit page; leave off until the module has an edit form. */
+  rowEditLink?: boolean;
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
@@ -120,6 +134,12 @@ export interface ModuleListScreenConfig {
    * list does; `inventory.actions` wins when both are given.
    */
   toolbarActions?: readonly Omit<MenuAction, "onAction">[];
+  /** Create opens this dialog over the list instead of the create page (Meetings). */
+  quickCreate?: (props: {
+    orgSlug: string;
+    currentUserId: string;
+    onClose: () => void;
+  }) => ReactNode;
 }
 
 export interface ModuleListScreenProps {
@@ -127,6 +147,8 @@ export interface ModuleListScreenProps {
   config: ModuleListScreenConfig;
   /** When omitted, the default view from `useViews` is used. */
   viewId?: string;
+  /** The signed-in user; a quick-create dialog uses it as the default Host. */
+  currentUserId?: string;
 }
 
 function ListNotFound() {
@@ -137,7 +159,12 @@ function ListNotFound() {
   );
 }
 
-export function ModuleListScreen({ orgSlug, config, viewId: routeViewId }: ModuleListScreenProps) {
+export function ModuleListScreen({
+  orgSlug,
+  config,
+  viewId: routeViewId,
+  currentUserId,
+}: ModuleListScreenProps) {
   const viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
     if (routeViewId) return routeViewId;
@@ -158,6 +185,7 @@ export function ModuleListScreen({ orgSlug, config, viewId: routeViewId }: Modul
       config={config}
       routeViewId={routeViewId}
       viewId={resolvedViewId}
+      currentUserId={currentUserId}
     />
   );
 }
@@ -167,6 +195,7 @@ function ModuleListScreenLoaded({
   config,
   routeViewId,
   viewId,
+  currentUserId,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
@@ -202,6 +231,7 @@ function ModuleListScreenLoaded({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [massUpdateOpen, setMassUpdateOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
   const deleteRecords = useDeleteRecords(config.module);
@@ -243,15 +273,22 @@ function ModuleListScreenLoaded({
 
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
-    const base = listQueryFromSearchState(viewId, columnApiNames, searchState, eligibleSortFields);
+    // Row presentation may need a field that is not a visible column.
+    const queryFields = config.allDayField
+      ? [...new Set([...columnApiNames, config.allDayField])]
+      : columnApiNames;
+    const base = listQueryFromSearchState(viewId, queryFields, searchState, eligibleSortFields);
     return {
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
     columnApiNames,
+    config.allDayField,
+    config.activityRibbon,
     eligibleSortFields,
     listCriteria,
     searchState,
@@ -636,7 +673,11 @@ function ModuleListScreenLoaded({
   ];
 
   return (
-    <div className="module-list-page">
+    <div
+      className="module-list-page"
+      data-list-variant={config.listVariant}
+      data-list-module={config.listVariant ? config.module : undefined}
+    >
       <ViewTabStrip
         viewName={view.name}
         views={config.inventory ? viewsQuery.data : undefined}
@@ -661,6 +702,7 @@ function ModuleListScreenLoaded({
       ) : (
         <ListToolbar
           viewTypeTileIds={config.viewTypeTileIds}
+          actionsMenuWidth={config.actionsMenuWidth}
           presentation={hasBoard ? presentation : undefined}
           onPresentationChange={
             hasBoard
@@ -695,7 +737,8 @@ function ModuleListScreenLoaded({
           }))}
           create={{
             label: config.createLabel,
-            href: config.paths.create(orgSlug, config.module),
+            href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
+            onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: config.inventory?.createItems,
             moreLaterModule: config.inventory ? "M6" : undefined,
           }}
@@ -706,6 +749,13 @@ function ModuleListScreenLoaded({
           {config.boardToolbar ?? boardProps?.toolbar}
         </div>
       ) : null}
+      {quickCreateOpen
+        ? config.quickCreate?.({
+            orgSlug,
+            currentUserId: currentUserId ?? "",
+            onClose: () => setQuickCreateOpen(false),
+          })
+        : null}
       {massUpdateOpen && massUpdateFields.length > 0 ? (
         <MassUpdateDialog
           isOpen
@@ -788,9 +838,19 @@ function ModuleListScreenLoaded({
             <RecordTable
               laterInventory={Boolean(config.inventory)}
               badgeColumn={config.badgeColumn}
+              activitySummaries={config.activityRibbon ? listPage.activitySummaries : undefined}
               phoneLaterModule={config.phoneLaterModule}
               linkWebsite={config.linkWebsite}
               currencyCode={config.cellCurrencyCode}
+              numericDates={config.listVariant === "activities"}
+              rowTools={config.rowTools}
+              relatedToPictogram={config.relatedToPictogram}
+              allDayField={config.allDayField}
+              rowEditHref={
+                config.rowEditLink
+                  ? (record) => `${config.paths.record(orgSlug, config.module, record.id)}/edit`
+                  : undefined
+              }
               columns={columns}
               records={records}
               linkField={config.linkField}

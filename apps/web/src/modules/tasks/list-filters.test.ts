@@ -45,3 +45,17 @@ test("lists metadata fields alphabetically and resolves editors", () => {
     { id: "u1", label: "Alice" },
   ]);
 });
+
+test("omits the Description and Locked field rows (difference rows 01-02)", () => {
+  const groups = buildTasksFilterGroups({
+    fields: [
+      taskField("Subject", { label: "Subject" }),
+      taskField("Description", { label: "Description" }),
+      taskField("Locked", { label: "Locked" }),
+    ],
+    users: [],
+    linkField: "Subject",
+    currencyCode: "TRY",
+  });
+  expect((groups[1]?.items ?? []).map((item) => item.label)).toEqual(["Subject"]);
+});

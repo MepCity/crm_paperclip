@@ -15,6 +15,9 @@ const systemRows: readonly string[] = [
   "Untouched Records",
 ];
 
+/** Difference rows 01-02: the reference field filter has no Description row, and Locked is a system filter. */
+const hiddenFieldLabels: ReadonlySet<string> = new Set(["Description", "Locked"]);
+
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
@@ -49,7 +52,11 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
  * There is no Filter By Related Modules group.
  */
 export function buildTasksFilterGroups(input: Input): readonly FilterGroup[] {
-  const labels = new Map(input.fields.map((field) => [field.label, field]));
+  const labels = new Map(
+    input.fields
+      .filter((field) => !hiddenFieldLabels.has(field.label))
+      .map((field) => [field.label, field]),
+  );
   return [
     {
       id: "system",

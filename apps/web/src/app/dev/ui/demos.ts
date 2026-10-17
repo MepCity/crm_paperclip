@@ -6,6 +6,7 @@ import RecordDetailCardsDemo from "@/components/records/detail/record-detail-car
 import StageBarDemo from "@/components/records/detail/stage-bar/stage-bar.demo";
 import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
+import DraftsPageDemo from "@/components/records/drafts/drafts-page.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import FormErrorBannerDemo from "@/components/records/form/form-error-banner.demo";
 import RecordFormAddressDemo from "@/components/records/form/record-form-address.demo";
@@ -19,6 +20,8 @@ import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import MassUpdateDialogDemo from "@/components/records/list/mass-update-dialog.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
 import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
+import RecycleBinDemo from "@/components/records/recycle-bin/recycle-bin.demo";
+import ManageTagsPageDemo from "@/components/records/tags/manage-tags-page.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -54,6 +57,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "recycle-bin": RecycleBinDemo,
   "record-board": RecordBoardDemo,
   "kanban-settings": KanbanSettingsDialogDemo,
   "inline-field-editor": InlineFieldEditorDemo,
@@ -108,4 +112,6 @@ export const demos: Record<string, React.ComponentType> = {
   "record-form-address": RecordFormAddressDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,
+  drafts: DraftsPageDemo,
+  "manage-tags": ManageTagsPageDemo,
 };

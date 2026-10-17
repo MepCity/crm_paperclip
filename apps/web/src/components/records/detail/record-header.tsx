@@ -20,6 +20,8 @@ export type RecordCommand = {
   variant?: "primary" | "secondary";
   isDisabled?: boolean;
   laterModule?: ModuleKey;
+  /** Attached dropdown segment (e.g. Reschedule Call); label is its accessible name. */
+  splitLabel?: string;
 } & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
 export interface RecordMenuGroup {
   id: string;
@@ -44,7 +46,13 @@ export interface RecordHeaderProps {
   nextHref?: string;
   addTags?: { label: string; laterModule: ModuleKey };
   showPortrait?: boolean;
+  /** "inline" draws the portrait icon backgroundless at title height; default "tile". */
+  portraitAppearance?: "tile" | "inline";
   showRecordNavigation?: boolean;
+  /** Static glyph before the title (activities variant). */
+  titleGlyph?: import("@/components/ui/icon").Icon;
+  titleHref?: string;
+  titleSuffix?: string;
 }
 
 export function RecordHeader({
@@ -54,6 +62,7 @@ export function RecordHeader({
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
+  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
@@ -64,7 +73,11 @@ export function RecordHeader({
   previousHref,
   nextHref,
   addTags,
+  titleGlyph: TitleGlyph,
+  titleHref,
+  titleSuffix,
 }: RecordHeaderProps) {
+  const inlinePortrait = showPortrait && portraitAppearance === "inline";
   const groups = menuGroups.filter((group) => group.items.length > 0);
   const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
   const accessibleTitle = subtitle ? `${title} - ${subtitle}` : title;
@@ -89,7 +102,7 @@ export function RecordHeader({
           </Button>
         )}
       </div>
-      {showPortrait ? (
+      {showPortrait && portraitAppearance === "tile" ? (
         <div
           data-record-portrait
           aria-hidden
@@ -104,11 +117,39 @@ export function RecordHeader({
       ) : null}
       <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
         <h1
-          className="min-w-0 truncate text-text"
+          className={`min-w-0 truncate text-text${TitleGlyph || inlinePortrait ? " flex items-center gap-2" : ""}`}
           title={accessibleTitle}
           aria-label={accessibleTitle}
         >
-          <span className="text-2xl font-bold">{title}</span>
+          {inlinePortrait ? (
+            <span data-record-portrait aria-hidden className="shrink-0 size-6 text-text">
+              {PortraitIcon ? (
+                <PortraitIcon className="h-full w-full" />
+              ) : (
+                <Icons.recordPortrait className="h-full w-full" />
+              )}
+            </span>
+          ) : null}
+          {TitleGlyph ? (
+            <TitleGlyph
+              aria-hidden
+              data-record-title-glyph
+              data-record-portrait
+              className="size-4 shrink-0"
+            />
+          ) : null}
+          {titleHref ? (
+            <Link href={titleHref} className="text-2xl font-bold hover:underline">
+              {title}
+            </Link>
+          ) : (
+            <span className="text-2xl font-bold">{title}</span>
+          )}
+          {titleSuffix ? (
+            <span className="text-md font-normal text-text" data-record-title-suffix>
+              {titleSuffix}
+            </span>
+          ) : null}
           {subtitle ? (
             <>
               <span
@@ -143,6 +184,45 @@ export function RecordHeader({
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
           const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
+          if (command.splitLabel) {
+            return (
+              <div key={command.id} data-record-split className="flex items-center">
+                {command.href ? (
+                  <Link
+                    href={command.href}
+                    variant={variant}
+                    size="record"
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
+                  </Link>
+                ) : (
+                  <Button
+                    variant={variant}
+                    size="record"
+                    onPress={command.onPress}
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
+                  </Button>
+                )}
+                <Button
+                  variant={variant}
+                  size="actions"
+                  aria-label={command.splitLabel}
+                  isDisabled={command.isDisabled}
+                  laterModule={command.laterModule}
+                  className="rounded-l-none border-l border-l-white/40"
+                >
+                  <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          }
           return command.href ? (
             <Link
               key={command.id}
