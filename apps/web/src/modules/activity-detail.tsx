@@ -45,6 +45,10 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
   const [selected, setSelected] = useState<string | null>(null);
   const fields = personQuery.data?.fields ?? {};
   const account = asRef(fields.Account_Name);
+  const isCall =
+    "Call_Type" in record.fields ||
+    "Call_Start_Time" in record.fields ||
+    "Outgoing_Call_Status" in record.fields;
   const persons: ActivityRelationPerson[] = personRef
     ? [
         {
@@ -57,7 +61,7 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
           accountName: account?.name ?? null,
           email: text(fields.Email),
           phone: text(fields.Phone),
-          mobile: text(fields.Mobile),
+          mobile: isCall ? null : text(fields.Mobile),
         },
       ]
     : [];
