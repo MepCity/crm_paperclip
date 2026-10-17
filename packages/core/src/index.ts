@@ -53,4 +53,4 @@ export type {
   TransferModule,
   TransferService,
 } from "./transfer";
-export { createTransferService, DEFAULT_TRANSFER_LIMITS } from "./transfer";
+export { createTransferService, DEFAULT_TRANSFER_LIMITS, TRANSFER_MODULES } from "./transfer";
