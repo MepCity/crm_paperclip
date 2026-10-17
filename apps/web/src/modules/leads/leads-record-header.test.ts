@@ -7,18 +7,12 @@ function leadRecord(fields: Record<string, unknown> = {}): RecordData {
 }
 
 describe("leadsRecordHeaderIdentity", () => {
-  it("builds title with first and last name and includes subtitle when company is present", () => {
+  it("uses Full_Name as title and Company as subtitle when both are present", () => {
     expect(
       leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Sample Person", Company: "Sample Corp" })),
     ).toEqual({
       title: "Sample Person",
       subtitle: "Sample Corp",
-    });
-  });
-
-  it("builds title with first and last name without subtitle when company is missing", () => {
-    expect(leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Sample Person" }))).toEqual({
-      title: "Sample Person",
     });
   });
 
@@ -31,10 +25,19 @@ describe("leadsRecordHeaderIdentity", () => {
     });
   });
 
-  it("builds title with only last name without subtitle when company is missing", () => {
-    expect(leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Person" }))).toEqual({
-      title: "Person",
-    });
+  it("omits the subtitle key when Company is empty, null, or missing", () => {
+    const cases: Record<string, unknown>[] = [
+      { Full_Name: "Sample Person", Company: "" },
+      { Full_Name: "Sample Person", Company: null },
+      { Full_Name: "Sample Person", Company: undefined },
+      { Full_Name: "Sample Person" },
+      { Full_Name: "Person" },
+    ];
+    for (const fields of cases) {
+      const identity = leadsRecordHeaderIdentity(leadRecord(fields));
+      expect(identity).toEqual({ title: String(fields.Full_Name) });
+      expect("subtitle" in identity).toBe(false);
+    }
   });
 
   it("handles company present with empty, null, or undefined name fields", () => {
@@ -62,22 +65,10 @@ describe("leadsRecordHeaderIdentity", () => {
     });
   });
 
-  it("omits subtitle when company is empty string, null, or undefined", () => {
-    expect(
-      leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Sample Person", Company: "" })),
-    ).toEqual({
-      title: "Sample Person",
-    });
-    expect(
-      leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Sample Person", Company: null })),
-    ).toEqual({
-      title: "Sample Person",
-    });
-    expect(
-      leadsRecordHeaderIdentity(leadRecord({ Full_Name: "Sample Person", Company: undefined })),
-    ).toEqual({
-      title: "Sample Person",
-    });
+  it("returns an empty title when Full_Name is null, empty or missing", () => {
+    expect(leadsRecordHeaderIdentity(leadRecord({ Full_Name: null })).title).toBe("");
+    expect(leadsRecordHeaderIdentity(leadRecord({ Full_Name: "" })).title).toBe("");
+    expect(leadsRecordHeaderIdentity(leadRecord({})).title).toBe("");
   });
 
   it("handles empty record with default empty title", () => {

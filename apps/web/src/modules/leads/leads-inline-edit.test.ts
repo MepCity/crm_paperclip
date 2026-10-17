@@ -1,18 +1,27 @@
-import type { FieldDefinition } from "@crm/core/records";
+import type { FieldDataType, FieldDefinition } from "@crm/core/records";
+import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import { isLeadInlineEditable } from "./leads-inline-edit";
 
-function leadField(apiName: string, extra: Partial<FieldDefinition> = {}): FieldDefinition {
+const ctx = {
+  orgId: "inline-edit-test-org",
+  orgSlug: "inline-edit-test-org",
+  orgName: "Inline Edit Test Org",
+  userId: "user-1",
+  role: "admin" as const,
+};
+
+function leadField(apiName = "Company", overrides: Partial<FieldDefinition> = {}): FieldDefinition {
   return {
     apiName,
     label: apiName,
-    dataType: "text",
+    dataType: "text" as FieldDataType,
     required: false,
     readOnly: false,
     unique: false,
     massUpdate: false,
     views: { view: true, create: true, edit: true, quickCreate: false },
-    ...extra,
+    ...overrides,
   };
 }
 
@@ -30,41 +39,7 @@ describe("isLeadInlineEditable", () => {
     expect(isLeadInlineEditable(leadField("Rating_Score", { dataType: "double" }))).toBe(true);
   });
 
-  it("excludes system and composite fields from inline editing", () => {
-    const excludedFields = [
-      "Address",
-      "Full_Name",
-      "Created_By",
-      "Modified_By",
-      "Created_Time",
-      "Modified_Time",
-    ];
-    for (const apiName of excludedFields) {
-      expect(isLeadInlineEditable(leadField(apiName))).toBe(false);
-    }
-  });
-
-  it("excludes uneditable data types", () => {
-    const excludedDataTypes = [
-      "profileimage",
-      "lookup",
-      "multi_module_lookup",
-      "datetime",
-      "bigint",
-    ] as const;
-    for (const dataType of excludedDataTypes) {
-      expect(isLeadInlineEditable(leadField("Custom_Field", { dataType }))).toBe(false);
-    }
-  });
-
-  it("excludes read-only fields even if dataType is otherwise editable", () => {
-    expect(isLeadInlineEditable(leadField("Company", { readOnly: true }))).toBe(false);
-    expect(isLeadInlineEditable(leadField("Email", { dataType: "email", readOnly: true }))).toBe(
-      false,
-    );
-  });
-
-  it("excludes fields when edit view is disabled", () => {
+  it("is false when the edit view flag is off", () => {
     expect(
       isLeadInlineEditable(
         leadField("Company", {
@@ -72,5 +47,59 @@ describe("isLeadInlineEditable", () => {
         }),
       ),
     ).toBe(false);
+  });
+
+  it("is false for read-only fields", () => {
+    expect(isLeadInlineEditable(leadField("Company", { readOnly: true }))).toBe(false);
+    expect(isLeadInlineEditable(leadField("Email", { dataType: "email", readOnly: true }))).toBe(
+      false,
+    );
+  });
+
+  it.each(["Address", "Full_Name", "Created_By", "Modified_By", "Created_Time", "Modified_Time"])(
+    "is false for excluded api name %s",
+    (apiName) => {
+      expect(isLeadInlineEditable(leadField(apiName))).toBe(false);
+    },
+  );
+
+  it.each(["profileimage", "lookup", "multi_module_lookup", "datetime", "bigint"])(
+    "is false for excluded data type %s",
+    (dataType) => {
+      expect(
+        isLeadInlineEditable(leadField("Custom_Field", { dataType: dataType as FieldDataType })),
+      ).toBe(false);
+    },
+  );
+
+  describe("with Leads fixture metadata", () => {
+    it("evaluates real fields from Leads fixture metadata", async () => {
+      const service = createFixtureRecordService(ctx);
+      const module = await service.getModule("Leads");
+      const findField = (apiName: string): FieldDefinition => {
+        const match = module.fields.find((f) => f.apiName === apiName);
+        if (!match) throw new Error(`Missing fixture field: ${apiName}`);
+        return match;
+      };
+
+      // Plain editable fields
+      expect(isLeadInlineEditable(findField("Company"))).toBe(true);
+      expect(isLeadInlineEditable(findField("Designation"))).toBe(true);
+
+      // Excluded composite / system fields
+      expect(isLeadInlineEditable(findField("Address"))).toBe(false);
+      expect(isLeadInlineEditable(findField("Full_Name"))).toBe(false);
+      expect(isLeadInlineEditable(findField("Created_By"))).toBe(false);
+      expect(isLeadInlineEditable(findField("Modified_By"))).toBe(false);
+      expect(isLeadInlineEditable(findField("Created_Time"))).toBe(false);
+      expect(isLeadInlineEditable(findField("Modified_Time"))).toBe(false);
+
+      // Excluded data types from fixture fields
+      expect(isLeadInlineEditable(findField("Record_Image"))).toBe(false); // profileimage
+      expect(isLeadInlineEditable(findField("Converted_Account"))).toBe(false); // lookup
+      expect(isLeadInlineEditable(findField("Connected_To__s"))).toBe(false); // multi_module_lookup
+      expect(isLeadInlineEditable(findField("Last_Activity_Time"))).toBe(false); // datetime
+      expect(isLeadInlineEditable(findField("id"))).toBe(false); // bigint
+    });
   });
 });

@@ -2,7 +2,7 @@
 
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { FieldInput } from "@/components/records/form/field-input";
 import { formPayload, initialFormValues } from "@/components/records/form/form-model";
@@ -135,6 +135,17 @@ export function MeetingInformationDialog({
   }
 
   const ready = Boolean(metadata.data && users.data);
+  const formRef = useRef<HTMLFormElement>(null);
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!ready || focused.current) return;
+    focused.current = true;
+    const title = formRef.current?.querySelector<HTMLInputElement>(
+      `#meeting-information-${MEETING_INFORMATION_FIELDS[0]}`,
+    );
+    title?.focus();
+    title?.select();
+  }, [ready]);
   const ownerOptions = (users.data ?? []).map((u) => ({
     id: u.userId,
     name: u.name,
@@ -150,24 +161,26 @@ export function MeetingInformationDialog({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
     >
-      <Modal className="flex max-h-full w-full max-w-xl flex-col rounded-lg border border-border bg-surface shadow-lg outline-none">
+      <Modal className="flex max-h-full w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
         <AriaDialog
           aria-label="Meeting Information"
           className="flex min-h-0 flex-col outline-none"
           data-meeting-information-dialog
         >
-          <Heading slot="title" className="px-6 pt-5 pb-3 text-xl font-semibold">
+          <Heading slot="title" className="meeting-window__title">
             Meeting Information
           </Heading>
           <form
-            className="flex min-h-0 flex-col"
+            ref={formRef}
+            className="meeting-window__form flex min-h-0 flex-col"
+            data-form-variant="activity"
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
               void save();
             }}
           >
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-3">
+            <div className="meeting-window__body min-h-0 flex-1 overflow-y-auto">
               {banner ? <p role="alert">{banner}</p> : null}
               {ready ? (
                 fields.map((field) => (
@@ -176,10 +189,12 @@ export function MeetingInformationDialog({
                       label={field.label}
                       controlId={`meeting-information-${field.apiName}`}
                       column="full"
+                      required={field.required}
                     >
                       <FieldInput
                         id={`meeting-information-${field.apiName}`}
                         hideLabel
+                        variant="activity"
                         field={field}
                         value={values[field.apiName] ?? null}
                         onChange={(next) => change(field.apiName, next)}
@@ -199,11 +214,12 @@ export function MeetingInformationDialog({
                 <p role="status">Loading...</p>
               )}
             </div>
-            <footer className="flex items-center justify-between border-t border-border px-6 py-3">
+            <footer className="meeting-window__footer flex items-center justify-between">
               <Button
                 type="button"
                 variant="ghost"
                 size="md"
+                className="meeting-window__more"
                 onPress={addMoreDetails}
                 isDisabled={!ready}
               >

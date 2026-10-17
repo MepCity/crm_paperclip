@@ -21,6 +21,8 @@ export interface ListToolbarProps {
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
   viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px; omitted keeps the shared width. */
+  actionsMenuWidth?: number;
 }
 
 export function ListToolbar({
@@ -35,6 +37,7 @@ export function ListToolbar({
   create,
   actions = [],
   viewTypeTileIds,
+  actionsMenuWidth,
 }: ListToolbarProps) {
   return (
     <div
@@ -86,13 +89,19 @@ export function ListToolbar({
             </Button>
             <Menu
               width="actions"
+              widthPx={actionsMenuWidth}
               items={actions}
               onAction={(key) =>
                 actions.find((item) => item.id === key && !item.laterModule)?.onAction()
               }
             >
               {(item) => (
-                <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
+                <MenuItem
+                  id={item.id}
+                  laterModule={item.laterModule}
+                  isDisabled={item.isDisabled}
+                  className={item.separatorBefore ? "mt-1 border-t border-border pt-1" : undefined}
+                >
                   <span className="flex items-center justify-between gap-3">
                     {item.label}
                     {item.submenuIndicator ? (
