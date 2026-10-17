@@ -1,8 +1,8 @@
 import { createElement } from "react";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
-import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
+import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
@@ -68,8 +68,7 @@ export function createContactsRelatedLists(
   return [
     {
       id: "notes",
-      renderBody: ({ definition }) =>
-        createElement(RelatedNotesCardBody, { notesShowMore: definition.notesShowMore }),
+      renderBody: notesCardBody("Contacts"),
       title: "Notes",
       moduleKey: "M6",
       order: 1,

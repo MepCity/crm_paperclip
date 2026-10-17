@@ -1,4 +1,5 @@
 import { Icons } from "@/components/ui/icon";
+import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListDefinition } from "../types";
 
@@ -40,6 +41,15 @@ export function createLeadsRelatedLists(
   badges: LeadsRelatedListBadges = {},
 ): readonly RelatedListDefinition[] {
   return [
+    {
+      id: "notes",
+      renderBody: notesCardBody("Leads"),
+      title: "Notes",
+      moduleKey: "M6",
+      order: 0,
+      targetId: "related-list-notes",
+      emptyStateText: "No records found",
+    },
     {
       id: "open-activities",
       renderBody: parentActivitiesBody("Leads", "open"),
