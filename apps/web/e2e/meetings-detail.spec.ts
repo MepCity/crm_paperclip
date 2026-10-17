@@ -27,7 +27,7 @@ test.describe("Meetings record detail", () => {
     await openMeeting(page, org.slug);
     const header = page.locator("[data-record-header]");
     await expect(header).toContainText("Meeting 246");
-    await expect(header.locator("[data-record-portrait]")).toHaveCount(0);
+    await expect(header.locator("[data-record-portrait]")).toHaveCount(1);
     await expect(header.getByRole("button", { name: "Close Task" })).toHaveCount(0);
     const wanted = ["Edit", "More Options", "Previous Record", "Next Record"];
     const names = await header
