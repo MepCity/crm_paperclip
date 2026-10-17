@@ -124,3 +124,14 @@ test("canEdit=false hides Attach and delete", () => {
   expect(screen.queryByRole("button", { name: "Attach" })).toBeNull();
   expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull();
 });
+
+test("Show more appears only when more pages exist and requests the next page", async () => {
+  const user = userEvent.setup();
+  const onLoadMore = vi.fn();
+  setup({ rows: [file], hasMore: true, onLoadMore });
+  await user.click(screen.getByRole("button", { name: "Show more" }));
+  expect(onLoadMore).toHaveBeenCalledTimes(1);
+  cleanup();
+  setup({ rows: [file] });
+  expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+});
