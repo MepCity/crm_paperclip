@@ -1,4 +1,4 @@
-import { ALLOWED_TAGS, DROPPED_TAGS, decodeEntities } from "@crm/core/records/note-html";
+import { DROPPED_TAGS, decodeEntities } from "@crm/core/records/note-html";
 
 export {
   ALLOWED_TAGS,

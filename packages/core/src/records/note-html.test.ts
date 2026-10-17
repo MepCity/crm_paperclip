@@ -27,6 +27,6 @@ describe("sanitizeNoteHtml", () => {
     expect(clean("<b <img onerror=1> >x")).not.toMatch(/onerror/);
     expect(clean("1 < 2 <!-- c --> <?x?>")).toBe("1 &lt; 2  ");
     expect(clean("<scr<script>ipt>alert(1)</scr</script>ipt>")).not.toMatch(/<script/i);
-    expect(clean('<a href="https://e.com" title="x"')).not.toMatch(/title/);
+    expect(clean('<a href="https://e.com" title="x"')).not.toContain("<a");
   });
 });
