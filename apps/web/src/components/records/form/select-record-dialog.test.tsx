@@ -486,3 +486,23 @@ test("multiple selection survives pagination and works from the keyboard", async
     { module: "Contacts", id: "c-2", name: "Second page" },
   ]);
 });
+
+test("initial multiple selection resolves record names and retains them after searching", async () => {
+  const user = userEvent.setup();
+  const onDone = vi.fn();
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      selection="multiple"
+      selectedIds={["c-1"]}
+      recordService={createMockService()}
+      onDone={onDone}
+      onCancel={vi.fn()}
+    />,
+  );
+  await screen.findByRole("checkbox", { name: "Alice Smith" });
+  await user.type(screen.getByRole("textbox", { name: "Search" }), "Bob");
+  await waitFor(() => expect(screen.queryByRole("checkbox", { name: "Alice Smith" })).toBeNull());
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(onDone).toHaveBeenCalledWith([{ module: "Contacts", id: "c-1", name: "Alice Smith" }]);
+});

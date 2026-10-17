@@ -217,6 +217,22 @@ export function SelectRecordDialog(props: SelectRecordDialogProps) {
     nameField ??
     screenDef?.list.linkField ??
     (metadata?.fields.some((f) => f.apiName === "Full_Name") ? "Full_Name" : "Name");
+  useEffect(() => {
+    if (!multiple) return;
+    setSelected((previous) => {
+      let next = previous;
+      for (const record of records) {
+        const reference = previous.get(record.id);
+        if (!reference) continue;
+        const name = formatCellText(record.fields[linkField]) || record.id;
+        if (reference.name === name) continue;
+        if (next === previous) next = new Map(previous);
+        next.set(record.id, { module, id: record.id, name });
+      }
+      return next;
+    });
+  }, [multiple, records, linkField, module]);
+
   const fieldMap = new Map<string, FieldDefinition>(
     metadata?.fields.map((f) => [f.apiName, f]) ?? [],
   );
