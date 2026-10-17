@@ -15,7 +15,7 @@ import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
-import { type RecordCommand, RecordHeader } from "@/components/records/detail/record-header";
+import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
@@ -70,14 +70,7 @@ export type RecordDetailSlotsContext = {
 export type RecordDetailSlots = {
   overviewPrefix?: ReactNode;
   contactSummary?: ReactNode;
-  relatedRailBeforeFooter?: ReactNode;
   relatedRailAfterFooter?: ReactNode;
-  /** Right-hand panel; when present the related list rail and its toggle are not drawn. */
-  sidePanel?: ReactNode;
-  /** Commands drawn before Edit in the record header. */
-  headerCommands?: readonly RecordCommand[];
-  /** When true, omits the Edit button from the record header (e.g. Calls where Edit is in More Options). */
-  suppressEditCommand?: boolean;
 };
 
 export type RecordDetailScreenProps = {
@@ -256,7 +249,6 @@ export function RecordDetailScreen({
     : record;
   const {
     title,
-    titleHref,
     subtitle,
     subtitleLaterModule,
     subtitleHref,
@@ -309,7 +301,6 @@ export function RecordDetailScreen({
   }
 
   const moreMenuGroups = rules.moreOptions({
-    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
     ...(definition.merge
@@ -473,12 +464,10 @@ export function RecordDetailScreen({
         header={
           <RecordHeader
             title={title}
-            titleHref={titleHref}
             subtitle={subtitle}
             subtitleLaterModule={subtitleLaterModule}
             subtitleHref={subtitleHref}
             portraitIcon={portraitIcon ?? rules.portraitIcon}
-            portraitAppearance={rules.portraitAppearance}
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}

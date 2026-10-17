@@ -529,12 +529,12 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 | --- | --- | --- |
 | Related-list card set | DD-93–DD-149 (card headers, controls, columns, footer DD-147–DD-149) | `deals-related-lists.test.tsx`, `deals-detail.spec.ts` |
 | Stage History data | DD-99–DD-106, DD-57 rail badge | `deal-stage-history-card-body.tsx`, `deals-detail.spec.ts` |
-| Contact Roles empty shell | DD-125–DD-132 (no DD-58 badge; service follow-up) | `deals-related-lists.test.tsx` |
+| Contact Roles card rows + rail count | DD-125–DD-132, DD-58 | `contact-roles-card-body.test.tsx`, `deals-detail.spec.ts` |
 | Scroll To Top | DD-98 | `deals-detail.spec.ts`, shared record detail e2e |
 | Lower detail sections | Deal Information, Description Information | `deals-detail-sections.test.ts`, `deals-detail.spec.ts` |
 | SALES SUMMARY | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
-**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
+**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions remain inert pending the dialog implementation (MEP-544).
 
 ### Deals create / edit / clone form — done; QA MEP-453 (MEP-440)
 
@@ -621,7 +621,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 **Known gaps**
 
 - **Later-module controls (M5+):** activity, note, attachment, campaign, cases, email, customization, automation, and commerce controls (M5–M12, P2, P3) remain drawn in place and inert when clicked (`data-later-module`).
-- **Contact Roles card (DD-125–DD-132):** table headers, columns, and structural row links are drawn; upper actions (Add Contacts Roles, Edit All, table icon) and rail count badge (DD-58) remain handler-less until the deal–contact role relation service ships.
+- **Contact Roles card (DD-125–DD-132):** rows (Contact Name and Account Name link to their detail pages, Phone, Email, Role Name) and the rail count badge (DD-58) are live; upper actions (Add Contacts Roles, Edit All, table icon) stay handler-less until MEP-544.
 - **Accounts Deals card Assign (AD-113):** drawn handler-less, mirroring the Contacts card Assign.
 - **Expected Revenue on form (DF-21):** read-only without a live client preview; the server computes `Amount × Probability / 100`, rounded to two decimals, after stage probability defaults, and returns the value after saving. Blank Amount yields `null`. This is an interim CTO rule because the exported metadata provides no formula. Seed, create, update, mass update and merge use the same Deals rule. CSV persistence is not implemented yet. Per Platform Lead decision MEP-673, client-supplied Expected_Revenue is rejected by shared read-only validation and stored values remain unchanged. Open gate question: this retains existing validation rather than the CTO wording requesting silent ignoring; confirm this interim difference at the module gate. Blank Probability follows existing stage-default rules; revenue uses the stored Probability.
 - **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
@@ -727,3 +727,24 @@ Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid
 show No participant found; a populated opaque array shows a blank body with heading/Add,
 without interpreting any entries or inventing names. The populated appearance/item schema
 remains an open question for the corresponding research/contract work.
+
+### Meetings create and edit — implemented; QA pending (MEP-509)
+
+Inventory is MF-01 – MF-15 and MF-02.1 – MF-02.3.
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| Meeting Information window: Title, Meeting Venue and its three options, Location, All day, From and To (date + time), Host, Participants + Add | MF-01 – MF-11, MF-02.1 – MF-02.3 | `meetings-form.spec.ts`, `meetings-form-rules.test.ts` |
+| Footer: Add more details, Cancel, Save; body scroll | MF-12 – MF-15 | `meetings-form.spec.ts` |
+| Full form (Add more details, Edit): metadata layout order, values carried over | Meeting form fields vs metadata | `meetings-form.spec.ts` |
+
+Provisional rules: From and To are required, To before From blocks Save with the shared
+"Please enter a valid To." under To; a new window starts at the next full hour with To one
+hour later and Host the signed-in user; All day hides the time entries and stores the day at
+UTC midnight; no provider choice (Online adds no field), Location is always shown;
+Participants Add opens the existing record picker for Contacts or Leads, at most 50, rows can
+be removed, no invitation is sent; Reminder and Participants Reminder are selects (At start,
+5/10/15/30 minutes, 1/2 hours, 1/2 days before) that only store the value; Repeat is drawn
+in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
+Cancel creates nothing. The record's Participants Add opens the same picker and writes the
+list. Provider and the audit, check-in and tag fields are not drawn.

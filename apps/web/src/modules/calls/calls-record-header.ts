@@ -10,7 +10,7 @@ function whoRef(record: RecordData): Partial<ModuleRecordReference> | undefined 
   return typeof ref.name === "string" && ref.name.trim() !== "" ? ref : undefined;
 }
 
-/** Header identity: Call For contact record's name + link + module suffix, or Subject (CD-02). Static handset glyph. */
+/** Header identity: the Call For record's name, else Subject (CD-02). No portrait. */
 export function callsRecordHeaderIdentity(
   record: RecordData,
   context?: { orgSlug?: string },

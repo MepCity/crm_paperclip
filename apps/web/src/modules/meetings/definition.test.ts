@@ -2,7 +2,6 @@ import { expect, test } from "vitest";
 import { moduleScreens, resolveModuleScreen } from "../registry";
 import { meetingsScreenDefinition } from "./definition";
 import { meetingsListPageConfig } from "./list-config";
-import { MeetingRecordScreen } from "./meeting-record-screen";
 
 test("exports a complete Meetings module screen definition registered in the module table", () => {
   expect(meetingsScreenDefinition).toMatchObject({
@@ -26,17 +25,4 @@ test("exports a complete Meetings module screen definition registered in the mod
   expect(resolveModuleScreen("Meetings")).toBe(meetingsScreenDefinition);
   expect(moduleScreens.some((definition) => definition.tab === "Meetings")).toBe(true);
   expect(moduleScreens.some((definition) => definition.apiName === "Events")).toBe(true);
-});
-
-test("binds the Meetings detail screen without a portrait, rail or completion command", () => {
-  const detail = meetingsScreenDefinition.detail;
-  expect(detail.Screen).toBe(MeetingRecordScreen);
-  expect(detail.lastUpdatePlacement).toBe("tab-row");
-  expect(detail.addTags).toEqual({ label: "Add Tags", laterModule: "M6" });
-  expect(detail.relatedLists).toBeUndefined();
-  expect(detail.relatedListRail).toBeUndefined();
-  expect(detail.headerCommands).toBeUndefined();
-  expect(
-    detail.header({ id: "meeting-sample", fields: { Event_Title: "Planning Meeting" } }).title,
-  ).toBe("Planning Meeting");
 });

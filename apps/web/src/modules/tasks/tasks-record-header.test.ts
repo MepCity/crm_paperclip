@@ -6,7 +6,7 @@ function taskRecord(fields: RecordData["fields"] = {}): RecordData {
   return { id: "test-task-1", fields };
 }
 
-test("builds record header with Subject title, static task icon and default record navigation", () => {
+test("builds record header with Subject title, no portrait, and disabled record navigation", () => {
   const result = tasksRecordHeaderIdentity(taskRecord({ Subject: "Call with Client" }));
 
   expect(result.title).toBe("Call with Client");

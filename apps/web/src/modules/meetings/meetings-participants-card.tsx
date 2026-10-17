@@ -11,6 +11,7 @@ export interface MeetingsParticipantsCardProps {
   /** null means a populated opaque array whose item schema is not agreed. */
   participants: readonly MeetingsParticipant[] | null;
   onAdd?: () => void;
+  addDisabled?: boolean;
 }
 
 /**
@@ -23,7 +24,11 @@ export interface MeetingsParticipantsCardProps {
  * Add behaviour (provisional rule — not observed in reference): calls onAdd
  * when provided; renders a handler-less button when omitted.
  */
-export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsParticipantsCardProps) {
+export function MeetingsParticipantsCard({
+  participants,
+  onAdd,
+  addDisabled,
+}: MeetingsParticipantsCardProps) {
   return (
     <section
       aria-label="Participants card"
@@ -38,6 +43,7 @@ export function MeetingsParticipantsCard({ participants, onAdd }: MeetingsPartic
           size="compact"
           data-control="MD-47"
           className="border-primary text-primary"
+          isDisabled={addDisabled}
           onPress={onAdd}
         >
           Add

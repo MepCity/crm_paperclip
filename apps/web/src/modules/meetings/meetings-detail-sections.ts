@@ -78,9 +78,8 @@ export function meetingRelatedToSuffix(record: RecordData): string | undefined {
 /**
  * Builds business card fields in the order supplied by service metadata,
  * falling back to MEETINGS_BUSINESS_CARD_FIELDS when metadata businessCardFields is empty.
- * False/empty All_day and empty Venue use the shared dash display. The business card
- * stays static; cloned field definitions do not change service metadata. Related To
- * reuses the Tasks plural module suffix shown in the reference capture.
+ * All_day is omitted when its value is absent or false (dash rule; boolean key is not drawn).
+ * Empty Venue renders as dash via field-format null handling.
  */
 export function buildMeetingsBusinessCardFields(
   module: ModuleMetadata,

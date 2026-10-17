@@ -2,8 +2,8 @@ import { Icons } from "@/components/ui/icon";
 import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { isAccountInlineEditable } from "../accounts/accounts-inline-edit";
 import { formatAccountsLastUpdateLabel } from "../accounts/accounts-last-update";
+import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
-import { CallRelationPanel } from "./call-relation-panel";
 import { buildCallsBusinessCardFields, buildCallsDetailSections } from "./calls-detail-sections";
 import { callsRecordHeaderIdentity } from "./calls-record-header";
 import {
@@ -69,7 +69,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
       }),
     deleteTitle: CALLS_DELETE_CONFIRM_TITLE,
     deleteMessage: CALLS_DELETE_CONFIRM_MESSAGE,
-    SidePanel: CallRelationPanel,
+    SidePanel: ActivitySidePanel,
     timeline: {
       subtabs: CALLS_TIMELINE_SUBTABS,
       modules: CALLS_TIMELINE_MODULE_OPTIONS,

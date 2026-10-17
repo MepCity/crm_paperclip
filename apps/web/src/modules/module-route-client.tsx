@@ -44,7 +44,14 @@ export function ModuleRouteClient({
   const definition = resolveModuleScreen(moduleTab);
   if (!definition) throw new Error("Unknown module screen.");
   if (kind === "list")
-    return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
+    return (
+      <ModuleListClient
+        definition={definition}
+        orgSlug={orgSlug}
+        viewId={viewId}
+        currentUserId={currentUserId}
+      />
+    );
   if (kind === "deduplicate")
     return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
   if (kind === "merge" && recordId) {

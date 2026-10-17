@@ -18,7 +18,7 @@ function visible(field: { views: { view: boolean }; apiName: string }, record: R
 
 /**
  * Unlinked module suffix shown after a record link (CD-36, CD-39, CD-42, CD-46):
- * a dash and plural module label, for Who_Id and What_Id.
+ * the singular label of the referenced record's module, for Who_Id and What_Id.
  */
 export function callReferenceSuffix(
   record: RecordData,

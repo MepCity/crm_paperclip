@@ -378,3 +378,23 @@ test("observed picker resolves the owner column to the member name and marks a p
   expect(handsets[0]?.getAttribute("data-later-module")).toBe("M5");
   expect(handsets[0]?.getAttribute("aria-disabled")).toBe("true");
 });
+
+test("switches between the offered modules inside the picker and lists the chosen one", async () => {
+  const user = userEvent.setup();
+  const service = createMockService();
+
+  render(
+    <SelectRecordDialog
+      module="Contacts"
+      modules={["Contacts", "Leads"]}
+      recordService={service}
+      onDone={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByRole("radio", { name: "Alice Smith" })).toBeTruthy());
+  await user.click(screen.getByRole("button", { name: /Module/ }));
+  await user.click(await screen.findByRole("option", { name: "Leads" }));
+  await waitFor(() => expect(service.list).toHaveBeenCalledWith("Leads", expect.anything()));
+});
