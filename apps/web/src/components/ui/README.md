@@ -796,6 +796,13 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-detail-inline-save-check-width` | `10px` | record-detail.md › Inline editor › Save button / checkmark width |
 | `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
 | `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
+| `--size-meeting-window-width` | `500px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-top` | `24px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-end` | `52px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-height` | `77px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-inset` | `25px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
 | `--size-activity-form-width` | `548px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
 | `--size-activity-form-inset` | `12px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
 | `--size-activity-form-label-width` | `219px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
