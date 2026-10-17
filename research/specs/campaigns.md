@@ -233,7 +233,7 @@ Image inspection adds SH-46 (trash bin), absent from controls.json. The populate
 
 ### Control inventory — m7-list-base-retry
 
-No changed visible controls: CL-01–CL-40 and shell refs remain as in m7-list-base. Both images were opened. Total Records remains 0; no record link disappeared. The 287 controls.json entries have identical tag/name order and use the same ordinal reconciliation above. Rest: as in m7-list-base; covered by overlay: none.
+No changed visible controls: CL-01–CL-40 and shell refs remain as in m7-list-base. Both images were opened. Total Records remains 0; no record link disappeared. The 287 controls.json entries reconcile as above with one ordering change: retry item 267 is the hidden live-chat widget (base 279, excluded); retry 268 is the utility-strip wrapper (base 267, excluded); retry 269–279 map to base 268–278, respectively (SH-35–SH-45). All other ordinals retain their base mapping. Rest: as in m7-list-base; covered by overlay: none.
 
 The second click-free capture was taken after the required five-minute interval, with the same command and 25-second wait. Both captures have 56 API calls and a module-specific title, but zero record links. The literal record-link condition of the inherited painting gate is therefore unsatisfied; no menu capture follows. This is an empty-state gate ambiguity, not evidence of a reference change.
 
