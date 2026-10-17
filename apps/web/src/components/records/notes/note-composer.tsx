@@ -3,6 +3,7 @@
 import { Paperclip, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { addPendingFiles, notifyOverBudget, PendingFileChips } from "./note-attachments";
 import {
   applyNoteEditorCommand,
   isNoteContentEmpty,
@@ -13,6 +14,8 @@ import {
 export interface NoteDraft {
   title: string;
   content: string;
+  /** Files picked with the paperclip; the caller uploads them after the note is saved. */
+  files?: File[];
 }
 export type NoteEditorExec = (command: string, value?: string, text?: string) => void;
 export interface NoteComposerProps {
@@ -25,6 +28,10 @@ export interface NoteComposerProps {
   saving?: boolean;
   error?: string | null;
   renderToolbar?: (exec: NoteEditorExec) => React.ReactNode;
+  /** Already-saved attachments shown above the buttons (edit mode). */
+  attachments?: React.ReactNode;
+  /** How many attachments the note already has; counts against the file budget. */
+  attachedCount?: number;
 }
 
 export const NOTE_CONTENT_MAX_LENGTH = 65535;
@@ -40,12 +47,16 @@ export function NoteComposer({
   saving = false,
   error = null,
   renderToolbar,
+  attachments,
+  attachedCount = 0,
 }: NoteComposerProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const rangeRef = useRef<Range | null>(null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [toolbarOpen, setToolbarOpen] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const initialRef = useRef(initial);
   initialRef.current = initial;
 
@@ -65,6 +76,7 @@ export function NoteComposer({
     setTitle("");
     setContent("");
     setToolbarOpen(false);
+    setFiles([]);
     if (editorRef.current) editorRef.current.innerHTML = "";
   }, []);
 
@@ -107,7 +119,7 @@ export function NoteComposer({
   const save = async () => {
     if (saveDisabled) return;
     try {
-      await onSave({ title: title.trim(), content });
+      await onSave({ title: title.trim(), content, ...(files.length > 0 ? { files } : {}) });
     } catch {
       return; // keep the draft; the caller reports the failure via `error`
     }
@@ -176,6 +188,26 @@ export function NoteComposer({
           {renderToolbar(exec)}
         </div>
       ) : null}
+      <PendingFileChips
+        files={files}
+        onRemove={(index) => setFiles((current) => current.filter((_, i) => i !== index))}
+      />
+      {attachments}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        hidden
+        data-testid="note-file-input"
+        onChange={(e) => {
+          const picked = Array.from(e.currentTarget.files ?? []);
+          e.currentTarget.value = "";
+          if (picked.length === 0) return;
+          const result = addPendingFiles(files, picked, attachedCount);
+          if (result.overBudget) notifyOverBudget();
+          else setFiles(result.files);
+        }}
+      />
       {tooLong ? (
         <p role="alert" className="text-sm text-danger">
           Note content exceeds the maximum length.
@@ -197,7 +229,11 @@ export function NoteComposer({
             <Type className="size-4" strokeWidth={1.75} aria-hidden="true" />
           </Button>
           {toolbarOpen ? null : (
-            <Button variant="icon" aria-label="Attach file" laterModule="M6">
+            <Button
+              variant="icon"
+              aria-label="Attach file"
+              onPress={() => fileInputRef.current?.click()}
+            >
               <Paperclip className="size-4" strokeWidth={1.75} aria-hidden="true" />
             </Button>
           )}
