@@ -678,7 +678,7 @@ The detail and form parts of the definition borrow module-neutral Deals builders
 Tasks detail and form tasks land.
 
 
-### Tasks record detail — implemented; QA pending (MEP-473)
+### Tasks record detail — implemented (MEP-591); e2e MEP-473
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -688,9 +688,10 @@ Tasks detail and form tasks land.
 | Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
 
 Interim rules: Close Task shows only while the task is open, opens no confirmation and
-updates Status through the record service (errors show a toast); Meetings and Calls open
-counts show 0 until those modules are registered; "+ New" and the panel search icons draw
-without handlers; Add Tags and Conversations are drawn as later-module controls.
+updates Status through the record service (errors show a toast); the right panel's Deal
+Summary and the Open Activities counts are read live for the related Contact (Deals through
+the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ New" and the
+panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 
 ### Calls record detail — implemented; QA pending (MEP-508)
@@ -773,3 +774,21 @@ disabled (decision 9), and there is no criteria builder: scope is a custom view.
 Interim rules: Retry in Export History opens the module list; Undo is offered for every job that
 is not already undone and the server re-checks the delete permission; selection export is
 disabled above 500 rows with the limit written in the menu label.
+
+## Module 7 — Campaigns
+
+### Campaigns list
+
+Not started.
+
+### Campaigns create / edit form
+
+Not started.
+
+### Campaigns record detail
+
+Not started.
+
+### Campaigns links in earlier modules
+
+Not started.
