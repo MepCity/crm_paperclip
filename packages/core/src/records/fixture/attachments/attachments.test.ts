@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { ATTACHMENT_PARENT_MODULES } from "../../../attachments/modules";
 import { ForbiddenError, NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
 import type { OrgContext } from "../../../tenancy/types";
 import type { RecordData, RecordInput } from "../../contract";
@@ -46,6 +47,13 @@ async function lead(service: ReturnType<typeof createFixtureRecordService>, name
 }
 
 describe("Attachments record contract", () => {
+  it("derives fixture parent validation from the shared API module definition", () => {
+    expect(attachmentParentModules).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(
+      attachmentsMetadata.fields.find((field) => field.apiName === "Parent_Id")?.lookup?.modules,
+    ).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(attachmentParentModules).not.toContain("Calls");
+  });
   it("registers evidenced metadata with empty seeds and hides internal fields", async () => {
     const { service } = make();
     expect(generateFixtureAttachments()).toEqual([]);
