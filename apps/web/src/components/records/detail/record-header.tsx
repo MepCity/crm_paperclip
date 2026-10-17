@@ -63,6 +63,8 @@ export interface RecordHeaderProps {
   nextHref?: string;
   addTags?: { label: string; laterModule: ModuleKey };
   showPortrait?: boolean;
+  /** "inline" draws the portrait icon backgroundless at title height; default "tile". */
+  portraitAppearance?: "tile" | "inline";
   showRecordNavigation?: boolean;
   /** Static glyph before the title (activities variant). */
   titleGlyph?: import("@/components/ui/icon").Icon;
@@ -77,6 +79,7 @@ export function RecordHeader({
   subtitleHref,
   portraitIcon: PortraitIcon,
   showPortrait = true,
+  portraitAppearance = "tile",
   showRecordNavigation = true,
   back,
   commands = [],
@@ -91,6 +94,7 @@ export function RecordHeader({
   titleHref,
   titleSuffix,
 }: RecordHeaderProps) {
+  const inlinePortrait = showPortrait && portraitAppearance === "inline";
   const [confirmItem, setConfirmItem] = useState<RecordSplitMenuItem | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -138,7 +142,7 @@ export function RecordHeader({
             </Button>
           )}
         </div>
-        {showPortrait ? (
+        {showPortrait && portraitAppearance === "tile" ? (
           <div
             data-record-portrait
             aria-hidden
@@ -155,10 +159,19 @@ export function RecordHeader({
           className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}
         >
           <h1
-            className={`min-w-0 truncate text-text${TitleGlyph ? " flex items-center gap-2" : ""}`}
+            className={`min-w-0 truncate text-text${TitleGlyph || inlinePortrait ? " flex items-center gap-2" : ""}`}
             title={accessibleTitle}
             aria-label={accessibleTitle}
           >
+            {inlinePortrait ? (
+              <span data-record-portrait aria-hidden className="shrink-0 size-6 text-text">
+                {PortraitIcon ? (
+                  <PortraitIcon className="h-full w-full" />
+                ) : (
+                  <Icons.recordPortrait className="h-full w-full" />
+                )}
+              </span>
+            ) : null}
             {TitleGlyph ? (
               <TitleGlyph aria-hidden data-record-title-glyph className="size-4 shrink-0" />
             ) : null}

@@ -529,12 +529,12 @@ Next Action summary (DD-69) omitted until Activities (M5). Related-card interior
 | --- | --- | --- |
 | Related-list card set | DD-93–DD-149 (card headers, controls, columns, footer DD-147–DD-149) | `deals-related-lists.test.tsx`, `deals-detail.spec.ts` |
 | Stage History data | DD-99–DD-106, DD-57 rail badge | `deal-stage-history-card-body.tsx`, `deals-detail.spec.ts` |
-| Contact Roles empty shell | DD-125–DD-132 (no DD-58 badge; service follow-up) | `deals-related-lists.test.tsx` |
+| Contact Roles card rows + rail count | DD-125–DD-132, DD-58 | `contact-roles-card-body.test.tsx`, `deals-detail.spec.ts` |
 | Scroll To Top | DD-98 | `deals-detail.spec.ts`, shared record detail e2e |
 | Lower detail sections | Deal Information, Description Information | `deals-detail-sections.test.ts`, `deals-detail.spec.ts` |
 | SALES SUMMARY | Lead Conversion Time, Sales Cycle Duration | `deals-detail.spec.ts` |
 
-**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions have no handlers until the deal–contact role service ships.
+**Interim rules:** Quotes card upper controls follow Accounts (not observed in reference). Open Activities column selector uses the untranslated label from the capture (DD-111). Emails scope selector label differs from Accounts (DD-137). Contact Roles upper actions remain inert pending the dialog implementation (MEP-544).
 
 ### Deals create / edit / clone form — done; QA MEP-453 (MEP-440)
 
@@ -621,7 +621,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 **Known gaps**
 
 - **Later-module controls (M5+):** activity, note, attachment, campaign, cases, email, customization, automation, and commerce controls (M5–M12, P2, P3) remain drawn in place and inert when clicked (`data-later-module`).
-- **Contact Roles card (DD-125–DD-132):** table headers, columns, and structural row links are drawn; upper actions (Add Contacts Roles, Edit All, table icon) and rail count badge (DD-58) remain handler-less until the deal–contact role relation service ships.
+- **Contact Roles card (DD-125–DD-132):** rows (Contact Name and Account Name link to their detail pages, Phone, Email, Role Name) and the rail count badge (DD-58) are live; upper actions (Add Contacts Roles, Edit All, table icon) stay handler-less until MEP-544.
 - **Accounts Deals card Assign (AD-113):** drawn handler-less, mirroring the Contacts card Assign.
 - **Expected Revenue on form (DF-21):** read-only without a live client preview; the server computes `Amount × Probability / 100`, rounded to two decimals, after stage probability defaults, and returns the value after saving. Blank Amount yields `null`. This is an interim CTO rule because the exported metadata provides no formula. Seed, create, update, mass update and merge use the same Deals rule. CSV persistence is not implemented yet. Per Platform Lead decision MEP-673, client-supplied Expected_Revenue is rejected by shared read-only validation and stored values remain unchanged. Open gate question: this retains existing validation rather than the CTO wording requesting silent ignoring; confirm this interim difference at the module gate. Blank Probability follows existing stage-default rules; revenue uses the stored Probability.
 - **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
@@ -678,7 +678,7 @@ The detail and form parts of the definition borrow module-neutral Deals builders
 Tasks detail and form tasks land.
 
 
-### Tasks record detail — implemented; QA pending (MEP-473)
+### Tasks record detail — implemented (MEP-591); e2e MEP-473
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -688,9 +688,10 @@ Tasks detail and form tasks land.
 | Right panel: person, Deal Summary, Open Activities | TD-50–TD-73 | `tasks-detail.spec.ts`, `activity-relation-panel.test.tsx` |
 
 Interim rules: Close Task shows only while the task is open, opens no confirmation and
-updates Status through the record service (errors show a toast); Meetings and Calls open
-counts show 0 until those modules are registered; "+ New" and the panel search icons draw
-without handlers; Add Tags and Conversations are drawn as later-module controls.
+updates Status through the record service (errors show a toast); the right panel's Deal
+Summary and the Open Activities counts are read live for the related Contact (Deals through
+the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ New" and the
+panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 
 ### Calls record detail — implemented; QA pending (MEP-508)
@@ -748,3 +749,21 @@ be removed, no invitation is sent; Reminder and Participants Reminder are select
 in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
+
+## Module 7 — Campaigns
+
+### Campaigns list
+
+Not started.
+
+### Campaigns create / edit form
+
+Not started.
+
+### Campaigns record detail
+
+Not started.
+
+### Campaigns links in earlier modules
+
+Not started.

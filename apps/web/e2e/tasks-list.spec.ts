@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
@@ -152,4 +153,20 @@ test("Tasks later-module controls stay inert and Actions lists the six rows", as
   await page.getByRole("menuitem", { name: "Export Tasks", exact: true }).click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Tasks list measured evidence and row configuration", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Tasks"));
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  await expect(list.locator("[data-part=related-pictogram]")).toHaveCount(0);
+
+  if (process.env.MEP_LIST_EVIDENCE_DIR) {
+    await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "tasks-list.png") });
+  }
 });
