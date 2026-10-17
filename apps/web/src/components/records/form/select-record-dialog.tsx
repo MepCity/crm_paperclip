@@ -14,6 +14,7 @@ import { type CSSProperties, useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { RecordChoice } from "@/components/ui/record-choice";
 import { TableRadio, TableRadioGroup } from "@/components/ui/table-radio";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
@@ -26,6 +27,8 @@ import "./select-record-dialog.css";
 
 export interface SelectRecordDialogProps {
   module: ModuleApiName;
+  /** Modules the user can switch between inside the picker (shown only when more than one). */
+  modules?: readonly ModuleApiName[];
   title?: string;
   searchLabel?: string;
   searchPlaceholder?: string;
@@ -78,7 +81,8 @@ function cellText(
 }
 
 export function SelectRecordDialog({
-  module,
+  module: initialModule,
+  modules,
   title,
   searchLabel,
   searchPlaceholder,
@@ -97,6 +101,7 @@ export function SelectRecordDialog({
   const clientService = useOptionalClientRecordService();
   const service = recordService ?? clientService;
 
+  const [module, setModule] = useState<ModuleApiName>(initialModule);
   const [draftId, setDraftId] = useState<string>(selectedId ?? "");
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
@@ -265,6 +270,25 @@ export function SelectRecordDialog({
         >
           <Icons.close aria-hidden className="h-(--size-menu-icon) w-(--size-menu-icon)" />
         </Button>
+      ) : null}
+
+      {modules && modules.length > 1 ? (
+        <div className="select-record-module-choice">
+          <RecordChoice
+            label="Module"
+            hideLabel
+            value={module}
+            onChange={(next) => {
+              setModule(next ?? initialModule);
+              setDraftId("");
+              setPage(1);
+            }}
+            options={modules.map((m) => ({
+              value: m,
+              label: resolveModuleScreenByApiName(m)?.pluralLabel ?? m,
+            }))}
+          />
+        </div>
       ) : null}
 
       <div className="select-user-search-row">
