@@ -356,7 +356,7 @@ and the reference captures.
 | AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link; Send Email as primary later-module command (M10, MEP-394); Last Update on the tab row with clock icon (MEP-394); prev/next from list context | `e2e/accounts-detail.spec.ts`; `accounts-last-update.test.ts` |
 | AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete; Find and Merge Duplicates opens the shared merge flow (MEP-393, after MEP-384 walk) | Accounts detail e2e; `accounts-record-more-options.test.ts` |
 | AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
-| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: e2e "Timeline History shows a row after an inline edit" (`test.fixme`, Accounts Timeline receives no events; bug reported on MEP-672)** |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: e2e "Timeline History shows a row after an inline edit" checks the v9 stream after saving and after reload (MEP-875).** |
 | AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
 | AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View opens Contact Hierarchy modal (AD-115, MEP-421) | Accounts detail e2e |
 | AD-112–AD-114 | Deals rail plus and Deals card: the Deals whose Account Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Account Name prefilled; Assign is handler-less like the Contacts card Assign (MEP-415) | `e2e/accounts-detail.spec.ts`; `accounts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
@@ -722,7 +722,7 @@ Last Update reuse Deals rules; the business card is static. Add Tags is M6; the 
 menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
 and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
 counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
-Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+Offscreen details and Timeline use the shared metadata-driven presentation. History reads the v9 event stream (MEP-875); seeded records can have no history.
 
 Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
 show No participant found; a populated opaque array shows a blank body with heading/Add,
@@ -759,7 +759,7 @@ list. Provider and the audit, check-in and tag fields are not drawn.
 | 81 | Long note body clamped with Show More / Show Less (inline) | Done |
 | 108 | "Add Note" + down indicator under a note event | Interim: non-interactive label (behaviour unobserved) — gate list |
 
-Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. The applied history filter (Modules, Users, Time) now filters events client-side; Sources has no effect yet.
+Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. History reads the v9 event stream and applies Modules, Users, Time and supported Sources through its codec (MEP-875). Transitional Notes and Attachments projections are reconciled by subject ID and filtered locally until their server producers are available. Automation-only source selections show no logs.
 
 
 ### Attachments card on record detail — MEP-600
