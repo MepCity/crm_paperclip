@@ -81,7 +81,7 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
       { id: "mass-delete", label: "Mass Delete" },
       { id: "mass-update", label: "Mass Update" },
       { id: "tags", label: "Manage Tags", laterModule: "M6" },
-      { id: "export", label: "Export Meetings", laterModule: "M6" },
+      { id: "export", label: "Export Meetings" },
       { id: "print", label: "Print View", submenuIndicator: true, separatorBefore: true },
     ],
   },
