@@ -60,7 +60,14 @@ export function ModuleRouteClient({
     return <DraftsPage onBack={() => router.push(listHref)} />;
   }
   if (kind === "list")
-    return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
+    return (
+      <ModuleListClient
+        definition={definition}
+        orgSlug={orgSlug}
+        viewId={viewId}
+        currentUserId={currentUserId}
+      />
+    );
   if (kind === "deduplicate")
     return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
   if (kind === "merge" && recordId) {

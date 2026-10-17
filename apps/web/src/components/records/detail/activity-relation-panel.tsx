@@ -92,9 +92,9 @@ function CallButton({
   return (
     <Button
       variant="icon"
-      size="sm"
+      size="compact"
       aria-label={label}
-      className="size-5"
+      className="size-5 p-0"
       onPress={onCall ? () => onCall(phone) : undefined}
     >
       <Icons.phone className="size-3.5" aria-hidden />
@@ -178,7 +178,7 @@ export function ActivityRelationPanel({
                   <Link
                     href={contactRecordPath(person.id)}
                     variant="text"
-                    className="font-semibold"
+                    className="font-semibold hover:underline"
                   >
                     {person.name}
                   </Link>

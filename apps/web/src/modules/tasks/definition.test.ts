@@ -19,7 +19,8 @@ test("exports a Tasks module screen definition registered in the module table", 
   expect(tasksScreenDefinition.detail.layout).toBe("activity");
   expect(tasksScreenDefinition.detail.lastUpdatePlacement).toBe("tab-row");
   expect(tasksScreenDefinition.detail.addTags).toEqual({ label: "Add Tags", laterModule: "M5" });
-  expect(tasksScreenDefinition.detail.hasPortrait).toBe(false);
+  expect(tasksScreenDefinition.detail.hasPortrait).toBe(true);
+  expect(tasksScreenDefinition.detail.portraitAppearance).toBe("inline");
   expect(tasksScreenDefinition.detail.recordNavigation).toBe(true);
 });
 

@@ -13,6 +13,7 @@ import { contactsListPageConfig } from "@/modules/contacts/list-config";
 import { dealsListPageConfig } from "@/modules/deals/list-config";
 import { LEADS_LIST_CURRENCY_CODE, leadsListPageConfig } from "@/modules/leads/list-config";
 import { buildLeadsFilterGroups } from "@/modules/leads/list-filters";
+import { meetingsListPageConfig } from "@/modules/meetings/list-config";
 import { ModuleListScreen } from "./module-list-screen";
 
 const ctx = {
@@ -1721,3 +1722,33 @@ it("navigates to Drafts when Drafts is clicked in Actions menu", async () => {
 
   expect(navigation.push).toHaveBeenCalledWith(`/crm/${ctx.orgSlug}/tab/Leads/drafts`);
 });
+
+it("requests the hidden all-day field for Meetings without adding a visible column", async () => {
+  const records = createFixtureRecordService(ctx);
+  const listSpy = vi.spyOn(records, "list");
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+  });
+  render(
+    <ModuleListScreen
+      orgSlug={ctx.orgSlug}
+      config={{
+        ...meetingsListPageConfig,
+        paths: {
+          ...meetingsListPageConfig.paths,
+          record: (slug, _module, id) => `/crm/${slug}/tab/Meetings/${id}`,
+        },
+      }}
+    />,
+    {
+      wrapper: wrapper(service),
+    },
+  );
+  await screen.findByRole("table", { name: "Records" });
+  await waitFor(() => expect(listSpy.mock.calls.at(-1)?.[1]?.fields).toContain("All_day"));
+  expect(screen.queryByRole("columnheader", { name: "All day" })).toBeNull();
+  expect(screen.getAllByRole("link", { name: "Edit record" })[0]?.getAttribute("href")).toMatch(
+    /\/tab\/Meetings\/[^/]+\/edit$/,
+  );
+});
+

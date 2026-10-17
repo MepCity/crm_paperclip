@@ -204,8 +204,6 @@ export interface ModuleScreenDefinition {
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
-      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
-      titleHref?: string;
       titleSuffix?: string;
     };
     /**
@@ -228,6 +226,7 @@ export interface ModuleScreenDefinition {
     /** Right-hand panel of the activities variant (300 px, white). */
     SidePanel?: ComponentType<{ record: RecordData; orgSlug: string }>;
     hasPortrait?: boolean;
+    portraitAppearance?: "tile" | "inline";
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     addTags?: { label: string; laterModule: ModuleKey };
@@ -242,10 +241,10 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
-      onEdit?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;
