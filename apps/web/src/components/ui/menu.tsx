@@ -128,6 +128,8 @@ export function MenuItem<T extends object>({
 export interface MenuAction {
   /** Visual indicator only; does not create a submenu. */
   submenuIndicator?: boolean;
+  /** Draws a divider above the row (Activities Actions menu, MEP-590 row 40). */
+  separatorBefore?: boolean;
   id: string;
   label: string;
   onAction: () => void;
@@ -168,8 +170,11 @@ export function Menu<T extends object>({
   placement,
   header,
   shouldCloseOnInteractOutside,
+  widthPx,
   ...props
 }: AriaMenuProps<T> & {
+  /** Measured outer width in px; overrides the named `width` (Activities Actions menu). */
+  widthPx?: number;
   width?: "create" | "actions" | "settings" | "columnOptions";
   appearance?: "default" | "measured" | "record";
   placement?: ComponentProps<typeof Popover>["placement"];
@@ -196,6 +201,7 @@ export function Menu<T extends object>({
       placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
       className={menuPopoverClass(widthClass, appearance)}
+      {...(widthPx ? { style: { width: widthPx } } : {})}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}

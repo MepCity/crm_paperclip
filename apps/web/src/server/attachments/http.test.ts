@@ -120,6 +120,7 @@ describe("Attachments HTTP handlers", () => {
     expect(listed.data[0]).toMatchObject({ $type: "link", $link_url: "https://example.test/doc" });
     const response = await call(deps, { module: "Leads", recordId: id, attachmentId });
     expect(response.status).toBe(409);
+    expect((await response.json()).code).toBe("INVALID_DATA");
     const bad = await post(deps, id, form({ attachmentUrl: "javascript:alert(1)" }));
     expect(bad.status).toBe(400);
   });
@@ -312,5 +313,75 @@ describe("Attachments HTTP handlers", () => {
 
     const unsupported = await call(deps, { module: "Leads", recordId: id }, { method: "PUT" });
     expect(unsupported.status).toBe(405);
+  });
+
+  it("hides pending attachments from the list and the download until published", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const pending = await deps.records.create("Attachments", {
+      File_Name: "staged.pdf",
+      Size: "10",
+      Parent_Id: { module: "Leads", id },
+      $type: "file",
+    });
+    const parent = { module: "Leads", recordId: id };
+    expect(deps.lifecycle.isReady(pending.id)).toBe(false);
+    expect((await call(deps, parent)).status).toBe(204);
+    expect((await call(deps, { ...parent, attachmentId: pending.id })).status).toBe(404);
+    deps.lifecycle.publish(pending.id, {
+      storageKey: pending.id,
+      checksum: "x",
+      mediaType: "application/pdf",
+    });
+    const listed = await (await call(deps, parent)).json();
+    expect(listed.info.count).toBe(1);
+    expect(listed.data[0].id).toBe(pending.id);
+  });
+
+  it("serves the download with the recorded media type", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const response = await call(deps, { module: "Leads", recordId: id, attachmentId });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe(deps.lifecycle.mediaType(attachmentId));
+  });
+
+  it("hides uploads while blob-store staging is in progress until published", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const originalStage = deps.blobs.stage.bind(deps.blobs);
+    let capturedId: string | null = null;
+    let releaseStage!: () => void;
+    const stageEntered = new Promise<void>((resolve) => {
+      deps.blobs.stage = async (key, stream, options, meta) => {
+        capturedId = key.attachmentId;
+        resolve();
+        await new Promise<void>((r) => {
+          releaseStage = r;
+        });
+        return originalStage(key, stream, options, meta);
+      };
+    });
+
+    const uploadPromise = post(deps, id, form({ file: pdf() }));
+    await stageEntered;
+
+    const parent = { module: "Leads", recordId: id };
+    expect(capturedId).toBeTruthy();
+    const stagedId = String(capturedId);
+    expect(deps.lifecycle.isReady(stagedId)).toBe(false);
+    expect((await call(deps, parent)).status).toBe(204);
+    expect((await call(deps, { ...parent, attachmentId: stagedId })).status).toBe(404);
+
+    releaseStage();
+    const created = await uploadPromise;
+    expect(created.status).toBe(201);
+    expect(deps.lifecycle.isReady(stagedId)).toBe(true);
+
+    const listed = await (await call(deps, parent)).json();
+    expect(listed.info.count).toBe(1);
+    expect(listed.data[0].id).toBe(stagedId);
   });
 });

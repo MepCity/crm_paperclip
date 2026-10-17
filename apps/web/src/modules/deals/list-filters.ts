@@ -41,6 +41,7 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   const fieldType = special ?? (field.dataType as FilterFieldType);
   return {
     fieldType,
+    ...(fieldType === "tag" ? { tagModule: "Deals" as const } : {}),
     ...(fieldType === "picklist"
       ? {
           options: field.picklist?.map((option) => ({
