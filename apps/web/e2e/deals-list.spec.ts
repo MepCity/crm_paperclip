@@ -194,10 +194,15 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // DL-13: Create Deal arrow attached dropdown (M6)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  // DL-13: Create Deal dropdown opens the CSV import wizard
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Deals", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Deals\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Deals"));
+  // Restore the explicit table presentation for the selection checks below.
+  await page.goto(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });

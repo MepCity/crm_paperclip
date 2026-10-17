@@ -1,30 +1,6 @@
-// Temporary copies of the shared transfer contract (packages/core/src/transfer/types.ts).
-// Replace with imports from the core package once it lands on `main`.
-export type TransferModule = "Leads" | "Contacts" | "Accounts" | "Deals";
+import type { ExportJob, ExportRequest, TransferModule } from "@crm/core";
 
-export interface Actor {
-  id: string;
-  name: string;
-}
-
-export interface ExportRequest {
-  module: TransferModule;
-  viewId?: string;
-  ids?: string[];
-  fields: "all" | { include: string[] } | { exclude: string[] };
-}
-
-export interface ExportJob {
-  id: string;
-  module: TransferModule;
-  scope: string;
-  createdBy: Actor;
-  createdAt: string;
-  status: "completed" | "failed";
-  rowCount: number;
-  code?: string;
-  fileName: string;
-}
+export type { Actor, ExportJob, ExportRequest, TransferModule } from "@crm/core";
 
 export interface ExportDialogProps {
   open: boolean;
