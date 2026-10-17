@@ -288,12 +288,12 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Campaigns",
+      module: "Cases",
       total: 1,
       records: [
         {
-          id: "campaign-1",
-          fields: { Campaign_Name: "Future Campaign", Email: "hidden@example.test" },
+          id: "case-1",
+          fields: { Subject: "Future Case", Email: "hidden@example.test" },
         },
       ],
     },
@@ -302,8 +302,8 @@ test("omits secondary line for modules without search field config", async () =>
   mount();
   await open(user);
   await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
-  const link = await screen.findByRole("link", { name: "campaign-1" });
-  expect(link.textContent).toBe("campaign-1");
+  const link = await screen.findByRole("link", { name: "case-1" });
+  expect(link.textContent).toBe("case-1");
 });
 
 test("search errors use the shared error notice", async () => {
