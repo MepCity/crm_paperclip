@@ -158,7 +158,7 @@ test("creates with required fields only and arrives at the record route", async 
 });
 
 test("creates with every field type through the Account and Contact pickers", async ({ page }) => {
-  await openCreate(page);
+  const { org } = await openCreate(page);
   await page.getByRole("textbox", { name: "Deal Name", exact: true }).fill("Full Form Deal");
   await page.getByRole("textbox", { name: "Amount", exact: true }).fill("250000");
   await expect(page.locator("[data-form-field=Amount] .record-currency-prefix")).toBeVisible();
@@ -252,6 +252,14 @@ test("creates with every field type through the Account and Contact pickers", as
   expect(body.Contact_Name?.name).toBe(contactName);
   expect(body.Campaign_Source?.name).toBe(campaignName);
   expect(body.Description).toBe("Created by e2e");
+
+  await expectRecordRoute(page, org.slug, "Full Form Deal");
+  const detailLink = page.getByRole("link", { name: campaignName, exact: true });
+  await expect(detailLink).toBeVisible();
+  await expect(detailLink).toHaveAttribute(
+    "href",
+    new RegExp(`/crm/${org.slug}/tab/Campaigns/\\d+$`),
+  );
 });
 
 test("Save and New resets the create form", async ({ page }) => {

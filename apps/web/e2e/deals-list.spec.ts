@@ -149,6 +149,25 @@ test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr").first()).toBeVisible();
 
+  // DL-66: Campaign Source field filter is live; filtering by campaign leaves matching deals.
+  const campaignSourceFilter = fieldFilters.getByRole("checkbox", {
+    name: "Campaign Source",
+    exact: true,
+  });
+  await campaignSourceFilter.scrollIntoViewIfNeeded();
+  await campaignSourceFilter.focus();
+  await page.keyboard.press("Space");
+  const campaignSourceValue = fieldFilters.getByRole("textbox", { name: "Campaign Source value" });
+  await campaignSourceValue.click();
+  await campaignSourceValue.fill("Campaign 001");
+  await campaignSourceValue.press("Tab");
+  await expect(apply).toBeEnabled();
+  await apply.click();
+  // Exactly 2 seeded deals match Campaign 001 (indices 0 and 3)
+  await expect(list.locator("tbody tr")).toHaveCount(2);
+  await list.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+
   // Account Name cell opens the related account (M3). Contact Name stays a Contacts link (M2).
   const accountLink = list
     .locator("tbody tr")
