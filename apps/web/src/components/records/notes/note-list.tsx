@@ -9,6 +9,7 @@ export interface NoteListItem {
   id: string;
   title: string | null;
   body: ReactNode;
+  attachments?: ReactNode;
   parentLabel: string;
   parentHref: string;
   createdAt: string;
