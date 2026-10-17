@@ -63,12 +63,5 @@ test("calls detail buildHeaderCommands includes Reschedule Call split button whe
     { id: "c2", fields: { Outgoing_Call_Status: "Completed" } },
     { editHref: "/edit", save: () => Promise.resolve() },
   );
-  expect(nonScheduledCommands).toEqual([
-    expect.objectContaining({
-      id: "edit",
-      label: "Edit",
-      variant: "secondary",
-      href: "/edit",
-    }),
-  ]);
+  expect(nonScheduledCommands).toEqual([]);
 });

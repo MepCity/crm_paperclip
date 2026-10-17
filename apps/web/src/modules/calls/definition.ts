@@ -54,7 +54,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     hasPortrait: false,
     recordNavigation: true,
     addTags: { label: "Add Tags", laterModule: "M6" },
-    // Scheduled calls: Reschedule Call split button and Edit in More; other states keep Edit.
+    // Scheduled calls: Reschedule Call split button and Edit in More; other states show no header command (Edit lives in More Options).
     buildHeaderCommands: (record, { editHref, save }) =>
       isCallScheduled(record)
         ? [
@@ -83,7 +83,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
               ],
             },
           ]
-        : [{ id: "edit", label: "Edit", variant: "secondary" as const, href: editHref }],
+        : [],
     businessCard: buildCallsBusinessCardFields,
     sections: buildCallsDetailSections,
     inlineEditable: isAccountInlineEditable,

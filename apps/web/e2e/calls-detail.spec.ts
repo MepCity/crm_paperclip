@@ -45,7 +45,7 @@ test.describe("Calls record detail", () => {
     await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
 
     // CD-05 & CD-05.1: Reschedule Call and Down arrow are present on scheduled calls
-    await expect(header.getByRole("button", { name: "Reschedule Call" })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Reschedule Call" })).toBeVisible();
     await expect(header.getByRole("button", { name: "Down arrow" })).toBeVisible();
 
     // CD-06 absent: Header Edit button is suppressed (Edit is in More Options menu CD-07.1)
@@ -97,8 +97,8 @@ test.describe("Calls record detail", () => {
     await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
 
     const header = page.locator("[data-record-header]");
-    await expect(header.getByRole("button", { name: "Reschedule Call" })).toHaveCount(0);
-    await expect(header.getByRole("button", { name: "Reschedule options" })).toHaveCount(0);
+    await expect(header.getByRole("link", { name: "Reschedule Call" })).toHaveCount(0);
+    await expect(header.getByRole("button", { name: "Down arrow" })).toHaveCount(0);
     // Header Edit button remains suppressed
     const headerButtons = await header
       .locator("button, a")
