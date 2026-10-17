@@ -46,6 +46,7 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
             />
           </Button>
         ) : null}
+        {item.attachments}
         <div className="note-row-meta">
           <Link href={item.parentHref}>{item.parentLabel}</Link>
           <span>Add Note</span>
