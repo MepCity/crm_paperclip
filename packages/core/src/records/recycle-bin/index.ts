@@ -14,6 +14,10 @@ export interface RecycleBinQuery {
   module?: ModuleApiName;
   name?: string;
   deletedBy?: string;
+  /** Case-insensitive substring of the deletion actor; combines with exact deletedBy. */
+  deletedByContains?: string;
+  /** UTC calendar day or minute until OrgContext provides a timezone. */
+  deletedOn?: { date: string; time?: string };
   page?: number;
   perPage?: number;
 }
