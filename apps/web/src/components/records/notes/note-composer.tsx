@@ -32,6 +32,8 @@ export interface NoteComposerProps {
   attachments?: React.ReactNode;
   /** How many attachments the note already has; counts against the file budget. */
   attachedCount?: number;
+  /** Total bytes of those attachments; counts against the size budget. */
+  attachedBytes?: number;
 }
 
 export const NOTE_CONTENT_MAX_LENGTH = 65535;
@@ -49,6 +51,7 @@ export function NoteComposer({
   renderToolbar,
   attachments,
   attachedCount = 0,
+  attachedBytes = 0,
 }: NoteComposerProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const rangeRef = useRef<Range | null>(null);
@@ -203,7 +206,7 @@ export function NoteComposer({
           const picked = Array.from(e.currentTarget.files ?? []);
           e.currentTarget.value = "";
           if (picked.length === 0) return;
-          const result = addPendingFiles(files, picked, attachedCount);
+          const result = addPendingFiles(files, picked, attachedCount, attachedBytes);
           if (result.overBudget) notifyOverBudget();
           else setFiles(result.files);
         }}

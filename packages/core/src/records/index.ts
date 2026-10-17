@@ -7,3 +7,5 @@ export type * from "./history";
 export { isJsonArray, isJsonObject } from "./json";
 export type * from "./kanban-views";
 export { KANBAN_HEADER_STYLES } from "./kanban-views";
+export type * from "./recycle-bin";
+export type * from "./tags";

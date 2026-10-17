@@ -2,11 +2,16 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createUploadBatchRegistry, LocalDiskBlobStore } from "@crm/core/attachments";
+import {
+  BlobNotFoundError,
+  createUploadBatchRegistry,
+  LocalDiskBlobStore,
+} from "@crm/core/attachments";
 import type { OrgContext } from "@crm/core/records";
 import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
+  createFixtureRecycleBinService,
 } from "@crm/core/records/fixture";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type AttachmentDeps, type AttachmentParams, handleAttachmentRequest } from "./http";
@@ -68,6 +73,22 @@ const post = (deps: AttachmentDeps, id: string, body: FormData, batch?: string, 
       headers: batch ? { "X-Upload-Batch": batch } : {},
     },
   );
+
+// Exercise the lifecycle cleanup consumer without adding a transport or scheduler.
+async function cleanup(deps: AttachmentDeps) {
+  for (const intent of deps.lifecycle.cleanupIntents()) {
+    try {
+      await deps.blobs.delete({ orgId: deps.ctx.orgId, attachmentId: intent.attachmentId });
+      deps.lifecycle.acknowledgeCleanup(intent.attachmentId);
+    } catch {
+      // Failed cleanup remains queued for a later retry.
+    }
+  }
+}
+async function purge(deps: AttachmentDeps) {
+  const bin = createFixtureRecycleBinService(deps.ctx);
+  await bin.purge((await bin.list()).entries.map((entry) => entry.id));
+}
 
 describe("Attachments HTTP handlers", () => {
   it("uploads a file, lists it, downloads it and deletes it", async () => {
@@ -238,7 +259,7 @@ describe("Attachments HTTP handlers", () => {
     expect(slashHeader).toContain("filename*=UTF-8''evil.pdf");
   });
 
-  it("retains the cleanup intent when blob deletion fails during removal", async () => {
+  it("retains the cleanup intent when blob deletion fails after purge", async () => {
     const deps = setup();
     const id = await lead(deps);
     const created = await post(deps, id, form({ file: pdf() }));
@@ -254,9 +275,48 @@ describe("Attachments HTTP handlers", () => {
       { method: "DELETE" },
     );
     expect(removed.status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    await purge(deps);
+    await cleanup(deps);
     const intents = deps.lifecycle.cleanupIntents();
     expect(intents.length).toBe(1);
     expect(intents[0]?.attachmentId).toBe(attachmentId);
+  });
+
+  it("restores HTTP-deleted attachments with the same downloadable bytes", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
+    const bin = createFixtureRecycleBinService(deps.ctx);
+    await bin.restore((await bin.list()).entries.map((entry) => entry.id));
+    const downloaded = await call(deps, params);
+    expect(downloaded.status).toBe(200);
+    expect(new Uint8Array(await downloaded.arrayBuffer())).toEqual(PDF());
+  });
+
+  it("removes bytes and acknowledges cleanup only after HTTP delete and purge", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    const key = { orgId: deps.ctx.orgId, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect(new Uint8Array(await new Response(await deps.blobs.read(key)).arrayBuffer())).toEqual(
+      PDF(),
+    );
+    await purge(deps);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([{ attachmentId, storageKey: attachmentId }]);
+    await cleanup(deps);
+    await expect(deps.blobs.read(key)).rejects.toBeInstanceOf(BlobNotFoundError);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
   });
 
   it("validates pagination parameters and handles multi-page listing", async () => {
