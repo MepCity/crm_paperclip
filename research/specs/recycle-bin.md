@@ -143,6 +143,8 @@ Raw captures remain local because they contain customer data.
 
 The existing per-state numbered inventories are preserved in
 [m6-tags-print-share-recycle-inventory.md](m6-tags-print-share-recycle-inventory.md).
-No fresh capture was launched on 2026-10-17: the one-minute machine load
-exceeded the approved limit of 50. This remains a partial spec. The approved
-MEP-765 continuation has not been consumed; no new dialog state is claimed.
+No fresh Recycle Bin capture was needed on 2026-10-17: the populated list and
+initial Search state were already captured and inventoried. Those completed
+observations were not repeated. Unknown filtered/empty/selected states remain
+explicit open questions; no restore, delete, search submission or preference
+change was attempted.

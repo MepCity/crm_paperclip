@@ -1,7 +1,8 @@
 # Print, Share and Drafts
 
 Status: partial research for MEP-629. Drafts initial empty states are observed
-in all four modules; print destination and sharing are not implementation-ready.
+in all four modules; Leads sharing initial state is observed; print destinations and other module
+sharing states remain unverified.
 Screenshots and accessibility snapshots were inspected on 2026-10-15.
 No print dialog, send operation or reference write was performed.
 
@@ -72,9 +73,8 @@ before activation because this task excludes the print dialog.
 ## Fields and flows
 
 Drafts links carry module context. All four observed destinations are naturally
-empty. Populated-result columns and row actions are therefore unverified. Share
-recipients, access-level fields, notifications, permissions, validation and
-confirmation behaviour remain unknown. Print layout, section selection, controls,
+empty. Populated-result columns and row actions are therefore unverified. Leads sharing controls are described below. Recipient suggestions, access-level
+options, notifications, permissions, validation and confirmation remain unknown. Print layout, section selection, controls,
 new-window behaviour and pagination remain unknown.
 
 Safe continuation: open each module's Drafts route through its visible link;
@@ -98,7 +98,8 @@ persisted preference. Capture each initial state before Escape.
 1. Print Preview initial page/window and every control in all four modules.
 2. Print View destination and Deals table availability without a view change;
    the submenu is now observed in Leads, Contacts and Accounts.
-3. Share initial state in all four record modules; no sharing may be submitted.
+3. Share initial state in Contacts, Accounts and Deals; Leads is observed below.
+   No sharing may be submitted.
 4. Drafts populated-result columns and row actions; initial empty states are
    observed in all four modules without creating drafts.
 5. See each capture folder’s `inventory.md` and the shared shell inventory
@@ -131,8 +132,28 @@ are unobserved; this spec remains partial.
 
 The existing per-state numbered inventories are preserved in
 [m6-tags-print-share-recycle-inventory.md](m6-tags-print-share-recycle-inventory.md).
-A fresh Leads Add Tags capture was completed on 2026-10-17; its 19 blocked
-background POST requests triggered the MEP-765 stop rule. More, Share and
-Print Preview were not attempted. A later one-minute load of 55.98 exceeded
-the limit of 50, so the independent Print Default view run was not launched.
-No new print or sharing state is claimed; this spec remains partial.
+A fresh Leads Add Tags capture was completed on 2026-10-17. MEP-787 accepted
+its blocked background requests as expected and authorized the remaining
+bounded openings. The fresh `m6-leads-detail-more` capture completed successfully:
+all 15 visible action entries are inventoried, and unique Share / Print Preview
+selectors are available. Nineteen blocked POSTs match the approved background
+baseline; no unexpected blocked path or new unblocked non-GET request occurred.
+Zero print calls or window requests were recorded. This is menu evidence only.
+
+
+## Leads Share initial state
+
+Source: `m6-leads-share-v2/step-3.png` and `step-3.yml` (2026-10-17).
+A modal titled Sharing Lead overlays dimmed record detail. A Help icon appears
+beside the title. Record access type offers Private (checked) and Public
+(unchecked). Beneath them, an empty Add members textbox sits beside a combobox
+showing Full Access. With Related list is unchecked and has an information icon.
+Cancel and disabled Share appear at the lower right. No visible close icon was
+present in this viewport. No fields or options were changed; Escape closed the
+modal and the capture reports no remaining visible dialog.
+
+All nine modal controls are numbered in the shared evidence inventory. Twenty-one
+blocked POSTs match the MEP-787 allowance: eighteen telemetry, three baseline
+non-telemetry paths once each. No new unblocked non-GET request, print call or
+window request. This establishes initial state only, not sharing outcomes.
+Subsequent load 101.77 prevents starting the remaining print captures.

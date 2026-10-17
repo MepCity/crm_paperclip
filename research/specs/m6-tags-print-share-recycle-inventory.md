@@ -15,7 +15,8 @@ Screenshots remain in the local research workspace and are never committed.
 | Recycle Bin list and initial Search | Shared Setup | Existing capture and inventory preserved below |
 | Add Tags initial dialog | Leads | Initial empty popover observed below; background-request stop condition triggered |
 | Add Tags initial dialog | Contacts, Accounts, Deals | Unobserved |
-| Share initial dialog | Four record modules | Unobserved; approved Leads continuation pending |
+| Share initial dialog | Leads | Initial private-sharing modal observed below |
+| Share initial dialog | Contacts, Accounts, Deals | Unobserved |
 | Record Print Preview destination | Four record modules | Unobserved; approved Leads continuation pending |
 | Print Default view destination | Table modules | Unobserved; approved Leads continuation pending |
 | Tagged records, populated Drafts, naturally empty bin | Applicable modules | No state may be manufactured by a write |
@@ -26,7 +27,9 @@ Two browser page targets, no capture lock, one-minute load 151.51.
 The approved maximum load is 50; no new capture was launched. Existing
 completed captures were not repeated. MEP-765 requires a single attach, a
 15-second paint wait per step and stop-on-any-blocked-request semantics.
-Its five approved runs remain unconsumed. Later module coverage requires
+At that initial preflight its five approved runs remained unconsumed.
+Later Add Tags, More and Share evidence is recorded below; MEP-787 replaces
+the original stop-on-any-blocked-request rule with baseline comparison. Later module coverage requires
 selectors from actual captures; never reconstruct hidden record identifiers.
 
 The inherited inventories below describe observations made on 2026-10-15
@@ -1379,6 +1382,76 @@ No record values or images are reproduced here.
 The tag glyph is decorative. There is no visible close icon or dim backdrop.
 Escape was pressed. All three requested steps completed, ready passed, one CDP
 attach; 19 blocked background POST requests, zero print calls and zero window
-requests. The stop condition prevents treating this as an approved continuation.
-More, Share and Print Preview remain unobserved in this pass. Print Default view
-was not run: a subsequent load check was 55.98, above the approved limit of 50.
+requests. MEP-787 accepted all 19 as baseline background traffic and accepted
+this opening. The original stop was correctly applied; it is now resolved.
+No Add Tags retry is allowed. Subsequent evidence is recorded below.
+
+
+## m6-leads-detail-more — record action menu
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml`, `controls.json`
+and `meta.json`. The menu is anchored beneath More Options, above record
+content. Existing shared shell, record header and related-list inventories
+apply to the surrounding screen; no surrounding control was changed.
+The following numbers cover every visible menu entry, from top to bottom.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Menu first group | Clone | Duplicate record entry; never activated |
+| 2 | After Clone | Share | Opens initial sharing state; separate capture below |
+| 3 | After Share | Delete | Destructive entry; never activated |
+| 4 | After separator | Print Preview | Preview entry; separate bounded capture |
+| 5 | After preview | Find and Merge Duplicates | Duplicate-resolution entry; not activated |
+| 6 | Next row | Mail Merge | Document action entry; not activated |
+| 7 | After second separator | Run Macro | Automation entry; never activated |
+| 8 | Next row | Customize Business Card | Preference action; never activated |
+| 9 | Next row | Organize Lead Details | Layout action; never activated |
+| 10 | Next row | Add Related List | Layout action; never activated |
+| 11 | Next row | Review History | History entry; not activated |
+| 12 | Next row | Enroll to Cadence | Enrollment action; never activated |
+| 13 | Next row | Add Kiosk | Configuration action; never activated |
+| 14 | Next row | Create Button | Configuration action; never activated |
+| 15 | Menu last row | Create Client Script | Configuration action; never activated |
+
+Ready passed; both clicks completed; one CDP attach. Nineteen POSTs were
+blocked: sixteen telemetry and three non-telemetry paths, each occurring once,
+matching the detail baseline. No unexpected blocked path or new unblocked
+non-GET request. Zero print calls, window requests, downloads or file choosers.
+No field input or submission. Share and Print Preview selectors were exported
+uniquely by the capture tool.
+
+
+## m6-leads-share-v2 — initial sharing modal
+
+Observed on 2026-10-17 from `step-3.png`, `step-3.yml` and `meta.json`.
+A centered modal at the top of the viewport overlays a dimmed record detail.
+The title is Sharing Lead; the background shell and record controls are inert
+while it is open. The shared shell and record-header inventories above describe
+that unchanged background. The following inventory covers all visible modal
+controls; no close icon was visible in this captured viewport.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Title row right | Help icon | Help affordance; not opened |
+| 2 | Record access type row | Private radio | Checked; not changed |
+| 3 | After Private | Public radio | Unchecked; not changed |
+| 4 | Next row left | Add members textbox | Empty; no member search or selection |
+| 5 | Same row right | Access combobox | Full Access; options not opened |
+| 6 | Below member row | With Related list checkbox | Unchecked; never toggled |
+| 7 | Beside related-list label | Information icon | Tooltip not inspected |
+| 8 | Footer right | Cancel | Enabled; not clicked; Escape used |
+| 9 | After Cancel | Share | Disabled in accessibility evidence; never submitted |
+
+Ready passed; record link, More and Share clicks completed, then Escape.
+One CDP attach; no skipped steps or visible dialog after close. Twenty-one
+background POSTs were blocked: eighteen telemetry plus the three baseline
+non-telemetry paths, each once. No unexpected blocked path or new unblocked
+non-GET request. Zero print calls/window requests/downloads/file choosers.
+No input, recipient, access-level, related-list or preference change.
+
+## Latest continuation preflight
+
+After Share completed, one-minute load was 101.77 (approved limit 50).
+Print Preview and independent Print Default view were not started. Neither
+approved attempt is consumed. Other module initial dialogs and filter details
+remain unobserved. Existing completed captures must not be repeated.

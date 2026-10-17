@@ -176,9 +176,10 @@ captured More menu. Print Default view is independent of that record path.
 Before each run: no capture lock, at most two browser page targets and one-minute
 load at most 50. Use one CDP attach; stop this capture process if a second attach
 starts. A failed ready gate, skipped/error/not-run step, invalid-address page or
-any blocked request stops that run and requires Platform Lead review. The latest
-rule includes automatic background requests in that stop condition; previous
-successful captures with blocked background requests do not relax it. No field
+an unexpected blocked request stops that run and requires Platform Lead review.
+MEP-787 accepts telemetry (any count) and the same non-telemetry paths, each
+no more frequent than the matching detail/list baseline. Any other blocked
+request or new unblocked non-GET request stops continuation. No field
 input, submission or preference change is authorized.
 
 The prior Add Tags continuation used a sanitized record address and rendered an
@@ -194,8 +195,8 @@ attachments; they are not additional screen observations.
 The existing per-state numbered inventories are preserved in
 [m6-tags-print-share-recycle-inventory.md](m6-tags-print-share-recycle-inventory.md).
 The Leads Add Tags continuation was consumed on 2026-10-17. Its opening is
-observed below; blocked background requests triggered the approved stop rule.
-The remaining record-path captures are pending Platform Lead review.
+observed below. MEP-787 accepts that evidence and authorizes the remaining
+bounded captures with unchanged guards and baseline request comparisons.
 
 
 ## Leads Add Tags initial opening (2026-10-17)
@@ -218,7 +219,7 @@ Preflight: one-minute load 25.64, no capture lock, two page targets. One CDP
 attach completed. Ready passed with no failed scripts; record link and Add Tags
 clicks completed, followed by Escape. No print call or new-window request was
 recorded. The tool blocked 19 background POST requests (16 telemetry, two legacy
-background actions and one other request). This triggers the MEP-765 stop rule:
-no retry or further record-path capture until Platform Lead review. The visual
-opening is evidence; it is not proof of successful tag persistence or a clean
-continuation gate. Guard settings remain unchanged.
+background actions and one other request). The original stop rule was applied. MEP-787 subsequently confirmed that all
+19 blocked requests match expected background traffic and accepted this opening
+as complete evidence. No Add Tags retry is permitted. This does not establish
+successful tag persistence. Guard settings remain unchanged.
