@@ -14,9 +14,10 @@ Screenshots remain in the local research workspace and are never committed.
 | Record header | Leads | Existing capture and inventory preserved below |
 | Recycle Bin list and initial Search | Shared Setup | Existing capture and inventory preserved below |
 | Add Tags initial dialog | Leads | Initial empty popover observed below; MEP-787 accepted baseline background requests |
-| Add Tags initial dialog | Contacts, Accounts, Deals | Unobserved |
+| Add Tags initial dialog | Contacts, Accounts, Deals | Initial empty popovers observed below; Deals baseline acceptance pending MEP-796 |
 | Share initial dialog | Leads | Initial private-sharing modal observed below |
-| Share initial dialog | Contacts, Accounts, Deals | Unobserved |
+| Share initial dialog | Contacts, Accounts | Initial private-sharing modals observed below |
+| Share initial dialog | Deals | Unobserved; sequence stopped before this capture |
 | Record Print Preview destination | Four record modules | Unobserved; Leads bounded attempt skipped by attribute guard |
 | Print Default view destination | Table modules | Leads requests a guarded new window; destination unobserved |
 | Tagged records, populated Drafts, naturally empty bin | Applicable modules | No state may be manufactured by a write |
@@ -1528,3 +1529,187 @@ Platform Lead must review the exported list controls and give a unique
 non-positional record-link continuation before this path resumes. Contacts,
 Accounts and Deals Add Tags / Share coverage remains incomplete; it is not
 inferred from the Leads dialog. Existing completed observations remain intact.
+
+
+## m6-contacts-add-tags-v2 — initial tag popover
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml` and `meta.json`.
+The shared shell surrounds record detail; this inventory numbers the new
+popover surfaces. Background record values are deliberately omitted.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Popover top row, after tag icon | Enter Tags textbox inside combobox | Empty, focused; no input or suggestions |
+| 2 | Popover lower right | Cancel | Enabled-looking; not clicked |
+| 3 | After Cancel | Save | Disabled; never submitted |
+
+Ready passed; record link and Add Tags opened, then Escape. One attach;
+19 baseline blocked POSTs (16 telemetry, three non-telemetry once each).
+No new unblocked non-GET request shape against the Contacts detail baseline;
+no print call, window, popup, download, file chooser or preference change.
+
+
+## m6-contacts-detail-more — record action menu
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml`, `controls.json`
+and `meta.json`. The upper-right More Options button opens a vertical menu
+below the record actions. Numbering covers every visible menu entry from top
+to bottom. The surrounding shell is described in the shared shell inventory;
+record values are omitted. No menu entry was activated in this capture.
+
+| No. | Location | Control | Purpose / observation |
+| --- | --- | --- | --- |
+| 1 | Menu row 1 | Clone | Visible action affordance; not exercised |
+| 2 | Menu row 2 | Share | Initial opening permitted separately; not clicked here |
+| 3 | Menu row 3 | Delete | Visible action affordance; not exercised |
+| 4 | Menu row 4 | Print Preview | Destination unobserved; never click under MEP-793 |
+| 5 | Menu row 5 | Find and Merge Duplicates | Visible action affordance; not exercised |
+| 6 | Menu row 6 | Mail Merge | Visible action affordance; not exercised |
+| 7 | Menu row 7 | Run Macro | Visible action affordance; not exercised |
+| 8 | Menu row 8 | Customize Business Card | Visible action affordance; not exercised |
+| 9 | Menu row 9 | Organize Contact Details | Visible action affordance; not exercised |
+| 10 | Menu row 10 | Add Related List | Visible action affordance; not exercised |
+| 11 | Menu row 11 | Review History | Visible action affordance; not exercised |
+| 12 | Menu row 12 | Enroll to Cadence | Visible action affordance; not exercised |
+| 13 | Menu row 13 | Add Kiosk | Visible action affordance; not exercised |
+| 14 | Menu row 14 | Create Button | Visible action affordance; not exercised |
+| 15 | Menu row 15 | Create Client Script | Visible action affordance; not exercised |
+
+Ready passed and both clicks completed using one attach. Sixteen blocked POSTs
+(13 telemetry, the three approved non-telemetry paths once each). All unblocked
+non-GET method/path/query-key combinations match the Contacts detail baseline.
+A local comparator initially included volatile multipart boundaries and body
+lengths; those differences are not new request paths. No guard or capture
+retry occurred. Zero print, window, popup, download or file chooser events.
+
+
+## m6-contacts-share-v2 — initial sharing modal
+
+Observed on 2026-10-17 from `step-3.png`, `step-3.yml` and `meta.json`.
+A centered modal at the top of the viewport overlays a dimmed record detail.
+The title is Sharing Contact; the background shell and record controls are inert
+while it is open. The shared shell and record-header inventories above describe
+that unchanged background. The following inventory covers all visible modal
+controls; no close icon was visible in this captured viewport.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Title row right | Help icon | Help affordance; not opened |
+| 2 | Record access type row | Private radio | Checked; not changed |
+| 3 | After Private | Public radio | Unchecked; not changed |
+| 4 | Next row left | Add members textbox | Empty; no member search or selection |
+| 5 | Same row right | Access combobox | Full Access; options not opened |
+| 6 | Below member row | With Related list checkbox | Unchecked; never toggled |
+| 7 | Beside related-list label | Information icon | Tooltip not inspected |
+| 8 | Footer right | Cancel | Enabled; not clicked; Escape used |
+| 9 | After Cancel | Share | Disabled in accessibility evidence; never submitted |
+
+Ready passed; record link, More and Share clicks completed, then Escape.
+One CDP attach; no skipped steps or visible dialog after close. Twenty-one
+background POSTs were blocked: eighteen telemetry plus the three baseline
+non-telemetry paths, each once. No unexpected blocked path or new unblocked
+non-GET request. Zero print calls/window requests/downloads/file choosers.
+No input, recipient, access-level, related-list or preference change.
+
+
+
+## m6-accounts-add-tags-v2 — initial tag popover
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml` and `meta.json`.
+The shared shell surrounds record detail; this inventory numbers the new
+popover surfaces. Background record values are deliberately omitted.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Popover top row, after tag icon | Enter Tags textbox inside combobox | Empty, focused; no input or suggestions |
+| 2 | Popover lower right | Cancel | Enabled-looking; not clicked |
+| 3 | After Cancel | Save | Disabled; never submitted |
+
+Ready passed; record link and Add Tags opened, then Escape. One attach;
+18 baseline blocked POSTs (16 telemetry, two legacy paths once each).
+No new unblocked non-GET request shape against the Accounts detail baseline;
+no print call, window, popup, download, file chooser or preference change.
+
+
+## m6-accounts-detail-more — record action menu
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml`, `controls.json`
+and `meta.json`. Numbering follows the upper-right menu from top to bottom.
+The shared shell remains visible around record detail. No menu entry was
+activated. Run Macro and Enroll to Cadence are absent in this observed menu;
+module, permission and record causes are not inferred.
+
+| No. | Location | Control | Purpose / observation |
+| --- | --- | --- | --- |
+| 1 | Menu row 1 | Clone | Visible action affordance; not exercised |
+| 2 | Menu row 2 | Share | Initial opening permitted separately; not clicked here |
+| 3 | Menu row 3 | Delete | Visible action affordance; not exercised |
+| 4 | Menu row 4 | Print Preview | Destination unobserved; never click under MEP-793 |
+| 5 | Menu row 5 | Find and Merge Duplicates | Visible action affordance; not exercised |
+| 6 | Menu row 6 | Mail Merge | Visible action affordance; not exercised |
+| 7 | Menu row 7 | Customize Business Card | Visible action affordance; not exercised |
+| 8 | Menu row 8 | Organize Account Details | Visible action affordance; not exercised |
+| 9 | Menu row 9 | Add Related List | Visible action affordance; not exercised |
+| 10 | Menu row 10 | Review History | Visible action affordance; not exercised |
+| 11 | Menu row 11 | Add Kiosk | Visible action affordance; not exercised |
+| 12 | Menu row 12 | Create Button | Visible action affordance; not exercised |
+| 13 | Menu row 13 | Create Client Script | Visible action affordance; not exercised |
+
+Ready and both clicks passed with one attach. Preflight load was 20.42.
+Fifteen POSTs were blocked (13 telemetry, two approved legacy paths once each).
+No new unblocked non-GET route/query-key combination against the Accounts detail
+baseline. Zero print, window, popup, download or file chooser events.
+The following Share preflight stopped at load 59.10 before any capture began.
+
+
+## m6-accounts-share-v2 — initial sharing modal
+
+Observed on 2026-10-17 from `step-3.png`, `step-3.yml` and `meta.json`.
+A centered modal at the top of the viewport overlays a dimmed record detail.
+The title is Sharing Account; the background shell and record controls are inert
+while it is open. The shared shell and record-header inventories above describe
+that unchanged background. The following inventory covers all visible modal
+controls; no close icon was visible in this captured viewport.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Title row right | Help icon | Help affordance; not opened |
+| 2 | Record access type row | Private radio | Checked; not changed |
+| 3 | After Private | Public radio | Unchecked; not changed |
+| 4 | Next row left | Add members textbox | Empty; no member search or selection |
+| 5 | Same row right | Access combobox | Full Access; options not opened |
+| 6 | Below member row | With Related list checkbox | Unchecked; never toggled |
+| 7 | Beside related-list label | Information icon | Tooltip not inspected |
+| 8 | Footer right | Cancel | Enabled; not clicked; Escape used |
+| 9 | After Cancel | Share | Disabled in accessibility evidence; never submitted |
+
+Ready passed; record link, More and Share clicks completed, then Escape.
+One CDP attach; no skipped steps or visible dialog after close. Eighteen
+background POSTs were blocked: sixteen telemetry plus the two baseline
+legacy paths, each once. No unexpected blocked path or new unblocked
+non-GET request. Zero print calls/window requests/downloads/file choosers.
+No input, recipient, access-level, related-list or preference change.
+
+
+
+## m6-deals-add-tags-v2 — initial tag popover and stop
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml` and `meta.json`.
+The shared shell surrounds record detail. This inventory numbers the new
+popover controls; no record identity, amount, date or contact value is copied.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Popover top row, after tag icon | Enter Tags textbox inside combobox | Empty, focused; no input or suggestions |
+| 2 | Popover lower right | Cancel | Enabled-looking; not clicked |
+| 3 | After Cancel | Save | Disabled; never submitted |
+
+Ready and all three steps passed with one attach; Escape closed the opening.
+Twenty requests were blocked: 16 telemetry, the two approved legacy paths,
+one grouped-count POST and one module-settings PUT. The last two exceed the
+MEP-794 allowance, although present in historical Deals baseline captures.
+The whole sequence stopped; MEP-796 owns acceptance and the precise remaining
+continuation. No new unblocked non-GET route/query-key combination against the
+Deals detail baseline. No print, window, popup, download, file chooser, field
+input, submission or view switch. Deals More and Share have no capture or
+inventory in this pass.

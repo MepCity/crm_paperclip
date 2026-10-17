@@ -1,8 +1,8 @@
 # Print, Share and Drafts
 
 Status: partial research for MEP-629. Drafts initial empty states are observed
-in all four modules; Leads sharing initial state is observed; print destinations and other module
-sharing states remain unverified.
+in all four modules; Leads, Contacts and Accounts sharing initial states are observed. Deals Share
+and print destinations remain unverified.
 Screenshots and accessibility snapshots were inspected on 2026-10-15.
 No print dialog, send operation or reference write was performed.
 
@@ -10,8 +10,8 @@ No print dialog, send operation or reference write was performed.
 
 Study record Print Preview, list Print View, record Share and module Drafts for
 Leads, Contacts, Accounts and Deals. Entry points sit in the upper-right Actions
-or record More menu. Drafts content is observed below; print and sharing
-destination layouts remain unobserved.
+or record More menu. Drafts content is observed below; print destination layouts remain unobserved; sharing openings are documented
+per module below.
 
 ## Observed control inventory
 
@@ -98,7 +98,7 @@ persisted preference. Capture each initial state before Escape.
 1. Print Preview initial page/window and every control in all four modules.
 2. Print View destination and Deals table availability without a view change;
    the submenu is now observed in Leads, Contacts and Accounts.
-3. Share initial state in Contacts, Accounts and Deals; Leads is observed below.
+3. Share initial state in Deals; Leads, Contacts and Accounts are observed below.
    No sharing may be submitted.
 4. Drafts populated-result columns and row actions; initial empty states are
    observed in all four modules without creating drafts.
@@ -125,8 +125,7 @@ print dialog. No browser print dialog may be opened.
 The approved list-to-record path, ready probe, preflight and stop conditions are
 summarized in [tags.md](tags.md#current-research-continuation). Share still permits
 only its initial exact-name opening and Escape. No recipient or permission field
-may be changed and no sharing may be submitted. The remaining initial states
-are unobserved; this spec remains partial.
+may be changed and no sharing may be submitted. Deals sharing remains unobserved; this spec remains partial.
 
 ## MEP-779 evidence handoff
 
@@ -222,3 +221,78 @@ The platform decision proposes an implementation using our own tokens; it does
 not establish reference layout parity or grant board approval for a design
 deviation. Any later destination-parity work needs the board decision and a
 separate bounded tool change before further observation.
+
+
+## Contacts More menu (2026-10-17)
+
+Source: `m6-contacts-detail-more/step-2.png`, `step-2.yml` and `controls.json`.
+The menu contains 15 entries, numbered in the shared evidence index: Clone,
+Share, Delete, Print Preview, Find and Merge Duplicates, Mail Merge, Run Macro,
+Customize Business Card, Organize Contact Details, Add Related List, Review
+History, Enroll to Cadence, Add Kiosk, Create Button and Create Client Script.
+Separators follow Delete and Mail Merge. Share exports a unique selector for
+the next bounded opening. No entry was activated here, including Print Preview.
+The two clicks and ready gate succeeded with one attach; 16 blocked POSTs
+match the permitted baseline (13 telemetry plus three non-telemetry paths).
+No new unblocked non-GET route/query-key combination or print/window event.
+
+
+## Contacts Share initial state (2026-10-17)
+
+Source: `m6-contacts-share-v2/step-3.png` and `step-3.yml`.
+Sharing Contact is a modal over dimmed record detail, with a Help icon beside
+the title. Private is checked and Public unchecked. Add members is empty;
+the adjacent access combobox displays Full Access. With Related list is
+unchecked, with an information icon. Cancel is enabled-looking and Share is
+disabled. No close icon is visible in this viewport. All nine control surfaces
+are numbered in the shared evidence inventory.
+
+The unique ready gate and all four steps succeeded with one attach. Escape
+closed the modal; no visible dialog remained. Preflight load was 24.76.
+Twenty-one blocked POSTs (18 telemetry plus the three approved non-telemetry
+paths once each) match the allowance. No new unblocked non-GET path/query-key
+combination against the Contacts detail baseline. Zero print calls, windows,
+popups, downloads and file choosers; no input, submission or preference change.
+
+
+## Accounts More menu (2026-10-17)
+
+Source: `m6-accounts-detail-more/step-2.png`, `step-2.yml` and `controls.json`.
+Thirteen entries are numbered in the evidence index: Clone, Share, Delete,
+Print Preview, Find and Merge Duplicates, Mail Merge, Customize Business Card,
+Organize Account Details, Add Related List, Review History, Add Kiosk, Create
+Button and Create Client Script. Separators follow Delete and Mail Merge.
+Run Macro and Enroll to Cadence are not present in this observed menu.
+Share exports a unique selector; no entry was activated here. Ready and both
+clicks passed with one attach. Fifteen blocked POSTs match the baseline
+(13 telemetry and two legacy paths once each); no new unblocked non-GET route
+or print/window event. The next Share preflight stopped at load 59.10, before
+starting a capture; it is not a Share observation.
+
+
+## Accounts Share initial state (2026-10-17)
+
+Source: `m6-accounts-share-v2/step-3.png` and `step-3.yml`.
+Sharing Account opens over dimmed record detail. The nine controls are the
+Help icon, checked Private and unchecked Public radios, empty Add members
+textbox, Full Access combobox, unchecked With Related list checkbox and its
+information icon, Cancel and disabled Share. No close icon is visible in the
+captured viewport. These controls are individually numbered in the inventory.
+No field was changed; Escape closed the modal.
+
+The later preflight passed at load 29.88; the earlier failed-load preflight did
+not start a capture and was not a repeated opening. Ready and all four steps
+passed with one attach. Eighteen blocked POSTs (16 telemetry and two approved
+legacy paths once each) match the baseline. No new unblocked non-GET route/query
+keys against the Accounts detail baseline. Print, windows, popups, downloads
+and file choosers remain zero; no dialog was visible after Escape.
+
+
+## Remaining record-chain boundary (MEP-796)
+
+Contacts and Accounts completed Add Tags, More and initial Share independently.
+Deals Add Tags rendered successfully, but two additional blocked paths exceeded
+the MEP-794 allowance. Details are in [tags.md](tags.md#deals-add-tags-opening-and-baseline-stop-2026-10-17).
+No Deals More or Share capture was started. Platform Lead owns the local
+baseline decision in MEP-796; no guard or selector workaround is authorized.
+Print destination and tag-filter restrictions remain unchanged.

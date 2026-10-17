@@ -1,8 +1,10 @@
 # Tags
 
-Status: partial research for MEP-629; not implementation-ready. Existing and fresh captures
-were inspected on 2026-10-15, with the Leads Add Tags opening inspected on 2026-10-17. The Leads list and all four Manage Tags initial empty states were freshly
-captured. Record dialog and filter coverage remains partial. No reference data or preferences were changed.
+Status: partial research for MEP-629 / MEP-779; not implementation-ready.
+Drafts and Manage Tags initial states are preserved. Add Tags initial openings
+are now observed in all four modules; the Deals opening awaits MEP-796 baseline
+review. No reference data or preferences were changed. Tag-filter input and
+write outcomes remain outside the current bounded observation pass.
 
 ## Purpose and scope
 
@@ -24,7 +26,7 @@ Sources are local capture slugs; screenshots remain outside the repository.
 | TAG-05 | Open operator menu under Tag | Options: `is`, `is not`, `is empty`, `is not empty`; `is` is marked selected. | `w2d-filter-tag-ops` / Tags |
 | TAG-06 | Under the operator, Leads filter | Value combobox contains a `Type here` textbox. No value was entered for this research. | `w2d-filter-tag` accessibility evidence / Tags |
 | TAG-07 | Filter panel footer | Apply Filter and Clear are visible; effects not exercised. | `w2d-filter-tag-ops` / shared filters |
-| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; initial Leads opening observed; other modules unobserved. | `w2f-detail-more`, `m6-leads-detail` / Tags |
+| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; initial openings observed in all four modules; Deals baseline review pending. | `w2f-detail-more`, `m6-leads-detail` / Tags |
 
 The inherited and freshly inspected Leads record show the Add Tags entry
 rather than an existing tag
@@ -146,7 +148,7 @@ state, not established module behaviour.
 
 ## Open questions
 
-1. Initial Add Tags state in Contacts, Accounts and Deals; populated suggestions in every module. Leads empty opening is observed below.
+1. Populated tag suggestions in every module; all four empty initial openings are observed below, with Deals baseline acceptance pending MEP-796.
 2. Existing tag chips in list rows and record headers, overflow and removal affordances.
 3. Populated tag management and batch actions with no selection; all four
    modules’ initial empty management pages are observed. No tags may be created
@@ -237,8 +239,80 @@ chooser occurred. Fourteen POSTs were blocked: twelve telemetry and the two
 list-baseline legacy requests, once each. No retry or replacement selector was
 used. No new dialog state or numbered dialog inventory can be claimed.
 
-Preflight passed at load 21.41, no capture lock and two page targets. The
-Platform Lead must review the exported list controls and give a unique
-non-positional record-link continuation before this path resumes. Contacts,
-Accounts and Deals Add Tags / Share coverage remains incomplete; it is not
-inferred from the Leads dialog. Existing completed observations remain intact.
+Preflight passed at load 21.41, no capture lock and two page targets. MEP-794 subsequently supplied a unique non-positional record-link continuation.
+The successful later openings below supersede this ready stop without repeating
+the failed selector. Initial states are observed independently; none is inferred
+from the Leads dialog. Existing completed observations remain intact.
+
+
+## Reviewed module continuation (MEP-794, 2026-10-17)
+
+The old Contacts link is no longer unique because the naturally changing list
+contains duplicate display names. Platform Lead supplied unique exported record
+links in a local-only selector file. Each module uses its first record-link
+click as the ready probe; no record identity or selector is copied here.
+The bounded order is Contacts, Accounts, then Deals: Add Tags, More menu,
+then Share using the successfully exported unique sharing selector. Print
+entries are never clicked. Deals retains the existing stage-board view.
+
+Ready failure ends that module's chain; any other skipped/error step or guard
+anomaly ends the entire sequence. All previous preflight and request-baseline
+limits remain. Tag-filter checkbox input is outside this pass: no toggle,
+criterion change or Apply Filter action is authorized. The incomplete historical
+Contacts/Accounts/Deals tag-filter folders have no meta.json and are not cited
+as observed criterion states.
+
+## Contacts Add Tags initial opening (2026-10-17)
+
+Source: `m6-contacts-add-tags-v2/step-2.png` and `step-2.yml`.
+The record-header popover contains the same three control surfaces observed
+in Leads: an empty focused Enter Tags textbox inside a combobox, Cancel and
+disabled Save. A tag icon precedes the textbox; no suggestions, chips or
+validation message are visible. The popover has no dimmed backdrop.
+No value was entered or submitted; Escape followed the opening.
+
+The unique ready probe passed with no failed scripts. All three steps completed
+using one CDP attach. Preflight load was 16.27, with two page targets and no
+capture lock. Nineteen blocked POSTs comprise sixteen telemetry and the three
+approved non-telemetry paths once each. Unblocked non-GET request shapes match
+`m6-notes-contacts-open`; none is new. Print calls, window requests, popups,
+downloads and file choosers are zero. The numbered opening inventory is in the
+shared evidence index. This does not establish persistence or validation.
+
+
+## Accounts Add Tags initial opening (2026-10-17)
+
+Source: `m6-accounts-add-tags-v2/step-2.png` and `step-2.yml`.
+The record-header popover shows a tag icon, empty focused Enter Tags textbox
+inside a combobox, Cancel and disabled Save. No suggestions, chips, validation
+or dimmed backdrop are visible. No field was changed; Escape followed opening.
+Ready and all three steps passed with one attach. Preflight load was 10.35.
+Eighteen blocked POSTs comprise sixteen telemetry and the two approved legacy
+paths once each; the related-record-count blocked path did not occur.
+Unblocked non-GET paths/query keys match the Accounts detail baseline.
+No print, window, popup, download or file chooser event was recorded.
+
+
+## Deals Add Tags opening and baseline stop (2026-10-17)
+
+Source: `m6-deals-add-tags-v2/step-2.png`, `step-2.yml` and `meta.json`.
+The record-header popover contains an empty focused Enter Tags textbox inside
+a combobox, preceded by a tag icon; Cancel and disabled Save are below on the
+right. No suggestion, chip, validation message or dimmed backdrop is visible.
+No input was entered. Ready and all three steps passed, including Escape.
+Preflight load was 19.24, with two page targets and no lock; one CDP attach.
+
+Twenty requests were blocked: sixteen telemetry, the two approved legacy
+background paths once each, plus one POST to the Deals grouped-count action
+and one PUT to the Deals module settings endpoint. The latter two are outside
+the MEP-794 allowance, so the entire sequence stopped after saving evidence.
+Both paths also appear in the earlier Deals export and detail baselines; this
+historical presence does not expand the approved allowance. No new unblocked
+non-GET method/path/query-key combination exists against the Deals detail
+baseline. All print/window/popup/download/file-chooser flags remain zero;
+no dialog remained visible after Escape. The settings PUT was blocked, not
+sent through by the capture tool. No view switch or preference change was made.
+
+MEP-796 asks Platform Lead to review local evidence and give a precise
+acceptance/continuation decision. Do not repeat Add Tags. Deals More and Share
+were not started; only those two openings remain in the permitted record chain.
