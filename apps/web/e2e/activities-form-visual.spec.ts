@@ -7,6 +7,7 @@ import { expect, test } from "./support/test";
 // Measured values come from research/specs/activities-form.md › "Visual layout — … (measured)".
 // No reference image or pixel snapshot is used; only computed styles and bounding boxes.
 const TOLERANCE = 2;
+const screenshotDir = process.env.ACTIVITIES_SCREENSHOT_DIR || process.env.PAPERCLIP_SCRATCH_DIR;
 
 test.use({ viewport: { width: 1470, height: 835 }, deviceScaleFactor: 2 });
 
@@ -18,6 +19,12 @@ async function box(locator: Locator) {
   const rect = await locator.boundingBox();
   if (!rect) throw new Error("element has no bounding box");
   return rect;
+}
+
+async function saveVisualScreenshot(page: Page, filename: string) {
+  if (screenshotDir) {
+    await page.screenshot({ path: `${screenshotDir}/${filename}` });
+  }
 }
 
 async function expectNoFormChrome(scope: Page | Locator) {
@@ -89,6 +96,7 @@ async function openTaskCreate(page: Page) {
 test("Create Task matches the measured layout", async ({ page }) => {
   await openTaskCreate(page);
   await expectTaskFormVisual(page);
+  await saveVisualScreenshot(page, "our-task-create.png");
 });
 
 test("Task Edit keeps the Create layout", async ({ page }) => {
@@ -102,6 +110,7 @@ test("Task Edit keeps the Create layout", async ({ page }) => {
   await page.goto(moduleRecordEditPath(org.slug, "Tasks", id));
   await expect(page.getByRole("heading", { name: "Edit Task" })).toBeVisible();
   await expectTaskFormVisual(page);
+  await saveVisualScreenshot(page, "our-task-edit.png");
 });
 
 async function openMeetingDialog(page: Page) {
@@ -124,9 +133,35 @@ test("Meeting Information window matches the measured layout", async ({ page }) 
   // Rows span 418 px from x=515; values start at x=682.
   const title = await box(dialog.getByRole("textbox", { name: "Title", exact: true }));
   near(title.x, 682);
-  const row = await box(dialog.locator('[data-form-field="Event_Title"] [data-record-form-row]'));
+  const rowLocator = dialog.locator('[data-form-field="Event_Title"] [data-record-form-row]');
+  const row = await box(rowLocator);
   near(row.x, 515);
   near(row.width, 418);
+  // Unboxed row and required marker on Title (requirements 5, 6, 7).
+  const titleStyle = await rowLocator.evaluate((el) => {
+    const s = getComputedStyle(el, "::after");
+    const input = el.querySelector("input, textarea");
+    const cs = getComputedStyle(input as Element);
+    const label = getComputedStyle(el.querySelector("label") as Element);
+    return {
+      markerWidth: s.width,
+      markerHeight: s.height,
+      markerColor: s.backgroundColor,
+      borderTop: cs.borderTopWidth,
+      borderLeft: cs.borderLeftWidth,
+      borderRight: cs.borderRightWidth,
+      labelAlign: label.textAlign,
+    };
+  });
+  expect(titleStyle).toEqual({
+    markerWidth: "25px",
+    markerHeight: "2px",
+    markerColor: "rgb(242, 123, 119)",
+    borderTop: "0px",
+    borderLeft: "0px",
+    borderRight: "0px",
+    labelAlign: "left",
+  });
   // All day is a 15 × 15 checkbox, not a switch (requirement 11).
   const check = await box(dialog.getByRole("checkbox", { name: "All day" }));
   near(check.width, 15);
@@ -137,6 +172,7 @@ test("Meeting Information window matches the measured layout", async ({ page }) 
   near(time.x - (date.x + date.width), 10);
   // Footer actions only: Cancel and Save, no Save and New.
   await expect(dialog.getByRole("button", { name: "Save and New" })).toHaveCount(0);
+  await saveVisualScreenshot(page, "our-meeting-dialog.png");
 });
 
 test("full Meeting form matches the measured layout", async ({ page }) => {
@@ -146,6 +182,28 @@ test("full Meeting form matches the measured layout", async ({ page }) => {
   await expectNoFormChrome(page);
   await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
+  await saveVisualScreenshot(page, "our-meeting-full.png");
+});
+
+test("Activities lists and record detail do not render copied extra elements", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  // Tasks list: no Related List rail, no Form chrome (MEP-590 blocker)
+  await page.goto(moduleListDefaultPath(org.slug, "Tasks"));
+  await expect(page.locator("[data-record-rail]")).toHaveCount(0);
+  await expect(page.locator("[data-record-rail-control]")).toHaveCount(0);
+  await expectNoFormChrome(page);
+
+  // Task detail: no Related List rail, no rail control, no Client Script / Create Form Views (MEP-591 blocker)
+  await page.getByRole("link", { name: "Create Task", exact: true }).click();
+  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Blocker check");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
+    timeout: 60_000,
+  });
+  await expect(page.locator("[data-record-rail]")).toHaveCount(0);
+  await expect(page.locator("[data-record-rail-control]")).toHaveCount(0);
+  await expectNoFormChrome(page);
 });
 
 // Call Create / Call Edit are not covered yet: the Call form screens are not on `main`
