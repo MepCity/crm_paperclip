@@ -85,7 +85,10 @@ test("keeps the Leads Actions menu inventory in reference order and assigns late
   expect(actions.filter((item) => item.submenuIndicator).map((item) => item.id)).toEqual(["print"]);
 
   expect(actions.find((item) => item.id === "sheet")?.laterModule).toBe("P3");
-  expect(actions.find((item) => item.id === "print")?.laterModule).toBe("M6");
+  // The Print View row carries its Module 6 markers on its submenu rows (MEP-725).
+  expect(
+    actions.find((item) => item.id === "print")?.submenu?.map((child) => child.laterModule),
+  ).toEqual(["M6", "M6"]);
   expect(actions.find((item) => item.id === "tags")?.laterModule).toBe("M11");
   expect(actions.find((item) => item.id === "assignment-rules")?.laterModule).toBe("M12");
   expect(actions.find((item) => item.id === "mass-email")?.laterModule).toBe("M10");
@@ -121,5 +124,6 @@ test("verifies Leads-specific actions entries", () => {
     "mass-convert",
     "drafts",
     "deduplicate",
+    "print",
   ]);
 });
