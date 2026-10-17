@@ -8,7 +8,7 @@ import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
 } from "@crm/core/records/fixture";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type AttachmentDeps, type AttachmentParams, handleAttachmentRequest } from "./http";
 
 let dir: string;
@@ -383,5 +383,129 @@ describe("Attachments HTTP handlers", () => {
     const listed = await (await call(deps, parent)).json();
     expect(listed.info.count).toBe(1);
     expect(listed.data[0].id).toBe(stagedId);
+  });
+
+  it("validates attachment link URL and stores normalised https URL", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // 2,049-character URL
+    const tooLong = `https://example.com/${"a".repeat(2049 - "https://example.com/".length)}`;
+    expect(tooLong.length).toBe(2049);
+
+    const badUrls = [
+      "javascript:alert(1)",
+      "data:text/html,evil",
+      "/relative/path",
+      "ftp://example.test/file",
+      tooLong,
+    ];
+
+    for (const bad of badUrls) {
+      const response = await post(deps, id, form({ attachmentUrl: bad }));
+      expect(response.status).toBe(400);
+      const payload = await response.json();
+      expect(payload.code).toBe("INVALID_DATA");
+      expect(payload.details?.fields?.attachmentUrl).toBeDefined();
+    }
+    // Nothing stored
+    expect((await call(deps, { module: "Leads", recordId: id })).status).toBe(204);
+
+    // Valid https URL with leading/trailing whitespace stored normalised
+    const valid = await post(
+      deps,
+      id,
+      form({ attachmentUrl: "  https://example.test/doc?foo=bar  " }),
+    );
+    expect(valid.status).toBe(201);
+    const validPayload = await valid.json();
+    expect(validPayload.data[0].details.File_Name).toBe("https://example.test/doc?foo=bar");
+    expect(validPayload.data[0].details.$type).toBe("link");
+
+    const listed = await (await call(deps, { module: "Leads", recordId: id })).json();
+    expect(listed.data.length).toBe(1);
+    expect(listed.data[0]).toMatchObject({
+      File_Name: "https://example.test/doc?foo=bar",
+      $type: "link",
+      $link_url: "https://example.test/doc?foo=bar",
+    });
+  });
+
+  it("rejects oversize body with honest Content-Length without calling formData", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    const stream = new ReadableStream<Uint8Array>();
+    const getReaderSpy = vi.spyOn(stream, "getReader");
+
+    const request = new Request("http://localhost/crm/v2.2/x", {
+      method: "POST",
+      headers: {
+        "content-type": "multipart/form-data; boundary=----boundary",
+        "content-length": String(100_000_000 + 64 * 1024 + 1),
+      },
+      body: stream,
+      // @ts-expect-error duplex is required in node runtime when body is stream
+      duplex: "half",
+    });
+    const formDataSpy = vi.spyOn(request, "formData");
+
+    const response = await handleAttachmentRequest(
+      deps,
+      { module: "Leads", recordId: id },
+      request,
+    );
+    expect(response.status).toBe(413);
+    expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(getReaderSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversize body with no/false Content-Length via the stream counter", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // Note kind has 20 MB budget (20_000_000 + 64 * 1024 = 20_065_536 bytes)
+    const note = await deps.records.create("Notes", {
+      Parent_Id: { module: "Leads", id },
+      Note_Content: "Body",
+    });
+
+    for (const falseContentLength of [null, "100"]) {
+      let cancelled = false;
+      const stream = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          // Stream chunks of 1 MiB each; will abort around 21 chunks
+          controller.enqueue(new Uint8Array(1024 * 1024));
+        },
+        cancel() {
+          cancelled = true;
+        },
+      });
+
+      const headers: Record<string, string> = {
+        "content-type": "multipart/form-data; boundary=----boundary",
+      };
+      if (falseContentLength !== null) {
+        headers["content-length"] = falseContentLength;
+      }
+
+      const request = new Request("http://localhost/crm/v2.2/x", {
+        method: "POST",
+        headers,
+        body: stream,
+        // @ts-expect-error duplex is required in node runtime when body is stream
+        duplex: "half",
+      });
+
+      const response = await handleAttachmentRequest(
+        deps,
+        { module: "Notes", recordId: note.id },
+        request,
+      );
+      expect(response.status).toBe(413);
+      expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+      expect(cancelled).toBe(true);
+    }
   });
 });
