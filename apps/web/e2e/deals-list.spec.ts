@@ -217,11 +217,10 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
     .first();
   await expect(latestEmail).toBeVisible();
 
-  // DL-66: Campaign Source field filter (M7)
-  const campaignSource = list
-    .locator('[data-later-module="M7"]', { hasText: "Campaign Source" })
-    .first();
+  // DL-66: Campaign Source field filter is live (Campaigns, M7)
+  const campaignSource = list.getByRole("checkbox", { name: "Campaign Source" });
   await expect(campaignSource).toBeVisible();
+  await expect(list.locator('[data-later-module="M7"]')).toHaveCount(0);
 
   // DL-14: Actions menu (10 items in reference order)
   await list.getByRole("button", { name: "Actions", exact: true }).click();

@@ -197,6 +197,27 @@ test("creates with every field type through the Account and Contact pickers", as
   await accountDialog.getByRole("row", { name: accountName }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
+  // DF-23/DF-24: Campaign Source is a live single lookup into Campaigns.
+  const campaignEntry = page.getByRole("textbox", { name: "Campaign Source", exact: true });
+  await expect(campaignEntry).not.toHaveAttribute("data-later-module", /.*/);
+  await campaignEntry.evaluate((node) => node.scrollIntoView({ block: "center" }));
+  // The sticky Client Script control overlaps this right-edge handset, so open it by keyboard.
+  const campaignHandset = page.getByRole("button", {
+    name: "Open Campaign Source lookup",
+    exact: true,
+  });
+  await campaignHandset.focus();
+  await campaignHandset.press("Enter");
+  const campaignDialog = page.getByRole("dialog");
+  await expect(campaignDialog.getByRole("heading", { name: "Choose Campaign" })).toBeVisible();
+  const campaignName = await campaignDialog.getByRole("radio").first().getAttribute("aria-label");
+  if (!campaignName) throw new Error("Missing campaign name in the picker");
+  await campaignDialog.getByRole("row", { name: campaignName }).click();
+  // Interim picker chrome (not observed): the choice is applied with the Done button.
+  await campaignDialog.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(campaignEntry).toHaveValue(campaignName);
+
   // DF-13/DF-14: the Contact picker is the same shape, named after the Contact Name column.
   await page.getByRole("button", { name: "Open Contact Name lookup", exact: true }).click();
   const contactDialog = page.getByRole("dialog");
@@ -229,6 +250,7 @@ test("creates with every field type through the Account and Contact pickers", as
   expect(body.Next_Step).toBe("Send proposal");
   expect(body.Account_Name?.name).toBe(accountName);
   expect(body.Contact_Name?.name).toBe(contactName);
+  expect(body.Campaign_Source?.name).toBe(campaignName);
   expect(body.Description).toBe("Created by e2e");
 });
 
@@ -384,15 +406,4 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   }
   await expect(page).toHaveURL(url);
   await expect(page.getByRole("dialog")).toHaveCount(0);
-
-  // DF-23/DF-24: Campaign Source belongs to Campaigns (M7); entry and handset are marked inert.
-  const entry = page.getByRole("textbox", { name: "Campaign Source", exact: true });
-  await expect(entry).toHaveAttribute("data-later-module", "M7");
-  await expect(entry).toHaveAttribute("aria-disabled", "true");
-  await entry.click({ force: true });
-  const handset = page.getByRole("button", { name: "Open Campaign Source lookup", exact: true });
-  await expect(handset).toHaveAttribute("data-later-module", "M7");
-  await handset.click({ force: true });
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(url);
 });
