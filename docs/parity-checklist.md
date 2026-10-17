@@ -694,6 +694,17 @@ the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ Ne
 panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 
+### Form screens — side-by-side check (board decision MEP-570, 2026-10-14)
+
+From now on, QA and the approver do not approve a form screen (Create/Edit page or dialog)
+until they have put our screen next to the reference image at the same 1470 × 835 viewport and
+ticked every line of the spec's measured inventory (`research/specs/activities-form.md` ›
+`## Visual layout — … (measured)`). The result of that comparison (✓ per row, plus any row
+left open) goes into the issue comment. `apps/web/e2e/activities-form-visual.spec.ts` guards
+the measured values for Task Create/Edit and the Meeting window and full form; Call Create/Edit
+join it with the Call form issue. The reference image is never a test fixture and never enters
+the repo.
+
 ### Calls record detail — implemented; QA pending (MEP-508)
 
 | Area | Inventory | Evidence |
