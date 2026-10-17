@@ -101,6 +101,47 @@ export function formatDateTime(
   );
 }
 
+function numericParts(options: FormatOptions, withTime: boolean, value: Date) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: options.timeZone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    ...(withTime ? { hour: "numeric", minute: "2-digit", hour12: true } : {}),
+  });
+  const parts = formatter.formatToParts(value);
+  return (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? "";
+}
+
+/**
+ * Zero-padded `dd.mm.yyyy` (Activities list cells). A `"YYYY-MM-DD"` calendar day stays on that
+ * day in every time zone.
+ */
+export function formatNumericDate(
+  value: CalendarDate | Date | null | undefined,
+  options: FormatOptions,
+): string {
+  if (value === null || value === undefined) return "";
+  const day = typeof value === "string" ? calendarDay(value) : undefined;
+  const part = numericParts(
+    day === undefined ? options : { ...options, timeZone: "UTC" },
+    false,
+    day === undefined ? instant(value) : new Date(day),
+  );
+  return `${part("day")}.${part("month")}.${part("year")}`;
+}
+
+/** `dd.mm.yyyy h:mm AM` in `options.timeZone` (Activities list cells). */
+export function formatNumericDateTime(
+  value: Date | string | null | undefined,
+  options: FormatOptions,
+): string {
+  if (value === null || value === undefined) return "";
+  const part = numericParts(options, true, instant(value));
+  return `${part("day")}.${part("month")}.${part("year")} ${part("hour")}:${part("minute")} ${part("dayPeriod").toUpperCase()}`;
+}
+
 /** Formats the time of day of an instant in `options.timeZone`. */
 export function formatTime(
   value: Date | string | null | undefined,

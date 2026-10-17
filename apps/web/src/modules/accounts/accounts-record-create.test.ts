@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { moduleCreatePath } from "@/lib/crm-paths";
 import { readRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import {
@@ -24,6 +24,10 @@ function makeStorage(): Storage {
 
 beforeEach(() => {
   vi.stubGlobal("sessionStorage", makeStorage());
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("accountNameLookupFromRecord", () => {
@@ -89,6 +93,29 @@ describe("openContactCreateWithAccountName", () => {
       module: "Accounts",
       id: "acc-2",
       name: "",
+    });
+  });
+
+  it("writes prefill before navigate is invoked", () => {
+    let prefillAtNavigate: ReturnType<typeof readRecordCreatePrefill> = null;
+    const org = "acme";
+    const account = { id: "acc-1", fields: { Account_Name: "Acme Corp" } };
+    const navigate = vi.fn().mockImplementation(() => {
+      prefillAtNavigate = readRecordCreatePrefill(org, "Contacts");
+    });
+
+    openContactCreateWithAccountName(org, account, navigate);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(prefillAtNavigate).toEqual({
+      module: "Contacts",
+      fields: {
+        Account_Name: {
+          module: "Accounts",
+          id: "acc-1",
+          name: "Acme Corp",
+        },
+      },
     });
   });
 });
