@@ -1,10 +1,10 @@
 # Tags
 
-Status: partial research for MEP-629 / MEP-779; not implementation-ready.
-Drafts and Manage Tags initial states are preserved. Add Tags initial openings
-are now observed in all four modules; the Deals opening awaits MEP-796 baseline
-review. No reference data or preferences were changed. Tag-filter input and
-write outcomes remain outside the current bounded observation pass.
+Status: ready for UI Lead review within the approved read-only observation
+boundary for MEP-629 / MEP-779. Manage Tags and Add Tags initial states are
+observed in all four modules. MEP-796 accepted the Deals opening and its
+remaining record chain completed. No reference data or preferences were changed.
+Tag-filter input and write outcomes remain explicit open questions.
 
 ## Purpose and scope
 
@@ -26,7 +26,7 @@ Sources are local capture slugs; screenshots remain outside the repository.
 | TAG-05 | Open operator menu under Tag | Options: `is`, `is not`, `is empty`, `is not empty`; `is` is marked selected. | `w2d-filter-tag-ops` / Tags |
 | TAG-06 | Under the operator, Leads filter | Value combobox contains a `Type here` textbox. No value was entered for this research. | `w2d-filter-tag` accessibility evidence / Tags |
 | TAG-07 | Filter panel footer | Apply Filter and Clear are visible; effects not exercised. | `w2d-filter-tag-ops` / shared filters |
-| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; initial openings observed in all four modules; Deals baseline review pending. | `w2f-detail-more`, `m6-leads-detail` / Tags |
+| TAG-08 | Leads record header, below record identity | Add Tags appears with a tag icon; initial openings observed in all four modules; Deals accepted by MEP-796. | `w2f-detail-more`, `m6-leads-detail` / Tags |
 
 The inherited and freshly inspected Leads record show the Add Tags entry
 rather than an existing tag
@@ -148,7 +148,7 @@ state, not established module behaviour.
 
 ## Open questions
 
-1. Populated tag suggestions in every module; all four empty initial openings are observed below, with Deals baseline acceptance pending MEP-796.
+1. Populated tag suggestions in every module; all four empty initial openings are observed below, with Deals accepted under MEP-796.
 2. Existing tag chips in list rows and record headers, overflow and removal affordances.
 3. Populated tag management and batch actions with no selection; all four
    modules’ initial empty management pages are observed. No tags may be created
@@ -316,3 +316,32 @@ sent through by the capture tool. No view switch or preference change was made.
 MEP-796 asks Platform Lead to review local evidence and give a precise
 acceptance/continuation decision. Do not repeat Add Tags. Deals More and Share
 were not started; only those two openings remain in the permitted record chain.
+
+
+## Reviewed Deals baseline (MEP-796, 2026-10-17)
+
+Platform Lead accepted the Deals Add Tags observation; it must not be repeated.
+Local evidence shows that grouped-count POST and module-settings PUT were
+attempted by the stage-board page load, before any click. Both were blocked;
+no setting was written. The earlier stop remains valid historical evidence.
+
+For only the remaining Deals More and Share runs, blocked telemetry is allowed
+at any count; reminder, notification, grouped-count, module-settings and
+related-record-count requests are capped at one each (method/path, query
+ignored). Any other blocked path or a second capped request stops the sequence.
+Unblocked non-GET requests must match the prior Deals detail method/path/query-key
+baseline. Preflight, one attach, 15-second waits and all field/print/preference
+restrictions remain unchanged. Share depends on the uniquely exported More
+menu selector. This decision permits observation; it establishes no write outcome.
+
+
+## Final review boundary
+
+The authorized initial openings are complete; no Add Tags retry is pending.
+Contacts, Accounts and Deals were observed independently, with individual
+numbered inventories. The successful later Deals More and Share captures are
+in [print-and-share.md](print-and-share.md#deals-more-menu-2026-10-17).
+Historical stop descriptions above are retained as evidence, with MEP-794 and
+MEP-796 decisions recorded afterwards. No tag-filter input or populated tag
+state was manufactured. Unknown suggestions, chips and write outcomes remain
+questions rather than inferred reference behaviour.

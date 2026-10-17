@@ -1,7 +1,9 @@
 # Tags, Print, Share, Drafts and Recycle Bin evidence inventory
 
-Status: partial continuation of MEP-629 on MEP-779. This index preserves existing
-numbered inventories; it does not claim new captures or complete scope.
+Status: ready for UI Lead review for the approved read-only MEP-629 / MEP-779
+observation pass. Existing inventories and nine new record openings are
+preserved. Print destinations, tag-filter input and write outcomes remain
+explicitly unobserved under the approved boundaries.
 Screenshots remain in the local research workspace and are never committed.
 
 ## Coverage and remaining work
@@ -14,10 +16,9 @@ Screenshots remain in the local research workspace and are never committed.
 | Record header | Leads | Existing capture and inventory preserved below |
 | Recycle Bin list and initial Search | Shared Setup | Existing capture and inventory preserved below |
 | Add Tags initial dialog | Leads | Initial empty popover observed below; MEP-787 accepted baseline background requests |
-| Add Tags initial dialog | Contacts, Accounts, Deals | Initial empty popovers observed below; Deals baseline acceptance pending MEP-796 |
+| Add Tags initial dialog | Contacts, Accounts, Deals | Initial empty popovers observed below; Deals accepted by MEP-796 |
 | Share initial dialog | Leads | Initial private-sharing modal observed below |
-| Share initial dialog | Contacts, Accounts | Initial private-sharing modals observed below |
-| Share initial dialog | Deals | Unobserved; sequence stopped before this capture |
+| Share initial dialog | Contacts, Accounts, Deals | Initial private-sharing modals observed below |
 | Record Print Preview destination | Four record modules | Unobserved; Leads bounded attempt skipped by attribute guard |
 | Print Default view destination | Table modules | Leads requests a guarded new window; destination unobserved |
 | Tagged records, populated Drafts, naturally empty bin | Applicable modules | No state may be manufactured by a write |
@@ -1524,11 +1525,10 @@ chooser occurred. Fourteen POSTs were blocked: twelve telemetry and the two
 list-baseline legacy requests, once each. No retry or replacement selector was
 used. No new dialog state or numbered dialog inventory can be claimed.
 
-Preflight passed at load 21.41, no capture lock and two page targets. The
-Platform Lead must review the exported list controls and give a unique
-non-positional record-link continuation before this path resumes. Contacts,
-Accounts and Deals Add Tags / Share coverage remains incomplete; it is not
-inferred from the Leads dialog. Existing completed observations remain intact.
+Preflight passed at load 21.41, no capture lock and two page targets. This
+historical stop was resolved by MEP-794, which supplied a unique non-positional
+record link. The independently observed module openings below completed the
+record chain; none is inferred from the Leads dialog.
 
 
 ## m6-contacts-add-tags-v2 — initial tag popover
@@ -1711,5 +1711,85 @@ MEP-794 allowance, although present in historical Deals baseline captures.
 The whole sequence stopped; MEP-796 owns acceptance and the precise remaining
 continuation. No new unblocked non-GET route/query-key combination against the
 Deals detail baseline. No print, window, popup, download, file chooser, field
-input, submission or view switch. Deals More and Share have no capture or
-inventory in this pass.
+input, submission or view switch. At this historical stop, Deals More and Share had no capture. MEP-796 later
+accepted this opening and permitted the two successful captures below.
+
+
+## m6-deals-detail-more — record action menu
+
+Observed on 2026-10-17 from `step-2.png`, `step-2.yml`, `controls.json`
+and `meta.json`. The upper-right More Options button opens a vertical menu
+below the record actions. Numbering covers every visible menu entry from top
+to bottom. The surrounding shell is described in the shared shell inventory;
+record values are omitted. No menu entry was activated in this capture.
+
+| No. | Location | Control | Purpose / observation |
+| --- | --- | --- | --- |
+| 1 | Menu row 1 | Clone | Visible action affordance; not exercised |
+| 2 | Menu row 2 | Share | Initial opening permitted separately; not clicked here |
+| 3 | Menu row 3 | Delete | Visible action affordance; not exercised |
+| 4 | Menu row 4 | Print Preview | Destination unobserved; never click under MEP-793 |
+| 5 | Menu row 5 | Find and Merge Duplicates | Visible action affordance; not exercised |
+| 6 | Menu row 6 | Mail Merge | Visible action affordance; not exercised |
+| 7 | Menu row 7 | Run Macro | Visible action affordance; not exercised |
+| 8 | Menu row 8 | Customize Business Card | Visible action affordance; not exercised |
+| 9 | Menu row 9 | Organize Deal Details | Visible action affordance; not exercised |
+| 10 | Menu row 10 | Add Related List | Visible action affordance; not exercised |
+| 11 | Menu row 11 | Review History | Visible action affordance; not exercised |
+| 12 | Menu row 12 | Enroll to Cadence | Visible action affordance; not exercised |
+| 13 | Menu row 13 | Add Kiosk | Visible action affordance; not exercised |
+| 14 | Menu row 14 | Create Button | Visible action affordance; not exercised |
+| 15 | Menu row 15 | Create Client Script | Visible action affordance; not exercised |
+
+Ready and both clicks passed with one attach; preflight load 7.32. Sixteen
+blocked requests comprise twelve telemetry and one each of reminder,
+notification, Deals grouped-count POST and Deals module-settings PUT.
+All match MEP-796 caps. No new unblocked non-GET route/query keys against the
+Deals detail baseline. Zero print, window, popup, download or file chooser.
+The stage-board view was retained; no menu action was activated in this capture.
+
+
+## m6-deals-share-v2 — initial sharing modal
+
+Observed on 2026-10-17 from `step-3.png`, `step-3.yml` and `meta.json`.
+A centered modal at the top of the viewport overlays a dimmed record detail.
+The title is Sharing Deal; the background shell and record controls are inert
+while it is open. The shared shell and record-header inventories above describe
+that unchanged background. The following inventory covers all visible modal
+controls; no close icon was visible in this captured viewport.
+
+| No. | Location | Control | Purpose / initial state |
+| --- | --- | --- | --- |
+| 1 | Title row right | Help icon | Help affordance; not opened |
+| 2 | Record access type row | Private radio | Checked; not changed |
+| 3 | After Private | Public radio | Unchecked; not changed |
+| 4 | Next row left | Add members textbox | Empty; no member search or selection |
+| 5 | Same row right | Access combobox | Full Access; options not opened |
+| 6 | Below member row | With Related list checkbox | Unchecked; never toggled |
+| 7 | Beside related-list label | Information icon | Tooltip not inspected |
+| 8 | Footer right | Cancel | Enabled; not clicked; Escape used |
+| 9 | After Cancel | Share | Disabled in accessibility evidence; never submitted |
+
+Ready passed; record link, More and Share clicks completed, then Escape.
+One CDP attach; no skipped steps or visible dialog after close. Eighteen
+background requests were blocked: fourteen telemetry plus the four Deals
+background paths, each once, within MEP-796 caps. No unexpected blocked path or new unblocked
+non-GET request. Zero print calls/window requests/downloads/file choosers.
+No input, recipient, access-level, related-list or preference change.
+
+
+
+## Final bounded coverage (2026-10-17)
+
+All four modules have observed Manage Tags and Drafts initial states, Add Tags
+initial popovers, More menus and initial sharing modals. Print View submenu
+coverage is Leads, Contacts and Accounts; Deals retains its existing stage board.
+Recycle Bin populated list and initial Search are preserved without a repeat.
+The nine new captures each have a standalone local `inventory.md` and a section
+above. Shared shell controls use the stable SH inventory in [tags.md](tags.md#shared-shell-control-inventory);
+modal background controls are inert. No background record value is copied.
+
+MEP-793 excludes print destinations with this tool; MEP-794 excludes tag-filter
+input in this pass. Neither is claimed observed or approved as a design deviation.
+MEP-796 resolved the Deals baseline stop; no record-chain opening remains pending.
+Unknown populated and write-result states remain explicit questions in the specs.
