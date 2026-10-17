@@ -57,6 +57,7 @@ function Harness({
   linkFieldLabel,
   sortableFields = new Set(columns.map((field) => field.apiName)),
   onSortChange = () => {},
+  extra,
 }: {
   records: readonly RecordData[];
   activitySummaries?: RecordTableProps["activitySummaries"];
@@ -68,6 +69,7 @@ function Harness({
   linkFieldLabel?: string;
   sortableFields?: ReadonlySet<string>;
   onSortChange?: (sort: SortSpec) => void;
+  extra?: Partial<RecordTableProps>;
 }) {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   return (
@@ -86,6 +88,7 @@ function Harness({
       wrapText={wrapText}
       emptyMessage={emptyMessage}
       settings={settings}
+      {...extra}
       format={DEFAULT_FORMAT}
       footer={{
         total: records.length,
@@ -515,6 +518,95 @@ test("omits badge column and pulse button when badgeColumn is false", () => {
   expect(screen.queryByRole("button", { name: "Record activity" })).toBeNull();
   expect(screen.getByRole("checkbox", { name: "Select Acme Corp" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Acme Corp" })).toBeTruthy();
+});
+
+test("row hover tools follow rowTools; the edit tool links to the edit page", () => {
+  const tools = () =>
+    Array.from(document.querySelectorAll("[data-part=row] td button, [data-part=row] td a"))
+      .map((node) => node.getAttribute("aria-label"))
+      .filter((label) => label && label !== "Select row" && label !== "Record activity");
+  const { unmount } = render(
+    <Harness records={[record("rec-001", "Lead 001")]} extra={{ laterInventory: true }} />,
+  );
+  expect(tools()).toEqual(["Record actions", "Notes"]);
+  unmount();
+
+  render(
+    <Harness
+      records={[record("rec-001", "Lead 001")]}
+      extra={{
+        laterInventory: true,
+        rowTools: ["edit", "note", "ellipsis"],
+        rowEditHref: (item) => `/records/${item.id}/edit`,
+      }}
+    />,
+  );
+  expect(tools()).toEqual(["Edit record", "Notes", "Record actions"]);
+  expect(screen.getByRole("link", { name: "Edit record" }).getAttribute("href")).toBe(
+    "/records/rec-001/edit",
+  );
+});
+
+test.each([
+  { rowTools: ["edit", "note"] as const, expected: ["Edit record", "Notes"] },
+  {
+    rowTools: ["edit", "note", "ellipsis"] as const,
+    expected: ["Edit record", "Notes", "Record actions"],
+  },
+])("Activities tool sequence $expected", ({ rowTools, expected }) => {
+  render(
+    <Harness
+      records={[record("rec-001", "Meeting")]}
+      extra={{
+        laterInventory: true,
+        rowTools,
+        rowEditHref: (item) => `/records/${item.id}/edit`,
+      }}
+    />,
+  );
+  const row = document.querySelector("[data-part=row]") as HTMLElement;
+  expect(
+    Array.from(row.querySelectorAll("td:first-child [aria-label]"), (node) =>
+      node.getAttribute("aria-label"),
+    ),
+  ).toEqual(expected);
+  expect(within(row).getByRole("link", { name: "Edit record" }).getAttribute("href")).toBe(
+    "/records/rec-001/edit",
+  );
+});
+
+test("all-day formatting comes from each row and leaves ordinary lists unchanged", () => {
+  const datetime = {
+    ...columns[0],
+    apiName: "Start_DateTime",
+    label: "From",
+    dataType: "datetime",
+  } as FieldDefinition;
+  const rows = [true, false].map((allDay, i) => ({
+    id: `row-${i}`,
+    fields: {
+      Full_Name: `Meeting ${i}`,
+      Start_DateTime: "2026-03-01T14:05:00Z",
+      All_day: allDay,
+    },
+  }));
+  const { rerender } = render(
+    <Harness
+      records={rows}
+      extra={{
+        columns: [columns[0] as FieldDefinition, datetime],
+        numericDates: true,
+        allDayField: "All_day",
+      }}
+    />,
+  );
+  const cells = () =>
+    Array.from(document.querySelectorAll("tbody tr td:last-child"), (node) => node.textContent);
+  expect(cells()).toEqual(["01.03.2026", "01.03.2026 5:05 PM"]);
+  rerender(
+    <Harness records={rows} extra={{ columns: [columns[0] as FieldDefinition, datetime] }} />,
+  );
+  expect(cells()).toEqual(["Mar 1, 2026, 5:05 PM", "Mar 1, 2026, 5:05 PM"]);
 });
 
 test("places open activity summaries between selection and record name, with no click action", () => {
