@@ -760,3 +760,21 @@ be removed, no invitation is sent; Reminder and Participants Reminder are select
 in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
+
+## Module 7 — Campaigns
+
+### Campaigns list
+
+Not started.
+
+### Campaigns create / edit form
+
+Not started.
+
+### Campaigns record detail
+
+Not started.
+
+### Campaigns links in earlier modules
+
+Not started.
