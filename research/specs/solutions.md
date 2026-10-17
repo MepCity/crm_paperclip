@@ -505,7 +505,7 @@ Edit, More Options (including its opened contents), previous/next, Overview, Tim
 
 ## Create and edit form
 
-Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. The Status menu is now observed; Product lookup and final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
+Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. The Status menu and Product lookup are now observed; final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
 
 ### Sources and limits
 
@@ -548,7 +548,7 @@ Shell: SH-01–SH-11, SH-24–SH-25 and SH-26–SH-46 as in [contacts.md](contac
 | SF-09 | Solution Information | Solution Owner | select | right, row 1 | Prefilled; identity omitted; not opened | seen (m8f-solutions-create) | M8 | KF-18 (cases.md) |
 | SF-10 | Solution Information | User lookup icon | icon button | right, row 1, input right edge | same | seen (m8f-solutions-create) | M8 | AF-07 moved (accounts-form.md) |
 | SF-11 | Solution Information | Product Name | input | right, row 2 | Blank lookup input; no typing | seen (m8f-solutions-create) | P2 | KF-07 moved (cases.md) |
-| SF-12 | Solution Information | Product lookup icon | icon button | right, row 2, input right edge | not observed; not opened | seen (m8f-solutions-create) | P2 | KF-08 moved (cases.md) |
+| SF-12 | Solution Information | Product lookup icon | icon button | right, row 2, input right edge | Opens Choose Product; not opened in this base capture | seen (m8f-solutions-create) | P2 | KF-08 moved (cases.md) |
 | SF-13 | Description Information | Question | input | first full-width row | Blank multiline editor; required input-edge marker | seen (m8f-solutions-create) | M8 | new |
 | SF-14 | Description Information | Answer | input | second full-width row | Blank multiline editor; required input-edge marker | seen (m8f-solutions-create) | M8 | new |
 | SF-15 | Description Information | Resize grip | icon button | Question editor, lower-right corner | not operated | seen (m8f-solutions-create) | M8 | DF-29 moved (deals-form.md) |
@@ -738,6 +738,113 @@ Self-audit: 233 source entries → 64 numbered controls (129 mapped entries); 10
 
 Capture safety: one click, zero skipped; ready probe succeeded and form/menu painted. Non-GET path/count matches m8f-solutions-create: one expected shell trigger POST (200). Reminder, notification and six telemetry requests blocked; no unexpected path or count increase. API calls 48; pre-capture 1-minute load 22.43. No option selection, typing, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
 
+### Control inventory — m8f-solutions-product
+
+The Product lookup opens **Choose Product**, matching the Cases Product popup. Three data columns and the empty state “No Products found” are painted; no row, selection circle, record link or pagination control is visible. The search has an opening focus outline; no typing or search was performed.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SF-12.1 | Product popup | Close cross | icon button | header, far right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.1 (cases.md) |
+| SF-12.2 | Product popup | Search by Product Name / Product Code | input | below title, left | same; not used | seen (m8f-solutions-product) | P2 | KF-08.2 (cases.md) |
+| SF-12.3 | Product popup | New Product | button | below title, right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.3 (cases.md) |
+| SF-12.4 | Product popup | Table with down arrow icon | icon button | table header, first | same; not used | seen (m8f-solutions-product) | P2 | KF-08.4 (cases.md) |
+| SF-12.5 | Product popup | Product Name | column header | table header, text column 1 | same; not used | seen (m8f-solutions-product) | P2 | KF-08.5 (cases.md) |
+| SF-12.6 | Product popup | Column options | icon button | text column 1, right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.6 (cases.md) |
+| SF-12.7 | Product popup | Product Code | column header | table header, text column 2 | same; not used | seen (m8f-solutions-product) | P2 | KF-08.7 (cases.md) |
+| SF-12.8 | Product popup | Column options | icon button | text column 2, right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.8 (cases.md) |
+| SF-12.9 | Product popup | Product Owner | column header | table header, text column 3 | same; not used | seen (m8f-solutions-product) | P2 | KF-08.9 (cases.md) |
+| SF-12.10 | Product popup | Column options | icon button | text column 3, right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.10 (cases.md) |
+| SF-12.11 | Product popup | Filter | icon button | table header, far right | same; not used | seen (m8f-solutions-product) | P2 | KF-08.11 (cases.md) |
+
+Rest: as in m8f-solutions-create; covered by the overlay: SF-01–SF-03, SF-05–SF-06, SF-09–SF-10 and portions of the upper shell. SF-04 is visible at the far-right edge; SF-07 and SF-11–SF-12 are at the lower modal edge. SF-08, Description Information, right-edge Client Script tab and footer remain visible behind the inactive overlay. No popup control was used. Absent here: populated-row selections, links and paging. The transient SF-S01 reconnect notice from the Status capture is absent; the base shell footer is painted.
+
+### Source reconciliation — m8f-solutions-product
+
+One-based controls.json ordinals. The form and shell retain base mappings behind the modal; these mappings do not imply that covered controls are visible or actionable. New modal nodes and later lookup/scroll duplicates are accounted for separately.
+
+| Inventory number or exclusion | Source ordinals |
+| --- | --- |
+| SH-01 | 2, 3 |
+| SH-02 | 11 |
+| SH-03 | 12, 14 |
+| SH-04 | 15, 17 |
+| SH-05 | 18, 20 |
+| SH-06 | 21, 23 |
+| SH-07 | 24, 26 |
+| SH-08 | 27, 29 |
+| SH-09 | 30, 31, 32 |
+| SH-10 | 34 |
+| SH-11 | 35, 36 |
+| SH-24 | 60, 61, 62 |
+| SH-25 | 63, 64, 65 |
+| SL-41 | 66, 67, 68 |
+| SL-42 | 69, 70, 71 |
+| SL-43 | 72, 73, 74 |
+| SL-44 | 75, 76, 77 |
+| SL-45 | 78, 79, 80 |
+| SL-46 | 81, 82, 83 |
+| SL-47 | 84, 85, 86 |
+| SL-48 | 87, 88, 89 |
+| SL-49 | 90, 91, 92 |
+| SL-50 | 93, 94, 95 |
+| SL-51 | 96, 97, 98 |
+| SL-52 | 107 |
+| SH-26 | 110 |
+| SH-27 | 111 |
+| SH-28 | 113 |
+| SH-29 | 114 |
+| SH-30 | 115 |
+| SH-31 | 118 |
+| SH-32 | 121 |
+| SH-33 | 124, 125 |
+| SH-34 | 128, 129, 130, 131 |
+| SF-01 | 135, 136 |
+| SF-02 | 142, 143 |
+| SF-03 | 140, 141 |
+| SF-04 | 138, 139 |
+| SF-05 | 151, 152 |
+| SF-07 | 153, 154 |
+| SF-08 | 155, 156 |
+| SF-09 | 158, 159 |
+| SF-10 | 157, 242, 243 |
+| SF-11 | 160, 161, 162, 163 |
+| SF-12 | 164, 245, 246 |
+| SF-13 | 167, 168, 251 |
+| SF-14 | 169, 170, 252 |
+| SF-17 | 172, 173, 174, 253 |
+| SF-18 | 175, 176 |
+| SF-19 | 189 |
+| SH-35 | 206 |
+| SH-36 | 207 |
+| SH-37 | 208 |
+| SH-38 | 209 |
+| SH-39 | 210 |
+| SH-40 | 211 |
+| SH-41 | 212 |
+| SH-42 | 213 |
+| SH-43 | 214 |
+| SH-44 | 215 |
+| SH-45 | 216 |
+| Excluded: structural wrapper, heading, duplicate decoration or non-control text | 1, 4, 109, 112, 133, 134, 137, 149, 150, 166, 171, 205, 217, 225, 226, 227, 228, 236, 241, 244, 249, 250, 254 |
+| Excluded: zero-area hidden node | 5, 6, 7, 8, 9, 10, 13, 16, 19, 22, 25, 28, 33, 106, 108, 116, 117, 119, 120, 122, 123, 126, 127, 144, 145, 146, 147, 148, 165, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 223, 237, 238, 239 |
+| Excluded: clipped, offscreen or covered by fixed rail header | 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 99, 100, 101, 102, 103, 104, 105, 132 |
+| Excluded: non-interactive empty-state text | 240 |
+| SF-12.1 | 218, 247 |
+| SF-12.2 | 219, 220, 248 |
+| SF-12.3 | 221, 222 |
+| SF-12.4 | 229 |
+| SF-12.5 | 230 |
+| SF-12.6 | 231 |
+| SF-12.7 | 232 |
+| SF-12.8 | 233 |
+| SF-12.9 | 234 |
+| SF-12.10 | 235 |
+| SF-12.11 | 224 |
+
+Self-audit: 254 source entries → 72 numbered controls (139 mapped entries); 115 excluded entries. Missing / duplicate ordinals: 0. Screenshot opened as an image across the popup, shell, right edge and footer. Image-only SF-15, SF-16 and SH-46 remain visible; SF-06 is covered. No additional image-only popup control was found. All eleven Cases popup references were checked against their inventory.
+
+Capture safety: one click, zero skipped; ready probe succeeded and popup painted. Non-GET path/count matches m8f-solutions-create: one expected shell trigger POST (200). Reminder, notification and six telemetry requests blocked; no unexpected path or count increase. API calls 53; pre-capture 1-minute load 14.02. No typing, search, selection, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -746,6 +853,7 @@ Numbers below count distinct inventory references receiving source items; image-
 | --- | --- | --- | --- | --- |
 | m8f-solutions-create | 225 | 61 | 99 | 4 (lock, two resize grips, trash) |
 | m8f-solutions-status | 233 | 64 | 104 | 5 (base four plus reconnect symbol) |
+| m8f-solutions-product | 254 | 72 | 115 | 3 (two resize grips, trash; lock covered) |
 | m8-solutions-list-base | 285 | 86 | 128 | 1 (trash) |
 | m8-solutions-list-views | 303 | 95 | 132 | 1 (trash) |
 | m8-solutions-list-actions | 299 | 94 | 127 | 3 (trash, Sheet view, Print View) |
@@ -759,6 +867,7 @@ Shell differences are covered by SL-41–SL-53 and the Cases shell-gap list; Ser
 
 - `m8f-solutions-create` — painted Create form and footer; zero clicks.
 - `m8f-solutions-status` — open Status menu; one click, no option selected.
+- `m8f-solutions-product` — open empty Product lookup; one click, no selection or search.
 
 - `m8-solutions-list-base` — painted default empty list, filter panel already open.
 - `m8-solutions-list-views` — open system-view menu; no view selected.
@@ -790,7 +899,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | Create form | observed in m8f-solutions-create, SF-01–SF-19 | Seven fields, default Draft, three required markers, title actions and footer established above. |
 | Edit form | not observed; prior painted All Solutions list and detail-empty capture establish zero records | Empty-list fallback applies; no sample record may be created. Final passive comparison remains pending. |
 | Status dropdown | observed in m8f-solutions-status, SF-08.1–SF-08.3 | Draft, Reviewed, Duplicate; initial Draft checked; no selection. |
-| Product lookup interior | not observed; capture pending | No selection or search is allowed. |
+| Product lookup interior | observed in m8f-solutions-product, SF-12.1–SF-12.11 | Empty table; populated rows and paging remain not observed. No selection or search performed. |
 | Empty required-field errors | M1 layout and D1 require Solution Title, Question, Answer; Save is forbidden | Ref: record-detail.md, Layout / Flows, Leads invalid-create evidence. Exact messages, timing and focus remain not observable without a write. |
 | Save / Save and New success, server errors, duplicates and dirty Cancel | not observable without a write or field change | Ref: record-detail.md and leads-write-behaviour.md; no observed Solutions-specific outcome. |
 | Published field and comment editing | absent in observed Create; Edit not observed | D1 documents edit-mode Add Comment only; no toggling, publishing or comment submission. |
@@ -824,7 +933,7 @@ These are CTO gate inputs under MEP-837, not questions submitted to the board. P
 
 ## Open questions
 
-- Complete the Product picker capture and final passive list comparisons; Create inventory and Status menu are complete.
+- Complete final passive list comparisons; Create inventory, Status menu and empty Product picker are complete. Populated Product rows and paging remain not observed.
 - SF-S01: transient chat reconnect symbol; action versus indicator and shell ownership remain unestablished. DOM-only Channels / Threads are not treated as painted evidence.
 - Prior painted Solutions list establishes zero records independently of Cases; final passive comparison remains pending before closing the Edit evidence gap.
 - Create required markers are confirmed against M1; exact validation messages remain evidence gaps.
