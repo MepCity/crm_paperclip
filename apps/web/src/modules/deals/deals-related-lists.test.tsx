@@ -144,8 +144,6 @@ describe("RelatedCardsContainer with Deals card set", () => {
   it("marks laterModule targets on non-working cards", async () => {
     const user = userEvent.setup();
     render(<RelatedCardsContainer relatedLists={dealsRelatedLists} />);
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    await user.click(within(notesSection).getByRole("button", { name: "Recent Last" }));
     const cadences = screen.getByRole("region", { name: "Cadences" });
     await user.click(within(cadences).getByRole("button", { name: "Enroll" }));
     const products = screen.getByRole("region", { name: "Products" });
