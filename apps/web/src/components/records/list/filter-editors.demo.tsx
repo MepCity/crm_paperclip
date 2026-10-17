@@ -28,6 +28,7 @@ const groups: FilterGroup[] = [
       label: `Sample ${fieldType}`,
       editor: {
         fieldType,
+        ...(fieldType === "tag" ? { tagModule: "Leads" as const } : {}),
         currencyCode: fieldType === "currency" ? "TL" : undefined,
         options:
           fieldType === "picklist"
@@ -47,6 +48,11 @@ const groups: FilterGroup[] = [
                 ],
       },
     })),
+  },
+  {
+    id: "empty-tags",
+    label: "Empty tag catalog",
+    items: [{ id: "empty-tag", label: "Empty tags", editor: { fieldType: "tag", options: [] } }],
   },
 ];
 export default function FilterEditorsDemo() {
