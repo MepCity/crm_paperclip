@@ -17,7 +17,11 @@ test("Manage Tags shares the catalogue with record tags and list filter options"
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Tags used : 1 / 100")).toBeVisible();
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await page.getByRole("checkbox", { name: "Tag", exact: true }).check();
+  const tagFilter = page.getByRole("checkbox", { name: "Tag", exact: true });
+  await tagFilter.scrollIntoViewIfNeeded();
+  await tagFilter.focus();
+  await page.keyboard.press("Space");
+  await expect(tagFilter).toBeChecked();
   await page.getByRole("button", { name: "Tag value", exact: true }).click();
   await expect(page.getByText("Shared catalogue", { exact: true })).toBeVisible();
   await page.goto(moduleRecordPath(org.slug, "Leads", "100000000000000000"));
