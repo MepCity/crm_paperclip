@@ -774,7 +774,10 @@ Not started.
 
 ### Campaigns record detail
 
-Not started.
+- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; QA pending (MEP-812).
+- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
+- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
+- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
 
 ### Campaigns links in earlier modules
 
