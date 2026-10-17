@@ -8,17 +8,15 @@ import { useExportHistory, useImportHistory, useTransferClient } from "@/lib/api
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
 import { importHistoryPath, moduleListDefaultPath } from "@/lib/crm-paths";
+import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { ExportHistory } from "./history/export-history";
 import { ImportHistory } from "./history/import-history";
 import { ImportWizard } from "./import/import-wizard";
 import type { ImportWizardClient } from "./import/types";
 
-const MODULE_LABELS: Record<TransferModule, string> = {
-  Leads: "Leads",
-  Contacts: "Contacts",
-  Accounts: "Accounts",
-  Deals: "Deals",
-};
+function moduleLabel(module: TransferModule): string {
+  return resolveModuleScreenByApiName(module)?.pluralLabel ?? module;
+}
 
 export function ImportWizardScreen({ module }: { module: TransferModule }) {
   const orgSlug = useOrgSlug();
@@ -42,7 +40,7 @@ export function ImportWizardScreen({ module }: { module: TransferModule }) {
   return (
     <ImportWizard
       module={module}
-      moduleLabel={MODULE_LABELS[module]}
+      moduleLabel={moduleLabel(module)}
       client={wizardClient}
       onCancel={() => router.push(listPath)}
       onDone={() => router.push(listPath)}
@@ -63,7 +61,7 @@ export function ImportHistoryScreen() {
     <ImportHistory
       jobs={history.data ?? []}
       loading={history.isLoading}
-      moduleLabel={(m) => MODULE_LABELS[m]}
+      moduleLabel={moduleLabel}
       canUndo={(job: ImportJob) => job.status !== "undone"}
       onUndo={async (job) => {
         await client.undoImport(job.id);
@@ -86,7 +84,7 @@ export function ExportHistoryScreen() {
     <ExportHistory
       jobs={history.data ?? []}
       loading={history.isLoading}
-      moduleLabel={(m) => MODULE_LABELS[m]}
+      moduleLabel={moduleLabel}
       downloadHref={(job) => client.exportDownloadUrl(job.id)}
       onRetry={(job) => router.push(moduleListDefaultPath(orgSlug, job.module))}
     />
