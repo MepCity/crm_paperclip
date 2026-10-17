@@ -28,6 +28,17 @@ describe("addPendingFiles", () => {
     expect(result.files).toHaveLength(5);
   });
 
+  it("counts existing attachments in the file budget", () => {
+    expect(addPendingFiles([], [file("a"), file("b")], 4).overBudget).toBe(true);
+    expect(addPendingFiles([], [file("a")], 4).overBudget).toBe(false);
+  });
+
+  it("counts existing attachment bytes in the size budget", () => {
+    const six = file("six", 6_000_000);
+    expect(addPendingFiles([], [six], 1, 15_000_000).overBudget).toBe(true);
+    expect(addPendingFiles([], [six], 1, 10_000_000).overBudget).toBe(false);
+  });
+
   it("rejects a total above 20 MB", () => {
     const result = addPendingFiles([], [file("big", NOTE_ATTACH_MAX_BYTES + 1)]);
     expect(result.overBudget).toBe(true);
