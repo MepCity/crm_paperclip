@@ -6,7 +6,7 @@ import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-confl
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
 import { DraftsPage } from "@/components/records/drafts/drafts-page";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
-import { ManageTagsPage } from "@/components/records/tags/manage-tags-page";
+import { ManageTagsClient } from "@/components/records/tags/manage-tags-client";
 import {
   moduleListDefaultPath,
   moduleRecordClonePath,
@@ -52,7 +52,13 @@ export function ModuleRouteClient({
   if (kind === "tags") {
     const listHref = moduleListDefaultPath(orgSlug, definition.tab);
     return (
-      <ManageTagsPage moduleName={definition.pluralLabel} onBack={() => router.push(listHref)} />
+      <ManageTagsClient
+        key={`${orgSlug}:${definition.apiName}`}
+        orgSlug={orgSlug}
+        module={definition.apiName}
+        moduleName={definition.pluralLabel}
+        onBack={() => router.push(listHref)}
+      />
     );
   }
   if (kind === "drafts") {
