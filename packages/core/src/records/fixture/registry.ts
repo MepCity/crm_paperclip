@@ -150,6 +150,7 @@ const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
     initialNextId: 260000000000000000n,
     createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
   },
+
   Campaigns: {
     ...campaignsHooks,
     afterDelete: parentDeleteHook("Campaigns"),
