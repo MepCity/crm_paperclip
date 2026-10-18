@@ -73,11 +73,11 @@ function matchesDetailSpec(request: CrmRequest, spec: (typeof DETAIL_FROM_LIST_R
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
 }
 
-/** Activity cards load their own module metadata, views and rows; they are not the detail request. */
+/** Activity and Campaigns cards load their own module metadata, views and rows; they are not the detail request. */
 function isActivityCardRequest(request: CrmRequest): boolean {
   return (
     /^\/crm\/v[\d.]+\/settings\//.test(request.pathname) ||
-    /^\/crm\/v[\d.]+\/(Tasks|Events|Calls)\b/.test(request.pathname)
+    /^\/crm\/v[\d.]+\/(Tasks|Events|Calls|Campaign_Members|Campaigns)\b/.test(request.pathname)
   );
 }
 
