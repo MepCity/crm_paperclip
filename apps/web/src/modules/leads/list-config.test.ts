@@ -92,7 +92,10 @@ test("keeps the Leads Actions menu inventory in reference order and assigns late
   expect(actions.find((item) => item.id === "approve")?.laterModule).toBe("P3");
   expect(actions.find((item) => item.id === "campaigns")?.laterModule).toBe("M7");
   expect(actions.find((item) => item.id === "client-script")?.laterModule).toBe("M11");
-  expect(actions.find((item) => item.id === "export")?.laterModule).toBe("M6");
+  expect(actions.find((item) => item.id === "export")).toEqual({
+    id: "export",
+    label: "Export Leads",
+  });
 });
 
 test("verifies Leads-specific actions entries", () => {
@@ -121,5 +124,6 @@ test("verifies Leads-specific actions entries", () => {
     "mass-convert",
     "drafts",
     "deduplicate",
+    "export",
   ]);
 });
