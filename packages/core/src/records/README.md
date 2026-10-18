@@ -89,7 +89,7 @@ Interim boundaries and empty-value behavior:
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
 - Role/group membership, blocked email, fiscal periods, system filters and
-  related-module filters are not introduced. `multi_module_lookup` keeps only
+  related-module filters are not introduced except for the interim Campaign system filter. `multi_module_lookup` keeps only
   empty / not-empty panel predicates.
 
 
@@ -791,6 +791,19 @@ query uses UTC (including when a deletion instant originated in another offset).
 The timezone source and reference CRM day boundaries need confirmation. RB-17 and
 RB-19 establish only `contains` and `is`; other operators remain unobserved and
 are not added. Deletion actor display-name resolution is outside this query port.
+
+## Campaign system filter (interim)
+
+Leads and Contacts accept `campaignFilter: { campaignIds, memberStatuses? }` on
+list/count/summarize. Choose one to five distinct non-empty campaign IDs and,
+optionally, a non-empty subset of the shared interim `campaignMemberStatuses`
+export from `@crm/core/records/campaigns`. A record matches membership in any
+selected campaign, narrowed by the status of that same membership. This combines
+with saved-view criteria, field filters, search and activity filters using AND.
+Membership and campaign reads use the caller's tenant and ordinary visibility;
+unknown or inaccessible IDs produce no matches. Other modules and malformed
+filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
+`campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
 
 ## Cases
 

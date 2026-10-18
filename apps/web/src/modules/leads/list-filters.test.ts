@@ -89,4 +89,22 @@ describe("buildLeadsFilterGroups", () => {
       systemEditor: "activities",
     });
   });
+
+  it("enables Campaigns system filter with systemEditor: 'campaigns'", async () => {
+    const service = createFixtureRecordService(ctx);
+    const module = await service.getModule("Leads");
+    const groups = buildLeadsFilterGroups({
+      fields: module.fields,
+      users: [],
+      linkField: "Full_Name",
+      currencyCode: "TRY",
+    });
+    const systemGroup = groups.find((group) => group.id === "system");
+    const campaignsItem = systemGroup?.items.find((item) => item.label === "Campaigns");
+    expect(campaignsItem).toEqual({
+      id: "Campaigns",
+      label: "Campaigns",
+      systemEditor: "campaigns",
+    });
+  });
 });
