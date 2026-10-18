@@ -64,8 +64,7 @@ export function SearchRows({
           <Operator
             label="Deleted By operator"
             value={draft.deletedByOperator}
-            options={["contains", "is"]}
-            onChange={(value) => change("deletedByOperator", value as "contains" | "is")}
+            options={["contains"]}
             busy={busy}
           />
         </td>
