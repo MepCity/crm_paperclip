@@ -861,3 +861,25 @@ our own and is an **interim rule** listed as an open question at the Module 6 ga
 
 Interim rule details: Print calls `window.print()`, Close goes back, `@media print` hides the
 buttons and everything outside the print page.
+
+## Module 8 — Cases and Solutions
+
+### Cases and Solutions lists
+
+Not started.
+
+### Cases record detail
+
+Not started.
+
+### Solutions record detail
+
+Not started.
+
+### Cases and Solutions create / edit forms
+
+Not started.
+
+### Cases links in earlier modules
+
+Not started.
