@@ -1,4 +1,4 @@
-# Campaigns
+# Campaigns — list screen and module inventory
 
 Status: research for MEP-754 / Module 7; empty-state painting gate accepted by the CTO in MEP-803. Menu evidence is recorded below for UI Lead review.
 
