@@ -1803,3 +1803,121 @@ These are CTO gate inputs, not questions sent to the board. Every proposal below
 - Exact populated row-end and hover-only controls remain not observed because both default lists are empty. CTO collects the evidence-gap decisions at the module gate; no board question is opened in this slice.
 - Sheet view attribution and the rail links My Jobs, Services and Projects are unresolved (`?`), pending the module gate.
 - Create split-menu opening is not observed following the automatic approval rejection; no alternative access was attempted.
+
+## Links from other modules
+
+MEP-842, research slice 5/5. Existing capture evidence is reused rather than recaptured. All three source screenshots were opened as images for this slice, including the fixed header, rail, card actions, right edge and utility strip. No reference session was opened, no control was clicked, and no tabs were closed during this slice. The tables below inventory the complete Cases surface in each image; the rest of each screen retains its existing screen inventory and reconciliation.
+
+Metadata source: `modules/Accounts/related_lists.json`, `modules/Contacts/related_lists.json`, `modules/Deals/related_lists.json`, and Cases fields/layouts. Accounts and Deals configure Cases at sequence 22; Contacts at sequence 18. These metadata sequences differ from the rendered rail positions below. All three relate through standard Cases lookup fields, rather than a new standalone association model.
+
+### Control inventory — m3c-card-sales-orders (reused Accounts evidence)
+
+Shell and surrounding record controls: [accounts-record-detail.md](accounts-record-detail.md), m3d-detail-main and m3c-card-sales-orders. No shell rows are repeated. Sales Orders is selected; Cases itself is not the active rail row.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KX-01 | Related-list rail | Cases | link | row 14, after Member Accounts | same; no new click | seen (m3c-card-sales-orders) | M8 | AD-19 (accounts-record-detail.md) |
+| KX-02 | Cases card | Cases | heading | below Member Accounts, header left | Names the related list; no counter painted | seen (m3c-card-sales-orders) | M8 | accounts-record-detail.md, Related-list cards, Cases row |
+| KX-03 | Cases card | Assign | button | header right group, first | not observed; inspection only | seen (m3c-card-sales-orders) | M8 | AD-155 (accounts-record-detail.md) |
+| KX-04 | Cases card | New | button | header right group, second | not observed; not opened | seen (m3c-card-sales-orders) | M8 | AD-156 (accounts-record-detail.md) |
+| KX-05 | Cases card | No records found | status text | body, below header divider | Empty related list; no columns or rows painted | seen (m3c-card-sales-orders) | M8 | accounts-record-detail.md, Related-list cards, Cases row |
+
+No Cases rail plus, card-header counter, column header, row selector, row-end menu or pagination is painted. Populated row controls remain not observed.
+
+### Control inventory — m2d2-card-cases (reused Contacts evidence)
+
+Shell and surrounding controls: [contacts-record-detail.md](contacts-record-detail.md), Control inventory — m2d2-card-cases, including its complete source-ordinal reconciliation. Cases is the selected rail entry. Its card is first below the sticky tabs.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KX-06 | Related-list rail | Cases | link | row 10, after Products | Scrolls to Cases; inherited observation, no new click | seen (m2d2-card-cases) | M8 | D-19 (contacts-record-detail.md) |
+| KX-07 | Related-list rail | Plus icon | icon button | selected Cases row, right end | not observed; not clicked | seen (m2d2-card-cases) | M8 | D-72 (contacts-record-detail.md) |
+| KX-08 | Cases card | Cases | heading | header left | Names the related list; no counter painted | seen (m2d2-card-cases) | M8 | contacts-record-detail.md, Related-list cards, Cases row |
+| KX-09 | Cases card | Assign | button | header right group, first | not observed; inspection only | seen (m2d2-card-cases) | M8 | D-70 (contacts-record-detail.md) |
+| KX-10 | Cases card | New | button | header right group, second | not observed; not opened | seen (m2d2-card-cases) | M8 | D-71 (contacts-record-detail.md) |
+| KX-11 | Cases card | No records found | status text | body, below header divider | Empty related list; no columns or rows painted | seen (m2d2-card-cases) | M8 | contacts-record-detail.md, Related-list cards, Cases row |
+
+No card-header counter, column header, row selector, row-end menu or pagination is painted. The plus is visible here because Cases is selected; it is not evidence that the inactive Accounts/Deals row lacks an equivalent affordance.
+
+### Control inventory — m4c-card-sales-orders (reused Deals evidence)
+
+Shell and surrounding controls: [deals-record-detail.md](deals-record-detail.md), m4c-detail-base and Control inventory — m4c-card-sales-orders. Sales Orders is selected. Cases follows Emails and precedes Invoices in the content.
+
+| # | Region | Control | Type | Position | What it does | Source | Module | Ref |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| KX-12 | Related-list rail | Cases | link | row 14, after Emails | same; no new click | seen (m4c-card-sales-orders) | M8 | DD-19 (deals-record-detail.md) |
+| KX-13 | Cases card | Cases | heading | header left | Names the related list; no counter painted | seen (m4c-card-sales-orders) | M8 | deals-record-detail.md, Related-list cards, Cases row |
+| KX-14 | Cases card | Assign | button | header right group, first | not observed; inspection only | seen (m4c-card-sales-orders) | M8 | DD-142 (deals-record-detail.md) |
+| KX-15 | Cases card | New | button | header right group, second | not observed; not opened | seen (m4c-card-sales-orders) | M8 | DD-143 (deals-record-detail.md) |
+| KX-16 | Cases card | No records found | status text | body, below header divider | Empty related list; no columns or rows painted | seen (m4c-card-sales-orders) | M8 | deals-record-detail.md, Related-list cards, Cases row |
+
+No Cases rail plus, card-header counter, column header, row selector, row-end menu or pagination is painted. The floating Scroll To Top overlaps the following Invoices action, not Cases New.
+
+### Reused evidence reconciliation
+
+Source ordinals are offline evidence references, never click selectors. Wrappers and their child buttons share an inventory number. This is a focused crosswalk into the existing whole-screen inventories, not a new capture or replacement shell inventory. All other source entries retain the original screen mapping/exclusion; surrounding cards are outside this slice and are not asserted absent.
+
+| Slug | Source entries | Cases mapping | Cases structural exclusions | Remaining entries inherited from source screen spec |
+| --- | --- | --- | --- | --- |
+| m3c-card-sales-orders | 510 | KX-01: 169–170; KX-02: 456; KX-03: 457–458; KX-04: 459–460 | 455: enclosing card wrapper | 502 |
+| m2d2-card-cases | 513 | KX-06: 158–159; KX-07: 161; KX-08: 409; KX-09: 410–411; KX-10: 412–413 | 408: enclosing card wrapper | 504 |
+| m4c-card-sales-orders | 509 | KX-12: 165–166; KX-13: 457; KX-14: 458–459; KX-15: 460–461 | 456: enclosing card wrapper | 501 |
+
+KX-05, KX-11 and KX-16 are visible empty-state text in the images, additional to controls.json. No additional Cases icon was found. No opened-menu delta exists: no Assign, New or plus control was activated. New capture safety/painting/count comparisons are inapplicable because this slice sends no requests; historical checks remain in the source specs.
+
+### Parent lookup and prefill evidence
+
+| Parent surface | Configured Cases field | Evidence | New-form prefill |
+| --- | --- | --- | --- |
+| Accounts Cases card | `Account_Name` / Account Name | Cases metadata; KF-13–KF-14 lookup in Create form | not observed; not established by public help |
+| Contacts Cases card | `Related_To` / Related To | Cases metadata; KF-11–KF-12; D1 standard-field purpose | not observed; not established by public help |
+| Deals Cases card | `Deal_Name` / Deal Name | Cases metadata; KF-15–KF-16; D4 documents Cases creation from deal details | not observed; not established by public help |
+
+These are parent-field mappings, not proof of prefilled values. D1 identifies the contact/account/deal lookup purposes. D4 establishes the deal Cases entry point but does not specify automatic field population. Neither article confirms whether New opens a page or dialog, whether an associated account/contact is copied from the parent, or whether email/phone are copied. No such propagation should be implemented as an established parity rule. The standalone Create Case defaults remain described under Create and edit form.
+
+### Case-related filters in earlier lists
+
+| List | Case-related entry | Evidence boundary | Ref |
+| --- | --- | --- | --- |
+| Leads | Cases (Connected Records) | Existing related-module catalogue; connected-record relation, not a direct Cases parent lookup | list-views.md, Filter By Related Modules catalogue |
+| Contacts | Cases | DOM-only, below the visible filter viewport in m2-list-base; not selected or visually confirmed | contacts.md base reconciliation excludes offscreen filter entries; existing capture controls.json |
+| Accounts | Cases | DOM-only clipped related-module filter catalogue; no operator or value control opened | accounts.md, DOM-only filter catalogue |
+| Deals | Cases | DOM-only clipped related-module filter catalogue; no operator or value control opened | deals.md, DOM-only filter catalogue |
+
+Related-filter operators, has/has-not behavior, nested criteria and applied results remain not observed. Presence in a DOM catalogue does not establish an active filter or visible checkbox. No filter, view or preference was changed.
+
+Products metadata also configures Cases (sequence 15) and Solutions (sequence 16). Products belongs to Phase 2; no Products screen research or implementation is included here.
+
+## Cases and Solutions
+
+The configured link shape is **Solution text on a Case**, with independent Solutions knowledge records. Evidence must not be interpreted as proof that a live detail screen has no additional control:
+
+- Cases metadata contains `Solution` as textarea and no Solutions related list. The painted lower Create form confirms an editable multiline field, KF-28 in m8f-cases-lower; no solution picker or association control is painted there.
+- Solutions metadata contains neither a Cases lookup nor a Cases related list. Its observed Create form has Product Name, Question and Answer, with no Case lookup (SF-05–SF-16 in solutions.md).
+- Slice 2/5 and 3/5 could not open record detail because the painted Cases and Solutions lists have zero records. Find Solution, Add Solution, Associate, Remove and reciprocal detail cards therefore remain **not observed**, rather than proven absent.
+- D1 describes moving a proven resolution into the knowledge module for reuse; D2 describes knowledge articles. This is a workflow connection, not documented evidence of a foreign key, related list, automatic copy or association widget.
+
+**Recommendation for CTO decision:** retain the metadata-backed Solution textarea and the independent Solutions module. Do not add a Cases ↔ Solutions lookup, join table, reciprocal related-list card or Find Solution flow on present evidence. This is a proposal, not an approved architecture decision. If the gate requires an additional relationship, the CTO must decide its contract after reviewing the evidence gaps. Products links are a separate Phase 2 concern.
+
+### Cross-module evidence gaps
+
+| Item | Why unobserved | Proposed boundary pending CTO gate |
+| --- | --- | --- |
+| Populated Cases-card columns, counter, row actions, hover and paging | All three existing parent-card images are empty | Reuse the observed empty state; leave populated schema/actions unresolved, without creating reference records |
+| New-card form and lookup prefill for each parent | New and rail-plus are forbidden; public help does not establish exact defaults | Keep the configured parent mapping separate from an unconfirmed prefill rule |
+| Assign dialog and association/removal outcome | Assign not opened; association and removal are forbidden | Retain visible control evidence only; no invented picker, selection or success behavior |
+| Related-module filter operators and applied results | Catalogue only; no toggle or application | Preserve catalogue availability separately from unobserved filter semantics |
+| Reciprocal Cases/Solutions detail controls | Both datasets empty; no live detail available | Text-only recommendation above, with final decision owned by CTO |
+
+### Cross-module public sources
+
+Read-only public help reviewed on 2026-10-18. Neutral keys and article/heading locators are used because product-bearing URLs must not enter the repository. These sources establish documented capabilities, not account-specific observations.
+
+- D1 — Working with Cases: Standard fields in the Cases module; Typical Case Management Process. Lookup purposes, a solution text field and resolution reuse workflow; no parent-card prefill contract.
+- D2 — Working with Solutions: Standard Fields in Solutions; Creating Solutions. Independent knowledge article structure; no reciprocal Cases association contract.
+- D4 — Creating Deals: Working with the Deals Details page; Associate Deals with Other Records. Documents Cases creation from deal details, without specifying populated fields.
+
+### Cross-module open questions
+
+- CTO: confirm the proposed text-only Cases/Solutions connection at the module gate; no new relationship is authorized by this spec.
+- Parent-card New form prefills, populated related-list behavior and exact case-filter semantics remain not observed. Existing public documentation does not close these gaps. No reference writes are permitted to resolve them.
