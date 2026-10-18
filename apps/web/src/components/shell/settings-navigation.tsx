@@ -10,9 +10,18 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Settings navigation" className="flex shrink-0 flex-col gap-1">
-      {settingsNav.map((link) => {
+      {settingsNav.map((link, index) => {
         const active = isNavLinkActive(link, orgSlug, pathname);
-        return (
+        const heading = link.group && link.group !== settingsNav[index - 1]?.group;
+        return [
+          heading ? (
+            <span
+              key={`${link.group}-heading`}
+              className="mt-3 px-3 pb-1 text-sm font-semibold text-text-muted"
+            >
+              {link.group}
+            </span>
+          ) : null,
           <Link
             key={link.id}
             href={link.href(orgSlug)}
@@ -24,8 +33,8 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
             }
           >
             {link.label}
-          </Link>
-        );
+          </Link>,
+        ];
       })}
     </nav>
   );

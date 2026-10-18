@@ -83,3 +83,15 @@ export function withSearchParams(path: string, params: URLSearchParams): string 
   const query = params.toString();
   return query.length > 0 ? `${path}?${query}` : path;
 }
+
+export function moduleImportPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName, "import");
+}
+
+export function importHistoryPath(orgSlug: string): string {
+  return `${orgBasePath(orgSlug)}/settings/import-history`;
+}
+
+export function exportHistoryPath(orgSlug: string): string {
+  return `${orgBasePath(orgSlug)}/settings/export-history`;
+}
