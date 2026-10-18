@@ -131,13 +131,15 @@ export function fixtureTagService(deps: Dependencies): TagService {
         const store = moduleStore(module);
         store.tags = new Map(store.tags);
         store.tags.delete(id);
-        store.tagLinks = new Map(
-          [...(store.tagLinks ?? [])].flatMap(([record, ids]) => {
-            const links = new Set(ids);
-            links.delete(id);
-            return links.size ? [[record, links] as const] : [];
-          }),
-        );
+        for (const key of ["tagLinks", "deletedTagLinks"] as const) {
+          store[key] = new Map(
+            [...(store[key] ?? [])].flatMap(([record, ids]) => {
+              const links = new Set(ids);
+              links.delete(id);
+              return links.size ? [[record, links] as const] : [];
+            }),
+          );
+        }
       });
     },
     async addTags(module, recordId, ids) {
