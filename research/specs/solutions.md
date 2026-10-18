@@ -951,3 +951,9 @@ These are CTO gate inputs under MEP-837, not questions submitted to the board. P
 - Exact populated row-end and hover-only controls remain not observed because both default lists are empty. CTO collects the evidence-gap decisions at the module gate; no board question is opened in this slice.
 - Sheet view attribution remains unresolved (`?`), pending the module gate.
 - Create split-menu opening is not observed following the automatic approval rejection; no alternative access was attempted.
+
+## Cases and Solutions
+
+Cross-module synthesis: [cases.md](cases.md#cases-and-solutions), MEP-842. Solutions metadata has no Cases lookup or Cases related list; the observed Create Solution form exposes no Case input. Cases has an observed Solution textarea (KF-28), not a Solutions lookup. Both record-detail screens remain not observed because their lists are empty; this does not prove the absence of every possible detail action.
+
+Public help D1 (Working with Cases, Typical Case Management Process) describes reusing a resolved answer in Solutions; D2 (Working with Solutions, Standard Fields in Solutions) describes a knowledge article. Neither establishes a reciprocal relationship or automatic copy. Recommendation pending CTO gate: independent Solutions records and Case Solution text, without an invented association card or join table. Products metadata links both modules, but Products is Phase 2 and outside this slice. Exact Find Solution / association controls remain an evidence gap, not an implementation requirement inferred from article wording.
