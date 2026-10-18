@@ -447,12 +447,16 @@ export function createFixtureRecordService(
         (field) =>
           !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
       );
+      const restoreInput = Object.fromEntries(
+        writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
+      );
+      const optional = bundle.optionalFields?.(record.fields) ?? [];
       validateInput(
-        Object.fromEntries(
-          writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
-        ),
+        restoreInput,
         false,
-        writableFields,
+        writableFields.map((field) =>
+          optional.includes(field.apiName) ? { ...field, required: false } : field,
+        ),
         new Set(),
       );
       validateReferences(module, record.fields);
