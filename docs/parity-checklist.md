@@ -833,7 +833,14 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 ### Campaigns record detail
 
-Not started.
+- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; QA pending (MEP-812).
+- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
+- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
+- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
+- GK-5 Leads and Contacts cards (campaign membership, Member Status, Email, Phone): implemented by provisional rule; QA pending (MEP-813).
+- GK-6 Deals card (Campaign Source matching deals, Accounts Deals card behaviour): implemented by provisional rule; QA pending (MEP-813).
+- GK-7 Child Campaigns card (Parent Campaign matching campaigns, standard columns): implemented by provisional rule; QA pending (MEP-813).
+- GK-8 Notes, Attachments, open/closed activities, Checklists, Connected Records (Accounts counterparts and laterModule): implemented by provisional rule; QA pending (MEP-813).
 
 ### Campaigns links in earlier modules
 
