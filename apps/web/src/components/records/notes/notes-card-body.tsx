@@ -99,7 +99,7 @@ function NotesPageLoader({
     if (list.data) {
       const records = (list.data.records ?? []) as readonly RecordData[];
       const moreRecords = Boolean(list.data.moreRecords);
-      const key = `${records.map((r) => r.id).join(",")}:${moreRecords}`;
+      const key = JSON.stringify({ records, moreRecords });
       if (lastKeyRef.current !== key) {
         lastKeyRef.current = key;
         onLoaded(page, { records, moreRecords });
@@ -140,15 +140,6 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
 
   const handlePageLoaded = useCallback((page: number, res: PageResult) => {
     setExtraPages((prev) => {
-      const existing = prev.get(page);
-      if (
-        existing &&
-        existing.moreRecords === res.moreRecords &&
-        existing.records.length === res.records.length &&
-        existing.records.every((r, idx) => r.id === res.records[idx]?.id)
-      ) {
-        return prev;
-      }
       const next = new Map(prev);
       next.set(page, res);
       return next;

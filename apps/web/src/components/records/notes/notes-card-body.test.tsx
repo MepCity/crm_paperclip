@@ -215,6 +215,27 @@ describe("NotesCardBody", () => {
     expect(state.deleted).toEqual([["n101"]]);
   });
 
+  it("refreshes edited content on an already loaded second page", () => {
+    state.records = Array.from({ length: 101 }, (_, i) => ({
+      id: `n${i + 1}`,
+      fields: { Note_Title: `Note ${i + 1}`, Note_Content: `Content ${i + 1}` },
+    }));
+    const { rerender } = render(<NotesCardBody {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "View more" }));
+    expect(screen.getByText("Content 101")).toBeTruthy();
+
+    state.records[100] = {
+      id: "n101",
+      fields: { Note_Title: "Edited note", Note_Content: "Edited content" },
+    };
+    rerender(<NotesCardBody {...props} />);
+
+    expect(screen.getByText("Edited note")).toBeTruthy();
+    expect(screen.getByText("Edited content")).toBeTruthy();
+    expect(screen.queryByText("Content 101")).toBeNull();
+    expect(screen.getAllByRole("listitem")).toHaveLength(101);
+  });
+
   it("handles 250 notes: shows 100 notes, second click reveals 200, third click reveals all 250", () => {
     state.records = Array.from({ length: 250 }, (_, i) => ({
       id: `n${i + 1}`,
