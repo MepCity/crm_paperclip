@@ -192,14 +192,36 @@ function LoadedRecordForm({
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
     [config.rules, mode, metadata, sourceRecord],
   );
-  const sections = applySectionColumnOverrides(
-    buildFormModel(metadata, mode, rules),
-    config.sectionColumnOverrides,
-    metadata,
-    mode,
-    rules,
+  const baseSections = useMemo(
+    () =>
+      applySectionColumnOverrides(
+        buildFormModel(metadata, mode, rules),
+        config.sectionColumnOverrides,
+        metadata,
+        mode,
+        rules,
+      ),
+    [metadata, mode, config.sectionColumnOverrides, rules],
   );
-  const fields = formFields(metadata, sections, mode, rules);
+  const sections = useMemo(() => {
+    if (!rules.requiredFields?.length) return baseSections;
+    const requiredSet = new Set(rules.requiredFields);
+    return baseSections.map((section) => ({
+      ...section,
+      columns: section.columns.map((col) =>
+        col.map((field) => (requiredSet.has(field.apiName) ? { ...field, required: true } : field)),
+      ),
+    }));
+  }, [baseSections, rules.requiredFields]);
+  const fields = useMemo(() => {
+    const list = formFields(metadata, sections, mode, rules);
+    if (!rules.requiredFields?.length) return list;
+    const requiredSet = new Set(rules.requiredFields);
+    return list.map((field) =>
+      requiredSet.has(field.apiName) ? { ...field, required: true } : field,
+    );
+  }, [metadata, sections, mode, rules]);
+
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const ruleDefaults =
     typeof rules.defaultValues === "function" ? rules.defaultValues(metadata) : rules.defaultValues;
@@ -648,7 +670,9 @@ function LoadedRecordForm({
               : undefined
           }
           currencyInformation={
-            field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined
+            field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
+              ? RECORD_FORM_COPY.currencyInformation
+              : undefined
           }
         />
       );

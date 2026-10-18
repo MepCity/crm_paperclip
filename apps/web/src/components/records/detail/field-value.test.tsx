@@ -173,6 +173,17 @@ test("lookup field links to registered Deals detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
+test("lookup field links to registered Campaigns detail page", () => {
+  show(field("Campaign_Source", "lookup", { lookup: { module: "Campaigns" } }), {
+    module: "Campaigns",
+    id: "camp-123",
+    name: "Acme Campaign",
+  });
+  const link = screen.getByRole("link", { name: "Acme Campaign" });
+  expect(link.getAttribute("href")).toBe("/tab/Campaigns/camp-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
 test("lookup field attaches laterModule to unregistered target link", () => {
   show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
     module: "Cases",
