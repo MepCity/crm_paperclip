@@ -237,20 +237,20 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Campaigns" } })}
-      value={{ module: "Campaigns", id: "camp-1", name: "Big Campaign" }}
+      field={field("lookup", { lookup: { module: "Cases" } })}
+      value={{ module: "Cases", id: "case-1", name: "Big Case" }}
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Big Campaign" });
+  const laterLink = screen.getByRole("link", { name: "Big Case" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("M7");
+  expect(laterLink.getAttribute("data-later-module")).toBe("M8");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Campaigns" } })}
+      field={field("lookup", { lookup: { module: "Cases" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,

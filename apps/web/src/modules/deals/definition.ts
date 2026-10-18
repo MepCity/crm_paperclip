@@ -52,7 +52,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
     headerCurrency: true,
     hasPortrait: false,
     recordNavigation: false,
-    addTags: { label: "Add Tags", laterModule: "M6" },
+    addTags: { label: "Add Tags" },
     headerCommands: [
       { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
     ],
