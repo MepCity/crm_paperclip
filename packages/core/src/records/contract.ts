@@ -10,6 +10,7 @@ export type FieldDataType =
   | "multireminder"
   | "ALARM"
   | "RRULE"
+  | "autonumber"
   | "text"
   | "textarea"
   | "email"

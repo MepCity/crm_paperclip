@@ -8,6 +8,8 @@ import type {
   ModuleApiName,
   ModuleMetadata,
   RecordData,
+  RecordHistoryPage,
+  RecordHistoryQuery,
   RecordId,
   RecordInput,
   RecordService,
@@ -32,6 +34,11 @@ import {
   type WireKanbanViewsResponse,
 } from "@/lib/api/wire/kanban-views";
 import { operationPath, operations } from "@/lib/api/wire/operations";
+import {
+  decodeTimelinesPage,
+  encodeTimelineQuery,
+  type WireTimelinesResponse,
+} from "@/lib/api/wire/timelines";
 import type {
   WireBulkResponse,
   WireCountResponse,
@@ -56,6 +63,14 @@ export type ViewSummary = Pick<ListView, "id" | "name" | "systemDefined" | "isDe
 export type ClientRecordService = RecordService & {
   listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]>;
   listUsers(): Promise<readonly OrgMember[]>;
+};
+
+export type HttpRecordService = ClientRecordService & {
+  listHistory(
+    module: ModuleApiName,
+    recordId: RecordId,
+    query: RecordHistoryQuery,
+  ): Promise<RecordHistoryPage>;
 };
 
 export type HttpRecordServiceOptions = {
@@ -149,7 +164,7 @@ function metadataFromWire(bundle: ModuleWireBundle): ModuleMetadata {
 export function createHttpRecordService({
   orgSlug,
   fetch: fetchImpl = (path, options) => apiFetch(orgSlug, path, options),
-}: HttpRecordServiceOptions): ClientRecordService {
+}: HttpRecordServiceOptions): HttpRecordService {
   const moduleState = new Map<ModuleApiName, ModuleLoadState>();
 
   const request = (
@@ -206,7 +221,7 @@ export function createHttpRecordService({
     return metadataFromWire(await loadModuleWire(module));
   }
 
-  const service: ClientRecordService = {
+  const service: HttpRecordService = {
     async search(query) {
       return (await request(operationPath(operations.search), {
         method: operations.search.method,
@@ -417,6 +432,22 @@ export function createHttpRecordService({
         body: { kanban_views: [encodeKanbanViewInput(input)] },
       })) as WireKanbanViewsResponse;
       return decodeKanbanView(requiredWire(body.kanban_views[0], "Kanban view"));
+    },
+
+    async listHistory(module, recordId, query) {
+      const path = `/crm/v9/${encodeURIComponent(module)}/${encodeURIComponent(recordId)}/timelines`;
+      const params = encodeTimelineQuery({
+        perPage: query.perPage,
+        pageToken: query.pageToken ?? null,
+        modules: query.modules?.length ? [...query.modules] : undefined,
+        actorId: query.actorId,
+        from: query.from,
+        to: query.to,
+        sources: query.sources?.length ? [...query.sources] : undefined,
+      });
+      return decodeTimelinesPage(
+        (await request(`${path}?${params}`)) as WireTimelinesResponse | null,
+      );
     },
 
     async listUsers(): Promise<readonly OrgMember[]> {
