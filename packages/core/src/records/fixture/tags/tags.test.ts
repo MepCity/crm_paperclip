@@ -16,9 +16,9 @@ const setup = (ctx = context()) => {
   const records = createFixtureRecordService(ctx);
   return { ctx, records, tags: createFixtureTagService(ctx) };
 };
-const modules = ["Leads", "Contacts", "Accounts", "Deals"];
+const modules = ["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"];
 const first = async (records: ReturnType<typeof createFixtureRecordService>, module: string) => {
-  const view = (await records.listViews(module))[0];
+  const view = (await records.listViews(module)).find((candidate) => candidate.isDefault);
   if (!view) throw new Error("Missing view");
   const result = await records.list(module, { viewId: view.id, page: 1, perPage: 100 });
   const row = result.records.find((record) => record.fields.Locked__s !== true);
@@ -229,7 +229,7 @@ describe("organization-bound fixture tags", () => {
       );
     }
     const tag = await tags.createTag(module, { name: "Locked" });
-    const viewId = (await records.listViews(module))[0]?.id;
+    const viewId = (await records.listViews(module)).find((candidate) => candidate.isDefault)?.id;
     if (!viewId) throw new Error("Missing view");
     const locked = (await records.list(module, { viewId, page: 1, perPage: 100 })).records.find(
       (r) => r.fields.Locked__s === true,
