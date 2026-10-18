@@ -902,11 +902,39 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 Not started.
 
+## Module 6 · Print page (MEP-871, interim rule)
+
+The reference print page could not be captured (capture protection, MEP-793), so the layout is
+our own and is an **interim rule** listed as an open question at the Module 6 gate.
+
+| Item | Status |
+| --- | --- |
+| Record Print Preview (PS-03) — Leads, Contacts, Accounts, Deals: More Options → Print Preview opens `.../tab/<module>/<recordId>/print` in the same tab | Done (interim layout: title + module, Print, Close; sections in detail order, label–value in two columns) |
+| List Print Default view (PS-17/18) — Leads, Contacts, Accounts: Actions → Print View → Print Default view opens `.../tab/<module>/print?viewId=` with the current view's records (current filter and sort, one page) as a table | Done (interim layout) |
+| Deals list Print View | Not added (not observed in the reference) |
+| Print Using Canvas (PS-19), Print Mailing Labels | Unchanged (later-module placeholders) |
+| Tasks, Meetings, Calls, Campaigns Print entries | Unchanged (Module 5 / Campaigns) |
+
+Interim rule details: Print calls `window.print()`, Close goes back, `@media print` hides the
+buttons and everything outside the print page.
+
 ## Module 8 — Cases and Solutions
 
 ### Cases and Solutions lists
 
-Not started.
+Implemented; QA pending (MEP-862).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| KL-45, KL-51 (SL-45, SL-51) | Cases and Solutions registered in registry.ts; shell entries and create-records rows live | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-01, KL-02, KL-02.1 – KL-02.12 | Single All Cases tab; view menu with eight service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `cases-list.spec.ts` |
+| SL-01, SL-02, SL-02.1 – SL-02.8 | Single All Solutions tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `solutions-list.spec.ts` |
+| KL-03 – KL-13, KL-40 (SL-03 – SL-13, SL-40) | Filter, Sort, presentation icons, refresh and Create as in Campaigns; arrow is `laterModule` M6 | `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-14.1 – KL-14.11 | Eleven Actions rows in reference order; Sheet view and Approve Cases `laterModule` P3 | `cases-list.spec.ts` |
+| SL-14.1 – SL-14.9 | Nine Actions rows, no Mass Email or Approve; Sheet view `laterModule` P3 | `solutions-list.spec.ts` |
+| KL-15 – KL-39 (SL-15 – SL-39) | Filter panel groups from the module definition; View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `list-filters.test.ts`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+
+Provisional rules: the populated table body is the Campaigns table (not observed in the reference).
 
 ### Cases record detail
 

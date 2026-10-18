@@ -24,6 +24,7 @@ import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
 import { useRecordNoteEvents } from "@/components/records/notes/use-record-note-events";
+import { supportsRecordPrint } from "@/components/records/print/print-modules";
 import { RecordTags } from "@/components/records/tags/record-tags";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ import {
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
+import { moduleRecordPrintPath } from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -316,6 +318,12 @@ export function RecordDetailScreen({
     ...(definition.merge
       ? {
           onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
+        }
+      : {}),
+    ...(supportsRecordPrint(moduleApiName)
+      ? {
+          onPrintPreview: () =>
+            router.push(moduleRecordPrintPath(orgSlug, definition.tab, recordId)),
         }
       : {}),
   });
