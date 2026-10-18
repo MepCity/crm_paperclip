@@ -83,7 +83,7 @@ export const leadsListPageConfig: ModuleListScreenConfig = {
     { id: "mass-email", label: "Mass Email", laterModule: "M10" },
     { id: "approve", label: "Approve Leads", laterModule: "P3" },
     { id: "deduplicate", label: "Deduplicate Leads" },
-    { id: "campaigns", label: "Add to Campaigns", laterModule: "M7" },
+    { id: "campaigns", label: "Add to Campaigns" },
     { id: "client-script", label: "Create Client Script", laterModule: "M11" },
     { id: "export", label: "Export Leads", laterModule: "M6" },
     { id: "sheet", label: "Sheet view", laterModule: "P3" },
