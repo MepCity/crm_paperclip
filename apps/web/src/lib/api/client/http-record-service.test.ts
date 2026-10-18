@@ -289,6 +289,7 @@ describe("HTTP record service", () => {
         filters: filter,
         search: "A & B",
         activityFilter: { choice: "overdue" },
+        campaignFilter: { campaignIds: ["synthetic"], memberStatuses: ["Opened"] },
         includeActivitySummary: true,
       }),
     ).resolves.toEqual({
@@ -303,6 +304,7 @@ describe("HTTP record service", () => {
       "/crm/v2.2/Leads/bulk?cvid=view-1&page=2&per_page=30&sort_by=Last_Name&sort_order=asc&fields=Last_Name",
       "POST",
       {
+        campaign_filter: { campaign_ids: ["synthetic"], member_statuses: ["Opened"] },
         activity_filter: { choice: "overdue" },
         include_activity_summary: true,
         filters: wireFilter,
