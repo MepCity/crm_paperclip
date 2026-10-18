@@ -1,4 +1,5 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import { withPrintPreviewAction } from "@/components/records/print/print-preview-menu";
 import type { ModuleKey } from "@/components/ui/later-module";
 
 /** Interim copy for single-record delete (leads-write-behaviour.md › A1, not documented in UI). */
@@ -9,6 +10,7 @@ export type LeadsRecordMoreOptionsHandlers = {
   onClone: () => void;
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
+  onPrintPreview?: () => void;
 };
 
 type SpecMenuItem = {
@@ -111,5 +113,5 @@ export function buildLeadsRecordMoreMenuGroups(
       groups.push({ id: group.id, items });
     }
   }
-  return groups;
+  return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }
