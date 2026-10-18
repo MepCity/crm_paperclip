@@ -1,0 +1,10 @@
+/* Provisional layout: the membership dialog was not observed. */
+.add-to-campaigns-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.add-to-campaigns-options [data-record-form-error-banner] {
+  color: var(--color-danger);
+}
