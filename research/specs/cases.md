@@ -1,14 +1,10 @@
-# Cases
+# Cases — list, record detail, forms and cross-module links
 
-Status: integrated Module 8 list, detail and form research; form slice MEP-841 submitted for UI Lead review. Metadata and capture evidence are distinguished below.
-
-Research slice: MEP-839, Module 8 record detail. This file records the authorized empty-list fallback; it does not establish a visually observed detail screen.
+Research slices: MEP-838 (list and module configuration), MEP-839 (record detail empty-list fallback), MEP-841 (forms) and MEP-842 (cross-module links). Metadata, public documentation and capture evidence are distinguished below.
 
 ## Purpose
 
-Describe the Cases list and module configuration. Detail and form research belong to subsequent slices. No reference writes or persisted preference changes are permitted.
-
-Describe the available evidence for a case detail, its comments, Timeline and related cards without writing to the reference CRM. The All Cases view contains no records. No record was created, no preference changed, no menu opened and no tab closed.
+Describe the Cases list, module configuration, record-detail evidence, forms and cross-module links. Record detail uses the authorized empty-list fallback; it does not establish a visually observed detail screen. No reference writes or persisted preference changes are permitted. The detail slice created no record, changed no preference, opened no menu and closed no tab.
 
 ## Fields and layout
 
@@ -495,7 +491,7 @@ Every controls.json entry is assigned below by its one-based source ordinal. Hid
 
 ### Metadata-backed detail sections
 
-Source M1: research metadata `modules/Cases/fields.json`, `layouts.json`, `related_lists.json`; 30 fields. Metadata establishes field types and layout membership, not actual detail rendering, collapse state or card order. No field values are reproduced.
+Source KD-M1: research metadata `modules/Cases/fields.json`, `layouts.json`, `related_lists.json`; 30 fields. Metadata establishes field types and layout membership, not actual detail rendering, collapse state or card order. No field values are reproduced.
 
 - **Case Image:** empty field list in layout metadata; rendering not observed.
 - **Case Information:** `Owner`, `Case_Number`, `Status`, `Product_Name`, `Priority`, `Type`, `Case_Reason`, `Case_Origin`, `Subject`, `Related_To`, `No_of_comments`, `Account_Name`, `Reported_By`, `Deal_Name`, `Email`, `Tag`, `Phone`, `Created_By`, `Modified_By`, `Created_Time`, `Modified_Time`, `id`, `Last_Activity_Time`, `Connected_To__s`.
@@ -506,95 +502,119 @@ Source M1: research metadata `modules/Cases/fields.json`, `layouts.json`, `relat
 
 ### Public documentation evidence
 
-D1: reference CRM public help, **Working with Cases**, sections “Standard fields in the Cases module”, “Emails in Cases”, “Associate Case with Other Records”; accessed 2026-10-17. Locator: help knowledge base → CRM → Customer Support → `working-with-cases`. Vendor-bearing source URLs are deliberately not stored in the repository.
+KD-D1: reference CRM public help, **Working with Cases**, sections “Standard fields in the Cases module”, “Emails in Cases”, “Associate Case with Other Records”; accessed 2026-10-17. Locator: help knowledge base → CRM → Customer Support → `working-with-cases`. Vendor-bearing source URLs are deliberately not stored in the repository.
 
-D1 describes description and resolution text, internal follow-up notes and solution comments. It documents composing case email for the related contact, with a default primary address and alternative addresses. Case-related emails can be filtered by sent messages or contact-associated messages. It describes related activities, completed history, attachments and notes. These are documented capabilities, not observations of button positions. D1 contains a mismatched module label in its association instructions; metadata governs module membership. No documentation screenshot or image asset was copied.
+KD-D1 describes description and resolution text, internal follow-up notes and solution comments. It documents composing case email for the related contact, with a default primary address and alternative addresses. Case-related emails can be filtered by sent messages or contact-associated messages. It describes related activities, completed history, attachments and notes. These are documented capabilities, not observations of button positions. KD-D1 contains a mismatched module label in its association instructions; metadata governs module membership. No documentation screenshot or image asset was copied.
 
 ### Related-list cards
 
-Each subsection below is **metadata only** (M1). Sequence numbers are retained, including ties. For every card: rendered heading, counter, columns, row controls, empty-state wording and location in the rail are **not observed**. Provisional implementation must reuse the closest existing shared card and await the CTO gate for any Cases-specific difference; metadata visibility alone does not prove that a card is painted. No add, associate, remove or row action was exercised.
+Each subsection below is **metadata only** (KD-M1). Sequence numbers are retained, including ties. For every card: rendered heading, counter, columns, row controls, empty-state wording and location in the rail are **not observed**. Provisional implementation must reuse the closest existing shared card and await the CTO gate for any Cases-specific difference; metadata visibility alone does not prove that a card is painted. No add, associate, remove or row action was exercised.
 
 #### Connected Records
 
-M1: sequence 1, API key `Connected_Records__s`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 1, API key `Connected_Records__s`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Review Process-Review Summary
 
-M1: sequence 1, API key `Review_Processes`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 1, API key `Review_Processes`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Notes
 
-M1: sequence 2, API key `Notes`. Provisional shared behaviour: [notes.md](notes.md); D1 documents notes association.
+KD-M1: sequence 2, API key `Notes`. Provisional shared behaviour: [notes.md](notes.md); KD-D1 documents notes association.
 
 #### Review Process-Field History
 
-M1: sequence 2, API key `Review_Logs`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 2, API key `Review_Logs`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### WebformUsage
 
-M1: sequence 3, API key `WebformUsage`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 3, API key `WebformUsage`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Attachments
 
-M1: sequence 4, API key `Attachments`. Provisional shared behaviour: [attachments.md](attachments.md); D1 documents document attachments.
+KD-M1: sequence 4, API key `Attachments`. Provisional shared behaviour: [attachments.md](attachments.md); KD-D1 documents document attachments.
 
 #### Open Tasks
 
-M1: sequence 6, API key `Tasks`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 6, API key `Tasks`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Open Meetings
 
-M1: sequence 7, API key `Events`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 7, API key `Events`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Open Calls
 
-M1: sequence 8, API key `Calls`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 8, API key `Calls`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Closed Calls
 
-M1: sequence 11, API key `Calls_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 11, API key `Calls_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Closed Meetings
 
-M1: sequence 12, API key `Events_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 12, API key `Events_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Closed Tasks
 
-M1: sequence 13, API key `Tasks_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); D1 documents open/completed activity history without confirming this card split.
+KD-M1: sequence 13, API key `Tasks_History`. Provisional shared activity presentation: [activities-record-detail.md](activities-record-detail.md); KD-D1 documents open/completed activity history without confirming this card split.
 
 #### Mailing History
 
-M1: sequence 14, API key `Mailing_History`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 14, API key `Mailing_History`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Checklists
 
-M1: sequence 15, API key `CheckLists`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 15, API key `CheckLists`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Emails
 
-M1: sequence 16, API key `Emails`. D1 documents case/contact email filtering; send and reply placement remain not observed. Do not open any compose control during research.
+KD-M1: sequence 16, API key `Emails`. KD-D1 documents case/contact email filtering; send and reply placement remain not observed. Do not open any compose control during research.
 
 #### Locking Information
 
-M1: sequence 17, API key `Locking_Information__s`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 17, API key `Locking_Information__s`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Email Drafts
 
-M1: sequence 18, API key `Email_Drafts__s`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 18, API key `Email_Drafts__s`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Email Sentiment
 
-M1: sequence 18, API key `Email_Sentiment`. No Cases-specific card behaviour established; preserve as a gate question.
+KD-M1: sequence 18, API key `Email_Sentiment`. No Cases-specific card behaviour established; preserve as a gate question.
 
 #### Solutions card or solution association
 
-No `Solutions` related-list key appears in Cases metadata. `Solution` is a textarea, not a lookup. Neither a Solutions card nor a solution link was observed. D1 describes adding a resolved answer to the Solutions module as a subsequent workflow; that does not establish a relationship card or a Find Solution control. Do not invent one from the similarly named field.
+No `Solutions` related-list key appears in Cases metadata. `Solution` is a textarea, not a lookup. Neither a Solutions card nor a solution link was observed. KD-D1 describes adding a resolved answer to the Solutions module as a subsequent workflow; that does not establish a relationship card or a Find Solution control. Do not invent one from the similarly named field.
 
 ### Case-specific controls and Timeline
 
-Comment composer, Add Comment submission, Close Case, status-changing controls, Escalate, Reply, Send Email, Find Solution, solution association, locking/unlocking and approval/rejection controls were not visible because no detail was available. Their presence, exact label and position are not established by this research. D1 establishes email composition and comment field purposes only; it does not establish the requested close/escalate/find-solution control layout. All remain inspection-only in the reference.
+Comment composer, Add Comment submission, Close Case, status-changing controls, Escalate, Reply, Send Email, Find Solution, solution association, locking/unlocking and approval/rejection controls were not visible because no detail was available. Their presence, exact label and position are not established by this research. KD-D1 establishes email composition and comment field purposes only; it does not establish the requested close/escalate/find-solution control layout. All remain inspection-only in the reference.
 
 Timeline, its filter popup, and its empty-state text are not observed. Reuse [accounts-record-detail.md](accounts-record-detail.md) and [record-detail.md](record-detail.md) only as provisional shared patterns; no Cases filter options or timeline event labels are asserted.
+
+### Detail evidence gaps
+
+These are CTO gate inputs, not questions sent to the board. Every proposal below is provisional and requires gate resolution before being treated as Cases parity evidence.
+
+| Item | Available source / missing evidence | Provisional rule proposal |
+| --- | --- | --- |
+| Detail title, Edit, More Options, previous/next | Empty list image; no record link | Reuse shared record header; leave menu membership unresolved |
+| Overview, Timeline and opened Timeline filter | No record; shared detail specs only | Reuse shared tabs provisionally; do not invent Cases filter options or empty wording |
+| Field placement and section presentation | KD-M1 layout membership; no detail image | Use metadata fields in section order; keep read-only and editable presentations separate |
+| Description, Internal Comments, Solution | KD-M1 textarea types; KD-D1 purposes | Reuse textarea display pattern; exact rendering unresolved |
+| Comment entry, history and count | KD-M1 Add_Comment, Comments, No_of_comments; KD-D1 field purpose | Keep comment submission separate from internal notes; count-update and history behaviour unresolved |
+| All 18 related cards: header, count, columns, row controls, empty states | KD-M1 list membership only; KD-D1 covers a subset generically | Reuse shared card per type; confirm visibility/order/columns at gate |
+| Solutions relationship or Find Solution | No Solutions list in KD-M1; KD-D1 workflow only | Keep Solution text field; add no relationship card without further evidence |
+| Close/status/escalate and approval/locking | KD-M1 Status and Locked__s; no visible controls | No dedicated action inferred from a field or metadata list |
+| Reply / Send Email position | KD-D1 documents composition; no detail image | Reuse shared email workflow provisionally; exact action location unresolved |
+| Hover actions, validation, success and server-error states | Not observable from empty list without a write | Keep not observed; never create reference records to obtain evidence |
+| Extra rail module ownership | Image establishes labels only | Keep unknown ownership as ? until shared-shell research resolves it |
+
+### Detail capture refs and verification
+
+- `m8d-cases-list-base`: click-free All Cases empty list; 327 source entries; image opened. 55 API calls form the baseline. Zero executed/skipped clicks. Expected blocked reminder, notification and telemetry requests only; no record mutation evidence.
+- No detail, More Options, Timeline or filter capture: no record to open. No “after” capture was necessary after zero interactions: base is also the final observed state, total 0 and record links 0.
+- No network contract table or visual measurements are included. Metadata was read offline. Markdown/source integrity and ordinal coverage were checked; application tests are not applicable to a documentation-only change.
 
 ## Create and edit form
 
@@ -1751,12 +1771,6 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 - D2 — Working with Solutions, Creating Solutions: manual creation and file import are supported; Solution Title, Question and Answer are required. Metadata determines the configured types and layout here.
 - D3 — Common Operations with Records, Record Navigation: list navigation supports previous/next pages and a selectable page size. Exact empty-list controls are established only by the images.
 
-## Capture refs and verification
-
-- `m8d-cases-list-base`: click-free All Cases empty list; 327 source entries; image opened. 55 API calls form the baseline. Zero executed/skipped clicks. Expected blocked reminder, notification and telemetry requests only; no record mutation evidence.
-- No detail, More Options, Timeline or filter capture: no record to open. No “after” capture was necessary after zero interactions: base is also the final observed state, total 0 and record links 0.
-- No network contract table or visual measurements are included. Metadata was read offline. Markdown/source integrity and ordinal coverage were checked; application tests are not applicable to a documentation-only change.
-
 ## Evidence gaps
 
 | Gap | Evidence | Temporary implementation reference / question |
@@ -1781,22 +1795,6 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 ### DOM-only filter catalogue
 
 The following are present in controls.json below the visible panel cutoff, not screen observations: Deal Name; Email; Last Activity Time; Modified By; Modified Time; No. of comments; Phone; Priority; Product Name; Related To; Reported By; Status; Subject; Tag; Type. The related-module section contains Calls, Emails, Meetings, Notes and Tasks in DOM order. The first Deal Name checkbox is only a bottom-edge fragment in the image. No scrolling, field toggle or filter application was performed.
-
-These are CTO gate inputs, not questions sent to the board. Every proposal below is provisional and requires gate resolution before being treated as Cases parity evidence.
-
-| Item | Available source / missing evidence | Provisional rule proposal |
-| --- | --- | --- |
-| Detail title, Edit, More Options, previous/next | Empty list image; no record link | Reuse shared record header; leave menu membership unresolved |
-| Overview, Timeline and opened Timeline filter | No record; shared detail specs only | Reuse shared tabs provisionally; do not invent Cases filter options or empty wording |
-| Field placement and section presentation | M1 layout membership; no detail image | Use metadata fields in section order; keep read-only and editable presentations separate |
-| Description, Internal Comments, Solution | M1 textarea types; D1 purposes | Reuse textarea display pattern; exact rendering unresolved |
-| Comment entry, history and count | M1 Add_Comment, Comments, No_of_comments; D1 field purpose | Keep comment submission separate from internal notes; count-update and history behaviour unresolved |
-| All 18 related cards: header, count, columns, row controls, empty states | M1 list membership only; D1 covers a subset generically | Reuse shared card per type; confirm visibility/order/columns at gate |
-| Solutions relationship or Find Solution | No Solutions list in M1; D1 workflow only | Keep Solution text field; add no relationship card without further evidence |
-| Close/status/escalate and approval/locking | M1 Status and Locked__s; no visible controls | No dedicated action inferred from a field or metadata list |
-| Reply / Send Email position | D1 documents composition; no detail image | Reuse shared email workflow provisionally; exact action location unresolved |
-| Hover actions, validation, success and server-error states | Not observable from empty list without a write | Keep not observed; never create reference records to obtain evidence |
-| Extra rail module ownership | Image establishes labels only | Keep unknown ownership as ? until shared-shell research resolves it |
 
 ## Open questions
 
