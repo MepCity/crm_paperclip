@@ -22,13 +22,25 @@ export function buildCampaignsFormDefaults(): Record<string, FieldValue> {
 }
 
 /**
- * Interim (MEP-759 decides). Campaign Name and Type are required by the layout (the service
- * reads that); Owner defaults to the signed-in user; money fields carry the currency prefix.
+ * Spec column order for Campaign Information (six rows in two columns).
+ * Row 1: Campaign Owner (left) / Type (right)
+ * Row 2: Campaign Name (left) / Status (right)
+ * Row 3: Start Date (left) / End Date (right)
+ * Row 4: Expected Revenue (left) / Budgeted Cost (right)
+ * Row 5: Actual Cost (left) / Expected Response (right)
+ * Row 6: Numbers sent (left) / (no field)
  */
+export const CAMPAIGNS_FORM_INFORMATION_COLUMNS = [
+  ["Owner", "Campaign_Name", "Start_Date", "Expected_Revenue", "Actual_Cost", "Num_sent"],
+  ["Type", "Status", "End_Date", "Budgeted_Cost", "Expected_Response"],
+] as const;
+
 export const campaignsFormRules: FormRules = {
   owner: "Owner",
   currency: "Expected_Revenue",
   currencies: ["Expected_Revenue", "Budgeted_Cost", "Actual_Cost"],
-  omitted: ["Connected_To__s", ...CAMPAIGNS_FORM_SYSTEM_FIELDS],
+  searchablePicklists: ["Type"],
+  requiredFields: ["Type"],
+  omitted: ["Connected_To__s", "Parent_Campaign", ...CAMPAIGNS_FORM_SYSTEM_FIELDS],
   defaultValues: buildCampaignsFormDefaults,
 };
