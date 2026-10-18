@@ -21,7 +21,7 @@ import { CASES_LIST_CURRENCY_CODE, casesListPageConfig } from "./list-config";
 import { buildCasesFilterGroups } from "./list-filters";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
  * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
  */
 export const casesScreenDefinition: ModuleScreenDefinition = {
