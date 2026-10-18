@@ -24,7 +24,7 @@ import { formatSolutionsLastUpdateLabel } from "./solutions-last-update";
 import { solutionsRecordHeaderIdentity } from "./solutions-record-header";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
  * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
  */
 export const solutionsScreenDefinition: ModuleScreenDefinition = {

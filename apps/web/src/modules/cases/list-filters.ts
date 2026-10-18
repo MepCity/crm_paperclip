@@ -1,7 +1,7 @@
 import type { FieldDefinition } from "@crm/core/records";
 import type { FilterEditorDefinition } from "@/components/records/list/filter-editor";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
-import { type ModuleKey, resolveLaterModule } from "@/components/ui/later-module";
+import type { ModuleKey } from "@/components/ui/later-module";
 import { type FilterFieldType, filterOperators } from "@/lib/records/filter-operators";
 import type { ModuleScreenDefinition } from "../types";
 
@@ -104,7 +104,8 @@ export function buildCasesFilterGroups(input: Input): readonly FilterGroup[] {
       id: "system",
       label: "System Defined Filters",
       items: systemRows.map(([label, moduleKey], index) => {
-        const laterModule = resolveLaterModule(moduleKey);
+        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
+        const laterModule = moduleKey;
         return {
           id: `system-${index}`,
           label,
@@ -131,7 +132,8 @@ export function buildCasesFilterGroups(input: Input): readonly FilterGroup[] {
       id: "related",
       label: "Filter By Related Modules",
       items: relatedModuleRows.map(([label, moduleKey], index) => {
-        const laterModule = resolveLaterModule(moduleKey);
+        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
+        const laterModule = moduleKey;
         return {
           id: `related-${index}`,
           label,

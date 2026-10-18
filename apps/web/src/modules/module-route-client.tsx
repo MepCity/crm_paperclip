@@ -6,6 +6,8 @@ import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-confl
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
 import { DraftsPage } from "@/components/records/drafts/drafts-page";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
+import { ListPrintScreen } from "@/components/records/print/list-print-screen";
+import { RecordPrintScreen } from "@/components/records/print/record-print-screen";
 import { ManageTagsPage } from "@/components/records/tags/manage-tags-page";
 import {
   moduleListDefaultPath,
@@ -27,7 +29,9 @@ export type ModuleRouteKind =
   | "merge"
   | "deduplicate"
   | "tags"
-  | "drafts";
+  | "drafts"
+  | "print"
+  | "print-list";
 
 export function ModuleRouteClient({
   moduleTab,
@@ -68,6 +72,10 @@ export function ModuleRouteClient({
         currentUserId={currentUserId}
       />
     );
+  if (kind === "print-list")
+    return <ListPrintScreen orgSlug={orgSlug} viewId={viewId} definition={definition} />;
+  if (kind === "print" && recordId)
+    return <RecordPrintScreen orgSlug={orgSlug} recordId={recordId} definition={definition} />;
   if (kind === "deduplicate")
     return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
   if (kind === "merge" && recordId) {
