@@ -135,3 +135,19 @@ test("Show more appears only when more pages exist and requests the next page", 
   setup({ rows: [file] });
   expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
 });
+
+test("card renders no anchor for unsafe link URL", () => {
+  const unsafeLink: AttachmentRow = {
+    id: "a3",
+    fileName: "javascript:alert(1)",
+    size: 0,
+    type: "link",
+    linkUrl: "javascript:alert(1)",
+    attachedBy: "Eve",
+    createdTime: "Oct 3, 2026",
+  };
+  setup({ rows: [unsafeLink] });
+  expect(screen.queryByRole("link")).toBeNull();
+  const textElement = screen.getByText("javascript:alert(1)");
+  expect(textElement.tagName).not.toBe("A");
+});
