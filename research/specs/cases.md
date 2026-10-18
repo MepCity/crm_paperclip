@@ -1,6 +1,6 @@
 # Cases
 
-Status: MEP-838 research slice 1/5, submitted for UI Lead approval. Metadata and capture evidence are distinguished below.
+Status: integrated Module 8 list, detail and form research; form slice MEP-841 submitted for UI Lead review. Metadata and capture evidence are distinguished below.
 
 Research slice: MEP-839, Module 8 record detail. This file records the authorized empty-list fallback; it does not establish a visually observed detail screen.
 
@@ -826,6 +826,23 @@ Rest: as in m8f-cases-create; covered by the overlay: KF-01–KF-25 and the uppe
 M1 configures 30 fields. Case Number is an auto-number; Owner is an owner lookup; Status / Type / Priority / Case Reason / Case Origin are picklists; Product Name targets Products, Related To targets Contacts, Account Name targets Accounts, and Deal Name targets Deals. The rendered Related To and Reported By controls are distinct. Case Number is locked on Create. The metadata requirements Status / Case Origin / Subject agree with their three visible markers. No values from an existing record were copied.
 
 The initial viewport visually establishes KF-05–KF-27. Solution is established separately by m8f-cases-lower (KF-28). Add Comment and Comments are not painted in either form image. Metadata-only system fields, tags, timestamps, comment counts and connection fields must not be inferred as create inputs. A Case Image section exists in M1 but has no fields and is not painted here.
+
+### Control inventory — m8f-cases-after
+
+No visible control changes. Rest: as in m8-cases-list-base; covered by overlay: none. The screenshot was opened across the rail, header, toolbar, empty table, right edge and footer. All Cases remains empty: Total Records 0 → 0 and record links 0 → 0 relative to m8f-cases-base. The existing empty-list exception applies to Edit; no record was created and no unseen Edit controls are inferred.
+
+Source reconciliation inherits the m8-cases-list-base table with this ordinal translation: after 307 = base 319 (zero-area chat widget, excluded); after 308–319 = base 307–318. All other ordinals retain their mappings. The Sort control at 147 has only a transient attribute difference; its label, type and box are unchanged. No new image-only control was found; SH-46 remains image-only. Self-audit: 327 source items → 86 mapped numbers (159 mapped items); 168 exclusions. Missing / duplicate ordinals: 0.
+
+Safety: zero clicks / skipped clicks; API calls 55 (baseline 55). Non-GET path/count comparison matches the baseline: Cases count ×1, list bulk ×1 and shell trigger ×1. Reminder, notification and ten telemetry attempts were blocked; no unexpected path or count increase. Pre-capture 1-minute load 127.91. Diagnostics contain known client errors, but the screenshot and passive ready gate establish the painted empty list. No preference change or tab cleanup; zero tabs closed.
+
+### Form capture refs
+
+- m8f-cases-base: initial passive empty list; inherits the list inventory above.
+- m8f-cases-create: full Create form inventory KF-01–KF-34; lower controls established separately.
+- m8f-cases-status, m8f-cases-origin, m8f-cases-priority: open choices; no option selected.
+- m8f-cases-account, m8f-cases-deal, m8f-cases-contact, m8f-cases-product: open lookup interiors; no search or selection.
+- m8f-cases-lower: one form scroll, lower Solution field and footer; zero clicks.
+- m8f-cases-after: final passive empty-list comparison; zero clicks.
 
 ## Form capture reconciliation
 
@@ -1696,6 +1713,17 @@ Numbers below count distinct inventory references receiving source items; image-
 | Slug | controls.json items | Distinct mapped numbers | Excluded items | Image-only additions |
 | --- | --- | --- | --- | --- |
 | m8-cases-list-base | 327 | 86 | 168 | 1 (trash) |
+| m8f-cases-base | 327 | 86 | 168 | 1 (trash); inherited list inventory |
+| m8f-cases-create | 270 | 72 | 110 | 4 (lock, two grips, trash) |
+| m8f-cases-status | 276 | 76 | 117 | 4 (lock, two grips, trash) |
+| m8f-cases-origin | 276 | 76 | 117 | 4 (lock, two grips, trash) |
+| m8f-cases-priority | 276 | 76 | 117 | 4 (lock, two grips, trash) |
+| m8f-cases-account | 414 | 89 | 216 | 4 types (handsets, two grips, trash) |
+| m8f-cases-deal | 460 | 95 | 248 | 3 (two grips, trash) |
+| m8f-cases-contact | 426 | 91 | 210 | 5 types (lock, two grips, trash, handsets) |
+| m8f-cases-product | 299 | 83 | 124 | 3 (two grips, trash) |
+| m8f-cases-lower | 275 | 65 | 130 | 4 (three grips, trash) |
+| m8f-cases-after | 327 | 86 | 168 | 1 (trash) |
 | m8-cases-list-views | 349 | 99 | 172 | 1 (trash) |
 | m8-cases-list-actions | 346 | 96 | 168 | 3 (trash, Sheet view, Print View) |
 | m8-cases-list-after | 327 | 86 | 168 | 1 (trash) |

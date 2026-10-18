@@ -1,6 +1,6 @@
 # Solutions
 
-Status: MEP-838 research slice 1/5, submitted for UI Lead approval. Metadata and capture evidence are distinguished below.
+Status: integrated Module 8 list, detail and form research; form slice MEP-841 submitted for UI Lead review. Metadata and capture evidence are distinguished below.
 
 ## Purpose
 
@@ -505,7 +505,7 @@ Edit, More Options (including its opened contents), previous/next, Overview, Tim
 
 ## Create and edit form
 
-Research in progress for MEP-841. The completed m8f-solutions-create capture establishes the Create form below. The Status menu and Product lookup are now observed; final passive list comparisons remain pending. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
+Form research for MEP-841 is complete for the permitted read-only scope. The completed m8f-solutions-create capture establishes the Create form below. The Status menu, Product lookup and final passive list comparison are observed. Prior painted list evidence establishes zero Solutions records, so Edit is not observed under the empty-list fallback; no record is created for research.
 
 ### Sources and limits
 
@@ -845,6 +845,14 @@ Self-audit: 254 source entries → 72 numbered controls (139 mapped entries); 11
 
 Capture safety: one click, zero skipped; ready probe succeeded and popup painted. Non-GET path/count matches m8f-solutions-create: one expected shell trigger POST (200). Reminder, notification and six telemetry requests blocked; no unexpected path or count increase. API calls 53; pre-capture 1-minute load 14.02. No typing, search, selection, Save, Cancel, preference change or tab cleanup; zero old tabs closed.
 
+### Control inventory — m8f-solutions-after
+
+No changed visible controls. Rest: as in m8-solutions-list-base; covered by overlay: none. The screenshot was opened across the full shell, toolbar, table, right edge and footer. All Solutions remains empty: Total Records 0 → 0, record links 0 → 0. The existing empty-list exception applies to Edit; no record was created and no unseen Edit controls are inferred.
+
+Source reconciliation inherits m8-solutions-list-base with these ordinal translations: after 262, 263, 264 = base 263, 264, 262 respectively (all zero-area nodes, excluded); after 265 = base 277 (zero-area chat widget, excluded); after 266–277 = base 265–276. All other ordinals retain their mappings. Sort at 145 differs only in a transient attribute; label, type and box are unchanged. Self-audit: 285 source entries → 86 mapped numbers (157 mapped entries); 128 exclusions. Missing / duplicate ordinals: 0. SH-46 is the only image-only addition; no new control was found.
+
+Safety: zero clicks / skipped clicks; API calls 55 (baseline 55). Non-GET path/count comparison matches the baseline: Solutions count ×1, list bulk ×1 and shell trigger ×1. Reminder, notification and six telemetry attempts were blocked; no unexpected path or count increase. Pre-capture 1-minute load 132.50. Known client diagnostics do not prevent the painted empty list and successful passive ready gate. No preference change or tab cleanup; zero tabs closed.
+
 ## Capture self-audit
 
 Numbers below count distinct inventory references receiving source items; image-only additions are separate. Exclusions are hidden, clipped, offscreen or structural duplicates, detailed in each reconciliation. Every screenshot was opened as an image.
@@ -854,6 +862,7 @@ Numbers below count distinct inventory references receiving source items; image-
 | m8f-solutions-create | 225 | 61 | 99 | 4 (lock, two resize grips, trash) |
 | m8f-solutions-status | 233 | 64 | 104 | 5 (base four plus reconnect symbol) |
 | m8f-solutions-product | 254 | 72 | 115 | 3 (two resize grips, trash; lock covered) |
+| m8f-solutions-after | 285 | 86 | 128 | 1 (trash) |
 | m8-solutions-list-base | 285 | 86 | 128 | 1 (trash) |
 | m8-solutions-list-views | 303 | 95 | 132 | 1 (trash) |
 | m8-solutions-list-actions | 299 | 94 | 127 | 3 (trash, Sheet view, Print View) |
@@ -868,6 +877,7 @@ Shell differences are covered by SL-41–SL-53 and the Cases shell-gap list; Ser
 - `m8f-solutions-create` — painted Create form and footer; zero clicks.
 - `m8f-solutions-status` — open Status menu; one click, no option selected.
 - `m8f-solutions-product` — open empty Product lookup; one click, no selection or search.
+- `m8f-solutions-after` — final passive list comparison; zero clicks, total and record links unchanged at zero.
 
 - `m8-solutions-list-base` — painted default empty list, filter panel already open.
 - `m8-solutions-list-views` — open system-view menu; no view selected.
@@ -888,7 +898,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 
 - `m8-solutions-detail-empty`: only new capture; zero clicks, zero skipped; successful passive ready gate, 55 API calls, total 0, record links 0. Diagnostics contain client errors, but the screenshot shows the painted list and empty state. No longer wait or retry was used.
 - `m8-solutions-list-base`: prior list evidence used only for API-call and non-GET path/count comparison; not recaptured. Non-GET list-read paths/counts match, including the single shell trigger; blocked background requests remain expected reminder/notification/telemetry. No record mutation evidence.
-- No separate after capture: zero interactions; base is also the final observed state, total and record links remain 0. No extra tabs closed.
+- Detail slice MEP-840 had no separate after capture because it contained zero interactions. Form slice MEP-841 subsequently adds m8f-solutions-after as its final passive comparison; total and record links remain 0. No extra tabs closed.
 - Load 1-minute reading: 14.06, taken after capture start. The mandated pre-capture reading was inadvertently omitted; this deviation is reported, not represented as a pre-capture observation.
 - Metadata checked offline; screenshot and all source ordinals reconciled. Documentation-only change: no application tests, full suite or visual measurements/request contract table.
 
@@ -897,7 +907,7 @@ Read-only public help consulted on 2026-10-17; neutral source keys avoid copying
 | Gap | Evidence | Temporary implementation reference / question |
 | --- | --- | --- |
 | Create form | observed in m8f-solutions-create, SF-01–SF-19 | Seven fields, default Draft, three required markers, title actions and footer established above. |
-| Edit form | not observed; prior painted All Solutions list and detail-empty capture establish zero records | Empty-list fallback applies; no sample record may be created. Final passive comparison remains pending. |
+| Edit form | not observed; prior painted All Solutions list and detail-empty capture establish zero records | Empty-list fallback applies; no sample record may be created. Final passive comparison confirms Total Records 0 → 0 and record links 0 → 0. |
 | Status dropdown | observed in m8f-solutions-status, SF-08.1–SF-08.3 | Draft, Reviewed, Duplicate; initial Draft checked; no selection. |
 | Product lookup interior | observed in m8f-solutions-product, SF-12.1–SF-12.11 | Empty table; populated rows and paging remain not observed. No selection or search performed. |
 | Empty required-field errors | M1 layout and D1 require Solution Title, Question, Answer; Save is forbidden | Ref: record-detail.md, Layout / Flows, Leads invalid-create evidence. Exact messages, timing and focus remain not observable without a write. |
@@ -933,9 +943,9 @@ These are CTO gate inputs under MEP-837, not questions submitted to the board. P
 
 ## Open questions
 
-- Complete final passive list comparisons; Create inventory, Status menu and empty Product picker are complete. Populated Product rows and paging remain not observed.
+- Create inventory, Status menu, empty Product picker and final passive comparison are complete. Populated Product rows and paging remain not observed.
 - SF-S01: transient chat reconnect symbol; action versus indicator and shell ownership remain unestablished. DOM-only Channels / Threads are not treated as painted evidence.
-- Prior painted Solutions list establishes zero records independently of Cases; final passive comparison remains pending before closing the Edit evidence gap.
+- The initial and final painted Solutions lists independently establish zero records; Edit remains not observed under the empty-list exception.
 - Create required markers are confirmed against M1; exact validation messages remain evidence gaps.
 
 - Exact populated row-end and hover-only controls remain not observed because both default lists are empty. CTO collects the evidence-gap decisions at the module gate; no board question is opened in this slice.
