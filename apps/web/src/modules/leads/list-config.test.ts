@@ -85,12 +85,17 @@ test("keeps the Leads Actions menu inventory in reference order and assigns late
   expect(actions.filter((item) => item.submenuIndicator).map((item) => item.id)).toEqual(["print"]);
 
   expect(actions.find((item) => item.id === "sheet")?.laterModule).toBe("P3");
-  expect(actions.find((item) => item.id === "print")?.laterModule).toBe("M6");
+  const print = actions.find((item) => item.id === "print");
+  expect(print?.laterModule).toBeUndefined();
+  expect(print?.submenu).toEqual([
+    { id: "print-default", label: "Print Default view", laterModule: "M6" },
+    { id: "print-canvas", label: "Print Using Canvas", laterModule: "M6", accent: true },
+  ]);
   expect(actions.find((item) => item.id === "tags")?.laterModule).toBe("M11");
   expect(actions.find((item) => item.id === "assignment-rules")?.laterModule).toBe("M12");
   expect(actions.find((item) => item.id === "mass-email")?.laterModule).toBe("M10");
   expect(actions.find((item) => item.id === "approve")?.laterModule).toBe("P3");
-  expect(actions.find((item) => item.id === "campaigns")?.laterModule).toBe("M7");
+  expect(actions.find((item) => item.id === "campaigns")?.laterModule).toBeUndefined();
   expect(actions.find((item) => item.id === "client-script")?.laterModule).toBe("M11");
   expect(actions.find((item) => item.id === "export")).toEqual({
     id: "export",
@@ -124,6 +129,8 @@ test("verifies Leads-specific actions entries", () => {
     "mass-convert",
     "drafts",
     "deduplicate",
+    "campaigns",
     "export",
+    "print",
   ]);
 });

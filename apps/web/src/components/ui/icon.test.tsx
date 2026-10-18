@@ -53,6 +53,7 @@ const expectedIcons = [
   "success",
   "info",
   "warning",
+  "sparkles",
   "calendar",
   "clock",
   "chevronDown",

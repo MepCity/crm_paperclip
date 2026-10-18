@@ -520,3 +520,57 @@ it("serves child CRUD and criteria on existing generic endpoints", async () => {
     fields.find((field: { api_name: string }) => field.api_name === "Note_Title").mass_update,
   ).toBe(true);
 });
+
+it.each([
+  [
+    "Cases",
+    { Subject: "Wire case", Status: "New", Case_Origin: "Email" },
+    "Subject",
+    "Case_Number",
+    30,
+  ],
+  ["Solutions", { Solution_Title: "Wire solution" }, "Solution_Title", "Solution_Number", 20],
+] as const)(
+  "serves %s through the generic metadata and CRUD operations",
+  async (module, row, title, number, fieldCount) => {
+    const request = {
+      params: { module },
+      query: { cvid: `all-${module.toLowerCase()}` },
+      body: { data: [row] },
+    };
+    const fields = json(await operations.fields.run(deps, request)).body.fields;
+    expect(fields).toHaveLength(fieldCount);
+    expect(fields.find((field: { api_name: string }) => field.api_name === number)).toMatchObject({
+      data_type: "autonumber",
+      read_only: true,
+    });
+    const created = json(await operations.create.run(deps, request));
+    const id = created.body.data[0].details.id;
+    const recordRequest = { ...request, params: { module, recordId: id } };
+    const read = json(await operations.record.run(deps, recordRequest)).body.data[0];
+    expect(read).toMatchObject(row);
+    expect(read[number]).toMatch(/^\d+$/);
+    const filter = {
+      filters: encodeCriteria({
+        field: title,
+        comparator: "equal",
+        value: row[title as keyof typeof row] as string,
+      }),
+    };
+    expect(
+      json(await operations.bulk.run(deps, { ...request, body: filter })).body.data.map(
+        (item: { id: string }) => item.id,
+      ),
+    ).toEqual([id]);
+    expect(json(await operations.count.run(deps, { ...request, body: filter })).body.count).toBe(1);
+    await operations.update.run(deps, {
+      ...recordRequest,
+      body: { data: [{ [title]: "Updated wire record" }] },
+    });
+    expect(json(await operations.record.run(deps, recordRequest)).body.data[0][number]).toBe(
+      read[number],
+    );
+    await operations.delete.run(deps, recordRequest);
+    await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
+  },
+);
