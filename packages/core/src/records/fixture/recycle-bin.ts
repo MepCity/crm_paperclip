@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ForbiddenError, NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { RecordData } from "../contract";
-import type { RecycleBinEntry, RecycleBinService } from "../recycle-bin";
+import type { RecycleBinEntry, RecycleBinQuery, RecycleBinService } from "../recycle-bin";
 import { attachmentParent } from "./attachments/hooks";
 import type { FixtureHistoryOperation } from "./history-write";
 import type { FixtureModuleStore } from "./hooks";
@@ -78,6 +78,27 @@ export function retainDeletion(
   deps.manifests().set(entry.id, { entry, operationId, graph });
 }
 
+/** OrgContext has no timezone; use half-open UTC day/minute intervals. */
+function deletedOnRange(value: RecycleBinQuery["deletedOn"]): [number, number] | undefined {
+  if (value === undefined) return undefined;
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    typeof value.date !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value.date) ||
+    (value.time !== undefined &&
+      (typeof value.time !== "string" || !/^([01]\d|2[0-3]):[0-5]\d$/.test(value.time)))
+  )
+    throw new ValidationError({
+      deletedOn: ["Choose a valid date (YYYY-MM-DD) and time (HH:mm)."],
+    });
+  const start = Date.parse(`${value.date}T${value.time ?? "00:00"}:00.000Z`);
+  if (!Number.isFinite(start) || new Date(start).toISOString().slice(0, 10) !== value.date)
+    throw new ValidationError({ deletedOn: ["Choose a valid calendar date (YYYY-MM-DD)."] });
+  return [start, start + (value.time === undefined ? 86_400_000 : 60_000)];
+}
+
 export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService {
   const { context: ctx, now, manifests, moduleStore, bundle, atomic } = deps;
   const visible = (manifest: DeletionManifest) =>
@@ -139,9 +160,12 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
         throw new ValidationError({ page: ["Choose positive integer paging values."] });
       if (
         (query.name !== undefined && typeof query.name !== "string") ||
-        (query.deletedBy !== undefined && typeof query.deletedBy !== "string")
+        (query.deletedBy !== undefined && typeof query.deletedBy !== "string") ||
+        (query.deletedByContains !== undefined && typeof query.deletedByContains !== "string")
       )
         throw new ValidationError({ query: ["Choose valid search values."] });
+      const range = deletedOnRange(query.deletedOn);
+      const actorContains = query.deletedByContains?.toLowerCase();
       const entries = [...manifests().values()]
         .filter(visible)
         .map((item) => item.entry)
@@ -149,7 +173,11 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
           (entry) =>
             (!query.module || entry.module === query.module) &&
             (!query.name || entry.name.toLowerCase().includes(query.name.toLowerCase())) &&
-            (!query.deletedBy || entry.deletedBy === query.deletedBy),
+            (!query.deletedBy || entry.deletedBy === query.deletedBy) &&
+            (actorContains === undefined ||
+              entry.deletedBy.toLowerCase().includes(actorContains)) &&
+            (!range ||
+              (Date.parse(entry.deletedAt) >= range[0] && Date.parse(entry.deletedAt) < range[1])),
         )
         .sort((a, b) => b.deletedAt.localeCompare(a.deletedAt) || a.id.localeCompare(b.id));
       return structuredClone({

@@ -110,7 +110,8 @@ test("RB-11/13–22: inline operator/value rows submit criteria and preserve the
   await user.type(screen.getByRole("textbox", { name: "Name search" }), "Example");
   await user.type(screen.getByRole("textbox", { name: "Deleted By search" }), "Demo");
   await user.click(screen.getByRole("button", { name: /Deleted By operator/ }));
-  await user.click(screen.getByRole("option", { name: "is" }));
+  expect(screen.queryByRole("option", { name: "is" })).toBeNull();
+  await user.keyboard("{Escape}");
   await user.click(screen.getByRole("button", { name: /Type search/ }));
   await user.click(screen.getByRole("option", { name: "Contacts" }));
   await user.type(screen.getByRole("textbox", { name: "Deleted Time date" }), "17.10.2026");
@@ -123,7 +124,7 @@ test("RB-11/13–22: inline operator/value rows submit criteria and preserve the
         name: "Example",
         module: "Contacts",
         deletedBy: "Demo",
-        deletedByOperator: "is",
+        deletedByOperator: "contains",
         date: "17.10.2026",
       },
       1,
@@ -231,4 +232,33 @@ test("deleting the last row of a later page reloads a valid page", async () => {
   await user.click(screen.getByRole("button", { name: "Delete permanently" }));
   await waitFor(() => expect(actions.list).toHaveBeenLastCalledWith(initialBinSearch, 1, 30));
   expect(screen.getByText("Displaying 0 to 0 of 0")).toBeTruthy();
+});
+
+test("search validation errors remain visible with the submitted date and time", async () => {
+  const list = vi
+    .fn<BinActions["list"]>()
+    .mockResolvedValueOnce({
+      status: "success",
+      entries: entries.slice(0, 1),
+      total: 1,
+    })
+    .mockResolvedValue({
+      status: "error",
+      message: "Check the search criteria.",
+      fieldErrors: { deletedOn: ["Choose a valid calendar date."] },
+    });
+  const { user } = setup({ list });
+  await loaded();
+  await user.click(screen.getByRole("button", { name: "Search" }));
+  await user.type(screen.getByRole("textbox", { name: "Deleted Time date" }), "31.02.2026");
+  await user.click(screen.getAllByRole("button", { name: "Search" })[1] as HTMLElement);
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Check the search criteria. Choose a valid calendar date.");
+  expect(
+    (screen.getByRole("textbox", { name: "Deleted Time date" }) as HTMLInputElement).value,
+  ).toBe("31.02.2026");
+  expect(screen.queryByText("Example 0")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Retry" }));
+  await waitFor(() => expect(list).toHaveBeenCalledTimes(3));
+  expect(list).toHaveBeenLastCalledWith({ ...initialBinSearch, date: "31.02.2026" }, 1, 30);
 });
