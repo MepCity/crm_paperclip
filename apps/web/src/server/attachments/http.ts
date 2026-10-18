@@ -288,7 +288,10 @@ async function remove(deps: AttachmentDeps, params: AttachmentParams): Promise<R
   await requireParent(deps, params);
   const record = await requireAttachment(deps, params);
   await deps.records.delete("Attachments", [record.id]);
-  if (record.fields.$type === "file") {
+  if (
+    record.fields.$type === "file" &&
+    deps.lifecycle.cleanupIntents().some((intent) => intent.attachmentId === record.id)
+  ) {
     try {
       await deps.blobs.delete({ orgId: deps.ctx.orgId, attachmentId: record.id });
       deps.lifecycle.acknowledgeCleanup(record.id);
