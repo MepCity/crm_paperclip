@@ -202,6 +202,17 @@ function comparatorFits(
   comparator: Comparator,
   value: CriteriaValue,
 ): boolean {
+  if (field.apiName === "Tag" && field.acceptsJsonArray) {
+    if (comparator === "is_empty" || comparator === "is_not_empty") return value === null;
+    return (
+      (comparator === "equal" || comparator === "not_equal") &&
+      (typeof value === "string"
+        ? value.length > 0
+        : isValueList(value) &&
+          value.length > 0 &&
+          value.every((id) => typeof id === "string" && id.length > 0))
+    );
+  }
   if (field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE")
     return false;
   if (isCriteriaToken(value) && value.token === "CURRENTTIME")
@@ -455,6 +466,16 @@ export function matches(
   // A leaf on a field absent from module metadata is published but does not constrain.
   if (!fields.has(criteria.field)) return true;
   const raw = record.fields[criteria.field] ?? null;
+  if (criteria.field === "Tag" && fields.get("Tag")?.acceptsJsonArray) {
+    const tags = Array.isArray(raw) ? raw : [];
+    if (criteria.comparator === "is_empty") return tags.length === 0;
+    if (criteria.comparator === "is_not_empty") return tags.length > 0;
+    const ids = Array.isArray(criteria.value) ? criteria.value : [criteria.value];
+    const any = tags.some(
+      (tag) => tag && typeof tag === "object" && "id" in tag && ids.includes(tag.id),
+    );
+    return criteria.comparator === "equal" ? any : criteria.comparator === "not_equal" && !any;
+  }
   if (isCriteriaToken(criteria.value) && criteria.value.token === "CURRENTTIME") {
     const parsed = typeof raw === "string" ? Date.parse(raw) : NaN;
     if (!Number.isFinite(parsed)) return false;
