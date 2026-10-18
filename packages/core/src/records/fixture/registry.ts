@@ -45,10 +45,10 @@ import { notesHooks, removeNotesForParents, transferNotesToMaster } from "./note
 import { notesMetadata } from "./notes/metadata";
 import { generateFixtureNotes } from "./notes/seed";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
-import { removeRecordTags } from "./tags";
 import { solutionsMetadata } from "./solutions/metadata";
 import { generateFixtureSolutions, fullName as solutionsFullName } from "./solutions/seed";
 import { solutionsViews } from "./solutions/views";
+import { removeRecordTags } from "./tags";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
 import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";

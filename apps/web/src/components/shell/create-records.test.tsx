@@ -123,7 +123,18 @@ test("The search box filters rows by label and leaves the list empty on no match
     within(dialog)
       .getAllByRole("link")
       .map((link) => link.textContent),
-  ).toEqual(["Lead", "Contact", "Account", "Deal", "Task", "Meeting", "Call", "Campaign", "Case", "Solution"]);
+  ).toEqual([
+    "Lead",
+    "Contact",
+    "Account",
+    "Deal",
+    "Task",
+    "Meeting",
+    "Call",
+    "Campaign",
+    "Case",
+    "Solution",
+  ]);
   await user.type(search, "CON");
   expect(within(dialog).getByRole("link", { name: "Contact" })).toBeTruthy();
   expect(within(dialog).queryByRole("link", { name: "Lead" })).toBeNull();

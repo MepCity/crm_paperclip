@@ -816,7 +816,13 @@ Provisional rules: the populated table body is the Campaigns table (not observed
 
 ### Cases and Solutions create / edit forms
 
-Not started.
+Solutions form: not started (parallel task).
+
+### Cases create / edit form
+
+- KF-01 – KF-34 implemented (MEP-895). M11 controls (KF-01, KF-29, KF-30, KF-32) and Product Name (KF-07, KF-08, P2) are `laterModule`; the Product picker (KF-08.x) is not drawn.
+- Case Number (KF-05, KF-06) is locked, blank on create and filled on edit.
+- Provisional: edit form = create form filled; shared picklist adds a leading `-None-` to Status (KF-20.x list otherwise matches); no Email requirement for Case Origin = Email; Type / Case Reason options in metadata order.
 
 ### Cases links in earlier modules
 
