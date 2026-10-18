@@ -1,16 +1,14 @@
 import { formatDate, formatRecordAuditDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
-import * as moduleRegistry from "@/modules/registry";
 import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
 });
 
 function field(
@@ -189,21 +187,16 @@ test("lookup field links to registered Campaigns detail page", () => {
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
-  // Exercise the unregistered state explicitly, independent of shipped modules.
-  const resolve = moduleRegistry.resolveModuleScreenByApiName;
-  vi.spyOn(moduleRegistry, "resolveModuleScreenByApiName").mockImplementation(
-    (apiName, definitions) => (apiName === "Cases" ? undefined : resolve(apiName, definitions)),
-  );
-  show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
-    module: "Cases",
-    id: "case-123",
-    name: "Acme Case",
+  show(field("Doc_Ref", "lookup", { lookup: { module: "Documents" } }), {
+    module: "Documents",
+    id: "doc-123",
+    name: "Acme Doc",
   });
-  const link = screen.getByRole("link", { name: "Acme Case" });
+  const link = screen.getByRole("link", { name: "Acme Doc" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("M8");
+  expect(link.getAttribute("data-later-module")).toBe("M9");
 });
 
 test("empty lookup field renders an em dash", () => {

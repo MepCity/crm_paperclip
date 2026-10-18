@@ -1,0 +1,111 @@
+/* Module 6 print page: interim own layout (reference print page not captured). */
+
+.print-page {
+  min-height: 100%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 24px 32px;
+}
+
+.print-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.print-page__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.print-page__module {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.print-page__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-page__section {
+  margin-top: 20px;
+  break-inside: avoid;
+}
+
+.print-page__section-title {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.print-page__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 32px;
+}
+
+.print-page__field {
+  display: grid;
+  grid-template-columns: 40% minmax(0, 1fr);
+  column-gap: 12px;
+  padding-block: 6px;
+}
+
+.print-page__label {
+  text-align: right;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.print-page__value {
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+
+.print-page__table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: var(--text-md);
+}
+
+.print-page__table th,
+.print-page__table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.print-page__table th {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-page,
+  .print-page * {
+    visibility: visible;
+  }
+
+  .print-page {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 0;
+  }
+
+  .print-page__toolbar-actions,
+  .print-page__actions {
+    display: none;
+  }
+}
