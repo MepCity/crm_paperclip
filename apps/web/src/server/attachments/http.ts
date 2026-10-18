@@ -13,11 +13,41 @@ import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext, RecordData, RecordService } from "@crm/core/records";
 import type { createFixtureAttachmentLifecycle } from "@crm/core/records/fixture";
 import { encodeError } from "@/lib/api/wire/errors";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 
 export const ATTACHMENT_PARENT_MODULES = ["Leads", "Contacts", "Accounts", "Deals", "Notes"];
 const PER_PAGE_DEFAULT = 20;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NO_STORE = { "Cache-Control": "no-store" };
+const MULTIPART_OVERHEAD = 64 * 1024;
+
+/** Reads at most `limit` bytes; the stream is cancelled at the budget, never trusting Content-Length. */
+async function readBounded(
+  body: ReadableStream<Uint8Array> | null,
+  limit: number,
+): Promise<{ ok: true; bytes: Uint8Array<ArrayBuffer> } | { ok: false }> {
+  if (!body) return { ok: true, bytes: new Uint8Array(new ArrayBuffer(0)) };
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      return { ok: false };
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(new ArrayBuffer(total));
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { ok: true, bytes };
+}
 
 export interface AttachmentDeps {
   ctx: OrgContext;
@@ -146,9 +176,29 @@ function policyResponse(failure: FilePolicyError): Response {
 
 async function upload(deps: AttachmentDeps, params: AttachmentParams, request: Request) {
   await requireParent(deps, params);
+  const kind: SelectionKind = params.module === "Notes" ? "note" : "record";
+  const budget = selectionBudget(kind);
+  const maxAllowedBytes = budget.maxBytes + MULTIPART_OVERHEAD;
+
+  const contentLengthHeader = request.headers.get("content-length");
+  if (contentLengthHeader !== null) {
+    const parsedLength = Number(contentLengthHeader.trim());
+    if (Number.isFinite(parsedLength) && parsedLength > maxAllowedBytes) {
+      return error(413, "LIMIT_EXCEEDED", "The upload exceeds the allowed size.");
+    }
+  }
+
+  const bounded = await readBounded(request.body, maxAllowedBytes);
+  if (!bounded.ok) {
+    return error(413, "LIMIT_EXCEEDED", "The upload exceeds the allowed size.");
+  }
+
   let form: FormData;
   try {
-    form = await request.formData();
+    const contentType = request.headers.get("content-type") ?? "";
+    form = await new Response(new Blob([bounded.bytes]), {
+      headers: contentType ? { "content-type": contentType } : {},
+    }).formData();
   } catch {
     return invalid("file", "Send a multipart form.");
   }
@@ -160,29 +210,29 @@ async function upload(deps: AttachmentDeps, params: AttachmentParams, request: R
   const parent = { module: params.module, id: params.recordId };
 
   if (hasUrl) {
+    const validatedUrl = safeAttachmentUrl(url);
+    if (!validatedUrl) return invalid("attachmentUrl", "Send a valid HTTP or HTTPS URL.");
     const created = await deps.records.create("Attachments", {
-      File_Name: url,
+      File_Name: validatedUrl,
       Size: "0",
       Parent_Id: parent,
       $type: "link",
-      $link_url: url,
+      $link_url: validatedUrl,
     });
     return ok(201, {
       data: [
         {
           code: "SUCCESS",
-          details: { id: created.id, File_Name: url, Size: 0, $type: "link" },
+          details: { id: created.id, File_Name: validatedUrl, Size: 0, $type: "link" },
         },
       ],
     });
   }
 
   const upload = file as File;
-  const kind: SelectionKind = params.module === "Notes" ? "note" : "record";
   const batchHeader = request.headers.get("X-Upload-Batch");
   if (batchHeader !== null && !UUID.test(batchHeader))
     return invalid("X-Upload-Batch", "Send a valid upload batch id.");
-  const budget = selectionBudget(kind);
   if (upload.size > budget.maxBytes) return error(413, "LIMIT_EXCEEDED", "The file is too large.");
   const key = batchHeader
     ? { organizationId: deps.ctx.orgId, userId: deps.ctx.userId, batchId: batchHeader, kind }
@@ -274,7 +324,10 @@ async function remove(deps: AttachmentDeps, params: AttachmentParams): Promise<R
   await requireParent(deps, params);
   const record = await requireAttachment(deps, params);
   await deps.records.delete("Attachments", [record.id]);
-  if (record.fields.$type === "file") {
+  if (
+    record.fields.$type === "file" &&
+    deps.lifecycle.cleanupIntents().some((intent) => intent.attachmentId === record.id)
+  ) {
     try {
       await deps.blobs.delete({ orgId: deps.ctx.orgId, attachmentId: record.id });
       deps.lifecycle.acknowledgeCleanup(record.id);

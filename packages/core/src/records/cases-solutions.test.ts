@@ -73,6 +73,7 @@ for (const [module, title, size, build, table] of [
       expect(metadata.fields).toEqual(
         table.fields.map((field) => ({
           ...field,
+          ...(field.apiName === "Tag" ? { acceptsJsonArray: true } : {}),
           ...(field.dataType === "picklist"
             ? { picklist: table.picklists[field.apiName as keyof typeof table.picklists] }
             : {}),
@@ -125,7 +126,12 @@ for (const [module, title, size, build, table] of [
       if (!bundle) throw new Error("Missing bundle");
       const cloneInput = Object.fromEntries(
         bundle.metadata.fields
-          .filter((field) => !field.readOnly && !bundle.managedFields.has(field.apiName))
+          .filter(
+            (field) =>
+              !field.readOnly &&
+              field.apiName !== "Tag" &&
+              !bundle.managedFields.has(field.apiName),
+          )
           .map((field) => [field.apiName, first.fields[field.apiName] ?? null]),
       );
       const clone = await service.create(module, cloneInput);
