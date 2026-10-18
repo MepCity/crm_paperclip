@@ -44,7 +44,8 @@ export interface RecordHeaderProps {
   nextLabel: string;
   previousHref?: string;
   nextHref?: string;
-  addTags?: { label: string; laterModule: ModuleKey };
+  addTags?: { label: string; laterModule?: ModuleKey };
+  tagsContent?: import("react").ReactNode;
   showPortrait?: boolean;
   /** "inline" draws the portrait icon backgroundless at title height; default "tile". */
   portraitAppearance?: "tile" | "inline";
@@ -73,6 +74,7 @@ export function RecordHeader({
   previousHref,
   nextHref,
   addTags,
+  tagsContent,
   titleGlyph: TitleGlyph,
   titleHref,
   titleSuffix,
@@ -131,10 +133,15 @@ export function RecordHeader({
             </span>
           ) : null}
           {TitleGlyph ? (
-            <TitleGlyph aria-hidden data-record-title-glyph className="size-4 shrink-0" />
+            <TitleGlyph
+              aria-hidden
+              data-record-title-glyph
+              data-record-portrait
+              className="size-4 shrink-0"
+            />
           ) : null}
           {titleHref ? (
-            <Link href={titleHref} className="text-2xl font-bold">
+            <Link href={titleHref} className="text-2xl font-bold hover:underline">
               {title}
             </Link>
           ) : (
@@ -167,14 +174,15 @@ export function RecordHeader({
             </>
           ) : null}
         </h1>
-        {addTags ? (
-          <div className="mt-1 flex items-center gap-1.5">
-            <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
-            <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
-              {addTags.label}
-            </Button>
-          </div>
-        ) : null}
+        {tagsContent ??
+          (addTags ? (
+            <div className="mt-1 flex items-center gap-1.5">
+              <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
+              <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
+                {addTags.label}
+              </Button>
+            </div>
+          ) : null)}
       </div>
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
