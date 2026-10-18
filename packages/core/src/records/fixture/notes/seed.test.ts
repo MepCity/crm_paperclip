@@ -53,7 +53,9 @@ describe("Notes metadata and seed", () => {
     expect(generateFixtureNotes(seed, now)).toEqual(notes);
     expect(new Set(notes.map((note) => note.id)).size).toBe(notes.length);
     expect(notes).toHaveLength(4);
-    for (const [index, module] of notesParentModules.entries()) {
+    for (const [index, module] of (
+      Object.keys(generators) as (keyof typeof generators)[]
+    ).entries()) {
       const parents = generators[module](seed, now);
       const note = notes[index];
       expect(note?.fields.Parent_Id).toEqual({ module, id: parents[0]?.id });

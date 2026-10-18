@@ -510,7 +510,7 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     apiName: "Case_Ref",
     label: "Case Ref",
     dataType: "lookup",
-    lookup: { module: "Cases" },
+    lookup: { module: "Products" },
     required: false,
     readOnly: false,
     unique: false,
@@ -522,7 +522,7 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Cases", id: "case-1", name: "Big Case" }}
+      initial={{ module: "Products", id: "case-1", name: "Big Case" }}
       onChange={change}
     />,
   );
@@ -530,11 +530,11 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const input = screen.getByRole("textbox", { name: "Case Ref" }) as HTMLInputElement;
   expect(input.value).toBe("Big Case");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M8");
+  expect(input.getAttribute("data-later-module")).toBe("P2");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
   const btn = screen.getByRole("button", { name: "Open Case Ref lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M8");
+  expect(btn.getAttribute("data-later-module")).toBe("P2");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog

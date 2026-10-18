@@ -266,6 +266,20 @@ export function FieldInput({
           onChange={(next) => onChange(next === "" ? null : next)}
         />
       );
+    case "autonumber":
+      return (
+        <TextField
+          {...common}
+          isDisabled
+          value={text}
+          endAction={
+            <span role="img" className="record-input-end" aria-label="Locked">
+              <Icons.lock className="record-input-end-icon" aria-hidden />
+            </span>
+          }
+          onChange={() => undefined}
+        />
+      );
     case "textarea":
       return (
         <TextArea

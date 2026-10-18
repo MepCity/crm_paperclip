@@ -1,6 +1,14 @@
 import type { FieldDefinition, ModuleMetadata } from "../../contract";
 
-export const attachmentParentModules = ["Leads", "Contacts", "Accounts", "Deals", "Notes"] as const;
+export const attachmentParentModules = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Cases",
+  "Solutions",
+  "Notes",
+] as const;
 const field = (
   apiName: string,
   dataType: FieldDefinition["dataType"],

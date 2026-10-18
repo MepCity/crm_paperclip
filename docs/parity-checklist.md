@@ -810,3 +810,51 @@ Not started.
 ### Campaigns links in earlier modules
 
 Not started.
+
+## Module 8 — Cases and Solutions
+
+### Cases and Solutions lists
+
+Implemented; QA pending (MEP-862).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| KL-45, KL-51 (SL-45, SL-51) | Cases and Solutions registered in registry.ts; shell entries and create-records rows live | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-01, KL-02, KL-02.1 – KL-02.12 | Single All Cases tab; view menu with eight service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `cases-list.spec.ts` |
+| SL-01, SL-02, SL-02.1 – SL-02.8 | Single All Solutions tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `solutions-list.spec.ts` |
+| KL-03 – KL-13, KL-40 (SL-03 – SL-13, SL-40) | Filter, Sort, presentation icons, refresh and Create as in Campaigns; arrow is `laterModule` M6 | `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-14.1 – KL-14.11 | Eleven Actions rows in reference order; Sheet view and Approve Cases `laterModule` P3 | `cases-list.spec.ts` |
+| SL-14.1 – SL-14.9 | Nine Actions rows, no Mass Email or Approve; Sheet view `laterModule` P3 | `solutions-list.spec.ts` |
+| KL-15 – KL-39 (SL-15 – SL-39) | Filter panel groups from the module definition; View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `list-filters.test.ts`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+
+Provisional rules: the populated table body is the Campaigns table (not observed in the reference).
+
+### Cases record detail
+
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Subject title, previous / next arrows, Edit, More Options; case-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments, Open Activities, Closed Activities, Emails; metadata order): implemented by provisional rule; QA pending (MEP-863).
+
+### Solutions record detail
+
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Solution Title title, previous / next arrows, Edit, More Options; solution-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments; metadata order): implemented by provisional rule; QA pending (MEP-863).
+
+### Cases and Solutions create / edit forms
+
+Solutions form: not started (parallel task).
+
+### Cases create / edit form
+
+- KF-01 – KF-34 implemented (MEP-895). M11 controls (KF-01, KF-29, KF-30, KF-32) and Product Name (KF-07, KF-08, P2) are `laterModule`; the Product picker (KF-08.x) is not drawn.
+- Case Number (KF-05, KF-06) is locked, blank on create and filled on edit.
+- Provisional: edit form = create form filled; shared picklist adds a leading `-None-` to Status (KF-20.x list otherwise matches); no Email requirement for Case Origin = Email; Type / Case Reason options in metadata order.
+
+### Cases links in earlier modules
+
+Not started.
