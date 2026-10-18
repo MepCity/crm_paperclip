@@ -26,7 +26,10 @@ export function parentActivityCriteria(parentModule: string, parentId: string): 
   const field =
     parentModule === "Leads" || parentModule === "Contacts"
       ? "Who_Id"
-      : parentModule === "Accounts" || parentModule === "Deals" || parentModule === "Campaigns"
+      : parentModule === "Accounts" ||
+          parentModule === "Deals" ||
+          parentModule === "Campaigns" ||
+          parentModule === "Cases"
         ? "What_Id"
         : null;
   if (!field) return null;

@@ -192,12 +192,13 @@ function LoadedRecordForm({
   const baseSections = useMemo(
     () =>
       applySectionColumnOverrides(
-        buildFormModel(metadata, mode),
-        config.sectionColumnOverrides,
+        buildFormModel(metadata, mode, rules.readOnlyFields),
+        config.sectionColumnOverrides ?? rules.fallbackColumns,
         metadata,
         mode,
+        rules.readOnlyFields,
       ),
-    [metadata, mode, config.sectionColumnOverrides],
+    [metadata, mode, config.sectionColumnOverrides, rules.fallbackColumns, rules.readOnlyFields],
   );
   const sections = useMemo(() => {
     if (!rules.requiredFields?.length) return baseSections;
@@ -327,6 +328,21 @@ function LoadedRecordForm({
     });
     return () => cancelAnimationFrame(frame);
   }, [errors, saving, rules]);
+
+  useEffect(() => {
+    if (intent !== "create") return;
+    const focusTarget = rules.initialFocus ?? rules.owner;
+    if (!focusTarget) return;
+    const frame = requestAnimationFrame(() => {
+      const row = rootRef.current?.querySelector<HTMLElement>(`[data-form-field="${focusTarget}"]`);
+      row
+        ?.querySelector<HTMLElement>(
+          "button:not(:disabled),input:not(:disabled),textarea:not(:disabled)",
+        )
+        ?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [intent, rules.initialFocus, rules.owner]);
 
   /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
   const dependentClears: Readonly<Record<string, readonly string[]>> = useMemo(() => {
