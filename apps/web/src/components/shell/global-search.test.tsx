@@ -4,6 +4,7 @@ import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { ClientRecordService } from "@/lib/api/client/provider";
+import * as moduleRegistry from "@/modules/registry";
 import { render } from "@/test/render";
 import { GlobalSearch } from "./global-search";
 import { readSearchHistory, rememberSearchRecord, searchHistoryKey } from "./search-history";
@@ -68,7 +69,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   search.mockResolvedValue(groups);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 async function open(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Search records" }));
   return screen.findByRole("dialog", { name: "Search records" });
@@ -286,6 +290,11 @@ test("keeps at most five visible results per group and ignores a late previous q
 });
 
 test("omits secondary line for modules without search field config", async () => {
+  // Model a module without a screen definition even after Cases ships.
+  const resolve = moduleRegistry.resolveModuleScreenByApiName;
+  vi.spyOn(moduleRegistry, "resolveModuleScreenByApiName").mockImplementation(
+    (apiName, definitions) => (apiName === "Cases" ? undefined : resolve(apiName, definitions)),
+  );
   search.mockResolvedValueOnce([
     {
       module: "Cases",
@@ -316,3 +325,25 @@ test("search errors use the shared error notice", async () => {
     "The page could not be loaded. Please try again.",
   );
 });
+
+for (const [module, titleField] of [
+  ["Cases", "Subject"],
+  ["Solutions", "Solution_Title"],
+]) {
+  test(`${module} search uses the registered title and detail route`, async () => {
+    search.mockResolvedValueOnce([
+      {
+        module,
+        total: 1,
+        records: [{ id: "support-1", fields: { [titleField]: "Support title" } }],
+      },
+    ]);
+    const user = userEvent.setup();
+    mount();
+    await open(user);
+    await user.type(screen.getByRole("textbox", { name: "Search records" }), "Support");
+    const link = await screen.findByRole("link", { name: "Support title" });
+    expect(link.getAttribute("href")).toContain(`/tab/${module}/support-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}

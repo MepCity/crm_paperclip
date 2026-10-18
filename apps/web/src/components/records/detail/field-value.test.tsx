@@ -1,13 +1,17 @@
 import { formatDate, formatRecordAuditDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import * as moduleRegistry from "@/modules/registry";
 import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function field(
   apiName: string,
@@ -185,6 +189,11 @@ test("lookup field links to registered Campaigns detail page", () => {
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
+  // Exercise the unregistered state explicitly, independent of shipped modules.
+  const resolve = moduleRegistry.resolveModuleScreenByApiName;
+  vi.spyOn(moduleRegistry, "resolveModuleScreenByApiName").mockImplementation(
+    (apiName, definitions) => (apiName === "Cases" ? undefined : resolve(apiName, definitions)),
+  );
   show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
     module: "Cases",
     id: "case-123",
@@ -209,3 +218,17 @@ test("empty lookup field renders an em dash", () => {
   });
   expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
 });
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show(field("Support_Ref", "lookup", { lookup: { module } }), {
+      module,
+      id: "record-1",
+      name: "Support record",
+    });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}
