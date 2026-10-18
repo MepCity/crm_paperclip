@@ -44,7 +44,7 @@ test("keeps the Meetings Actions inventory in reference order and assigns later 
     "Print View",
   ]);
   expect(actions.find((item) => item.id === "tags")?.laterModule).toBe("M6");
-  expect(actions.find((item) => item.id === "export")?.laterModule).toBe("M6");
+  expect(actions.find((item) => item.id === "export")?.laterModule).toBeUndefined();
   expect(actions.find((item) => item.id === "print")?.submenuIndicator).toBe(true);
   expect(meetingsListPageConfig.inventory?.createItems).toBeUndefined();
 });

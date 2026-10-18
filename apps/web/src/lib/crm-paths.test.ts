@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CRM_ORG_PATH_PREFIX,
   moduleCreatePath,
+  moduleImportPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordEditPath,
@@ -34,4 +35,10 @@ describe("crm-paths", () => {
       "/crm/acme/tab/Leads/list",
     );
   });
+});
+
+it.each(["Tasks", "Events", "Calls"])("uses the screen tab for %s imports", (module) => {
+  expect(moduleImportPath("sample-org", module)).toBe(
+    `/crm/sample-org/tab/${module === "Events" ? "Meetings" : module}/import`,
+  );
 });
