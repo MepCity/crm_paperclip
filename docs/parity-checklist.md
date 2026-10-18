@@ -694,6 +694,37 @@ the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ Ne
 panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 
+### Activities screens — side-by-side visual check (board decision MEP-570, 2026-10-14 and 2026-10-15)
+
+From now on, QA and the approver do not approve any Activities screen — including forms
+(Create/Edit page or dialog), list views, and record detail — until they have opened our screen
+at the same CSS viewport (1470 × 835, DPR 2), put our screenshot next to the reference capture,
+and ticked every row of the spec's measured inventory (`research/specs/activities-form.md`,
+`activities.md`, and `activities-record-detail.md`). Components and layouts from
+Leads/Accounts/Contacts/Deals must never be copied as-is into Activities screens.
+
+Our screenshot is uploaded to the task as an attachment; the reference image never enters the
+repo or task (only its research workspace path is referenced). The result of each comparison (✓
+per verified row) is recorded below and in the review comments. `apps/web/e2e/activities-form-visual.spec.ts`
+guards the measured values and absence of copied chrome for Task Create/Edit, Meeting window and
+full form, and Activities lists/detail. Call Create/Edit join it once the Call form lands.
+
+#### Task and Meeting form screens — measured comparison result
+
+| Screen / Area | Measured inventory | Verified result | Evidence |
+| --- | --- | --- | --- |
+| Task Create & Edit: Header & placement | Requirements 1–3: Pale #EEF1F9 title band y=50–113; 548 px column x=332–880; 590 px blank right area; #313949 section headings | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Columns & styling | Requirements 4–6: Left-aligned labels x=332; values start x=551; unboxed rows; 1 px #DCDBEE underline spanning label and value | ✓ Matched | `activities-form-visual.spec.ts` |
+| Task Create & Edit: Required indicator | Requirement 7: 25 × 2 px horizontal #F27B77 red segment at row left edge under Subject | ✓ Matched | `activities-form-visual.spec.ts` |
+| Task Create & Edit: Lookups & selects | Requirements 8–10: Contact/Account label type selector with magnifying-glass icon at x=859; short Status (103 px) & Priority (59 px) spans; DD.MM.YYYY Due Date without calendar glyph | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Toggles & Description | Requirements 11–12: Bare 28 × 15 switches for Reminder & Repeat with no adjacent text; underlined textarea with 7 × 7 resize grip | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Form chrome | Requirement 14: No "Create Form Views", no "Client Script" tab | ✓ Matched | `activities-form-visual.spec.ts` |
+| Meeting Information dialog: Modal & grid | Requirements 1–4: Centered 500 px modal at x=485; 418 px lines from x=515 to 933; labels left at x=515, values start at x=682; 50 px pitch | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
+| Meeting Information dialog: Fields & controls | Requirements 5–11: Unboxed rows; 25 × 2 px red marker; All day 15 × 15 checkbox; Date and time on one line 10 px apart; Cancel and Save only (no Save and New) | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
+| Meeting Full Form (Add more details) | Requirements 1–14: Expands to full form with Repeat and Description; no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts` |
+| Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
+
+
 ### Calls record detail — implemented; QA pending (MEP-508)
 
 | Area | Inventory | Evidence |
@@ -765,7 +796,19 @@ Open question: note edit/delete produce no separate Timeline event; a deleted no
 
 ### Campaigns list
 
-Not started.
+Implemented; QA pending (MEP-805).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SH-18 | Registered in registry.ts after Calls; shell entry and create-records row live | `registry.test.ts`, `shell.test.tsx`, `campaigns-list.spec.ts` |
+| CL-01, CL-02, CL-02.1 – CL-02.8 | Single All Campaigns tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `campaigns-list.spec.ts` |
+| CL-03 – CL-11, CL-40 | Filter, Sort, presentation icons and refresh as in Accounts | `campaigns-list.spec.ts` |
+| CL-12, CL-13 | Create Campaign opens the create route; arrow is `laterModule` M6 | `campaigns-list.spec.ts` |
+| CL-14, CL-14.1 – CL-14.9 | Nine Actions rows in reference order, no Deduplicate; Sheet view `laterModule` P3 | `campaigns-list.spec.ts` |
+| CL-15 – CL-31 | Filter panel groups from the module definition | `list-filters.test.ts`, `campaigns-list.spec.ts` |
+| CL-32 – CL-39 | View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `campaigns-list.spec.ts` |
+
+Provisional rules: the populated table body is the Accounts table (not observed in the reference).
 
 ### Campaigns create / edit form
 

@@ -12,7 +12,7 @@ test("exports a complete Accounts module screen definition", () => {
     navigation: { id: "accounts" },
   });
   expect(accountsScreenDefinition.detail.statusRibbon).toBeUndefined();
-  expect(accountsScreenDefinition.detail.addTags).toEqual({ label: "Add Tags", laterModule: "M6" });
+  expect(accountsScreenDefinition.detail.addTags).toEqual({ label: "Add Tags" });
   expect(accountsScreenDefinition.detail.headerCommands).toEqual([
     { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
   ]);
