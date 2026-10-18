@@ -1,6 +1,7 @@
 import type { ListQuery, RecordService, SearchQuery, SortSpec } from "@crm/core/records";
 import {
   decodeActivityFilter,
+  decodeCampaignFilter,
   decodeCriteria,
   decodeInput,
   encodeActivitySummaries,
@@ -70,7 +71,12 @@ async function bodyOf(input: OperationRequest): Promise<unknown> {
 export const MAX_SEARCH_LENGTH = 2000;
 async function restrictions(
   input: OperationRequest,
-): Promise<Pick<ListQuery, "filters" | "search" | "activityFilter" | "includeActivitySummary">> {
+): Promise<
+  Pick<
+    ListQuery,
+    "filters" | "search" | "activityFilter" | "campaignFilter" | "includeActivitySummary"
+  >
+> {
   const value = await bodyOf(input);
   if (value === undefined) return {};
   const body = object(value, "filters");
@@ -83,6 +89,9 @@ async function restrictions(
   )
     invalid("includeActivitySummary");
   return {
+    ...(body.campaign_filter === undefined
+      ? {}
+      : { campaignFilter: decodeCampaignFilter(body.campaign_filter) }),
     ...(body.activity_filter === undefined
       ? {}
       : { activityFilter: decodeActivityFilter(body.activity_filter) }),

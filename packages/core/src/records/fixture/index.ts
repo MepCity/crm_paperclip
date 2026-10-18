@@ -18,6 +18,7 @@ import {
   selectActivitySummary,
   validateActivityFilter,
 } from "../activities";
+import { validateCampaignFilter } from "../campaigns";
 import type {
   DuplicateGroup,
   FieldDefinition,
@@ -343,7 +344,7 @@ export function createFixtureRecordService(
   };
   const matching = (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
     applyView = true,
     now = clock(),
   ) => {
@@ -355,6 +356,34 @@ export function createFixtureRecordService(
       validateActivityFilter(query.activityFilter);
       if (!activityParentModules.has(module))
         throw new ValidationError({ activityFilter: ["Choose a parent record module."] });
+    }
+    let campaignMembers: Set<string> | undefined;
+    if (query.campaignFilter !== undefined) {
+      validateCampaignFilter(query.campaignFilter);
+      if (module !== "Leads" && module !== "Contacts")
+        throw new ValidationError({ campaignFilter: ["Choose Leads or Contacts."] });
+      campaignMembers = new Set<string>();
+      const filter = query.campaignFilter;
+      // Both stores belong to the caller's organization, like ordinary record reads.
+      const campaigns = moduleStore("Campaigns").records;
+      for (const membership of moduleStore("Campaign_Members").records.values()) {
+        const campaign = membership.fields.Campaign;
+        const parent: FieldValue | undefined =
+          membership.fields[module === "Leads" ? "Lead" : "Contact"];
+        if (
+          isJsonObject(campaign) &&
+          campaign.module === "Campaigns" &&
+          typeof campaign.id === "string" &&
+          campaigns.has(campaign.id) &&
+          filter.campaignIds.includes(campaign.id) &&
+          isJsonObject(parent) &&
+          parent.module === module &&
+          typeof parent.id === "string" &&
+          (!filter.memberStatuses ||
+            filter.memberStatuses.includes(String(membership.fields.Member_Status)))
+        )
+          campaignMembers.add(parent.id);
+      }
     }
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
@@ -368,6 +397,7 @@ export function createFixtureRecordService(
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
+          (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
       );
