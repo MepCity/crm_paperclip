@@ -37,7 +37,7 @@ function CampaignSelect({
 }: CampaignSelectProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0" data-inventory="CX-207">
-      <span className="text-xs font-medium text-text-muted">Campaign Name</span>
+      <span className="text-xs text-text-muted">Campaign Name</span>
       <MultiSelect
         label="Campaign Name"
         placeholder="Select Campaigns"
@@ -155,7 +155,7 @@ export function CampaignFilterEditor({
       )}
 
       <div className="flex flex-col gap-1 min-w-0" data-inventory="CX-209">
-        <span className="text-xs font-medium text-text-muted">Member Status</span>
+        <span className="text-xs text-text-muted">Member Status</span>
         <MultiSelect
           label="Member Status"
           placeholder="Select Member Status"
