@@ -14,6 +14,7 @@ import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext, RecordData, RecordService } from "@crm/core/records";
 import type { createFixtureAttachmentLifecycle } from "@crm/core/records/fixture";
 import { encodeError } from "@/lib/api/wire/errors";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 
 const PER_PAGE_DEFAULT = 20;
 const PER_PAGE_MAX = 200;
@@ -22,10 +23,6 @@ const INTERNAL_PAGE = 100;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NO_STORE = { "Cache-Control": "no-store" };
 const MULTIPART_OVERHEAD = 64 * 1024;
-
-import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
-
-export { safeAttachmentUrl };
 
 /** Reads at most `limit` bytes; the stream is cancelled at the budget, never trusting Content-Length. */
 async function readBounded(
