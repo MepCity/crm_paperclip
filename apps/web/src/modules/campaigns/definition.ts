@@ -24,7 +24,7 @@ import { CAMPAIGNS_LIST_CURRENCY_CODE, campaignsListPageConfig } from "./list-co
 import { buildCampaignsFilterGroups } from "./list-filters";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
  * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
  */
 export const campaignsScreenDefinition: ModuleScreenDefinition = {

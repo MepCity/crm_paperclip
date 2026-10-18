@@ -52,6 +52,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   buildFilterGroups: buildLeadsFilterGroups,
   form: { rules: leadsFormRules },
   detail: {
+    addTags: { label: "Add Tags" },
     Screen: LeadRecordScreen,
     header: leadsRecordHeaderIdentity,
     businessCard: buildLeadsBusinessCardFields,

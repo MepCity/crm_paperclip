@@ -50,6 +50,7 @@ import SplitButtonDemo from "@/components/ui/split-button.demo";
 import SwitchDemo from "@/components/ui/switch.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
+import TagEntryDemo from "@/components/ui/tag-entry.demo";
 import TextAreaDemo from "@/components/ui/text-area.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 import ToastDemo from "@/components/ui/toast.demo";
@@ -114,4 +115,5 @@ export const demos: Record<string, React.ComponentType> = {
   "timeline-history": TimelineHistoryDemo,
   drafts: DraftsPageDemo,
   "manage-tags": ManageTagsPageDemo,
+  "tag-entry": TagEntryDemo,
 };
