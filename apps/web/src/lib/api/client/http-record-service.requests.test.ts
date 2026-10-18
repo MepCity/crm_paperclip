@@ -558,3 +558,70 @@ it("reports a missing or malformed currencies list as a validation error", async
     expect((error as ValidationError).fieldErrors).toEqual({ currencies: ["Invalid value."] });
   }
 });
+
+describe("listHistory request", () => {
+  it("requests the timelines endpoint with encoded filters and decodes the page", async () => {
+    const calls: string[] = [];
+    const service = createHttpRecordService({
+      orgSlug: "org",
+      fetch: async (path) => {
+        calls.push(path);
+        return {
+          timelines: [
+            {
+              id: "e1",
+              audited_time: "2026-01-01T00:00:00.000Z",
+              done_by: { id: "u1", name: "User" },
+              record: { module: { api_name: "Leads" }, id: "r1", name: "Lead" },
+              related_record: null,
+              action: "updated",
+              source: "crm_api",
+              field_history: [
+                {
+                  api_name: "Company",
+                  field_label: "Company",
+                  data_type: "text",
+                  _value: { old: "A", new: null },
+                },
+              ],
+              automation: null,
+              extension: null,
+              type: null,
+              event_kind: "fields_updated",
+              event_details: null,
+            },
+          ],
+          info: {
+            count: 1,
+            more_records: true,
+            page: 1,
+            per_page: 10,
+            next_page_token: "next",
+            previous_page_token: null,
+          },
+        };
+      },
+    });
+    const page = await service.listHistory("Leads", "r1", {
+      perPage: 10,
+      modules: ["Leads"],
+      sources: ["api"],
+    });
+    const url = new URL(calls[0] ?? "", "http://x");
+    expect(url.pathname).toBe("/crm/v9/Leads/r1/timelines");
+    expect(url.searchParams.get("per_page")).toBe("10");
+    expect(JSON.parse(url.searchParams.get("filters") ?? "")).toEqual({
+      group_operator: "AND",
+      group: [
+        { field: { api_name: "record.module.api_name" }, comparator: "in", value: ["Leads"] },
+        { field: { api_name: "source" }, comparator: "in", value: ["crm_api"] },
+      ],
+    });
+    expect(page).toMatchObject({ nextPageToken: "next", moreRecords: true });
+    expect(page.events[0]).toMatchObject({
+      kind: "fields_updated",
+      source: "api",
+      changes: [{ apiName: "Company", oldDisplay: "A", newDisplay: null }],
+    });
+  });
+});
