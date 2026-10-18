@@ -507,8 +507,8 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Case_Name",
-    label: "Case Name",
+    apiName: "Case_Ref",
+    label: "Case Ref",
     dataType: "lookup",
     lookup: { module: "Cases" },
     required: false,
@@ -527,13 +527,13 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Case Name" }) as HTMLInputElement;
+  const input = screen.getByRole("textbox", { name: "Case Ref" }) as HTMLInputElement;
   expect(input.value).toBe("Big Case");
   expect(input.readOnly).toBe(true);
   expect(input.getAttribute("data-later-module")).toBe("M8");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Case Name lookup" });
+  const btn = screen.getByRole("button", { name: "Open Case Ref lookup" });
   expect(btn.getAttribute("data-later-module")).toBe("M8");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
