@@ -13,6 +13,10 @@ const navigation = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
+vi.mock("@/app/crm/[orgSlug]/tags/actions", () => ({
+  readRecordTagsAction: vi.fn(async () => ({ status: "success", tags: [], catalogue: [] })),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => navigation,
 }));

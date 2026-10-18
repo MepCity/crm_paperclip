@@ -83,7 +83,7 @@ export function validateInput(
   for (const field of fields) {
     const present = Object.hasOwn(input, field.apiName);
     const value = input[field.apiName];
-    if (present && (field.readOnly || managed.has(field.apiName))) {
+    if (present && (field.apiName === "Tag" || field.readOnly || managed.has(field.apiName))) {
       errors[field.apiName] = ["This field is system managed."];
       continue;
     }
