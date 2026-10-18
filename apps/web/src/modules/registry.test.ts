@@ -16,6 +16,7 @@ test("the shipped modules is registered", () => {
     "Tasks",
     "Meetings",
     "Calls",
+    "Campaigns",
     "Cases",
     "Solutions",
   ]);
