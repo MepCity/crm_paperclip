@@ -16,6 +16,7 @@ test("the shipped modules is registered", () => {
     "Tasks",
     "Meetings",
     "Calls",
+    "Campaigns",
   ]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
   expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
