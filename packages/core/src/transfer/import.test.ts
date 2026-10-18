@@ -1,9 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
 import { AppError, ValidationError } from "../errors";
 import type { FieldDefinition, ModuleMetadata } from "../records/contract";
+import { createFixtureRecordService } from "../records/fixture";
+import type { OrgContext } from "../tenancy/types";
 import type { Upload } from "./history";
-import { defaultMatch, matchFields, normalizeHeader, validateMapping, writable } from "./import";
-import type { ImportSettings, TransferModule } from "./types";
+import {
+  defaultMatch,
+  importRows,
+  matchFields,
+  normalizeHeader,
+  validateMapping,
+  writable,
+} from "./import";
+import type { ImportJob, ImportSettings, TransferDependencies, TransferModule } from "./types";
 
 function makeField(overrides: Partial<FieldDefinition> & { apiName: string }): FieldDefinition {
   return {
@@ -562,5 +572,90 @@ describe("validateMapping", () => {
     expect(validateMapping(accountMeta, "Accounts", defaultUpload, accountSettings)).toBe(
       defaultMatch.Accounts,
     );
+  });
+});
+
+describe("importRows", () => {
+  const ctx: OrgContext = {
+    orgId: randomUUID(),
+    orgSlug: "import-test",
+    orgName: "Example",
+    userId: "example-user",
+    role: "admin",
+  };
+  const records = createFixtureRecordService(ctx);
+  const deps: TransferDependencies = {
+    records: () => records,
+    authorize: vi.fn(async () => {}),
+    listActors: async () => [{ id: ctx.userId, name: "Example User" }],
+  };
+  const upload = (headers: string[], rows: string[][]): Upload => ({
+    id: "u1",
+    userId: ctx.userId,
+    module: "Contacts",
+    fileName: "example.csv",
+    charset: "UTF-8",
+    headers,
+    rows,
+    at: 0,
+  });
+  const settings = (overrides: Partial<ImportSettings> = {}): ImportSettings => ({
+    mode: "add",
+    ignoreEmptyOnUpdate: false,
+    mapping: [
+      { column: 0, field: "Last_Name" },
+      { column: 1, field: "Email" },
+    ],
+    defaults: [],
+    ...overrides,
+  });
+  const newJob = (): ImportJob => ({
+    id: "j1",
+    module: "Contacts",
+    fileName: "example.csv",
+    createdBy: { id: ctx.userId, name: "Example User" },
+    createdAt: "2026-01-01T00:00:00.000Z",
+    status: "completed",
+    counts: { created: 0, updated: 0, skipped: 0, errors: 0 },
+    undoable: false,
+    rows: [],
+  });
+
+  it("creates, updates, skips and reports row errors", async () => {
+    const metadata = await records.getModule("Contacts");
+    const run = async (rows: string[][], over: Partial<ImportSettings>) => {
+      const job = newJob();
+      const s = settings(over);
+      const matchField = validateMapping(metadata, "Contacts", upload(["a", "b"], rows), s);
+      await importRows(ctx, records, deps, upload(["a", "b"], rows), s, metadata, matchField, job);
+      return job;
+    };
+    const added = await run(
+      [
+        ["One", "one@example.test"],
+        ["Two", "two@example.test"],
+        ["Dup", "ONE@example.test"],
+        ["", "bad@example.test"],
+      ],
+      {},
+    );
+    expect(added.counts).toEqual({ created: 2, updated: 0, skipped: 1, errors: 1 });
+    expect(added.status).toBe("completed_with_errors");
+    expect(added.undoable).toBe(true);
+    expect(added.rows).toEqual([
+      { row: 4, outcome: "skipped", code: "duplicate_in_file", field: "Email" },
+      { row: 5, outcome: "error", code: "required_missing", field: "Last_Name" },
+    ]);
+    const again = await run([["One", "one@example.test"]], {});
+    expect(again.counts).toEqual({ created: 0, updated: 0, skipped: 1, errors: 0 });
+    expect(again.rows[0]?.code).toBe("already_exists");
+    expect(again.status).toBe("failed");
+    const updated = await run([["Renamed", "one@example.test"]], { mode: "update" });
+    expect(updated.counts.updated).toBe(1);
+    expect(updated.status).toBe("completed");
+    expect(updated.undoable).toBe(false);
+    const missing = await run([["Ghost", "ghost@example.test"]], { mode: "update" });
+    expect(missing.counts.errors).toBe(1);
+    expect(missing.rows[0]).toMatchObject({ code: "not_found", field: "Email" });
   });
 });
