@@ -13,6 +13,7 @@ const generators = {
   Accounts: generateFixtureAccounts,
   Deals: generateFixtureDeals,
 };
+const seedModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 describe("Notes metadata and seed", () => {
   it("preserves evidenced fields and restricts the polymorphic parent", () => {
@@ -53,9 +54,7 @@ describe("Notes metadata and seed", () => {
     expect(generateFixtureNotes(seed, now)).toEqual(notes);
     expect(new Set(notes.map((note) => note.id)).size).toBe(notes.length);
     expect(notes).toHaveLength(4);
-    for (const [index, module] of (
-      Object.keys(generators) as (keyof typeof generators)[]
-    ).entries()) {
+    for (const [index, module] of seedModules.entries()) {
       const parents = generators[module](seed, now);
       const note = notes[index];
       expect(note?.fields.Parent_Id).toEqual({ module, id: parents[0]?.id });

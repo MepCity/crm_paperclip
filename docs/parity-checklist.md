@@ -801,11 +801,46 @@ Provisional rules: the populated table body is the Accounts table (not observed 
 
 ### Campaigns create / edit form
 
-Not started.
+Implemented; QA pending (MEP-814).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| CF-01 | Edit Page Layout beside the form title (M11, inert) | `campaigns-form.spec.ts` |
+| CF-02–CF-04 | Cancel, Save and New, Save in the title strip's right group | `campaigns-form.spec.ts` |
+| CF-05, CF-06 | Campaign Owner field on the session owner and in initial focus, with the Select User dialog behind its lookup icon | `campaigns-form.spec.ts` |
+| CF-07 | Campaign Name input with its required marker | `campaigns-form.spec.ts` |
+| CF-08 | Start Date on shared masked date entry (DD.MM.YYYY) | `campaigns-form.spec.ts` |
+| CF-09, CF-09.1, CF-10 | Expected Revenue with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-11, CF-11.1, CF-12 | Actual Cost with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-13 | Numbers sent integer entry | `campaigns-form.spec.ts` |
+| CF-14, CF-14.1–CF-14.8 | Type select popup with search input, required marker, and options in metadata order | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-15, CF-15.1–CF-15.5 | Status select popup with five options and no search box | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-16 | End Date on shared masked date entry (DD.MM.YYYY) | `campaigns-form.spec.ts` |
+| CF-17, CF-17.1, CF-18 | Budgeted Cost with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-19 | Expected Response integer entry | `campaigns-form.spec.ts` |
+| CF-20, CF-21 | Description multiline editor with its lower-right resize grip | `campaigns-form.spec.ts` |
+| CF-22, CF-23 | Form footer: Create Form Views label with Standard View and Create a custom form page (M11, inert) | `campaigns-form.spec.ts` |
+| CF-24 | Client Script tab on the page's right edge (M11, inert) | `campaigns-form.spec.ts` |
+| — | Parent Campaign omitted from the form layout | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+
+Provisional rules (behaviour not observed in reference):
+- Edit form reuses the create form layout populated with saved record values (Accounts edit behaviour).
+- Required field error copy and post-save navigation follow Accounts behaviour.
+- No ordering constraint between Start Date and End Date.
+- Currency and integer field validation follows shared field behaviour.
+
+Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 ### Campaigns record detail
 
-Not started.
+- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; QA pending (MEP-812).
+- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
+- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
+- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
+- GK-5 Leads and Contacts cards (campaign membership, Member Status, Email, Phone): implemented by provisional rule; QA pending (MEP-813).
+- GK-6 Deals card (Campaign Source matching deals, Accounts Deals card behaviour): implemented by provisional rule; QA pending (MEP-813).
+- GK-7 Child Campaigns card (Parent Campaign matching campaigns, standard columns): implemented by provisional rule; QA pending (MEP-813).
+- GK-8 Notes, Attachments, open/closed activities, Checklists, Connected Records (Accounts counterparts and laterModule): implemented by provisional rule; QA pending (MEP-813).
 
 ### Campaigns links in earlier modules
 
