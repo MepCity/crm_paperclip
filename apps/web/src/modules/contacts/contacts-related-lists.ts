@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
@@ -11,6 +12,7 @@ export interface ContactsRelatedListHandlers {
   onNewReportingContact?: () => void;
   onAddReportingContact?: () => void;
   onDealsNew?: () => void;
+  onCasesNew?: () => void;
 }
 
 export interface ContactsRelatedListBadges {
@@ -243,27 +245,37 @@ export function createContactsRelatedLists(
     },
     {
       id: "cases",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedCasesCardBody, {
+              managerRecord: record,
+              filterField: "Related_To",
+              caseRecordPath: (id) => recordPath("Cases", id),
+            })
+          : undefined,
       title: "Cases",
-      moduleKey: "M8",
+      moduleKey: "M2",
       order: 10,
       targetId: "related-list-cases",
       railAction: {
         id: "cases-add",
         label: "Add",
-        moduleKey: "M8",
+        moduleKey: "M2",
+        onAction: handlers.onCasesNew,
       },
       upperControls: [
         {
           id: "assign-cases",
           label: "Assign",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
         },
         {
           id: "new-case",
           label: "New",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
+          onAction: handlers.onCasesNew,
         },
       ],
       emptyStateText: "No records found",

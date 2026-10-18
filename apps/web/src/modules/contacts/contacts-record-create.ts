@@ -68,3 +68,24 @@ export function reportingToLookupFromManager(
 ): { module: "Contacts"; id: RecordId; name: string } {
   return { module: "Contacts", id: managerId, name: contactDisplayName(managerFields) };
 }
+
+/** Provisional rule (MEP-900): New Case from the Contacts card fills Related To and Account Name. */
+export function openCaseCreateWithContact(
+  orgSlug: string,
+  contact: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  const account = accountLookupOfContact(contact.fields);
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Cases",
+    fields: {
+      Related_To: {
+        module: "Contacts",
+        id: contact.id,
+        name: contactDisplayName(contact.fields),
+      },
+      ...(account ? { Account_Name: account } : {}),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Cases"));
+}
