@@ -1,7 +1,7 @@
 import type { ModuleMetadata } from "../../contract";
 
 /** Confirmed parent modules; activity parents remain a research question. */
-export const notesParentModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+export const notesParentModules = ["Leads", "Contacts", "Accounts", "Deals", "Campaigns"] as const;
 
 /** Sanitized field export; se_module denotes a polymorphic lookup. */
 export const notesMetadataSource = {

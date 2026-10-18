@@ -335,7 +335,14 @@ No write, menu item, preference or filter was exercised. The system-view and Act
 - `m7-list-actions` — nine Actions rows, refresh icon visible; one executed opening click; image opened.
 - `m7-list-after` — final click-free empty list; image opened; total and record-link counts unchanged.
 
-## Record detail
+## Record detail access evidence (MEP-758)
+
+Historical access report retained from MEP-758. Its blocked disposition and
+question about an alternative evidence source were superseded by the CTO
+decision recorded in the Record detail source inventory below. References to
+no allocated CD numbers describe that earlier observation attempt only;
+CD-01–CD-51 below identify sources, not observed controls.
+
 
 Status: **blocked — no accessible record** (MEP-758). This section records
 an evidence limit, not a completed record-detail inventory or an implementation
@@ -849,3 +856,159 @@ Self-check: controls.json 219 entries → 136 mapped source entries, 83 excluded
 `m7f-list-base`: 287 source entries use the exact ordinal mapping in MEP-754, `Reconciliation of controls.json — m7-list-base`. Every source entry was compared by tag, name and bounds and is identical. This covers CL-01–CL-40 and SH-01–SH-45 (SH-46 is image-only); CL-40 is DOM-only, not painted. 146 source entries map to visible-control numbers; 141 are excluded as hidden/unpainted, clipped, structural or duplicate wrappers under that mapping. No overlay.
 
 `m7f-list-after`: 287 entries use the same assignments, with only hidden-overlay ordering changes at ordinals 264–266 (all already excluded). Every other tag/name/bounds tuple is identical. Self-check: 146 mapped entries and 141 excluded; CL-01–CL-40 plus SH references. Both list screenshots show total 0 and zero record links; no record disappeared. All five screenshots were opened as images. No tab was closed.
+
+## Record detail
+
+### Not observed — the reference has no campaign records
+
+This is the MEP-811 source inventory authorized by the CTO's defer_detail decision
+on MEP-758. It replaces that slice's blocked-detail disposition; it does not claim
+screen observation or authorize implementation from an assumed layout. The approved
+MEP-759 form research above is preserved unchanged. No new capture, record creation,
+preference change or guessed detail route was used.
+
+The existing `m7d-list-base` remains the prerequisite evidence: empty list, total 0,
+no record links. Its saved retry and blocked-background-request audit belong to
+MEP-758; this task issues no capture requests. There is no detail screenshot to
+compare. UI Lead review checks source fidelity and open questions only.
+
+### Sources and reading rules
+
+- M1: local research `metadata/modules/Campaigns/layouts.json`, Standard layout,
+  `sections[].sequence_number` and `fields[].sequence_number`.
+- M2: local research `metadata/modules/Campaigns/related_lists.json`, all 15 entries.
+- P1: reference CRM public help, **Creating Campaigns**, article path
+  `crm/marketing-automation-tools/campaigns/articles/create-campaigns`, read 2026-10-17.
+  Section names below identify the specific evidence; documentation describes the
+  general product, not this account's rendered detail.
+- P2: reference CRM public help, **Associating Other Records**, article path
+  `crm/manage-crm-data/record-management/articles/associate-other-records`,
+  **Add Notes** and **Add Tasks, Events & Calls**, read 2026-10-17.
+- P3: reference CRM public help, **Customizing Record's Detail Page**, article path
+  `crm/customize-crm-account/record-level-customization/articles/page-level-customization`,
+  **Organize Page Details**, read 2026-10-17.
+
+Neutral article paths omit the publisher hostname to comply with repository naming
+rules. No documentation images or customer examples are reproduced.
+
+CD numbers are stable source-inventory identifiers, **not observed controls**.
+Every row gives a Source. Metadata order is configuration order, never painted
+position. No existing CD identifiers were allocated in MEP-758, so numbering starts
+at CD-01 here. Shared-module patterns remain hypotheses and do not establish parity.
+
+### Section and field inventory
+
+All fields below have `view_type.view=true` in M1. That flag does not prove that a
+field is painted. Campaign Information has two configured columns; Description
+Information has one. Neither the actual detail grid nor business-card placement
+is known. Field sequence 16 is duplicated; array order is retained for that tie.
+
+| # | Section / field | Configured order | Type / limit | Source | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| CD-01 | Campaign Information | section 1 | 2 configured columns | metadata | M1 |
+| CD-02 | Campaign Owner (`Owner`) | field 1 | ownerlookup; rendering unknown | metadata | M1, Campaign Information |
+| CD-03 | Type (`Type`) | field 2 | picklist; rendering unknown | metadata | M1, Campaign Information |
+| CD-04 | Campaign Name (`Campaign_Name`) | field 3 | text; rendering unknown | metadata | M1, Campaign Information |
+| CD-05 | Status (`Status`) | field 4 | picklist; rendering unknown | metadata | M1, Campaign Information |
+| CD-06 | Start Date (`Start_Date`) | field 5 | date; rendering unknown | metadata | M1, Campaign Information |
+| CD-07 | End Date (`End_Date`) | field 6 | date; rendering unknown | metadata | M1, Campaign Information |
+| CD-08 | Expected Revenue (`Expected_Revenue`) | field 7 | currency; rendering unknown | metadata | M1, Campaign Information |
+| CD-09 | Budgeted Cost (`Budgeted_Cost`) | field 8 | currency; rendering unknown | metadata | M1, Campaign Information |
+| CD-10 | Actual Cost (`Actual_Cost`) | field 9 | currency; rendering unknown | metadata | M1, Campaign Information |
+| CD-11 | Expected Response (`Expected_Response`) | field 10 | bigint; rendering unknown | metadata | M1, Campaign Information |
+| CD-12 | Numbers sent (`Num_sent`) | field 11 | bigint; rendering unknown | metadata | M1, Campaign Information |
+| CD-13 | Created By (`Created_By`) | field 12 | ownerlookup; rendering unknown | metadata | M1, Campaign Information |
+| CD-14 | Modified By (`Modified_By`) | field 13 | ownerlookup; rendering unknown | metadata | M1, Campaign Information |
+| CD-15 | Created Time (`Created_Time`) | field 14 | datetime; rendering unknown | metadata | M1, Campaign Information |
+| CD-16 | Modified Time (`Modified_Time`) | field 15 | datetime; rendering unknown | metadata | M1, Campaign Information |
+| CD-17 | Tag (`Tag`) | field 16 | text; rendering unknown | metadata | M1, Campaign Information |
+| CD-18 | Parent Campaign (`Parent_Campaign`) | field 16 | lookup; rendering unknown | metadata | M1, Campaign Information |
+| CD-19 | Record Id (`id`) | field 20 | bigint; rendering unknown | metadata | M1, Campaign Information |
+| CD-20 | Last Activity Time (`Last_Activity_Time`) | field 21 | datetime; rendering unknown | metadata | M1, Campaign Information |
+| CD-21 | Connected To (`Connected_To__s`) | field 23 | multi_module_lookup; rendering unknown | metadata | M1, Campaign Information |
+| CD-22 | Description Information | section 2 | 1 configured columns | metadata | M1 |
+| CD-23 | Description (`Description`) | field 1 | textarea; rendering unknown | metadata | M1, Description Information |
+
+### Related-list configuration inventory
+
+All M2 entries have `visible=true`; that is configuration, not observed visibility.
+Sequence gaps are retained. Permission flags and relation API names do not establish
+UI buttons, endpoint requests or availability. No metadata route was navigated.
+
+| # | Related list | Configured sequence | API name | Source | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| CD-24 | Locking Information | -1 | `Locking_Information__s` | metadata | M2 |
+| CD-25 | Connected Records | 1 | `Connected_Records__s` | metadata | M2 |
+| CD-26 | Notes | 2 | `Notes` | metadata | M2 |
+| CD-27 | Child Campaigns | 3 | `Child_Campaigns` | metadata | M2 |
+| CD-28 | Open Calls | 6 | `Calls` | metadata | M2 |
+| CD-29 | Open Meetings | 7 | `Events` | metadata | M2 |
+| CD-30 | Open Tasks | 8 | `Tasks` | metadata | M2 |
+| CD-31 | Attachments | 9 | `Attachments` | metadata | M2 |
+| CD-32 | Closed Tasks | 10 | `Tasks_History` | metadata | M2 |
+| CD-33 | Closed Meetings | 11 | `Events_History` | metadata | M2 |
+| CD-34 | Closed Calls | 12 | `Calls_History` | metadata | M2 |
+| CD-35 | Leads | 15 | `Leads` | metadata | M2 |
+| CD-36 | Deals | 16 | `Deals` | metadata | M2 |
+| CD-37 | Contacts | 17 | `Contacts` | metadata | M2 |
+| CD-38 | Checklists | 18 | `CheckLists` | metadata | M2 |
+
+### Public-documentation and pattern inventory
+
+The related-list descriptions below are documentation-only. Member Status is
+supported for Leads/Contacts; the sources do not establish it for Deals.
+No documented action was performed.
+
+| # | Region / item | Documented capability or pattern; local rendering unknown | Source | Evidence |
+| --- | --- | --- | --- | --- |
+| CD-39 | Header: More | Opens campaign actions. | public docs | P1, Create Campaigns Individually → To clone campaigns |
+| CD-40 | Header menu: Clone | Copies a campaign through a clone form. | public docs | P1, To clone campaigns |
+| CD-41 | Header menu: Organize module details | Generic detail-page customization action, under top-right More; Campaigns availability unknown. | public docs | P3, Organize Page Details |
+| CD-42 | Header: Edit | Candidate shared action only; Campaigns presence, position and enablement unknown. | pattern: accounts-record-detail.md:40 | AD-06 |
+| CD-43 | Leads / Contacts members | Associate records and choose campaign Member Status. | public docs | P1, Add Leads/Contacts to the Campaign |
+| CD-44 | Member Status update | Mass-update selected lead/contact members; distinct from Lead Status. | public docs | P1, Mass Update Campaign Member Status |
+| CD-45 | Member filters | Filter Leads/Contacts by related-list fields. | public docs | P1, Filter Leads or Contacts |
+| CD-46 | Deals | Lists deals attributed to the campaign; Member Status is unconfirmed. | public docs | P1, Associate Campaign with Other Records |
+| CD-47 | Child Campaigns | Related list supports +New; selected leads/contacts can seed child campaigns. | public docs | P1, Create Child Campaigns |
+| CD-48 | Open / Closed Activities | Documents open tasks/events and completed activities. | public docs | P1, Associate Campaign with Other Records |
+| CD-49 | Activities: Calls | Generic activity association includes Log a Call; campaign-specific rendering unknown. | public docs | P2, Add Tasks, Events & Calls |
+| CD-50 | Notes | Generic record notes support body, optional title and Save; Campaigns placement unknown. | public docs | P2, Add Notes; M2 supplies Campaigns relation separately |
+| CD-51 | Attachments | Campaign-related documents. | public docs | P1, Associate Campaign with Other Records |
+
+The generic P3 customization operation changes persisted preferences and is forbidden
+in the reference CRM. Its inventory row describes documentation, not permission to
+open or use it. Edit remains a pattern because the campaign-specific article does
+not establish that button's header placement. No Delete, Share, Send Email or other
+menu item is inferred from another module.
+
+### Open questions
+
+1. What is the actual header composition, record identity/business card, tag UI,
+   navigation, Edit placement, More menu order, permission-dependent visibility and
+   complete action set? Documentation proves only the capabilities cited above.
+2. Are Overview and Timeline present, and what are their default states, filters,
+   events, counters and empty states? Neither metadata nor these articles determines them.
+3. Which configured fields render, in which columns/order, with what formatting,
+   inline-edit affordances and empty values? Resolve the duplicate field sequence 16,
+   Parent Campaign visibility and system/Connected To fields through future observation.
+4. Which related lists actually render, in what rail/card order, with which counters,
+   columns, paging, sorting, selection, row controls, hover actions and empty states?
+   M2's visibility flags and sequence are insufficient to answer this.
+5. Are activities grouped as Open/Closed Activities or split into Calls, Meetings
+   and Tasks? How do history lists render? Public docs and metadata use different grouping.
+6. Does Deals expose Member Status at all? Public docs establish that field only
+   for Leads/Contacts; do not implement it for Deals from analogy.
+7. What Member Status values/defaults and member permissions apply locally? What
+   exact add/import/filter/update dialogs and validation states are available?
+8. How are Child Campaigns, parent links, hierarchy depth/limits and member reuse
+   presented in this account? The documented capability does not establish local UI.
+9. Are Locking Information, Connected Records and Checklists visible or conditional?
+   What are the actual Notes and Attachments controls, permissions and empty states?
+10. What are the write-dependent validation, success/error messages, confirmation
+    flows and resulting navigation? Not observable without a write; no such test
+    is authorized. No network contract or guessed detail route is specified.
+
+These questions record deferred observation, not a request to create reference data.
+Revisit only if records become available independently and a later task authorizes
+read-only observation. This document-only slice is complete within the CTO's scope;
+no CD screenshot comparison is required.
