@@ -1,4 +1,5 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import { withPrintPreviewAction } from "@/components/records/print/print-preview-menu";
 import type { ModuleKey } from "@/components/ui/later-module";
 
 export const ACCOUNTS_DELETE_CONFIRM_TITLE = "Delete Account";
@@ -8,6 +9,7 @@ type Handlers = {
   onClone: () => void;
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
+  onPrintPreview?: () => void;
 };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 
@@ -51,7 +53,7 @@ export const ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS: readonly {
 ];
 
 export function buildAccountsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGroup[] {
-  return ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
+  const groups = ACCOUNTS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
     id: group.id,
     items: group.items
       .filter(
@@ -63,4 +65,5 @@ export function buildAccountsRecordMoreMenuGroups(handlers: Handlers): RecordMen
         ...(handler ? { onAction: handlers[handler] } : {}),
       })),
   }));
+  return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }
