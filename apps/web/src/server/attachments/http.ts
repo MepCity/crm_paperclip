@@ -23,31 +23,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NO_STORE = { "Cache-Control": "no-store" };
 const MULTIPART_OVERHEAD = 64 * 1024;
 
-/**
- * Normalises an attachment link URL:
- * - string only, trimmed, max 2,048 chars
- * - must parse with `new URL(value)` as an absolute URL
- * - protocol is exactly `http:` or `https:`
- * - host/hostname is non-empty
- * Returns the normalized `url.href`, or null if invalid.
- */
-export function safeAttachmentUrl(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > 2048) return null;
-  try {
-    const parsed = new URL(trimmed);
-    if (
-      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
-      parsed.hostname.length > 0
-    ) {
-      return parsed.href;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
+import { safeAttachmentUrl } from "@/components/records/attachments/safe-attachment-url";
+
+export { safeAttachmentUrl };
 
 /** Reads at most `limit` bytes; the stream is cancelled at the budget, never trusting Content-Length. */
 async function readBounded(
