@@ -108,7 +108,7 @@ export function UploadStep(props: UploadStepProps) {
             {error}
           </p>
         ) : null}
-        <Link href={sampleCsvUrl} variant="text" download>
+        <Link href={sampleCsvUrl} variant="text" download prefetch={false}>
           Download sample CSV file
         </Link>
       </section>
