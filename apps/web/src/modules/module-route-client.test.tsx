@@ -12,6 +12,9 @@ vi.mock("./registry", async (importOriginal) => {
     resolveModuleScreen: (tab: string) => resolveModuleScreen(tab),
   };
 });
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
 vi.mock("./module-list-client", () => ({
   ModuleListClient: () => <p>list</p>,
 }));
