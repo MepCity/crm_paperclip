@@ -19,7 +19,7 @@ permissions:
 jobs:
   fast:
     name: fast
-    runs-on: macos-latest   # dev platform; native IPC tests are macOS-specific
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -34,8 +34,9 @@ jobs:
         run: pnpm exec biome check .
       - name: Typecheck
         run: node scripts/typecheck.mjs
-      - name: Unit, component and integration tests
-        run: pnpm exec vitest run
+      # Integration tests (embedded Postgres) and the native SysV IPC test are timing/OS sensitive;
+      # they stay in the merge bot's full `pnpm verify` on the Mac.
+      - name: Unit and component tests
+        run: pnpm exec vitest run --project unit --project component --exclude packages/db/src/sysv-ipc.test.ts
         env:
           CI: "1"
-          MEP_FULL_SUITE: "1"
