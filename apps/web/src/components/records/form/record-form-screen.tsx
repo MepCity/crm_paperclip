@@ -189,12 +189,16 @@ function LoadedRecordForm({
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
     [config.rules, mode, metadata, sourceRecord],
   );
-  const baseSections = applySectionColumnOverrides(
-    buildFormModel(metadata, mode, rules.readOnlyFields),
-    config.sectionColumnOverrides ?? rules.fallbackColumns,
-    metadata,
-    mode,
-    rules.readOnlyFields,
+  const baseSections = useMemo(
+    () =>
+      applySectionColumnOverrides(
+        buildFormModel(metadata, mode, rules.readOnlyFields),
+        config.sectionColumnOverrides ?? rules.fallbackColumns,
+        metadata,
+        mode,
+        rules.readOnlyFields,
+      ),
+    [metadata, mode, config.sectionColumnOverrides, rules.fallbackColumns, rules.readOnlyFields],
   );
   const sections = useMemo(() => {
     if (!rules.requiredFields?.length) return baseSections;

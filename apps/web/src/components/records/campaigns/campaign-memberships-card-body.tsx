@@ -3,6 +3,7 @@
 import {
   type Criteria,
   campaignMemberStatuses,
+  type FieldDefinition,
   type FieldValue,
   type ModuleRecordReference,
   type RecordData,
@@ -10,14 +11,20 @@ import {
 } from "@crm/core/records";
 import { useId, useMemo, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
+import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Link } from "@/components/ui/link";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { useDeleteRecords, useRecordList, useUpdateRecord, useViews } from "@/lib/api/client/hooks";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 
 const LIST_PAGE_SIZE = 100;
+const DATE_FIELDS = {
+  Start_Date: { apiName: "Start_Date", label: "Start Date", dataType: "date" },
+  End_Date: { apiName: "End_Date", label: "End Date", dataType: "date" },
+} as unknown as Record<"Start_Date" | "End_Date", FieldDefinition>;
 const COLUMNS = [
   "Campaign Name",
   "Status",
@@ -230,10 +237,18 @@ export function CampaignMembershipsCardBody({
                   {text(campaign?.fields.Type)}
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
-                  {text(campaign?.fields.Start_Date)}
+                  <FieldValueView
+                    field={DATE_FIELDS.Start_Date}
+                    value={campaign?.fields.Start_Date ?? null}
+                    format={DEFAULT_FORMAT}
+                  />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
-                  {text(campaign?.fields.End_Date)}
+                  <FieldValueView
+                    field={DATE_FIELDS.End_Date}
+                    value={campaign?.fields.End_Date ?? null}
+                    format={DEFAULT_FORMAT}
+                  />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
                   {text(row.fields.Member_Status)}
