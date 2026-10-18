@@ -1,4 +1,5 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import { withPrintPreviewAction } from "@/components/records/print/print-preview-menu";
 import type { ModuleKey } from "@/components/ui/later-module";
 
 export const CONTACTS_DELETE_CONFIRM_TITLE = "Delete Contact";
@@ -8,6 +9,7 @@ type Handlers = {
   onClone: () => void;
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
+  onPrintPreview?: () => void;
 };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 /** Three observed groups; separators follow Delete and Mail Merge. */
@@ -49,7 +51,7 @@ export const CONTACTS_RECORD_MORE_OPTIONS_GROUPS: readonly { id: string; items: 
     },
   ];
 export function buildContactsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGroup[] {
-  return CONTACTS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
+  const groups = CONTACTS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
     id: group.id,
     items: group.items
       .filter(
@@ -61,4 +63,5 @@ export function buildContactsRecordMoreMenuGroups(handlers: Handlers): RecordMen
         ...(handler ? { onAction: handlers[handler] } : {}),
       })),
   }));
+  return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }

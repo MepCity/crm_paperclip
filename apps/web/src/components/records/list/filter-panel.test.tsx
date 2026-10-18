@@ -257,3 +257,101 @@ test("seeds ActivityFilterEditor from initialActivityFilter", async () => {
   await user.click(screen.getByRole("button", { name: "Apply Filter" }));
   expect(onApply).toHaveBeenCalledWith([], { choice: "overdue" });
 });
+
+test("renders CampaignFilterEditor, validates selection limit and emits campaign filter on apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+
+  function ControlledPanel() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: [{ id: "Campaigns", label: "Campaigns", systemEditor: "campaigns" }],
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        campaignOptions={[
+          { id: "c-1", label: "Campaign Alpha" },
+          { id: "c-2", label: "Campaign Beta" },
+        ]}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+
+  render(<ControlledPanel />);
+
+  const campaignsCheckbox = screen.getByRole("checkbox", { name: "Campaigns" });
+  await user.click(campaignsCheckbox);
+
+  // Apply button should be disabled when 0 campaigns are selected
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+
+  // Select Campaign Alpha
+  const campaignTrigger = screen.getByRole("button", { name: "Campaign Name" });
+  await user.click(campaignTrigger);
+  const optionAlpha = screen.getByRole("option", { name: "Campaign Alpha" });
+  await user.click(optionAlpha);
+  await user.keyboard("{Escape}");
+
+  // Now Apply should be enabled
+  expect(applyButton.disabled).toBe(false);
+
+  // Select Member Status Planned
+  const statusTrigger = screen.getByRole("button", { name: "Member Status" });
+  await user.click(statusTrigger);
+  const optionPlanned = screen.getByRole("option", { name: "Planned" });
+  await user.click(optionPlanned);
+  await user.keyboard("{Escape}");
+
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], undefined, {
+    campaignIds: ["c-1"],
+    memberStatuses: ["Planned"],
+  });
+
+  // Clear button resets selection and calls onClear
+  const clearButton = screen.getByRole("button", { name: "Clear" });
+  await user.click(clearButton);
+  expect(onClear).toHaveBeenCalled();
+  expect(screen.queryByRole("button", { name: "Campaign Name" })).toBeNull();
+});
+
+test("seeds CampaignFilterEditor from initialCampaignFilter", async () => {
+  const onApply = vi.fn();
+  render(
+    <FilterPanel
+      {...props}
+      groups={[
+        {
+          id: "system",
+          label: "System Defined Filters",
+          items: [{ id: "Campaigns", label: "Campaigns", systemEditor: "campaigns" }],
+        },
+      ]}
+      selectedIds={["Campaigns"]}
+      campaignOptions={[{ id: "c-1", label: "Campaign Alpha" }]}
+      initialCampaignFilter={{ campaignIds: ["c-1"], memberStatuses: ["Sent"] }}
+      onApply={onApply}
+    />,
+  );
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(false);
+
+  const user = userEvent.setup();
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], undefined, {
+    campaignIds: ["c-1"],
+    memberStatuses: ["Sent"],
+  });
+});

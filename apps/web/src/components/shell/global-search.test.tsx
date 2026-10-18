@@ -288,12 +288,12 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Products",
+      module: "Vendors",
       total: 1,
       records: [
         {
           id: "case-1",
-          fields: { Subject: "Future Case", Email: "hidden@example.test" },
+          fields: { Subject: "Future Vendor", Email: "hidden@example.test" },
         },
       ],
     },

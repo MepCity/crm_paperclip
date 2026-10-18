@@ -104,3 +104,30 @@ test("Toast fades in only when the user allows motion", () => {
     "motion-safe:animate-toast-in",
   );
 });
+
+test("Toast renders link and button actions", async () => {
+  const user = userEvent.setup();
+  const onPress = vi.fn();
+  render(
+    <ToastProvider>
+      <Button
+        onPress={() =>
+          toast({
+            variant: "success",
+            title: "Export completed",
+            actions: [
+              { label: "Download", onPress },
+              { label: "View history", href: "/history" },
+            ],
+          })
+        }
+      >
+        Go
+      </Button>
+    </ToastProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: "Go" }));
+  await user.click(screen.getByRole("button", { name: "Download" }));
+  expect(onPress).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("link", { name: "View history" }).getAttribute("href")).toBe("/history");
+});

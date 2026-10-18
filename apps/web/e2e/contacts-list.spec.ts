@@ -61,9 +61,12 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
   const list = page.locator(".module-list-page");
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Contacts", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Contacts\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "Actions", exact: true }).click();
@@ -93,7 +96,7 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     "Print Default view",
     "Print Using Canvas",
   ]);
-  for (const name of ["Print Default view", "Print Using Canvas"]) {
+  for (const name of ["Print Using Canvas"]) {
     const item = printMenu.getByRole("menuitem", { name, exact: true });
     await expect(item).toHaveAttribute("data-later-module", "M6");
     // Placeholder rows stay inert and leave the submenu open.
@@ -177,4 +180,33 @@ test("navigates from Account Name cell in Contacts list to Account record detail
   await list.getByRole("button", { name: "Apply Filter" }).click();
   await expect(list.locator("tbody tr").first()).toBeVisible();
   await expect(list.locator("tbody tr").first()).toContainText(accountName);
+});
+
+test("applies Campaigns system filter to Contacts list and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Contacts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  const initialRowCount = await list.locator("tbody tr").count();
+
+  const campaignsCheckbox = list.getByRole("checkbox", { name: "Campaigns", exact: true });
+  await campaignsCheckbox.scrollIntoViewIfNeeded();
+  await campaignsCheckbox.check({ force: true });
+
+  const campaignTrigger = list.getByRole("button", { name: "Campaign Name" });
+  await expect(campaignTrigger).toBeVisible();
+  await campaignTrigger.click();
+
+  const campaignOption = page.getByRole("option", { name: "Campaign 001" });
+  await expect(campaignOption).toBeVisible();
+  await campaignOption.click();
+  await page.keyboard.press("Escape");
+
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(list.locator("tbody tr")).toHaveCount(1);
+  await expect(list.locator("[data-part=total-value]")).toHaveText("1");
+
+  await list.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(list.locator("tbody tr")).toHaveCount(initialRowCount);
 });

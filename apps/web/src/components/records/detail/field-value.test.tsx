@@ -185,16 +185,16 @@ test("lookup field links to registered Campaigns detail page", () => {
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
-  show(field("Product_Ref", "lookup", { lookup: { module: "Products" } }), {
-    module: "Products",
-    id: "prod-123",
-    name: "Acme Product",
+  show(field("Doc_Ref", "lookup", { lookup: { module: "Documents" } }), {
+    module: "Documents",
+    id: "doc-123",
+    name: "Acme Doc",
   });
-  const link = screen.getByRole("link", { name: "Acme Product" });
+  const link = screen.getByRole("link", { name: "Acme Doc" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("P2");
+  expect(link.getAttribute("data-later-module")).toBe("M9");
 });
 
 test("empty lookup field renders an em dash", () => {
