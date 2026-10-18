@@ -1,4 +1,5 @@
 import { signUpNewUser } from "./support/auth";
+import { createCaseFromCardAndOpenIt, expectEmptyCasesCard } from "./support/cases-card";
 import {
   moduleCreatePath,
   moduleListDefaultPath,
@@ -488,6 +489,29 @@ test.describe("Accounts record detail", () => {
     await expect(page).toHaveURL(moduleCreatePath(org.slug, "Cases"));
     await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
       "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    await expectEmptyCasesCard(page);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card: New, Save, row on the card, Subject opens the Case", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    await expectEmptyCasesCard(page);
+    await createCaseFromCardAndOpenIt(
+      page,
+      org.slug,
+      moduleRecordPath(org.slug, "Accounts", EMPTY_RELATED_ACCOUNT_ID),
+      "E2E linked case",
     );
     ignoreFailedResponses(pageErrors, [400]);
   });

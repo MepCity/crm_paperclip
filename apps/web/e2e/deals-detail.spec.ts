@@ -1,4 +1,5 @@
 import { signUpNewUser } from "./support/auth";
+import { createCaseFromCardAndOpenIt, expectEmptyCasesCard } from "./support/cases-card";
 import {
   moduleCreatePath,
   moduleListDefaultPath,
@@ -328,7 +329,35 @@ test.describe("Deals record detail", () => {
     await expect(cases.locator("[data-later-module]")).toHaveCount(0);
     await cases.getByRole("button", { name: "New" }).click();
     await expect(page).toHaveURL(moduleCreatePath(org.slug, "Cases"));
-    await expect(page.getByRole("textbox", { name: "Deal Name", exact: true })).not.toHaveValue("");
+    await expect(page.getByRole("textbox", { name: "Deal Name", exact: true })).toHaveValue(
+      "Deal 001",
+    );
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, "700000000000000249");
+    await expectEmptyCasesCard(page);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card: New, Save, row on the card, Subject opens the Case", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, "700000000000000249");
+    await expectEmptyCasesCard(page);
+    await createCaseFromCardAndOpenIt(
+      page,
+      org.slug,
+      moduleRecordPath(org.slug, "Deals", "700000000000000249"),
+      "E2E linked case",
+    );
     ignoreFailedResponses(pageErrors, [400]);
   });
 });
