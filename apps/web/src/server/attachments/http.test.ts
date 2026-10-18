@@ -2,15 +2,20 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createUploadBatchRegistry, LocalDiskBlobStore } from "@crm/core/attachments";
+import {
+  BlobNotFoundError,
+  createUploadBatchRegistry,
+  LocalDiskBlobStore,
+} from "@crm/core/attachments";
 import { ATTACHMENT_PARENT_MODULES } from "@crm/core/attachments/modules";
 import { NotFoundError } from "@crm/core/errors";
 import type { OrgContext, RecordData } from "@crm/core/records";
 import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
+  createFixtureRecycleBinService,
 } from "@crm/core/records/fixture";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type AttachmentDeps, type AttachmentParams, handleAttachmentRequest } from "./http";
 
 let dir: string;
@@ -85,6 +90,21 @@ function expectWindowArgs(
       value: { module: "Leads", id: parentId },
     });
   }
+}
+// Exercise the lifecycle cleanup consumer without adding a transport or scheduler.
+async function cleanup(deps: AttachmentDeps) {
+  for (const intent of deps.lifecycle.cleanupIntents()) {
+    try {
+      await deps.blobs.delete({ orgId: deps.ctx.orgId, attachmentId: intent.attachmentId });
+      deps.lifecycle.acknowledgeCleanup(intent.attachmentId);
+    } catch {
+      // Failed cleanup remains queued for a later retry.
+    }
+  }
+}
+async function purge(deps: AttachmentDeps) {
+  const bin = createFixtureRecycleBinService(deps.ctx);
+  await bin.purge((await bin.list()).entries.map((entry) => entry.id));
 }
 
 describe("Attachments HTTP handlers", () => {
@@ -360,7 +380,7 @@ describe("Attachments HTTP handlers", () => {
     expect(slashHeader).toContain("filename*=UTF-8''evil.pdf");
   });
 
-  it("retains the cleanup intent when blob deletion fails during removal", async () => {
+  it("retains the cleanup intent when blob deletion fails after purge", async () => {
     const deps = setup();
     const id = await lead(deps);
     const created = await post(deps, id, form({ file: pdf() }));
@@ -376,9 +396,48 @@ describe("Attachments HTTP handlers", () => {
       { method: "DELETE" },
     );
     expect(removed.status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    await purge(deps);
+    await cleanup(deps);
     const intents = deps.lifecycle.cleanupIntents();
     expect(intents.length).toBe(1);
     expect(intents[0]?.attachmentId).toBe(attachmentId);
+  });
+
+  it("restores HTTP-deleted attachments with the same downloadable bytes", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
+    const bin = createFixtureRecycleBinService(deps.ctx);
+    await bin.restore((await bin.list()).entries.map((entry) => entry.id));
+    const downloaded = await call(deps, params);
+    expect(downloaded.status).toBe(200);
+    expect(new Uint8Array(await downloaded.arrayBuffer())).toEqual(PDF());
+  });
+
+  it("removes bytes and acknowledges cleanup only after HTTP delete and purge", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    const key = { orgId: deps.ctx.orgId, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect(new Uint8Array(await new Response(await deps.blobs.read(key)).arrayBuffer())).toEqual(
+      PDF(),
+    );
+    await purge(deps);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([{ attachmentId, storageKey: attachmentId }]);
+    await cleanup(deps);
+    await expect(deps.blobs.read(key)).rejects.toBeInstanceOf(BlobNotFoundError);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
   });
 
   it("validates pagination parameters and handles multi-page listing", async () => {
@@ -595,5 +654,129 @@ describe("Attachments HTTP handlers", () => {
     const listed = await (await call(deps, parent)).json();
     expect(listed.info.count).toBe(1);
     expect(listed.data[0].id).toBe(stagedId);
+  });
+
+  it("validates attachment link URL and stores normalised https URL", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // 2,049-character URL
+    const tooLong = `https://example.com/${"a".repeat(2049 - "https://example.com/".length)}`;
+    expect(tooLong.length).toBe(2049);
+
+    const badUrls = [
+      "javascript:alert(1)",
+      "data:text/html,evil",
+      "/relative/path",
+      "ftp://example.test/file",
+      tooLong,
+    ];
+
+    for (const bad of badUrls) {
+      const response = await post(deps, id, form({ attachmentUrl: bad }));
+      expect(response.status).toBe(400);
+      const payload = await response.json();
+      expect(payload.code).toBe("INVALID_DATA");
+      expect(payload.details?.fields?.attachmentUrl).toBeDefined();
+    }
+    // Nothing stored
+    expect((await call(deps, { module: "Leads", recordId: id })).status).toBe(204);
+
+    // Valid https URL with leading/trailing whitespace stored normalised
+    const valid = await post(
+      deps,
+      id,
+      form({ attachmentUrl: "  https://example.test/doc?foo=bar  " }),
+    );
+    expect(valid.status).toBe(201);
+    const validPayload = await valid.json();
+    expect(validPayload.data[0].details.File_Name).toBe("https://example.test/doc?foo=bar");
+    expect(validPayload.data[0].details.$type).toBe("link");
+
+    const listed = await (await call(deps, { module: "Leads", recordId: id })).json();
+    expect(listed.data.length).toBe(1);
+    expect(listed.data[0]).toMatchObject({
+      File_Name: "https://example.test/doc?foo=bar",
+      $type: "link",
+      $link_url: "https://example.test/doc?foo=bar",
+    });
+  });
+
+  it("rejects oversize body with honest Content-Length without calling formData", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    const stream = new ReadableStream<Uint8Array>();
+    const getReaderSpy = vi.spyOn(stream, "getReader");
+
+    const request = new Request("http://localhost/crm/v2.2/x", {
+      method: "POST",
+      headers: {
+        "content-type": "multipart/form-data; boundary=----boundary",
+        "content-length": String(100_000_000 + 64 * 1024 + 1),
+      },
+      body: stream,
+      // @ts-expect-error duplex is required in node runtime when body is stream
+      duplex: "half",
+    });
+    const formDataSpy = vi.spyOn(request, "formData");
+
+    const response = await handleAttachmentRequest(
+      deps,
+      { module: "Leads", recordId: id },
+      request,
+    );
+    expect(response.status).toBe(413);
+    expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(getReaderSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversize body with no/false Content-Length via the stream counter", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // Note kind has 20 MB budget (20_000_000 + 64 * 1024 = 20_065_536 bytes)
+    const note = await deps.records.create("Notes", {
+      Parent_Id: { module: "Leads", id },
+      Note_Content: "Body",
+    });
+
+    for (const falseContentLength of [null, "100"]) {
+      let cancelled = false;
+      const stream = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          // Stream chunks of 1 MiB each; will abort around 21 chunks
+          controller.enqueue(new Uint8Array(1024 * 1024));
+        },
+        cancel() {
+          cancelled = true;
+        },
+      });
+
+      const headers: Record<string, string> = {
+        "content-type": "multipart/form-data; boundary=----boundary",
+      };
+      if (falseContentLength !== null) {
+        headers["content-length"] = falseContentLength;
+      }
+
+      const request = new Request("http://localhost/crm/v2.2/x", {
+        method: "POST",
+        headers,
+        body: stream,
+        // @ts-expect-error duplex is required in node runtime when body is stream
+        duplex: "half",
+      });
+
+      const response = await handleAttachmentRequest(
+        deps,
+        { module: "Notes", recordId: note.id },
+        request,
+      );
+      expect(response.status).toBe(413);
+      expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+      expect(cancelled).toBe(true);
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   ConflictError,
   ForbiddenError,
@@ -29,7 +30,9 @@ import type {
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
+import type { RecycleBinService } from "../recycle-bin";
 import { roundMoneyTwoDecimals } from "../rounding";
+import type { TagService } from "../tags";
 import {
   attachmentUltimateParent,
   fixtureAttachmentLifecycle,
@@ -50,8 +53,10 @@ import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
@@ -61,6 +66,7 @@ interface FixtureStore {
   deduplicating: Set<string>;
   history: Map<string, RecordHistoryEvent>;
   sequence: number;
+  deletions: Map<string, DeletionManifest>;
   cursors: Parameters<typeof fixtureHistoryReader>[6];
 }
 
@@ -138,7 +144,11 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService & { readonly history: RecordHistoryService } {
+): RecordService & {
+  readonly history: RecordHistoryService;
+  readonly tags: TagService;
+  readonly recycleBin: RecycleBinService;
+} {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -173,6 +183,7 @@ export function createFixtureRecordService(
       deduplicating: new Set(),
       history: new Map(),
       sequence: 0,
+      deletions: new Map(),
       cursors: new Map(),
     };
     const seededModules = store.modules;
@@ -197,6 +208,7 @@ export function createFixtureRecordService(
   state.history ??= new Map();
   state.sequence ??= 0;
   state.cursors ??= new Map();
+  state.deletions ??= new Map();
   state.memberIds.add(ctx.userId);
 
   const referenceModules = (): Map<string, FixtureReferenceModule> => {
@@ -263,7 +275,9 @@ export function createFixtureRecordService(
     const bundle = bundleFor(module);
     if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     return resolveRecordReferences(
-      bundle.readRecord?.(record, now) ?? record,
+      bundle.metadata.fields.some((field) => field.apiName === "Tag")
+        ? projectTags(moduleStore(module), bundle.readRecord?.(record, now) ?? record)
+        : (bundle.readRecord?.(record, now) ?? record),
       bundle.metadata.fields,
       referenceModules(),
     );
@@ -352,6 +366,8 @@ export function createFixtureRecordService(
   };
   const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
     const previous = state.modules;
+    const previousDeletions = state.deletions;
+    state.deletions = new Map(previousDeletions);
     const staged = new Map(previous);
     state.modules = staged;
     transactionOriginal = previous;
@@ -372,11 +388,71 @@ export function createFixtureRecordService(
       return result;
     } catch (error) {
       state.modules = previous;
+      state.deletions = previousDeletions;
       throw error;
     } finally {
       transactionOriginal = undefined;
     }
   };
+  const tags = fixtureTagService({
+    ctx,
+    now: clock,
+    moduleStore,
+    assertModule(module, write) {
+      const bundle = bundleFor(module);
+      if (!bundle.metadata.fields.some((field) => field.apiName === "Tag"))
+        throw new NotFoundError("Module not found.");
+      if (write) assertModuleWritable(module);
+    },
+    assertRecord(module, id, write) {
+      const record = recordFor(module, id);
+      if (write) assertWritable(record);
+    },
+    atomic: (module, write) => atomic({ module, mechanism: "tags" }, write),
+  });
+  const recycleDependencies = {
+    context: ctx,
+    now: clock,
+    modules: () => state.modules,
+    manifests: () => state.deletions,
+    moduleStore,
+    bundle: bundleFor,
+  };
+  const recycleBin = fixtureRecycleBinService({
+    ...recycleDependencies,
+    atomic,
+    async validateOwners(records) {
+      const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
+      for (const record of records) {
+        const owner = record.fields.Owner;
+        if (owner != null && (typeof owner !== "string" || !members.includes(owner)))
+          throw new ValidationError({ Owner: ["Choose a member of this organization."] });
+      }
+    },
+    validate(module, record) {
+      const bundle = bundleFor(module);
+      if (!bundle.readOnly) assertModuleWritable(module);
+      if (options?.canReadRecord?.(module, record.id) === false)
+        throw new ValidationError({ permission: ["You cannot restore this record."] });
+      if (record.fields.Locked__s === true)
+        throw new ValidationError({ Locked__s: ["The record is locked."] });
+      const writableFields = bundle.metadata.fields.filter(
+        (field) =>
+          !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
+      );
+      validateInput(
+        Object.fromEntries(
+          writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
+        ),
+        false,
+        writableFields,
+        new Set(),
+      );
+      validateReferences(module, record.fields);
+      if (module === "Notes" || module === "Attachments")
+        attachmentUltimateParent(record.fields, hookContext);
+    },
+  });
   const writeBatch = (
     module: string,
     ids: readonly string[],
@@ -533,6 +609,8 @@ export function createFixtureRecordService(
   };
 
   return {
+    tags,
+    recycleBin,
     history: fixtureHistoryReader(
       ctx,
       () => fixtureHistoryStore(state.history),
@@ -876,11 +954,18 @@ export function createFixtureRecordService(
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
-      atomic({ module, mechanism: "delete" }, () => {
-        const moduleState = moduleStore(module);
-        if (module === "Attachments") removeAttachmentIds(ids, hookContext);
-        for (const id of ids) moduleState.records.delete(id);
-        bundleFor(module).afterDelete?.(ids, hookContext);
+      const operationId = randomUUID();
+      atomic({ module, mechanism: "delete", operationId }, () => {
+        for (const record of records) {
+          // A previous root in the same batch can already own a shared cascade.
+          if (!moduleStore(module).records.has(record.id)) continue;
+          retainDeletion(recycleDependencies, module, record, operationId, () => {
+            const moduleState = moduleStore(module);
+            if (module === "Attachments") removeAttachmentIds([record.id], hookContext);
+            moduleState.records.delete(record.id);
+            bundleFor(module).afterDelete?.([record.id], hookContext);
+          });
+        }
       });
     },
   };
@@ -907,4 +992,20 @@ export function createFixtureRecordHistoryService(
   options?: FixtureRecordServiceOptions,
 ): RecordHistoryService {
   return createFixtureRecordService(context, options).history;
+}
+
+/** Organization-bound tag facade sharing record transactions and lifecycle hooks. */
+export function createFixtureTagService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): TagService {
+  return createFixtureRecordService(context, options).tags;
+}
+
+/** Organization-bound recoverable deletion facade; transport is deliberately separate. */
+export function createFixtureRecycleBinService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): RecycleBinService {
+  return createFixtureRecordService(context, options).recycleBin;
 }

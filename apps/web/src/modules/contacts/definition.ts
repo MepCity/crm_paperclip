@@ -60,7 +60,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   detail: {
     Screen: ContactRecordScreen,
     header: contactsRecordHeaderIdentity,
-    addTags: { label: "Add Tags", laterModule: "M6" },
+    addTags: { label: "Add Tags" },
     headerCommands: [
       { id: "send-email", label: "Send Email", laterModule: "M10", variant: "primary" },
     ],
