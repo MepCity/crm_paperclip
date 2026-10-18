@@ -1,0 +1,449 @@
+{
+  "fields": [
+    {
+      "apiName": "Solution_Number",
+      "label": "Solution Number",
+      "dataType": "autonumber",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 25
+    },
+    {
+      "apiName": "Owner",
+      "label": "Solution Owner",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Solution_Title",
+      "label": "Solution Title",
+      "dataType": "text",
+      "required": true,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 100
+    },
+    {
+      "apiName": "Published",
+      "label": "Published",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Status",
+      "label": "Status",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Product_Name",
+      "label": "Product Name",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Products"
+      }
+    },
+    {
+      "apiName": "No_of_comments",
+      "label": "No. of comments",
+      "dataType": "integer",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Created_By",
+      "label": "Created By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_By",
+      "label": "Modified By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Created_Time",
+      "label": "Created Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_Time",
+      "label": "Modified Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Question",
+      "label": "Question",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Answer",
+      "label": "Answer",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Add_Comment",
+      "label": "Add Comment",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Comments",
+      "label": "Comments",
+      "dataType": "text",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 1000
+    },
+    {
+      "apiName": "Tag",
+      "label": "Tag",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "id",
+      "label": "Record Id",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 18
+    },
+    {
+      "apiName": "Locked__s",
+      "label": "Locked",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Last_Activity_Time",
+      "label": "Last Activity Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Connected_To__s",
+      "label": "Connected To",
+      "dataType": "multi_module_lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    }
+  ],
+  "layout": [
+    {
+      "label": "Solution Information",
+      "columnCount": 2,
+      "columns": [
+        [
+          "Solution_Number",
+          "Solution_Title",
+          "Product_Name",
+          "Created_By",
+          "Created_Time",
+          "Tag",
+          "Last_Activity_Time"
+        ],
+        [
+          "Owner",
+          "Status",
+          "No_of_comments",
+          "Modified_By",
+          "Modified_Time",
+          "id",
+          "Connected_To__s"
+        ]
+      ],
+      "fields": [
+        "Solution_Number",
+        "Owner",
+        "Solution_Title",
+        "Status",
+        "Product_Name",
+        "No_of_comments",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "Tag",
+        "id",
+        "Last_Activity_Time",
+        "Connected_To__s"
+      ]
+    },
+    {
+      "label": "Description Information",
+      "columnCount": 1,
+      "columns": [["Question", "Answer", "Add_Comment"]],
+      "fields": ["Question", "Answer", "Add_Comment"]
+    },
+    {
+      "label": "Comment Information",
+      "columnCount": 1,
+      "columns": [["Comments"]],
+      "fields": ["Comments"]
+    }
+  ],
+  "picklists": {
+    "Status": [
+      {
+        "displayValue": "Draft",
+        "storedValue": "Draft"
+      },
+      {
+        "displayValue": "Reviewed",
+        "storedValue": "Reviewed"
+      },
+      {
+        "displayValue": "Duplicate",
+        "storedValue": "Duplicate"
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "all-locked-solutions",
+      "name": "All Locked Solutions",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Solution_Title", "Status", "Owner"],
+      "criteria": {
+        "field": "Locked__s",
+        "comparator": "equal",
+        "value": true
+      },
+      "sort": null
+    },
+    {
+      "id": "all-solutions",
+      "name": "All Solutions",
+      "systemDefined": true,
+      "isDefault": true,
+      "columns": ["Solution_Number", "Solution_Title", "Status", "Owner"],
+      "criteria": null,
+      "sort": null
+    },
+    {
+      "id": "my-solutions",
+      "name": "My Solutions",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Solution_Number", "Solution_Title", "Status"],
+      "criteria": {
+        "field": "Owner",
+        "comparator": "equal",
+        "value": {
+          "token": "CURRENTUSER"
+        }
+      },
+      "sort": null
+    },
+    {
+      "id": "unread-solutions",
+      "name": "Unread Solutions",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Solution_Number", "Solution_Title", "Status", "Owner"],
+      "criteria": {
+        "field": "Common_Status",
+        "comparator": "not_contains",
+        "value": "v"
+      },
+      "sort": null
+    }
+  ]
+}
