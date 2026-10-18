@@ -29,7 +29,7 @@ describe("contactsRelatedLists definition", () => {
       { order: 13, id: "purchase-orders", title: "Purchase Orders", moduleKey: "P2" },
       { order: 14, id: "emails", title: "Emails", moduleKey: "M10" },
       { order: 15, id: "invoices", title: "Invoices", moduleKey: "P2" },
-      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M7" },
+      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M2" },
       { order: 17, id: "social", title: "Social", moduleKey: "M15" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
@@ -58,7 +58,8 @@ describe("contactsRelatedLists definition", () => {
     expect(reportingContacts?.moduleKey).toBe("M2");
 
     for (const card of contactsRelatedLists) {
-      if (card.id === "reporting-contacts" || card.id === "cases") {
+      // The Campaigns card is live and borrows the live key so its controls stay unlocked.
+      if (card.id === "reporting-contacts" || card.id === "campaigns" || card.id === "cases") {
         expect(card.moduleKey).toBe("M2");
       } else {
         expect(card.moduleKey).not.toBe("M2");
