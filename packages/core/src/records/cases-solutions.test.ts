@@ -128,9 +128,7 @@ for (const [module, title, size, build, table] of [
         bundle.metadata.fields
           .filter(
             (field) =>
-              !field.readOnly &&
-              field.apiName !== "Tag" &&
-              !bundle.managedFields.has(field.apiName),
+              field.views.create && !field.readOnly && !bundle.managedFields.has(field.apiName),
           )
           .map((field) => [field.apiName, first.fields[field.apiName] ?? null]),
       );
