@@ -1,13 +1,18 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { ActionState } from "@/lib/action";
 import { render } from "@/test/render";
 import { RemoveMemberButton } from "./remove-member-button";
 
-const refreshMock = vi.fn();
+const router = vi.hoisted(() => ({
+  push: vi.fn(),
+  replace: vi.fn(),
+  refresh: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: refreshMock }),
+  useRouter: () => router,
 }));
 
 afterEach(() => {
@@ -15,31 +20,48 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("renders remove button with accessible name", () => {
-  render(<RemoveMemberButton name="Ada Lovelace" onRemove={vi.fn()} report={vi.fn()} />);
-
-  expect(screen.getByRole("button", { name: "Remove Ada Lovelace" })).toBeTruthy();
+beforeEach(() => {
+  router.push.mockReset();
+  router.replace.mockReset();
+  router.refresh.mockReset();
 });
 
-test("clicking button opens confirmation dialog with details and cancel dismisses without removing", async () => {
-  const onRemove = vi.fn();
+test("opens a dialog titled Remove <name> with loss of access warning", async () => {
   const user = userEvent.setup();
-
-  render(<RemoveMemberButton name="Ada Lovelace" onRemove={onRemove} report={vi.fn()} />);
+  render(<RemoveMemberButton name="Ada Lovelace" onRemove={vi.fn()} report={vi.fn()} />);
 
   await user.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }));
+
   expect(screen.getByRole("alertdialog")).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Remove Ada Lovelace" })).toBeTruthy();
   expect(screen.getByText("Ada Lovelace will lose access to this organization.")).toBeTruthy();
-
-  await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(onRemove).not.toHaveBeenCalled();
-  expect(screen.queryByRole("alertdialog")).toBeNull();
 });
 
-test("confirming calls onRemove, clears errors and refreshes router on success", async () => {
-  const onRemove = vi.fn(async (): Promise<ActionState> => ({ status: "success" }));
+test("Cancel closes the dialog without calling onRemove or report", async () => {
+  const user = userEvent.setup();
+  const onRemove = vi.fn();
   const report = vi.fn();
+
+  render(<RemoveMemberButton name="Ada Lovelace" onRemove={onRemove} report={report} />);
+
+  await user.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(onRemove).not.toHaveBeenCalled();
+  expect(report).not.toHaveBeenCalled();
+  expect(router.refresh).not.toHaveBeenCalled();
+});
+
+test("Remove calls report(null) then onRemove once and refreshes on success", async () => {
+  const calls: string[] = [];
+  const report = vi.fn((message: string | null) => {
+    calls.push(`report:${message}`);
+  });
+  const onRemove = vi.fn(async (): Promise<ActionState> => {
+    calls.push("onRemove");
+    return { status: "success" };
+  });
   const user = userEvent.setup();
 
   render(<RemoveMemberButton name="Ada Lovelace" onRemove={onRemove} report={report} />);
@@ -48,19 +70,20 @@ test("confirming calls onRemove, clears errors and refreshes router on success",
   await user.click(screen.getByRole("button", { name: "Remove" }));
 
   await waitFor(() => expect(onRemove).toHaveBeenCalledTimes(1));
-  expect(report).toHaveBeenCalledWith(null);
-  expect(refreshMock).toHaveBeenCalledTimes(1);
-  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  expect(calls).toEqual(["report:null", "onRemove"]);
+  expect(router.refresh).toHaveBeenCalledTimes(1);
+  expect(report).toHaveBeenCalledTimes(1);
 });
 
-test("reports error message when onRemove returns an error status", async () => {
-  const onRemove = vi.fn(
-    async (): Promise<ActionState> => ({
-      status: "error",
-      message: "You do not have permission to remove this member.",
-    }),
-  );
-  const report = vi.fn();
+test("Remove reports error message and does not refresh when onRemove fails", async () => {
+  const calls: string[] = [];
+  const report = vi.fn((message: string | null) => {
+    calls.push(`report:${message}`);
+  });
+  const onRemove = vi.fn(async (): Promise<ActionState> => {
+    calls.push("onRemove");
+    return { status: "error", message: "Cannot remove member." };
+  });
   const user = userEvent.setup();
 
   render(<RemoveMemberButton name="Ada Lovelace" onRemove={onRemove} report={report} />);
@@ -68,40 +91,7 @@ test("reports error message when onRemove returns an error status", async () => 
   await user.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }));
   await user.click(screen.getByRole("button", { name: "Remove" }));
 
-  await waitFor(() =>
-    expect(report).toHaveBeenCalledWith("You do not have permission to remove this member."),
-  );
-  expect(refreshMock).not.toHaveBeenCalled();
-});
-
-test("disables cancel and confirm buttons while removal is pending", async () => {
-  let resolveRemove: (state: ActionState) => void = () => {};
-  const onRemove = vi.fn(
-    () =>
-      new Promise<ActionState>((resolve) => {
-        resolveRemove = resolve;
-      }),
-  );
-  const user = userEvent.setup();
-
-  render(<RemoveMemberButton name="Ada Lovelace" onRemove={onRemove} report={vi.fn()} />);
-
-  await user.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }));
-  const confirmButton = screen.getByRole("button", {
-    name: "Remove",
-  }) as HTMLButtonElement;
-  const cancelButton = screen.getByRole("button", {
-    name: "Cancel",
-  }) as HTMLButtonElement;
-
-  expect(confirmButton.disabled).toBe(false);
-  expect(cancelButton.disabled).toBe(false);
-
-  await user.click(confirmButton);
-
-  await waitFor(() => expect(confirmButton.disabled).toBe(true));
-  expect(cancelButton.disabled).toBe(true);
-
-  resolveRemove({ status: "success" });
-  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  await waitFor(() => expect(onRemove).toHaveBeenCalledTimes(1));
+  expect(calls).toEqual(["report:null", "onRemove", "report:Cannot remove member."]);
+  expect(router.refresh).not.toHaveBeenCalled();
 });

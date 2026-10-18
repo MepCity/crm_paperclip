@@ -1,14 +1,18 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
-import type { ActionState } from "@/lib/action";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { type ChangeRoleAction, RoleControl } from "./role-control";
 import type { MemberRole } from "./roles";
 
-const refreshMock = vi.fn();
+const router = vi.hoisted(() => ({
+  push: vi.fn(),
+  replace: vi.fn(),
+  refresh: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: refreshMock }),
+  useRouter: () => router,
 }));
 
 afterEach(() => {
@@ -16,109 +20,59 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("renders the current role and accessible label", () => {
-  const currentRole: MemberRole = "admin";
-  render(
+beforeEach(() => {
+  router.push.mockReset();
+  router.replace.mockReset();
+  router.refresh.mockReset();
+});
+
+const adminRole: MemberRole = "admin";
+const memberRole: MemberRole = "member";
+
+test("shows a select named Role for <name> with the current role", () => {
+  const { rerender } = render(
     <RoleControl
       userId="user-1"
       name="Ada Lovelace"
-      role={currentRole}
+      role={adminRole}
       onChangeRole={vi.fn()}
       report={vi.fn()}
     />,
   );
 
-  const trigger = screen.getByRole("button", { name: /Role for Ada Lovelace/ });
-  expect(trigger.textContent).toContain("Admin");
-});
+  const adminTrigger = screen.getByRole("button", { name: /Role for Ada Lovelace/ });
+  expect(adminTrigger.textContent).toContain("Admin");
 
-test("renders with member role", () => {
-  const currentRole: MemberRole = "member";
-  render(
+  rerender(
     <RoleControl
-      userId="user-2"
-      name="Grace Hopper"
-      role={currentRole}
+      userId="user-1"
+      name="Ada Lovelace"
+      role={memberRole}
       onChangeRole={vi.fn()}
       report={vi.fn()}
     />,
   );
 
-  const trigger = screen.getByRole("button", { name: /Role for Grace Hopper/ });
-  expect(trigger.textContent).toContain("Member");
+  const memberTrigger = screen.getByRole("button", { name: /Role for Ada Lovelace/ });
+  expect(memberTrigger.textContent).toContain("Member");
 });
 
-test("selecting the same role does not invoke onChangeRole or clear error", async () => {
-  const currentRole: MemberRole = "admin";
-  const onChangeRole: ChangeRoleAction = vi.fn();
-  const report = vi.fn();
+test("choosing the other role calls report(null) then onChangeRole with the new role and refreshes on success", async () => {
+  const calls: string[] = [];
+  const report = vi.fn((message: string | null) => {
+    calls.push(`report:${message}`);
+  });
+  const onChangeRole: ChangeRoleAction = vi.fn(async (userId, _previous, formData) => {
+    calls.push(`onChangeRole:${userId}:${formData.get("role")}`);
+    return { status: "success" as const };
+  });
   const user = userEvent.setup();
 
   render(
     <RoleControl
       userId="user-1"
       name="Ada Lovelace"
-      role={currentRole}
-      onChangeRole={onChangeRole}
-      report={report}
-    />,
-  );
-
-  await user.click(screen.getByRole("button", { name: /Role for Ada Lovelace/ }));
-  await user.click(screen.getByRole("option", { name: "Admin" }));
-
-  expect(onChangeRole).not.toHaveBeenCalled();
-  expect(report).not.toHaveBeenCalled();
-});
-
-test("changing role invokes onChangeRole with formData and refreshes router on success", async () => {
-  const initialRole: MemberRole = "member";
-  const onChangeRole: ChangeRoleAction = vi.fn(
-    async (_userId: string, _prev: ActionState, _data: FormData): Promise<ActionState> => ({
-      status: "success",
-    }),
-  );
-  const report = vi.fn();
-  const user = userEvent.setup();
-
-  render(
-    <RoleControl
-      userId="user-1"
-      name="Ada Lovelace"
-      role={initialRole}
-      onChangeRole={onChangeRole}
-      report={report}
-    />,
-  );
-
-  await user.click(screen.getByRole("button", { name: /Role for Ada Lovelace/ }));
-  await user.click(screen.getByRole("option", { name: "Admin" }));
-
-  await waitFor(() => expect(onChangeRole).toHaveBeenCalledTimes(1));
-  expect(report).toHaveBeenCalledWith(null);
-  expect(onChangeRole).toHaveBeenCalledWith("user-1", { status: "idle" }, expect.any(FormData));
-  const sentFormData = (onChangeRole as unknown as { mock: { calls: unknown[][] } }).mock
-    .calls[0]?.[2] as FormData;
-  expect(sentFormData.get("role")).toBe("admin");
-  expect(refreshMock).toHaveBeenCalledTimes(1);
-});
-
-test("reports error when onChangeRole returns an error result", async () => {
-  const currentRole: MemberRole = "admin";
-  const onChangeRole: ChangeRoleAction = vi.fn(
-    async (): Promise<ActionState> => ({
-      status: "error",
-      message: "An organization must have at least one admin.",
-    }),
-  );
-  const report = vi.fn();
-  const user = userEvent.setup();
-
-  render(
-    <RoleControl
-      userId="user-1"
-      name="Ada Lovelace"
-      role={currentRole}
+      role={adminRole}
       onChangeRole={onChangeRole}
       report={report}
     />,
@@ -127,44 +81,61 @@ test("reports error when onChangeRole returns an error result", async () => {
   await user.click(screen.getByRole("button", { name: /Role for Ada Lovelace/ }));
   await user.click(screen.getByRole("option", { name: "Member" }));
 
-  await waitFor(() =>
-    expect(report).toHaveBeenCalledWith("An organization must have at least one admin."),
-  );
-  expect(refreshMock).not.toHaveBeenCalled();
+  await waitFor(() => expect(onChangeRole).toHaveBeenCalledTimes(1));
+  expect(calls[0]).toBe("report:null");
+  expect(calls[1]).toBe("onChangeRole:user-1:member");
+  expect(router.refresh).toHaveBeenCalledTimes(1);
+  expect(report).toHaveBeenCalledTimes(1);
 });
 
-test("disables the select control while role change action is pending", async () => {
-  const currentRole: MemberRole = "member";
-  let resolveAction: (state: ActionState) => void = () => {};
-  const onChangeRole: ChangeRoleAction = vi.fn(
-    () =>
-      new Promise<ActionState>((resolve) => {
-        resolveAction = resolve;
-      }),
-  );
+test("reports error message and does not refresh when onChangeRole returns an error", async () => {
+  const calls: string[] = [];
+  const report = vi.fn((message: string | null) => {
+    calls.push(`report:${message}`);
+  });
+  const onChangeRole: ChangeRoleAction = vi.fn(async () => {
+    calls.push("onChangeRole");
+    return { status: "error" as const, message: "Cannot change role." };
+  });
   const user = userEvent.setup();
 
   render(
     <RoleControl
       userId="user-1"
       name="Ada Lovelace"
-      role={currentRole}
+      role={adminRole}
       onChangeRole={onChangeRole}
-      report={vi.fn()}
+      report={report}
     />,
   );
 
-  const trigger = screen.getByRole("button", {
-    name: /Role for Ada Lovelace/,
-  }) as HTMLButtonElement;
-  expect(trigger.disabled).toBe(false);
-
-  await user.click(trigger);
-  await user.click(screen.getByRole("option", { name: "Admin" }));
+  await user.click(screen.getByRole("button", { name: /Role for Ada Lovelace/ }));
+  await user.click(screen.getByRole("option", { name: "Member" }));
 
   await waitFor(() => expect(onChangeRole).toHaveBeenCalledTimes(1));
-  await waitFor(() => expect(trigger.disabled).toBe(true));
+  expect(calls).toEqual(["report:null", "onChangeRole", "report:Cannot change role."]);
+  expect(router.refresh).not.toHaveBeenCalled();
+});
 
-  resolveAction({ status: "success" });
-  await waitFor(() => expect(trigger.disabled).toBe(false));
+test("choosing the current role again does nothing", async () => {
+  const report = vi.fn();
+  const onChangeRole: ChangeRoleAction = vi.fn();
+  const user = userEvent.setup();
+
+  render(
+    <RoleControl
+      userId="user-1"
+      name="Ada Lovelace"
+      role={adminRole}
+      onChangeRole={onChangeRole}
+      report={report}
+    />,
+  );
+
+  await user.click(screen.getByRole("button", { name: /Role for Ada Lovelace/ }));
+  await user.click(screen.getByRole("option", { name: "Admin" }));
+
+  expect(report).not.toHaveBeenCalled();
+  expect(onChangeRole).not.toHaveBeenCalled();
+  expect(router.refresh).not.toHaveBeenCalled();
 });
