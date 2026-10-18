@@ -4,7 +4,6 @@ import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { ClientRecordService } from "@/lib/api/client/provider";
-import * as moduleRegistry from "@/modules/registry";
 import { render } from "@/test/render";
 import { GlobalSearch } from "./global-search";
 import { readSearchHistory, rememberSearchRecord, searchHistoryKey } from "./search-history";
@@ -290,11 +289,6 @@ test("keeps at most five visible results per group and ignores a late previous q
 });
 
 test("omits secondary line for modules without search field config", async () => {
-  // Model a module without a screen definition even after Cases ships.
-  const resolve = moduleRegistry.resolveModuleScreenByApiName;
-  vi.spyOn(moduleRegistry, "resolveModuleScreenByApiName").mockImplementation(
-    (apiName, definitions) => (apiName === "Cases" ? undefined : resolve(apiName, definitions)),
-  );
   search.mockResolvedValueOnce([
     {
       module: "Vendors",

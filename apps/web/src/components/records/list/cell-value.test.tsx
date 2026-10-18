@@ -1,15 +1,13 @@
 import { formatDate, formatDateTime } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { cleanup, screen } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
-import * as moduleRegistry from "@/modules/registry";
 import { render } from "@/test/render";
 import { CellValue } from "./cell-value";
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
 });
 
 function field(
@@ -239,11 +237,6 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
   expect(dealsLink.getAttribute("href")).toBe("/tab/Deals/deal-1");
   expect(dealsLink.getAttribute("data-later-module")).toBeNull();
 
-  // Exercise the unregistered state explicitly, independent of shipped modules.
-  const resolve = moduleRegistry.resolveModuleScreenByApiName;
-  vi.spyOn(moduleRegistry, "resolveModuleScreenByApiName").mockImplementation(
-    (apiName, definitions) => (apiName === "Cases" ? undefined : resolve(apiName, definitions)),
-  );
   rerender(
     <CellValue
       field={field("lookup", { lookup: { module: "Cases" } })}
