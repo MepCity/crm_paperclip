@@ -77,3 +77,27 @@ test("choosing Create organization pushes /orgs/new", async () => {
 
   expect(router.push).toHaveBeenCalledWith("/orgs/new");
 });
+
+test("handles a single organization correctly", async () => {
+  const user = userEvent.setup();
+  const singleOrg: readonly ShellOrganization[] = [{ name: "Solo Workspace", slug: "solo" }];
+
+  render(<OrganizationSwitcher organizations={singleOrg} currentSlug="solo" />);
+
+  const trigger = screen.getByRole("button", {
+    name: "Organization switcher: Solo Workspace",
+  });
+  expect(trigger).toBeTruthy();
+  expect(trigger.textContent).toContain("Solo Workspace");
+
+  await user.click(trigger);
+
+  const soloItem = screen.getByRole("menuitemradio", {
+    name: "Solo Workspace",
+  });
+  expect(soloItem.getAttribute("aria-checked")).toBe("true");
+
+  const orgRadios = screen.getAllByRole("menuitemradio");
+  expect(orgRadios).toHaveLength(2);
+  expect(screen.getByRole("menuitemradio", { name: "Create organization" })).toBeTruthy();
+});
