@@ -11,6 +11,7 @@
     "./testing": "./src/testing.ts",
     "./attachments": "./src/attachments/index.ts",
     "./records": "./src/records/index.ts",
+    "./records/campaigns": "./src/records/campaigns.ts",
     "./records/note-html": "./src/records/note-html.ts",
     "./records/activities": "./src/records/activities.ts",
     "./records/fixture": "./src/records/fixture/index.ts",
