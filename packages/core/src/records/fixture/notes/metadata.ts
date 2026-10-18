@@ -6,6 +6,7 @@ export const notesParentModules = [
   "Contacts",
   "Accounts",
   "Deals",
+  "Campaigns",
   "Cases",
   "Solutions",
 ] as const;
