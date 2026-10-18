@@ -11,46 +11,64 @@ const ctx = {
   role: "admin" as const,
 };
 
-const field = (overrides: Partial<FieldDefinition> = {}): FieldDefinition => ({
-  apiName: "Designation",
-  label: "Designation",
-  dataType: "text" as FieldDataType,
-  required: false,
-  readOnly: false,
-  massUpdate: false,
-  unique: false,
-  views: { view: true, create: true, edit: true, quickCreate: false },
-  ...overrides,
-});
+function leadField(apiName = "Company", overrides: Partial<FieldDefinition> = {}): FieldDefinition {
+  return {
+    apiName,
+    label: apiName,
+    dataType: "text" as FieldDataType,
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+    ...overrides,
+  };
+}
 
 describe("isLeadInlineEditable", () => {
-  it("is true for a plain editable text field", () => {
-    expect(isLeadInlineEditable(field())).toBe(true);
+  it("allows standard writable field types with edit permission", () => {
+    expect(isLeadInlineEditable(leadField("Company"))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Email", { dataType: "email" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Phone", { dataType: "phone" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Website", { dataType: "website" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Lead_Source", { dataType: "picklist" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("No_of_Employees", { dataType: "integer" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Annual_Revenue", { dataType: "currency" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Email_Opt_Out", { dataType: "boolean" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Follow_Up_Date", { dataType: "date" }))).toBe(true);
+    expect(isLeadInlineEditable(leadField("Rating_Score", { dataType: "double" }))).toBe(true);
   });
 
   it("is false when the edit view flag is off", () => {
     expect(
       isLeadInlineEditable(
-        field({ views: { view: true, create: true, edit: false, quickCreate: false } }),
+        leadField("Company", {
+          views: { view: true, create: true, edit: false, quickCreate: false },
+        }),
       ),
     ).toBe(false);
   });
 
   it("is false for read-only fields", () => {
-    expect(isLeadInlineEditable(field({ readOnly: true }))).toBe(false);
+    expect(isLeadInlineEditable(leadField("Company", { readOnly: true }))).toBe(false);
+    expect(isLeadInlineEditable(leadField("Email", { dataType: "email", readOnly: true }))).toBe(
+      false,
+    );
   });
 
   it.each(["Address", "Full_Name", "Created_By", "Modified_By", "Created_Time", "Modified_Time"])(
     "is false for excluded api name %s",
     (apiName) => {
-      expect(isLeadInlineEditable(field({ apiName }))).toBe(false);
+      expect(isLeadInlineEditable(leadField(apiName))).toBe(false);
     },
   );
 
   it.each(["profileimage", "lookup", "multi_module_lookup", "datetime", "bigint"])(
     "is false for excluded data type %s",
     (dataType) => {
-      expect(isLeadInlineEditable(field({ dataType: dataType as FieldDataType }))).toBe(false);
+      expect(
+        isLeadInlineEditable(leadField("Custom_Field", { dataType: dataType as FieldDataType })),
+      ).toBe(false);
     },
   );
 
