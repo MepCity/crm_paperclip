@@ -23,7 +23,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NO_STORE = { "Cache-Control": "no-store" };
 const MULTIPART_OVERHEAD = 64 * 1024;
 
-import { safeAttachmentUrl } from "@/components/records/attachments/safe-attachment-url";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 
 export { safeAttachmentUrl };
 

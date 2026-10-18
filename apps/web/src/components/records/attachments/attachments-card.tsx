@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 import { type AttachSource, AttachSourceMenu } from "./attach-source-menu";
-import { safeAttachmentUrl } from "./safe-attachment-url";
 
 export type { AttachSource };
 
