@@ -1,5 +1,6 @@
 "use client";
 import { useCallback } from "react";
+import { useCampaignsCard } from "@/components/records/campaigns/campaigns-card";
 import {
   RecordDetailScreen,
   type RecordDetailScreenProps,
@@ -16,8 +17,23 @@ export function LeadRecordScreen({
   definition?: RecordDetailScreenProps["definition"];
 }) {
   const badges = useParentActivityBadges("Leads", props.recordId);
-  const buildRelatedLists = useCallback(() => createLeadsRelatedLists(badges), [badges]);
+  const campaigns = useCampaignsCard("Leads", props.recordId);
+  const buildRelatedLists = useCallback(
+    () =>
+      createLeadsRelatedLists(
+        { ...badges, campaigns: campaigns.badge },
+        { onAddCampaigns: campaigns.onAdd },
+      ),
+    [badges, campaigns.badge, campaigns.onAdd],
+  );
   return (
-    <RecordDetailScreen {...props} definition={definition} buildRelatedLists={buildRelatedLists} />
+    <>
+      <RecordDetailScreen
+        {...props}
+        definition={definition}
+        buildRelatedLists={buildRelatedLists}
+      />
+      {campaigns.dialog}
+    </>
   );
 }

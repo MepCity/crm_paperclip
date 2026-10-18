@@ -90,7 +90,7 @@ test("keeps the Leads Actions menu inventory in reference order and assigns late
   expect(actions.find((item) => item.id === "assignment-rules")?.laterModule).toBe("M12");
   expect(actions.find((item) => item.id === "mass-email")?.laterModule).toBe("M10");
   expect(actions.find((item) => item.id === "approve")?.laterModule).toBe("P3");
-  expect(actions.find((item) => item.id === "campaigns")?.laterModule).toBe("M7");
+  expect(actions.find((item) => item.id === "campaigns")?.laterModule).toBeUndefined();
   expect(actions.find((item) => item.id === "client-script")?.laterModule).toBe("M11");
   expect(actions.find((item) => item.id === "export")?.laterModule).toBeUndefined();
 });
@@ -121,6 +121,7 @@ test("verifies Leads-specific actions entries", () => {
     "mass-convert",
     "drafts",
     "deduplicate",
+    "campaigns",
     "export",
   ]);
 });
