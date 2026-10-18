@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImportSummary } from "./import-summary";
-import { ImportMappingStep } from "./mapping-step-placeholder";
+import { ImportMappingStep } from "./mapping-step";
 import { RecordHandlingStep } from "./record-handling-step";
 import {
   type Charset,
@@ -51,7 +51,9 @@ export function ImportWizard({
         const result = await client.preview(file, charset);
         setPreview(result);
         setMapping(result.suggestedMapping);
-        setMatchField(result.matchFields[0]?.field ?? "");
+        setMatchField(
+          (result.matchFields.find((m) => m.field !== "id") ?? result.matchFields[0])?.field ?? "",
+        );
         setStep(1);
       } catch (error) {
         setFileError(errorMessage(error));
@@ -140,12 +142,14 @@ export function ImportWizard({
         ) : null}
         {step === 2 && preview ? (
           <ImportMappingStep
-            preview={preview}
-            mode={mode}
+            headers={preview.headers}
+            sampleRows={preview.sampleRows}
+            fields={preview.fields}
             mapping={mapping}
-            defaults={defaults}
             onMappingChange={setMapping}
+            defaults={defaults}
             onDefaultsChange={setDefaults}
+            requireAllRequired={mode !== "update"}
             onValidityChange={onValidity}
           />
         ) : null}

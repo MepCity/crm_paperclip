@@ -76,9 +76,7 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
   filterGroups: contactsFilterGroups,
   sortFieldLabels: CONTACTS_SORT_FIELD_LABELS,
   inventory: {
-    createItems: [
-      { id: "import", label: "Import Contacts", laterModule: "M6", onAction: () => {} },
-    ],
+    createItems: [{ id: "import", label: "Import Contacts", onAction: () => {} }],
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },
       { id: "mass-delete", label: "Mass Delete" },
@@ -90,7 +88,7 @@ export const contactsListPageConfig: ModuleListScreenConfig = {
       { id: "deduplicate", label: "Deduplicate Contacts" },
       { id: "campaigns", label: "Add to Campaigns" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Contacts", laterModule: "M6" },
+      { id: "export", label: "Export Contacts" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       {
         id: "print",

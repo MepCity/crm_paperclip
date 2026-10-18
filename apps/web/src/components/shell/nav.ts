@@ -33,6 +33,8 @@ export interface NavLink {
   activePrefix?: (orgSlug: string) => string;
   /** Pinned-link icon accent; label colour rules are unchanged. */
   iconAccentToken?: NavLinkIconAccentToken;
+  /** Settings navigation heading shown above the first link of each group. */
+  group?: string;
 }
 
 export interface NavGroup {
@@ -105,6 +107,22 @@ export const settingsNav: readonly NavLink[] = [
     icon: Icons.users,
     href: (slug) => `/crm/${slug}/settings/members`,
     match: "exact",
+  },
+  {
+    id: "import-history",
+    label: "Import History",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/import-history`,
+    match: "exact",
+    group: "Data Administration",
+  },
+  {
+    id: "export-history",
+    label: "Export History",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/export-history`,
+    match: "exact",
+    group: "Data Administration",
   },
 ];
 

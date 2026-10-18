@@ -16,6 +16,7 @@ import type {
 } from "@crm/core/records";
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
+import { validateCampaignFilter } from "@crm/core/records/campaigns";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -692,4 +693,25 @@ export function decodeActivitySummaries(
       },
     ]),
   );
+}
+
+export function decodeCampaignFilter(
+  value: unknown,
+): import("@crm/core/records").CampaignFilterValue {
+  const wire = object(value, "campaignFilter");
+  if (Object.keys(wire).some((key) => !["campaign_ids", "member_statuses"].includes(key)))
+    invalid("campaignFilter");
+  const filter = {
+    campaignIds: wire.campaign_ids,
+    ...(wire.member_statuses === undefined ? {} : { memberStatuses: wire.member_statuses }),
+  };
+  validateCampaignFilter(filter);
+  return filter;
+}
+export function encodeCampaignFilter(value: import("@crm/core/records").CampaignFilterValue) {
+  validateCampaignFilter(value);
+  return {
+    campaign_ids: [...value.campaignIds],
+    ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
+  };
 }
