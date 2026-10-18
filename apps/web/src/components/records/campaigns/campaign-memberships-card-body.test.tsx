@@ -63,9 +63,12 @@ test("renders a membership row linking to the campaign", () => {
   expect(screen.getByRole("link", { name: "Spring Launch" }).getAttribute("href")).toBe(
     "/campaigns/k1",
   );
-  for (const value of ["Active", "Email", "2026-03-01", "2026-04-01", "Invited"]) {
+  for (const value of ["Active", "Email", "Invited"]) {
     expect(screen.getByText(value)).toBeTruthy();
   }
+  expect(screen.queryByText("2026-03-01")).toBeNull();
+  expect(screen.queryByText("2026-04-01")).toBeNull();
+  expect(screen.getByText(/2026/, { selector: "td:nth-child(4) *" })).toBeTruthy();
   expect(state.calls[0]?.query).toMatchObject({
     filters: { field: "Lead", comparator: "equal", value: "l1" },
   });
@@ -95,4 +98,10 @@ test("Edit saves the Member Status of the membership", async () => {
   await waitFor(() =>
     expect(state.update).toHaveBeenCalledWith({ id: "m1", input: { Member_Status: "Opened" } }),
   );
+});
+
+test("shows a dash for missing campaign dates", () => {
+  state.campaigns = [{ id: "k1", fields: { Campaign_Name: "Spring Launch" } }];
+  render(<CampaignMembershipsCardBody {...props} />);
+  expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2);
 });
