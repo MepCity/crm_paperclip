@@ -61,9 +61,12 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
   const list = page.locator(".module-list-page");
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Contacts", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Contacts\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "Actions", exact: true }).click();
@@ -93,7 +96,7 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     "Print Default view",
     "Print Using Canvas",
   ]);
-  for (const name of ["Print Default view", "Print Using Canvas"]) {
+  for (const name of ["Print Using Canvas"]) {
     const item = printMenu.getByRole("menuitem", { name, exact: true });
     await expect(item).toHaveAttribute("data-later-module", "M6");
     // Placeholder rows stay inert and leave the submenu open.

@@ -781,6 +781,31 @@ in place as a `laterModule="P3"` toggle (open question for the board); Save open
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
 
+## Module 6 — CSV import and export
+
+Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
+captured on the four module lists; the wizard, export dialog and history screens were not
+observable in the reference and follow public documentation (interim rules T4 – T7).
+
+| Area | Inventory | Tests |
+| --- | --- | --- |
+| List entry points | CSV-02, CSV-04, CSV-05 (Create chevron "Import <Module>", Actions "Export <Module>" on Leads, Contacts, Accounts, Deals; Tasks, Meetings and Calls keep `laterModule` M6) | `csv-import-export.spec.ts`, `list-config.test.ts` |
+| Import wizard | CSV-06 – CSV-19 (route `tab/<module>/import`; mapping step replaces the earlier placeholder; default match field is the first non-`id` unique field) | `csv-import-export.spec.ts`, `import-wizard.test.tsx`, `mapping-step.test.tsx` |
+| Import summary and history | CSV-27 – CSV-30 (Settings › Data Administration › Import History, Undo removes added records only) | `csv-import-export.spec.ts`, `history.test.tsx` |
+| Export | CSV-21 – CSV-26 (view scope, all/choose/exclude fields, selected records up to 500, completion toast with Download and View export history) | `csv-import-export.spec.ts`, `export-dialog.test.tsx`, `toast.test.tsx` |
+| Export history | CSV-31, CSV-32 (Settings › Data Administration › Export History) | `history.test.tsx` |
+
+Open differences for the module gate: in-process, synchronous transfer without recovery
+(decision 1); CSV only, UTF-8 or ISO-8859-1, no XLS/XLSX/VCF, ZIP or password protection
+(decision 3); history is per-organization in memory, 7 days, lost on restart (decision 6);
+export reads at run and download time, best effort under concurrent writes, text cells starting
+with `=`, `+`, `-`, `@`, tab or CR get a leading `'` (decision 7); no separate export profile
+permission (decision 8); Notify Email (M10), Layout selection and Create New Fields (M11) are
+disabled (decision 9), and there is no criteria builder: scope is a custom view.
+Interim rules: Retry in Export History opens the module list; Undo is offered for every job that
+is not already undone and the server re-checks the delete permission; selection export is
+disabled above 500 rows with the limit written in the menu label.
+
 ## Module 7 — Campaigns
 
 ### Campaigns list
@@ -845,6 +870,22 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 ### Campaigns links in earlier modules
 
 Not started.
+
+## Module 6 · Print page (MEP-871, interim rule)
+
+The reference print page could not be captured (capture protection, MEP-793), so the layout is
+our own and is an **interim rule** listed as an open question at the Module 6 gate.
+
+| Item | Status |
+| --- | --- |
+| Record Print Preview (PS-03) — Leads, Contacts, Accounts, Deals: More Options → Print Preview opens `.../tab/<module>/<recordId>/print` in the same tab | Done (interim layout: title + module, Print, Close; sections in detail order, label–value in two columns) |
+| List Print Default view (PS-17/18) — Leads, Contacts, Accounts: Actions → Print View → Print Default view opens `.../tab/<module>/print?viewId=` with the current view's records (current filter and sort, one page) as a table | Done (interim layout) |
+| Deals list Print View | Not added (not observed in the reference) |
+| Print Using Canvas (PS-19), Print Mailing Labels | Unchanged (later-module placeholders) |
+| Tasks, Meetings, Calls, Campaigns Print entries | Unchanged (Module 5 / Campaigns) |
+
+Interim rule details: Print calls `window.print()`, Close goes back, `@media print` hides the
+buttons and everything outside the print page.
 
 ## Module 8 — Cases and Solutions
 

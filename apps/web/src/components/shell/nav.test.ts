@@ -126,8 +126,13 @@ describe("shellNav", () => {
 });
 
 describe("settingsNav", () => {
-  it("defines general and members settings links in order", () => {
-    expect(settingsNav).toHaveLength(2);
+  it("defines general, members and data administration links in order", () => {
+    expect(settingsNav.map((link) => link.id)).toEqual([
+      "general",
+      "members",
+      "import-history",
+      "export-history",
+    ]);
     const [general, members] = settingsNav;
 
     expect(general).toEqual({
@@ -147,6 +152,21 @@ describe("settingsNav", () => {
 
     expect(general?.href("acme")).toBe("/crm/acme/settings");
     expect(members?.href("acme")).toBe("/crm/acme/settings/members");
+  });
+
+  it("groups transfer history links and matches only their own settings page", () => {
+    const historyLinks = settingsNav.filter((link) => link.group === "Data Administration");
+    expect(historyLinks.map((link) => link.label)).toEqual(["Import History", "Export History"]);
+
+    for (const [index, link] of historyLinks.entries()) {
+      const page = index === 0 ? "import-history" : "export-history";
+      const path = `/crm/acme/settings/${page}`;
+      expect(link.href("acme")).toBe(path);
+      expect(link.match).toBe("exact");
+      expect(isNavLinkActive(link, "acme", path)).toBe(true);
+      expect(isNavLinkActive(link, "acme", "/crm/acme/settings")).toBe(false);
+      expect(isNavLinkActive(link, "acme", `${path}/other`)).toBe(false);
+    }
   });
 
   it("edge case: generates correct paths for empty and non-standard organization slugs without accent tokens", () => {

@@ -237,20 +237,31 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Products" } })}
-      value={{ module: "Products", id: "product-1", name: "Big Product" }}
+      field={field("lookup", { lookup: { module: "Cases" } })}
+      value={{ module: "Cases", id: "case-1", name: "Big Case" }}
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Big Product" });
+  const casesLink = screen.getByRole("link", { name: "Big Case" });
+  expect(casesLink.getAttribute("href")).toBe("/tab/Cases/case-1");
+  expect(casesLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Documents" } })}
+      value={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Big Doc" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("P2");
+  expect(laterLink.getAttribute("data-later-module")).toBe("M9");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Products" } })}
+      field={field("lookup", { lookup: { module: "Documents" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
