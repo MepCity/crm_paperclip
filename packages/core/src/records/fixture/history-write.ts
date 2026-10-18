@@ -70,6 +70,7 @@ export interface FixtureHistoryOperation {
   recordId?: string;
   kind?: HistoryEventKind;
   mechanism: string;
+  operationId?: string;
 }
 export function historyBatch(
   before: Map<string, FixtureModuleStore>,
@@ -83,13 +84,14 @@ export function historyBatch(
     source: HistorySource;
   },
 ): RecordHistoryEvent[] {
-  const operationId = randomUUID();
+  const operationId = operation.operationId ?? randomUUID();
   const events: RecordHistoryEvent[] = [];
   for (const [module, store] of after) {
     const bundle = bundles[module];
     if (!bundle) throw new Error("Missing module history metadata.");
-    // Child history is supplied by later approved lifecycle slices.
-    if (bundle.childModule || bundle.readOnly) continue;
+    // Recycle-bin transitions include the entire graph; other child history stays separate.
+    const lifecycle = operation.mechanism === "delete" || operation.mechanism === "restore";
+    if (!lifecycle && (bundle.childModule || bundle.readOnly)) continue;
     const previous = before.get(module);
     if (!previous) throw new Error("Missing staged module.");
     if (previous === store) continue;
@@ -136,7 +138,9 @@ export function historyBatch(
         module === operation.module && id === operation.recordId && operation.kind
           ? operation.kind
           : !old
-            ? "record_created"
+            ? operation.mechanism === "restore"
+              ? "record_restored"
+              : "record_created"
             : !next
               ? "record_deleted"
               : "fields_updated";

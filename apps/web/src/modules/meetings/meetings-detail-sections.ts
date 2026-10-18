@@ -99,7 +99,7 @@ export function buildMeetingsBusinessCardFields(
     // the dash is shown — meaning the field row IS shown, just the value reads as dash.
     return [
       {
-        field,
+        field: { ...field, readOnly: true },
         value: record.fields[name] ?? null,
         suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
       },
