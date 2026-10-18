@@ -694,6 +694,37 @@ the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ Ne
 panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
 
 
+### Activities screens — side-by-side visual check (board decision MEP-570, 2026-10-14 and 2026-10-15)
+
+From now on, QA and the approver do not approve any Activities screen — including forms
+(Create/Edit page or dialog), list views, and record detail — until they have opened our screen
+at the same CSS viewport (1470 × 835, DPR 2), put our screenshot next to the reference capture,
+and ticked every row of the spec's measured inventory (`research/specs/activities-form.md`,
+`activities.md`, and `activities-record-detail.md`). Components and layouts from
+Leads/Accounts/Contacts/Deals must never be copied as-is into Activities screens.
+
+Our screenshot is uploaded to the task as an attachment; the reference image never enters the
+repo or task (only its research workspace path is referenced). The result of each comparison (✓
+per verified row) is recorded below and in the review comments. `apps/web/e2e/activities-form-visual.spec.ts`
+guards the measured values and absence of copied chrome for Task Create/Edit, Meeting window and
+full form, and Activities lists/detail. Call Create/Edit join it once the Call form lands.
+
+#### Task and Meeting form screens — measured comparison result
+
+| Screen / Area | Measured inventory | Verified result | Evidence |
+| --- | --- | --- | --- |
+| Task Create & Edit: Header & placement | Requirements 1–3: Pale #EEF1F9 title band y=50–113; 548 px column x=332–880; 590 px blank right area; #313949 section headings | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Columns & styling | Requirements 4–6: Left-aligned labels x=332; values start x=551; unboxed rows; 1 px #DCDBEE underline spanning label and value | ✓ Matched | `activities-form-visual.spec.ts` |
+| Task Create & Edit: Required indicator | Requirement 7: 25 × 2 px horizontal #F27B77 red segment at row left edge under Subject | ✓ Matched | `activities-form-visual.spec.ts` |
+| Task Create & Edit: Lookups & selects | Requirements 8–10: Contact/Account label type selector with magnifying-glass icon at x=859; short Status (103 px) & Priority (59 px) spans; DD.MM.YYYY Due Date without calendar glyph | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Toggles & Description | Requirements 11–12: Bare 28 × 15 switches for Reminder & Repeat with no adjacent text; underlined textarea with 7 × 7 resize grip | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-form.spec.ts` |
+| Task Create & Edit: Form chrome | Requirement 14: No "Create Form Views", no "Client Script" tab | ✓ Matched | `activities-form-visual.spec.ts` |
+| Meeting Information dialog: Modal & grid | Requirements 1–4: Centered 500 px modal at x=485; 418 px lines from x=515 to 933; labels left at x=515, values start at x=682; 50 px pitch | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
+| Meeting Information dialog: Fields & controls | Requirements 5–11: Unboxed rows; 25 × 2 px red marker; All day 15 × 15 checkbox; Date and time on one line 10 px apart; Cancel and Save only (no Save and New) | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
+| Meeting Full Form (Add more details) | Requirements 1–14: Expands to full form with Repeat and Description; no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts` |
+| Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
+
+
 ### Calls record detail — implemented; QA pending (MEP-508)
 
 | Area | Inventory | Evidence |
@@ -801,7 +832,35 @@ Provisional rules: the populated table body is the Accounts table (not observed 
 
 ### Campaigns create / edit form
 
-Not started.
+Implemented; QA pending (MEP-814).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| CF-01 | Edit Page Layout beside the form title (M11, inert) | `campaigns-form.spec.ts` |
+| CF-02–CF-04 | Cancel, Save and New, Save in the title strip's right group | `campaigns-form.spec.ts` |
+| CF-05, CF-06 | Campaign Owner field on the session owner and in initial focus, with the Select User dialog behind its lookup icon | `campaigns-form.spec.ts` |
+| CF-07 | Campaign Name input with its required marker | `campaigns-form.spec.ts` |
+| CF-08 | Start Date on shared masked date entry (DD.MM.YYYY) | `campaigns-form.spec.ts` |
+| CF-09, CF-09.1, CF-10 | Expected Revenue with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-11, CF-11.1, CF-12 | Actual Cost with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-13 | Numbers sent integer entry | `campaigns-form.spec.ts` |
+| CF-14, CF-14.1–CF-14.8 | Type select popup with search input, required marker, and options in metadata order | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-15, CF-15.1–CF-15.5 | Status select popup with five options and no search box | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-16 | End Date on shared masked date entry (DD.MM.YYYY) | `campaigns-form.spec.ts` |
+| CF-17, CF-17.1, CF-18 | Budgeted Cost with home-currency prefix and information icon | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+| CF-19 | Expected Response integer entry | `campaigns-form.spec.ts` |
+| CF-20, CF-21 | Description multiline editor with its lower-right resize grip | `campaigns-form.spec.ts` |
+| CF-22, CF-23 | Form footer: Create Form Views label with Standard View and Create a custom form page (M11, inert) | `campaigns-form.spec.ts` |
+| CF-24 | Client Script tab on the page's right edge (M11, inert) | `campaigns-form.spec.ts` |
+| — | Parent Campaign omitted from the form layout | `campaigns-form.spec.ts`, `campaigns-form-rules.test.ts` |
+
+Provisional rules (behaviour not observed in reference):
+- Edit form reuses the create form layout populated with saved record values (Accounts edit behaviour).
+- Required field error copy and post-save navigation follow Accounts behaviour.
+- No ordering constraint between Start Date and End Date.
+- Currency and integer field validation follows shared field behaviour.
+
+Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 ### Campaigns record detail
 

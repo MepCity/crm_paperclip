@@ -33,6 +33,19 @@ describe("createLeadsRelatedLists", () => {
     expect(closedActivities.targetId).toBe("related-list-closed-activities");
   });
 
+  it("adds a live Campaigns card wired to Add Campaigns", () => {
+    const onAddCampaigns = () => {};
+    const campaigns = createLeadsRelatedLists({ campaigns: 2 }, { onAddCampaigns }).find(
+      (list) => list.id === "campaigns",
+    );
+    expect(campaigns?.title).toBe("Campaigns");
+    expect(campaigns?.moduleKey).not.toBe("M7");
+    expect(campaigns?.countBadge).toBe(2);
+    expect(campaigns?.upperControls?.[0]?.label).toBe("Add Campaigns");
+    expect(campaigns?.upperControls?.[0]?.onAction).toBe(onAddCampaigns);
+    expect(campaigns?.railAction?.onAction).toBe(onAddCampaigns);
+  });
+
   it("configures upper controls for open-activities and closed-activities as defined", () => {
     const [, openActivities, closedActivities] = createLeadsRelatedLists();
     expect(openActivities).toBeDefined();

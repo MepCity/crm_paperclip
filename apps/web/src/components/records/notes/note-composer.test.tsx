@@ -95,6 +95,20 @@ describe("NoteComposer", () => {
     expect(body().innerHTML).toBe("<p>body</p>");
   });
 
+  it("seeds the editor without event handlers or scripts from stored content", () => {
+    setup({
+      mode: "edit",
+      initial: {
+        title: "T",
+        content:
+          '<p>hi <b>x</b></p><img src=x onerror="alert(1)"><svg onload="a()"></svg><a href="javascript:alert(1)">l</a>',
+      },
+    });
+    expect(body().querySelector("img, svg, script")).toBeNull();
+    expect(body().innerHTML).not.toMatch(/onerror|onload|javascript:/i);
+    expect(body().innerHTML).toContain("<b>x</b>");
+  });
+
   it("toolbar toggles and hides the attachment button", async () => {
     const renderToolbar = vi.fn((exec) => (
       <button type="button" onClick={() => exec("bold")}>

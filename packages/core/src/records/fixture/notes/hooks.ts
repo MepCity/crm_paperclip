@@ -1,5 +1,6 @@
 import { type FieldErrors, ValidationError } from "../../../errors";
 import type { FieldValue, ModuleRecordReference } from "../../contract";
+import { sanitizeNoteHtml } from "../../note-html";
 import { removeAttachmentsForParents } from "../attachments/hooks";
 import type { FixtureHookContext, FixtureModuleHooks } from "../hooks";
 import { notesParentModules } from "./metadata";
@@ -43,6 +44,10 @@ export const notesHooks: FixtureModuleHooks = {
       if (typeof fields[field] === "string" && fields[field].length > limit) {
         errors[field] = ["Value is too long."];
       }
+    }
+    // Stored markup is cleaned by the same allowlist the editor and display use.
+    if (typeof fields.Note_Content === "string") {
+      fields.Note_Content = sanitizeNoteHtml(fields.Note_Content);
     }
     if (Object.keys(errors).length) throw new ValidationError(errors);
   },
