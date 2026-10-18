@@ -19,21 +19,18 @@ export async function listRecycleBinAction(
 ): Promise<BinReadResult> {
   const context = await requireOrgContext(orgSlug);
   try {
-    if (
-      search.nameOperator !== "contains" ||
-      !["contains", "is"].includes(search.deletedByOperator)
-    )
+    if (search.nameOperator !== "contains" || search.deletedByOperator !== "contains")
       throw new ValidationError({ search: ["Choose a supported search operator."] });
-    if (search.date || search.time !== "01:00")
-      throw new ValidationError({ date: ["Deleted Time search is not supported yet."] });
-    if (search.deletedBy && search.deletedByOperator !== "is")
-      throw new ValidationError({
-        deletedBy: ["Deleted By currently supports only is (exact user ID)."],
-      });
+    if (!search.date && search.time && search.time !== "01:00")
+      throw new ValidationError({ date: ["Enter a date to search by Deleted Time."] });
+    if (search.date && !/^\d{2}\.\d{2}\.\d{4}$/.test(search.date))
+      throw new ValidationError({ date: ["Enter a date in DD.MM.YYYY format."] });
+    const date = search.date ? search.date.split(".").reverse().join("-") : undefined;
     const result = await getRecycleBinService(context).list({
       name: search.name || undefined,
       module: search.module || undefined,
-      deletedBy: search.deletedBy || undefined,
+      deletedByContains: search.deletedBy || undefined,
+      deletedOn: date ? { date, time: search.time || undefined } : undefined,
       page,
       perPage,
     });

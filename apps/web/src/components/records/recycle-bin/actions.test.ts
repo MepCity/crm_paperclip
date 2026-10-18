@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { ForbiddenError, ValidationError } from "@crm/core/errors";
+import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { beforeEach, expect, test, vi } from "vitest";
 import {
   listRecycleBinAction,
@@ -34,7 +36,7 @@ test("read reauthorizes and passes supported criteria and paging to the org-boun
         name: "Example",
         module: "Leads",
         deletedBy: "test-admin",
-        deletedByOperator: "is",
+        date: "17.10.2026",
       },
       2,
       30,
@@ -45,20 +47,57 @@ test("read reauthorizes and passes supported criteria and paging to the org-boun
   expect(mocks.list).toHaveBeenCalledWith({
     name: "Example",
     module: "Leads",
-    deletedBy: "test-admin",
+    deletedByContains: "test-admin",
+    deletedOn: { date: "2026-10-17", time: "01:00" },
     page: 2,
     perPage: 30,
   });
 });
 
-test("unsupported date/time and actor operators return explicit errors without broadening a query", async () => {
-  for (const search of [
-    { ...initialBinSearch, date: "17.10.2026" },
-    { ...initialBinSearch, time: "02:00" },
-    { ...initialBinSearch, deletedBy: "test" },
+test("date-only searches omit time; empty criteria do not filter", async () => {
+  await listRecycleBinAction("demo", { ...initialBinSearch, date: "29.02.2028", time: "" }, 1, 30);
+  expect(mocks.list).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      deletedOn: { date: "2028-02-29", time: undefined },
+    }),
+  );
+  await listRecycleBinAction("demo", initialBinSearch, 1, 30);
+  expect(mocks.list).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      deletedOn: undefined,
+      deletedByContains: undefined,
+    }),
+  );
+});
+
+test("invalid calendar dates and times reach service validation and retain field errors", async () => {
+  for (const values of [
+    { date: "31.02.2026", time: "01:00" },
+    { date: "17.10.2026", time: "25:00" },
   ]) {
-    expect((await listRecycleBinAction("demo", search, 1, 30)).status).toBe("error");
+    mocks.list.mockRejectedValueOnce(
+      new ValidationError({ deletedOn: ["Invalid deletion date or time."] }),
+    );
+    expect(
+      await listRecycleBinAction("demo", { ...initialBinSearch, ...values }, 1, 30),
+    ).toMatchObject({
+      status: "error",
+      fieldErrors: { deletedOn: ["Invalid deletion date or time."] },
+    });
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        deletedOn: { date: values.date.split(".").reverse().join("-"), time: values.time },
+      }),
+    );
   }
+});
+
+test("malformed display dates and a time without a date fail explicitly", async () => {
+  for (const search of [
+    { ...initialBinSearch, date: "2026-10-17" },
+    { ...initialBinSearch, time: "02:00" },
+  ])
+    expect((await listRecycleBinAction("demo", search, 1, 30)).status).toBe("error");
   expect(mocks.list).not.toHaveBeenCalled();
 });
 
@@ -92,4 +131,26 @@ test("service field errors survive transport and authentication failures never c
   await expect(listRecycleBinAction("demo", initialBinSearch, 1, 30)).rejects.toThrow("redirect");
   await expect(mutateRecycleBinAction("demo", "empty", [])).rejects.toThrow("redirect");
   expect(mocks.service).not.toHaveBeenCalled();
+});
+
+test("real service validation rejects invalid dates and times through the action", async () => {
+  const service = createFixtureRecordService({
+    orgId: randomUUID(),
+    orgSlug: "demo",
+    orgName: "Demo",
+    userId: "test-admin",
+    role: "admin",
+  });
+  mocks.service.mockReturnValue(service.recycleBin);
+  for (const values of [
+    { date: "31.02.2026", time: "01:00" },
+    { date: "17.10.2026", time: "25:00" },
+  ]) {
+    expect(
+      await listRecycleBinAction("demo", { ...initialBinSearch, ...values }, 1, 30),
+    ).toMatchObject({
+      status: "error",
+      fieldErrors: { deletedOn: expect.any(Array) },
+    });
+  }
 });
