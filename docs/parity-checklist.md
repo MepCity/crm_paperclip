@@ -870,3 +870,25 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 ### Campaigns links in earlier modules
 
 Not started.
+
+## Module 8 — Cases and Solutions
+
+### Cases and Solutions lists
+
+Not started.
+
+### Cases record detail
+
+Not started.
+
+### Solutions record detail
+
+Not started.
+
+### Cases and Solutions create / edit forms
+
+Not started.
+
+### Cases links in earlier modules
+
+Not started.
