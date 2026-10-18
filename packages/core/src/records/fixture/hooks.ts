@@ -5,6 +5,9 @@ import type { Tag } from "../tags";
 export interface FixtureModuleStore {
   tags?: Map<string, Tag>;
   tagLinks?: Map<string, Set<string>>;
+  /** Canonical rows partitioned out of active reads until restore or purge. */
+  deletedRecords?: Map<string, RecordData>;
+  deletedTagLinks?: Map<string, Set<string>>;
   records: Map<string, RecordData>;
   nextId: bigint;
   attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
