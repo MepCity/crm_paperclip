@@ -25,6 +25,7 @@ import {
   panelFiltersToCriteria,
 } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { AddToCampaignsDialog } from "../campaigns/add-to-campaigns-dialog";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
@@ -241,6 +242,9 @@ function ModuleListScreenLoaded({
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
+  const [campaignsOpen, setCampaignsOpen] = useState(false);
+  const campaignsModule =
+    config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
 
   const viewsQuery = useViews(config.module);
@@ -640,8 +644,9 @@ function ModuleListScreenLoaded({
   }
 
   function openSelectedMassAction(action: string) {
-    if (!["mass-transfer", "mass-update", "mass-delete"].includes(action)) return;
+    if (!["mass-transfer", "mass-update", "mass-delete", "campaigns"].includes(action)) return;
     if (!selectionActive) return;
+    if (action === "campaigns" && campaignsModule) setCampaignsOpen(true);
     if (action === "mass-transfer") setChangeOwnerOpen(true);
     if (action === "mass-update") setMassUpdateOpen(true);
     if (action === "mass-delete") openDeleteDialog();
@@ -684,7 +689,11 @@ function ModuleListScreenLoaded({
       onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
     },
     { id: "cadences", label: "Cadences", onAction: inert },
-    { id: "add-to-campaigns", label: "Add to Campaigns", onAction: inert },
+    {
+      id: "add-to-campaigns",
+      label: "Add to Campaigns",
+      onAction: campaignsModule ? () => setCampaignsOpen(true) : inert,
+    },
     { id: "print-mailing-labels", label: "Print Mailing Labels", onAction: inert },
     { id: "print-using-canvas", label: "Print Using Canvas", onAction: inert },
     { id: "mail-merge", label: "Mail Merge", onAction: inert },
@@ -797,6 +806,17 @@ function ModuleListScreenLoaded({
           ownerField={ownerField}
           users={ownerOptions}
           onSuccess={clearSelection}
+        />
+      ) : null}
+      {campaignsOpen && campaignsModule ? (
+        <AddToCampaignsDialog
+          module={campaignsModule}
+          recordIds={pageSelectedIds}
+          onDone={() => {
+            setCampaignsOpen(false);
+            clearSelection();
+          }}
+          onCancel={() => setCampaignsOpen(false)}
         />
       ) : null}
       {dedupOpen && moduleQuery.data ? (

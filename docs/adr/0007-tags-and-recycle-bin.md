@@ -6,6 +6,7 @@
 - Issue: MEP-693
 - Dependencies: ADR 0002 (MEP-40), ADR 0004, ADR 0005, ADR 0006 (MEP-692)
 - Scope: Logical architecture draft only; no implementation or final DDL
+- Acceptance: see [Acceptance scope (MEP-828)](#acceptance-scope-mep-828-2026-10-17); it supersedes the status line
 
 ## Context and evidence boundary
 
@@ -278,6 +279,41 @@ migration, database job library or background service is authorized here.
 Unknown outcomes must be researched through permitted evidence, never reference
 writes. Future slices require approved scope/criteria and may not treat this
 proposal as evidence that incomplete screens or unconfirmed behavior are ready.
+
+## Acceptance scope (MEP-828, 2026-10-17)
+
+Evidence: the MEP-779 specs on `main` (`research/specs/tags.md`,
+`recycle-bin.md`, `m6-tags-print-share-recycle-inventory.md`). They add the
+Add Tags opening in four modules (TAG-12 – TAG-14), the four empty Manage Tags
+pages and the Recycle Bin list plus initial Search (RB-01 – RB-22). Tagged
+records, write outcomes, an empty bin and selected-row states stay unobserved
+and may not be manufactured in the reference.
+
+| Section | Disposition |
+| --- | --- |
+| §1 | **Accepted.** Module-scoped tag catalogue with explicit links (MEP-771) and recoverable deletion as a lifecycle state plus deletion manifest. R2 notices (60-day retention, restore, administrator purge) are the evidence. |
+| §2 | **Accepted** with the MEP-771 slice 1 interim rules. |
+| §3 | **Logical boundary accepted:** deleted state hides records and their cascade from every ordinary read; restore and purge are separate authorized operations; one operation graph per deletion; no overwrite of live unique values. The behaviour gaps below run on interim rules. Storage stays S1. |
+| §4 | **Accepted as our contract** for both tag and bin locators (board rule from Module 2: request shapes need not mirror the reference). Platform Lead fixes the wire item keys per slice inside ADR 0004. |
+| §5 | Each question is an interim rule (**I**) that implementation may use, or a gate question (**G**) listed at the module gate; an interim rule changes only when evidence or the board says so. |
+
+| Key | Kind | Interim rule / gate question |
+| --- | --- | --- |
+| T1 | I | MEP-771: trim + NFC, 1–50 characters, module-local uniqueness by NFC + lowercase. Gate: confirm the length limit from public documentation. |
+| T2 | I | 100 catalogue entries per module (counter evidence), no per-record cap. |
+| T3 | I+G | Optional `#RRGGBB`, default null; the UI shows a neutral colour for null. Gate: palette and who may recolour. |
+| T4 | I+G | Record read projects `{id, name}` in name order, empty null. Header shows chips after the Add Tags line. Gate: chip look, overflow and removal affordance (unobserved). |
+| T5 | I | Operators `is`, `is not`, `is empty`, `is not empty` (Leads evidence) for all four modules; ID any-of; negative matching includes untagged records. |
+| T6 | I | Idempotent add; rename keeps links; catalogue delete removes links. While a record is in the bin its links stay in the manifest; a catalogue delete during retention removes them there too. |
+| T7 | I+G | Catalogue writes need module write; membership needs record write and lock checks. Gate: separate tag-management grants. |
+| R3 | I+G | Administrators see and restore every entry; other members see and restore entries they deleted. Purge and Empty Recycle Bin: administrators only. Gate: "own records" meaning and restore-others grant. |
+| R4 | I | Restore validates the whole selection first; any unique conflict, lock or missing permission rejects the whole call with field-level errors; nothing is renamed or overwritten. Restored records keep their ID, owner and values. |
+| R5 | I | Restoring a root restores its whole deletion graph. A child whose parent is still deleted cannot be restored on its own (the notice restricts mass restore; we apply it to single restore too). Independently deleted items keep their own entry. |
+| R6 | I+G | Deadline = deletion time (UTC) + 60 days; expired entries are hidden and not restorable. No scheduled purge yet. Gate: purge cadence. |
+| R7 | I | Delete and Empty act on the selection / the caller-visible entries only after our own confirmation dialog; an empty selection never purges anything. |
+| R8 | I+G | Event `record_deleted` on delete and `record_restored` on restore of the root, one per record of the graph; purge emits no event. Full history disposition waits for the ADR 0006 review. |
+| A1 | I | §4 locators are our paths; ADR 0004 envelopes, paging and errors apply. |
+| S1 | G | Fixture adapter only until ADR 0002; no DDL, migration or scheduler. |
 
 ## Consequences and future verification
 

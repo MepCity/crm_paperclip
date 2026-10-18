@@ -124,3 +124,19 @@ test("canEdit=false hides Attach and delete", () => {
   expect(screen.queryByRole("button", { name: "Attach" })).toBeNull();
   expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull();
 });
+
+test("card renders no anchor for unsafe link URL", () => {
+  const unsafeLink: AttachmentRow = {
+    id: "a3",
+    fileName: "javascript:alert(1)",
+    size: 0,
+    type: "link",
+    linkUrl: "javascript:alert(1)",
+    attachedBy: "Eve",
+    createdTime: "Oct 3, 2026",
+  };
+  setup({ rows: [unsafeLink] });
+  expect(screen.queryByRole("link")).toBeNull();
+  const textElement = screen.getByText("javascript:alert(1)");
+  expect(textElement.tagName).not.toBe("A");
+});
