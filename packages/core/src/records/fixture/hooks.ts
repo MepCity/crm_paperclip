@@ -10,6 +10,7 @@ export interface FixtureModuleStore {
   deletedTagLinks?: Map<string, Set<string>>;
   records: Map<string, RecordData>;
   nextId: bigint;
+  nextAutoNumber?: bigint;
   attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 

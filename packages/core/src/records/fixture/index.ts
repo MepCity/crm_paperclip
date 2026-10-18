@@ -38,6 +38,7 @@ import {
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
 } from "./attachments/hooks";
+import { assignAutoNumber, seedAutoNumbers } from "./auto-number";
 import {
   automaticMaster,
   duplicateGroups,
@@ -194,7 +195,11 @@ export function createFixtureRecordService(
         return moduleState;
       },
     };
-    for (const bundle of Object.values(fixtureModules)) bundle.afterSeed?.(seedContext);
+    for (const [name, bundle] of Object.entries(fixtureModules)) {
+      if (bundle.autoNumberField)
+        seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
+      bundle.afterSeed?.(seedContext);
+    }
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -882,6 +887,7 @@ export function createFixtureRecordService(
           Created_By: ctx.userId,
           Modified_By: ctx.userId,
         });
+        if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
         bundle.applyRules?.(fields, normalized, undefined, hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const record = { id, fields };
