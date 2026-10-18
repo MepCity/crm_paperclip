@@ -1,0 +1,44 @@
+# Fast checks on GitHub for every agent branch push (board decision 2026-10-18).
+# The merge bot waits for this to be green before it merges a branch; the slower
+# browser e2e suite still runs in the merge bot's batch verify.
+name: CI
+
+on:
+  push:
+    branches: ["mep/**", "main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    name: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint (biome)
+        run: pnpm exec biome check .
+      - name: Typecheck
+        run: node scripts/typecheck.mjs
+      # Integration tests (embedded Postgres) and the native SysV IPC test are timing/OS sensitive;
+      # they stay in the merge bot's full `pnpm verify` on the Mac.
+      - name: Unit and component tests
+        run: |
+          files=$(git ls-files '*.test.ts' '*.test.tsx' | grep -v '\.int\.test\.ts$' | grep -v 'packages/db/src/sysv-ipc.test.ts')
+          pnpm exec vitest run --project unit --project component $files
+        env:
+          CI: "1"

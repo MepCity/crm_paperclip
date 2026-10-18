@@ -14,7 +14,7 @@ import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext, RecordData, RecordService } from "@crm/core/records";
 import type { createFixtureAttachmentLifecycle } from "@crm/core/records/fixture";
 import { encodeError } from "@/lib/api/wire/errors";
-import { safeAttachmentUrl } from "@/lib/attachment-url";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 
 const PER_PAGE_DEFAULT = 20;
 const PER_PAGE_MAX = 200;

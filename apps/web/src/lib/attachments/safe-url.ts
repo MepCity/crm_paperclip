@@ -14,7 +14,8 @@ export function safeAttachmentUrl(value: unknown): string | null {
     const parsed = new URL(trimmed);
     if (
       (parsed.protocol === "http:" || parsed.protocol === "https:") &&
-      parsed.hostname.length > 0
+      parsed.hostname.length > 0 &&
+      parsed.href.length <= 2048
     ) {
       return parsed.href;
     }
