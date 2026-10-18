@@ -178,3 +178,32 @@ test("navigates from Account Name cell in Contacts list to Account record detail
   await expect(list.locator("tbody tr").first()).toBeVisible();
   await expect(list.locator("tbody tr").first()).toContainText(accountName);
 });
+
+test("applies Campaigns system filter to Contacts list and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Contacts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  const initialRowCount = await list.locator("tbody tr").count();
+
+  const campaignsCheckbox = list.getByRole("checkbox", { name: "Campaigns", exact: true });
+  await campaignsCheckbox.scrollIntoViewIfNeeded();
+  await campaignsCheckbox.check({ force: true });
+
+  const campaignTrigger = list.getByRole("button", { name: "Campaign Name" });
+  await expect(campaignTrigger).toBeVisible();
+  await campaignTrigger.click();
+
+  const campaignOption = page.getByRole("option", { name: "Campaign 001" });
+  await expect(campaignOption).toBeVisible();
+  await campaignOption.click();
+  await page.keyboard.press("Escape");
+
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(list.locator("tbody tr")).toHaveCount(1);
+  await expect(list.locator("[data-part=total-value]")).toHaveText("1");
+
+  await list.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(list.locator("tbody tr")).toHaveCount(initialRowCount);
+});
