@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import type { BinSearch } from "./contracts";
+import { SearchRows } from "./search-rows";
 
 export interface RecycleBinRow {
   id: string;
@@ -20,11 +22,40 @@ export interface RecycleBinProps {
   onDelete: (ids: string[]) => void;
   onEmpty: (ids: string[]) => void;
   onHelp?: () => void;
+  onSearch?: (search: BinSearch) => void;
+  busy?: boolean;
+  search?: BinSearch;
+  page?: number;
+  perPage?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
 }
 
-/** Unwired content only. Search panels and action confirmations remain unobserved. */
-export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: RecycleBinProps) {
+export function RecycleBin({
+  rows,
+  onRestore,
+  onDelete,
+  onEmpty,
+  onHelp,
+  onSearch,
+  busy,
+  search,
+  page = 1,
+  perPage = 30,
+  total = rows.length,
+  onPageChange,
+}: RecycleBinProps) {
   const titleId = useId();
+  const [searchOpen, setSearchOpen] = useState(
+    Boolean(
+      search &&
+        (search.name ||
+          search.module ||
+          search.deletedBy ||
+          search.date ||
+          search.time !== "01:00"),
+    ),
+  );
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const selectedIds = rows.filter((row) => selection.has(row.id)).map((row) => row.id);
   const allSelected = rows.length > 0 && selectedIds.length === rows.length;
@@ -34,6 +65,7 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
   return (
     <section
       aria-labelledby={titleId}
+      aria-busy={busy}
       className="flex h-full min-h-0 flex-col rounded-xl border border-panel-border bg-surface p-6 text-base text-text"
     >
       <div className="flex items-center justify-between gap-4">
@@ -62,6 +94,7 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
           variant="ghost"
           size="sm"
           className={`${outline} border-primary text-primary`}
+          isDisabled={busy}
           onPress={() => onRestore(selectedIds)}
         >
           Restore
@@ -70,6 +103,7 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
           variant="ghost"
           size="sm"
           className={destructive}
+          isDisabled={busy}
           onPress={() => onDelete(selectedIds)}
         >
           Delete
@@ -78,13 +112,15 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
           variant="ghost"
           size="sm"
           className={`ml-auto ${destructive}`}
+          isDisabled={busy}
           onPress={() => onEmpty(selectedIds)}
         >
           Empty Recycle Bin
         </Button>
       </fieldset>
       <p className="mb-1 mt-5 text-right text-text-muted">
-        Displaying {rows.length ? 1 : 0} to {rows.length} of {rows.length}
+        Displaying {rows.length ? (page - 1) * perPage + 1 : 0} to{" "}
+        {rows.length ? (page - 1) * perPage + rows.length : 0} of {total}
       </p>
       <section
         aria-label="Deleted records"
@@ -98,8 +134,10 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
               <th scope="col" className="w-10 px-2 py-2">
                 <Checkbox
                   label="Select all records"
+                  isDisabled={busy}
                   hideLabel
                   isSelected={allSelected}
+                  isIndeterminate={selectedIds.length > 0 && !allSelected}
                   onChange={(checked) =>
                     setSelection(checked ? new Set(rows.map((row) => row.id)) : new Set())
                   }
@@ -111,18 +149,26 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
                 </th>
               ))}
               <th scope="col" className="w-8">
-                <Button variant="icon" size="sm" aria-label="Search">
+                <Button
+                  variant="icon"
+                  size="sm"
+                  aria-label="Search"
+                  aria-expanded={searchOpen}
+                  onPress={() => setSearchOpen((open) => !open)}
+                >
                   <Icons.filterToggle aria-hidden className="h-4 w-4" />
                 </Button>
               </th>
             </tr>
           </thead>
           <tbody>
+            {searchOpen && <SearchRows onSearch={onSearch} busy={busy} initialSearch={search} />}
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-row-separator">
                 <td className="px-2 py-3">
                   <Checkbox
                     label={`Select ${row.name}`}
+                    isDisabled={busy}
                     hideLabel
                     isSelected={selection.has(row.id)}
                     onChange={(checked) =>
@@ -154,6 +200,27 @@ export function RecycleBin({ rows, onRestore, onDelete, onEmpty, onHelp }: Recyc
           </tbody>
         </table>
       </section>
+      {onPageChange && (
+        <fieldset aria-label="Recycle Bin pagination" className="mt-3 flex justify-end gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={busy || page <= 1}
+            onPress={() => onPageChange(page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="self-center">Page {page}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={busy || page * perPage >= total}
+            onPress={() => onPageChange(page + 1)}
+          >
+            Next
+          </Button>
+        </fieldset>
+      )}
     </section>
   );
 }

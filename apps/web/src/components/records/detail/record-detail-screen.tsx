@@ -20,6 +20,7 @@ import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
 import { supportsRecordPrint } from "@/components/records/print/print-modules";
+import { RecordTags } from "@/components/records/tags/record-tags";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -480,6 +481,17 @@ export function RecordDetailScreen({
             portraitAppearance={rules.portraitAppearance}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
+            tagsContent={
+              rules.addTags && !rules.addTags.laterModule ? (
+                <RecordTags
+                  key={`${orgSlug}:${definition.apiName}:${recordId}`}
+                  orgSlug={orgSlug}
+                  module={definition.apiName}
+                  recordId={recordId}
+                  label={rules.addTags.label}
+                />
+              ) : undefined
+            }
             back={{ label: "Back", href: backHref }}
             titleGlyph={rules.titleGlyph}
             titleSuffix={titleSuffix}

@@ -175,6 +175,7 @@ describe("Events HTTP participants and opaque reminders", () => {
     expect(metadata.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
       "Remind_At",
       "Participants",
+      "Tag",
       "Remind_Participants",
     ]);
     const arrays = {

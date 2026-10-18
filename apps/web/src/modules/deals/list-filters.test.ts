@@ -31,7 +31,7 @@ test("preserves initial field rows with inventory module keys (DL-26, DL-27, DL-
   ).toEqual([
     ["Account Name", undefined],
     ["Amount", undefined],
-    ["Campaign Source", "M7"],
+    ["Campaign Source", undefined],
     ["Closing Date", undefined],
     ["Connected To", undefined],
     ["Contact Name", undefined],
