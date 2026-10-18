@@ -103,7 +103,7 @@ test("The Lead row links to the Create Lead page", async () => {
   const dialog = await openMenu(user);
   const row = within(dialog).getByRole("link", { name: "Lead" });
   expect(row.getAttribute("href")).toBe("/crm/example/tab/Leads/create");
-  expect(within(dialog).getAllByRole("link")).toHaveLength(11);
+  expect(within(dialog).getAllByRole("link")).toHaveLength(10);
 });
 
 test("Choosing a row closes the menu", async () => {
@@ -123,7 +123,18 @@ test("The search box filters rows by label and leaves the list empty on no match
     within(dialog)
       .getAllByRole("link")
       .map((link) => link.textContent),
-  ).toEqual(["Lead", "Contact", "Account", "Deal", "Task", "Meeting", "Call", "Campaign", "Case", "Solution"]);
+  ).toEqual([
+    "Lead",
+    "Contact",
+    "Account",
+    "Deal",
+    "Task",
+    "Meeting",
+    "Call",
+    "Campaign",
+    "Case",
+    "Solution",
+  ]);
   await user.type(search, "CON");
   expect(within(dialog).getByRole("link", { name: "Contact" })).toBeTruthy();
   expect(within(dialog).queryByRole("link", { name: "Lead" })).toBeNull();
