@@ -50,5 +50,7 @@ export function stored<T>(entries: Map<string, T>, id: string): T {
   return entry;
 }
 export function newest<T extends { createdAt: string }>(jobs: T[]): T[] {
-  return structuredClone(jobs.reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+  return structuredClone(
+    [...jobs].reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  );
 }

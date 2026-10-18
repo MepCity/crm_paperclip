@@ -112,3 +112,15 @@ describe("Notes parent removal", () => {
     expect(notes.size).toBe(2);
   });
 });
+
+describe("notes content sanitising", () => {
+  it("cleans Note_Content on write and keeps formatting", () => {
+    const current = fields();
+    current.Note_Content =
+      '<p><b>a</b> <img src=x onerror=alert(1)><a href="https://e.com">l</a></p><script>x()</script>';
+    apply(current);
+    expect(current.Note_Content).toBe(
+      '<p><b>a</b> <a href="https://e.com" target="_blank" rel="noopener noreferrer">l</a></p>',
+    );
+  });
+});

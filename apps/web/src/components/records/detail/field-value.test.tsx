@@ -185,7 +185,7 @@ test("lookup field links to registered Campaigns detail page", () => {
 });
 
 test("lookup field attaches laterModule to unregistered target link", () => {
-  show(field("Case_Number", "lookup", { lookup: { module: "Cases" } }), {
+  show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
     module: "Cases",
     id: "case-123",
     name: "Acme Case",
