@@ -19,6 +19,7 @@ import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
+import { RecordTags } from "@/components/records/tags/record-tags";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -255,7 +256,6 @@ export function RecordDetailScreen({
     portraitIcon,
     hasPortrait,
     recordNavigation,
-    titleHref,
     titleSuffix,
   } = rules.header(record, {
     orgSlug,
@@ -304,7 +304,6 @@ export function RecordDetailScreen({
   const moreMenuGroups = rules.moreOptions({
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
-    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     ...(definition.merge
       ? {
           onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
@@ -474,9 +473,19 @@ export function RecordDetailScreen({
             portraitAppearance={rules.portraitAppearance}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
             addTags={rules.addTags}
+            tagsContent={
+              rules.addTags && !rules.addTags.laterModule ? (
+                <RecordTags
+                  key={`${orgSlug}:${definition.apiName}:${recordId}`}
+                  orgSlug={orgSlug}
+                  module={definition.apiName}
+                  recordId={recordId}
+                  label={rules.addTags.label}
+                />
+              ) : undefined
+            }
             back={{ label: "Back", href: backHref }}
             titleGlyph={rules.titleGlyph}
-            titleHref={titleHref}
             titleSuffix={titleSuffix}
             commands={
               rules.buildHeaderCommands
@@ -522,7 +531,7 @@ export function RecordDetailScreen({
           { id: "overview", label: "Overview", content: overview },
           { id: "timeline", label: "Timeline", content: timeline },
         ]}
-        relatedRailVisible={railVisible}
+        relatedRailVisible={railVisible && !activityLayout}
         railControl={
           activityLayout ? undefined : (
             <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
