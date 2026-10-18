@@ -329,7 +329,7 @@ test("search errors use the shared error notice", async () => {
 for (const [module, titleField] of [
   ["Cases", "Subject"],
   ["Solutions", "Solution_Title"],
-]) {
+] as const) {
   test(`${module} search uses the registered title and detail route`, async () => {
     search.mockResolvedValueOnce([
       {
