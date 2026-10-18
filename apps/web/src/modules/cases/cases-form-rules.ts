@@ -63,6 +63,7 @@ export const casesFormRules: FormRules = {
   laterModuleFields: {
     Product_Name: "P2",
   },
+  editShownFields: ["Case_Number"],
   omittedSections: ["Comment Information"],
   omitted: [
     "Connected_To__s",

@@ -16,7 +16,7 @@ export const casesMetadataSource = {
       massUpdate: false,
       views: {
         view: true,
-        edit: true,
+        edit: false,
         quickCreate: false,
         create: true,
       },
