@@ -89,7 +89,7 @@ Interim boundaries and empty-value behavior:
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
 - Role/group membership, blocked email, fiscal periods, system filters and
-  related-module filters are not introduced. `multi_module_lookup` keeps only
+  related-module filters are not introduced except for the interim Campaign system filter. `multi_module_lookup` keeps only
   empty / not-empty panel predicates.
 
 
@@ -772,6 +772,21 @@ Interim/open questions:
   to the resulting Contact remains open; no conversion code is added here.
 - Unread Campaigns retains the exported Common_Status criterion although that
   field is absent from public metadata, following existing saved-view policy.
+
+## Campaign system filter (interim)
+
+Leads and Contacts accept `campaignFilter: { campaignIds, memberStatuses? }` on
+list/count/summarize. Choose one to five distinct non-empty campaign IDs and,
+optionally, a non-empty subset of the shared interim `campaignMemberStatuses`
+export from `@crm/core/records/campaigns`. A record matches membership in any
+selected campaign, narrowed by the status of that same membership. This combines
+with saved-view criteria, field filters, search and activity filters using AND.
+Membership and campaign reads use the caller's tenant and ordinary visibility;
+unknown or inaccessible IDs produce no matches. Other modules and malformed
+filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
+`campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
+
+
 ## Cases
 
 `Cases` publishes all 30 exported fields, layout sections/columns, five picklists

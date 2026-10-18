@@ -198,6 +198,11 @@ export interface ActivitySummary {
   date: string | null;
 }
 
+export type CampaignFilterValue = {
+  campaignIds: readonly string[];
+  memberStatuses?: readonly string[];
+};
+
 export interface ListQuery {
   viewId: string;
   /** One-based page number. */
@@ -210,10 +215,14 @@ export interface ListQuery {
   filters?: Criteria;
   search?: string;
   activityFilter?: ActivityFilterValue;
+  campaignFilter?: CampaignFilterValue;
   includeActivitySummary?: boolean;
 }
 
-export type SummaryQuery = Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter"> & {
+export type SummaryQuery = Pick<
+  ListQuery,
+  "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter"
+> & {
   groupBy: string;
   sum?: string;
 };
@@ -302,7 +311,7 @@ export interface RecordService {
   list(module: ModuleApiName, query: ListQuery): Promise<ListResult>;
   count(
     module: ModuleApiName,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
