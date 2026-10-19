@@ -3,7 +3,7 @@
 import type { Criteria, FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
 import { useMemo } from "react";
 import type { TimelineEvent } from "@/components/records/detail/timeline";
-import { useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
+import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { NoteContent } from "./note-content";
 
 // Same page size and filter as the Notes card so both share one cached list.
@@ -41,7 +41,12 @@ export function useRecordNoteEvents(
   parentModule: ModuleApiName,
   parentId: string,
 ): readonly TimelineEvent[] {
-  const views = useViews("Notes");
+  const metadata = useModule("Notes");
+  const parentLookup = metadata.data?.fields.find((field) => field.apiName === "Parent_Id")?.lookup;
+  const supported = (parentLookup?.modules ?? (parentLookup ? [parentLookup.module] : [])).includes(
+    parentModule,
+  );
+  const views = useViews("Notes", { enabled: supported });
   const users = useUsers();
   const viewId = useMemo(
     () => views.data?.find((view) => view.isDefault)?.id ?? views.data?.[0]?.id ?? null,
@@ -60,11 +65,11 @@ export function useRecordNoteEvents(
     () => ({ viewId: viewId ?? "pending", page: 1, perPage: PAGE_SIZE, filters }),
     [viewId, filters],
   );
-  const list = useRecordList("Notes", query, { enabled: viewId !== null });
+  const list = useRecordList("Notes", query, { enabled: supported && viewId !== null });
   return useMemo(() => {
     const names = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
-    return ((list.data?.records ?? []) as readonly RecordData[]).map((record) =>
+    return ((supported ? (list.data?.records ?? []) : []) as readonly RecordData[]).map((record) =>
       noteToTimelineEvent(record, names),
     );
-  }, [list.data, users.data]);
+  }, [supported, list.data, users.data]);
 }
