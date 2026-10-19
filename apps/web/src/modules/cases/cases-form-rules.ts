@@ -60,6 +60,7 @@ export const CASES_FORM_INFORMATION_COLUMNS = [
  */
 export const casesFormRules: FormRules = {
   owner: "Owner",
+  readOnlyFields: ["Case_Number"],
   laterModuleFields: {
     Product_Name: "P2",
   },

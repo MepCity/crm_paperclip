@@ -36,6 +36,7 @@ test("Cases form rules configure owner, defaults, omitted fields, and titles", (
   for (const name of ["Add_Comment", "Comments", "No_of_comments"]) {
     expect(casesFormRules.omitted).toContain(name);
   }
+  expect(casesFormRules.readOnlyFields).toContain("Case_Number");
   expect(CASES_FORM_INFORMATION_COLUMNS[0][0]).toBe("Case_Number");
   expect(CASES_FORM_INFORMATION_COLUMNS[1][0]).toBe("Owner");
 });
