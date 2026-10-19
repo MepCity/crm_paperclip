@@ -85,9 +85,12 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     "Sheet view",
     "Print View",
   ]);
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Manage Tags", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });
   await expect(print.locator("svg")).toBeVisible();
   await print.click();

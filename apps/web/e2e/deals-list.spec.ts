@@ -261,10 +261,13 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
     "Print View",
   ]);
 
-  // Inert action items
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  // Manage Tags opens module-scoped tag management.
+  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Manage Tags", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
 
   // Print View
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });
