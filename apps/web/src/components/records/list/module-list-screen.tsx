@@ -12,6 +12,7 @@ import type {
   RecordData,
   SortSpec,
 } from "@crm/core/records";
+import { TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
@@ -149,7 +150,6 @@ export interface ModuleListScreenConfig {
 }
 
 const MAX_EXPORT_SELECTION = 500;
-const TRANSFER_MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 function isTransferModule(module: string): module is (typeof TRANSFER_MODULES)[number] {
   return (TRANSFER_MODULES as readonly string[]).includes(module);

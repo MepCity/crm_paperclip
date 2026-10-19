@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors";
-import type { RecordInput } from "./contract";
 import { describeRecordServiceContract } from "./contract-suite";
-import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
+import {
+  casesRecordServiceContractModule,
+  solutionsRecordServiceContractModule,
+} from "./contract-suite-module";
 import { createFixtureRecordService } from "./fixture";
 import casesTable from "./fixture/cases/export-table.json";
 import { fixtureModules } from "./fixture/registry";
@@ -21,50 +23,15 @@ const make = (options = {}) =>
     },
     { now: () => now, ...options },
   );
-const caseInput = (extra: RecordInput = {}): RecordInput => ({
-  Subject: "Example case",
-  Status: "New",
-  Case_Origin: "Email",
-  ...extra,
-});
-const solutionInput = (extra: RecordInput = {}): RecordInput => ({
-  Solution_Title: "Example solution",
-  ...extra,
-});
+const caseInput = casesRecordServiceContractModule.buildMinimalValidInput;
+const solutionInput = solutionsRecordServiceContractModule.buildMinimalValidInput;
 for (const [module, title, size, build, table] of [
   ["Cases", "Subject", 60, caseInput, casesTable],
   ["Solutions", "Solution_Title", 25, solutionInput, solutionsTable],
 ] as const) {
   const number = module === "Cases" ? "Case_Number" : "Solution_Number";
-  const definition: RecordServiceContractModuleDefinition = {
-    apiName: module,
-    singularLabel: module.slice(0, -1),
-    pluralLabel: module,
-    expectedFieldCount: table.fields.length,
-    buildMinimalValidInput: build,
-    systemFields: {
-      owner: "Owner",
-      createdBy: "Created_By",
-      modifiedBy: "Modified_By",
-      createdTime: "Created_Time",
-      modifiedTime: "Modified_Time",
-      lastActivityTime: "Last_Activity_Time",
-    },
-    filterMarker: {
-      field: title,
-      sample: "Contract sample",
-      updated: "Contract updated",
-      tenantOther: "Other tenant",
-    },
-    duplicatePermittedField: "Add_Comment",
-    sortFields: [title, "Status"],
-    expectedUniqueFields: [],
-    typeValidationCases: [
-      [title, 1],
-      ["Locked__s", "true"],
-      ["No_of_comments", "one"],
-    ],
-  };
+  const definition =
+    module === "Cases" ? casesRecordServiceContractModule : solutionsRecordServiceContractModule;
   describeRecordServiceContract(`${module} fixture`, createFixtureRecordService, definition);
   describe(module, () => {
     it("matches the sanitized export field, layout, picklist and view tables", async () => {
