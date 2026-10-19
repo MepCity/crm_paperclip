@@ -178,6 +178,8 @@ export interface ModuleScreenDefinition {
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
+    /** Footer group sits at the bottom right of the form (Cases). */
+    inventoryFooterEnd?: boolean;
     profileImageLaterModule?: ModuleKey;
     profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     /**

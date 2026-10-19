@@ -64,3 +64,18 @@ export function openDealCreateWithAccountName(
   });
   navigate(moduleCreatePath(orgSlug, "Deals"));
 }
+
+/** Provisional rule (MEP-900): New Case from the Accounts card fills Account Name. */
+export function openCaseCreateWithAccountName(
+  orgSlug: string,
+  account: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Cases",
+    fields: {
+      Account_Name: accountNameLookupFromRecord(account.id, account.fields),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Cases"));
+}

@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { AccountContactsCardBody } from "@/components/records/detail/account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "@/components/records/detail/account-member-accounts-card-body";
+import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
 import { notesCardBody } from "../notes-card";
@@ -20,6 +21,7 @@ export interface AccountsRelatedListHandlers {
   onMemberAccountNew?: () => void;
   onDealsAssign?: () => void;
   onDealsNew?: () => void;
+  onCasesNew?: () => void;
 }
 
 export interface AccountsRelatedListRailDefinition {
@@ -492,8 +494,16 @@ export function createAccountsRelatedLists(
     },
     {
       id: "cases",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedCasesCardBody, {
+              managerRecord: record,
+              filterField: "Account_Name",
+              caseRecordPath: (id) => recordPath("Cases", id),
+            })
+          : undefined,
       title: "Cases",
-      moduleKey: "M8",
+      moduleKey: "M3",
       order: 14,
       targetId: "related-list-cases",
       upperControls: [
@@ -501,13 +511,14 @@ export function createAccountsRelatedLists(
           id: "assign-cases",
           label: "Assign",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M3",
         },
         {
           id: "new-case",
           label: "New",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M3",
+          onAction: handlers.onCasesNew,
         },
       ],
       emptyStateText: "No records found",
