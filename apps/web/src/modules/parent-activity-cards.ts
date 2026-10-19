@@ -4,7 +4,7 @@ import type { RelatedListDefinition } from "./types";
 
 /** Body renderer for the Open / Closed Activities cards of a parent record's detail page. */
 export function parentActivitiesBody(
-  parentModule: "Leads" | "Contacts" | "Accounts" | "Deals" | "Campaigns",
+  parentModule: "Leads" | "Contacts" | "Accounts" | "Deals" | "Campaigns" | "Cases",
   variant: "open" | "closed",
 ): NonNullable<RelatedListDefinition["renderBody"]> {
   return ({ record, recordPath }) =>

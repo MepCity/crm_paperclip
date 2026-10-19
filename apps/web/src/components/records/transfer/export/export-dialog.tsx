@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
@@ -66,10 +66,6 @@ function ExportForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setError(null);
-  }, []);
-
   const picked = mode === "include" ? included : excluded;
   const setPicked = mode === "include" ? setIncluded : setExcluded;
   const limit = mode === "include" ? MAX_INCLUDED_FIELDS : MAX_EXCLUDED_FIELDS;
@@ -98,7 +94,8 @@ function ExportForm({
         toast({
           variant: "success",
           title: "Export completed",
-          message: `${job.rowCount} records exported to ${job.fileName}. Open ${historyHref} to download it again.`,
+          message: `${job.rowCount} records exported to ${job.fileName}.`,
+          actions: [{ label: "View export history", href: historyHref }],
         });
       close();
     } catch (caught) {

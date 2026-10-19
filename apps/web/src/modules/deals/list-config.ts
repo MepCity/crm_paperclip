@@ -72,7 +72,7 @@ export const dealsListPageConfig: ModuleListScreenConfig = {
       { id: "drafts", label: "Drafts" },
       { id: "deduplicate", label: "Deduplicate Deals" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Deals", laterModule: "M6" },
+      { id: "export", label: "Export Deals" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       { id: "print", label: "Print View", submenuIndicator: true },
     ],

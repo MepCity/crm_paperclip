@@ -170,3 +170,36 @@ test("Cancel with a file asks for confirmation; without a file cancels directly"
   await user.click(await screen.findByRole("button", { name: "Discard" }));
   await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(2));
 });
+
+test("default match field skips the record id entry", async () => {
+  const user = userEvent.setup();
+  const idFirst = {
+    ...preview,
+    matchFields: [
+      { field: "id", label: "Record Id" },
+      { field: "Email", label: "Email" },
+    ],
+  };
+  const { full } = setup({ preview: vi.fn().mockResolvedValue(idFirst) });
+  await toStep2(user);
+  await user.click(screen.getByRole("radio", { name: "Both" }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  await screen.findByText("Import completed");
+  expect(vi.mocked(full.run).mock.calls[0]?.[1].matchField).toBe("Email");
+});
+
+test("file size uses the decimal 25 MB server budget before preview", async () => {
+  const user = userEvent.setup();
+  const { full } = setup();
+  const file = csv();
+  Object.defineProperty(file, "size", { value: 25_000_001, configurable: true });
+  await user.upload(input(), file);
+  expect(screen.getByRole("alert").textContent).toBe("File exceeds the 25 MB limit.");
+  expect(full.preview).not.toHaveBeenCalled();
+  Object.defineProperty(file, "size", { value: 25_000_000 });
+  await user.upload(input(), file);
+  await user.click(next());
+  await screen.findByText("How should records be handled?");
+  expect(full.preview).toHaveBeenCalledWith(file, "UTF-8");
+});

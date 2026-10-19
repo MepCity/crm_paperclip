@@ -1430,6 +1430,85 @@ test.describe("Leads list page", () => {
     expect(lastCountBody?.activity_filter).toBeUndefined();
   });
 
+  test("applies campaigns system filter to list data and count requests and resets on clear", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await bulkSearchParamsPromise;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
+    const initialRows = await page.locator("table tbody tr").count();
+    const initialTotal = await page.locator("[data-part=total-value]").innerText();
+
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    const campaignsRow = panel.getByRole("checkbox", { name: "Campaigns", exact: true });
+    await campaignsRow.scrollIntoViewIfNeeded();
+    await expect(campaignsRow).toBeEnabled({ timeout: 30_000 });
+    await campaignsRow.focus();
+    await page.keyboard.press("Space");
+    await expect(campaignsRow).toBeChecked();
+
+    const campaignTrigger = panel.getByRole("button", { name: "Campaign Name" });
+    await expect(campaignTrigger).toBeVisible();
+    await campaignTrigger.click();
+
+    const campaignOption = page.getByRole("option", { name: "Campaign 001" });
+    await expect(campaignOption).toBeVisible();
+    await campaignOption.click();
+    await page.keyboard.press("Escape");
+
+    let lastBulkBody: Record<string, unknown> | undefined;
+    let lastCountBody: Record<string, unknown> | undefined;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) {
+        lastBulkBody = request.postDataJSON() as Record<string, unknown>;
+      }
+      if (parsed.pathname.endsWith("/Leads/actions/count")) {
+        lastCountBody = request.postDataJSON() as Record<string, unknown>;
+      }
+    });
+
+    const filterResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulkResponse, countResponse] = await filterResponses;
+    expect(bulkResponse.ok()).toBe(true);
+    expect(countResponse.ok()).toBe(true);
+
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        campaign_filter: {
+          campaign_ids: ["210000000000000000"],
+        },
+      }),
+    );
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
+
+    const memberLeadIds = ["100000000000000006", "100000000000000000"];
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(memberLeadIds);
+    await expect(page.locator("[data-part=total-value]")).toHaveText("2");
+
+    const clearResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Clear" }).click();
+    const [clearBulk, clearCount] = await clearResponses;
+    expect(clearBulk.ok()).toBe(true);
+    expect(clearCount.ok()).toBe(true);
+
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+    expect(lastBulkBody?.campaign_filter).toBeUndefined();
+    expect(lastCountBody?.campaign_filter).toBeUndefined();
+  });
+
   test("alphabetical filter keeps the rows that start with the chosen letter", async ({ page }) => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
@@ -2170,7 +2249,8 @@ test("Print View exposes a left flyout without printing or navigating", async ({
   const childBox = requireBox(await defaultItem.boundingBox());
   expect(childBox.x + childBox.width).toBeLessThanOrEqual(parentBox.x);
   await page.screenshot({ path: test.info().outputPath("print-view-submenu.png") });
-  for (const item of [defaultItem, canvasItem]) {
+  await expect(defaultItem).not.toHaveAttribute("data-later-module", "M6");
+  for (const item of [canvasItem]) {
     await expect(item).toHaveAttribute("data-later-module", "M6");
     // Placeholder rows are aria-disabled; dispatch a pointer click to verify their event guard.
     await item.click({ force: true });

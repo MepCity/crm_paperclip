@@ -17,12 +17,13 @@ import {
 import { isCaseInlineEditable } from "./cases-inline-edit";
 import { formatCasesLastUpdateLabel } from "./cases-last-update";
 import { casesRecordHeaderIdentity } from "./cases-record-header";
+import { casesRelatedListRail, casesRelatedLists } from "./cases-related-lists";
 import { CASES_LIST_CURRENCY_CODE, casesListPageConfig } from "./list-config";
 import { buildCasesFilterGroups } from "./list-filters";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
- * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Accounts bindings; the rail follows metadata order with provisional rules (MEP-863).
  */
 export const casesScreenDefinition: ModuleScreenDefinition = {
   apiName: "Cases",
@@ -42,7 +43,7 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
   detail: {
     header: casesRecordHeaderIdentity,
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
     businessCard: buildCasesBusinessCardFields,
     sections: buildCasesDetailSections,
     inlineEditable: isCaseInlineEditable,
@@ -51,12 +52,18 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildAccountsRecordMoreMenuGroups,
     deleteTitle: CASES_DELETE_CONFIRM_TITLE,
     deleteMessage: CASES_DELETE_CONFIRM_MESSAGE,
+    relatedLists: casesRelatedLists,
+    relatedListRail: casesRelatedListRail,
     timeline: {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
       events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };

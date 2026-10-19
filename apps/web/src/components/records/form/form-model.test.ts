@@ -3,6 +3,7 @@ import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import {
+  applySectionColumnOverrides,
   buildFormModel,
   type FormRules,
   formFields,
@@ -216,6 +217,36 @@ describe("metadata form model", () => {
     expect(payload).not.toHaveProperty(names.coordinates);
     for (const f of module.fields.filter((f) => !f.views.create))
       expect(payload).not.toHaveProperty(f.apiName);
+  });
+
+  it("readOnlyFields retains edit:false field in edit mode as read-only and fallbackColumns overrides section columns", () => {
+    const rawSections = buildFormModel(metadata, "edit", ["CreateOnly"]);
+    const overridden = applySectionColumnOverrides(
+      rawSections,
+      {
+        "First section": [["CreateOnly"], ["Required"]],
+      },
+      metadata,
+      "edit",
+      ["CreateOnly"],
+    );
+    expect(overridden[0]?.columns[0]?.map((f) => f.apiName)).toEqual(["CreateOnly"]);
+    expect(overridden[0]?.columns[0]?.[0]?.readOnly).toBe(true);
+    expect(overridden[0]?.columns[1]?.map((f) => f.apiName)).toEqual(["Required"]);
+
+    const fields = formFields(metadata, overridden, "edit", {
+      owner: "Required",
+      readOnlyFields: ["CreateOnly"],
+    });
+    expect(fields.some((f) => f.apiName === "CreateOnly")).toBe(true);
+
+    const payload = formPayload(
+      fields,
+      { CreateOnly: "12345", Required: "new title" },
+      { CreateOnly: "12345", Required: "old title" },
+    );
+    expect(payload).toEqual({ Required: "new title" });
+    expect(payload).not.toHaveProperty("CreateOnly");
   });
 });
 

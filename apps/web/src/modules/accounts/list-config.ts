@@ -82,7 +82,7 @@ export const accountsListPageConfig: ModuleListScreenConfig = {
       { id: "drafts", label: "Drafts" },
       { id: "deduplicate", label: "Deduplicate Accounts" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Accounts", laterModule: "M6" },
+      { id: "export", label: "Export Accounts" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       {
         id: "print",
