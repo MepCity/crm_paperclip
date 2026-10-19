@@ -5,7 +5,7 @@ import { contactField } from "./test-metadata";
 test("preserves inventory order and later-module keys before metadata resolves", () => {
   expect(contactsFilterGroups[0]?.items.map((row) => [row.label, row.laterModule])).toEqual([
     ["Activities", undefined],
-    ["Campaigns", "M7"],
+    ["Campaigns", undefined],
     ["Latest Email Status", "M10"],
     ["Locked", undefined],
     ["Record Action", undefined],
@@ -18,6 +18,11 @@ test("preserves inventory order and later-module keys before metadata resolves",
     id: "Activities",
     label: "Activities",
     systemEditor: "activities",
+  });
+  expect(contactsFilterGroups[0]?.items[1]).toEqual({
+    id: "Campaigns",
+    label: "Campaigns",
+    systemEditor: "campaigns",
   });
   expect(contactsFilterGroups[1]?.items.map((row) => row.label)).toEqual([
     "Account Name",

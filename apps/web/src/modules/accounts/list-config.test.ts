@@ -40,7 +40,7 @@ test("keeps the Accounts Actions inventory in reference order (AL-14.1 - AL-14.1
   ).toBe("M6");
   expect(
     accountsListPageConfig.inventory?.actions.find((item) => item.id === "export")?.laterModule,
-  ).toBe("M6");
+  ).toBeUndefined();
   expect(
     accountsListPageConfig.inventory?.actions.find((item) => item.id === "client-script")
       ?.laterModule,

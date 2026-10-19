@@ -145,7 +145,7 @@ test("Calls filters, paging, record route and related record link", async ({ pag
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
 
-test("Calls later-module controls stay inert and Actions lists the six rows", async ({ page }) => {
+test("Calls import and export open while later-module controls stay inert", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, "Calls"));
@@ -153,9 +153,10 @@ test("Calls later-module controls stay inert and Actions lists the six rows", as
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // CL-11 (M6) and CL-30 (M11): nothing happens
+  // Import is available; View Settings remains a later-module control.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Import Calls" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
@@ -171,7 +172,7 @@ test("Calls later-module controls stay inert and Actions lists the six rows", as
     "Print View",
   ]);
   await page.getByRole("menuitem", { name: "Export Calls", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Export Calls" })).toBeVisible();
   expect(page.url()).toBe(before);
 });
 

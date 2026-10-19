@@ -121,10 +121,13 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // AL-13: Create Account arrow attached dropdown (M6)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  // AL-13: Create Account dropdown opens the CSV import wizard
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Accounts", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Accounts\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // AL-33: View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
@@ -176,6 +179,24 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });
   await expect(print.locator("svg")).toBeVisible();
   await print.click();
+  const printMenu = page.getByRole("menu", { name: "Print View", exact: true });
+  await expect(printMenu.getByRole("menuitem")).toHaveText([
+    "Print Default view",
+    "Print Using Canvas",
+  ]);
+  for (const name of ["Print Using Canvas"]) {
+    const item = printMenu.getByRole("menuitem", { name, exact: true });
+    await expect(item).toHaveAttribute("data-later-module", "M6");
+    // Placeholder rows stay inert and leave the submenu open.
+    await item.click({ force: true });
+    await expect(printMenu).toBeVisible();
+    expect(page.url()).toBe(before);
+  }
+  await printMenu.getByRole("menuitem", { name: "Print Default view", exact: true }).focus();
+  await page.keyboard.press("Escape");
+  await expect(printMenu).toHaveCount(0);
+  await expect(print).toBeFocused();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 

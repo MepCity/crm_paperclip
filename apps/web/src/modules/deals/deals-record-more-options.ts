@@ -1,4 +1,5 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import { withPrintPreviewAction } from "@/components/records/print/print-preview-menu";
 import type { ModuleKey } from "@/components/ui/later-module";
 
 export const DEALS_DELETE_CONFIRM_TITLE = "Delete Deal";
@@ -8,6 +9,7 @@ type Handlers = {
   onClone: () => void;
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
+  onPrintPreview?: () => void;
 };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 
@@ -53,7 +55,7 @@ export const DEALS_RECORD_MORE_OPTIONS_GROUPS: readonly {
 ];
 
 export function buildDealsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGroup[] {
-  return DEALS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
+  const groups = DEALS_RECORD_MORE_OPTIONS_GROUPS.map((group) => ({
     id: group.id,
     items: group.items
       .filter(
@@ -65,4 +67,5 @@ export function buildDealsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGr
         ...(handler ? { onAction: handlers[handler] } : {}),
       })),
   }));
+  return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }
