@@ -580,6 +580,12 @@
   background: var(--color-activity-form-switch-subdued);
 }
 
+.record-duration-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+}
+
 /* activities-form.md → Visual layout — Meeting form (measured): Meeting Information window. */
 .meeting-window__title {
   margin: 0;
