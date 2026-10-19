@@ -56,7 +56,7 @@ describe("accountsRelatedLists definition", () => {
       { order: 11, id: "sales-orders", title: "Sales Orders", moduleKey: "P2" },
       { order: 12, id: "invoices", title: "Invoices", moduleKey: "P2" },
       { order: 13, id: "member-accounts", title: "Member Accounts", moduleKey: "M3" },
-      { order: 14, id: "cases", title: "Cases", moduleKey: "M8" },
+      { order: 14, id: "cases", title: "Cases", moduleKey: "M3" },
       { order: 15, id: "social", title: "Social", moduleKey: "M15" },
     ];
 

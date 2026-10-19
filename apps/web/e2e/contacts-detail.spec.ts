@@ -1,4 +1,5 @@
 import { signUpNewUser } from "./support/auth";
+import { createCaseFromCardAndOpenIt, expectEmptyCasesCard } from "./support/cases-card";
 import {
   moduleCreatePath,
   moduleListDefaultPath,
@@ -545,6 +546,51 @@ test.describe("Contacts record detail", () => {
     const deals = page.getByRole("region", { name: "Deals" });
     await expect(deals.getByText("No records found")).toBeVisible();
     await expect(deals.getByRole("table")).toHaveCount(0);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card is live: lists linked cases, New opens the Cases form prefilled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, MANAGER_RECORD_ID);
+    const cases = page.getByRole("region", { name: "Cases" });
+    await cases.scrollIntoViewIfNeeded();
+    await expect(cases.getByRole("link").first()).toHaveAttribute("href", /\/tab\/Cases\/\d+$/);
+    await expect(cases.getByRole("button", { name: "Assign" })).toBeVisible();
+    await expect(cases.locator("[data-later-module]")).toHaveCount(0);
+    await cases.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Cases"));
+    await expect(page.getByRole("textbox", { name: "Related To", exact: true })).toHaveValue(
+      /Contact 001/,
+    );
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, NO_DEAL_RECORD_ID);
+    await expectEmptyCasesCard(page);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card: New, Save, row on the card, Subject opens the Case", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, NO_DEAL_RECORD_ID);
+    await expectEmptyCasesCard(page);
+    await createCaseFromCardAndOpenIt(
+      page,
+      org.slug,
+      moduleRecordPath(org.slug, "Contacts", NO_DEAL_RECORD_ID),
+      "E2E linked case",
+    );
     ignoreFailedResponses(pageErrors, [400]);
   });
 });
