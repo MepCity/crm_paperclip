@@ -12,6 +12,8 @@ test("exports the Cases definition and registers it", () => {
     navigation: { id: "cases" },
   });
   expect(casesScreenDefinition.detail.hasPortrait).toBe(false);
-  expect(casesScreenDefinition.detail.recordNavigation).toBe(false);
+  expect(casesScreenDefinition.detail.recordNavigation).toBe(true);
+  expect(casesScreenDefinition.detail.relatedLists?.length).toBeGreaterThan(0);
+  expect(casesScreenDefinition.detail.relatedListRail).toBeDefined();
   expect(getModuleScreens().some((d) => d.apiName === "Cases")).toBe(true);
 });

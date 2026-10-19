@@ -14,6 +14,10 @@ import { ImportHistory } from "./history/import-history";
 import { ImportWizard } from "./import/import-wizard";
 import type { ImportWizardClient } from "./import/types";
 
+function moduleListPath(orgSlug: string, module: TransferModule): string {
+  return moduleListDefaultPath(orgSlug, resolveModuleScreenByApiName(module)?.tab ?? module);
+}
+
 function moduleLabel(module: TransferModule): string {
   return resolveModuleScreenByApiName(module)?.pluralLabel ?? module;
 }
@@ -36,7 +40,7 @@ export function ImportWizardScreen({ module }: { module: TransferModule }) {
     }),
     [client, module, orgSlug, queryClient],
   );
-  const listPath = moduleListDefaultPath(orgSlug, module);
+  const listPath = moduleListPath(orgSlug, module);
   return (
     <ImportWizard
       module={module}
@@ -86,7 +90,7 @@ export function ExportHistoryScreen() {
       loading={history.isLoading}
       moduleLabel={moduleLabel}
       downloadHref={(job) => client.exportDownloadUrl(job.id)}
-      onRetry={(job) => router.push(moduleListDefaultPath(orgSlug, job.module))}
+      onRetry={(job) => router.push(moduleListPath(orgSlug, job.module))}
     />
   );
 }

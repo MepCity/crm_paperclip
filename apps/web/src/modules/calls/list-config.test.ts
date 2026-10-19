@@ -45,7 +45,7 @@ test("keeps the Calls Actions inventory in reference order and assigns later mod
   ).toBe("M6");
   expect(
     callsListPageConfig.inventory?.actions.find((item) => item.id === "export")?.laterModule,
-  ).toBe("M6");
+  ).toBeUndefined();
   expect(
     callsListPageConfig.inventory?.actions.find((item) => item.id === "print")?.submenuIndicator,
   ).toBe(true);

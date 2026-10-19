@@ -12,6 +12,8 @@ test("exports the Solutions definition and registers it", () => {
     navigation: { id: "solutions" },
   });
   expect(solutionsScreenDefinition.detail.hasPortrait).toBe(false);
-  expect(solutionsScreenDefinition.detail.recordNavigation).toBe(false);
+  expect(solutionsScreenDefinition.detail.recordNavigation).toBe(true);
+  expect(solutionsScreenDefinition.detail.relatedLists?.length).toBeGreaterThan(0);
+  expect(solutionsScreenDefinition.detail.relatedListRail).toBeDefined();
   expect(getModuleScreens().some((d) => d.apiName === "Solutions")).toBe(true);
 });
