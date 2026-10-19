@@ -41,6 +41,7 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
     rules: casesFormRules,
     fallbackColumns: { "Case Information": CASES_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
+    inventoryFooterEnd: true,
   },
   detail: {
     header: casesRecordHeaderIdentity,

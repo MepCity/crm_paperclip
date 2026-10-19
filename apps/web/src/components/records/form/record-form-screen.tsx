@@ -125,6 +125,7 @@ export interface RecordFormConfig {
   currencyPrefix?: string;
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
+  inventoryFooterEnd?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -838,7 +839,7 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter />
+          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog
