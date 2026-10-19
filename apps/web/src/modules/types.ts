@@ -182,6 +182,8 @@ export interface ModuleScreenDefinition {
     editIntents?: Readonly<
       Record<string, { set?: Readonly<Record<string, FieldValue>>; focus?: string }>
     >;
+    /** Footer group sits at the bottom right of the form (Cases). */
+    inventoryFooterEnd?: boolean;
     profileImageLaterModule?: ModuleKey;
     profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     /**

@@ -12,6 +12,7 @@ import {
 import { useRecordCount, useViews } from "@/lib/api/client/hooks";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import {
+  openCaseCreateWithContact,
   openContactCreateWithReportingTo,
   openDealCreateWithContact,
 } from "./contacts-record-create";
@@ -54,6 +55,8 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
             openContactCreateWithReportingTo(props.orgSlug, record, (path) => router.push(path)),
           onAddReportingContact: () =>
             openContactCreateWithReportingTo(props.orgSlug, record, (path) => router.push(path)),
+          onCasesNew: () =>
+            openCaseCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
           onDealsNew: () =>
             openDealCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
           onAddCampaigns: campaigns.onAdd,

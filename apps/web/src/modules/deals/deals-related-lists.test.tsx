@@ -53,7 +53,7 @@ describe("createDealsRelatedLists definition", () => {
       { id: "sales-orders", moduleKey: "P2" },
       { id: "contact-roles", moduleKey: "M2" },
       { id: "emails", moduleKey: "M10" },
-      { id: "cases", moduleKey: "M8" },
+      { id: "cases", moduleKey: "M4" },
       { id: "invoices", moduleKey: "P2" },
     ];
     expected.forEach((row, index) => {
