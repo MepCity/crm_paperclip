@@ -786,6 +786,7 @@ unknown or inaccessible IDs produce no matches. Other modules and malformed
 filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
 `campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
 
+
 ## Cases
 
 `Cases` publishes all 30 exported fields, layout sections/columns, five picklists
@@ -832,6 +833,7 @@ Interim/open questions:
   following the existing shared saved-view policy.
 - Layout-required Question/Answer do not change Solutions' module-level required
   fields; the record contract follows the exported system_mandatory flags.
+
 
 ## Recycle Bin search queries
 

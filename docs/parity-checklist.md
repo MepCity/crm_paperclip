@@ -826,7 +826,10 @@ Provisional rules: the populated table body is the Accounts table (not observed 
 
 ### Campaigns create / edit form
 
-Implemented; QA pending (MEP-814).
+Implemented; closing QA 2/2 exercised the create and edit flows on 2026-10-19
+(MEP-853). One visible layout defect remains: the footer controls sit directly
+below Description and leave a large blank area underneath, while the reference
+form keeps that footer at the bottom edge of the form viewport.
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -862,14 +865,43 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 - GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
 - GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
 - GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
-- GK-5 Leads and Contacts cards (campaign membership, Member Status, Email, Phone): implemented by provisional rule; QA pending (MEP-813).
-- GK-6 Deals card (Campaign Source matching deals, Accounts Deals card behaviour): implemented by provisional rule; QA pending (MEP-813).
-- GK-7 Child Campaigns card (Parent Campaign matching campaigns, standard columns): implemented by provisional rule; QA pending (MEP-813).
-- GK-8 Notes, Attachments, open/closed activities, Checklists, Connected Records (Accounts counterparts and laterModule): implemented by provisional rule; QA pending (MEP-813).
+- GK-5 Leads and Contacts cards (campaign membership, Member Status, Email, Phone): implemented by provisional rule; closing QA 2/2 verified populated cards and their left-to-right headings (MEP-853).
+- GK-6 Deals card (Campaign Source matching deals, Accounts Deals card behaviour): implemented by provisional rule; closing QA 2/2 verified the populated card and record navigation (MEP-853).
+- GK-7 Child Campaigns card (Parent Campaign matching campaigns, standard columns): implemented by provisional rule; closing QA 2/2 verified the populated card (MEP-853).
+- GK-8 Notes, Attachments, open/closed activities, Checklists, Connected Records (Accounts counterparts and laterModule): implemented by provisional rule; closing QA 2/2 verified the Notes flow and related-card order (MEP-853).
+
+Closing QA 2/2 found that the populated Leads/Contacts cards still render the
+phone Call action with `data-later-module="M5"`; clicking it opens no call flow.
+The detail also retains M5/M6 later-module markers on activity and attachment
+rail/actions. These controls cross the M7 functionality threshold and need a
+gate decision or correction. M10/M11/P3 controls did not navigate when clicked.
 
 ### Campaigns links in earlier modules
 
-Not started.
+Leads Campaigns (CX-18) and Contacts Campaigns (CX-318) appear as the second
+system filter in their respective list panels. The provisional criterion limits
+(CX-207: up to five campaigns; CX-209: Member Status) remain open questions
+because the reference filter was not operated. Closing QA 2/2 tested the local
+select, Apply, and Clear flows (MEP-853): the selected campaign returns two
+Leads and one Contact; Clear restores the full lists. After Apply, both filter
+panels scroll horizontally and clip the left edge of their section headings
+and checkboxes, a visible defect.
+
+### Module 7 gate
+
+Closing QA 2/2 (MEP-853): all nine prerequisite Campaigns branches were present
+on `origin/main` at `4301d431` (2026-10-19 02:31:45 +0300). The create/edit form,
+related cards, and Leads/Contacts Campaigns filters were exercised against the
+local app. The form footer placement, M5/M6 inert controls on the Campaigns
+detail, and the horizontally clipped Campaigns filter panels remain defects
+for the CTO gate. The detail layout, Add to Campaigns picker, member-status
+choices, populated membership columns/actions, Campaign Source lookup, and form
+validation/edit behaviour remain provisional where the reference could not be
+observed.
+Existing/Create New bulk membership, Campaign type/status and Service status
+filter criteria, Lead-conversion membership transfer, and a Deals Campaigns
+card are outside this half of the gate. Closing QA 1/2 (MEP-852) is tracked
+separately.
 
 ## Module 6 · Print page (MEP-871, interim rule)
 
