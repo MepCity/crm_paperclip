@@ -295,8 +295,8 @@ test("omits secondary line for modules without search field config", async () =>
       total: 1,
       records: [
         {
-          id: "case-1",
-          fields: { Subject: "Future Vendor", Email: "hidden@example.test" },
+          id: "vendor-1",
+          fields: { Vendor_Name: "Future Vendor", Email: "hidden@example.test" },
         },
       ],
     },
@@ -305,8 +305,8 @@ test("omits secondary line for modules without search field config", async () =>
   mount();
   await open(user);
   await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
-  const link = await screen.findByRole("link", { name: "case-1" });
-  expect(link.textContent).toBe("case-1");
+  const link = await screen.findByRole("link", { name: "vendor-1" });
+  expect(link.textContent).toBe("vendor-1");
 });
 
 test("search errors use the shared error notice", async () => {
