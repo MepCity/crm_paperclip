@@ -94,7 +94,7 @@ export function withSearchParams(path: string, params: URLSearchParams): string 
 }
 
 export function moduleImportPath(orgSlug: string, moduleApiName: string): string {
-  return moduleTabPath(orgSlug, moduleApiName, "import");
+  return moduleTabPath(orgSlug, moduleApiName === "Events" ? "Meetings" : moduleApiName, "import");
 }
 
 export function importHistoryPath(orgSlug: string): string {

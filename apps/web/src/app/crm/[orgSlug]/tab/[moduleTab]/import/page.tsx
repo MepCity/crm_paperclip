@@ -1,11 +1,10 @@
 import type { TransferModule } from "@crm/core";
+import { TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { notFound } from "next/navigation";
 import { ImportWizardScreen } from "@/components/records/transfer/transfer-screens";
 import { PageTitle } from "@/components/shell/page-title";
 import { requireOrgContext } from "@/lib/session";
 import { requireModuleScreen } from "@/modules/module-route";
-
-const TRANSFER_MODULES: readonly string[] = ["Leads", "Contacts", "Accounts", "Deals"];
 
 type Props = { params: Promise<{ orgSlug: string; moduleTab: string }> };
 
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function ModuleImportPage({ params }: Props) {
   const { orgSlug, moduleTab } = await params;
   const definition = requireModuleScreen(moduleTab);
-  if (!TRANSFER_MODULES.includes(definition.apiName)) notFound();
+  if (!(TRANSFER_MODULES as readonly string[]).includes(definition.apiName)) notFound();
   await requireOrgContext(orgSlug);
   return (
     <>
