@@ -186,6 +186,17 @@ test("lookup field links to registered Campaigns detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
+test("lookup field links to registered Cases detail page", () => {
+  show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
+    module: "Cases",
+    id: "case-123",
+    name: "Acme Case",
+  });
+  const link = screen.getByRole("link", { name: "Acme Case" });
+  expect(link.getAttribute("href")).toBe("/tab/Cases/case-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
 test("lookup field attaches laterModule to unregistered target link", () => {
   show(field("Doc_Ref", "lookup", { lookup: { module: "Documents" } }), {
     module: "Documents",
