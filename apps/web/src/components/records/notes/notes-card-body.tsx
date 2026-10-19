@@ -30,6 +30,8 @@ const NAME_FIELDS = [
   "Account_Name",
   "Deal_Name",
   "Campaign_Name",
+  "Subject",
+  "Solution_Title",
   "Last_Name",
   "Company",
 ];

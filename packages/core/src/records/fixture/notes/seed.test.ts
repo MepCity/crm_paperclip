@@ -16,6 +16,17 @@ const generators = {
 const seedModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 describe("Notes metadata and seed", () => {
+  it("preserves Campaigns, Cases and Solutions as note parents after integration", () => {
+    expect(notesParentModules).toEqual([
+      "Leads",
+      "Contacts",
+      "Accounts",
+      "Deals",
+      "Campaigns",
+      "Cases",
+      "Solutions",
+    ]);
+  });
   it("preserves evidenced fields and restricts the polymorphic parent", () => {
     expect(notesMetadata.apiName).toBe("Notes");
     expect(notesMetadata.fields.map((field) => field.apiName)).toEqual([
