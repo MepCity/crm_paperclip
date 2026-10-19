@@ -6,6 +6,9 @@ import type { TimelineEvent } from "@/components/records/detail/timeline";
 import { useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { NoteContent } from "./note-content";
 
+// Record modules whose Timeline History shows notes (same parents as the Notes card).
+export const NOTE_TIMELINE_PARENTS: readonly string[] = ["Leads", "Contacts", "Accounts", "Deals"];
+
 // Same page size and filter as the Notes card so both share one cached list.
 const PAGE_SIZE = 100;
 
@@ -60,11 +63,15 @@ export function useRecordNoteEvents(
     () => ({ viewId: viewId ?? "pending", page: 1, perPage: PAGE_SIZE, filters }),
     [viewId, filters],
   );
-  const list = useRecordList("Notes", query, { enabled: viewId !== null });
+  // Notes only hang off Leads, Contacts, Accounts and Deals; asking for Activities (Tasks,
+  // Meetings, Calls) or later modules returns 400 and breaks those record pages.
+  const enabled = viewId !== null && NOTE_TIMELINE_PARENTS.includes(parentModule);
+  const list = useRecordList("Notes", query, { enabled });
   return useMemo(() => {
+    if (!enabled) return [];
     const names = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
     return ((list.data?.records ?? []) as readonly RecordData[]).map((record) =>
       noteToTimelineEvent(record, names),
     );
-  }, [list.data, users.data]);
+  }, [enabled, list.data, users.data]);
 }

@@ -186,7 +186,8 @@ test.describe("Deals record detail", () => {
     const frame = page.locator("[data-record-frame]");
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
-    await expect(frame.getByText("No logs found")).toBeVisible();
+    // Seeded notes now appear in Timeline History (MEP-580), so the list is either empty or shows them.
+    await expect(frame.getByText(/No logs found|Note added/).first()).toBeVisible();
     await frame.getByRole("tab", { name: "Overview" }).click();
     const summary = page.locator("[data-deals-contact-person-summary]");
     await expect(summary).toBeVisible({ timeout: 15_000 });
