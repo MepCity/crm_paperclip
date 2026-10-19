@@ -13,14 +13,23 @@ export interface FormSectionModel {
 }
 
 /** Placement comes from columns, never from field dictionary or sequence order. */
-export function buildFormModel(metadata: ModuleMetadata, mode: FormMode): FormSectionModel[] {
+export function buildFormModel(
+  metadata: ModuleMetadata,
+  mode: FormMode,
+  readOnlyFields?: readonly string[],
+): FormSectionModel[] {
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
   return metadata.layout.map((section) => ({
     label: section.label,
     columns: section.columns.map((column) =>
       column.flatMap((name) => {
         const field = fields.get(name);
-        return field?.views[mode] ? [field] : [];
+        if (!field) return [];
+        const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+        if (field.views[mode] || isReadOnlyEdit) {
+          return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+        }
+        return [];
       }),
     ),
   }));
@@ -32,6 +41,7 @@ export function applySectionColumnOverrides(
   overrides: Readonly<Record<string, readonly (readonly string[])[]>> | undefined,
   metadata: ModuleMetadata,
   mode: FormMode,
+  readOnlyFields?: readonly string[],
 ): FormSectionModel[] {
   if (!overrides) return [...sections];
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
@@ -43,7 +53,12 @@ export function applySectionColumnOverrides(
       columns: override.map((column) =>
         column.flatMap((name) => {
           const field = fields.get(name);
-          return field?.views[mode] ? [field] : [];
+          if (!field) return [];
+          const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+          if (field.views[mode] || isReadOnlyEdit) {
+            return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+          }
+          return [];
         }),
       ),
     };
@@ -216,6 +231,12 @@ export interface FormRules {
   subduedToggles?: readonly string[];
   /** Fields marked required by layout rules even when not system-mandatory in metadata. */
   requiredFields?: readonly string[];
+  /** Fields rendered read-only in the form even in edit mode when metadata marks edit: false. */
+  readOnlyFields?: readonly string[];
+  /** Field column order overrides when service layout columns do not match the reference form. */
+  fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
+  /** Initial field to focus when opening create form (defaults to owner). */
+  initialFocus?: string;
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);
@@ -290,10 +311,18 @@ export function formFields(
       names.add(address.longitude);
     }
   }
-  return metadata.fields.filter(
-    (field) =>
-      names.has(field.apiName) && field.views[mode] && !rules.omitted?.includes(field.apiName),
-  );
+  return metadata.fields
+    .filter(
+      (field) =>
+        names.has(field.apiName) &&
+        (field.views[mode] || (mode === "edit" && rules.readOnlyFields?.includes(field.apiName))) &&
+        !rules.omitted?.includes(field.apiName),
+    )
+    .map((field) =>
+      mode === "edit" && rules.readOnlyFields?.includes(field.apiName)
+        ? { ...field, readOnly: true }
+        : field,
+    );
 }
 
 export function addressRulesList(rules: FormRules): readonly AddressFormRule[] {

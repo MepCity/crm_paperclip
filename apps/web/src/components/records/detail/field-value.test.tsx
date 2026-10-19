@@ -7,7 +7,9 @@ import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   apiName: string,
@@ -220,3 +222,17 @@ test("empty lookup field renders an em dash", () => {
   });
   expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
 });
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show(field("Support_Ref", "lookup", { lookup: { module } }), {
+      module,
+      id: "record-1",
+      name: "Support record",
+    });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}

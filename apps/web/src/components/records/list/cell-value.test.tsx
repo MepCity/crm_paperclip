@@ -6,7 +6,9 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { CellValue } from "./cell-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   dataType: FieldDefinition["dataType"],
@@ -334,3 +336,13 @@ test("numeric dates show date and time, or only the date on all-day rows", () =>
   );
   expect(screen.getByText("01.03.2026")).toBeTruthy();
 });
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show("lookup", { module, id: "record-1", name: "Support record" }, { lookup: { module } });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}
