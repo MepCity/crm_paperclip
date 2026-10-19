@@ -208,6 +208,8 @@ export interface FormRules {
   currencies?: readonly string[];
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
+  /** Fields the service hides in edit that the reference edit form still draws (read-only ones). */
+  editShownFields?: readonly string[];
   omittedSections?: readonly string[];
   labelLines?: Readonly<Record<string, readonly string[]>>;
   /** Picklists whose reference panel paints a search field above the options (AF-13.1). */

@@ -140,9 +140,20 @@ test("edit shows the locked Case Number and saves", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`/tab/Cases/${id}$`), { timeout: 60_000 });
 });
 
-test("laterModule controls do not navigate or open dialogs", async ({ page }) => {
+test("footer is right aligned and laterModule controls stay inert", async ({ page }) => {
   await openCreate(page);
   const url = page.url();
+  const card = page.locator("[data-record-form-card]");
+  const footer = page.locator("[data-record-form-inventory-footer]");
+  await footer.scrollIntoViewIfNeeded();
+  const cardBounds = await card.boundingBox();
+  const footerBounds = await footer.boundingBox();
+  const footerLabelBounds = await footer.getByText("Create Form Views :").boundingBox();
+  if (!cardBounds || !footerBounds || !footerLabelBounds) {
+    throw new Error("Cases form footer geometry is unavailable");
+  }
+  expect(footerLabelBounds.x).toBeGreaterThan(cardBounds.x + cardBounds.width / 2);
+  expect(footerBounds.x + footerBounds.width).toBeLessThanOrEqual(cardBounds.x + cardBounds.width);
   for (const name of [
     "Edit Page Layout",
     "Client Script",

@@ -125,6 +125,7 @@ export interface RecordFormConfig {
   currencyPrefix?: string;
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
+  inventoryFooterEnd?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -189,16 +190,32 @@ function LoadedRecordForm({
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
     [config.rules, mode, metadata, sourceRecord],
   );
+  const formMetadata = useMemo(() => {
+    const shown = rules.editShownFields;
+    if (mode !== "edit" || !shown?.length) return metadata;
+    return {
+      ...metadata,
+      fields: metadata.fields.map((field) =>
+        shown.includes(field.apiName) ? { ...field, views: { ...field.views, edit: true } } : field,
+      ),
+    };
+  }, [metadata, mode, rules.editShownFields]);
   const baseSections = useMemo(
     () =>
       applySectionColumnOverrides(
-        buildFormModel(metadata, mode, rules.readOnlyFields),
+        buildFormModel(formMetadata, mode, rules.readOnlyFields),
         config.sectionColumnOverrides ?? rules.fallbackColumns,
-        metadata,
+        formMetadata,
         mode,
         rules.readOnlyFields,
       ),
-    [metadata, mode, config.sectionColumnOverrides, rules.fallbackColumns, rules.readOnlyFields],
+    [
+      formMetadata,
+      mode,
+      config.sectionColumnOverrides,
+      rules.fallbackColumns,
+      rules.readOnlyFields,
+    ],
   );
   const sections = useMemo(() => {
     if (!rules.requiredFields?.length) return baseSections;
@@ -211,13 +228,13 @@ function LoadedRecordForm({
     }));
   }, [baseSections, rules.requiredFields]);
   const fields = useMemo(() => {
-    const list = formFields(metadata, sections, mode, rules);
+    const list = formFields(formMetadata, sections, mode, rules);
     if (!rules.requiredFields?.length) return list;
     const requiredSet = new Set(rules.requiredFields);
     return list.map((field) =>
       requiredSet.has(field.apiName) ? { ...field, required: true } : field,
     );
-  }, [metadata, sections, mode, rules]);
+  }, [formMetadata, sections, mode, rules]);
 
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const ruleDefaults =
@@ -822,7 +839,7 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter />
+          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog

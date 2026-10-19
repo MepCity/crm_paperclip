@@ -21,9 +21,13 @@ export function RecordFormClientScriptTab() {
   );
 }
 
-export function RecordFormInventoryFooter() {
+export function RecordFormInventoryFooter({ alignEnd = false }: { alignEnd?: boolean }) {
   return (
-    <footer className="record-form-inventory-footer" data-record-form-inventory-footer>
+    <footer
+      className="record-form-inventory-footer"
+      data-align-end={alignEnd || undefined}
+      data-record-form-inventory-footer
+    >
       <span className="record-form-inventory-footer__label">Create Form Views :</span>
       <Button
         type="button"
