@@ -12,14 +12,18 @@ import type {
   RecordData,
   SortSpec,
 } from "@crm/core/records";
+import { TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
+import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
+import { supportsListPrint } from "@/components/records/print/print-modules";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
+import { moduleListPrintPath } from "@/lib/crm-paths";
 import {
   combineCriteriaAnd,
   firstLetterCriteria,
@@ -146,7 +150,6 @@ export interface ModuleListScreenConfig {
 }
 
 const MAX_EXPORT_SELECTION = 500;
-const TRANSFER_MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 function isTransferModule(module: string): module is (typeof TRANSFER_MODULES)[number] {
   return (TRANSFER_MODULES as readonly string[]).includes(module);
@@ -647,6 +650,13 @@ function ModuleListScreenLoaded({
     }
   }
 
+  /** Module 6 interim print page: hands the current query over and opens the print route. */
+  function openPrintDefaultView() {
+    if (!listQuery) return;
+    writePrintListQuery(orgSlug, config.module, listQuery);
+    router.push(moduleListPrintPath(orgSlug, config.module, viewId));
+  }
+
   function openToolbarAction(action: string) {
     // The module-wide cleanup works on the whole module, so it never needs a row selection.
     if (action === "deduplicate") {
@@ -806,6 +816,15 @@ function ModuleListScreenLoaded({
           actions={toolbarActions?.map((item) => ({
             ...item,
             onAction: () => openToolbarAction(item.id),
+            ...(item.id === "print" && item.submenu && supportsListPrint(config.module)
+              ? {
+                  submenu: item.submenu.map((child) =>
+                    child.id === "print-default"
+                      ? { ...child, laterModule: undefined, onAction: openPrintDefaultView }
+                      : child,
+                  ),
+                }
+              : {}),
           }))}
           create={{
             label: config.createLabel,

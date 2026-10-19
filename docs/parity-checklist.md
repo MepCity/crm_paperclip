@@ -871,23 +871,85 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 Not started.
 
+## Module 6 · Print page (MEP-871, interim rule)
+
+The reference print page could not be captured (capture protection, MEP-793), so the layout is
+our own and is an **interim rule** listed as an open question at the Module 6 gate.
+
+| Item | Status |
+| --- | --- |
+| Record Print Preview (PS-03) — Leads, Contacts, Accounts, Deals: More Options → Print Preview opens `.../tab/<module>/<recordId>/print` in the same tab | Done (interim layout: title + module, Print, Close; sections in detail order, label–value in two columns) |
+| List Print Default view (PS-17/18) — Leads, Contacts, Accounts: Actions → Print View → Print Default view opens `.../tab/<module>/print?viewId=` with the current view's records (current filter and sort, one page) as a table | Done (interim layout) |
+| Deals list Print View | Not added (not observed in the reference) |
+| Print Using Canvas (PS-19), Print Mailing Labels | Unchanged (later-module placeholders) |
+| Tasks, Meetings, Calls, Campaigns Print entries | Unchanged (Module 5 / Campaigns) |
+
+Interim rule details: Print calls `window.print()`, Close goes back, `@media print` hides the
+buttons and everything outside the print page.
+
 ## Module 8 — Cases and Solutions
 
 ### Cases and Solutions lists
 
-Not started.
+Implemented; QA pending (MEP-862).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| KL-45, KL-51 (SL-45, SL-51) | Cases and Solutions registered in registry.ts; shell entries and create-records rows live | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-01, KL-02, KL-02.1 – KL-02.12 | Single All Cases tab; view menu with eight service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `cases-list.spec.ts` |
+| SL-01, SL-02, SL-02.1 – SL-02.8 | Single All Solutions tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `solutions-list.spec.ts` |
+| KL-03 – KL-13, KL-40 (SL-03 – SL-13, SL-40) | Filter, Sort, presentation icons, refresh and Create as in Campaigns; arrow is `laterModule` M6 | `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-14.1 – KL-14.11 | Eleven Actions rows in reference order; Sheet view and Approve Cases `laterModule` P3 | `cases-list.spec.ts` |
+| SL-14.1 – SL-14.9 | Nine Actions rows, no Mass Email or Approve; Sheet view `laterModule` P3 | `solutions-list.spec.ts` |
+| KL-15 – KL-39 (SL-15 – SL-39) | Filter panel groups from the module definition; View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `list-filters.test.ts`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+
+Provisional rules: the populated table body is the Campaigns table (not observed in the reference).
 
 ### Cases record detail
 
-Not started.
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Subject title, previous / next arrows, Edit, More Options; case-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments, Open Activities, Closed Activities, Emails; metadata order): implemented by provisional rule; QA pending (MEP-863).
 
 ### Solutions record detail
 
-Not started.
+- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
+- GK-2 header (Solution Title title, previous / next arrows, Edit, More Options; solution-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
+- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
+- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
+- GK-5 related-list rail and cards (Connected Records, Notes, Attachments; metadata order): implemented by provisional rule; QA pending (MEP-863).
 
-### Cases and Solutions create / edit forms
+### Solutions create / edit form
 
-Not started.
+Implemented; QA pending (MEP-896).
+
+| Inventory | Implementation | Verification |
+| --- | --- | --- |
+| SF-01 | Edit Page Layout beside the form title (M11, inert) | `solutions-form.spec.ts` |
+| SF-02–SF-04 | Cancel, Save and New, Save in the title strip's right group | `solutions-form.spec.ts` |
+| SF-05, SF-06 | Solution Number locked input with lock icon badge; empty on create, populated and preserved on edit | `solutions-form.spec.ts`, `solutions-form-rules.test.ts`, `field-input.test.tsx` |
+| SF-07 | Solution Title input with its required marker | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-08, SF-08.1–SF-08.3 | Status picklist popup defaulting to Draft, three options (Draft, Reviewed, Duplicate) and no search box | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-09, SF-10 | Solution Owner field on the session owner and in initial focus, with the Select User dialog behind its lookup icon | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-11, SF-12 | Product Name lookup input and button (P2 `laterModule`, inert) | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-13, SF-15 | Question multiline input with required marker and resize grip | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-14, SF-16 | Answer multiline input with required marker and resize grip | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+| SF-17, SF-18 | Form footer: Create Form Views label with Standard View and Create a custom form page (M11, inert) | `solutions-form.spec.ts` |
+| SF-19 | Client Script tab on the page's right edge (M11, inert) | `solutions-form.spec.ts` |
+| — | Published checkbox, Add Comment, Comments, No. of comments, Tag, Connected To, and system audit fields omitted from form layout | `solutions-form.spec.ts`, `solutions-form-rules.test.ts` |
+
+Provisional rules (behaviour not observed in reference):
+- Edit form reuses the create form layout populated with saved record values (Accounts edit behaviour).
+- Required field error copy and post-save navigation follow Accounts behaviour.
+- Solution Number is generated by fixture service autonumber and stays read-only across create and edit.
+
+Later-module controls: SF-01, SF-17, SF-18, SF-19 (M11 `laterModule`); SF-11, SF-12 (P2 `laterModule`).
+
+### Cases create / edit form
+
+Not started (in progress in MEP-895).
 
 ### Cases links in earlier modules
 

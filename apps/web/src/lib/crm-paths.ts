@@ -56,6 +56,23 @@ export function moduleRecordMergePath(
   return moduleTabPath(orgSlug, moduleApiName, recordId, "merge");
 }
 
+export function moduleRecordPrintPath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "print");
+}
+
+export function moduleListPrintPath(
+  orgSlug: string,
+  moduleApiName: string,
+  viewId?: string,
+): string {
+  const path = moduleTabPath(orgSlug, moduleApiName, "print");
+  return viewId ? `${path}?viewId=${encodeURIComponent(viewId)}` : path;
+}
+
 /** Conflict groups of a module-wide cleanup, carrying the match fields it ran on. */
 export function moduleDeduplicatePath(
   orgSlug: string,
@@ -77,7 +94,7 @@ export function withSearchParams(path: string, params: URLSearchParams): string 
 }
 
 export function moduleImportPath(orgSlug: string, moduleApiName: string): string {
-  return moduleTabPath(orgSlug, moduleApiName, "import");
+  return moduleTabPath(orgSlug, moduleApiName === "Events" ? "Meetings" : moduleApiName, "import");
 }
 
 export function importHistoryPath(orgSlug: string): string {

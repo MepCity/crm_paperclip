@@ -251,6 +251,7 @@ export interface ModuleScreenDefinition {
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
       onEdit?: () => void;
+      onPrintPreview?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

@@ -484,3 +484,57 @@ export const campaignsRecordServiceContractModule: RecordServiceContractModuleDe
     },
   },
 };
+
+export const casesRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Cases",
+  singularLabel: "Case",
+  pluralLabel: "Cases",
+  expectedFieldCount: 30,
+  buildMinimalValidInput: (extra = {}) => ({
+    Subject: "Example case",
+    Status: "New",
+    Case_Origin: "Email",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Subject",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Add_Comment",
+  sortFields: ["Subject", "Status"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 1],
+    ["Locked__s", "true"],
+    ["No_of_comments", "one"],
+  ],
+};
+
+export const solutionsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Solutions",
+  singularLabel: "Solution",
+  pluralLabel: "Solutions",
+  expectedFieldCount: 20,
+  buildMinimalValidInput: (extra = {}) => ({
+    Solution_Title: "Example solution",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Solution_Title",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Add_Comment",
+  sortFields: ["Solution_Title", "Status"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Solution_Title", 1],
+    ["Locked__s", "true"],
+    ["No_of_comments", "one"],
+  ],
+};

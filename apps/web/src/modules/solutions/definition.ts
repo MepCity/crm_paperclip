@@ -22,10 +22,11 @@ import {
 import { isSolutionInlineEditable } from "./solutions-inline-edit";
 import { formatSolutionsLastUpdateLabel } from "./solutions-last-update";
 import { solutionsRecordHeaderIdentity } from "./solutions-record-header";
+import { solutionsRelatedListRail, solutionsRelatedLists } from "./solutions-related-lists";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
- * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Accounts bindings; the rail follows metadata order with provisional rules (MEP-863).
  */
 export const solutionsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Solutions",
@@ -45,7 +46,7 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   detail: {
     header: solutionsRecordHeaderIdentity,
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
     businessCard: buildSolutionsBusinessCardFields,
     sections: buildSolutionsDetailSections,
     inlineEditable: isSolutionInlineEditable,
@@ -54,12 +55,18 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildAccountsRecordMoreMenuGroups,
     deleteTitle: SOLUTIONS_DELETE_CONFIRM_TITLE,
     deleteMessage: SOLUTIONS_DELETE_CONFIRM_MESSAGE,
+    relatedLists: solutionsRelatedLists,
+    relatedListRail: solutionsRelatedListRail,
     timeline: {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
       events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };
