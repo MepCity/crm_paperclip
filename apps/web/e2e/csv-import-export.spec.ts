@@ -163,3 +163,91 @@ test.describe("CSV import and export", () => {
     await expect(page.getByRole("row", { name: /Selected records/ })).toBeVisible();
   });
 });
+
+for (const { label, csv } of [
+  { module: "Tasks", label: "Tasks", csv: "Subject\nCSV Task\n" },
+  {
+    module: "Events",
+    label: "Meetings",
+    csv: "Event_Title,Start_DateTime,End_DateTime,Meeting_Venue__s\nCSV Meeting,2026-11-01T09:00:00Z,2026-11-01T10:00:00Z,Client location\n",
+  },
+  {
+    module: "Calls",
+    label: "Calls",
+    csv: "Subject,Call_Type,Call_Start_Time,Call_Duration\nCSV Call,Outbound,2026-11-01T09:00:00Z,01:00\n",
+  },
+]) {
+  test(`${label}: import related records, export view and selection, and show histories`, async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const accountId = await createRecord(page, "Accounts", org.slug, {
+      Account_Name: "CSV Parent",
+    });
+    const contactId = await createRecord(page, "Contacts", org.slug, { Last_Name: "CSV Contact" });
+    await page.goto(moduleListDefaultPath(org.slug, label));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.getByRole("button", { name: "More", exact: true }).click();
+    await page.getByRole("menuitem", { name: `Import ${label}`, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/tab/${label}/import`));
+    const [header = "", values = ""] = csv.trim().split("\n");
+    await uploadCsv(
+      page,
+      `${header},What_Id,$se_module,Who_Id\n${values},${accountId},Accounts,${contactId}\n`,
+    );
+    await page.getByRole("radio", { name: /Add as new/ }).check({ force: true });
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(
+      page.getByRole("tab", { name: `Mapped (${header.split(",").length + 3})` }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Import", exact: true }).click();
+    await expect(page.getByTestId("count-added")).toHaveText("1", { timeout: 15_000 });
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const title = values.split(",")[0] ?? "";
+    const row = page
+      .getByRole("row")
+      .filter({ has: page.getByRole("link", { name: title, exact: true }) });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("CSV Parent");
+    await page.getByRole("button", { name: "Actions", exact: true }).click();
+    await page.getByRole("menuitem", { name: `Export ${label}`, exact: true }).click();
+    await page
+      .getByRole("dialog", { name: `Export ${label}` })
+      .getByRole("button", { name: "Export", exact: true })
+      .click();
+    await expect(page.getByRole("alertdialog", { name: "Export completed" })).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("alertdialog", { name: "Export completed" }).getByRole("button").click();
+    await row.getByRole("checkbox").check({ force: true });
+    await page.getByRole("button", { name: "Actions", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Export Selected Records", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: `Export ${label}` });
+    await expect(dialog.getByText("Selected records (1)")).toBeVisible();
+    await dialog.getByRole("button", { name: "Export", exact: true }).click();
+    const notification = page
+      .getByRole("alertdialog", { name: "Export completed" })
+      .filter({ hasText: /1 records exported/ });
+    await expect(notification).toBeVisible({ timeout: 15_000 });
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      notification.getByRole("link", { name: "Download", exact: true }).click(),
+    ]);
+    const { readFile } = await import("node:fs/promises");
+    const rows = parseCsv(await readFile(await download.path(), "utf8"));
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toContain(title);
+    expect(rows[1]?.[rows[0]?.indexOf("Related To") ?? -1]).toBe(accountId);
+    expect(rows[1]?.[rows[0]?.indexOf("Contact Name") ?? -1]).toBe(contactId);
+    await page.goto(`/crm/${org.slug}/settings/import-history`);
+    await expect(
+      page
+        .getByRole("row", { name: /import\.csv/ })
+        .getByRole("cell", { name: label, exact: true }),
+    ).toBeVisible();
+    await page.goto(`/crm/${org.slug}/settings/export-history`);
+    await expect(page.getByRole("cell", { name: label, exact: true })).toHaveCount(2);
+  });
+}

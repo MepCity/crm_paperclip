@@ -1,25 +1,31 @@
 import type { ExportJob, ImportJob, TransferModule } from "@crm/core";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
-import { ExportHistoryScreen, ImportHistoryScreen } from "./transfer-screens";
+import { ExportHistoryScreen, ImportHistoryScreen, ImportWizardScreen } from "./transfer-screens";
 
 const state = vi.hoisted(() => ({
   data: undefined as ImportJob[] | ExportJob[] | undefined,
   isLoading: false,
   isError: true,
+  push: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: state.push }) }));
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 vi.mock("@/lib/api/client/provider", () => ({ useOrgSlug: () => "test-org" }));
 vi.mock("@/lib/api/client/hooks", () => ({
-  useTransferClient: () => ({ exportDownloadUrl: (id: string) => `/exports/${id}` }),
+  useTransferClient: () => ({
+    exportDownloadUrl: (id: string) => `/exports/${id}`,
+    sampleCsvUrl: () => "/sample",
+  }),
   useImportHistory: () => state,
   useExportHistory: () => state,
 }));
 afterEach(() => {
   cleanup();
+  state.push.mockClear();
   state.data = undefined;
   state.isError = true;
 });
@@ -79,4 +85,32 @@ test.each(activityModules)("export history labels $module as $label", ({ module,
   ];
   render(<ExportHistoryScreen />);
   expect(screen.getByRole("cell", { name: label })).toBeTruthy();
+});
+
+test.each(activityModules)(
+  "cancel $module import returns to the $label screen",
+  async ({ module, label }) => {
+    render(<ImportWizardScreen module={module} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
+    expect(state.push).toHaveBeenCalledWith(`/crm/test-org/tab/${label}/list`);
+  },
+);
+
+test("retry meeting export opens the Meetings screen", async () => {
+  state.isError = false;
+  state.data = [
+    {
+      id: "export-1",
+      module: "Events",
+      fileName: "meetings.csv",
+      scope: "All Meetings",
+      createdBy: { id: "user-1", name: "Test User" },
+      createdAt: "2026-10-14T10:00:00Z",
+      status: "failed",
+      rowCount: 0,
+    },
+  ];
+  render(<ExportHistoryScreen />);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Retry" }));
+  expect(state.push).toHaveBeenCalledWith("/crm/test-org/tab/Meetings/list");
 });
