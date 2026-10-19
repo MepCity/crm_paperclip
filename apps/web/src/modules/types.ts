@@ -88,6 +88,10 @@ export interface RelatedListBodyContext {
 }
 
 export interface RelatedListDefinition {
+  /** Replaces the whole card (header included); return null or undefined to use the generic card. */
+  renderCard?: (
+    context: RelatedListBodyContext & { definition: RelatedListDefinition },
+  ) => ReactNode;
   /** Return null or undefined to use the generic body; render hook-based bodies as elements. */
   renderBody?: (
     context: RelatedListBodyContext & { definition: RelatedListDefinition },
