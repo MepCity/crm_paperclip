@@ -96,18 +96,21 @@ test("Save creates the meeting and opens its record", async ({ page }) => {
   ).toContainText("Planning sync");
 });
 
-test("Add more details opens the full form with the typed values", async ({ page }) => {
+test("Add more details expands the same window and saves the extra field", async ({ page }) => {
   const { org, dialog } = await openDialog(page);
+  const windowUrl = page.url();
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Quarterly review");
   await dialog.getByRole("button", { name: "Add more details" }).click();
-  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/create`));
-  await expect(page.getByRole("heading", { name: "Create Meeting" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(
-    "Quarterly review",
-  );
-  await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Participants Reminder" })).toBeVisible();
+  expect(page.url()).toBe(windowUrl);
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Repeat" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Description", exact: true }).fill("Agenda notes");
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/\\d+$`), {
+    timeout: 60_000,
+  });
+  await expect(page.getByText("Agenda notes").first()).toBeVisible();
 });
 
 test("adds a participant in the window and edits the meeting from the record", async ({ page }) => {

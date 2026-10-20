@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { FieldInput } from "@/components/records/form/field-input";
-import { formPayload, initialFormValues } from "@/components/records/form/form-model";
+import {
+  buildFormModel,
+  formPayload,
+  initialFormValues,
+} from "@/components/records/form/form-model";
 import { FormRow } from "@/components/records/form/form-row";
 import {
   formSaveBannerMessage,
@@ -14,13 +18,12 @@ import {
 import { validateRanges, validateRecordForm } from "@/components/records/form/form-validation";
 import { Button } from "@/components/ui/button";
 import { useCreateRecord, useModule, useUsers } from "@/lib/api/client/hooks";
-import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
+import { moduleRecordPath } from "@/lib/crm-paths";
 import {
   allDayClearedTime,
   dateTimePartsToIso,
   isoToDateTimeParts,
 } from "@/lib/records/datetime-parts";
-import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { buildMeetingsFormDefaults, meetingsFormRules } from "./meetings-form-rules";
 
 /** MF-01 – MF-11 in the reference order. */
@@ -68,13 +71,27 @@ export function MeetingInformationDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
 
-  const fields = useMemo(() => {
+  const [expanded, setExpanded] = useState(false);
+  const windowFields = useMemo(() => {
     const byName = new Map((metadata.data?.fields ?? []).map((f) => [f.apiName, f]));
     return MEETING_INFORMATION_FIELDS.flatMap((name) => {
       const field = byName.get(name);
       return field ? [field] : [];
     });
   }, [metadata.data]);
+  // Add more details: the rest of the full create form, in layout order, inside this same window.
+  const extraFields = useMemo(() => {
+    if (!metadata.data) return [];
+    const shown = new Set<string>(MEETING_INFORMATION_FIELDS);
+    const omitted = new Set<string>(meetingsFormRules.omitted ?? []);
+    return buildFormModel(metadata.data, "create", meetingsFormRules)
+      .flatMap((section) => section.columns.flat())
+      .filter((f) => !shown.has(f.apiName) && !omitted.has(f.apiName));
+  }, [metadata.data]);
+  const fields = useMemo(
+    () => (expanded ? [...windowFields, ...extraFields] : windowFields),
+    [expanded, windowFields, extraFields],
+  );
 
   function change(name: string, value: FieldValue) {
     const writes: Record<string, FieldValue> = { [name]: value };
@@ -125,13 +142,13 @@ export function MeetingInformationDialog({
     }
   }
 
+  const bodyRef = useRef<HTMLDivElement>(null);
   function addMoreDetails() {
-    writeRecordCreatePrefill(orgSlug, {
-      module: MODULE,
-      fields: formPayload(fields, initialFormValues(fields, values)),
+    setExpanded(true);
+    requestAnimationFrame(() => {
+      const first = bodyRef.current?.querySelector<HTMLElement>("[data-more-details-start]");
+      first?.scrollIntoView({ block: "start" });
     });
-    onClose();
-    router.push(moduleCreatePath(orgSlug, TAB));
   }
 
   const ready = Boolean(metadata.data && users.data);
@@ -159,9 +176,9 @@ export function MeetingInformationDialog({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-overlay/50 p-4 pt-[var(--size-meeting-window-top,48px)]"
     >
-      <Modal className="flex max-h-full w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
+      <Modal className="flex max-h-[calc(100vh-96px)] w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
         <AriaDialog
           aria-label="Meeting Information"
           className="flex min-h-0 flex-col outline-none"
@@ -180,11 +197,17 @@ export function MeetingInformationDialog({
               void save();
             }}
           >
-            <div className="meeting-window__body min-h-0 flex-1 overflow-y-auto">
+            <div ref={bodyRef} className="meeting-window__body min-h-0 flex-1 overflow-y-auto">
               {banner ? <p role="alert">{banner}</p> : null}
               {ready ? (
                 fields.map((field) => (
-                  <div key={field.apiName} data-form-field={field.apiName}>
+                  <div
+                    key={field.apiName}
+                    data-form-field={field.apiName}
+                    data-more-details-start={
+                      expanded && field.apiName === extraFields[0]?.apiName ? "" : undefined
+                    }
+                  >
                     <FormRow
                       label={field.label}
                       controlId={`meeting-information-${field.apiName}`}
@@ -221,7 +244,7 @@ export function MeetingInformationDialog({
                 size="md"
                 className="meeting-window__more"
                 onPress={addMoreDetails}
-                isDisabled={!ready}
+                isDisabled={!ready || expanded}
               >
                 Add more details
               </Button>
