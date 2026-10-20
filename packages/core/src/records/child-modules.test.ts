@@ -130,7 +130,7 @@ describe("child module integration", () => {
       await expect(service.delete(module, [duplicate.id, "missing"])).rejects.toBeInstanceOf(
         NotFoundError,
       );
-      expect((await service.get("Notes", note.id)).fields.Locked__s).toBe(true);
+      await expect(service.delete("Notes", [note.id])).rejects.toBeInstanceOf(RecordLockedError);
       await service.merge(module, {
         masterId: master.id,
         duplicateIds: [duplicate.id],

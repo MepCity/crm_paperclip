@@ -5,6 +5,7 @@ import {
   emailError,
   nameError,
   newPasswordError,
+  signInEmailError,
 } from "./validation";
 
 describe("nameError", () => {
@@ -132,4 +133,13 @@ describe("authFailureState", () => {
     const result = authFailureState({ message: "", fieldErrors });
     expect(result).toEqual({ status: "error", message: "", fieldErrors });
   });
+});
+
+it("development username validation stays specific to sign in", () => {
+  expect(signInEmailError(" ADMIN ", true)).toBeNull();
+  expect(signInEmailError("admin", false)).toBe("Enter a valid email address.");
+  expect(signInEmailError("other-user", true)).toBe("Enter a valid email address.");
+  expect(signInEmailError("user@example.test", false)).toBeNull();
+  expect(emailError("admin")).toBe("Enter a valid email address.");
+  expect(newPasswordError("admin")).toBe("Password must be at least 10 characters.");
 });

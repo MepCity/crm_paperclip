@@ -7,6 +7,7 @@ import {
   describeNotesContract,
   describeRecordServiceContract,
 } from "@crm/core/records/contract-suite";
+import * as systemDefinitions from "@crm/core/records/contract-suite-module";
 import {
   campaignsRecordServiceContractModule,
   eventsRecordServiceContractModule,
@@ -19,6 +20,7 @@ import {
   type FixtureRecordServiceOptions,
 } from "@crm/core/records/fixture";
 import { describeKanbanViewContract } from "@crm/core/records/kanban-contract-suite";
+import { describeSystemFiltersContract } from "@crm/core/records/system-filters-contract-suite";
 import { describe, expect, it } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
 import type { Operation, OperationDeps } from "@/lib/api/wire/operations";
@@ -273,3 +275,17 @@ describeNotesContract("http", (ctx, options) => {
     fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
   });
 });
+
+for (const definition of Object.values(systemDefinitions)) {
+  describeSystemFiltersContract(
+    "http",
+    (ctx, now) => {
+      const deps = operationDeps(ctx, { now });
+      return createHttpRecordService({
+        orgSlug: ctx.orgSlug,
+        fetch: (path, options) => operationApiFetch(deps, path, options),
+      });
+    },
+    definition,
+  );
+}

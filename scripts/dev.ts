@@ -2,6 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { closeDb, createDb } from "@crm/db";
 import { ensureDatabase, type LocalPostgres, startLocalPostgres } from "@crm/db/local-postgres";
 import { runMigrations } from "@crm/db/migrate";
 import { isPortFree, pickFreePort } from "@crm/db/ports";
@@ -10,6 +11,7 @@ import {
   startWithSignalShutdown,
   stopApplicationChild,
 } from "@crm/db/signal-shutdown";
+import { seedDevAdmin } from "../packages/core/src/auth/seed-dev-admin";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const webDir = `${root}apps/web`;
@@ -92,6 +94,12 @@ async function main(): Promise<number> {
 
     const port = await pickAppPort();
     const appUrl = `http://127.0.0.1:${port}`;
+    const db = createDb(databaseUrl);
+    try {
+      await seedDevAdmin(db, { ...process.env, APP_URL: appUrl });
+    } finally {
+      await closeDb(db);
+    }
     next = spawn("next", ["dev", "--hostname", "127.0.0.1", "--port", String(port)], {
       cwd: webDir,
       stdio: "inherit",

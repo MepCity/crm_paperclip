@@ -14,6 +14,11 @@ export function emailError(value: string): string | null {
   return null;
 }
 
+export function signInEmailError(value: string, devLogin: boolean): string | null {
+  if (devLogin && value.trim().toLowerCase() === "admin") return null;
+  return emailError(value);
+}
+
 export function currentPasswordError(value: string): string | null {
   if (value.length === 0) return "Enter your password.";
   return null;
