@@ -206,5 +206,48 @@ test("Activities lists and record detail do not render copied extra elements", a
   await expectNoFormChrome(page);
 });
 
-// Call Create / Call Edit are not covered yet: the Call form screens are not on `main`
-// (only the Calls list and record detail are). Add them with the Call form issue.
+async function expectCallFormVisual(page: Page) {
+  await expectNoFormChrome(page);
+  // Form column: x=332, width 548, labels left, border only below (as the Task form).
+  const row = page.locator('[data-form-field="Call_Type"] [data-record-form-row]');
+  const rect = await box(row);
+  near(rect.x, 332);
+  near(rect.width, 548);
+  expect(await row.locator("label").evaluate((el) => getComputedStyle(el).textAlign)).toBe("left");
+  // Required marker: 25 × 2 px segment under the Call Type label.
+  const marker = await page
+    .locator('[data-form-field="Call_Type"] [data-record-form-row]')
+    .evaluate((el) => {
+      const s = getComputedStyle(el, "::after");
+      return { width: s.width, height: s.height };
+    });
+  expect(marker).toEqual({ width: "25px", height: "2px" });
+  await expect(page.getByRole("heading", { name: "Call Information", exact: true })).toBeVisible();
+  // Toggles carry no text beside them; Repeat is not part of the Call form.
+  await expect(page.getByRole("switch", { name: "Repeat" })).toHaveCount(0);
+  // The Related To lookup shows its magnifier.
+  await expect(page.locator('[data-form-field="What_Id"] svg').first()).toBeVisible();
+}
+
+async function openCallCreate(page: Page) {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Calls"));
+  await page.getByRole("link", { name: "Create Call", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Create Call" })).toBeVisible();
+  return org;
+}
+
+test("Create Call matches the measured layout", async ({ page }) => {
+  await openCallCreate(page);
+  await expectCallFormVisual(page);
+  await saveVisualScreenshot(page, "our-call-create.png");
+});
+
+test("Call Edit keeps the Create layout", async ({ page }) => {
+  const org = await openCallCreate(page);
+  await page.goto(moduleRecordEditPath(org.slug, "Calls", "150000000000000001"));
+  await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
+  await expectCallFormVisual(page);
+  await saveVisualScreenshot(page, "our-call-edit.png");
+});
