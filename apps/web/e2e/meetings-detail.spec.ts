@@ -62,6 +62,9 @@ test.describe("Meetings record detail", () => {
         "—",
       );
     }
+    await expect(
+      card.locator("[data-detail-field='Start_DateTime'] .detail-field-value"),
+    ).toHaveText(/^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} (AM|PM)$/);
     await expect(card.getByRole("button")).toHaveCount(0);
     await expect(card.locator("[data-detail-field='What_Id']")).toContainText("- Deals");
     await expect(card.locator("[data-detail-field='What_Id']").getByRole("link")).toHaveAttribute(
