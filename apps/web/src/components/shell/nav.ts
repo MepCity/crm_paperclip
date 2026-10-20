@@ -56,20 +56,36 @@ export interface NavConfig {
 }
 
 function navGroup(group: "sales" | "activities", label: string): NavGroup {
+  const documentsLink: readonly NavLink[] =
+    group === "sales"
+      ? [
+          {
+            id: "documents",
+            label: "Documents",
+            icon: Icons.folder,
+            href: (slug: string) => moduleTabPath(slug, "Documents"),
+            activePrefix: (slug: string) => moduleTabPath(slug, "Documents"),
+            match: "prefix" as const,
+          },
+        ]
+      : [];
   return {
     id: group,
     label,
     icon: Icons.folder,
-    links: getModuleScreens()
-      .filter((definition) => (definition.navigation.group ?? "sales") === group)
-      .map((definition) => ({
-        id: definition.navigation.id,
-        label: definition.pluralLabel,
-        icon: definition.navigation.icon,
-        href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
-        activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
-        match: "prefix" as const,
-      })),
+    links: [
+      ...getModuleScreens()
+        .filter((definition) => (definition.navigation.group ?? "sales") === group)
+        .map((definition) => ({
+          id: definition.navigation.id,
+          label: definition.pluralLabel,
+          icon: definition.navigation.icon,
+          href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
+          activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
+          match: "prefix" as const,
+        })),
+      ...documentsLink,
+    ],
   };
 }
 

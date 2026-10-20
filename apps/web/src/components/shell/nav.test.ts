@@ -93,10 +93,10 @@ describe("shellNav", () => {
     const expectedActivitiesModules = screens.filter(
       (screen) => screen.navigation.group === "activities",
     );
-
-    expect(salesGroup?.links.map((link) => link.id)).toEqual(
-      expectedSalesModules.map((screen) => screen.navigation.id),
-    );
+    expect(salesGroup?.links.map((link) => link.id)).toEqual([
+      ...expectedSalesModules.map((screen) => screen.navigation.id),
+      "documents",
+    ]);
     expect(activitiesGroup?.links.map((link) => link.id)).toEqual(
       expectedActivitiesModules.map((screen) => screen.navigation.id),
     );
