@@ -265,7 +265,9 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Manage Tags", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page).toHaveURL(before);
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Deals"));
+  // Back returns to the default board; restore table presentation for selection checks.
+  await page.goto(before);
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   await list.getByRole("button", { name: "Actions", exact: true }).click();
 
