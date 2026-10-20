@@ -33,6 +33,8 @@ export function generateFixtureCalls(
       type === "Missed" || index % 5 === 0 || (outgoing === "Completed" && index % 2 === 0)
         ? 0
         : 60 * ((index % 12) + 1);
+    // Planned and missed outbound calls carry no duration.
+    const unset = seconds === 0 && type !== "Inbound" && outgoing !== "Completed";
     Object.assign(fields, {
       id,
       Subject: `Call ${String(index + 1).padStart(3, "0")}`,
@@ -40,8 +42,10 @@ export function generateFixtureCalls(
       Call_Purpose: pick("Call_Purpose", index, 2),
       Call_Result: pick("Call_Result", index, 3),
       Call_Start_Time: start,
-      Call_Duration: `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`,
-      Call_Duration_in_seconds: seconds,
+      Call_Duration: unset
+        ? null
+        : `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`,
+      Call_Duration_in_seconds: unset ? null : seconds,
       Reminder: pick("Reminder", index, 2),
       Outgoing_Call_Status: outgoing,
       Scheduled_In_CRM: pick("Scheduled_In_CRM", index, 4),

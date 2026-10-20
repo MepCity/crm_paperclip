@@ -283,6 +283,18 @@ export function createFixtureRecordService(
       referenceModules(),
     );
   };
+  /** Drops the required flag from fields a module hook declares optional for this record. */
+  const relaxRequired = (
+    bundle: FixtureModuleBundle,
+    fields: Readonly<Record<string, FieldValue>>,
+  ) => {
+    const optional = bundle.optionalFields?.(fields);
+    return optional?.length
+      ? bundle.metadata.fields.map((f) =>
+          optional.includes(f.apiName) ? { ...f, required: false } : f,
+        )
+      : bundle.metadata.fields;
+  };
   const validateReferences = (module: string, input: RecordInput) => {
     const bundle = bundleFor(module);
     resolveRecordReferences({ id: "", fields: input }, bundle.metadata.fields, referenceModules(), {
@@ -470,12 +482,16 @@ export function createFixtureRecordService(
         (field) =>
           !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
       );
+      const restoreInput = Object.fromEntries(
+        writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
+      );
+      const optional = bundle.optionalFields?.(record.fields) ?? [];
       validateInput(
-        Object.fromEntries(
-          writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
-        ),
+        restoreInput,
         false,
-        writableFields,
+        writableFields.map((field) =>
+          optional.includes(field.apiName) ? { ...field, required: false } : field,
+        ),
         new Set(),
       );
       validateReferences(module, record.fields);
@@ -887,7 +903,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, false, bundle.metadata.fields, bundle.managedFields);
+      validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "create" }, () => {
@@ -924,7 +940,12 @@ export function createFixtureRecordService(
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
+      validateInput(
+        normalized,
+        true,
+        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }),
+        bundle.managedFields,
+      );
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "update" }, () => {

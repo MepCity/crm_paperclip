@@ -220,7 +220,7 @@ describe("metadata form model", () => {
   });
 
   it("readOnlyFields retains edit:false field in edit mode as read-only and fallbackColumns overrides section columns", () => {
-    const rawSections = buildFormModel(metadata, "edit", ["CreateOnly"]);
+    const rawSections = buildFormModel(metadata, "edit", undefined, ["CreateOnly"]);
     const overridden = applySectionColumnOverrides(
       rawSections,
       {
@@ -228,6 +228,7 @@ describe("metadata form model", () => {
       },
       metadata,
       "edit",
+      undefined,
       ["CreateOnly"],
     );
     expect(overridden[0]?.columns[0]?.map((f) => f.apiName)).toEqual(["CreateOnly"]);
