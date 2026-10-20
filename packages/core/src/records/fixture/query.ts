@@ -44,7 +44,15 @@ const PERIODS = new Set([
   "PREVIOUS_YEAR",
   "NEXT_YEAR",
 ]);
-const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website", "lookup"]);
+const TEXT_TYPES = new Set([
+  "text",
+  "textarea",
+  "email",
+  "phone",
+  "website",
+  "lookup",
+  "autonumber",
+]);
 const CRITERIA_UNITS = new Set(["days", "weeks", "months"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
