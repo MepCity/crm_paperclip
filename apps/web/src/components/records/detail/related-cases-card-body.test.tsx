@@ -1,5 +1,5 @@
 import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 import { RelatedCasesCardBody } from "./related-cases-card-body";
@@ -68,7 +68,11 @@ const caseFields: FieldDefinition[] = [
 ];
 
 const hookState = vi.hoisted(() => ({
-  list: { data: { records: [] as RecordData[] }, isLoading: false, isError: false },
+  list: {
+    data: { records: [] as RecordData[], moreRecords: false },
+    isLoading: false,
+    isError: false,
+  },
   module: { data: { fields: [] as FieldDefinition[] }, isLoading: false, isError: false },
   views: {
     data: [{ id: "all-cases", name: "All Cases", isDefault: true }],
@@ -157,5 +161,25 @@ describe("RelatedCasesCardBody", () => {
     expect(screen.getByRole("link", { name: "Broken login" }).getAttribute("href")).toBe(
       "/acme/Cases/case-1",
     );
+  });
+
+  it("shows a Next control when more than one page of cases exists", () => {
+    hookState.module = { data: { fields: caseFields }, isLoading: false, isError: false };
+    hookState.list = {
+      data: {
+        records: Array.from({ length: 100 }, (_, i) => ({
+          id: `case-${i}`,
+          fields: { Subject: `Case ${i}` },
+        })),
+        moreRecords: true,
+      },
+      isLoading: false,
+      isError: false,
+    };
+    renderCard("Account_Name");
+    const next = screen.getByRole("button", { name: "Next" }) as HTMLButtonElement;
+    expect(next.disabled).toBe(false);
+    fireEvent.click(next);
+    expect(hookState.calls.at(-1)?.query).toMatchObject({ page: 2 });
   });
 });
