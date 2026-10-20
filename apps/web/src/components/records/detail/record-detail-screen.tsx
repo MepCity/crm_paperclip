@@ -16,6 +16,7 @@ import { useAttachments } from "@/components/records/attachments/use-attachments
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
+import { NumericDatesProvider } from "@/components/records/detail/numeric-dates-context";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
@@ -337,7 +338,7 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <>
+    <NumericDatesProvider value={moduleApiName === "Events" || moduleApiName === "Calls"}>
       {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField && StatusSection ? (
         <StatusSection
@@ -392,7 +393,7 @@ export function RecordDetailScreen({
           />
         ) : null}
       </InlineEditProvider>
-    </>
+    </NumericDatesProvider>
   );
 
   const timeline = (

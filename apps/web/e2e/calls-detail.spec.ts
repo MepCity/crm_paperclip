@@ -91,6 +91,10 @@ test.describe("Calls record detail", () => {
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
 
+    await expect(
+      card.locator("[data-detail-field='Call_Start_Time'] .detail-field-value"),
+    ).toHaveText(/^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} (AM|PM)$/);
+
     // Details sections
     await expect(page.getByText("Call Information")).toBeVisible();
     // No related list rail on activity records
