@@ -3,7 +3,7 @@
 import { formatDate, formatDateTime } from "@crm/core/format";
 import type { FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
 import { activityState } from "@crm/core/records/activities";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import {
@@ -50,12 +50,40 @@ function useActivityList(module: ModuleApiName, parentModule: string, parentId: 
     }),
     [viewId, filters],
   );
-  const list = useRecordList(module, query, {
-    enabled: viewId !== null && filters !== null,
+  // Load every page: ask for the next one while the previous reported more records.
+  const queryKey = `${viewId}|${JSON.stringify(filters)}`;
+  const [paging, setPaging] = useState<{ key: string; pages: RecordData[][]; more: boolean }>({
+    key: queryKey,
+    pages: [],
+    more: true,
   });
+  const fresh = paging.key === queryKey;
+  const pages = fresh ? paging.pages : [];
+  const done = fresh && pages.length > 0 && !paging.more;
+  const page = done ? pages.length : pages.length + 1;
+  const list = useRecordList(
+    module,
+    { ...query, page },
+    { enabled: viewId !== null && filters !== null },
+  );
+  const data = list.data;
+  useEffect(() => {
+    if (done || !data || data.page !== page) return;
+    setPaging((prev) => {
+      const base = prev.key === queryKey ? prev.pages : [];
+      if (base.length + 1 !== page) return prev;
+      return {
+        key: queryKey,
+        pages: [...base, [...data.records]],
+        more: data.moreRecords === true,
+      };
+    });
+  }, [data, page, queryKey, done]);
+  const records = useMemo(() => pages.flat() as readonly RecordData[], [pages]);
   return {
-    records: (list.data?.records ?? []) as readonly RecordData[],
-    isLoading: views.isLoading || (viewId !== null && list.isLoading),
+    records,
+    isLoading:
+      views.isLoading || (viewId !== null && filters !== null && (list.isLoading || !done)),
     isError: views.isError || list.isError,
   };
 }
@@ -73,6 +101,23 @@ export function useParentActivities(
   const isLoading = parts.some((part) => part.isLoading) || users.isLoading;
   const isError = parts.some((part) => part.isError);
 
+  const [now, setNow] = useState(() => new Date());
+  const nextBoundary = useMemo(() => {
+    let next = Number.POSITIVE_INFINITY;
+    for (const record of meetings.records) {
+      const end = record.fields.End_DateTime;
+      const time = typeof end === "string" ? Date.parse(end) : Number.NaN;
+      if (time > now.getTime() && time < next) next = time;
+    }
+    return next;
+  }, [meetings.records, now]);
+  useEffect(() => {
+    if (!Number.isFinite(nextBoundary)) return;
+    const delay = Math.min(Math.max(nextBoundary - Date.now(), 0) + 50, 2 ** 31 - 1);
+    const timer = setTimeout(() => setNow(new Date()), delay);
+    return () => clearTimeout(timer);
+  }, [nextBoundary]);
+
   return useMemo(() => {
     const ownerById = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
     const records = { task: tasks.records, meeting: meetings.records, call: calls.records };
@@ -80,7 +125,7 @@ export function useParentActivities(
       buildParentActivityCategories({
         records,
         variant,
-        now: new Date(),
+        now,
         classify: (kind, record, now) => activityState(MODULE_BY_KIND[kind], record, now),
         recordPath: (kind, id) => recordPath(MODULE_BY_KIND[kind], id),
         formatDate: (iso) => formatDate(iso, DEFAULT_FORMAT),
@@ -106,7 +151,16 @@ export function useParentActivities(
       openCount: sum(open),
       closedCount: sum(closed),
     };
-  }, [tasks.records, meetings.records, calls.records, users.data, isLoading, isError, recordPath]);
+  }, [
+    tasks.records,
+    meetings.records,
+    calls.records,
+    users.data,
+    isLoading,
+    isError,
+    recordPath,
+    now,
+  ]);
 }
 
 const noPath = () => "#";

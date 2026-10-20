@@ -1,5 +1,5 @@
 import type { ModuleApiName, RecordData } from "@crm/core/records";
-import { cleanup, renderHook } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parentActivityCriteria } from "./parent-activities";
 import { useParentActivities, useParentActivityBadges } from "./use-parent-activities";
@@ -40,7 +40,13 @@ beforeEach(() => {
   };
   users = ready([{ userId: "user-1", name: "Fixture User" }]);
   api.useViews.mockImplementation((module: ActivityModule) => views[module]);
-  api.useRecordList.mockImplementation((module: ActivityModule) => lists[module]);
+  api.useRecordList.mockImplementation((module: ActivityModule, query: { page: number }) => {
+    const list = lists[module];
+    return {
+      ...list,
+      data: list.data && { page: query.page, moreRecords: false, ...list.data },
+    };
+  });
   api.useUsers.mockImplementation(() => users);
 });
 
@@ -271,5 +277,50 @@ describe("useParentActivities rows and badges", () => {
       openActivities: result.current.openCount,
       closedActivities: result.current.closedCount,
     });
+  });
+});
+
+describe("useParentActivities paging and time", () => {
+  it("loads every page and counts all rows", () => {
+    const all = Array.from({ length: 101 }, (_, i) =>
+      rec(`t${i}`, { Subject: `Task ${i}`, Status: "Not Started" }),
+    );
+    api.useRecordList.mockImplementation((module: ActivityModule, query: { page: number }) => {
+      if (module !== "Tasks")
+        return {
+          data: { records: [], page: 1, moreRecords: false },
+          isLoading: false,
+          isError: false,
+        };
+      const records = query.page === 1 ? all.slice(0, 100) : all.slice(100);
+      return {
+        data: { records, page: query.page, moreRecords: query.page === 1 },
+        isLoading: false,
+        isError: false,
+      };
+    });
+    const { result } = show();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.open.find((c) => c.kind === "task")?.count).toBe(101);
+    expect(result.current.openCount).toBe(101);
+  });
+
+  it("moves an open meeting to closed when its end time passes", () => {
+    lists.Events = ready({
+      records: [
+        rec("e1", {
+          Event_Title: "Sync",
+          Start_DateTime: "2026-01-10T00:00:00Z",
+          End_DateTime: "2026-01-10T01:00:00Z",
+        }),
+      ],
+    });
+    const { result } = show();
+    expect(result.current.openCount).toBe(1);
+    act(() => {
+      vi.advanceTimersByTime(61 * 60 * 1000);
+    });
+    expect(result.current.openCount).toBe(0);
+    expect(result.current.closedCount).toBe(1);
   });
 });
