@@ -1,8 +1,10 @@
 # Documents
 
 Status: incomplete research draft for MEP-922. Metadata reviewed; the first
-capture failed its readiness gate. This document is not an implementation-ready
-screen specification. Further captures require reviewed continuation.
+capture failed its readiness gate. A reviewed continuation passed the folder
+probe but did not render the file list and ended with a tool cleanup error.
+This document is not an implementation-ready screen specification. Further
+captures require another reviewed continuation.
 
 ## Purpose
 
@@ -43,10 +45,38 @@ uploader or modifier values are reproduced here.
 
 ## Control inventory
 
-Pending. Do not treat a failed-gate capture as a completed numbered inventory.
-Reconcile screenshot, accessibility tree and controls evidence after the reviewed
-continuation. Include the shared shell and bottom utility strip, distinguish
-visible controls from hidden/zero-area entries, and record owning modules.
+Partial diagnostic inventory for `m9-documents-main-ready` only. The screenshot
+and controls export were inspected together. This is not the final main-screen
+inventory because the embedded file-list surface was blank. All controls below
+were left untouched; behaviour is inferred from appearance/attributes unless
+explicitly observed. Owner: Documents for D1–D5, external file service for D6.
+
+| No. | Position / control | Evidence and behaviour boundary |
+| --- | --- | --- |
+| D1 | Folder pane, My Folders row | Screenshot selected state; personal-folder navigation entry. Opening not tested. |
+| D2 | Below D1, Team Folders disclosure | Screenshot downward triangle beside section label; expanded region visible. Persisted collapse/expand must not be exercised. |
+| D3 | Right of Team Folders, circled plus | Screenshot only; inferred team-folder addition. Write action, never clicked. |
+| D4 | Beneath Team Folders, existing team-folder row | Screenshot folder glyph and adjacent lock indicator; label intentionally omitted. Navigation not tested. |
+| D5 | Folder-pane content region | `#show div.zWDListUlInner` is visible and uniquely passes the readiness probe; controls export reports no overflow. |
+| D6 | Bottom of folder pane, external file-service link | Screenshot and exported anchor agree; external navigation destination omitted. Not opened. |
+
+The main content pane has no visible breadcrumb, columns, rows, toolbar or empty
+state message in this continuation. Blank content must not be specified as the
+product's empty state. No file-detail or preview controls can be inventoried.
+
+The screenshot also shows the shared shell: app selector and menu collapse;
+Home, Workqueue, Reports, Analytics, Agents and MCP; teamspace selector, more
+actions and module search; Sales, Activities and Integrations group disclosures;
+Leads, Contacts, Accounts, Deals, Documents, Campaigns, Tasks, Meetings, Calls,
+Visits and Price Books links; global record search, create, assistant,
+notifications, calendar, marketplace, setup, profile and application launcher.
+The bottom strip shows pins, chats, channels, threads, contacts, command palette,
+announcements, motivator, sticky notes, reminders, recent items, accessibility,
+help and a far-right utility glyph whose identity remains unverified. Shell
+controls belong to the shared shell or their destination modules. They were
+not opened. Final numbered reconciliation of these controls remains pending;
+offscreen Products entries and zero-area dialog containers in the export do
+not establish visible controls.
 
 ## Actions, filters, views, sorting and search
 
@@ -82,10 +112,37 @@ The capture usage instructions require stopping and reporting failed readiness
 evidence to Platform Lead before continuation. No guard changes, browser/profile
 changes or alternate browser access were attempted.
 
+### Reviewed continuation: incomplete embedded content
+
+Platform Lead reviewed the original evidence in MEP-925 and permitted one
+step-less recapture with `#show div.zWDListUlInner`. Its acceptance additionally
+required the file-list request to return 200 and the list to be visible.
+
+Local-only evidence: `captures/m9-documents-main-ready/`, captured 2026-10-20.
+All six base evidence files exist. No screenshot or raw data is committed.
+
+- `ready.ok=true`, 168 ms, timeout 30000 ms; `failedScripts=[]`.
+- Script-load failures: zero. Fourteen requests were pending at readiness,
+  including embedded-content scripts; the folder probe alone is insufficient.
+- Team-folder and initial file-object reads returned 200, but the expected
+  `files?sort=…` listing request is absent from the recorded network evidence.
+- Screenshot: personal/team folder pane is visible; the larger file-list pane
+  is blank. The reviewed baseline acceptance therefore fails.
+- Two blocked POSTs, both within the previously reviewed background categories:
+  reminder read action and notification status action. No new write category.
+- No clicks or other steps, file chooser, download or print occurred.
+- After `meta-written` and `done`, the process exited 1 with `TargetClosedError2`
+  from `apiResponse.dispose` in the CDN route callback during cleanup.
+- No retry, further navigation, guard change or browser/profile change followed.
+
+Platform Lead must review the retained artifacts and define safe continuation
+before another capture. This is a content-readiness/tool failure, not evidence
+of an empty folder or a reference CRM write.
+
 ## Open questions and remaining research
 
-1. Establish a reviewed, single visible Documents-content readiness probe and
-   assess initialization diagnostics before authorizing a new capture.
+1. Review the continuation's missing embedded list and tool cleanup error;
+   establish a passive probe/wait strategy that proves the list is painted.
 2. Capture a passing main-screen baseline and enumerate every visible control.
 3. Inspect safe folder navigation and any existing file detail/preview entry;
    determine whether embedded content exposes usable selectors through the tool.
