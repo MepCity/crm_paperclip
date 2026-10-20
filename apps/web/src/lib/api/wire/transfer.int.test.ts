@@ -209,10 +209,17 @@ describe("transfer routes", () => {
       expect(file.headers.get("Content-Type")).toContain("text/csv");
       expect(await file.text()).toContain(module === "Solutions" ? "Solution Title" : "Subject");
       expect((await call("downloadExport", b, { params: { exportId: job.id } })).status).toBe(404);
-      expect(
-        (await call("previewImport", a, { params, body: upload("Subject\nExample") })).status,
-      ).toBe(400);
-      expect((await call("sampleCsv", a, { params })).status).toBe(400);
+      for (const rejected of [
+        await call("previewImport", a, { params, body: upload("Subject\nExample") }),
+        await call("runImport", a, { params, json: { uploadId: "unavailable", settings } }),
+        await call("sampleCsv", a, { params }),
+      ]) {
+        expect(rejected.status).toBe(400);
+        expect(await rejected.json()).toMatchObject({
+          code: "INVALID_DATA",
+          details: { fields: { module: ["Import is not supported for this module."] } },
+        });
+      }
     },
   );
 

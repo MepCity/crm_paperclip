@@ -1,4 +1,4 @@
-import { AppError, ForbiddenError, isAppError, NotFoundError } from "../errors";
+import { AppError, ForbiddenError, isAppError, NotFoundError, ValidationError } from "../errors";
 import type { FieldDefinition } from "../records/contract";
 import type { OrgContext } from "../tenancy/types";
 import { CsvError, parseCsv, serializeCsv } from "./csv";
@@ -55,7 +55,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
   };
   const requireImportModule = (module: TransferModule) => {
     if (!(IMPORT_MODULES as readonly string[]).includes(module))
-      throw new AppError("validation", "Import is not supported for this module.");
+      throw new ValidationError({ module: ["Import is not supported for this module."] });
   };
   return {
     async previewImport(ctx, module, file) {
