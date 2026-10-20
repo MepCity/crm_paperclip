@@ -1,6 +1,7 @@
 import { ATTACHMENT_CARD_MODULES, supportsAttachmentCard } from "@crm/core/attachments/modules";
 import { describe, expect, it } from "vitest";
 import { accountsRelatedLists } from "./accounts/accounts-related-lists";
+import { campaignsRelatedLists } from "./campaigns/campaigns-related-lists";
 import { contactsRelatedLists } from "./contacts/contacts-related-lists";
 import { dealsRelatedLists } from "./deals/deals-related-lists";
 import { createLeadsRelatedLists } from "./leads/leads-related-lists";
@@ -13,6 +14,7 @@ describe("attachments card contract", () => {
       Contacts: contactsRelatedLists,
       Accounts: accountsRelatedLists,
       Deals: dealsRelatedLists,
+      Campaigns: campaignsRelatedLists,
     };
 
     for (const module of ATTACHMENT_CARD_MODULES) {

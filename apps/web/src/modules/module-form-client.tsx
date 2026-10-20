@@ -78,6 +78,7 @@ export function ModuleFormClient({
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
           inventoryFooterEnd: definition.form.inventoryFooterEnd,
+          inventoryFooterPinned: definition.form.inventoryFooterPinned,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           profileImageIcon: definition.form.profileImageIcon,
           createPrefill: hasPrefill ? prefill : undefined,

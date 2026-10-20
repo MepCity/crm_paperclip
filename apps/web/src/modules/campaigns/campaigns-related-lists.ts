@@ -3,6 +3,7 @@ import { CampaignChildCampaignsCardBody } from "@/components/records/detail/camp
 import { CampaignMembersCardBody } from "@/components/records/detail/campaign-members-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -242,6 +243,7 @@ export function createCampaignsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Campaigns"),
       title: "Attachments",
       moduleKey: "M6",
       order: 9,

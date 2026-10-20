@@ -127,6 +127,8 @@ export interface RecordFormConfig {
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
   inventoryFooterEnd?: boolean;
+  /** Pins the inventory footer to the bottom edge of the form view instead of below the last field. */
+  inventoryFooterPinned?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -890,7 +892,10 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
+          <RecordFormInventoryFooter
+            alignEnd={config.inventoryFooterEnd}
+            pinBottom={config.inventoryFooterPinned}
+          />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog
