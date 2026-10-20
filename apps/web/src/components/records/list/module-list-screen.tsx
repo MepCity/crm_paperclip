@@ -671,6 +671,11 @@ function ModuleListScreenLoaded({
       setDedupOpen(true);
       return;
     }
+    if (action === "export" && transferModule) {
+      setExportSelected(undefined);
+      setExportOpen(true);
+      return;
+    }
     if (action === "tags") {
       const href = config.paths.tags
         ? config.paths.tags(orgSlug, config.module)
@@ -683,11 +688,6 @@ function ModuleListScreenLoaded({
         ? config.paths.drafts(orgSlug, config.module)
         : moduleDraftsPath(orgSlug, config.module);
       router.push(href);
-      return;
-    }
-    if (action === "export" && transferModule) {
-      setExportSelected(undefined);
-      setExportOpen(true);
       return;
     }
     openSelectedMassAction(action);

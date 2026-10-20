@@ -5,10 +5,6 @@ import type { ModuleScreenDefinition } from "./types";
 
 const resolveModuleScreen = vi.fn<(tab: string) => ModuleScreenDefinition | undefined>();
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
-}));
-
 vi.mock("./registry", async (importOriginal) => {
   const original = await importOriginal<typeof import("./registry")>();
   return {
@@ -16,6 +12,9 @@ vi.mock("./registry", async (importOriginal) => {
     resolveModuleScreen: (tab: string) => resolveModuleScreen(tab),
   };
 });
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
 vi.mock("./module-list-client", () => ({
   ModuleListClient: () => <p>list</p>,
 }));
