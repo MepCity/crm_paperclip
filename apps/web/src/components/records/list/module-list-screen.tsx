@@ -12,7 +12,7 @@ import type {
   RecordData,
   SortSpec,
 } from "@crm/core/records";
-import { TRANSFER_MODULES } from "@crm/core/transfer/types";
+import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
@@ -732,7 +732,9 @@ function ModuleListScreenLoaded({
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
-  const createItems: readonly MenuAction[] | undefined = transferModule
+  const createItems: readonly MenuAction[] | undefined = (
+    IMPORT_MODULES as readonly string[]
+  ).includes(config.module)
     ? [
         {
           id: "import",
