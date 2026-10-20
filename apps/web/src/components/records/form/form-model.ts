@@ -16,7 +16,8 @@ export interface FormSectionModel {
 export function buildFormModel(
   metadata: ModuleMetadata,
   mode: FormMode,
-  rules?: Pick<FormRules, "viewOverrides" | "readOnlyFields">,
+  rules?: Pick<FormRules, "viewOverrides">,
+  readOnlyFields?: readonly string[],
 ): FormSectionModel[] {
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
   return metadata.layout.map((section) => ({
@@ -24,22 +25,15 @@ export function buildFormModel(
     columns: section.columns.map((column) =>
       column.flatMap((name) => {
         const field = fields.get(name);
-        return field ? fieldForMode(field, mode, rules) : [];
+        if (!field) return [];
+        const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+        if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
+          return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+        }
+        return [];
       }),
     ),
   }));
-}
-
-function fieldForMode(
-  field: FieldDefinition,
-  mode: FormMode,
-  rules?: Pick<FormRules, "viewOverrides" | "readOnlyFields">,
-): FieldDefinition[] {
-  const isReadOnlyEdit = mode === "edit" && Boolean(rules?.readOnlyFields?.includes(field.apiName));
-  if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
-    return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
-  }
-  return [];
 }
 
 /** A field is in a form mode when its export view says so, unless a rule overrides that view. */
@@ -57,7 +51,8 @@ export function applySectionColumnOverrides(
   overrides: Readonly<Record<string, readonly (readonly string[])[]>> | undefined,
   metadata: ModuleMetadata,
   mode: FormMode,
-  rules?: Pick<FormRules, "viewOverrides" | "readOnlyFields">,
+  rules?: Pick<FormRules, "viewOverrides">,
+  readOnlyFields?: readonly string[],
 ): FormSectionModel[] {
   if (!overrides) return [...sections];
   const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
@@ -69,7 +64,12 @@ export function applySectionColumnOverrides(
       columns: override.map((column) =>
         column.flatMap((name) => {
           const field = fields.get(name);
-          return field ? fieldForMode(field, mode, rules) : [];
+          if (!field) return [];
+          const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+          if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
+            return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+          }
+          return [];
         }),
       ),
     };

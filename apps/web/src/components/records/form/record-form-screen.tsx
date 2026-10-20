@@ -206,13 +206,14 @@ function LoadedRecordForm({
   const baseSections = useMemo(
     () =>
       applySectionColumnOverrides(
-        buildFormModel(formMetadata, mode, rules),
+        buildFormModel(formMetadata, mode, rules, rules.readOnlyFields),
         config.sectionColumnOverrides ?? rules.fallbackColumns,
         formMetadata,
         mode,
         rules,
+        rules.readOnlyFields,
       ),
-    [formMetadata, mode, rules, config.sectionColumnOverrides],
+    [formMetadata, mode, config.sectionColumnOverrides, rules],
   );
   const sections = useMemo(() => {
     if (!rules.requiredFields?.length) return baseSections;

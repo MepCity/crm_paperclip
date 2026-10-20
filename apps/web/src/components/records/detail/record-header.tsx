@@ -1,9 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
@@ -24,22 +22,9 @@ export type RecordCommand = {
   laterModule?: ModuleKey;
   /** Attached dropdown segment (e.g. Reschedule Call); label is its accessible name. */
   splitLabel?: string;
-  /** Rows of the split segment's menu; a row with `confirm` asks first, then runs `onConfirm`. */
-  splitMenu?: readonly RecordSplitMenuItem[];
+  /** Rows the split segment opens as a menu; without them the segment is a plain button. */
+  splitMenu?: readonly { id: string; label: string; onAction: () => void }[];
 } & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
-export interface RecordSplitMenuItem {
-  id: string;
-  label: string;
-  onAction?: () => void;
-  href?: string;
-  confirm?: {
-    title: string;
-    message: string;
-    confirmLabel: string;
-    cancelLabel?: string;
-    onConfirm: () => Promise<void>;
-  };
-}
 export interface RecordMenuGroup {
   id: string;
   items: readonly (Omit<MenuAction, "onAction"> & { onAction?: () => void })[];
@@ -97,301 +82,240 @@ export function RecordHeader({
   titleSuffix,
 }: RecordHeaderProps) {
   const inlinePortrait = showPortrait && portraitAppearance === "inline";
-  const [confirmItem, setConfirmItem] = useState<RecordSplitMenuItem | null>(null);
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
   const groups = menuGroups.filter((group) => group.items.length > 0);
   const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
   const accessibleTitle = subtitle ? `${title} - ${subtitle}` : title;
-  async function runConfirm() {
-    const confirm = confirmItem?.confirm;
-    if (!confirm) return;
-    setConfirmBusy(true);
-    setConfirmError(null);
-    try {
-      await confirm.onConfirm();
-      setConfirmItem(null);
-    } catch (error) {
-      setConfirmError(error instanceof Error ? error.message : "Something went wrong.");
-    } finally {
-      setConfirmBusy(false);
-    }
-  }
   return (
-    <>
-      <header
-        data-record-header
-        className="flex shrink-0 items-center h-(--size-record-header-height) border-b border-panel-border bg-surface pr-(--size-record-header-end)"
-      >
-        <div className="flex shrink-0 items-center justify-center w-(--size-record-back-region)">
-          {back.href ? (
-            <Link
-              href={back.href}
-              variant="recordNavigation"
-              size="compact"
-              aria-label={back.label}
-            >
-              {backIcon}
-            </Link>
+    <header
+      data-record-header
+      className="flex shrink-0 items-center h-(--size-record-header-height) border-b border-panel-border bg-surface pr-(--size-record-header-end)"
+    >
+      <div className="flex shrink-0 items-center justify-center w-(--size-record-back-region)">
+        {back.href ? (
+          <Link href={back.href} variant="recordNavigation" size="compact" aria-label={back.label}>
+            {backIcon}
+          </Link>
+        ) : (
+          <Button
+            variant="recordNavigation"
+            size="compact"
+            aria-label={back.label}
+            onPress={back.onPress}
+          >
+            {backIcon}
+          </Button>
+        )}
+      </div>
+      {showPortrait && portraitAppearance === "tile" ? (
+        <div
+          data-record-portrait
+          aria-hidden
+          className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
+        >
+          {PortraitIcon ? (
+            <PortraitIcon className="h-full w-full" />
           ) : (
-            <Button
-              variant="recordNavigation"
-              size="compact"
-              aria-label={back.label}
-              onPress={back.onPress}
-            >
-              {backIcon}
-            </Button>
+            <Icons.recordPortrait className="h-full w-full" />
           )}
         </div>
-        {showPortrait && portraitAppearance === "tile" ? (
-          <div
-            data-record-portrait
-            aria-hidden
-            className="shrink-0 size-(--size-record-portrait) overflow-hidden rounded-md bg-bg text-avatar"
-          >
-            {PortraitIcon ? (
-              <PortraitIcon className="h-full w-full" />
-            ) : (
-              <Icons.recordPortrait className="h-full w-full" />
-            )}
-          </div>
-        ) : null}
-        <div
-          className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}
+      ) : null}
+      <div className={`min-w-0 flex-1 ${showPortrait ? "ml-(--size-record-title-gap)" : ""} mr-3`}>
+        <h1
+          className={`min-w-0 truncate text-text${TitleGlyph || inlinePortrait ? " flex items-center gap-2" : ""}`}
+          title={accessibleTitle}
+          aria-label={accessibleTitle}
         >
-          <h1
-            className={`min-w-0 truncate text-text${TitleGlyph || inlinePortrait ? " flex items-center gap-2" : ""}`}
-            title={accessibleTitle}
-            aria-label={accessibleTitle}
-          >
-            {inlinePortrait ? (
-              <span data-record-portrait aria-hidden className="shrink-0 size-6 text-text">
-                {PortraitIcon ? (
-                  <PortraitIcon className="h-full w-full" />
-                ) : (
-                  <Icons.recordPortrait className="h-full w-full" />
-                )}
-              </span>
-            ) : null}
-            {TitleGlyph ? (
-              <TitleGlyph
+          {inlinePortrait ? (
+            <span data-record-portrait aria-hidden className="shrink-0 size-6 text-text">
+              {PortraitIcon ? (
+                <PortraitIcon className="h-full w-full" />
+              ) : (
+                <Icons.recordPortrait className="h-full w-full" />
+              )}
+            </span>
+          ) : null}
+          {TitleGlyph ? (
+            <TitleGlyph
+              aria-hidden
+              data-record-title-glyph
+              data-record-portrait
+              className="size-4 shrink-0"
+            />
+          ) : null}
+          {titleHref ? (
+            <Link href={titleHref} className="text-2xl font-bold hover:underline">
+              {title}
+            </Link>
+          ) : (
+            <span className="text-2xl font-bold">{title}</span>
+          )}
+          {titleSuffix ? (
+            <span className="text-md font-normal text-text" data-record-title-suffix>
+              {titleSuffix}
+            </span>
+          ) : null}
+          {subtitle ? (
+            <>
+              <span
+                className="text-md font-normal mx-(--size-record-title-separator-gap)"
                 aria-hidden
-                data-record-title-glyph
-                data-record-portrait
-                className="size-4 shrink-0"
-              />
-            ) : null}
-            {titleHref ? (
-              <Link href={titleHref} className="text-2xl font-bold hover:underline">
-                {title}
-              </Link>
-            ) : (
-              <span className="text-2xl font-bold">{title}</span>
-            )}
-            {titleSuffix ? (
-              <span className="text-md font-normal text-text" data-record-title-suffix>
-                {titleSuffix}
+              >
+                -
               </span>
-            ) : null}
-            {subtitle ? (
-              <>
-                <span
-                  className="text-md font-normal mx-(--size-record-title-separator-gap)"
-                  aria-hidden
-                >
-                  -
-                </span>
-                {subtitleLaterModule ? (
-                  <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
-                    {subtitle}
-                  </Link>
-                ) : subtitleHref ? (
-                  <Link href={subtitleHref} className="text-md font-normal">
-                    {subtitle}
+              {subtitleLaterModule ? (
+                <Link href="#" laterModule={subtitleLaterModule} className="text-md font-normal">
+                  {subtitle}
+                </Link>
+              ) : subtitleHref ? (
+                <Link href={subtitleHref} className="text-md font-normal">
+                  {subtitle}
+                </Link>
+              ) : (
+                <span className="text-md font-normal">{subtitle}</span>
+              )}
+            </>
+          ) : null}
+        </h1>
+        {tagsContent ??
+          (addTags ? (
+            <div className="mt-1 flex items-center gap-1.5">
+              <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
+              <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
+                {addTags.label}
+              </Button>
+            </div>
+          ) : null)}
+      </div>
+      <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
+        {commands.map((command) => {
+          const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
+          if (command.splitLabel) {
+            return (
+              <div key={command.id} data-record-split className="flex items-center">
+                {command.href ? (
+                  <Link
+                    href={command.href}
+                    variant={variant}
+                    size="record"
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
                   </Link>
                 ) : (
-                  <span className="text-md font-normal">{subtitle}</span>
+                  <Button
+                    variant={variant}
+                    size="record"
+                    onPress={command.onPress}
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-r-none"
+                  >
+                    {command.label}
+                  </Button>
                 )}
-              </>
-            ) : null}
-          </h1>
-          {tagsContent ??
-            (addTags ? (
-              <div className="mt-1 flex items-center gap-1.5">
-                <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
-                <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
-                  {addTags.label}
-                </Button>
-              </div>
-            ) : null)}
-        </div>
-        <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
-          {commands.map((command) => {
-            const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
-            if (command.splitLabel) {
-              return (
-                <div key={command.id} data-record-split className="flex items-center">
-                  {command.href ? (
-                    <Link
-                      href={command.href}
-                      variant={variant}
-                      size="record"
-                      isDisabled={command.isDisabled}
-                      laterModule={command.laterModule}
-                      className="rounded-r-none"
-                    >
-                      {command.label}
-                    </Link>
-                  ) : (
-                    <Button
-                      variant={variant}
-                      size="record"
-                      onPress={command.onPress}
-                      isDisabled={command.isDisabled}
-                      laterModule={command.laterModule}
-                      className="rounded-r-none"
-                    >
-                      {command.label}
-                    </Button>
-                  )}
-                  {command.splitMenu ? (
-                    <MenuTrigger>
-                      <Button
-                        variant={variant}
-                        size="actions"
-                        aria-label={command.splitLabel}
-                        isDisabled={command.isDisabled}
-                        className="rounded-l-none border-l border-l-white/40"
-                      >
-                        <Icons.chevronDown aria-hidden className="h-4 w-4" />
-                      </Button>
-                      <Menu appearance="record" aria-label={command.splitLabel}>
-                        <MenuGroup>
-                          {command.splitMenu.map((item) => (
-                            <SplitMenuItem
-                              key={item.id}
-                              item={item}
-                              onConfirmRequest={setConfirmItem}
-                            />
-                          ))}
-                        </MenuGroup>
-                      </Menu>
-                    </MenuTrigger>
-                  ) : (
+                {command.splitMenu ? (
+                  <MenuTrigger>
                     <Button
                       variant={variant}
                       size="actions"
                       aria-label={command.splitLabel}
                       isDisabled={command.isDisabled}
-                      laterModule={command.laterModule}
                       className="rounded-l-none border-l border-l-white/40"
                     >
                       <Icons.chevronDown aria-hidden className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
-              );
-            }
-            return command.href ? (
-              <Link
-                key={command.id}
-                href={command.href}
-                variant={variant}
-                size="record"
-                isDisabled={command.isDisabled}
-                laterModule={command.laterModule}
-              >
-                {command.label}
-              </Link>
-            ) : (
-              <Button
-                key={command.id}
-                variant={variant}
-                size="record"
-                onPress={command.onPress}
-                isDisabled={command.isDisabled}
-                laterModule={command.laterModule}
-              >
-                {command.label}
-              </Button>
+                    <Menu appearance="record" aria-label={command.splitLabel}>
+                      <MenuGroup>
+                        {command.splitMenu.map((item) => (
+                          <MenuItem
+                            key={item.id}
+                            id={item.id}
+                            appearance="record"
+                            onAction={item.onAction}
+                          >
+                            {item.label}
+                          </MenuItem>
+                        ))}
+                      </MenuGroup>
+                    </Menu>
+                  </MenuTrigger>
+                ) : (
+                  <Button
+                    variant={variant}
+                    size="actions"
+                    aria-label={command.splitLabel}
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-l-none border-l border-l-white/40"
+                  >
+                    <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             );
-          })}
-          {groups.length > 0 && (
-            <MenuTrigger>
-              <Button variant="recordSecondary" size="actions" aria-label={moreLabel}>
-                <Icons.ellipsis aria-hidden className="h-4 w-4" />
-              </Button>
-              <Menu appearance="record" aria-label={moreLabel}>
-                {groups.map((group, index) => (
-                  <Fragment key={group.id}>
-                    {index > 0 && <MenuDivider />}
-                    <MenuGroup>
-                      {group.items.map((item) => (
-                        <MenuItem
-                          key={item.id}
-                          id={item.id}
-                          appearance="record"
-                          onAction={item.onAction}
-                          isDisabled={item.isDisabled}
-                          laterModule={item.laterModule}
-                        >
-                          {item.label}
-                        </MenuItem>
-                      ))}
-                    </MenuGroup>
-                  </Fragment>
-                ))}
-              </Menu>
-            </MenuTrigger>
-          )}
-          {showRecordNavigation ? (
-            <>
-              <RecordArrow href={previousHref} label={previousLabel} direction="previous" />
-              <RecordArrow href={nextHref} label={nextLabel} direction="next" />
-            </>
-          ) : null}
-        </div>
-      </header>
-      {confirmItem?.confirm ? (
-        <ConfirmDialog
-          isOpen
-          onOpenChange={(open) => {
-            if (!open && !confirmBusy) setConfirmItem(null);
-          }}
-          title={confirmItem.confirm.title}
-          message={confirmItem.confirm.message}
-          confirmLabel={confirmItem.confirm.confirmLabel}
-          cancelLabel={confirmItem.confirm.cancelLabel ?? "Close"}
-          busy={confirmBusy}
-          errorMessage={confirmError}
-          onConfirm={runConfirm}
-        />
-      ) : null}
-    </>
-  );
-}
-
-function SplitMenuItem({
-  item,
-  onConfirmRequest,
-}: {
-  item: RecordSplitMenuItem;
-  onConfirmRequest: (item: RecordSplitMenuItem) => void;
-}) {
-  const router = useRouter();
-  return (
-    <MenuItem
-      id={item.id}
-      appearance="record"
-      onAction={() => {
-        if (item.confirm) onConfirmRequest(item);
-        else if (item.href) router.push(item.href);
-        else item.onAction?.();
-      }}
-    >
-      {item.label}
-    </MenuItem>
+          }
+          return command.href ? (
+            <Link
+              key={command.id}
+              href={command.href}
+              variant={variant}
+              size="record"
+              isDisabled={command.isDisabled}
+              laterModule={command.laterModule}
+            >
+              {command.label}
+            </Link>
+          ) : (
+            <Button
+              key={command.id}
+              variant={variant}
+              size="record"
+              onPress={command.onPress}
+              isDisabled={command.isDisabled}
+              laterModule={command.laterModule}
+            >
+              {command.label}
+            </Button>
+          );
+        })}
+        {groups.length > 0 && (
+          <MenuTrigger>
+            <Button variant="recordSecondary" size="actions" aria-label={moreLabel}>
+              <Icons.ellipsis aria-hidden className="h-4 w-4" />
+            </Button>
+            <Menu appearance="record" aria-label={moreLabel}>
+              {groups.map((group, index) => (
+                <Fragment key={group.id}>
+                  {index > 0 && <MenuDivider />}
+                  <MenuGroup>
+                    {group.items.map((item) => (
+                      <MenuItem
+                        key={item.id}
+                        id={item.id}
+                        appearance="record"
+                        onAction={item.onAction}
+                        isDisabled={item.isDisabled}
+                        laterModule={item.laterModule}
+                      >
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </MenuGroup>
+                </Fragment>
+              ))}
+            </Menu>
+          </MenuTrigger>
+        )}
+        {showRecordNavigation ? (
+          <>
+            <RecordArrow href={previousHref} label={previousLabel} direction="previous" />
+            <RecordArrow href={nextHref} label={nextLabel} direction="next" />
+          </>
+        ) : null}
+      </div>
+    </header>
   );
 }
 

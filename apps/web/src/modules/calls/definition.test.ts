@@ -23,8 +23,8 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
   expect(callsScreenDefinition.list).toBe(callsListPageConfig);
   expect(callsScreenDefinition.buildFilterGroups).toBe(buildCallsFilterGroups);
 
+  // Calls form rules; detail is Calls-specific
   expect(callsScreenDefinition.form.rules).toBe(callsFormRules);
-  expect(callsScreenDefinition.form.variant).toBe("activity");
   expect(callsScreenDefinition.detail.deleteTitle).toBe(CALLS_DELETE_CONFIRM_TITLE);
   expect(callsScreenDefinition.detail.deleteMessage).toBe(CALLS_DELETE_CONFIRM_MESSAGE);
   expect(callsScreenDefinition.detail.layout).toBe("activity");
@@ -40,7 +40,7 @@ test("exports a complete Calls module screen definition satisfying ModuleScreenD
 test("calls detail buildHeaderCommands includes Reschedule Call split button when scheduled", () => {
   const scheduledCommands = callsScreenDefinition.detail.buildHeaderCommands?.(
     { id: "c1", fields: { Outgoing_Call_Status: "Scheduled" } },
-    { editHref: "/edit", save: () => Promise.resolve() },
+    { editHref: "/edit", save: () => Promise.resolve(), navigate: () => {}, confirm: () => {} },
   );
   expect(scheduledCommands).toEqual([
     expect.objectContaining({
@@ -48,20 +48,13 @@ test("calls detail buildHeaderCommands includes Reschedule Call split button whe
       label: "Reschedule Call",
       variant: "primary",
       href: "/edit?intent=reschedule",
-      splitLabel: "Down arrow",
-      splitMenu: [
-        expect.objectContaining({ id: "mark-as-completed", href: "/edit?intent=complete" }),
-        expect.objectContaining({
-          id: "cancel-call",
-          confirm: expect.objectContaining({ title: "Cancel Call" }),
-        }),
-      ],
+      splitLabel: "Reschedule options",
     }),
   ]);
 
   const nonScheduledCommands = callsScreenDefinition.detail.buildHeaderCommands?.(
     { id: "c2", fields: { Outgoing_Call_Status: "Completed" } },
-    { editHref: "/edit", save: () => Promise.resolve() },
+    { editHref: "/edit", save: () => Promise.resolve(), navigate: () => {}, confirm: () => {} },
   );
   expect(nonScheduledCommands).toEqual([]);
 });

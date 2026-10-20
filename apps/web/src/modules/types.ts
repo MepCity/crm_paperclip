@@ -154,6 +154,14 @@ export type ModuleRecordDetailScreenProps = {
 };
 
 /** Only presentation rules absent from service metadata belong here. */
+/** A confirmation a header command opens; the screen draws the dialog and runs `onConfirm`. */
+export interface HeaderConfirmRequest {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+}
+
 export interface ModuleScreenDefinition {
   apiName: ModuleApiName;
   tab: string;
@@ -211,7 +219,6 @@ export interface ModuleScreenDefinition {
       hasPortrait?: boolean;
       recordNavigation?: boolean;
       /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
-      titleHref?: string;
       titleSuffix?: string;
     };
     /**
@@ -227,7 +234,12 @@ export interface ModuleScreenDefinition {
      */
     buildHeaderCommands?: (
       record: RecordData,
-      actions: { editHref: string; save: (input: RecordInput) => Promise<void> },
+      actions: {
+        editHref: string;
+        save: (input: RecordInput) => Promise<void>;
+        navigate: (href: string) => void;
+        confirm: (request: HeaderConfirmRequest) => void;
+      },
     ) => readonly RecordCommand[];
     /** Extra card rendered between the business card and the details card. */
     BetweenCards?: ComponentType<{ record: RecordData }>;
@@ -249,10 +261,10 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
-      onEdit?: () => void;
       onPrintPreview?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;

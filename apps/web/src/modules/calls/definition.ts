@@ -5,8 +5,6 @@ import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
 import { buildCallsBusinessCardFields, buildCallsDetailSections } from "./calls-detail-sections";
 import {
-  CALLS_CANCEL_CONFIRM_MESSAGE,
-  CALLS_CANCEL_CONFIRM_TITLE,
   CALLS_EDIT_INTENTS,
   CALLS_FORM_CANCELLED_STATUS,
   CALLS_FORM_FALLBACK_COLUMNS,
@@ -28,6 +26,9 @@ import {
 } from "./calls-timeline";
 import { CALLS_LIST_CURRENCY_CODE, callsListPageConfig } from "./list-config";
 import { buildCallsFilterGroups } from "./list-filters";
+
+export const CALLS_CANCEL_CONFIRM_TITLE = "Cancel Call";
+export const CALLS_CANCEL_CONFIRM_MESSAGE = "Are you sure you want to cancel this Call?";
 
 export const callsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Calls",
@@ -54,8 +55,8 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     hasPortrait: false,
     recordNavigation: true,
     addTags: { label: "Add Tags", laterModule: "M6" },
-    // Scheduled calls: Reschedule Call split button and Edit in More; other states show no header command (Edit lives in More Options).
-    buildHeaderCommands: (record, { editHref, save }) =>
+    // Scheduled calls: Reschedule Call split button and Edit in More; other states keep Edit.
+    buildHeaderCommands: (record, { editHref, save, navigate, confirm }) =>
       isCallScheduled(record)
         ? [
             {
@@ -63,22 +64,23 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
               label: "Reschedule Call",
               variant: "primary" as const,
               href: `${editHref}?intent=reschedule`,
-              splitLabel: "Down arrow",
+              splitLabel: "Reschedule options",
               splitMenu: [
                 {
                   id: "mark-as-completed",
                   label: "Mark as Completed",
-                  href: `${editHref}?intent=complete`,
+                  onAction: () => navigate(`${editHref}?intent=complete`),
                 },
                 {
                   id: "cancel-call",
                   label: "Cancel Call",
-                  confirm: {
-                    title: CALLS_CANCEL_CONFIRM_TITLE,
-                    message: CALLS_CANCEL_CONFIRM_MESSAGE,
-                    confirmLabel: "Cancel Call",
-                    onConfirm: () => save({ Outgoing_Call_Status: CALLS_FORM_CANCELLED_STATUS }),
-                  },
+                  onAction: () =>
+                    confirm({
+                      title: CALLS_CANCEL_CONFIRM_TITLE,
+                      message: CALLS_CANCEL_CONFIRM_MESSAGE,
+                      confirmLabel: "Cancel Call",
+                      onConfirm: () => save({ Outgoing_Call_Status: CALLS_FORM_CANCELLED_STATUS }),
+                    }),
                 },
               ],
             },
