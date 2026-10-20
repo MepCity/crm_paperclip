@@ -143,6 +143,20 @@ test.describe("Calls record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("More Options > Edit opens the edit route", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "More Options" })
+      .click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await expect(page).toHaveURL(/\/edit/);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Related To shows the plural module suffix without a link", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
