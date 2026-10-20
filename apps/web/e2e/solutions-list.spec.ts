@@ -143,6 +143,6 @@ test("Solutions Actions exports through the shared dialog", async ({ page }) => 
   expect(await response.json()).toMatchObject({ module: "Solutions", status: "completed" });
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
-  await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
-  await expect(page.getByRole("heading", { name: /404|not found/i })).toBeVisible();
+  const importPage = await page.request.get(`/crm/${org.slug}/tab/Solutions/import`);
+  expect(importPage.status()).toBe(404);
 });
