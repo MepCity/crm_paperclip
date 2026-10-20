@@ -3,7 +3,14 @@
  * acceptance) and client (card mounting, timeline events) both derive from it;
  * it is dependency-free so the client bundle can import it.
  */
-export const ATTACHMENT_CARD_MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+export const ATTACHMENT_CARD_MODULES = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Cases",
+  "Solutions",
+] as const;
 
 /** API parents include additional record modules and Notes (composer), without mounting cards. */
 export const ATTACHMENT_PARENT_MODULES: readonly string[] = [
@@ -12,8 +19,6 @@ export const ATTACHMENT_PARENT_MODULES: readonly string[] = [
   "Tasks",
   "Events",
   "Campaigns",
-  "Cases",
-  "Solutions",
 ];
 
 export type AttachmentCardModule = (typeof ATTACHMENT_CARD_MODULES)[number];
