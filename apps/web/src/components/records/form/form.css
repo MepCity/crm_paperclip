@@ -415,12 +415,12 @@
   flex-direction: column;
 }
 
-.record-form-inventory-footer[data-pin-bottom] {
-  margin-top: auto;
-}
-
 .record-form-inventory-footer[data-align-end] {
   justify-content: flex-end;
+}
+
+.record-form-inventory-footer[data-pin-bottom] {
+  margin-top: auto;
 }
 
 .record-form-standard-view {
