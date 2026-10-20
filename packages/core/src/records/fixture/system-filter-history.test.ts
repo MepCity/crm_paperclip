@@ -111,6 +111,12 @@ describe("system filter related history", () => {
     });
     expect(page.records.map((r) => r.id)).toEqual([master.id]);
   });
+  it("treats an empty system filter as absent", async () => {
+    const ctx = context();
+    const service = createFixtureRecordService(ctx, { canReadRecord: () => false });
+    const count = await service.count("Leads", { viewId: "all-leads" });
+    expect(await service.count("Leads", { viewId: "all-leads", systemFilters: {} })).toBe(count);
+  });
   it("validates live organization membership and registered related modules", async () => {
     const ctx = context();
     let members = [ctx.userId];

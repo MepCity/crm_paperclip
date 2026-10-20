@@ -15,7 +15,8 @@ function isInstant(value: unknown): value is string {
   const year = Number(value.slice(0, 4));
   const month = Number(value.slice(5, 7));
   const day = Number(value.slice(8, 10));
-  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1] ?? 0;
   return month >= 1 && month <= 12 && day >= 1 && day <= days && Number(value.slice(11, 13)) < 24;
 }
 const object = (value: unknown): value is Record<string, unknown> =>

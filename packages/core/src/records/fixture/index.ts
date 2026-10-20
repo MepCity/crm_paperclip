@@ -395,7 +395,11 @@ export function createFixtureRecordService(
           ...(activityParentModules.has(module) ? ["Tasks", "Events", "Calls"] : []),
         ],
       });
-    const systemEvents = query.systemFilters
+    const systemFilters =
+      query.systemFilters && Object.keys(query.systemFilters).length
+        ? query.systemFilters
+        : undefined;
+    const systemEvents = systemFilters
       ? [...state.history.values()].filter(
           (event) =>
             (event.kind !== "note_added" ||
@@ -448,13 +452,12 @@ export function createFixtureRecordService(
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .filter(
         (record) =>
-          !query.systemFilters ||
-          matchesSystemFilters(module, record, query.systemFilters, systemEvents),
+          !systemFilters || matchesSystemFilters(module, record, systemFilters, systemEvents),
       )
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
-          (!query.systemFilters || options?.canReadRecord?.(module, record.id) !== false) &&
+          (!systemFilters || options?.canReadRecord?.(module, record.id) !== false) &&
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
