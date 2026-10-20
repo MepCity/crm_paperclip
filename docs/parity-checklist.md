@@ -822,10 +822,11 @@ order and measured layout match the saved capture. Call Create/Edit, Inbound,
 Missed and completed recording modes, scheduled Save, Reschedule, Mark as
 Completed with required duration, and Cancel Call were walked.
 
-**Open Call findings:** the captured Create Call header offers “Save and Create
-Follow-up Task”, while the app offers “Save and New”; the app's Call Start Time
-uses a locale-native `mm/dd/yyyy` date field, while the captured form shows
-`DD.MM.YYYY` and a formatted time. The boxed Call field layout and section
+**Call findings (fixed in MEP-952):** Create Call now offers “Save and Create
+Follow-up Task” (provisional: the reference action was never invoked; the app
+saves the call, then opens Create Task prefilled with Who/What and Subject
+`Follow-up: <subject>`), and Call Start Time shows `DD.MM.YYYY` with a time
+field. The boxed Call field layout and section
 order otherwise follow the Call-specific capture.
 
 ### Activities in parent modules — done; QA MEP-940 (MEP-500, MEP-524, MEP-501, MEP-478, MEP-519, MEP-518, MEP-525)
@@ -930,9 +931,8 @@ to stay inert.
 3. Meeting Information opens too low in the viewport; Add more details leaves
    the modal for a full page, whereas the captured reference keeps the modal
    and scrolls its body to lower fields.
-4. Call Create shows “Save and New” instead of the captured “Save and Create
-   Follow-up Task”; Call Start Time uses a native `mm/dd/yyyy` date display
-   instead of the captured `DD.MM.YYYY` layout.
+4. Fixed in MEP-952: Call Create offers “Save and Create Follow-up Task”
+   (provisional interim rule) and Call Start Time uses `DD.MM.YYYY`.
 
 ## Module 6 — CSV import and export
 
