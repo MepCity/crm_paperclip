@@ -704,3 +704,34 @@
 [data-form-layout="call"] [data-form-field] + [data-form-field] {
   margin-top: var(--size-call-form-row-gap);
 }
+
+/* solutions.md → Layout — m8f-solutions-create (measured at 1470×835): the card runs to the page
+   bottom, Question / Answer rows keep the 54 px pitch, the footer group is pinned to the card base. */
+[data-form-layout="solutions"] .record-form-card {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 107px - 16px);
+}
+[data-form-layout="solutions"] .record-form-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+[data-form-layout="solutions"] .record-form-section:first-child {
+  margin-bottom: 17px;
+}
+[data-form-layout="solutions"] [data-record-form-section-layout="single"] > [data-form-field] + [data-form-field] {
+  margin-top: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
+}
+[data-form-layout="solutions"] .record-form-inventory-footer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-top: auto;
+  padding: var(--space-3) 20px var(--space-3) 0;
+  border-top: 1px solid var(--color-detail-divider);
+}
+[data-form-layout="solutions"] .record-form-inventory-footer button {
+  height: 32px;
+}
