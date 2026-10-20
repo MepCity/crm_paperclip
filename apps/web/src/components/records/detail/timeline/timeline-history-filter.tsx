@@ -187,6 +187,7 @@ export interface TimelineHistoryFilterProps {
   sourcesAllLabel: string;
   sourceOptions: readonly TimelineFilterOption[];
   applyLabel: string;
+  initialValue?: TimelineHistoryFilterValue;
   onApply: (value: TimelineHistoryFilterValue) => void;
 }
 
@@ -203,14 +204,18 @@ export function TimelineHistoryFilterPanel({
   sourceOptions,
   applyLabel,
   onApply,
+  initialValue,
 }: TimelineHistoryFilterProps) {
-  const [value, setValue] = useState<TimelineHistoryFilterValue>({
-    moduleIds: [],
-    userId: null,
-    time: "any",
-    sourceIds: [],
-  });
-  const canApply = isDirty(value);
+  const [value, setValue] = useState<TimelineHistoryFilterValue>(
+    initialValue ?? {
+      moduleIds: [],
+      userId: null,
+      time: "any",
+      sourceIds: [],
+    },
+  );
+  const [hasApplied, setHasApplied] = useState(initialValue ? isDirty(initialValue) : false);
+  const canApply = isDirty(value) || hasApplied;
   return (
     <div className="timeline-history-filter-panel" data-timeline-filter-panel>
       <div className="timeline-history-filter-row">
@@ -246,7 +251,10 @@ export function TimelineHistoryFilterPanel({
           type="button"
           className="timeline-history-apply"
           disabled={!canApply}
-          onClick={() => onApply(value)}
+          onClick={() => {
+            setHasApplied(true);
+            onApply(value);
+          }}
         >
           {applyLabel}
         </button>

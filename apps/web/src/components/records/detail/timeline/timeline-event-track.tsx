@@ -40,10 +40,11 @@ function EventBody({ event }: { event: TimelineEvent }) {
 function groupEventsByDay(
   events: readonly TimelineEvent[],
   format: FormatOptions,
+  preserveOrder: boolean,
 ): { dayLabel: string; events: TimelineEvent[] }[] {
-  const sorted = [...events].sort(
-    (left, right) => new Date(right.at).getTime() - new Date(left.at).getTime(),
-  );
+  const sorted = preserveOrder
+    ? [...events]
+    : [...events].sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime());
   const groups: { dayLabel: string; events: TimelineEvent[] }[] = [];
   for (const event of sorted) {
     const dayLabel = formatDate(event.at, format);
@@ -51,7 +52,7 @@ function groupEventsByDay(
     if (last && last.dayLabel === dayLabel) last.events.push(event);
     else groups.push({ dayLabel, events: [event] });
   }
-  for (const group of groups) {
+  for (const group of preserveOrder ? [] : groups) {
     group.events.sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime());
   }
   return groups;
@@ -60,11 +61,16 @@ function groupEventsByDay(
 export interface TimelineEventTrackProps {
   events: readonly TimelineEvent[];
   format: FormatOptions;
+  preserveOrder?: boolean;
 }
 
-export function TimelineEventTrack({ events, format }: TimelineEventTrackProps) {
+export function TimelineEventTrack({
+  events,
+  format,
+  preserveOrder = false,
+}: TimelineEventTrackProps) {
   if (events.length === 0) return null;
-  const days = groupEventsByDay(events, format);
+  const days = groupEventsByDay(events, format, preserveOrder);
   return (
     <div className="timeline-event-track" data-timeline-event-track>
       {days.map((day) => (

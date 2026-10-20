@@ -356,7 +356,7 @@ and the reference captures.
 | AD-01–AD-09, AD-32–AD-35, AD-99 | Shared record header; building placeholder (M6), Website link; Send Email as primary later-module command (M10, MEP-394); Last Update on the tab row with clock icon (MEP-394); prev/next from list context | `e2e/accounts-detail.spec.ts`; `accounts-last-update.test.ts` |
 | AD-07.1–AD-07.13 | Accounts More Options menu (no Run Macro / Enroll to Cadence); Clone and Delete; Find and Merge Duplicates opens the shared merge flow (MEP-393, after MEP-384 walk) | Accounts detail e2e; `accounts-record-more-options.test.ts` |
 | AD-37–AD-41, AD-100, AD-103–AD-104 | Business card, Contacts summary, details; call icons (M5, inert) | Accounts detail e2e; detail section tests |
-| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: e2e "Timeline History shows a row after an inline edit" (`test.fixme`, Accounts Timeline receives no events; bug reported on MEP-672)** |
+| AD-159–AD-162 | Timeline History only; filter and upcoming actions (M12, inert) | Accounts detail e2e. **Populated history rows: e2e "Timeline History shows a row after an inline edit" checks the v9 stream after saving and after reload (MEP-875).** |
 | AD-10–AD-31, AD-96–AD-102, AD-98 | Accounts related-list rail and cards; Open and Closed Activities cards draw no count badge when the card holds zero records (MEP-394); Contacts badge from service counts | Related-list tests; accounts detail e2e. Related-list query failures show an error state instead of an empty list (MEP-391) |
 | AD-115–AD-120, AD-154 | Contacts card data and New prefill; Member Accounts card with Account Owner display names (MEP-393), New prefill, and active rail plus (MEP-387); Hierarchy View opens Contact Hierarchy modal (AD-115, MEP-421) | Accounts detail e2e |
 | AD-112–AD-114 | Deals rail plus and Deals card: the Deals whose Account Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Account Name prefilled; Assign is handler-less like the Contacts card Assign (MEP-415) | `e2e/accounts-detail.spec.ts`; `accounts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
@@ -659,7 +659,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 
 ## Module 5 — Activities
 
-### Tasks list — implemented; QA pending (MEP-459)
+### Tasks list — done; QA MEP-940 (MEP-459)
 
 Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
 
@@ -667,18 +667,20 @@ Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
 | --- | --- | --- |
 | Shell entry | SH-19, SH-20 (Tasks is the first entry of the Activities group) | `tasks-list.spec.ts`, `definition.test.ts` |
 | View strip and menu | TL-01, TL-02, TL-02.1 – TL-02.20 (Search filters rows by name; interim) | `tasks-list.spec.ts`, `view-tab-strip.test.tsx` |
-| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; TL-13 `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
-| Actions | TL-14, TL-14.1 – TL-14.6 (Manage Tags and Export Tasks `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; Import Tasks is now live) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Actions | TL-14, TL-14.1 – TL-14.6 (Export Tasks now opens the export dialog) | `tasks-list.spec.ts`, `list-config.test.ts` |
 | Filter panel | TL-15 – TL-26, TL-53 – TL-61, TL-66 (no Activities, Latest Email Status, Cadences, related-modules group) | `tasks-list.spec.ts`, `list-filters.test.ts` |
 | Table and footer | TL-33 – TL-42, TL-62 – TL-64, TL-48 – TL-51 (TL-33 `laterModule` M11) | `tasks-list.spec.ts` |
 
 Interim rules: selection bar, page size, empty state and row actions follow Accounts;
 Related To and Contact Name link to the related record when the target module is registered.
-The detail and form parts of the definition borrow module-neutral Deals builders until the
-Tasks detail and form tasks land.
+Closing QA walked the list, view menu, filters, paging, record link and current
+import/export entries against the saved Tasks list capture. The Tasks list
+inventory and column order matched at 1470 × 835. Dedicated detail and form
+screens are now live.
 
 
-### Tasks record detail — implemented (MEP-591); e2e MEP-473
+### Tasks record detail — done; QA MEP-940 (MEP-591, MEP-473)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -692,6 +694,15 @@ updates Status through the record service (errors show a toast); the right panel
 Summary and the Open Activities counts are read live for the related Contact (Deals through
 the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ New" and the
 panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+Closing QA walked the header, More Options, Overview/Timeline, business card,
+Task Information and right panel against `m5d-task-main`, `m5d-task-more` and
+`m5d-task-timeline`. The business card field order is Priority, Due Date,
+Status, Related To, Task Owner; Task Information begins Task Owner, Subject,
+Due Date, Contact Name, Related To. Close Task saves Completed and removes
+the command. **Open finding:** Due Date displays an English month name in
+detail while the reference displays `dd.MM.yyyy`; the Meetings/Calls detail
+date fix tracked separately does not cover Tasks.
 
 
 ### Activities screens — side-by-side visual check (board decision MEP-570, 2026-10-14 and 2026-10-15)
@@ -722,11 +733,21 @@ full form, Call Create/Edit, and Activities lists/detail.
 | Meeting Information dialog: Modal & grid | Requirements 1–4: Centered 500 px modal at x=485; 418 px lines from x=515 to 933; labels left at x=515, values start at x=682; 50 px pitch | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Information dialog: Fields & controls | Requirements 5–11: Unboxed rows; 25 × 2 px red marker; All day 15 × 15 checkbox; Date and time on one line 10 px apart; Cancel and Save only (no Save and New) | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Full Form (Add more details) | Requirements 1–14: Expands to full form with Repeat and Description; no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts` |
-| Call Create & Edit: Geometry & chrome | Call spec requirements 1–14 (measured): boxed fields, right-aligned labels x≈515, 531 px field box at x=534.5, 3 px vertical required bar, wide Type/Status selects. Implemented form follows the Task layout instead (548 px column x=332, left labels, 25 × 2 px marker, no Client Script / Create Form Views, no Repeat, magnifier on Related To) | ✗ Open: geometry differs from the Call spec; spec's own open question says Edit equals Create | `activities-form-visual.spec.ts` (guards the implemented layout), `calls-form.spec.ts` |
+| Call Create & Edit: Geometry & chrome | Call spec requirements 1–14 (measured): boxed fields, right-aligned labels x≈515, 531 px field box at x=534.5, 3 px vertical required bar, wide Type/Status selects, no Client Script / Create Form Views, no Repeat, magnifier on Related To | ✓ Call-specific layout variant. Edit equals Create is an open question (Edit not observed in the reference) | `activities-form-visual.spec.ts` (measured Call layout, Create and Edit), `calls-form.spec.ts` |
 | Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
 
 
-### Calls record detail — implemented; QA pending (MEP-508)
+### Meetings and Calls lists — done; QA MEP-939 (MEP-503, MEP-462, MEP-463, MEP-504, MEP-484)
+
+| Area | Result |
+| --- | --- |
+| Activities nav group, single All Meetings / All Calls tab, view menu, view-type tiles, Filter panel, Create button with chevron, Actions menu, default columns, paging, record open and back | ✓ Walked; matches the reference |
+| Row selection bar (Send Email, Tags, Mass Update, more) | ✓ Walked on Calls; text "1 Record Selected." starts flush against the sidebar edge (low; shared bar, Leads not re-checked) |
+| List activity ribbon on Leads, Contacts (and none on Accounts, Deals) | ✓ Walked; ribbon count matches the Open Activities card on the lead record |
+| Global search heading and rows for Meetings and Calls; advanced search | ✓ Headings filled (advanced search covered by `advanced-search.spec.ts`, not walked by hand) |
+| Meetings / Calls detail date format | ✗ Open: detail shows "Oct 19, 2026, 11:20 AM" while the list and the reference use `19.10.2026 11:20 AM` |
+
+### Calls record detail — done; QA MEP-939 (MEP-508)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -738,7 +759,7 @@ full form, Call Create/Edit, and Activities lists/detail.
 
 Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
 
-### Meetings record detail — implemented; QA pending (MEP-507)
+### Meetings record detail — done; QA MEP-939 (MEP-507)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -754,14 +775,14 @@ Last Update reuse Deals rules; the business card is static. Add Tags is M6; the 
 menu retains Share/Create Button as M11 and Print Preview as M6. Conversations, Send Email
 and Email are M10. Export Meeting and participant Add have no handlers. Relation panel
 counts and data loading follow Tasks; Meetings/Calls counts remain the existing zero fallback.
-Offscreen details and Timeline use the shared metadata-driven presentation and empty history.
+Offscreen details and Timeline use the shared metadata-driven presentation. History reads the v9 event stream (MEP-875); seeded records can have no history.
 
 Interim decision MEP-517: Participants reads array emptiness only. Empty/invalid values
 show No participant found; a populated opaque array shows a blank body with heading/Add,
 without interpreting any entries or inventing names. The populated appearance/item schema
 remains an open question for the corresponding research/contract work.
 
-### Meetings create and edit — implemented; QA pending (MEP-509)
+### Meetings create and edit — done; QA MEP-940 (MEP-509)
 
 Inventory is MF-01 – MF-15 and MF-02.1 – MF-02.3.
 
@@ -782,6 +803,50 @@ in place as a `laterModule="P3"` toggle (open question for the board); Save open
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
 
+Closing QA walked the Meeting Information window, Add more details, participant
+picker, Save, Edit and To-before-From validation; the All day control was
+inspected while its storage rule remains provisional. The quick window
+shows Title, Meeting Venue, Location, All day, From, To, Host and Participants
+in that order; saving a selected participant displays it on the detail card.
+**Open finding:** the reference quick window is clipped at the viewport top
+with a fixed footer, and Add more details keeps that window open and scrolls
+to the lower fields. The app centers the whole quick window lower and opens a
+separate full-page form after Add more details. This is a visible container
+and navigation mismatch; the provisional field-order rule does not cover it.
+
+### Tasks and Calls forms — done; QA MEP-940 (MEP-502, MEP-698, MEP-510, MEP-729)
+
+Task Create/Edit, Subject validation, Who/What selectors, Reminder and Repeat,
+Save and record navigation were walked; the Task form's single-column field
+order and measured layout match the saved capture. Call Create/Edit, Inbound,
+Missed and completed recording modes, scheduled Save, Reschedule, Mark as
+Completed with required duration, and Cancel Call were walked.
+
+**Open Call findings:** the captured Create Call header offers “Save and Create
+Follow-up Task”, while the app offers “Save and New”; the app's Call Start Time
+uses a locale-native `mm/dd/yyyy` date field, while the captured form shows
+`DD.MM.YYYY` and a formatted time. The boxed Call field layout and section
+order otherwise follow the Call-specific capture.
+
+### Activities in parent modules — done; QA MEP-940 (MEP-500, MEP-524, MEP-501, MEP-478, MEP-519, MEP-518, MEP-525)
+
+Leads, Contacts, Accounts and Deals record details show Open and Closed
+Activities with Tasks, Meetings and Calls in the observed column order; linked
+open/completed Tasks land in the corresponding card, and empty states render.
+The Leads list Activities filter sends the selected predicate to the list and
+count requests; Apply showed a lead with a completed Task and excluded a lead
+without activities, and Clear restored the list. Deals Next Action selected
+the earlier of two open Tasks. A UI flow created and edited a Task linked to a
+Lead, closed it, and found it in that Lead's Closed Activities card. Deleting
+a parent lead removes its linked Task from the list and its detail route. The
+four parent lists and details passed the targeted regression tour.
+
+**Open flow finding:** the Open Activities card's “Add New” button on a Lead
+is still marked `data-later-module="M5"` and `aria-disabled="true"`. The
+required parent-detail → new Task/Meeting/Call flow cannot start. Contact
+business-card and detail Phone “Call” controls also retain M5 markers and
+remain inert even though Module 5 is live. Direct module Create routes work.
+
 
 ### Notes in Timeline History — MEP-580
 
@@ -791,7 +856,7 @@ list. Provider and the audit, check-in and tag fields are not drawn.
 | 81 | Long note body clamped with Show More / Show Less (inline) | Done |
 | 108 | "Add Note" + down indicator under a note event | Interim: non-interactive label (behaviour unobserved) — gate list |
 
-Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. The applied history filter (Modules, Users, Time) now filters events client-side; Sources has no effect yet.
+Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. History reads the v9 event stream and applies Modules, Users, Time and supported Sources through its codec (MEP-875). Transitional Notes and Attachments projections are reconciled by subject ID and filtered locally until their server producers are available. Automation-only source selections show no logs.
 
 
 ### Attachments card on record detail — MEP-600
@@ -812,6 +877,63 @@ authenticated request; delete asks for confirmation and is permanent; Timeline H
 "Attachment added: <name>" (from the stored row) and "Attachment deleted: <name>" (kept only for
 the browser session, attributed to "You", because a deleted row leaves no record); Documents is
 inert (M9); Leads card sits after Closed Activities (order 3, as on the other modules).
+
+### Module 5 gate
+
+Closing QA ran on `origin/main` at `33b4df67` (2026-10-20). QA 1/2
+(MEP-939) walked Meetings/Calls lists, the list activity ribbon and both
+record details against saved captures: one material date-format finding was
+sent to MEP-947; the selection-bar inset and Calls title-suffix typography
+were below the Module 2+ visual threshold. QA 2/2 (MEP-940) walked Tasks,
+the three form families and the parent-module activity links against saved
+captures. The primary Activities tour passed 157 e2e tests with one skipped;
+the measured form visual tour passed seven tests, and the focused local
+browser walk confirmed the disabled parent action and inert Contact call
+action. Focused browser flows also passed the linked Task lifecycle, Leads
+Activities filter result and nearest Deal Next Action. Across 15 walked
+list/form/detail routes, 105 visible M8-and-later controls were clicked with
+no navigation, dialog or menu change. QA 1/2 reported 63 passing e2e tests
+on its earlier main snapshot.
+
+**Gate result:** the module is implemented and its direct list/form/detail
+routes work, but the parent-detail creation flow and the Meeting form
+container still diverge visibly from the reference. The gate is not clear
+for approval until the CTO reviews the findings below. No reference record
+was changed during this QA; only saved captures were inspected.
+
+**Provisional rules and open questions (not defects):**
+
+- Task completion/Close Task, reminder and Repeat persistence; Meeting
+  participant cap of 50 with no invitation email; Meeting full-form field
+  order, From/To ordering validation and All day UTC-midnight storage.
+- Call recording modes (Inbound, Missed and Completed), Reschedule through
+  Edit, Mark as Completed and Cancel Call, and conditional duration validation.
+- Parent deletion cascades to linked activities; open/closed classification,
+  Activities filter predicates and nearest-open-activity Next Action.
+- The populated opaque Participants array and participant Add in record
+  detail remain under the MEP-517 observation limit. Deal Summary currency
+  and amount format remains an open question from QA 1/2. Reference Call
+  Edit layout and save effects were not safely observable.
+
+**Out of scope for this gate:** reference-side writes, imports/exports and
+Notes/Attachments/CSV workflows, email/calendar/invitations, and hover-only
+behaviour without a saved capture. Drawn M8-and-later controls are expected
+to stay inert.
+
+**Known gaps for CTO disposition:**
+
+1. MEP-947 covers Meetings/Calls detail dates; Tasks detail Due Date still
+   uses an English month name instead of `dd.MM.yyyy`.
+2. Open Activities “Add New” is disabled with an M5 marker on parent record
+   detail, blocking new Task/Meeting/Call creation from that parent. Contact
+   Phone “Call” actions also retain inert M5 markers.
+3. Meeting Information opens too low in the viewport; Add more details leaves
+   the modal for a full page, whereas the captured reference keeps the modal
+   and scrolls its body to lower fields.
+4. Call Create shows “Save and New” instead of the captured “Save and Create
+   Follow-up Task”; Call Start Time uses a native `mm/dd/yyyy` date display
+   instead of the captured `DD.MM.YYYY` layout.
+
 ## Module 6 — CSV import and export
 
 Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
@@ -952,29 +1074,46 @@ buttons and everything outside the print page.
 
 ## Module 8 — Cases and Solutions
 
-### Cases and Solutions lists
+### Cases list
 
-Implemented; QA pending (MEP-862).
+Closing QA 1/2 (MEP-901) compared the running list, view menu, Actions menu,
+filter panel and populated table with the saved empty-list captures. The
+populated table follows the approved provisional Campaigns pattern; the
+reference account had no Cases rows.
 
-| Inventory | Implementation | Verification |
+| Inventory | Closing QA result | Verification |
 | --- | --- | --- |
-| KL-45, KL-51 (SL-45, SL-51) | Cases and Solutions registered in registry.ts; shell entries and create-records rows live | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
-| KL-01, KL-02, KL-02.1 – KL-02.12 | Single All Cases tab; view menu with eight service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `cases-list.spec.ts` |
-| SL-01, SL-02, SL-02.1 – SL-02.8 | Single All Solutions tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `solutions-list.spec.ts` |
-| KL-03 – KL-13, KL-40 (SL-03 – SL-13, SL-40) | Filter, Sort, presentation icons, refresh and Create as in Campaigns; arrow is `laterModule` M6 | `cases-list.spec.ts`, `solutions-list.spec.ts` |
-| KL-14.1 – KL-14.11 | Eleven Actions rows in reference order; Sheet view and Approve Cases `laterModule` P3 | `cases-list.spec.ts` |
-| SL-14.1 – SL-14.9 | Nine Actions rows, no Mass Email or Approve; Sheet view `laterModule` P3 | `solutions-list.spec.ts` |
-| KL-15 – KL-39 (SL-15 – SL-39) | Filter panel groups from the module definition; View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `list-filters.test.ts`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-01, KL-02, KL-02.1–KL-02.9, KL-40 | Passed: All Cases tab, eight system views in reference order, active check mark and refresh control | Browser walkthrough; `cases-list.spec.ts` |
+| KL-02.10–KL-02.12 | **Visual defect:** M11 controls are inert as expected, but the menu is visibly narrower than the saved capture; the Dropdown row wraps and pushes the following controls downward | Browser walkthrough; `cases-list.spec.ts` |
+| KL-03–KL-12 | Toolbar order and four visible columns passed; Filter, Sort, Refresh and Create route worked. Alternate presentation modes were not established by the empty reference list | Browser walkthrough; `cases-list.spec.ts` |
+| KL-13 | **Defect:** Create chevron is marked `data-later-module="M6"` and opens nothing, although the Module 8 gate requires M1–M8 controls to work | Browser click; `cases-list.spec.ts` currently asserts inactivity |
+| KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
+| KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
+| KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
+| KL-41–KL-56 | Cases/Solutions routes and surrounding rail entries rendered; later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
+| Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
-Provisional rules: the populated table body is the Campaigns table (not observed in the reference).
+The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
+as M6 with `data-later-module`; these controls remain inert. This is a gate
+defect under the M8 threshold. The saved reference list is empty, so populated
+row, selection-bar and paging design remain provisional.
 
 ### Cases record detail
 
-- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
-- GK-2 header (Subject title, previous / next arrows, Edit, More Options; case-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
-- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
-- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
-- GK-5 related-list rail and cards (Connected Records, Notes, Attachments, Open Activities, Closed Activities, Emails; metadata order): implemented by provisional rule; QA pending (MEP-863).
+The reference account had no Cases record, so the entire detail layout remains
+provisional. Closing QA compared it with the running Accounts detail pattern.
+
+| Inventory | Closing QA result | Verification |
+| --- | --- | --- |
+| GK-1 | Passed: list and direct record routes open the detail | Browser create/list walkthrough; `cases-detail.spec.ts` |
+| GK-2 | Passed: Subject heading, navigation arrows, Edit and More Options | Browser walkthrough; `cases-detail.spec.ts` |
+| GK-3 | Passed: Overview sections and locked Case Number; Edit saves and updates the list | Browser create/edit walkthrough; `cases-detail.spec.ts`, `cases-form.spec.ts` |
+| GK-4 | Passed: Timeline opens and shows history/filter controls | Browser walkthrough; `cases-detail.spec.ts` |
+| GK-5 | Passed: rail and six cards render in the provisional order | Browser walkthrough; `cases-detail.spec.ts` |
+
+**Gate defect:** Notes/Attachments actions still carry M6 and activity actions
+still carry M5 `data-later-module` markers and remain inert on the Cases detail.
+M11/P3/M10 detail placeholders stayed inert when clicked.
 
 ### Solutions record detail
 
@@ -1055,28 +1194,63 @@ follow Accounts, and the Solution Number is generated locally. The reference
 account has no record with which to observe these behaviours.
 
 
-### Cases create / edit form
+### Cases form
 
-- KF-01 – KF-34 implemented (MEP-895). M11 controls (KF-01, KF-29, KF-30, KF-32) and Product Name (KF-07, KF-08, P2) are `laterModule`; the Product picker (KF-08.x) is not drawn.
-- Case Number (KF-05, KF-06) is locked, blank on create and filled on edit.
-- Provisional: edit form = create form filled; shared picklist adds a leading `-None-` to Status (KF-20.x list otherwise matches); no Email requirement for Case Origin = Email; Type / Case Reason options in metadata order.
+Closing QA 1/2 compared the running Create form with the saved top, lower,
+picklist and lookup captures. Edit reuses Create by provisional rule.
 
-### Cases links in earlier modules (MEP-900)
-
-| ID | Behaviour | Tests |
+| Inventory | Closing QA result | Verification |
 | --- | --- | --- |
-| KX-01 – KX-16 | Accounts, Contacts and Deals detail: Cases card live (no later-module marker); filters Cases on `Account_Name` / `Related_To` / `Deal_Name`; empty card shows Assign and New and "No records found"; rail entry kept (Contacts rail plus included) | `related-cases-card-body.test.tsx`, `*-related-lists.test.tsx`, `accounts-detail.spec.ts`, `contacts-detail.spec.ts`, `deals-detail.spec.ts` |
-| Provisional | Filled card columns Subject (detail link), Case Number, Status, Priority, Case Owner; New opens the Cases form with the parent field (and Account Name when known) filled; Assign has no handler; no Cases ↔ Solutions link (CTO decision) | same |
+| KF-01–KF-04 | Passed: heading actions; Save, Save and New and Cancel work; M11 Edit Page Layout is inert | Browser walkthrough; `cases-form.spec.ts` |
+| KF-05–KF-08 | Passed: Case Number blank and locked on Create, filled and locked on Edit; P2 Product controls inert and picker omitted | Browser walkthrough; `cases-form.spec.ts` |
+| KF-09–KF-19 | Passed: fields in captured left/right order; Contact, Account and Deal lookups available | Browser walkthrough; `cases-form.spec.ts` |
+| KF-20–KF-22 and choices | Passed: Status, Origin and Priority choices in captured order except provisional leading `-None-` in Status | Browser walkthrough; `cases-form.spec.ts` |
+| KF-23–KF-28, KF-31, KF-33–KF-34 | Passed: required Subject error, Case Origin error, multiline fields and Solution text field | Browser walkthrough; `cases-form.spec.ts` |
+| KF-29–KF-30, KF-32 | Passed as inert M11 controls; lower footer and Client Script tab visible | Browser walkthrough; `cases-form.spec.ts` |
+
+Email remains optional when Case Origin is Email by provisional rule. The
+Create form's two-column layout and lower section visually match the captures
+at the same viewport proportions; exact edit behaviour was not observed in the
+reference account.
+
+### Cases links in earlier modules
+
+| ID | Closing QA result | Verification |
+| --- | --- | --- |
+| KX-01–KX-05 | Passed: Accounts rail and empty Cases card; New prefills Account Name, saved row appears and Subject opens detail | Browser walkthrough; `accounts-detail.spec.ts` |
+| KX-06–KX-11 | Passed: Contacts rail and empty Cases card; New prefills Related To and Account Name, saved row opens detail | Browser walkthrough; `contacts-detail.spec.ts` |
+| KX-12–KX-16 | Passed: Deals rail and empty Cases card; New prefills Deal Name and Account Name, saved row opens detail | Browser walkthrough; `deals-detail.spec.ts` |
+| Provisional | Filled card columns Subject, Case Number, Status, Priority and Case Owner; New prefills parent lookups; Assign has no handler | Browser walkthrough; `related-cases-card-body.test.tsx` |
 
 ### Module 8 gate
 
-QA 2/2 found three Solutions defect groups: disabled M8 filters, inert M6
-actions and the Create form layout/footer placement. The Solutions create →
-validation → save → detail → edit → list flow and Case `Solution` text → detail
-flow passed locally.
-Across Cases and Solutions list, create and detail screens, 133 visible
-`data-later-module` controls were clicked without navigation or dialogs.
-Cases list/detail, Accounts and Contacts lists, and the required Activities
-specs passed in the targeted end-to-end run. Solutions detail and Edit are
-provisional because the reference account has no Solutions records. CTO owns the
-Module 8 gate and any consolidated correction scope.
+Closing QA 1/2 (MEP-901): `origin/main` was `523636e4` (2026-10-20
+04:48:03 +0300). Eleven required issues appeared as first-parent merge commits.
+MEP-843 entered `main` through the MEP-861 and MEP-862 branch merges; its service
+commit and merge commits are ancestors of `origin/main`, though no separate
+first-parent MEP-843 line exists. The running Cases list, form, detail and
+Accounts/Contacts/Deals card flows passed. Leads and Campaigns lists opened;
+surrounding parent-detail cards remained present. Cases defects: M5/M6 controls
+still marked `data-later-module` and inert on Cases screens; M8 Drafts and Print
+View have no visible result; the custom-view menu is visibly too narrow.
+
+Closing QA 2/2 (MEP-902) found three Solutions defect groups: disabled M8
+filters, inert M6 actions and the Create form layout/footer placement. The
+Solutions create → validation → save → detail → edit → list flow and Case
+`Solution` text → detail flow passed locally. Across Cases and Solutions list,
+create and detail screens, 133 visible `data-later-module` controls were
+clicked without navigation or dialogs. Cases list/detail, Accounts and
+Contacts lists, and the required Activities specs passed in the targeted
+end-to-end run. Solutions detail and Edit are provisional because the reference
+account has no Solutions records. CTO owns the Module 8 gate and any
+consolidated correction scope.
+
+Provisional/open: populated Cases table and selection bar; complete Cases and
+Solutions record details; Edit form equals Create; optional Email for Email
+origin; populated parent-card columns and New prefills; Assign without a
+handler; text-only Cases `Solution` field with no reciprocal Solutions card or
+lookup. Exact visual and behaviour parity of these surfaces awaits reference
+records, which cannot be created for research.
+
+Outside this gate: Product and other Phase 2 links, M10 email, M11
+customization and Phase 3 controls.

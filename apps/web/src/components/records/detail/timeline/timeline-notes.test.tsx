@@ -1,8 +1,12 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { filterTimelineEvents, TimelineHistory } from "./timeline-history";
 import type { TimelineEvent } from "./types";
+
+afterEach(() => {
+  cleanup();
+});
 
 const noteEvent = (id: string, at: string, extra: Partial<TimelineEvent> = {}): TimelineEvent => ({
   id,
@@ -100,5 +104,35 @@ describe("note timeline events", () => {
       else Reflect.deleteProperty(proto, "scrollHeight");
       Reflect.deleteProperty(proto, "clientHeight");
     }
+  });
+
+  it("renders all 250 note events in timeline history", () => {
+    const events = Array.from({ length: 250 }, (_, i) =>
+      noteEvent(`n${i + 1}`, new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString(), {
+        title: `Note ${i + 1}`,
+      }),
+    );
+    render(
+      <TimelineHistory
+        heading="Timeline History"
+        filterButtonLabel="History filter"
+        events={events}
+        format={DEFAULT_FORMAT}
+        modulesLabel="Modules"
+        modulesAllLabel="All Modules"
+        moduleOptions={[{ id: "notes", label: "Notes" }]}
+        usersLabel="Users"
+        usersAllLabel="All Users"
+        userOptions={[]}
+        timeLabel="Time"
+        sourcesLabel="Sources"
+        sourcesAllLabel="All Sources"
+        sourceOptions={[]}
+        applyLabel="Apply Filter"
+        onApply={() => {}}
+      />,
+    );
+    const rows = screen.getAllByRole("listitem");
+    expect(rows).toHaveLength(250);
   });
 });
