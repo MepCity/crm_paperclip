@@ -48,6 +48,8 @@ export interface NavSection {
   id: string;
   label: string;
   groups: readonly NavGroup[];
+  /** Ungrouped top-level rows rendered below the groups (reference: Solutions, Cases). */
+  links?: readonly NavLink[];
 }
 
 export interface NavConfig {
@@ -55,22 +57,32 @@ export interface NavConfig {
   sections: readonly NavSection[];
 }
 
-function navGroup(group: "sales" | "activities", label: string): NavGroup {
-  return {
-    id: group,
-    label,
-    icon: Icons.folder,
-    links: getModuleScreens()
-      .filter((definition) => (definition.navigation.group ?? "sales") === group)
-      .map((definition) => ({
-        id: definition.navigation.id,
-        label: definition.pluralLabel,
-        icon: definition.navigation.icon,
-        href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
-        activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
-        match: "prefix" as const,
-      })),
+/** Reference order of the ungrouped rows; modules not listed follow in registry order. */
+const flatNavOrder: readonly string[] = ["solutions", "cases"];
+
+function moduleNavLinks(group: "sales" | "activities" | "flat"): NavLink[] {
+  return getModuleScreens()
+    .filter((definition) => (definition.navigation.group ?? "sales") === group)
+    .map((definition) => ({
+      id: definition.navigation.id,
+      label: definition.pluralLabel,
+      icon: definition.navigation.icon,
+      href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
+      activePrefix: (slug: string) => moduleTabPath(slug, definition.tab),
+      match: "prefix" as const,
+    }));
+}
+
+function flatNavLinks(): NavLink[] {
+  const rank = (id: string) => {
+    const index = flatNavOrder.indexOf(id);
+    return index === -1 ? flatNavOrder.length : index;
   };
+  return moduleNavLinks("flat").sort((a, b) => rank(a.id) - rank(b.id));
+}
+
+function navGroup(group: "sales" | "activities", label: string): NavGroup {
+  return { id: group, label, icon: Icons.folder, links: moduleNavLinks(group) };
 }
 
 export const shellNav: NavConfig = {
@@ -89,6 +101,7 @@ export const shellNav: NavConfig = {
       id: "teamspace",
       label: "Teamspace",
       groups: [navGroup("sales", "Sales"), navGroup("activities", "Activities")],
+      links: flatNavLinks(),
     },
   ],
 };

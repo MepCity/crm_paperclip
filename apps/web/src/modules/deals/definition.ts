@@ -28,7 +28,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Deal",
   pluralLabel: "Deals",
   pageTitle: "Deals",
-  navigation: { id: "deals", icon: Icons.building },
+  navigation: { id: "deals", icon: Icons.handshake },
   list: dealsListPageConfig,
   listCurrencyCode: DEALS_LIST_CURRENCY_CODE,
   searchColumns: [

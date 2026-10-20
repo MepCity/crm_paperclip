@@ -34,7 +34,7 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Campaign",
   pluralLabel: "Campaigns",
   pageTitle: "Campaigns",
-  navigation: { id: "campaigns", icon: Icons.building },
+  navigation: { id: "campaigns", icon: Icons.megaphone },
   list: campaignsListPageConfig,
   listCurrencyCode: CAMPAIGNS_LIST_CURRENCY_CODE,
   searchColumns: ["Campaign_Name", "Type", "Status", "Owner"],

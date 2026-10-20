@@ -32,7 +32,7 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Case",
   pluralLabel: "Cases",
   pageTitle: "Cases",
-  navigation: { id: "cases", icon: Icons.building },
+  navigation: { id: "cases", icon: Icons.lifeBuoy, group: "flat" },
   list: casesListPageConfig,
   listCurrencyCode: CASES_LIST_CURRENCY_CODE,
   searchColumns: ["Case_Number", "Subject", "Status", "Priority", "Owner"],

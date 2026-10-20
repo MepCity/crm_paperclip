@@ -108,6 +108,30 @@ describe("shellNav", () => {
     }
   });
 
+  it("keeps Campaigns in Sales and places Solutions and Cases as ungrouped rows in reference order", () => {
+    const teamspace = shellNav.sections[0];
+    const sales = teamspace?.groups.find((group) => group.id === "sales");
+    expect(sales?.links.map((link) => link.id)).toEqual([
+      "leads",
+      "contacts",
+      "accounts",
+      "deals",
+      "campaigns",
+    ]);
+    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "cases"]);
+  });
+
+  it("gives every module row its own glyph", () => {
+    const teamspace = shellNav.sections[0];
+    const rows = [
+      ...(teamspace?.groups.flatMap((g) => g.links) ?? []),
+      ...(teamspace?.links ?? []),
+    ];
+    const glyphs = rows.filter((l) => l.id !== "accounts").map((l) => l.icon);
+    expect(new Set(glyphs).size).toBe(glyphs.length);
+    expect(rows.find((l) => l.id === "accounts")?.icon).toBe(Icons.building);
+  });
+
   it("edge case: generates valid paths for empty and complex organization slugs", () => {
     const homeLink = shellNav.links[0];
     expect(homeLink?.href("")).toBe("/crm/");

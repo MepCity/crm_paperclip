@@ -25,9 +25,10 @@ test("renders links in the configured order", () => {
   render(<Navigation orgSlug="acme" />);
   const expected = [
     ...shellNav.links.map((l) => l.label),
-    ...shellNav.sections.flatMap((s) =>
-      s.groups.flatMap((g) => (g.links.length > 0 ? g.links.map((l) => l.label) : [])),
-    ),
+    ...shellNav.sections.flatMap((s) => [
+      ...s.groups.flatMap((g) => (g.links.length > 0 ? g.links.map((l) => l.label) : [])),
+      ...(s.links ?? []).map((l) => l.label),
+    ]),
   ];
   const actual = screen
     .getAllByRole("link")

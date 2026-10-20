@@ -172,7 +172,7 @@ export interface ModuleScreenDefinition {
   singularLabel: string;
   pluralLabel: string;
   pageTitle: string;
-  navigation: { id: string; icon: Icon; group?: "sales" | "activities" };
+  navigation: { id: string; icon: Icon; group?: "sales" | "activities" | "flat" };
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
