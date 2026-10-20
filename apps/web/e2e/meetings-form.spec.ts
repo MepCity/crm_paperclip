@@ -100,8 +100,22 @@ test("Add more details expands the same window and saves the extra field", async
   const { org, dialog } = await openDialog(page);
   const windowUrl = page.url();
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Quarterly review");
+  const save = dialog.getByRole("button", { name: "Save", exact: true });
+  const before = await dialog.boundingBox();
+  const footerBefore = await save.boundingBox();
+  expect(before?.y).toBe(0);
+  expect(before?.height).toBe(547);
   await dialog.getByRole("button", { name: "Add more details" }).click();
   expect(page.url()).toBe(windowUrl);
+  await expect(dialog.getByRole("button", { name: "Add more details" })).toHaveCount(0);
+  const after = await dialog.boundingBox();
+  const footerAfter = await save.boundingBox();
+  expect(after?.y).toBe(0);
+  expect(after?.height).toBe(547);
+  expect(footerAfter?.y).toBe(footerBefore?.y);
+  await expect
+    .poll(() => dialog.locator(".meeting-window__body").evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("switch", { name: "Repeat" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Save", exact: true })).toBeVisible();

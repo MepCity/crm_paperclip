@@ -176,12 +176,12 @@ export function MeetingInformationDialog({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-overlay/50 p-4 pt-[var(--size-meeting-window-top,48px)]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-overlay/50 px-4 pt-0"
     >
-      <Modal className="flex max-h-[calc(100vh-96px)] w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
+      <Modal className="flex h-[547px] max-h-screen w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
         <AriaDialog
           aria-label="Meeting Information"
-          className="flex min-h-0 flex-col outline-none"
+          className="flex h-full min-h-0 flex-col outline-none"
           data-meeting-information-dialog
         >
           <Heading slot="title" className="meeting-window__title">
@@ -189,7 +189,7 @@ export function MeetingInformationDialog({
           </Heading>
           <form
             ref={formRef}
-            className="meeting-window__form flex min-h-0 flex-col"
+            className="meeting-window__form flex min-h-0 flex-1 flex-col"
             data-form-variant="activity"
             noValidate
             onSubmit={(event) => {
@@ -237,17 +237,21 @@ export function MeetingInformationDialog({
                 <p role="status">Loading...</p>
               )}
             </div>
-            <footer className="meeting-window__footer flex items-center justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                className="meeting-window__more"
-                onPress={addMoreDetails}
-                isDisabled={!ready || expanded}
-              >
-                Add more details
-              </Button>
+            <footer className="meeting-window__footer flex shrink-0 items-center justify-between">
+              {expanded ? (
+                <span className="h-8" />
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  className="meeting-window__more"
+                  onPress={addMoreDetails}
+                  isDisabled={!ready}
+                >
+                  Add more details
+                </Button>
+              )}
               <div className="flex gap-2">
                 <Button type="button" variant="secondary" size="md" onPress={onClose}>
                   Cancel
