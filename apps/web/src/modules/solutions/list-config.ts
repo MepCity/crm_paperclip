@@ -51,7 +51,7 @@ export const solutionsListPageConfig: ModuleListScreenConfig = {
       { id: "tags", label: "Manage Tags" },
       { id: "drafts", label: "Drafts" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Solutions" },
+      { id: "export", label: "Export Solutions", laterModule: "M6" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       { id: "print", label: "Print View", submenuIndicator: true },
     ],

@@ -42,7 +42,6 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: solutionsFormRules,
     inventoryChrome: true,
-    inventoryFooterEnd: true,
   },
   detail: {
     header: solutionsRecordHeaderIdentity,

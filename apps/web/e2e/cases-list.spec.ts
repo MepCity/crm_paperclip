@@ -111,7 +111,9 @@ test("Cases Actions menu and later-module controls stay inert", async ({ page })
     "Sheet view",
     "Print View",
   ]);
-  await page.getByRole("menuitem", { name: "Create Client Script", exact: true }).click({ force: true });
+  await page
+    .getByRole("menuitem", { name: "Create Client Script", exact: true })
+    .click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
 });
