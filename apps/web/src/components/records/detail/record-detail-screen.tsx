@@ -59,7 +59,7 @@ import type {
 } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
-import { RecordCallProvider } from "./record-call-context";
+import { ACTIVITY_PARENT_MODULES, RecordCallProvider } from "./record-call-context";
 import { RelatedCardsContainer } from "./related-cards-container";
 import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
@@ -342,15 +342,18 @@ export function RecordDetailScreen({
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
     <RecordCallProvider
-      value={() =>
-        openActivityCreate(
-          orgSlug,
-          "Calls",
-          moduleApiName,
-          record,
-          (path) => router.push(path),
-          paths.record(orgSlug, definition.tab, recordId),
-        )
+      value={
+        ACTIVITY_PARENT_MODULES.includes(moduleApiName)
+          ? () =>
+              openActivityCreate(
+                orgSlug,
+                "Calls",
+                moduleApiName,
+                record,
+                (path) => router.push(path),
+                paths.record(orgSlug, definition.tab, recordId),
+              )
+          : null
       }
     >
       {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
