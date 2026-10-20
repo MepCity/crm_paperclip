@@ -1,8 +1,9 @@
 "use client";
 
 import type { Criteria, FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
+import { Button } from "@/components/ui/button";
 import {
   useCreateRecord,
   useDeleteRecords,
@@ -80,6 +81,44 @@ function EditComposerWithBudget({
   );
 }
 
+interface PageResult {
+  records: readonly RecordData[];
+  moreRecords: boolean;
+}
+
+function NotesPageLoader({
+  viewId,
+  page,
+  filters,
+  onLoaded,
+}: {
+  viewId: string;
+  page: number;
+  filters: Criteria;
+  onLoaded: (page: number, result: PageResult) => void;
+}) {
+  const query = useMemo(
+    () => ({ viewId, page, perPage: PAGE_SIZE, filters }),
+    [viewId, page, filters],
+  );
+  const list = useRecordList("Notes", query, { enabled: Boolean(viewId) });
+  const lastKeyRef = useRef<string>("");
+
+  useEffect(() => {
+    if (list.data) {
+      const records = (list.data.records ?? []) as readonly RecordData[];
+      const moreRecords = Boolean(list.data.moreRecords);
+      const key = JSON.stringify({ records, moreRecords });
+      if (lastKeyRef.current !== key) {
+        lastKeyRef.current = key;
+        onLoaded(page, { records, moreRecords });
+      }
+    }
+  }, [page, list.data, onLoaded]);
+
+  return null;
+}
+
 export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesCardBodyProps) {
   const views = useViews("Notes");
   const users = useUsers();
@@ -105,6 +144,24 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   const update = useUpdateRecord("Notes");
   const remove = useDeleteRecords("Notes");
 
+  const [pageCount, setPageCount] = useState(1);
+  const [extraPages, setExtraPages] = useState<Map<number, PageResult>>(new Map());
+
+  const handlePageLoaded = useCallback((page: number, res: PageResult) => {
+    setExtraPages((prev) => {
+      const next = new Map(prev);
+      next.set(page, res);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (parentRecord.id || viewId) {
+      setPageCount(1);
+      setExtraPages(new Map());
+    }
+  }, [parentRecord.id, viewId]);
+
   const [sort, setSort] = useState<NoteSortOrder>("recentLast");
   const [composing, setComposing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -112,7 +169,34 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const upload = useUploadNoteAttachments();
 
-  const records = (list.data?.records ?? []) as readonly RecordData[];
+  const page1Records = (list.data?.records ?? []) as readonly RecordData[];
+  const page1MoreRecords = Boolean(list.data?.moreRecords);
+
+  const records = useMemo(() => {
+    const seen = new Set<string>();
+    const combined: RecordData[] = [];
+    for (const r of page1Records) {
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        combined.push(r);
+      }
+    }
+    for (let p = 2; p <= pageCount; p++) {
+      const pageData = extraPages.get(p);
+      if (pageData) {
+        for (const r of pageData.records) {
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            combined.push(r);
+          }
+        }
+      }
+    }
+    return combined;
+  }, [page1Records, pageCount, extraPages]);
+
+  const hasMore =
+    pageCount === 1 ? page1MoreRecords : Boolean(extraPages.get(pageCount)?.moreRecords);
   const items = useMemo<NoteListItem[]>(() => {
     const names = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
     const label = parentLabel(parentModule, parentRecord);
@@ -227,6 +311,16 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
         error={composing ? error : null}
         renderToolbar={toolbar}
       />
+      {viewId !== null &&
+        Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => i + 2).map((page) => (
+          <NotesPageLoader
+            key={page}
+            viewId={viewId}
+            filters={filters}
+            page={page}
+            onLoaded={handlePageLoaded}
+          />
+        ))}
       {items.length === 0 ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
           No records found
@@ -242,6 +336,15 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
           }}
           onDelete={onDelete}
           editingId={editingId}
+          footer={
+            hasMore ? (
+              <div className="flex justify-center pt-2">
+                <Button variant="secondary" size="sm" onPress={() => setPageCount((p) => p + 1)}>
+                  View more
+                </Button>
+              </div>
+            ) : null
+          }
           renderEditor={(id) => (
             <EditComposerWithBudget
               noteId={id}
