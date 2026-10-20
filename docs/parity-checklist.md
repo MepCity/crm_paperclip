@@ -998,10 +998,19 @@ fixture contains records, and the empty state was reached with a field filter.
 The local list was compared beside `m8-solutions-list-base`,
 `m8-solutions-list-views` and `m8-solutions-list-actions`.
 
-Defect: SL-30 (Product Name) and SL-31 (Solution Number) are disabled in the
-local filter panel, although the reference paints both as selectable field
-filters and the inventory assigns them to Module 8. This prevents those list
-filters from being used. The local QA screenshot is attached to MEP-902.
+Defect: SL-17–SL-21 (the five system filters), SL-30 (Product Name) and SL-31
+(Solution Number) are disabled in the local filter panel. The reference paints
+ordinary unchecked boxes for them. The inventory assigns them to Module 8.
+Disabling them prevents those list filters from being used. The local QA
+screenshot is attached to MEP-902.
+
+Defect: SL-14.4 (Manage Tags) is marked `data-later-module="M6"` and does not
+open the delivered Tags flow. SL-14.7 (Export Solutions) and the populated
+selection bar's Tags action also carry M6 markers. Module 6 falls inside the
+Module 8 live-control threshold; these controls need a working action rather
+than a later-module placeholder. SL-13's create-menu arrow is also an inert M6
+control, but its reference menu contents were not observed and remain an open
+question.
 
 ### Solutions create / edit form
 
@@ -1060,9 +1069,10 @@ account has no record with which to observe these behaviours.
 
 ### Module 8 gate
 
-QA 2/2 found two Solutions defects: disabled SL-30/SL-31 field filters and the
-Create form layout/footer placement. The Solutions create → validation → save →
-detail → edit → list flow and Case `Solution` text → detail flow passed locally.
+QA 2/2 found three Solutions defect groups: disabled M8 filters, inert M6
+actions and the Create form layout/footer placement. The Solutions create →
+validation → save → detail → edit → list flow and Case `Solution` text → detail
+flow passed locally.
 Across Cases and Solutions list, create and detail screens, 133 visible
 `data-later-module` controls were clicked without navigation or dialogs.
 Cases list/detail, Accounts and Contacts lists, and the required Activities
