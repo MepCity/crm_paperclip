@@ -102,6 +102,11 @@ export function ModuleFormClient({
               return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);
             },
             create: moduleCreatePath(orgSlug, definition.tab),
+            createIn: (targetModule, params) => {
+              const targetDef = resolveModuleScreenByApiName(targetModule);
+              const query = new URLSearchParams(params).toString();
+              return `${moduleCreatePath(orgSlug, targetDef?.tab ?? targetModule)}${query ? `?${query}` : ""}`;
+            },
             cancel: defaultCancel,
           },
           navigate: (path) => {

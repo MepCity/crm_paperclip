@@ -65,8 +65,29 @@ export function callsFormDynamicState(
   };
 }
 
+function lookupParams(
+  values: Readonly<Record<string, FieldValue | undefined>>,
+  apiName: string,
+): Record<string, string> {
+  const value = values[apiName];
+  if (typeof value !== "object" || value === null || !("id" in value)) return {};
+  return { [apiName]: String(value.id), [`${apiName}_module`]: String(value.module) };
+}
+
 export const callsFormRules: FormRules = {
   owner: "Owner",
+  // Provisional: the reference action was never invoked (`activities-form.md` CF-02).
+  followUp: {
+    label: "Save and Create Follow-up Task",
+    module: "Tasks",
+    params: (values) => ({
+      ...(typeof values.Subject === "string" && values.Subject
+        ? { Subject: `Follow-up: ${values.Subject}` }
+        : {}),
+      ...lookupParams(values, "Who_Id"),
+      ...lookupParams(values, "What_Id"),
+    }),
+  },
   omitted: CALLS_FORM_OMITTED_FIELDS,
   omittedSections: ["Reason For Incoming Call"],
   viewOverrides: {
