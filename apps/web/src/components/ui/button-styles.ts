@@ -35,7 +35,7 @@ export const buttonStyles = {
 export const buttonSizes = {
   relatedAction: "h-(--size-list-filter-button-height) text-sm px-2.5 py-0",
   cardSelector:
-    "h-(--size-list-filter-button-height) w-(--size-record-column-selector-width) text-sm pl-2.5 pr-1 py-0 gap-1.5",
+    "h-(--size-list-filter-button-height) min-w-(--size-record-column-selector-width) text-sm pl-2.5 pr-1 py-0 gap-1.5",
   pageSelector:
     "h-(--size-record-page-selector-height) w-(--size-record-page-selector-width) text-md px-3 py-0 gap-3",
   pageAction:
