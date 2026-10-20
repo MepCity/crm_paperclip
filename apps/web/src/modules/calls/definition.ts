@@ -93,7 +93,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     lastUpdatePlacement: "tab-row",
     moreOptions: (handlers) =>
       buildCallsRecordMoreMenuGroups({
-        onEdit: handlers.onEdit ?? handlers.onClone,
+        onEdit: handlers.onEdit ?? (() => {}),
         onDelete: handlers.onDelete,
       }),
     deleteTitle: CALLS_DELETE_CONFIRM_TITLE,

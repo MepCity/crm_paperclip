@@ -318,6 +318,7 @@ export function RecordDetailScreen({
   }
 
   const moreMenuGroups = rules.moreOptions({
+    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
     ...(definition.merge
