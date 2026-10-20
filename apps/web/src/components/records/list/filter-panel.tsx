@@ -190,7 +190,13 @@ export function FilterPanel({
         value={query}
         onChange={setQuery}
       />
-      <div className="filter-panel-content mt-(--size-list-filter-search-to-group)">
+      <div
+        className="filter-panel-content mt-(--size-list-filter-search-to-group)"
+        onScroll={(event) => {
+          // Focus scrolling must never shift the panel sideways (CX-18).
+          if (event.currentTarget.scrollLeft !== 0) event.currentTarget.scrollLeft = 0;
+        }}
+      >
         {visibleGroups.map((group, index) => (
           <div
             key={group.id}

@@ -4,6 +4,7 @@ import {
   decodeCampaignFilter,
   decodeCriteria,
   decodeInput,
+  decodeSystemFilters,
   encodeActivitySummaries,
   encodeCurrency,
   encodeField,
@@ -74,7 +75,12 @@ async function restrictions(
 ): Promise<
   Pick<
     ListQuery,
-    "filters" | "search" | "activityFilter" | "campaignFilter" | "includeActivitySummary"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "includeActivitySummary"
   >
 > {
   const value = await bodyOf(input);
@@ -89,6 +95,9 @@ async function restrictions(
   )
     invalid("includeActivitySummary");
   return {
+    ...(body.system_filters === undefined
+      ? {}
+      : { systemFilters: decodeSystemFilters(body.system_filters) }),
     ...(body.campaign_filter === undefined
       ? {}
       : { campaignFilter: decodeCampaignFilter(body.campaign_filter) }),

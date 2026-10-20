@@ -24,6 +24,9 @@ export function fixtureHistoryReader(
   knownModule: (module: string) => boolean,
   permissions: FixtureHistoryPermissions,
   cursors: Map<string, Cursor>,
+  projectChild?: (
+    event: RecordHistoryEvent,
+  ) => { name?: string; payload: RecordHistoryEvent["payload"] } | null,
 ): RecordHistoryService {
   const invalid = () => new ValidationError({ history: ["Invalid history query or page token."] });
   const canRead = (module: string, id: string) => {
@@ -130,12 +133,18 @@ export function fixtureHistoryReader(
         if (event.kind === "fields_updated" && changes.length === 0) continue;
         // Identity/payload snapshots may derive from hidden fields. Only the typed field
         // snapshots are exposed for direct CRUD until kind-specific readers are supplied.
+        const child = projectChild?.(event);
+        if (child === null) continue;
         visible.push({
           ...event,
           stream: { module, recordId },
-          subject: { module: event.subject.module, recordId: event.subject.recordId },
+          subject: {
+            module: event.subject.module,
+            recordId: event.subject.recordId,
+            ...(child?.name ? { name: child.name } : {}),
+          },
           changes,
-          payload: null,
+          payload: child?.payload ?? null,
         });
         if (visible.length > perPage) break;
       }
