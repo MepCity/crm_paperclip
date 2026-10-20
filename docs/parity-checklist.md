@@ -659,7 +659,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 
 ## Module 5 — Activities
 
-### Tasks list — implemented; QA pending (MEP-459)
+### Tasks list — done; QA MEP-940 (MEP-459)
 
 Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
 
@@ -667,18 +667,20 @@ Inventory is SH-20, TL-01 – TL-66, TL-02.1 – TL-02.20, TL-14.1 – TL-14.6.
 | --- | --- | --- |
 | Shell entry | SH-19, SH-20 (Tasks is the first entry of the Activities group) | `tasks-list.spec.ts`, `definition.test.ts` |
 | View strip and menu | TL-01, TL-02, TL-02.1 – TL-02.20 (Search filters rows by name; interim) | `tasks-list.spec.ts`, `view-tab-strip.test.tsx` |
-| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; TL-13 `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
-| Actions | TL-14, TL-14.1 – TL-14.6 (Manage Tags and Export Tasks `laterModule` M6) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Toolbar | TL-03 – TL-13, TL-65 (no Sheet tile; Kanban and Timeline tiles inert; Import Tasks is now live) | `tasks-list.spec.ts`, `list-config.test.ts` |
+| Actions | TL-14, TL-14.1 – TL-14.6 (Export Tasks now opens the export dialog) | `tasks-list.spec.ts`, `list-config.test.ts` |
 | Filter panel | TL-15 – TL-26, TL-53 – TL-61, TL-66 (no Activities, Latest Email Status, Cadences, related-modules group) | `tasks-list.spec.ts`, `list-filters.test.ts` |
 | Table and footer | TL-33 – TL-42, TL-62 – TL-64, TL-48 – TL-51 (TL-33 `laterModule` M11) | `tasks-list.spec.ts` |
 
 Interim rules: selection bar, page size, empty state and row actions follow Accounts;
 Related To and Contact Name link to the related record when the target module is registered.
-The detail and form parts of the definition borrow module-neutral Deals builders until the
-Tasks detail and form tasks land.
+Closing QA walked the list, view menu, filters, paging, record link and current
+import/export entries against the saved Tasks list capture. The Tasks list
+inventory and column order matched at 1470 × 835. Dedicated detail and form
+screens are now live.
 
 
-### Tasks record detail — implemented (MEP-591); e2e MEP-473
+### Tasks record detail — done; QA MEP-940 (MEP-591, MEP-473)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -692,6 +694,15 @@ updates Status through the record service (errors show a toast); the right panel
 Summary and the Open Activities counts are read live for the related Contact (Deals through
 the Deals list, open Tasks / Meetings / Calls through the activity lists); "+ New" and the
 panel search icons draw without handlers; Add Tags and Conversations are drawn as later-module controls.
+
+Closing QA walked the header, More Options, Overview/Timeline, business card,
+Task Information and right panel against `m5d-task-main`, `m5d-task-more` and
+`m5d-task-timeline`. The business card field order is Priority, Due Date,
+Status, Related To, Task Owner; Task Information begins Task Owner, Subject,
+Due Date, Contact Name, Related To. Close Task saves Completed and removes
+the command. **Open finding:** Due Date displays an English month name in
+detail while the reference displays `dd.MM.yyyy`; the Meetings/Calls detail
+date fix tracked separately does not cover Tasks.
 
 
 ### Activities screens — side-by-side visual check (board decision MEP-570, 2026-10-14 and 2026-10-15)
@@ -771,7 +782,7 @@ show No participant found; a populated opaque array shows a blank body with head
 without interpreting any entries or inventing names. The populated appearance/item schema
 remains an open question for the corresponding research/contract work.
 
-### Meetings create and edit — implemented; QA pending (MEP-509)
+### Meetings create and edit — done; QA MEP-940 (MEP-509)
 
 Inventory is MF-01 – MF-15 and MF-02.1 – MF-02.3.
 
@@ -791,6 +802,50 @@ be removed, no invitation is sent; Reminder and Participants Reminder are select
 in place as a `laterModule="P3"` toggle (open question for the board); Save opens the record,
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
+
+Closing QA walked the Meeting Information window, Add more details, participant
+picker, Save, Edit and To-before-From validation; the All day control was
+inspected while its storage rule remains provisional. The quick window
+shows Title, Meeting Venue, Location, All day, From, To, Host and Participants
+in that order; saving a selected participant displays it on the detail card.
+**Open finding:** the reference quick window is clipped at the viewport top
+with a fixed footer, and Add more details keeps that window open and scrolls
+to the lower fields. The app centers the whole quick window lower and opens a
+separate full-page form after Add more details. This is a visible container
+and navigation mismatch; the provisional field-order rule does not cover it.
+
+### Tasks and Calls forms — done; QA MEP-940 (MEP-502, MEP-698, MEP-510, MEP-729)
+
+Task Create/Edit, Subject validation, Who/What selectors, Reminder and Repeat,
+Save and record navigation were walked; the Task form's single-column field
+order and measured layout match the saved capture. Call Create/Edit, Inbound,
+Missed and completed recording modes, scheduled Save, Reschedule, Mark as
+Completed with required duration, and Cancel Call were walked.
+
+**Open Call findings:** the captured Create Call header offers “Save and Create
+Follow-up Task”, while the app offers “Save and New”; the app's Call Start Time
+uses a locale-native `mm/dd/yyyy` date field, while the captured form shows
+`DD.MM.YYYY` and a formatted time. The boxed Call field layout and section
+order otherwise follow the Call-specific capture.
+
+### Activities in parent modules — done; QA MEP-940 (MEP-500, MEP-524, MEP-501, MEP-478, MEP-519, MEP-518, MEP-525)
+
+Leads, Contacts, Accounts and Deals record details show Open and Closed
+Activities with Tasks, Meetings and Calls in the observed column order; linked
+open/completed Tasks land in the corresponding card, and empty states render.
+The Leads list Activities filter sends the selected predicate to the list and
+count requests; Apply showed a lead with a completed Task and excluded a lead
+without activities, and Clear restored the list. Deals Next Action selected
+the earlier of two open Tasks. A UI flow created and edited a Task linked to a
+Lead, closed it, and found it in that Lead's Closed Activities card. Deleting
+a parent lead removes its linked Task from the list and its detail route. The
+four parent lists and details passed the targeted regression tour.
+
+**Open flow finding:** the Open Activities card's “Add New” button on a Lead
+is still marked `data-later-module="M5"` and `aria-disabled="true"`. The
+required parent-detail → new Task/Meeting/Call flow cannot start. Contact
+business-card and detail Phone “Call” controls also retain M5 markers and
+remain inert even though Module 5 is live. Direct module Create routes work.
 
 
 ### Notes in Timeline History — MEP-580
@@ -822,6 +877,63 @@ authenticated request; delete asks for confirmation and is permanent; Timeline H
 "Attachment added: <name>" (from the stored row) and "Attachment deleted: <name>" (kept only for
 the browser session, attributed to "You", because a deleted row leaves no record); Documents is
 inert (M9); Leads card sits after Closed Activities (order 3, as on the other modules).
+
+### Module 5 gate
+
+Closing QA ran on `origin/main` at `33b4df67` (2026-10-20). QA 1/2
+(MEP-939) walked Meetings/Calls lists, the list activity ribbon and both
+record details against saved captures: one material date-format finding was
+sent to MEP-947; the selection-bar inset and Calls title-suffix typography
+were below the Module 2+ visual threshold. QA 2/2 (MEP-940) walked Tasks,
+the three form families and the parent-module activity links against saved
+captures. The primary Activities tour passed 157 e2e tests with one skipped;
+the measured form visual tour passed seven tests, and the focused local
+browser walk confirmed the disabled parent action and inert Contact call
+action. Focused browser flows also passed the linked Task lifecycle, Leads
+Activities filter result and nearest Deal Next Action. Across 15 walked
+list/form/detail routes, 105 visible M8-and-later controls were clicked with
+no navigation, dialog or menu change. QA 1/2 reported 63 passing e2e tests
+on its earlier main snapshot.
+
+**Gate result:** the module is implemented and its direct list/form/detail
+routes work, but the parent-detail creation flow and the Meeting form
+container still diverge visibly from the reference. The gate is not clear
+for approval until the CTO reviews the findings below. No reference record
+was changed during this QA; only saved captures were inspected.
+
+**Provisional rules and open questions (not defects):**
+
+- Task completion/Close Task, reminder and Repeat persistence; Meeting
+  participant cap of 50 with no invitation email; Meeting full-form field
+  order, From/To ordering validation and All day UTC-midnight storage.
+- Call recording modes (Inbound, Missed and Completed), Reschedule through
+  Edit, Mark as Completed and Cancel Call, and conditional duration validation.
+- Parent deletion cascades to linked activities; open/closed classification,
+  Activities filter predicates and nearest-open-activity Next Action.
+- The populated opaque Participants array and participant Add in record
+  detail remain under the MEP-517 observation limit. Deal Summary currency
+  and amount format remains an open question from QA 1/2. Reference Call
+  Edit layout and save effects were not safely observable.
+
+**Out of scope for this gate:** reference-side writes, imports/exports and
+Notes/Attachments/CSV workflows, email/calendar/invitations, and hover-only
+behaviour without a saved capture. Drawn M8-and-later controls are expected
+to stay inert.
+
+**Known gaps for CTO disposition:**
+
+1. MEP-947 covers Meetings/Calls detail dates; Tasks detail Due Date still
+   uses an English month name instead of `dd.MM.yyyy`.
+2. Open Activities “Add New” is disabled with an M5 marker on parent record
+   detail, blocking new Task/Meeting/Call creation from that parent. Contact
+   Phone “Call” actions also retain inert M5 markers.
+3. Meeting Information opens too low in the viewport; Add more details leaves
+   the modal for a full page, whereas the captured reference keeps the modal
+   and scrolls its body to lower fields.
+4. Call Create shows “Save and New” instead of the captured “Save and Create
+   Follow-up Task”; Call Start Time uses a native `mm/dd/yyyy` date display
+   instead of the captured `DD.MM.YYYY` layout.
+
 ## Module 6 — CSV import and export
 
 Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
