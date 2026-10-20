@@ -126,7 +126,8 @@ describe("Attachments record contract", () => {
           ? await service.create("Notes", {
               Parent_Id: { module: "Leads", id: (await lead(service)).id },
             })
-          : (await service.list(module, { ...listQuery, viewId: requireValue(view).id })).records[0];
+          : (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
+              .records[0];
       if (!parent) throw new Error("Missing fixture parent.");
       const record = await service.create("Attachments", link(module, parent.id));
       expect((await service.get("Attachments", record.id)).fields.Parent_Id).toMatchObject({
