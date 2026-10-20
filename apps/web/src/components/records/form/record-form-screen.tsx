@@ -698,6 +698,7 @@ function LoadedRecordForm({
               ? config.currencyPrefix
               : undefined
           }
+          currencyHelp={rules.currencyHelp?.[field.apiName]}
           currencyInformation={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? RECORD_FORM_COPY.currencyInformation
@@ -766,6 +767,7 @@ function LoadedRecordForm({
       ) : null}
       <RecordFormShell
         variant={config.variant}
+        layout={config.variant === "activity" && config.module === "Calls" ? "call" : undefined}
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}

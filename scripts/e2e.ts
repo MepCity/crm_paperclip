@@ -12,6 +12,7 @@ import {
 } from "@crm/db/testing";
 import { runCleanupSteps } from "./e2e-cleanup";
 import { acquireE2eLock, releaseE2eLock } from "./e2e-lock";
+import { timeE2eStage } from "./e2e-timing";
 
 const execFileAsync = promisify(execFile);
 
@@ -213,13 +214,13 @@ async function main(): Promise<number> {
     };
 
     console.log("e2e: building the production bundle");
-    const buildCode = await run("next", ["build"], env);
+    const buildCode = await timeE2eStage("next build", () => run("next", ["build"], env));
     if (interrupted) return interruptedExitCode;
     if (buildCode !== 0) return 1;
     console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
     playwrightStageStarted = true;
     const playwrightArgs = ["test", ...process.argv.slice(2)];
-    const code = await run("playwright", playwrightArgs, env);
+    const code = await timeE2eStage("Playwright", () => run("playwright", playwrightArgs, env));
     if (interrupted) return interruptedExitCode;
     return code;
   } finally {

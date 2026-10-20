@@ -574,3 +574,33 @@ it.each([
     await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
   },
 );
+
+it.each(["Tasks", "Events", "Calls", "Campaigns", "Cases", "Solutions"])(
+  "decodes Notes Parent_Id plus $se_module for %s and rejects mismatches",
+  async (module) => {
+    const view = (await deps.records.listViews(module)).find((view) => view.criteria === null);
+    if (!view) throw new Error("Missing view");
+    const parent = (await deps.records.list(module, { viewId: view.id, page: 1, perPage: 10 }))
+      .records[0];
+    if (!parent) throw new Error("Missing parent");
+    const request = {
+      params: { module: "Notes" },
+      query: {},
+      body: {
+        data: [{ Parent_Id: { id: parent.id }, $se_module: module, Note_Content: "Wire note" }],
+      },
+    };
+    const created = json(await operations.create.run(deps, request));
+    const note = await deps.records.get("Notes", created.body.data[0].details.id);
+    expect(note.fields.Parent_Id).toMatchObject({ module, id: parent.id });
+    for (const row of [
+      { Parent_Id: { id: parent.id }, $se_module: "Unknown" },
+      { Parent_Id: { id: parent.id, module: "Leads" }, $se_module: module },
+      { Parent_Id: { id: parent.id }, $se_module: null },
+    ]) {
+      await expect(
+        operations.create.run(deps, { ...request, body: { data: [row] } }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
+  },
+);

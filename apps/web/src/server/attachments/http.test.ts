@@ -91,6 +91,7 @@ function expectWindowArgs(
     });
   }
 }
+
 // Exercise the lifecycle cleanup consumer without adding a transport or scheduler.
 async function cleanup(deps: AttachmentDeps) {
   for (const intent of deps.lifecycle.cleanupIntents()) {

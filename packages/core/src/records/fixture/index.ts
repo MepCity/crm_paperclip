@@ -267,9 +267,25 @@ export function createFixtureRecordService(
     if (!view) throw new NotFoundError("View not found.");
     return view;
   };
+  const noteParentVisible = (fields: RecordData["fields"]) => {
+    const parent = fields.Parent_Id;
+    return (
+      isJsonObject(parent) &&
+      typeof parent.module === "string" &&
+      typeof parent.id === "string" &&
+      Object.hasOwn(fixtureModules, parent.module) &&
+      moduleStore(parent.module).records.has(parent.id) &&
+      options?.canReadRecord?.(parent.module, parent.id) !== false
+    );
+  };
+  const assertNoteParentVisible = (module: string, fields: RecordData["fields"]) => {
+    if (module === "Notes" && !noteParentVisible(fields))
+      throw new NotFoundError("Record not found.");
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
+    assertNoteParentVisible(module, record.fields);
     return record;
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
@@ -390,6 +406,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .map((record) => resolveRead(module, record, now))
       .filter(
@@ -496,8 +513,8 @@ export function createFixtureRecordService(
         new Set(),
       );
       validateReferences(module, record.fields);
-      if (module === "Notes" || module === "Attachments")
-        attachmentUltimateParent(record.fields, hookContext);
+      assertNoteParentVisible(module, record.fields);
+      if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     },
   });
   const writeBatch = (
@@ -924,6 +941,7 @@ export function createFixtureRecordService(
         });
         if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
         bundle.applyRules?.(fields, normalized, undefined, hookContext);
+        assertNoteParentVisible(module, fields);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const record = { id, fields };
         assertUniqueFieldValues(
