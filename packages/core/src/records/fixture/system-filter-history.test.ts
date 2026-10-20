@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ValidationError } from "../../errors";
+import { RecordLockedError, ValidationError } from "../../errors";
 import { createFixtureRecordService } from "./index";
 
 const period = { from: "2026-10-01T00:00:00Z", to: "2026-10-02T00:00:00Z" };
@@ -11,6 +11,41 @@ const context = () => ({
   userId: "user",
   role: "admin" as const,
 });
+describe("system filter seeded locks", () => {
+  it.each([
+    ["Campaigns", "Campaign_Name", ["210000000000000249", "210000000000000000"]],
+    [
+      "Calls",
+      "Subject",
+      ["150000000000000249", "150000000000000001", "150000000000000000", "150000000000000003"],
+    ],
+    ["Events", "Event_Title", ["130000000000000249", "130000000000000245", "130000000000000244"]],
+  ] as const)(
+    "keeps %s detail fixtures editable while retaining locked records",
+    async (module, field, detailIds) => {
+      const service = createFixtureRecordService(context());
+      const viewId = (await service.listViews(module)).find((view) => view.isDefault)?.id ?? "";
+      const locked = await service.list(module, {
+        viewId,
+        page: 1,
+        perPage: 100,
+        systemFilters: { locked: { locked: true } },
+      });
+      expect(locked.records.length).toBeGreaterThan(0);
+      for (const record of locked.records) {
+        expect(detailIds).not.toContain(record.id);
+        await expect(
+          service.update(module, record.id, { [field]: "Blocked edit" }),
+        ).rejects.toBeInstanceOf(RecordLockedError);
+      }
+      for (const id of detailIds) {
+        const updated = await service.update(module, id, { [field]: "Editable detail fixture" });
+        expect(updated.fields[field]).toBe("Editable detail fixture");
+      }
+    },
+  );
+});
+
 describe("system filter related history", () => {
   it("evaluates child create, update, delete and reparent events", async () => {
     let time = period.from;

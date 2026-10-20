@@ -25,7 +25,7 @@ export function generateFixtureEvents(
     if (allDay) start.setUTCHours(0, 0, 0, 0);
     Object.assign(fields, {
       id,
-      Locked__s: index === 249,
+      Locked__s: index === 125,
       Event_Title: `Meeting ${String(index + 1).padStart(3, "0")}`,
       Start_DateTime: start.toISOString(),
       End_DateTime: new Date(start.getTime() + (allDay ? 86_399_000 : 3_600_000)).toISOString(),
