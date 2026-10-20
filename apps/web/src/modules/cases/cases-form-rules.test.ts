@@ -5,6 +5,7 @@ import {
   CASES_DELETE_CONFIRM_TITLE,
   CASES_FORM_CREATE_TITLE,
   CASES_FORM_EDIT_TITLE,
+  CASES_FORM_INFORMATION_COLUMNS,
   CASES_FORM_PICKLIST_NONE,
   CASES_FORM_SYSTEM_FIELDS,
   casesFormRules,
@@ -31,5 +32,11 @@ test("Cases form rules configure owner, defaults, omitted fields, and titles", (
   for (const name of CASES_FORM_SYSTEM_FIELDS) {
     expect(casesFormRules.omitted).toContain(name);
   }
-  expect(casesFormRules.omitted).toContain("Case_Number");
+  expect(casesFormRules.omitted).not.toContain("Case_Number");
+  for (const name of ["Add_Comment", "Comments", "No_of_comments"]) {
+    expect(casesFormRules.omitted).toContain(name);
+  }
+  expect(casesFormRules.readOnlyFields).toContain("Case_Number");
+  expect(CASES_FORM_INFORMATION_COLUMNS[0][0]).toBe("Case_Number");
+  expect(CASES_FORM_INFORMATION_COLUMNS[1][0]).toBe("Owner");
 });

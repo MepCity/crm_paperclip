@@ -52,6 +52,9 @@ export function AttachmentsCardContainer({
         loading={attachments.loading}
         error={attachments.error}
         uploading={attachments.uploading}
+        hasMore={attachments.hasMore}
+        loadingMore={attachments.loadingMore}
+        onLoadMore={attachments.loadMore}
         onAttach={handleAttach}
         onFilesSelected={(files) => void attachments.upload(files)}
         onDownload={(row) => void attachments.download(row)}

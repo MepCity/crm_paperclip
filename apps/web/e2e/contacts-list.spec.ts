@@ -1,5 +1,5 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -85,9 +85,29 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
     "Sheet view",
     "Print View",
   ]);
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  // TAG-02 / PS-05: these entries now navigate instead of remaining inert.
+  for (const [label, path] of [
+    ["Manage Tags", moduleTagsPath],
+    ["Drafts", moduleDraftsPath],
+  ] as const) {
+    await page.getByRole("menuitem", { name: label, exact: true }).click();
+    await expect(page).toHaveURL(path(org.slug, "Contacts"));
+    await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    if (label === "Manage Tags") {
+      await expect(
+        page.locator("#main-content").getByText("Contacts", { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByRole("table", { name: "Tags table" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { name: "Criteria", exact: true })).toBeVisible();
+    }
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Contacts"));
+    await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+    await list.getByRole("button", { name: "Actions", exact: true }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+  }
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });
   await expect(print.locator("svg")).toBeVisible();
   await print.click();

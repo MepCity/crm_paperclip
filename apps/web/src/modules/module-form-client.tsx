@@ -1,7 +1,7 @@
 "use client";
 
 import type { FieldValue } from "@crm/core/records";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RecordFormScreen } from "@/components/records/form/record-form-screen";
 import { SelectUserDialog } from "@/components/records/form/select-user-dialog";
@@ -40,6 +40,11 @@ export function ModuleFormClient({
       return readRecordCreatePrefill(orgSlug, moduleApiName)?.fields ?? null;
     },
   );
+  // Read from the router, not the window: during a client navigation the window URL lags behind.
+  const intentName = useSearchParams().get("intent");
+  const [editIntent] = useState(() =>
+    recordId && intentName ? definition.form.editIntents?.[intentName] : undefined,
+  );
 
   useEffect(() => {
     if (recordId || cloneSourceId) return;
@@ -72,9 +77,11 @@ export function ModuleFormClient({
           rules: definition.form.rules,
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
+          inventoryFooterEnd: definition.form.inventoryFooterEnd,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           profileImageIcon: definition.form.profileImageIcon,
           createPrefill: hasPrefill ? prefill : undefined,
+          editIntent,
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id, targetModule) => {

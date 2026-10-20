@@ -773,6 +773,25 @@ Interim/open questions:
 - Unread Campaigns retains the exported Common_Status criterion although that
   field is absent from public metadata, following existing saved-view policy.
 
+## Recycle Bin search queries
+
+`RecycleBinQuery.deletedByContains` matches a case-insensitive substring of the
+stored deletion actor. Existing `deletedBy` retains exact, case-sensitive equality;
+when both are supplied, both must match. An empty substring matches every visible
+actor. Search predicates combine with module/name filters before pagination and
+`total`; tenant and role visibility remain authoritative.
+
+`deletedOn: { date: "YYYY-MM-DD", time?: "HH:mm" }` matches an entire calendar day
+or, with a 24-hour time, one minute. Intervals include their start and exclude the
+next day/minute. Invalid calendar dates, malformed times and malformed query
+values raise the existing `ValidationError`, even for an empty bin.
+
+Open questions: `OrgContext` currently has no user/organization timezone, so this
+query uses UTC (including when a deletion instant originated in another offset).
+The timezone source and reference CRM day boundaries need confirmation. RB-17 and
+RB-19 establish only `contains` and `is`; other operators remain unobserved and
+are not added. Deletion actor display-name resolution is outside this query port.
+
 ## Campaign system filter (interim)
 
 Leads and Contacts accept `campaignFilter: { campaignIds, memberStatuses? }` on
@@ -785,7 +804,6 @@ Membership and campaign reads use the caller's tenant and ordinary visibility;
 unknown or inaccessible IDs produce no matches. Other modules and malformed
 filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
 `campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
-
 
 ## Cases
 
@@ -833,23 +851,3 @@ Interim/open questions:
   following the existing shared saved-view policy.
 - Layout-required Question/Answer do not change Solutions' module-level required
   fields; the record contract follows the exported system_mandatory flags.
-
-
-## Recycle Bin search queries
-
-`RecycleBinQuery.deletedByContains` matches a case-insensitive substring of the
-stored deletion actor. Existing `deletedBy` retains exact, case-sensitive equality;
-when both are supplied, both must match. An empty substring matches every visible
-actor. Search predicates combine with module/name filters before pagination and
-`total`; tenant and role visibility remain authoritative.
-
-`deletedOn: { date: "YYYY-MM-DD", time?: "HH:mm" }` matches an entire calendar day
-or, with a 24-hour time, one minute. Intervals include their start and exclude the
-next day/minute. Invalid calendar dates, malformed times and malformed query
-values raise the existing `ValidationError`, even for an empty bin.
-
-Open questions: `OrgContext` currently has no user/organization timezone, so this
-query uses UTC (including when a deletion instant originated in another offset).
-The timezone source and reference CRM day boundaries need confirmation. RB-17 and
-RB-19 establish only `contains` and `is`; other operators remain unobserved and
-are not added. Deletion actor display-name resolution is outside this query port.

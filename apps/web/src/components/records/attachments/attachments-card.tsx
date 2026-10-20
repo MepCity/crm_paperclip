@@ -28,6 +28,10 @@ export interface AttachmentsCardProps {
   onFilesSelected: (files: File[]) => void;
   onDownload: (row: AttachmentRow) => void;
   onDelete: (row: AttachmentRow) => Promise<void> | void;
+  /** More pages exist on the server; shows the "Show more" control. */
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
   canEdit?: boolean;
   /** Rail jump target (AT-01). */
   targetId?: string;
@@ -48,6 +52,9 @@ export function AttachmentsCard({
   onFilesSelected,
   onDownload,
   onDelete,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
   canEdit = true,
   targetId = "attachments",
 }: AttachmentsCardProps) {
@@ -213,6 +220,19 @@ export function AttachmentsCard({
               })}
             </tbody>
           </table>
+          {hasMore ? (
+            <div className="py-2 text-center">
+              <Button
+                variant="recordSecondary"
+                size="compact"
+                data-part="show-more"
+                isDisabled={loadingMore}
+                onPress={() => onLoadMore?.()}
+              >
+                {loadingMore ? "Loading…" : "Show more"}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
 

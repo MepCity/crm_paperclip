@@ -811,7 +811,6 @@ authenticated request; delete asks for confirmation and is permanent; Timeline H
 "Attachment added: <name>" (from the stored row) and "Attachment deleted: <name>" (kept only for
 the browser session, attributed to "You", because a deleted row leaves no record); Documents is
 inert (M9); Leads card sits after Closed Activities (order 3, as on the other modules).
-
 ## Module 6 — CSV import and export
 
 Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
@@ -1010,10 +1009,17 @@ Provisional rules (behaviour not observed in reference):
 
 Later-module controls: SF-01, SF-17, SF-18, SF-19 (M11 `laterModule`); SF-11, SF-12 (P2 `laterModule`).
 
+
 ### Cases create / edit form
 
-Not started (in progress in MEP-895).
+- KF-01 – KF-34 implemented (MEP-895). M11 controls (KF-01, KF-29, KF-30, KF-32) and Product Name (KF-07, KF-08, P2) are `laterModule`; the Product picker (KF-08.x) is not drawn.
+- Case Number (KF-05, KF-06) is locked, blank on create and filled on edit.
+- Provisional: edit form = create form filled; shared picklist adds a leading `-None-` to Status (KF-20.x list otherwise matches); no Email requirement for Case Origin = Email; Type / Case Reason options in metadata order.
 
-### Cases links in earlier modules
+### Cases links in earlier modules (MEP-900)
 
-Not started.
+| ID | Behaviour | Tests |
+| --- | --- | --- |
+| KX-01 – KX-16 | Accounts, Contacts and Deals detail: Cases card live (no later-module marker); filters Cases on `Account_Name` / `Related_To` / `Deal_Name`; empty card shows Assign and New and "No records found"; rail entry kept (Contacts rail plus included) | `related-cases-card-body.test.tsx`, `*-related-lists.test.tsx`, `accounts-detail.spec.ts`, `contacts-detail.spec.ts`, `deals-detail.spec.ts` |
+| Provisional | Filled card columns Subject (detail link), Case Number, Status, Priority, Case Owner; New opens the Cases form with the parent field (and Account Name when known) filled; Assign has no handler; no Cases ↔ Solutions link (CTO decision) | same |
+

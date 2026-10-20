@@ -158,6 +158,14 @@ export type ModuleRecordDetailScreenProps = {
 };
 
 /** Only presentation rules absent from service metadata belong here. */
+/** A confirmation a header command opens; the screen draws the dialog and runs `onConfirm`. */
+export interface HeaderConfirmRequest {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+}
+
 export interface ModuleScreenDefinition {
   apiName: ModuleApiName;
   tab: string;
@@ -182,6 +190,12 @@ export interface ModuleScreenDefinition {
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
+    /** Edit-route `intent` query values a record action opens the form with. */
+    editIntents?: Readonly<
+      Record<string, { set?: Readonly<Record<string, FieldValue>>; focus?: string }>
+    >;
+    /** Footer group sits at the bottom right of the form (Cases). */
+    inventoryFooterEnd?: boolean;
     profileImageLaterModule?: ModuleKey;
     profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     /**
@@ -208,6 +222,7 @@ export interface ModuleScreenDefinition {
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
+      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
       titleSuffix?: string;
     };
     /**
@@ -223,7 +238,12 @@ export interface ModuleScreenDefinition {
      */
     buildHeaderCommands?: (
       record: RecordData,
-      actions: { editHref: string; save: (input: RecordInput) => Promise<void> },
+      actions: {
+        editHref: string;
+        save: (input: RecordInput) => Promise<void>;
+        navigate: (href: string) => void;
+        confirm: (request: HeaderConfirmRequest) => void;
+      },
     ) => readonly RecordCommand[];
     /** Extra card rendered between the business card and the details card. */
     BetweenCards?: ComponentType<{ record: RecordData }>;

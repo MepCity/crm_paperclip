@@ -88,6 +88,14 @@ export function moduleCreatePath(orgSlug: string, moduleApiName: string): string
   return moduleTabPath(orgSlug, moduleApiName, "create");
 }
 
+export function moduleTagsPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName, "tags");
+}
+
+export function moduleDraftsPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName, "drafts");
+}
+
 export function withSearchParams(path: string, params: URLSearchParams): string {
   const query = params.toString();
   return query.length > 0 ? `${path}?${query}` : path;
