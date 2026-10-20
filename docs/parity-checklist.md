@@ -707,7 +707,7 @@ Our screenshot is uploaded to the task as an attachment; the reference image nev
 repo or task (only its research workspace path is referenced). The result of each comparison (✓
 per verified row) is recorded below and in the review comments. `apps/web/e2e/activities-form-visual.spec.ts`
 guards the measured values and absence of copied chrome for Task Create/Edit, Meeting window and
-full form, and Activities lists/detail. Call Create/Edit join it once the Call form lands.
+full form, Call Create/Edit, and Activities lists/detail.
 
 #### Task and Meeting form screens — measured comparison result
 
@@ -722,6 +722,7 @@ full form, and Activities lists/detail. Call Create/Edit join it once the Call f
 | Meeting Information dialog: Modal & grid | Requirements 1–4: Centered 500 px modal at x=485; 418 px lines from x=515 to 933; labels left at x=515, values start at x=682; 50 px pitch | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Information dialog: Fields & controls | Requirements 5–11: Unboxed rows; 25 × 2 px red marker; All day 15 × 15 checkbox; Date and time on one line 10 px apart; Cancel and Save only (no Save and New) | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Full Form (Add more details) | Requirements 1–14: Expands to full form with Repeat and Description; no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts` |
+| Call Create & Edit: Geometry & chrome | Call spec requirements 1–14 (measured): boxed fields, right-aligned labels x≈515, 531 px field box at x=534.5, 3 px vertical required bar, wide Type/Status selects. Implemented form follows the Task layout instead (548 px column x=332, left labels, 25 × 2 px marker, no Client Script / Create Form Views, no Repeat, magnifier on Related To) | ✗ Open: geometry differs from the Call spec; spec's own open question says Edit equals Create | `activities-form-visual.spec.ts` (guards the implemented layout), `calls-form.spec.ts` |
 | Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
 
 
