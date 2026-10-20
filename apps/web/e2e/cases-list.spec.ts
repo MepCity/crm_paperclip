@@ -143,6 +143,6 @@ test("Cases Actions exports through the shared dialog", async ({ page }) => {
   expect(await response.json()).toMatchObject({ module: "Cases", status: "completed" });
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
-  const importPage = await page.request.get(`/crm/${org.slug}/tab/Cases/import`);
-  expect(importPage.status()).toBe(404);
+  await page.goto(`/crm/${org.slug}/tab/Cases/import`);
+  await expect(page.getByRole("heading", { name: "404 - Not Found", exact: true })).toBeVisible();
 });

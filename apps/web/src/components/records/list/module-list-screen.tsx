@@ -732,9 +732,8 @@ function ModuleListScreenLoaded({
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
-  const createItems: readonly MenuAction[] | undefined = (
-    IMPORT_MODULES as readonly string[]
-  ).includes(config.module)
+  const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
+  const createItems: readonly MenuAction[] | undefined = importEnabled
     ? [
         {
           id: "import",
@@ -855,7 +854,7 @@ function ModuleListScreenLoaded({
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
-            moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
+            moreLaterModule: config.inventory && !importEnabled ? "M6" : undefined,
           }}
         />
       )}
