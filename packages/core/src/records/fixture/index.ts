@@ -402,8 +402,6 @@ export function createFixtureRecordService(
     const systemEvents = systemFilters
       ? [...state.history.values()].filter(
           (event) =>
-            (event.kind !== "note_added" ||
-              state.modules.get("Notes")?.records.has(event.subject.recordId)) &&
             options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
         )
       : [];
@@ -494,7 +492,16 @@ export function createFixtureRecordService(
         { ...operation, operationId },
         commit,
       );
-      events.push(...relatedFilterHistory(previous, state.modules, events, commit, operationId));
+      const noteIds = new Set(
+        [...state.history.values()]
+          .filter((event) => event.kind === "note_added")
+          .map((event) => event.subject.recordId),
+      );
+      events.push(
+        ...relatedFilterHistory(previous, state.modules, events, commit, operationId).filter(
+          (event) => event.kind !== "note_added" || !noteIds.has(event.subject.recordId),
+        ),
+      );
       const nextHistory = new Map(state.history);
       if (events.length) options?.beforeHistoryAppend?.(copy(events));
       fixtureHistoryStore(nextHistory).appendBatch(events);
@@ -502,8 +509,10 @@ export function createFixtureRecordService(
         if (event.kind !== "note_added") continue;
         const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
         const parent = attachmentParent(note?.fields.Parent_Id);
-        if (!parent) nextHistory.delete(id);
-        else if (event.stream.module !== parent.module || event.stream.recordId !== parent.id)
+        if (
+          parent &&
+          (event.stream.module !== parent.module || event.stream.recordId !== parent.id)
+        )
           nextHistory.set(id, { ...event, stream: { module: parent.module, recordId: parent.id } });
       }
       state.history = nextHistory;

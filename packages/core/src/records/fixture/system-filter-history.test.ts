@@ -37,7 +37,7 @@ describe("system filter related history", () => {
     await service.delete("Tasks", [task.id]);
     expect(await count("deleted")).toBe(2);
   });
-  it("suppresses deleted notes and never exposes unreadable parents", async () => {
+  it("retains historical touches after note deletion and never exposes unreadable parents", async () => {
     const ctx = context();
     const service = createFixtureRecordService(ctx, { now: () => new Date(period.from) });
     const parent = await service.create("Leads", { Last_Name: "Parent", Company: "Synthetic" });
@@ -55,7 +55,12 @@ describe("system filter related history", () => {
     });
     expect(await denied.count("Leads", query)).toBe(0);
     await service.delete("Notes", [note.id]);
-    expect(await service.count("Leads", query)).toBe(0);
+    expect(await service.count("Leads", query)).toBe(1);
+    expect(
+      (await service.history.list("Leads", parent.id, { perPage: 25 })).events.some(
+        (event) => event.kind === "note_added",
+      ),
+    ).toBe(false);
   });
   it("records attachments only after publication and rolls back failed history appends", async () => {
     const ctx = context();
