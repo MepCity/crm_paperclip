@@ -16,6 +16,7 @@ import { useAttachments } from "@/components/records/attachments/use-attachments
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
+import { NumericDatesProvider } from "@/components/records/detail/numeric-dates-context";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
@@ -64,6 +65,9 @@ import { RelatedCardsContainer } from "./related-cards-container";
 import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
+
+// Activity modules whose lists show numeric dates; their details match.
+const NUMERIC_DATE_MODULES = new Set(["Events", "Calls", "Tasks"]);
 
 export type RecordDetailPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
@@ -341,76 +345,78 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <RecordCallProvider
-      value={
-        ACTIVITY_PARENT_MODULES.includes(moduleApiName)
-          ? () =>
-              openActivityCreate(
-                orgSlug,
-                "Calls",
-                moduleApiName,
-                record,
-                (path) => router.push(path),
-                paths.record(orgSlug, definition.tab, recordId),
-              )
-          : null
-      }
-    >
-      {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
-      {statusField && StatusSection ? (
-        <StatusSection
-          module={moduleApiName}
-          recordId={recordId}
-          field={statusField}
-          value={displayStatus}
-          onValueChange={setStatusOverride}
-        />
-      ) : null}
-      <InlineEditProvider
-        key={recordId}
-        eligible={rules.inlineEditable}
-        users={(usersQuery.data ?? []).map((user) => ({
-          id: user.userId,
-          name: user.name,
-          email: user.email,
-        }))}
-        ownerNames={ownerNames}
-        recordPath={(targetModule, id) => {
-          const targetDef = resolveModuleScreenByApiName(targetModule);
-          return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
-        }}
-        save={persistRecord}
+    <NumericDatesProvider value={NUMERIC_DATE_MODULES.has(moduleApiName)}>
+      <RecordCallProvider
+        value={
+          ACTIVITY_PARENT_MODULES.includes(moduleApiName)
+            ? () =>
+                openActivityCreate(
+                  orgSlug,
+                  "Calls",
+                  moduleApiName,
+                  record,
+                  (path) => router.push(path),
+                  paths.record(orgSlug, definition.tab, recordId),
+                )
+            : null
+        }
       >
-        {detailSlots?.overviewPrefix}
-        <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-        {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
-        {detailSlots?.contactSummary ??
-          (rules.linkedContactSummary && linkedContactSummaryPath ? (
-            <AccountsLinkedContactSummary
-              accountRecord={displayRecord}
-              contactRecordPath={linkedContactSummaryPath}
-            />
-          ) : null)}
-        <DetailsCard
-          sections={detailSections}
-          ownerNames={ownerNames}
-          format={DEFAULT_FORMAT}
-          railLayout={railVisible ? "shown" : "hidden"}
-          activity={activityLayout}
-        />
-        {relatedLists.length > 0 ? (
-          <RelatedCardsContainer
-            relatedLists={relatedLists}
-            context={{
-              orgSlug,
-              record,
-              module: moduleApiName,
-              recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
-            }}
+        {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
+        {statusField && StatusSection ? (
+          <StatusSection
+            module={moduleApiName}
+            recordId={recordId}
+            field={statusField}
+            value={displayStatus}
+            onValueChange={setStatusOverride}
           />
         ) : null}
-      </InlineEditProvider>
-    </RecordCallProvider>
+        <InlineEditProvider
+          key={recordId}
+          eligible={rules.inlineEditable}
+          users={(usersQuery.data ?? []).map((user) => ({
+            id: user.userId,
+            name: user.name,
+            email: user.email,
+          }))}
+          ownerNames={ownerNames}
+          recordPath={(targetModule, id) => {
+            const targetDef = resolveModuleScreenByApiName(targetModule);
+            return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
+          }}
+          save={persistRecord}
+        >
+          {detailSlots?.overviewPrefix}
+          <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+          {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
+          {detailSlots?.contactSummary ??
+            (rules.linkedContactSummary && linkedContactSummaryPath ? (
+              <AccountsLinkedContactSummary
+                accountRecord={displayRecord}
+                contactRecordPath={linkedContactSummaryPath}
+              />
+            ) : null)}
+          <DetailsCard
+            sections={detailSections}
+            ownerNames={ownerNames}
+            format={DEFAULT_FORMAT}
+            railLayout={railVisible ? "shown" : "hidden"}
+            activity={activityLayout}
+          />
+          {relatedLists.length > 0 ? (
+            <RelatedCardsContainer
+              relatedLists={relatedLists}
+              context={{
+                orgSlug,
+                record,
+                module: moduleApiName,
+                recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
+              }}
+            />
+          ) : null}
+        </InlineEditProvider>
+      </RecordCallProvider>
+    </NumericDatesProvider>
   );
 
   const timeline = (

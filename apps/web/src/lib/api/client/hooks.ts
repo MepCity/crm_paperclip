@@ -88,7 +88,10 @@ export function useRecordList(
 
 export function useRecordCount(
   module: ModuleApiName,
-  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+  query: Pick<
+    ListQuery,
+    "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+  >,
 ) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
