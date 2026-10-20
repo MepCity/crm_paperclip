@@ -725,7 +725,10 @@ describe.each(["Solutions", "Cases"] as const)("%s export-only transfer", (modul
   it("exports selected metadata fields and records, history and tenant isolation", async () => {
     const s = setup();
     const field = module === "Solutions" ? "Solution_Title" : "Subject";
-    const record = await s.records.create(module, { [field]: "Synthetic export record" });
+    const record = await s.records.create(module, {
+      [field]: "Synthetic export record",
+      ...(module === "Cases" ? { Status: "New", Case_Origin: "Phone" } : {}),
+    });
     const job = await s.service.runExport(s.ctx, {
       module,
       ids: [record.id],

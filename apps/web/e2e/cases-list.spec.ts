@@ -131,6 +131,7 @@ test("Cases Actions exports through the shared dialog", async ({ page }) => {
   await expect(dialog.getByRole("radio", { name: "Choose fields", exact: true })).toBeVisible();
   await expect(dialog.getByRole("radio", { name: "Exclude fields", exact: true })).toBeVisible();
   await expect(dialog.getByText("CSV", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("UTF-8", { exact: true })).toBeVisible();
   const responsePromise = page.waitForResponse(
     (response) =>
       response.url().includes("/crm/v2.2/Cases/actions/export") &&
