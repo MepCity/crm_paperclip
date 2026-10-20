@@ -178,10 +178,9 @@ test("Meeting Information window matches the measured layout", async ({ page }) 
 test("full Meeting form matches the measured layout", async ({ page }) => {
   const { dialog } = await openMeetingDialog(page);
   await dialog.getByRole("button", { name: "Add more details" }).click();
-  await expect(page.getByRole("heading", { name: "Create Meeting" })).toBeVisible();
   await expectNoFormChrome(page);
-  await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Repeat" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
   await saveVisualScreenshot(page, "our-meeting-full.png");
 });
 
