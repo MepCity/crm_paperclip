@@ -41,6 +41,13 @@ describe("parentActivityCriteria", () => {
       });
     }
   });
+  it.each(["Campaigns", "Cases"])("preserves What_Id links for %s after integration", (module) => {
+    expect(parentActivityCriteria(module, "7")).toEqual({
+      field: "What_Id",
+      comparator: "equal",
+      value: { module, id: "7" },
+    });
+  });
   it("returns null elsewhere", () => {
     expect(parentActivityCriteria("Tasks", "1")).toBeNull();
   });

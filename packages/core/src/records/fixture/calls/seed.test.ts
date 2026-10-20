@@ -50,4 +50,28 @@ describe("prepared Calls seed", () => {
       expect(targets.some((record) => !counts.has(record.id))).toBe(true);
     },
   );
+
+  it("leaves Call_Duration empty on scheduled and missed calls, and covers unattended completed calls", () => {
+    const calls = generateFixtureCalls(68, now);
+    const scheduled = calls.filter((c) => c.fields.Outgoing_Call_Status === "Scheduled");
+    const missed = calls.filter((c) => c.fields.Call_Type === "Missed");
+    const unattended = calls.filter(
+      (c) =>
+        c.fields.Outgoing_Call_Status === "Completed" && c.fields.Call_Duration_in_seconds === 0,
+    );
+    expect(scheduled.length).toBeGreaterThan(0);
+    expect(missed.length).toBeGreaterThan(0);
+    expect(unattended.length).toBeGreaterThan(0);
+    for (const call of scheduled) {
+      expect(call.fields.Call_Duration).toBeNull();
+      expect(call.fields.Call_Duration_in_seconds).toBeNull();
+    }
+    for (const call of missed) {
+      expect(call.fields.Call_Duration).toBeNull();
+      expect(call.fields.Call_Duration_in_seconds).toBeNull();
+    }
+    for (const call of unattended) {
+      expect(call.fields.Call_Duration).toBe("00:00");
+    }
+  });
 });

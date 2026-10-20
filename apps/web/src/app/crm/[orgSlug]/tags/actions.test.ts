@@ -106,3 +106,53 @@ it("does not expose or remove another organization's tag", async () => {
   });
   expect(await original.tags.listRecordTags("Leads", record.id)).toHaveLength(1);
 });
+
+it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+  "manages %s catalogue and keeps record projections consistent",
+  async (module) => {
+    const { readTagCatalogueAction, mutateTagCatalogueAction } = await import("./actions");
+    expect(await readTagCatalogueAction("synthetic", module)).toMatchObject({
+      status: "success",
+      tags: [],
+      capacity: 100,
+      canManage: true,
+    });
+    const created = await mutateTagCatalogueAction("synthetic", module, {
+      kind: "create",
+      name: "Example",
+    });
+    if (created.status !== "success") throw new Error("Create failed");
+    const tag = required(created.tags[0]);
+    const service = createFixtureRecordService(session.ctx);
+    const record = required(
+      (
+        await service.list(module, {
+          viewId: required((await service.listViews(module))[0]).id,
+          page: 1,
+          perPage: 10,
+        })
+      ).records[0],
+    );
+    await service.tags.addTags(module, record.id, [tag.id]);
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, {
+        kind: "rename",
+        id: tag.id,
+        name: "Renamed",
+      }),
+    ).toMatchObject({ tags: [{ id: tag.id, name: "Renamed" }] });
+    expect(await readRecordTagsAction("synthetic", module, record.id)).toMatchObject({
+      tags: [{ id: tag.id, name: "Renamed" }],
+    });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, { kind: "delete", id: tag.id }),
+    ).toMatchObject({ tags: [] });
+    expect(await readRecordTagsAction("synthetic", module, record.id)).toMatchObject({
+      tags: [],
+      catalogue: [],
+    });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, { kind: "create", name: "x".repeat(51) }),
+    ).toMatchObject({ status: "error", fieldErrors: { name: expect.any(Array) } });
+  },
+);

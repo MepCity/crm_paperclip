@@ -431,3 +431,13 @@ describe("query-keys", () => {
     });
   });
 });
+
+it("includes campaign restrictions in list, count and summary cache keys", () => {
+  const base = { viewId: "all-leads", page: 1, perPage: 10, groupBy: "Lead_Status" };
+  const first = { ...base, campaignFilter: { campaignIds: ["one"] } };
+  const second = { ...base, campaignFilter: { campaignIds: ["two"], memberStatuses: ["Sent"] } };
+  for (const key of [apiKeys.list, apiKeys.count, apiKeys.summarize]) {
+    expect(key("synthetic", "Leads", first)).not.toEqual(key("synthetic", "Leads", second));
+    expect(key("synthetic", "Leads", first)).not.toEqual(key("synthetic", "Leads", base));
+  }
+});

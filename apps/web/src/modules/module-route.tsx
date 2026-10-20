@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { supportsListPrint, supportsRecordPrint } from "@/components/records/print/print-modules";
 import { PageTitle } from "@/components/shell/page-title";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
@@ -35,6 +36,10 @@ async function renderModuleRoute(props: RouteProps, kind: ModuleRouteKind) {
   const route = await props.params;
   const definition = requireModuleScreen(route.moduleTab);
   if ((kind === "detail" || kind === "merge") && route.recordId === "create") notFound();
+  if (kind === "print" && !supportsRecordPrint(definition.apiName)) notFound();
+  if (kind === "print-list" && !supportsListPrint(definition.apiName)) notFound();
+  const printViewId =
+    kind === "print-list" && props.searchParams ? (await props.searchParams).viewId : undefined;
   const context = await requireOrgContext(route.orgSlug);
   const createPrefill =
     kind === "create" && props.searchParams
@@ -47,6 +52,7 @@ async function renderModuleRoute(props: RouteProps, kind: ModuleRouteKind) {
   const client = (
     <ModuleRouteClient
       {...route}
+      viewId={typeof printViewId === "string" ? printViewId : route.viewId}
       kind={kind}
       currentUserId={context.userId}
       createPrefill={createPrefill}
@@ -55,7 +61,7 @@ async function renderModuleRoute(props: RouteProps, kind: ModuleRouteKind) {
   return (
     <>
       <PageTitle title={definition.pageTitle} />
-      {kind === "list" || kind === "deduplicate" ? (
+      {kind === "list" || kind === "deduplicate" || kind === "print-list" ? (
         <Suspense fallback={<div className="module-list-page min-h-full" aria-hidden="true" />}>
           {client}
         </Suspense>
@@ -73,3 +79,7 @@ export const moduleEditPage = (props: RouteProps) => renderModuleRoute(props, "e
 export const moduleClonePage = (props: RouteProps) => renderModuleRoute(props, "clone");
 export const moduleMergePage = (props: RouteProps) => renderModuleRoute(props, "merge");
 export const moduleDeduplicatePage = (props: RouteProps) => renderModuleRoute(props, "deduplicate");
+export const moduleTagsPage = (props: RouteProps) => renderModuleRoute(props, "tags");
+export const moduleDraftsPage = (props: RouteProps) => renderModuleRoute(props, "drafts");
+export const moduleRecordPrintPage = (props: RouteProps) => renderModuleRoute(props, "print");
+export const moduleListPrintPage = (props: RouteProps) => renderModuleRoute(props, "print-list");

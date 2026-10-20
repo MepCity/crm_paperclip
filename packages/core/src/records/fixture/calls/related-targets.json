@@ -58,5 +58,10 @@
     "sourceModule": "Vendors",
     "module": "Calls",
     "href": "Vendors/{ENTITYID}/Calls"
+  },
+  {
+    "sourceModule": "Solutions",
+    "module": "Calls",
+    "href": "Solutions/{ENTITYID}/Calls"
   }
 ]

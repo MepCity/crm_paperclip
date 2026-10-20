@@ -4,9 +4,11 @@ import {
   moduleClonePage,
   moduleCreatePage,
   moduleDetailPage,
+  moduleDraftsPage,
   moduleEditPage,
   moduleListPage,
   modulePageMetadata,
+  moduleTagsPage,
 } from "./module-route";
 import { resolveModuleScreen } from "./registry";
 import type { ModuleScreenDefinition } from "./types";
@@ -15,6 +17,7 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
 }));
 vi.mock("@/lib/session", () => ({
   requireOrgContext: vi.fn(async () => ({ userId: "route-author" })),
@@ -110,6 +113,17 @@ test.each([
   expect(screen.getByText(expected)).toBeTruthy();
 });
 
+test("renders moduleTagsPage with Manage Tags and module badge", async () => {
+  render(await moduleTagsPage({ params: params() }));
+  expect(screen.getByRole("heading", { name: "Manage Tags" })).toBeTruthy();
+  expect(screen.getAllByText("Samples")).toHaveLength(2);
+});
+
+test("renders moduleDraftsPage with Drafts heading", async () => {
+  render(await moduleDraftsPage({ params: params() }));
+  expect(screen.getByRole("heading", { name: "Drafts" })).toBeTruthy();
+});
+
 test("uses the registered title even when tab and API names differ", async () => {
   expect(await modulePageMetadata({ params: params() })).toEqual({ title: "Samples" });
   expect(resolveModuleScreen("Specimens")).toBeUndefined();
@@ -121,6 +135,8 @@ test.each([
   moduleCreatePage,
   moduleEditPage,
   moduleClonePage,
+  moduleTagsPage,
+  moduleDraftsPage,
   modulePageMetadata,
 ])("unknown tabs use the existing not-found boundary %#", async (page) => {
   await expect(

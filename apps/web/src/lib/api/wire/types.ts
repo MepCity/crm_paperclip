@@ -97,6 +97,7 @@ export type WireCountResponse = { count: number };
 export type WireRecordResponse = { data: readonly WireRecord[] };
 export type WireUsersResponse = { users: readonly WireUser[]; info: WirePageInfo };
 export type WireRestrictions = {
+  campaign_filter?: { campaign_ids: readonly string[]; member_statuses?: readonly string[] };
   filters?: WireCriteria;
   search?: string;
   activity_filter?: import("@crm/core/records").ActivityFilterValue;

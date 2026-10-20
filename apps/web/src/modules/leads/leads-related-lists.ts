@@ -1,3 +1,4 @@
+import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
@@ -7,6 +8,11 @@ import type { RelatedListDefinition } from "../types";
 export interface LeadsRelatedListBadges {
   openActivities?: number;
   closedActivities?: number;
+  campaigns?: number;
+}
+
+export interface LeadsRelatedListHandlers {
+  onAddCampaigns?: () => void;
 }
 
 function badgeValue(count: number | undefined): number | undefined {
@@ -40,6 +46,7 @@ function viewControls(suffix: "open" | "closed") {
 
 export function createLeadsRelatedLists(
   badges: LeadsRelatedListBadges = {},
+  handlers: LeadsRelatedListHandlers = {},
 ): readonly RelatedListDefinition[] {
   return [
     {
@@ -83,6 +90,33 @@ export function createLeadsRelatedLists(
       targetId: "related-list-attachments",
       upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
       emptyStateText: "No Attachment",
+    },
+    {
+      id: "campaigns",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? campaignsCardBody("Leads", record.id, (id) => recordPath("Campaigns", id))
+          : undefined,
+      title: "Campaigns",
+      // The card is live; "M2" keeps the rail entry and controls unlocked.
+      moduleKey: "M2",
+      order: 4,
+      targetId: "related-list-campaigns",
+      countBadge: badgeValue(badges.campaigns),
+      railAction: {
+        id: "add-campaigns",
+        label: "Add Campaigns",
+        onAction: handlers.onAddCampaigns,
+      },
+      upperControls: [
+        {
+          id: "add-campaigns",
+          label: "Add Campaigns",
+          type: "button",
+          onAction: handlers.onAddCampaigns,
+        },
+      ],
+      emptyStateText: "No records found",
     },
   ];
 }

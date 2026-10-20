@@ -3,6 +3,7 @@
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type {
   ActivityFilterValue,
+  CampaignFilterValue,
   Criteria,
   FieldDefinition,
   ListResult,
@@ -11,20 +12,26 @@ import type {
   RecordData,
   SortSpec,
 } from "@crm/core/records";
+import { TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
+import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
+import { supportsListPrint } from "@/components/records/print/print-modules";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
+import { moduleListPrintPath } from "@/lib/crm-paths";
 import {
   combineCriteriaAnd,
   firstLetterCriteria,
   panelFiltersToCriteria,
 } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { AddToCampaignsDialog } from "../campaigns/add-to-campaigns-dialog";
+import { ExportLauncher } from "../transfer/export-launcher";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
@@ -43,7 +50,13 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { moduleDeduplicatePath, withSearchParams } from "@/lib/crm-paths";
+import {
+  moduleDeduplicatePath,
+  moduleDraftsPath,
+  moduleImportPath,
+  moduleTagsPath,
+  withSearchParams,
+} from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -67,6 +80,8 @@ export interface ModuleListPaths {
   customList: (orgSlug: string, module: ModuleApiName, viewId: string) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: string) => string;
   create: (orgSlug: string, module: ModuleApiName) => string;
+  tags?: (orgSlug: string, module: ModuleApiName) => string;
+  drafts?: (orgSlug: string, module: ModuleApiName) => string;
 }
 
 export interface ModuleListBoardProps {
@@ -140,6 +155,12 @@ export interface ModuleListScreenConfig {
     currentUserId: string;
     onClose: () => void;
   }) => ReactNode;
+}
+
+const MAX_EXPORT_SELECTION = 500;
+
+function isTransferModule(module: string): module is (typeof TRANSFER_MODULES)[number] {
+  return (TRANSFER_MODULES as readonly string[]).includes(module);
 }
 
 export interface ModuleListScreenProps {
@@ -221,6 +242,9 @@ function ModuleListScreenLoaded({
   const [appliedActivityFilter, setAppliedActivityFilter] = useState<ActivityFilterValue | null>(
     null,
   );
+  const [appliedCampaignFilter, setAppliedCampaignFilter] = useState<CampaignFilterValue | null>(
+    null,
+  );
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
@@ -234,6 +258,11 @@ function ModuleListScreenLoaded({
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
+  const [campaignsOpen, setCampaignsOpen] = useState(false);
+  const campaignsModule =
+    config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
 
   const viewsQuery = useViews(config.module);
@@ -258,6 +287,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
+    setAppliedCampaignFilter(null);
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -282,10 +312,12 @@ function ModuleListScreenLoaded({
       ...base,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
+    appliedCampaignFilter,
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
@@ -300,8 +332,9 @@ function ModuleListScreenLoaded({
       viewId,
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
+      ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
     }),
-    [appliedActivityFilter, listCriteria, viewId],
+    [appliedActivityFilter, appliedCampaignFilter, listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -344,7 +377,10 @@ function ModuleListScreenLoaded({
   const serverFilterMessage = useMemo(() => {
     const error = listValidationError ?? countValidationError;
     if (!error) return null;
-    const messages = error.fieldErrors.filters ?? error.fieldErrors.activityFilter;
+    const messages =
+      error.fieldErrors.filters ??
+      error.fieldErrors.activityFilter ??
+      error.fieldErrors.campaignFilter;
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
 
@@ -480,6 +516,7 @@ function ModuleListScreenLoaded({
   function applyPanelFilters(
     applied: AppliedFilter[],
     activityFilter?: ActivityFilterValue | null,
+    campaignFilter?: CampaignFilterValue | null,
   ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
@@ -491,6 +528,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters(applied);
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setAppliedActivityFilter(activityFilter ?? null);
+    setAppliedCampaignFilter(campaignFilter ?? null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -501,6 +539,7 @@ function ModuleListScreenLoaded({
     setAppliedFilters([]);
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
+    setAppliedCampaignFilter(null);
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -510,13 +549,22 @@ function ModuleListScreenLoaded({
 
   function handleFilterSelectionChange(next: string[]) {
     setFilterSelection(next);
-    if (next.length === 0 && (appliedCriteria !== undefined || appliedActivityFilter !== null)) {
+    if (
+      next.length === 0 &&
+      (appliedCriteria !== undefined ||
+        appliedActivityFilter !== null ||
+        appliedCampaignFilter !== null)
+    ) {
       clearPanelFilters();
     }
   }
 
   function handleFilterClear() {
-    if (appliedCriteria === undefined && appliedActivityFilter === null) {
+    if (
+      appliedCriteria === undefined &&
+      appliedActivityFilter === null &&
+      appliedCampaignFilter === null
+    ) {
       clearPanelFilters();
     }
   }
@@ -563,7 +611,8 @@ function ModuleListScreenLoaded({
 
   const listSettled = list.isSuccess && !list.isPlaceholderData && !list.isFetching;
   const countSettled = count.isSuccess && !count.isFetching;
-  const hasActiveFilter = listCriteria !== undefined || appliedActivityFilter !== null;
+  const hasActiveFilter =
+    listCriteria !== undefined || appliedActivityFilter !== null || appliedCampaignFilter !== null;
   const awaitingFilteredPair =
     hasActiveFilter && !(listSettled && countSettled && !hasFilterValidationError);
   const useAcceptedSnapshot =
@@ -609,18 +658,45 @@ function ModuleListScreenLoaded({
     }
   }
 
+  /** Module 6 interim print page: hands the current query over and opens the print route. */
+  function openPrintDefaultView() {
+    if (!listQuery) return;
+    writePrintListQuery(orgSlug, config.module, listQuery);
+    router.push(moduleListPrintPath(orgSlug, config.module, viewId));
+  }
+
   function openToolbarAction(action: string) {
     // The module-wide cleanup works on the whole module, so it never needs a row selection.
     if (action === "deduplicate") {
       setDedupOpen(true);
       return;
     }
+    if (action === "export" && transferModule) {
+      setExportSelected(undefined);
+      setExportOpen(true);
+      return;
+    }
+    if (action === "tags") {
+      const href = config.paths.tags
+        ? config.paths.tags(orgSlug, config.module)
+        : moduleTagsPath(orgSlug, config.module);
+      router.push(href);
+      return;
+    }
+    if (action === "drafts") {
+      const href = config.paths.drafts
+        ? config.paths.drafts(orgSlug, config.module)
+        : moduleDraftsPath(orgSlug, config.module);
+      router.push(href);
+      return;
+    }
     openSelectedMassAction(action);
   }
 
   function openSelectedMassAction(action: string) {
-    if (!["mass-transfer", "mass-update", "mass-delete"].includes(action)) return;
+    if (!["mass-transfer", "mass-update", "mass-delete", "campaigns"].includes(action)) return;
     if (!selectionActive) return;
+    if (action === "campaigns" && campaignsModule) setCampaignsOpen(true);
     if (action === "mass-transfer") setChangeOwnerOpen(true);
     if (action === "mass-update") setMassUpdateOpen(true);
     if (action === "mass-delete") openDeleteDialog();
@@ -654,6 +730,18 @@ function ModuleListScreenLoaded({
 
   const inert = () => {};
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
+  const transferModule = isTransferModule(config.module) ? config.module : null;
+  const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
+  const createItems: readonly MenuAction[] | undefined = transferModule
+    ? [
+        {
+          id: "import",
+          label: `Import ${config.pluralLabel}`,
+          onAction: () => router.push(moduleImportPath(orgSlug, config.module)),
+        },
+        ...(config.inventory?.createItems ?? []).filter((item) => item.id !== "import"),
+      ]
+    : config.inventory?.createItems;
   const selectionActions: MenuAction[] = [
     { id: "run-macro", label: "Run Macro", onAction: inert },
     { id: "create-task", label: "Create Task", onAction: inert },
@@ -663,13 +751,29 @@ function ModuleListScreenLoaded({
       onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
     },
     { id: "cadences", label: "Cadences", onAction: inert },
-    { id: "add-to-campaigns", label: "Add to Campaigns", onAction: inert },
+    {
+      id: "add-to-campaigns",
+      label: "Add to Campaigns",
+      onAction: campaignsModule ? () => setCampaignsOpen(true) : inert,
+    },
     { id: "print-mailing-labels", label: "Print Mailing Labels", onAction: inert },
     { id: "print-using-canvas", label: "Print Using Canvas", onAction: inert },
     { id: "mail-merge", label: "Mail Merge", onAction: inert },
     { id: "mass-convert", label: "Mass Convert", onAction: inert },
     { id: "delete", label: "Delete", onAction: openDeleteDialog },
-    { id: "export-selected", label: "Export Selected Records", onAction: inert },
+    {
+      id: "export-selected",
+      label: exportSelectedTooLarge
+        ? `Export Selected Records (max ${MAX_EXPORT_SELECTION})`
+        : "Export Selected Records",
+      isDisabled: exportSelectedTooLarge,
+      onAction: transferModule
+        ? () => {
+            setExportSelected([...pageSelectedIds]);
+            setExportOpen(true);
+          }
+        : inert,
+    },
   ];
 
   return (
@@ -734,13 +838,22 @@ function ModuleListScreenLoaded({
           actions={toolbarActions?.map((item) => ({
             ...item,
             onAction: () => openToolbarAction(item.id),
+            ...(item.id === "print" && item.submenu && supportsListPrint(config.module)
+              ? {
+                  submenu: item.submenu.map((child) =>
+                    child.id === "print-default"
+                      ? { ...child, laterModule: undefined, onAction: openPrintDefaultView }
+                      : child,
+                  ),
+                }
+              : {}),
           }))}
           create={{
             label: config.createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
-            items: config.inventory?.createItems,
-            moreLaterModule: config.inventory ? "M6" : undefined,
+            items: createItems,
+            moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
           }}
         />
       )}
@@ -778,6 +891,28 @@ function ModuleListScreenLoaded({
           onSuccess={clearSelection}
         />
       ) : null}
+      {transferModule ? (
+        <ExportLauncher
+          key={exportSelected ? "selected" : "view"}
+          module={transferModule}
+          moduleLabel={config.pluralLabel}
+          viewId={viewId}
+          selectedIds={exportSelected}
+          open={exportOpen}
+          onOpenChange={setExportOpen}
+        />
+      ) : null}
+      {campaignsOpen && campaignsModule ? (
+        <AddToCampaignsDialog
+          module={campaignsModule}
+          recordIds={pageSelectedIds}
+          onDone={() => {
+            setCampaignsOpen(false);
+            clearSelection();
+          }}
+          onCancel={() => setCampaignsOpen(false)}
+        />
+      ) : null}
       {dedupOpen && moduleQuery.data ? (
         <DeduplicateJob
           module={config.module}
@@ -813,6 +948,7 @@ function ModuleListScreenLoaded({
             groups={config.filterGroups}
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
+            initialCampaignFilter={appliedCampaignFilter}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}

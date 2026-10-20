@@ -18,6 +18,7 @@ import {
   selectActivitySummary,
   validateActivityFilter,
 } from "../activities";
+import { validateCampaignFilter } from "../campaigns";
 import type {
   DuplicateGroup,
   FieldDefinition,
@@ -38,6 +39,7 @@ import {
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
 } from "./attachments/hooks";
+import { assignAutoNumber, seedAutoNumbers } from "./auto-number";
 import {
   automaticMaster,
   duplicateGroups,
@@ -194,7 +196,11 @@ export function createFixtureRecordService(
         return moduleState;
       },
     };
-    for (const bundle of Object.values(fixtureModules)) bundle.afterSeed?.(seedContext);
+    for (const [name, bundle] of Object.entries(fixtureModules)) {
+      if (bundle.autoNumberField)
+        seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
+      bundle.afterSeed?.(seedContext);
+    }
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -277,6 +283,18 @@ export function createFixtureRecordService(
       referenceModules(),
     );
   };
+  /** Drops the required flag from fields a module hook declares optional for this record. */
+  const relaxRequired = (
+    bundle: FixtureModuleBundle,
+    fields: Readonly<Record<string, FieldValue>>,
+  ) => {
+    const optional = bundle.optionalFields?.(fields);
+    return optional?.length
+      ? bundle.metadata.fields.map((f) =>
+          optional.includes(f.apiName) ? { ...f, required: false } : f,
+        )
+      : bundle.metadata.fields;
+  };
   const validateReferences = (module: string, input: RecordInput) => {
     const bundle = bundleFor(module);
     resolveRecordReferences({ id: "", fields: input }, bundle.metadata.fields, referenceModules(), {
@@ -326,7 +344,7 @@ export function createFixtureRecordService(
   };
   const matching = (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
     applyView = true,
     now = clock(),
   ) => {
@@ -338,6 +356,34 @@ export function createFixtureRecordService(
       validateActivityFilter(query.activityFilter);
       if (!activityParentModules.has(module))
         throw new ValidationError({ activityFilter: ["Choose a parent record module."] });
+    }
+    let campaignMembers: Set<string> | undefined;
+    if (query.campaignFilter !== undefined) {
+      validateCampaignFilter(query.campaignFilter);
+      if (module !== "Leads" && module !== "Contacts")
+        throw new ValidationError({ campaignFilter: ["Choose Leads or Contacts."] });
+      campaignMembers = new Set<string>();
+      const filter = query.campaignFilter;
+      // Both stores belong to the caller's organization, like ordinary record reads.
+      const campaigns = moduleStore("Campaigns").records;
+      for (const membership of moduleStore("Campaign_Members").records.values()) {
+        const campaign = membership.fields.Campaign;
+        const parent: FieldValue | undefined =
+          membership.fields[module === "Leads" ? "Lead" : "Contact"];
+        if (
+          isJsonObject(campaign) &&
+          campaign.module === "Campaigns" &&
+          typeof campaign.id === "string" &&
+          campaigns.has(campaign.id) &&
+          filter.campaignIds.includes(campaign.id) &&
+          isJsonObject(parent) &&
+          parent.module === module &&
+          typeof parent.id === "string" &&
+          (!filter.memberStatuses ||
+            filter.memberStatuses.includes(String(membership.fields.Member_Status)))
+        )
+          campaignMembers.add(parent.id);
+      }
     }
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
@@ -351,6 +397,7 @@ export function createFixtureRecordService(
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
+          (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
       );
@@ -431,16 +478,21 @@ export function createFixtureRecordService(
         throw new ValidationError({ permission: ["You cannot restore this record."] });
       if (record.fields.Locked__s === true)
         throw new ValidationError({ Locked__s: ["The record is locked."] });
-      const writableFields = bundle.metadata.fields.filter(
+      // Restore honours the same per-record optional fields as create/update (e.g. planned calls).
+      const writableFields = relaxRequired(bundle, record.fields).filter(
         (field) =>
           !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
       );
+      const restoreInput = Object.fromEntries(
+        writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
+      );
+      const optional = bundle.optionalFields?.(record.fields) ?? [];
       validateInput(
-        Object.fromEntries(
-          writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
-        ),
+        restoreInput,
         false,
-        writableFields,
+        writableFields.map((field) =>
+          optional.includes(field.apiName) ? { ...field, required: false } : field,
+        ),
         new Set(),
       );
       validateReferences(module, record.fields);
@@ -852,7 +904,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, false, bundle.metadata.fields, bundle.managedFields);
+      validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "create" }, () => {
@@ -870,6 +922,7 @@ export function createFixtureRecordService(
           Created_By: ctx.userId,
           Modified_By: ctx.userId,
         });
+        if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
         bundle.applyRules?.(fields, normalized, undefined, hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const record = { id, fields };
@@ -888,7 +941,12 @@ export function createFixtureRecordService(
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
+      validateInput(
+        normalized,
+        true,
+        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }),
+        bundle.managedFields,
+      );
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "update" }, () => {

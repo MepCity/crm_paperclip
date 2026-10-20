@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { NotFoundError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
-import type { RecordInput, RecordService } from "./contract";
+import type { CampaignFilterValue, RecordInput, RecordService } from "./contract";
 
 type Factory = (ctx: OrgContext) => RecordService | Promise<RecordService>;
 const context = (): OrgContext => ({
@@ -29,6 +29,137 @@ export function describeCampaignMembershipContract(name: string, make: Factory):
         service.create("Campaign_Members", { ...base, Lead: ref("Leads", lead.id), ...extra });
       return { service, campaign, lead, contact, base, member };
     }
+    it("filters Leads and Contacts by campaign OR and membership status with AND restrictions", async () => {
+      const { service, campaign, lead, contact, member } = await setup();
+      const second = await service.create("Campaigns", { Campaign_Name: "Second Synthetic" });
+      const other = await service.create("Leads", {
+        Last_Name: "Other Synthetic",
+        Company: "Synthetic",
+      });
+      await member({ Member_Status: "Sent" });
+      await member({ Campaign: ref("Campaigns", second.id), Member_Status: "Opened" });
+      await member({
+        Campaign: ref("Campaigns", second.id),
+        Lead: ref("Leads", other.id),
+        Member_Status: "Sent",
+      });
+      await member({ Lead: null, Contact: ref("Contacts", contact.id), Member_Status: "Opened" });
+      for (const [module, viewId, groupBy, campaignFilter, expected] of [
+        ["Leads", "all-leads", "Lead_Status", { campaignIds: [campaign.id] }, [lead.id]],
+        [
+          "Leads",
+          "all-leads",
+          "Lead_Status",
+          { campaignIds: [campaign.id, second.id] },
+          [lead.id, other.id],
+        ],
+        [
+          "Leads",
+          "all-leads",
+          "Lead_Status",
+          { campaignIds: [campaign.id], memberStatuses: ["Opened"] },
+          [],
+        ],
+        [
+          "Leads",
+          "all-leads",
+          "Lead_Status",
+          { campaignIds: [second.id], memberStatuses: ["Opened"] },
+          [lead.id],
+        ],
+        [
+          "Contacts",
+          "all-contacts",
+          "Lead_Source",
+          { campaignIds: [campaign.id], memberStatuses: ["Opened"] },
+          [contact.id],
+        ],
+        ["Contacts", "all-contacts", "Lead_Source", { campaignIds: [second.id] }, []],
+        ["Leads", "all-leads", "Lead_Status", { campaignIds: ["missing"] }, []],
+      ] as const) {
+        const query = { viewId, campaignFilter };
+        const rows = await service.list(module, { ...query, page: 1, perPage: 100 });
+        expect(rows.records.map((row) => row.id).sort()).toEqual([...expected].sort());
+        expect(await service.count(module, query)).toBe(expected.length);
+        expect(
+          (await service.summarize(module, { ...query, groupBy })).reduce(
+            (total, group) => total + group.count,
+            0,
+          ),
+        ).toBe(expected.length);
+      }
+      const query = {
+        viewId: "all-leads",
+        campaignFilter: { campaignIds: [campaign.id, second.id] },
+        filters: { field: "id", comparator: "equal", value: lead.id } as const,
+        search: "Synthetic",
+        activityFilter: { choice: "without_any_activity" } as const,
+      };
+      expect(await service.count("Leads", query)).toBe(1);
+      expect(await service.count("Leads", { ...query, search: "No matching record" })).toBe(0);
+      await service.create("Tasks", { Subject: "Synthetic Task", Who_Id: ref("Leads", lead.id) });
+      expect(await service.count("Leads", query)).toBe(0);
+      expect(
+        await service.count("Leads", {
+          ...query,
+          activityFilter: undefined,
+          viewId: "converted-leads",
+        }),
+      ).toBe(0);
+      const foreign = await make(context());
+      // Numeric fixture IDs overlap across tenants; foreign memberships must not leak.
+      const foreignLead = await foreign.create("Leads", {
+        Last_Name: "Foreign Synthetic",
+        Company: "Synthetic",
+      });
+      expect(foreignLead.id).toBe(lead.id);
+      expect(
+        await foreign.count("Leads", {
+          viewId: "all-leads",
+          campaignFilter: { campaignIds: [campaign.id] },
+        }),
+      ).toBe(0);
+      expect(
+        await service.count("Leads", {
+          viewId: "my-leads",
+          campaignFilter: { campaignIds: [campaign.id] },
+        }),
+      ).toBe(1);
+    });
+    it("rejects malformed campaign filters and unsupported modules consistently", async () => {
+      const { service } = await setup();
+      for (const campaignFilter of [
+        null,
+        {},
+        { campaignIds: [] },
+        { campaignIds: [" "] },
+        { campaignIds: [1] },
+        { campaignIds: ["same", "same"] },
+        { campaignIds: ["1", "2", "3", "4", "5", "6"] },
+        { campaignIds: ["1"], memberStatuses: [] },
+        { campaignIds: ["1"], memberStatuses: ["unknown"] },
+        { campaignIds: ["1"], extra: true },
+      ]) {
+        const query = {
+          viewId: "all-leads",
+          campaignFilter: campaignFilter as CampaignFilterValue,
+        };
+        for (const call of [
+          () => service.list("Leads", { ...query, page: 1, perPage: 10 }),
+          () => service.count("Leads", query),
+          () => service.summarize("Leads", { ...query, groupBy: "Lead_Status" }),
+        ])
+          await expect(call()).rejects.toMatchObject({
+            fieldErrors: { campaignFilter: expect.any(Array) },
+          });
+      }
+      await expect(
+        service.count("Accounts", {
+          viewId: "all-accounts",
+          campaignFilter: { campaignIds: ["missing"] },
+        }),
+      ).rejects.toMatchObject({ fieldErrors: { campaignFilter: expect.any(Array) } });
+    });
     it("requires campaign and exactly one valid member, validates status and enforces composite uniqueness on create/update", async () => {
       const { service, lead, contact, base, member } = await setup();
       for (const input of [
