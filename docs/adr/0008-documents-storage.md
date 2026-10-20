@@ -1,9 +1,9 @@
 # ADR 0008 — Documents storage, folder access and read boundary
 
-- Status: Proposed
+- Status: Partially accepted (MEP-929, 2026-10-20): §1, §2, §3 and §5 Accepted; §4 remains Proposed
 - Date: 2026-10-20
 - Issue: MEP-929; umbrella: MEP-921
-- Review: Platform Lead, then CTO decision
+- Review: Platform Lead approved; CTO decision recorded below
 - Scope: Architecture draft only; no migrations, implementation or permission grants
 
 ## Evidence and decision boundary
@@ -33,6 +33,35 @@ is reviewable proposed key structure, not a claim that ADR 0002 has approved it.
 Physical record references and RLS integration must be reconciled with that ADR
 before persistence work. No throughput, latency or storage-efficiency claim is
 made without measurements.
+
+## CTO decision (MEP-929)
+
+Accepted:
+
+- §1 option A: a dedicated Documents service and table family, sharing the
+  ADR 0005 private blob-store port. The DDL stays a key sketch: persistence
+  work (migrations, RLS policies, record-key references) waits for ADR 0002.
+- §2 option B: My Folders is a read-only projection of the owner's managed
+  record attachments; Team spaces have their own roles and item grants; the
+  server boundary and same-not-found rule apply to every read. No write
+  grants until the U2 resolver is accepted.
+- §3: immutable versions, identity-preserving rename and move, a separate
+  Documents Trash, no automatic purge until a retention policy is accepted.
+- §5 option B: a dedicated read service behind the existing
+  `DocumentsPort`, with the HTTP reads listed there. Name sorting arrives
+  only as the optional capability described in §5.
+
+Still Proposed: §4 (pinned-version reference). The Attach > Documents source
+stays disconnected until U12 is decided.
+
+Conditions for the implementation slices:
+
+1. The generic `[module]` record handler rejects `documents` as a module
+   name, and a test proves the static Documents routes win.
+2. Before persistence work, the persistence change states whether the
+   `kind='my'` space row is a projection root or a real folder tree.
+3. The physical schema adds grant lookup indexes on
+   `(organization_id, user_id)` and on each grant target.
 
 ## 1. Domain entities and shared content store
 
