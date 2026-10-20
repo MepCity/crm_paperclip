@@ -94,7 +94,9 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
       const field = fieldsByName.get(apiName);
       const value = row.fields[apiName];
       if (!field || value === undefined) return null;
-      const formatted = formatFieldValue(field, value, {}, DEFAULT_FORMAT);
+      const formatted = formatFieldValue(field, value, {}, DEFAULT_FORMAT, {
+        numericDates: true,
+      });
       return formatted.kind === "text" || formatted.kind === "multiline" ? formatted.text : null;
     };
     return (dealList.data?.records ?? []).map((row) => ({
