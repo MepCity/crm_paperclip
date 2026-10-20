@@ -27,6 +27,8 @@ export interface FixtureModuleHooks {
     previous: Readonly<Record<string, FieldValue>> | undefined,
     ctx: FixtureHookContext,
   ) => void;
+  /** Required fields that may stay empty for this record's field values. */
+  optionalFields?: (fields: Readonly<Record<string, FieldValue>>) => readonly string[];
   readRecord?: (record: RecordData, now: Date) => RecordData;
   afterWrite?: (
     record: RecordData,

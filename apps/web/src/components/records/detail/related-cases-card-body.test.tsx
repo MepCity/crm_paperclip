@@ -1,0 +1,161 @@
+import type { FieldDefinition, RecordData } from "@crm/core/records";
+import { cleanup, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { render } from "@/test/render";
+import { RelatedCasesCardBody } from "./related-cases-card-body";
+
+const caseFields: FieldDefinition[] = [
+  {
+    apiName: "Subject",
+    label: "Subject",
+    dataType: "text",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+  {
+    apiName: "Case_Number",
+    label: "Case Number",
+    dataType: "text",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+  {
+    apiName: "Status",
+    label: "Status",
+    dataType: "picklist",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+  {
+    apiName: "Priority",
+    label: "Priority",
+    dataType: "picklist",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+  {
+    apiName: "Owner",
+    label: "Case Owner",
+    dataType: "ownerlookup",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+  {
+    apiName: "Description",
+    label: "Description",
+    dataType: "text",
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+  },
+];
+
+const hookState = vi.hoisted(() => ({
+  list: { data: { records: [] as RecordData[] }, isLoading: false, isError: false },
+  module: { data: { fields: [] as FieldDefinition[] }, isLoading: false, isError: false },
+  views: {
+    data: [{ id: "all-cases", name: "All Cases", isDefault: true }],
+    isLoading: false,
+    isError: false,
+  },
+  view: { data: { id: "all-cases", columns: [] as string[] }, isLoading: false, isError: false },
+  users: { data: [] as { userId: string; name: string }[], isLoading: false, isError: false },
+  calls: [] as { module: string; query: { viewId: string; filters?: unknown } }[],
+}));
+
+vi.mock("@/lib/api/client/hooks", () => ({
+  useModule: () => hookState.module,
+  useViews: () => hookState.views,
+  useView: () => hookState.view,
+  useUsers: () => hookState.users,
+  useRecordList: (module: string, query: { viewId: string; filters?: unknown }) => {
+    hookState.calls.push({ module, query });
+    return hookState.list;
+  },
+}));
+
+afterEach(() => {
+  cleanup();
+  hookState.list = { data: { records: [] }, isLoading: false, isError: false };
+  hookState.module = { data: { fields: [] }, isLoading: false, isError: false };
+  hookState.views = {
+    data: [{ id: "all-cases", name: "All Cases", isDefault: true }],
+    isLoading: false,
+    isError: false,
+  };
+  hookState.view = { data: { id: "all-cases", columns: [] }, isLoading: false, isError: false };
+  hookState.users = { data: [], isLoading: false, isError: false };
+  hookState.calls = [];
+});
+
+const accountRecord: RecordData = { id: "acc-1", fields: { Account_Name: "Acme" } };
+
+function renderCard(filterField: string) {
+  return render(
+    <RelatedCasesCardBody
+      managerRecord={accountRecord}
+      filterField={filterField}
+      caseRecordPath={(id) => `/acme/Cases/${id}`}
+    />,
+  );
+}
+
+describe("RelatedCasesCardBody", () => {
+  it.each(["Account_Name", "Related_To", "Deal_Name"])(
+    "filters Cases on the %s lookup",
+    (filterField) => {
+      renderCard(filterField);
+      expect(hookState.calls[0]?.module).toBe("Cases");
+      expect(hookState.calls[0]?.query).toMatchObject({
+        viewId: "all-cases",
+        filters: { field: filterField, comparator: "equal", value: "acc-1" },
+      });
+    },
+  );
+
+  it("shows the empty state", () => {
+    renderCard("Account_Name");
+    expect(screen.getByText("No records found")).toBeTruthy();
+  });
+
+  it("draws the provisional columns with a Subject detail link", () => {
+    hookState.module = { data: { fields: caseFields }, isLoading: false, isError: false };
+    hookState.list = {
+      data: {
+        records: [
+          { id: "case-1", fields: { Subject: "Broken login", Case_Number: "101", Status: "New" } },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+    };
+    renderCard("Account_Name");
+    expect(screen.getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
+      "Subject",
+      "Case Number",
+      "Status",
+      "Priority",
+      "Case Owner",
+    ]);
+    expect(screen.getByRole("link", { name: "Broken login" }).getAttribute("href")).toBe(
+      "/acme/Cases/case-1",
+    );
+  });
+});

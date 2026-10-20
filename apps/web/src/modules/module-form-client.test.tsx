@@ -6,6 +6,7 @@ import { ModuleFormClient } from "./module-form-client";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/lib/api/client/hooks", () => ({

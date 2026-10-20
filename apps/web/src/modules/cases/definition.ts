@@ -12,6 +12,7 @@ import { buildCasesBusinessCardFields, buildCasesDetailSections } from "./cases-
 import {
   CASES_DELETE_CONFIRM_MESSAGE,
   CASES_DELETE_CONFIRM_TITLE,
+  CASES_FORM_INFORMATION_COLUMNS,
   casesFormRules,
 } from "./cases-form-rules";
 import { isCaseInlineEditable } from "./cases-inline-edit";
@@ -38,7 +39,9 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
   buildFilterGroups: buildCasesFilterGroups,
   form: {
     rules: casesFormRules,
+    fallbackColumns: { "Case Information": CASES_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
+    inventoryFooterEnd: true,
   },
   detail: {
     header: casesRecordHeaderIdentity,
