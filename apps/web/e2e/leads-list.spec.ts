@@ -1,7 +1,13 @@
 import type { Locator } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
-import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
+import {
+  LEADS_MODULE,
+  moduleDraftsPath,
+  moduleListCustomPath,
+  moduleListDefaultPath,
+  moduleTagsPath,
+} from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType } from "./support/typography";
@@ -2179,6 +2185,40 @@ test.describe("Leads list page", () => {
       "menu row",
     );
     expect(Math.abs(firstItem.height - 32)).toBeLessThanOrEqual(0.5);
+  });
+
+  test("TAG-02, PS-05: navigates to Manage Tags and Drafts from Actions menu and back to list", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+
+    // Open Actions menu and navigate to Manage Tags
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Manage Tags" }).click();
+
+    await expect(page).toHaveURL(moduleTagsPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("heading", { name: "Manage Tags" })).toBeVisible();
+    await expect(page.locator("#main-content").getByText("Leads", { exact: true })).toBeVisible();
+
+    // Click back to return to the list
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    // Open Actions menu and navigate to Drafts
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Drafts" }).click();
+
+    await expect(page).toHaveURL(moduleDraftsPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("heading", { name: "Drafts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Criteria" })).toBeVisible();
+
+    // Click back to return to the list
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
   });
 });
 

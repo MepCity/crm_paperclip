@@ -79,5 +79,7 @@ export const moduleEditPage = (props: RouteProps) => renderModuleRoute(props, "e
 export const moduleClonePage = (props: RouteProps) => renderModuleRoute(props, "clone");
 export const moduleMergePage = (props: RouteProps) => renderModuleRoute(props, "merge");
 export const moduleDeduplicatePage = (props: RouteProps) => renderModuleRoute(props, "deduplicate");
+export const moduleTagsPage = (props: RouteProps) => renderModuleRoute(props, "tags");
+export const moduleDraftsPage = (props: RouteProps) => renderModuleRoute(props, "drafts");
 export const moduleRecordPrintPage = (props: RouteProps) => renderModuleRoute(props, "print");
 export const moduleListPrintPage = (props: RouteProps) => renderModuleRoute(props, "print-list");

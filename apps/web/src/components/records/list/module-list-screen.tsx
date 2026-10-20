@@ -50,7 +50,13 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { moduleDeduplicatePath, moduleImportPath, withSearchParams } from "@/lib/crm-paths";
+import {
+  moduleDeduplicatePath,
+  moduleDraftsPath,
+  moduleImportPath,
+  moduleTagsPath,
+  withSearchParams,
+} from "@/lib/crm-paths";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -74,6 +80,8 @@ export interface ModuleListPaths {
   customList: (orgSlug: string, module: ModuleApiName, viewId: string) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: string) => string;
   create: (orgSlug: string, module: ModuleApiName) => string;
+  tags?: (orgSlug: string, module: ModuleApiName) => string;
+  drafts?: (orgSlug: string, module: ModuleApiName) => string;
 }
 
 export interface ModuleListBoardProps {
@@ -666,6 +674,20 @@ function ModuleListScreenLoaded({
     if (action === "export" && transferModule) {
       setExportSelected(undefined);
       setExportOpen(true);
+      return;
+    }
+    if (action === "tags") {
+      const href = config.paths.tags
+        ? config.paths.tags(orgSlug, config.module)
+        : moduleTagsPath(orgSlug, config.module);
+      router.push(href);
+      return;
+    }
+    if (action === "drafts") {
+      const href = config.paths.drafts
+        ? config.paths.drafts(orgSlug, config.module)
+        : moduleDraftsPath(orgSlug, config.module);
+      router.push(href);
       return;
     }
     openSelectedMassAction(action);
