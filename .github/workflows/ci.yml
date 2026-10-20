@@ -77,6 +77,7 @@ jobs:
       CI: "1"
       # Each hosted job owns its VM; the shared-Mac lock is unnecessary here.
       MEP_E2E_LOCK: "0"
+      MEP_E2E_CI_GROUP: ubuntu
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -119,6 +120,58 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-${{ matrix.shard }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  e2e-macos:
+    name: e2e (macOS geometry)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      CI: "1"
+      # Each hosted job owns its VM; the shared-Mac lock is unnecessary here.
+      MEP_E2E_LOCK: "0"
+      MEP_E2E_CI_GROUP: macos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Read Playwright version
+        id: playwright
+        working-directory: apps/web
+        run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - name: Cache Chromium
+        id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ms-playwright
+          key: ${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium and system dependencies
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: pnpm test:e2e --reporter=list,github,html,json
+        env:
+          PLAYWRIGHT_HTML_OPEN: never
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Record cache result
+        if: always()
+        run: |
+          echo 'Chromium cache hit = ${{ steps.browsers.outputs.cache-hit }}' >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
+      - name: Upload browser report and traces
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-macos
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
