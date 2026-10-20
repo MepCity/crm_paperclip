@@ -17,6 +17,7 @@ import type {
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import { validateCampaignFilter } from "@crm/core/records/campaigns";
+import { validateSystemFilters } from "@crm/core/records/system-filters";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -152,7 +153,17 @@ export function encodeInput(
   return result;
 }
 export function decodeInput(row: unknown, metadata: ModuleMetadata): RecordInput {
-  const source = object(row, "data");
+  let source = object(row, "data");
+  if (metadata.apiName === "Notes" && Object.hasOwn(source, "$se_module")) {
+    const module = source.$se_module;
+    const parent = object(source.Parent_Id, "Parent_Id");
+    const field = metadata.fields.find((candidate) => candidate.apiName === "Parent_Id");
+    if (typeof module !== "string" || !field || !lookupTargetModules(field).includes(module))
+      invalid("$se_module");
+    if (parent.module !== undefined && parent.module !== module) invalid("Parent_Id");
+    source = { ...source, Parent_Id: { ...parent, module } };
+    delete source.$se_module;
+  }
   const result: Record<string, FieldValue> = Object.create(null);
   for (const [name, value] of Object.entries(source)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
@@ -714,4 +725,55 @@ export function encodeCampaignFilter(value: import("@crm/core/records").Campaign
     campaign_ids: [...value.campaignIds],
     ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
   };
+}
+
+const systemFilterNames = {
+  locked: "locked",
+  record_action: "recordAction",
+  related_records_action: "relatedRecordsAction",
+  touched: "touched",
+  untouched: "untouched",
+} as const;
+export function decodeSystemFilters(
+  value: unknown,
+): import("@crm/core/records").SystemFiltersValue {
+  const body = object(value, "systemFilters.filters");
+  const decoded: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(body)) {
+    if (!Object.hasOwn(systemFilterNames, key)) invalid(`systemFilters.${key}`);
+    const name = systemFilterNames[key as keyof typeof systemFilterNames];
+    const entry = object(item, `systemFilters.${name}`);
+    const result: Record<string, unknown> = {};
+    for (const [field, content] of Object.entries(entry)) {
+      if (!["locked", "action", "module", "actor_ids", "period"].includes(field))
+        invalid(`systemFilters.${name}`);
+      result[field === "actor_ids" ? "actorIds" : field] = content;
+    }
+    decoded[name] = result;
+  }
+  validateSystemFilters(decoded);
+  return decoded;
+}
+export function encodeSystemFilters(
+  value: import("@crm/core/records").SystemFiltersValue,
+): import("./types").WireSystemFilters {
+  validateSystemFilters(value);
+  return Object.fromEntries(
+    Object.entries(systemFilterNames).flatMap(([wire, domain]) => {
+      const entry = value[domain];
+      return entry === undefined
+        ? []
+        : [
+            [
+              wire,
+              Object.fromEntries(
+                Object.entries(entry).map(([key, content]) => [
+                  key === "actorIds" ? "actor_ids" : key,
+                  content,
+                ]),
+              ),
+            ],
+          ];
+    }),
+  ) as import("./types").WireSystemFilters;
 }

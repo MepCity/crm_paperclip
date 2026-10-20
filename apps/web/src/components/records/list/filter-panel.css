@@ -5,7 +5,8 @@
   min-height: 0;
 }
 .filter-panel-content {
-  overflow: auto;
+  overflow-x: clip;
+  overflow-y: auto;
   min-height: 0;
   padding-bottom: var(--space-4);
 }

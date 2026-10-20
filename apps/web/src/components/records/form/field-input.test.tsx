@@ -1,9 +1,10 @@
 import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
 import { FormRow } from "./form-row";
@@ -709,4 +710,40 @@ test("the default toggle retains its visible label", () => {
   render(<Controlled type="ALARM" />);
   expect(screen.getByRole("switch", { name: "Example" })).toBeTruthy();
   expect(screen.getByText("Example").classList.contains("sr-only")).toBe(false);
+});
+
+test("currency help opens on click or keyboard, dismisses and never edits the amount", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="currency"
+      field={{ ...field("currency"), apiName: "Amount", label: "Amount" }}
+      initial={125}
+      onChange={change}
+      currencyPrefix="$"
+      currencyHelp={dealsFormRules.currencyHelp?.Amount}
+    />,
+  );
+  const amount = screen.getByRole("textbox", { name: "Amount" });
+  const trigger = screen.getByRole("button", { name: "Amount information" });
+  await user.hover(trigger);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(trigger);
+  expect(screen.getByRole("dialog", { name: "Amount information" })).toBeTruthy();
+  expect(screen.getByText("20 + 20").tagName).toBe("STRONG");
+  expect(screen.getByText("40").tagName).toBe("STRONG");
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(amount);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  trigger.focus();
+  await user.keyboard(" ");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.keyboard("{Escape}");
+  expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
+  expect(change).not.toHaveBeenCalled();
 });

@@ -32,12 +32,6 @@ a.activity-ribbon:focus-visible {
   padding-right: 13px;
 }
 
-.activity-ribbon--overdue,
-.activity-ribbon.overdue {
-  background-color: var(--color-status-terminal-fill, #ffecec);
-  color: var(--color-status-terminal-icon, #ff5d5a);
-}
-
 .activity-ribbon-icon {
   width: 14px;
   height: 14px;

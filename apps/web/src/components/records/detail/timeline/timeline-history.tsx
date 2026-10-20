@@ -19,6 +19,13 @@ export interface TimelineHistoryProps extends TimelineHistoryFilterProps {
   events: readonly TimelineEvent[];
   format: FormatOptions;
   initialFilterExpanded?: boolean;
+  serverFiltered?: boolean;
+  loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onShowMore?: () => void;
   upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
 }
 
@@ -72,10 +79,20 @@ export function TimelineHistory({
   initialFilterExpanded = false,
   upcomingAutomatedActions,
   onApply,
+  serverFiltered = false,
+  loading = false,
+  error = false,
+  onRetry,
+  hasMore = false,
+  loadingMore = false,
+  onShowMore,
   ...filterProps
 }: TimelineHistoryProps) {
   const [applied, setApplied] = useState<TimelineHistoryFilterValue>(NO_FILTER);
-  const visibleEvents = useMemo(() => filterTimelineEvents(events, applied), [events, applied]);
+  const visibleEvents = useMemo(
+    () => (serverFiltered ? events : filterTimelineEvents(events, applied)),
+    [events, applied, serverFiltered],
+  );
   const [filterExpanded, setFilterExpanded] = useState(initialFilterExpanded);
   return (
     <div className="timeline-history" data-timeline-history>
@@ -101,17 +118,37 @@ export function TimelineHistory({
       {filterExpanded && (
         <TimelineHistoryFilterPanel
           {...filterProps}
+          initialValue={applied}
           onApply={(value) => {
             setApplied(value);
             onApply(value);
           }}
         />
       )}
-      {visibleEvents.length === 0 ? (
+      {loading ? <p role="status">Loading history…</p> : null}
+      {error ? (
+        <div role="alert">
+          Could not load history.{" "}
+          <button type="button" onClick={onRetry}>
+            Retry
+          </button>
+        </div>
+      ) : null}
+      {!loading && !error && visibleEvents.length === 0 ? (
         <p className="timeline-history-empty text-md text-text-muted px-3 py-4">No logs found</p>
       ) : (
-        <TimelineEventTrack events={visibleEvents} format={format} />
+        <TimelineEventTrack events={visibleEvents} format={format} preserveOrder={serverFiltered} />
       )}
+      {hasMore ? (
+        <button
+          type="button"
+          className="timeline-event-show-more"
+          disabled={loadingMore}
+          onClick={onShowMore}
+        >
+          {loadingMore ? "Loading…" : "Show More"}
+        </button>
+      ) : null}
     </div>
   );
 }

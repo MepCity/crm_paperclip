@@ -26,6 +26,7 @@ import {
   encodeCampaignFilter,
   encodeCriteria,
   encodeInput,
+  encodeSystemFilters,
   invalid,
 } from "@/lib/api/wire/codec";
 import {
@@ -63,6 +64,12 @@ export type ViewSummary = Pick<ListView, "id" | "name" | "systemDefined" | "isDe
 export type ClientRecordService = RecordService & {
   listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]>;
   listUsers(): Promise<readonly OrgMember[]>;
+  /** Optional for in-memory screen fixtures; HTTP clients always supply this reader. */
+  listHistory?(
+    module: ModuleApiName,
+    recordId: RecordId,
+    query: RecordHistoryQuery,
+  ): Promise<RecordHistoryPage>;
 };
 
 export type HttpRecordService = ClientRecordService & {
@@ -97,10 +104,17 @@ function requiredWire<T>(value: T | undefined, label: string): T {
 function listBody(
   query: Pick<
     ListQuery,
-    "filters" | "search" | "activityFilter" | "campaignFilter" | "includeActivitySummary"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "includeActivitySummary"
   >,
 ): unknown | undefined {
   const body: import("../wire/types").WireRestrictions = {};
+  if (query.systemFilters !== undefined)
+    body.system_filters = encodeSystemFilters(query.systemFilters);
   if (query.campaignFilter !== undefined)
     body.campaign_filter = encodeCampaignFilter(query.campaignFilter);
   if (query.activityFilter !== undefined)
@@ -336,7 +350,10 @@ export function createHttpRecordService({
 
     async count(
       module: ModuleApiName,
-      query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+      query: Pick<
+        ListQuery,
+        "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+      >,
     ): Promise<number> {
       const path = operationPath(operations.count, { module });
       const restrictions = listBody(query);

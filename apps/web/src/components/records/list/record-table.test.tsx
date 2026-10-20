@@ -643,5 +643,5 @@ test("formats timestamp summaries in the configured time zone", () => {
       }}
     />,
   );
-  expect(screen.getByRole("img", { name: "Open call, due Oct 14, 2026" })).toBeTruthy();
+  expect(screen.getByRole("img", { name: "Open call, Oct 14, 2026" })).toBeTruthy();
 });

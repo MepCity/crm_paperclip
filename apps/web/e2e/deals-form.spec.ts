@@ -163,7 +163,7 @@ test("creates with every field type through the Account and Contact pickers", as
   await page.getByRole("textbox", { name: "Amount", exact: true }).fill("250000");
   await expect(page.locator("[data-form-field=Amount] .record-currency-prefix")).toBeVisible();
   await expect(
-    page.locator("[data-form-field=Amount]").getByRole("img", { name: "Currency information" }),
+    page.locator("[data-form-field=Amount]").getByRole("button", { name: "Amount information" }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "Closing Date", exact: true }).fill("15.12.2026");
   await page.getByRole("button", { name: "Stage", exact: true }).click();
@@ -414,4 +414,33 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   }
   await expect(page).toHaveURL(url);
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("Amount information opens below the field and supports Escape and outside dismissal", async ({
+  page,
+}) => {
+  await openCreate(page);
+  const trigger = page.getByRole("button", { name: "Amount information", exact: true });
+  await trigger.hover();
+  const help = page.getByRole("dialog", { name: "Amount information", exact: true });
+  await expect(help).toHaveCount(0);
+  await trigger.click();
+  await expect(help).toBeVisible();
+  await expect(help.locator("strong")).toHaveText(["20 + 20", "40"]);
+  const fieldBox = await page.locator("[data-form-field=Amount] .record-input-frame").boundingBox();
+  const helpBox = await help.boundingBox();
+  expect(fieldBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  if (fieldBox && helpBox) expect(helpBox.y).toBeGreaterThanOrEqual(fieldBox.y + fieldBox.height);
+  await page.keyboard.press("Escape");
+  await expect(help).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(help).toBeVisible();
+  await page.mouse.click(10, 10);
+  await expect(help).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Amount", exact: true })).toHaveValue("");
+  await expect(
+    page.locator("[data-form-field=Expected_Revenue]").getByRole("img", { name: "Locked" }),
+  ).toBeVisible();
 });

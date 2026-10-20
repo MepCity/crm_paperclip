@@ -52,6 +52,7 @@ test.describe("Tasks record detail", () => {
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
     await expect(page.getByText("Task Information")).toBeVisible();
+    expect(cardText).toMatch(/Due Date\s*\d{2}\.\d{2}\.\d{4}/);
     const infoText = (await page.locator("[data-record-frame]").innerText()).replace(/\s+/g, " ");
     const infoStart = infoText.indexOf("Task Information");
     const infoPositions = ["Task Owner", "Subject", "Due Date", "Contact Name", "Related To"].map(

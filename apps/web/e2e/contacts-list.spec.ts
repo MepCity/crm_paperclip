@@ -227,6 +227,21 @@ test("applies Campaigns system filter to Contacts list and restores on Clear", a
   await expect(list.locator("tbody tr")).toHaveCount(1);
   await expect(list.locator("[data-part=total-value]")).toHaveText("1");
 
+  const panel = list.getByRole("region", { name: "Filter Contacts by" });
+  const scrollLeft = await panel
+    .locator(".filter-panel-content")
+    .evaluate((element) => element.scrollLeft);
+  const panelLeft = await panel.evaluate((element) => element.getBoundingClientRect().left);
+  const headingLeft = await panel
+    .getByRole("heading", { name: "Filter Contacts by" })
+    .evaluate((element) => element.getBoundingClientRect().left);
+  const checkboxLeft = await campaignsCheckbox.evaluate(
+    (element) => element.getBoundingClientRect().left,
+  );
+  expect(scrollLeft).toBe(0);
+  expect(headingLeft).toBeGreaterThanOrEqual(panelLeft);
+  expect(checkboxLeft).toBeGreaterThanOrEqual(panelLeft);
+
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr")).toHaveCount(initialRowCount);
 });

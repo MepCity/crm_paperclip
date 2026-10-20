@@ -2288,3 +2288,5 @@ export function describeActivityReadContract(name: string, makeService: Contract
 }
 
 export { describeRecordHistoryContract } from "./history-contract-suite";
+
+export { describeNotesContract } from "./notes-contract-suite";

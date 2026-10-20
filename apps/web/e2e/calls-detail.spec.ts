@@ -91,6 +91,10 @@ test.describe("Calls record detail", () => {
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
 
+    await expect(
+      card.locator("[data-detail-field='Call_Start_Time'] .detail-field-value"),
+    ).toHaveText(/^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} (AM|PM)$/);
+
     // Details sections
     await expect(page.getByText("Call Information")).toBeVisible();
     // No related list rail on activity records
@@ -140,6 +144,20 @@ test.describe("Calls record detail", () => {
       "Print Preview",
       "Send Email",
     ]);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("More Options > Edit opens the edit route", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "More Options" })
+      .click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await expect(page).toHaveURL(/\/edit/);
     ignoreFailedResponses(pageErrors, [400]);
   });
 
