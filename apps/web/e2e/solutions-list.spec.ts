@@ -144,5 +144,5 @@ test("Solutions Actions exports through the shared dialog", async ({ page }) => 
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
-  await expect(page.getByRole("heading", { name: "404 - Not Found", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
 });
