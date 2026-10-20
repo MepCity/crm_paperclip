@@ -1,5 +1,6 @@
 import KanbanSettingsDialogDemo from "@/components/records/board/kanban-settings-dialog.demo";
 import RecordBoardDemo from "@/components/records/board/record-board.demo";
+import AddToCampaignsDialogDemo from "@/components/records/campaigns/add-to-campaigns-dialog.demo";
 import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
@@ -50,6 +51,7 @@ import SplitButtonDemo from "@/components/ui/split-button.demo";
 import SwitchDemo from "@/components/ui/switch.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
+import TagEntryDemo from "@/components/ui/tag-entry.demo";
 import TextAreaDemo from "@/components/ui/text-area.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 import ToastDemo from "@/components/ui/toast.demo";
@@ -57,6 +59,7 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "add-to-campaigns": AddToCampaignsDialogDemo,
   "recycle-bin": RecycleBinDemo,
   "record-board": RecordBoardDemo,
   "kanban-settings": KanbanSettingsDialogDemo,
@@ -114,4 +117,5 @@ export const demos: Record<string, React.ComponentType> = {
   "timeline-history": TimelineHistoryDemo,
   drafts: DraftsPageDemo,
   "manage-tags": ManageTagsPageDemo,
+  "tag-entry": TagEntryDemo,
 };

@@ -1,9 +1,10 @@
 import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
 import { FormRow } from "./form-row";
@@ -507,10 +508,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Campaign_Source",
-    label: "Campaign Source",
+    apiName: "Doc_Ref",
+    label: "Doc Ref",
     dataType: "lookup",
-    lookup: { module: "Campaigns" },
+    lookup: { module: "Documents" },
     required: false,
     readOnly: false,
     unique: false,
@@ -522,19 +523,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Campaigns", id: "camp-1", name: "Big Campaign" }}
+      initial={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Campaign Source" }) as HTMLInputElement;
-  expect(input.value).toBe("Big Campaign");
+  const input = screen.getByRole("textbox", { name: "Doc Ref" }) as HTMLInputElement;
+  expect(input.value).toBe("Big Doc");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M7");
+  expect(input.getAttribute("data-later-module")).toBe("M9");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Campaign Source lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M7");
+  const btn = screen.getByRole("button", { name: "Open Doc Ref lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M9");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog
@@ -709,4 +710,40 @@ test("the default toggle retains its visible label", () => {
   render(<Controlled type="ALARM" />);
   expect(screen.getByRole("switch", { name: "Example" })).toBeTruthy();
   expect(screen.getByText("Example").classList.contains("sr-only")).toBe(false);
+});
+
+test("currency help opens on click or keyboard, dismisses and never edits the amount", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="currency"
+      field={{ ...field("currency"), apiName: "Amount", label: "Amount" }}
+      initial={125}
+      onChange={change}
+      currencyPrefix="$"
+      currencyHelp={dealsFormRules.currencyHelp?.Amount}
+    />,
+  );
+  const amount = screen.getByRole("textbox", { name: "Amount" });
+  const trigger = screen.getByRole("button", { name: "Amount information" });
+  await user.hover(trigger);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(trigger);
+  expect(screen.getByRole("dialog", { name: "Amount information" })).toBeTruthy();
+  expect(screen.getByText("20 + 20").tagName).toBe("STRONG");
+  expect(screen.getByText("40").tagName).toBe("STRONG");
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(amount);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  trigger.focus();
+  await user.keyboard(" ");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.keyboard("{Escape}");
+  expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
+  expect(change).not.toHaveBeenCalled();
 });

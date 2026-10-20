@@ -57,13 +57,37 @@ describe("Calls activity foundation", () => {
     expect((await service.list("Calls", query)).sort).toEqual({ field: "id", order: "desc" });
   });
 
-  it("requires Call_Type, Call_Start_Time and Call_Duration", async () => {
+  it("requires Call_Type and Call_Start_Time", async () => {
     const service = make();
-    for (const name of ["Call_Type", "Call_Start_Time", "Call_Duration"]) {
+    for (const name of ["Call_Type", "Call_Start_Time"]) {
       const rest = Object.fromEntries(Object.entries(input()).filter(([key]) => key !== name));
       await expect(service.create("Calls", rest)).rejects.toBeInstanceOf(ValidationError);
     }
     await expect(service.create("Calls", input())).resolves.toBeDefined();
+  });
+
+  it("requires Call_Duration only for Inbound or Completed calls", async () => {
+    const service = make();
+    const { Call_Duration: _, ...bare } = input();
+    const scheduled = await service.create("Calls", { ...bare, Outgoing_Call_Status: "Scheduled" });
+    expect(scheduled.fields.Call_Duration).toBeNull();
+    const missed = await service.create("Calls", { ...bare, Call_Type: "Missed" });
+    expect(missed.fields.Call_Duration).toBeNull();
+    await expect(
+      service.create("Calls", { ...bare, Outgoing_Call_Status: "Completed" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(service.create("Calls", { ...bare, Call_Type: "Inbound" })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    await expect(
+      service.update("Calls", scheduled.id, { Outgoing_Call_Status: "Completed" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    const completed = await service.update("Calls", scheduled.id, {
+      Outgoing_Call_Status: "Completed",
+      Call_Duration: "05:30",
+    });
+    expect(completed.fields.Call_Duration).toBe("05:30");
+    expect(completed.fields.Call_Duration_in_seconds).toBe(330);
   });
 
   it("supports list, get, create, update and delete", async () => {

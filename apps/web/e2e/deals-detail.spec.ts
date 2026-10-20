@@ -1,5 +1,7 @@
 import { signUpNewUser } from "./support/auth";
+import { createCaseFromCardAndOpenIt, expectEmptyCasesCard } from "./support/cases-card";
 import {
+  moduleCreatePath,
   moduleListDefaultPath,
   moduleRecordClonePath,
   moduleRecordPath,
@@ -186,7 +188,7 @@ test.describe("Deals record detail", () => {
     const frame = page.locator("[data-record-frame]");
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
-    await expect(frame.getByText("No logs found")).toBeVisible();
+    await expect(frame.getByText("Note added: Note 4", { exact: true })).toBeVisible();
     await frame.getByRole("tab", { name: "Overview" }).click();
     const summary = page.locator("[data-deals-contact-person-summary]");
     await expect(summary).toBeVisible({ timeout: 15_000 });
@@ -286,6 +288,76 @@ test.describe("Deals record detail", () => {
       .getByRole("button", { name: "Send Email" })
       .click({ force: true });
     await expect(page).toHaveURL(url);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Campaign Source detail value links to campaign when populated and displays dash when empty", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    // PRIMARY_DEAL_ID (Deal 001) has Campaign 001 (id: 210000000000000000)
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const campaignField = page.locator("[data-detail-field='Campaign_Source']");
+    await expect(campaignField).toBeVisible();
+    const campaignLink = campaignField.getByRole("link", { name: "Campaign 001", exact: true });
+    await expect(campaignLink).toBeVisible();
+    await expect(campaignLink).toHaveAttribute(
+      "href",
+      moduleRecordPath(org.slug, "Campaigns", "210000000000000000"),
+    );
+
+    // Deal 021 ("700000000000000020") has null Campaign_Source
+    await openDealDetail(page, org.slug, "700000000000000020");
+    const emptyField = page.locator("[data-detail-field='Campaign_Source']");
+    await expect(emptyField).toBeVisible();
+    await expect(emptyField).toContainText("—");
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card is live: lists linked cases, New opens the Cases form prefilled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const cases = page.getByRole("region", { name: "Cases" });
+    await cases.scrollIntoViewIfNeeded();
+    await expect(cases.getByRole("link").first()).toHaveAttribute("href", /\/tab\/Cases\/\d+$/);
+    await expect(cases.getByRole("button", { name: "Assign" })).toBeVisible();
+    await expect(cases.locator("[data-later-module]")).toHaveCount(0);
+    await cases.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Cases"));
+    await expect(page.getByRole("textbox", { name: "Deal Name", exact: true })).toHaveValue(
+      "Deal 001",
+    );
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, "700000000000000249");
+    await expectEmptyCasesCard(page);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card: New, Save, row on the card, Subject opens the Case", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, "700000000000000249");
+    await expectEmptyCasesCard(page);
+    await createCaseFromCardAndOpenIt(
+      page,
+      org.slug,
+      moduleRecordPath(org.slug, "Deals", "700000000000000249"),
+      "E2E linked case",
+    );
     ignoreFailedResponses(pageErrors, [400]);
   });
 });

@@ -2,13 +2,20 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createUploadBatchRegistry, LocalDiskBlobStore } from "@crm/core/attachments";
-import type { OrgContext } from "@crm/core/records";
+import {
+  BlobNotFoundError,
+  createUploadBatchRegistry,
+  LocalDiskBlobStore,
+} from "@crm/core/attachments";
+import { ATTACHMENT_PARENT_MODULES } from "@crm/core/attachments/modules";
+import { NotFoundError } from "@crm/core/errors";
+import type { OrgContext, RecordData } from "@crm/core/records";
 import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
+  createFixtureRecycleBinService,
 } from "@crm/core/records/fixture";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type AttachmentDeps, type AttachmentParams, handleAttachmentRequest } from "./http";
 
 let dir: string;
@@ -69,7 +76,143 @@ const post = (deps: AttachmentDeps, id: string, body: FormData, batch?: string, 
     },
   );
 
+function expectWindowArgs(
+  seen: { page?: number; perPage?: number; sort?: unknown; filters?: unknown }[],
+  parentId: string,
+  pages: number[],
+) {
+  expect(seen.map((q) => q.page)).toEqual(pages);
+  for (const q of seen) {
+    expect(q.sort).toEqual({ field: "Created_Time", order: "desc" });
+    expect(q.filters).toEqual({
+      field: "Parent_Id",
+      comparator: "equal",
+      value: { module: "Leads", id: parentId },
+    });
+  }
+}
+
+// Exercise the lifecycle cleanup consumer without adding a transport or scheduler.
+async function cleanup(deps: AttachmentDeps) {
+  for (const intent of deps.lifecycle.cleanupIntents()) {
+    try {
+      await deps.blobs.delete({ orgId: deps.ctx.orgId, attachmentId: intent.attachmentId });
+      deps.lifecycle.acknowledgeCleanup(intent.attachmentId);
+    } catch {
+      // Failed cleanup remains queued for a later retry.
+    }
+  }
+}
+async function purge(deps: AttachmentDeps) {
+  const bin = createFixtureRecycleBinService(deps.ctx);
+  await bin.purge((await bin.list()).entries.map((entry) => entry.id));
+}
+
 describe("Attachments HTTP handlers", () => {
+  it("rejects Calls before reading records or processing attachment inputs", async () => {
+    const deps = setup();
+    deps.records.get = async () => {
+      throw new Error("Unsupported attachment parents must not reach record lookup.");
+    };
+    const parent = { module: "Calls", recordId: randomUUID() };
+    const attachment = { ...parent, attachmentId: randomUUID() };
+    for (const [params, init] of [
+      [parent, {}],
+      [parent, { method: "POST", body: form({ file: pdf() }) }],
+      [parent, { method: "POST", body: form({ attachmentUrl: "https://example.test/doc" }) }],
+      [attachment, {}],
+      [attachment, { method: "DELETE" }],
+    ] as const) {
+      const response = await call(deps, params, init);
+      expect(response.status).toBe(404);
+      expect((await response.json()).code).toBe("not_found");
+    }
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+  });
+
+  it.each(["Tasks", "Events", "Campaigns", "Cases", "Solutions"])(
+    "serves %s files and links with pagination and parent/tenant isolation",
+    async (module) => {
+      const deps = setup();
+      const parent = await deps.records.create(
+        module,
+        module === "Events"
+          ? {
+              Event_Title: "Synthetic",
+              Meeting_Venue__s: "In-office",
+              Start_DateTime: "2030-01-01T10:00:00Z",
+              End_DateTime: "2030-01-01T11:00:00Z",
+            }
+          : module === "Campaigns"
+            ? { Campaign_Name: "Synthetic" }
+            : module === "Solutions"
+              ? { Solution_Title: "Synthetic" }
+              : module === "Cases"
+                ? { Subject: "Synthetic", Status: "New", Case_Origin: "Phone" }
+                : { Subject: "Synthetic" },
+      );
+      const params = { module, recordId: parent.id };
+      const created = await post(deps, parent.id, form({ file: pdf() }), undefined, module);
+      expect(created.status).toBe(201);
+      const attachmentId = (await created.json()).data[0].details.id;
+      const linked = await post(
+        deps,
+        parent.id,
+        form({ attachmentUrl: "https://example.test/doc" }),
+        undefined,
+        module,
+      );
+      expect(linked.status).toBe(201);
+      const linkId = (await linked.json()).data[0].details.id;
+      const pages = [];
+      for (const page of [1, 2]) {
+        const response = await call(deps, params, { query: `?page=${page}&per_page=1` });
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.info).toEqual({ page, per_page: 1, count: 1, more_records: page === 1 });
+        pages.push(body.data[0].id);
+      }
+      expect(pages.sort()).toEqual([attachmentId, linkId].sort());
+      const item = { ...params, attachmentId };
+      expect(new Uint8Array(await (await call(deps, item)).arrayBuffer())).toEqual(PDF());
+      expect((await call(deps, { ...params, attachmentId: linkId })).status).toBe(409);
+      const other = setup(randomUUID());
+      const hidden = setup(deps.ctx.orgId);
+      hidden.records = {
+        ...hidden.records,
+        get: async () => {
+          throw new NotFoundError();
+        },
+      };
+      for (const unauthorized of [other, hidden]) {
+        expect((await call(unauthorized, params)).status).toBe(404);
+        expect(
+          (await post(unauthorized, parent.id, form({ file: pdf() }), undefined, module)).status,
+        ).toBe(404);
+        expect(
+          (
+            await post(
+              unauthorized,
+              parent.id,
+              form({ attachmentUrl: "https://example.test/doc" }),
+              undefined,
+              module,
+            )
+          ).status,
+        ).toBe(404);
+        expect((await call(unauthorized, item)).status).toBe(404);
+        expect((await call(unauthorized, item, { method: "DELETE" })).status).toBe(404);
+      }
+      expect((await call(deps, item)).status).toBe(200);
+      expect((await call(deps, item, { method: "DELETE" })).status).toBe(200);
+      expect(
+        (await call(deps, { ...params, attachmentId: linkId }, { method: "DELETE" })).status,
+      ).toBe(200);
+      expect((await call(deps, params)).status).toBe(204);
+      expect((await call(deps, item)).status).toBe(404);
+    },
+  );
+
   it("uploads a file, lists it, downloads it and deletes it", async () => {
     const deps = setup();
     const id = await lead(deps);
@@ -238,7 +381,7 @@ describe("Attachments HTTP handlers", () => {
     expect(slashHeader).toContain("filename*=UTF-8''evil.pdf");
   });
 
-  it("retains the cleanup intent when blob deletion fails during removal", async () => {
+  it("retains the cleanup intent when blob deletion fails after purge", async () => {
     const deps = setup();
     const id = await lead(deps);
     const created = await post(deps, id, form({ file: pdf() }));
@@ -254,9 +397,48 @@ describe("Attachments HTTP handlers", () => {
       { method: "DELETE" },
     );
     expect(removed.status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    await purge(deps);
+    await cleanup(deps);
     const intents = deps.lifecycle.cleanupIntents();
     expect(intents.length).toBe(1);
     expect(intents[0]?.attachmentId).toBe(attachmentId);
+  });
+
+  it("restores HTTP-deleted attachments with the same downloadable bytes", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
+    const bin = createFixtureRecycleBinService(deps.ctx);
+    await bin.restore((await bin.list()).entries.map((entry) => entry.id));
+    const downloaded = await call(deps, params);
+    expect(downloaded.status).toBe(200);
+    expect(new Uint8Array(await downloaded.arrayBuffer())).toEqual(PDF());
+  });
+
+  it("removes bytes and acknowledges cleanup only after HTTP delete and purge", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const created = await post(deps, id, form({ file: pdf() }));
+    const attachmentId = (await created.json()).data[0].details.id;
+    const params = { module: "Leads", recordId: id, attachmentId };
+    const key = { orgId: deps.ctx.orgId, attachmentId };
+    expect((await call(deps, params, { method: "DELETE" })).status).toBe(200);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect(new Uint8Array(await new Response(await deps.blobs.read(key)).arrayBuffer())).toEqual(
+      PDF(),
+    );
+    await purge(deps);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([{ attachmentId, storageKey: attachmentId }]);
+    await cleanup(deps);
+    await expect(deps.blobs.read(key)).rejects.toBeInstanceOf(BlobNotFoundError);
+    expect(deps.lifecycle.cleanupIntents()).toEqual([]);
+    expect((await call(deps, params)).status).toBe(404);
   });
 
   it("validates pagination parameters and handles multi-page listing", async () => {
@@ -302,6 +484,96 @@ describe("Attachments HTTP handlers", () => {
       { query: "?page=3&per_page=1" },
     );
     expect(page3.status).toBe(204);
+  });
+
+  it("rejects per_page above the cap with INVALID_DATA", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const res = await call(deps, { module: "Leads", recordId: id }, { query: "?per_page=201" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("INVALID_DATA");
+  });
+
+  it("serves any page of 5,000 attachments with a constant number of list calls", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const total = 5000;
+    const all: RecordData[] = Array.from({ length: total }, (_, i) => ({
+      id: `att-${i}`,
+      fields: {
+        File_Name: `f${i}.pdf`,
+        Size: 1,
+        $type: "file",
+        Created_Time: "t",
+        Modified_Time: "t",
+      },
+    })) as unknown as RecordData[];
+    let calls = 0;
+    const seen: { page?: number; perPage?: number; sort?: unknown; filters?: unknown }[] = [];
+    const realList = deps.records.list.bind(deps.records);
+    deps.records.list = (async (
+      module: string,
+      query: { page?: number; perPage?: number; sort?: unknown; filters?: unknown },
+    ) => {
+      if (module !== "Attachments") return realList(module, query as never);
+      calls++;
+      seen.push(query);
+      const perPage = query.perPage ?? 100;
+      const from = ((query.page ?? 1) - 1) * perPage;
+      return { records: all.slice(from, from + perPage), moreRecords: from + perPage < total };
+    }) as never;
+    deps.lifecycle.isReady = () => true;
+    const run = async (query: string) => {
+      calls = 0;
+      seen.length = 0;
+      const res = await call(deps, { module: "Leads", recordId: id }, { query });
+      return { body: await res.json(), calls };
+    };
+    const first = await run("?page=1&per_page=200");
+    expect(first.body.data).toHaveLength(200);
+    expect(first.body.data[0].id).toBe("att-0");
+    expect(first.body.info.more_records).toBe(true);
+    expect(first.calls).toBeLessThanOrEqual(3);
+    expectWindowArgs(seen, id, [1, 2]);
+    const last = await run("?page=25&per_page=200");
+    expect(last.body.data).toHaveLength(200);
+    expect(last.body.data[199].id).toBe("att-4999");
+    expect(last.body.info.more_records).toBe(false);
+    expect(last.calls).toBeLessThanOrEqual(3);
+    expectWindowArgs(seen, id, [49, 50]);
+  });
+
+  it("returns 200 with empty data when the whole window is not ready but more rows exist", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+    const all = Array.from({ length: 3 }, (_, i) => ({
+      id: `att-${i}`,
+      fields: { File_Name: `f${i}.pdf`, Size: 1, $type: "file", Created_Time: "t" },
+    })) as unknown as RecordData[];
+    const realList = deps.records.list.bind(deps.records);
+    deps.records.list = (async (module: string, query: { page?: number; perPage?: number }) =>
+      module !== "Attachments"
+        ? realList(module, query as never)
+        : { records: all, moreRecords: false }) as never;
+    deps.lifecycle.isReady = () => false;
+    const res = await call(
+      deps,
+      { module: "Leads", recordId: id },
+      { query: "?page=1&per_page=2" },
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data).toEqual([]);
+    expect(body.info).toEqual({ page: 1, per_page: 2, count: 0, more_records: true });
+  });
+
+  it("accepts every supported parent module", async () => {
+    const deps = setup();
+    for (const module of ATTACHMENT_PARENT_MODULES) {
+      const res = await call(deps, { module, recordId: randomUUID() });
+      expect(res.status, module).toBe(404); // reaches the parent lookup, not module rejection
+    }
+    expect(ATTACHMENT_PARENT_MODULES).toContain("Leads");
   });
 
   it("rejects invalid upload batch header and unsupported methods", async () => {
@@ -383,5 +655,129 @@ describe("Attachments HTTP handlers", () => {
     const listed = await (await call(deps, parent)).json();
     expect(listed.info.count).toBe(1);
     expect(listed.data[0].id).toBe(stagedId);
+  });
+
+  it("validates attachment link URL and stores normalised https URL", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // 2,049-character URL
+    const tooLong = `https://example.com/${"a".repeat(2049 - "https://example.com/".length)}`;
+    expect(tooLong.length).toBe(2049);
+
+    const badUrls = [
+      "javascript:alert(1)",
+      "data:text/html,evil",
+      "/relative/path",
+      "ftp://example.test/file",
+      tooLong,
+    ];
+
+    for (const bad of badUrls) {
+      const response = await post(deps, id, form({ attachmentUrl: bad }));
+      expect(response.status).toBe(400);
+      const payload = await response.json();
+      expect(payload.code).toBe("INVALID_DATA");
+      expect(payload.details?.fields?.attachmentUrl).toBeDefined();
+    }
+    // Nothing stored
+    expect((await call(deps, { module: "Leads", recordId: id })).status).toBe(204);
+
+    // Valid https URL with leading/trailing whitespace stored normalised
+    const valid = await post(
+      deps,
+      id,
+      form({ attachmentUrl: "  https://example.test/doc?foo=bar  " }),
+    );
+    expect(valid.status).toBe(201);
+    const validPayload = await valid.json();
+    expect(validPayload.data[0].details.File_Name).toBe("https://example.test/doc?foo=bar");
+    expect(validPayload.data[0].details.$type).toBe("link");
+
+    const listed = await (await call(deps, { module: "Leads", recordId: id })).json();
+    expect(listed.data.length).toBe(1);
+    expect(listed.data[0]).toMatchObject({
+      File_Name: "https://example.test/doc?foo=bar",
+      $type: "link",
+      $link_url: "https://example.test/doc?foo=bar",
+    });
+  });
+
+  it("rejects oversize body with honest Content-Length without calling formData", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    const stream = new ReadableStream<Uint8Array>();
+    const getReaderSpy = vi.spyOn(stream, "getReader");
+
+    const request = new Request("http://localhost/crm/v2.2/x", {
+      method: "POST",
+      headers: {
+        "content-type": "multipart/form-data; boundary=----boundary",
+        "content-length": String(100_000_000 + 64 * 1024 + 1),
+      },
+      body: stream,
+      // @ts-expect-error duplex is required in node runtime when body is stream
+      duplex: "half",
+    });
+    const formDataSpy = vi.spyOn(request, "formData");
+
+    const response = await handleAttachmentRequest(
+      deps,
+      { module: "Leads", recordId: id },
+      request,
+    );
+    expect(response.status).toBe(413);
+    expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(getReaderSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversize body with no/false Content-Length via the stream counter", async () => {
+    const deps = setup();
+    const id = await lead(deps);
+
+    // Note kind has 20 MB budget (20_000_000 + 64 * 1024 = 20_065_536 bytes)
+    const note = await deps.records.create("Notes", {
+      Parent_Id: { module: "Leads", id },
+      Note_Content: "Body",
+    });
+
+    for (const falseContentLength of [null, "100"]) {
+      let cancelled = false;
+      const stream = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          // Stream chunks of 1 MiB each; will abort around 21 chunks
+          controller.enqueue(new Uint8Array(1024 * 1024));
+        },
+        cancel() {
+          cancelled = true;
+        },
+      });
+
+      const headers: Record<string, string> = {
+        "content-type": "multipart/form-data; boundary=----boundary",
+      };
+      if (falseContentLength !== null) {
+        headers["content-length"] = falseContentLength;
+      }
+
+      const request = new Request("http://localhost/crm/v2.2/x", {
+        method: "POST",
+        headers,
+        body: stream,
+        // @ts-expect-error duplex is required in node runtime when body is stream
+        duplex: "half",
+      });
+
+      const response = await handleAttachmentRequest(
+        deps,
+        { module: "Notes", recordId: note.id },
+        request,
+      );
+      expect(response.status).toBe(413);
+      expect((await response.json()).code).toBe("LIMIT_EXCEEDED");
+      expect(cancelled).toBe(true);
+    }
   });
 });

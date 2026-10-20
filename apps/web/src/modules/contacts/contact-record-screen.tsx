@@ -3,6 +3,7 @@
 import type { RecordData } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useCampaignsCard } from "@/components/records/campaigns/campaigns-card";
 import { ContactHierarchyModal } from "@/components/records/detail/contact-hierarchy-modal";
 import {
   RecordDetailScreen,
@@ -11,6 +12,7 @@ import {
 import { useRecordCount, useViews } from "@/lib/api/client/hooks";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import {
+  openCaseCreateWithContact,
   openContactCreateWithReportingTo,
   openDealCreateWithContact,
 } from "./contacts-record-create";
@@ -35,6 +37,7 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
   const router = useRouter();
   const dealsBadge = useContactDealsBadge(props.recordId);
   const activityBadges = useParentActivityBadges("Contacts", props.recordId);
+  const campaigns = useCampaignsCard("Contacts", props.recordId);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
   const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -52,12 +55,15 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
             openContactCreateWithReportingTo(props.orgSlug, record, (path) => router.push(path)),
           onAddReportingContact: () =>
             openContactCreateWithReportingTo(props.orgSlug, record, (path) => router.push(path)),
+          onCasesNew: () =>
+            openCaseCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
           onDealsNew: () =>
             openDealCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
+          onAddCampaigns: campaigns.onAdd,
         },
-        { deals: dealsBadge, ...activityBadges },
+        { deals: dealsBadge, campaigns: campaigns.badge, ...activityBadges },
       ),
-    [dealsBadge, activityBadges, props.orgSlug, router],
+    [dealsBadge, activityBadges, campaigns.badge, campaigns.onAdd, props.orgSlug, router],
   );
 
   return (
@@ -67,6 +73,7 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
         definition={definition}
         buildRelatedLists={buildRelatedLists}
       />
+      {campaigns.dialog}
       {hierarchyOpen ? (
         <ContactHierarchyModal
           isOpen={hierarchyOpen}

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   ConflictError,
   ForbiddenError,
@@ -17,6 +18,7 @@ import {
   selectActivitySummary,
   validateActivityFilter,
 } from "../activities";
+import { validateCampaignFilter } from "../campaigns";
 import type {
   DuplicateGroup,
   FieldDefinition,
@@ -29,12 +31,15 @@ import type {
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
+import type { RecycleBinService } from "../recycle-bin";
 import { roundMoneyTwoDecimals } from "../rounding";
+import type { TagService } from "../tags";
 import {
   attachmentUltimateParent,
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
 } from "./attachments/hooks";
+import { assignAutoNumber, seedAutoNumbers } from "./auto-number";
 import {
   automaticMaster,
   duplicateGroups,
@@ -49,8 +54,10 @@ import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
@@ -60,6 +67,7 @@ interface FixtureStore {
   deduplicating: Set<string>;
   history: Map<string, RecordHistoryEvent>;
   sequence: number;
+  deletions: Map<string, DeletionManifest>;
   cursors: Parameters<typeof fixtureHistoryReader>[6];
 }
 
@@ -137,7 +145,11 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService & { readonly history: RecordHistoryService } {
+): RecordService & {
+  readonly history: RecordHistoryService;
+  readonly tags: TagService;
+  readonly recycleBin: RecycleBinService;
+} {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -172,6 +184,7 @@ export function createFixtureRecordService(
       deduplicating: new Set(),
       history: new Map(),
       sequence: 0,
+      deletions: new Map(),
       cursors: new Map(),
     };
     const seededModules = store.modules;
@@ -183,7 +196,11 @@ export function createFixtureRecordService(
         return moduleState;
       },
     };
-    for (const bundle of Object.values(fixtureModules)) bundle.afterSeed?.(seedContext);
+    for (const [name, bundle] of Object.entries(fixtureModules)) {
+      if (bundle.autoNumberField)
+        seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
+      bundle.afterSeed?.(seedContext);
+    }
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -192,6 +209,7 @@ export function createFixtureRecordService(
   state.history ??= new Map();
   state.sequence ??= 0;
   state.cursors ??= new Map();
+  state.deletions ??= new Map();
   state.memberIds.add(ctx.userId);
 
   const referenceModules = (): Map<string, FixtureReferenceModule> => {
@@ -249,19 +267,49 @@ export function createFixtureRecordService(
     if (!view) throw new NotFoundError("View not found.");
     return view;
   };
+  const noteParentVisible = (fields: RecordData["fields"]) => {
+    const parent = fields.Parent_Id;
+    return (
+      isJsonObject(parent) &&
+      typeof parent.module === "string" &&
+      typeof parent.id === "string" &&
+      Object.hasOwn(fixtureModules, parent.module) &&
+      moduleStore(parent.module).records.has(parent.id) &&
+      options?.canReadRecord?.(parent.module, parent.id) !== false
+    );
+  };
+  const assertNoteParentVisible = (module: string, fields: RecordData["fields"]) => {
+    if (module === "Notes" && !noteParentVisible(fields))
+      throw new NotFoundError("Record not found.");
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
+    assertNoteParentVisible(module, record.fields);
     return record;
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
     if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     return resolveRecordReferences(
-      bundle.readRecord?.(record, now) ?? record,
+      bundle.metadata.fields.some((field) => field.apiName === "Tag")
+        ? projectTags(moduleStore(module), bundle.readRecord?.(record, now) ?? record)
+        : (bundle.readRecord?.(record, now) ?? record),
       bundle.metadata.fields,
       referenceModules(),
     );
+  };
+  /** Drops the required flag from fields a module hook declares optional for this record. */
+  const relaxRequired = (
+    bundle: FixtureModuleBundle,
+    fields: Readonly<Record<string, FieldValue>>,
+  ) => {
+    const optional = bundle.optionalFields?.(fields);
+    return optional?.length
+      ? bundle.metadata.fields.map((f) =>
+          optional.includes(f.apiName) ? { ...f, required: false } : f,
+        )
+      : bundle.metadata.fields;
   };
   const validateReferences = (module: string, input: RecordInput) => {
     const bundle = bundleFor(module);
@@ -312,7 +360,7 @@ export function createFixtureRecordService(
   };
   const matching = (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
     applyView = true,
     now = clock(),
   ) => {
@@ -325,11 +373,40 @@ export function createFixtureRecordService(
       if (!activityParentModules.has(module))
         throw new ValidationError({ activityFilter: ["Choose a parent record module."] });
     }
+    let campaignMembers: Set<string> | undefined;
+    if (query.campaignFilter !== undefined) {
+      validateCampaignFilter(query.campaignFilter);
+      if (module !== "Leads" && module !== "Contacts")
+        throw new ValidationError({ campaignFilter: ["Choose Leads or Contacts."] });
+      campaignMembers = new Set<string>();
+      const filter = query.campaignFilter;
+      // Both stores belong to the caller's organization, like ordinary record reads.
+      const campaigns = moduleStore("Campaigns").records;
+      for (const membership of moduleStore("Campaign_Members").records.values()) {
+        const campaign = membership.fields.Campaign;
+        const parent: FieldValue | undefined =
+          membership.fields[module === "Leads" ? "Lead" : "Contact"];
+        if (
+          isJsonObject(campaign) &&
+          campaign.module === "Campaigns" &&
+          typeof campaign.id === "string" &&
+          campaigns.has(campaign.id) &&
+          filter.campaignIds.includes(campaign.id) &&
+          isJsonObject(parent) &&
+          parent.module === module &&
+          typeof parent.id === "string" &&
+          (!filter.memberStatuses ||
+            filter.memberStatuses.includes(String(membership.fields.Member_Status)))
+        )
+          campaignMembers.add(parent.id);
+      }
+    }
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .map((record) => resolveRead(module, record, now))
       .filter(
@@ -337,6 +414,7 @@ export function createFixtureRecordService(
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
+          (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
       );
@@ -347,6 +425,8 @@ export function createFixtureRecordService(
   };
   const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
     const previous = state.modules;
+    const previousDeletions = state.deletions;
+    state.deletions = new Map(previousDeletions);
     const staged = new Map(previous);
     state.modules = staged;
     transactionOriginal = previous;
@@ -367,11 +447,76 @@ export function createFixtureRecordService(
       return result;
     } catch (error) {
       state.modules = previous;
+      state.deletions = previousDeletions;
       throw error;
     } finally {
       transactionOriginal = undefined;
     }
   };
+  const tags = fixtureTagService({
+    ctx,
+    now: clock,
+    moduleStore,
+    assertModule(module, write) {
+      const bundle = bundleFor(module);
+      if (!bundle.metadata.fields.some((field) => field.apiName === "Tag"))
+        throw new NotFoundError("Module not found.");
+      if (write) assertModuleWritable(module);
+    },
+    assertRecord(module, id, write) {
+      const record = recordFor(module, id);
+      if (write) assertWritable(record);
+    },
+    atomic: (module, write) => atomic({ module, mechanism: "tags" }, write),
+  });
+  const recycleDependencies = {
+    context: ctx,
+    now: clock,
+    modules: () => state.modules,
+    manifests: () => state.deletions,
+    moduleStore,
+    bundle: bundleFor,
+  };
+  const recycleBin = fixtureRecycleBinService({
+    ...recycleDependencies,
+    atomic,
+    async validateOwners(records) {
+      const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
+      for (const record of records) {
+        const owner = record.fields.Owner;
+        if (owner != null && (typeof owner !== "string" || !members.includes(owner)))
+          throw new ValidationError({ Owner: ["Choose a member of this organization."] });
+      }
+    },
+    validate(module, record) {
+      const bundle = bundleFor(module);
+      if (!bundle.readOnly) assertModuleWritable(module);
+      if (options?.canReadRecord?.(module, record.id) === false)
+        throw new ValidationError({ permission: ["You cannot restore this record."] });
+      if (record.fields.Locked__s === true)
+        throw new ValidationError({ Locked__s: ["The record is locked."] });
+      // Restore honours the same per-record optional fields as create/update (e.g. planned calls).
+      const writableFields = relaxRequired(bundle, record.fields).filter(
+        (field) =>
+          !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
+      );
+      const restoreInput = Object.fromEntries(
+        writableFields.map((field) => [field.apiName, record.fields[field.apiName] ?? null]),
+      );
+      const optional = bundle.optionalFields?.(record.fields) ?? [];
+      validateInput(
+        restoreInput,
+        false,
+        writableFields.map((field) =>
+          optional.includes(field.apiName) ? { ...field, required: false } : field,
+        ),
+        new Set(),
+      );
+      validateReferences(module, record.fields);
+      assertNoteParentVisible(module, record.fields);
+      if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
+    },
+  });
   const writeBatch = (
     module: string,
     ids: readonly string[],
@@ -528,6 +673,8 @@ export function createFixtureRecordService(
   };
 
   return {
+    tags,
+    recycleBin,
     history: fixtureHistoryReader(
       ctx,
       () => fixtureHistoryStore(state.history),
@@ -774,7 +921,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, false, bundle.metadata.fields, bundle.managedFields);
+      validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "create" }, () => {
@@ -792,7 +939,9 @@ export function createFixtureRecordService(
           Created_By: ctx.userId,
           Modified_By: ctx.userId,
         });
+        if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
         bundle.applyRules?.(fields, normalized, undefined, hookContext);
+        assertNoteParentVisible(module, fields);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const record = { id, fields };
         assertUniqueFieldValues(
@@ -810,7 +959,12 @@ export function createFixtureRecordService(
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
-      validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
+      validateInput(
+        normalized,
+        true,
+        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }),
+        bundle.managedFields,
+      );
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "update" }, () => {
@@ -870,11 +1024,18 @@ export function createFixtureRecordService(
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
-      atomic({ module, mechanism: "delete" }, () => {
-        const moduleState = moduleStore(module);
-        if (module === "Attachments") removeAttachmentIds(ids, hookContext);
-        for (const id of ids) moduleState.records.delete(id);
-        bundleFor(module).afterDelete?.(ids, hookContext);
+      const operationId = randomUUID();
+      atomic({ module, mechanism: "delete", operationId }, () => {
+        for (const record of records) {
+          // A previous root in the same batch can already own a shared cascade.
+          if (!moduleStore(module).records.has(record.id)) continue;
+          retainDeletion(recycleDependencies, module, record, operationId, () => {
+            const moduleState = moduleStore(module);
+            if (module === "Attachments") removeAttachmentIds([record.id], hookContext);
+            moduleState.records.delete(record.id);
+            bundleFor(module).afterDelete?.([record.id], hookContext);
+          });
+        }
       });
     },
   };
@@ -901,4 +1062,20 @@ export function createFixtureRecordHistoryService(
   options?: FixtureRecordServiceOptions,
 ): RecordHistoryService {
   return createFixtureRecordService(context, options).history;
+}
+
+/** Organization-bound tag facade sharing record transactions and lifecycle hooks. */
+export function createFixtureTagService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): TagService {
+  return createFixtureRecordService(context, options).tags;
+}
+
+/** Organization-bound recoverable deletion facade; transport is deliberately separate. */
+export function createFixtureRecycleBinService(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+): RecycleBinService {
+  return createFixtureRecordService(context, options).recycleBin;
 }

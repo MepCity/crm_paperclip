@@ -23,6 +23,7 @@ import {
   decodeRecord,
   decodeView,
   encodeActivityFilter,
+  encodeCampaignFilter,
   encodeCriteria,
   encodeInput,
   invalid,
@@ -100,9 +101,14 @@ function requiredWire<T>(value: T | undefined, label: string): T {
 }
 
 function listBody(
-  query: Pick<ListQuery, "filters" | "search" | "activityFilter" | "includeActivitySummary">,
+  query: Pick<
+    ListQuery,
+    "filters" | "search" | "activityFilter" | "campaignFilter" | "includeActivitySummary"
+  >,
 ): unknown | undefined {
   const body: import("../wire/types").WireRestrictions = {};
+  if (query.campaignFilter !== undefined)
+    body.campaign_filter = encodeCampaignFilter(query.campaignFilter);
   if (query.activityFilter !== undefined)
     body.activity_filter = encodeActivityFilter(query.activityFilter);
   if (query.includeActivitySummary !== undefined)
@@ -336,7 +342,7 @@ export function createHttpRecordService({
 
     async count(
       module: ModuleApiName,
-      query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+      query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
     ): Promise<number> {
       const path = operationPath(operations.count, { module });
       const restrictions = listBody(query);

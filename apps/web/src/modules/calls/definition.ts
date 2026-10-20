@@ -1,10 +1,15 @@
 import { Icons } from "@/components/ui/icon";
-import { accountsFormRules } from "../accounts/accounts-form-rules";
 import { isAccountInlineEditable } from "../accounts/accounts-inline-edit";
 import { formatAccountsLastUpdateLabel } from "../accounts/accounts-last-update";
 import { ActivitySidePanel } from "../activity-detail";
 import type { ModuleScreenDefinition } from "../types";
 import { buildCallsBusinessCardFields, buildCallsDetailSections } from "./calls-detail-sections";
+import {
+  CALLS_EDIT_INTENTS,
+  CALLS_FORM_CANCELLED_STATUS,
+  CALLS_FORM_FALLBACK_COLUMNS,
+  callsFormRules,
+} from "./calls-form-rules";
 import { callsRecordHeaderIdentity } from "./calls-record-header";
 import {
   buildCallsRecordMoreMenuGroups,
@@ -22,6 +27,9 @@ import {
 import { CALLS_LIST_CURRENCY_CODE, callsListPageConfig } from "./list-config";
 import { buildCallsFilterGroups } from "./list-filters";
 
+export const CALLS_CANCEL_CONFIRM_TITLE = "Cancel Call";
+export const CALLS_CANCEL_CONFIRM_MESSAGE = "Are you sure you want to cancel this Call?";
+
 export const callsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Calls",
   tab: "Calls",
@@ -34,8 +42,11 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Subject", "Call_Type", "Call_Start_Time", "Call_Duration", "Owner"],
   buildFilterGroups: buildCallsFilterGroups,
   form: {
-    // Temporary fallback: form rules will be replaced in the Calls form task
-    rules: accountsFormRules,
+    variant: "activity",
+    rules: callsFormRules,
+    fallbackColumns: CALLS_FORM_FALLBACK_COLUMNS,
+    inventoryChrome: true,
+    editIntents: CALLS_EDIT_INTENTS,
   },
   detail: {
     layout: "activity",
@@ -44,16 +55,34 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     hasPortrait: false,
     recordNavigation: true,
     addTags: { label: "Add Tags", laterModule: "M6" },
-    // Scheduled calls: Reschedule Call split button and Down arrow; other states have no header command.
-    buildHeaderCommands: (record) =>
+    // Scheduled calls: Reschedule Call split button and Edit in More; other states keep Edit.
+    buildHeaderCommands: (record, { editHref, save, navigate, confirm }) =>
       isCallScheduled(record)
         ? [
             {
               id: "reschedule-call",
               label: "Reschedule Call",
               variant: "primary" as const,
-              onPress: () => {},
-              splitLabel: "Down arrow",
+              href: `${editHref}?intent=reschedule`,
+              splitLabel: "Reschedule options",
+              splitMenu: [
+                {
+                  id: "mark-as-completed",
+                  label: "Mark as Completed",
+                  onAction: () => navigate(`${editHref}?intent=complete`),
+                },
+                {
+                  id: "cancel-call",
+                  label: "Cancel Call",
+                  onAction: () =>
+                    confirm({
+                      title: CALLS_CANCEL_CONFIRM_TITLE,
+                      message: CALLS_CANCEL_CONFIRM_MESSAGE,
+                      confirmLabel: "Cancel Call",
+                      onConfirm: () => save({ Outgoing_Call_Status: CALLS_FORM_CANCELLED_STATUS }),
+                    }),
+                },
+              ],
             },
           ]
         : [],
@@ -64,7 +93,7 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
     lastUpdatePlacement: "tab-row",
     moreOptions: (handlers) =>
       buildCallsRecordMoreMenuGroups({
-        onEdit: handlers.onEdit ?? handlers.onClone,
+        onEdit: handlers.onEdit ?? (() => {}),
         onDelete: handlers.onDelete,
       }),
     deleteTitle: CALLS_DELETE_CONFIRM_TITLE,

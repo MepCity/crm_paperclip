@@ -96,6 +96,13 @@ function buildSystemDefinedItems() {
         systemEditor: "activities" as const,
       };
     }
+    if (label === "Campaigns") {
+      return {
+        id: "Campaigns",
+        label,
+        systemEditor: "campaigns" as const,
+      };
+    }
     return {
       id: `system-${index}`,
       label,

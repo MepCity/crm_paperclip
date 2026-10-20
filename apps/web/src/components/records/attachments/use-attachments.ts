@@ -1,7 +1,8 @@
 "use client";
 
+import { supportsAttachmentCard } from "@crm/core/attachments/modules";
 import type { ModuleApiName } from "@crm/core/records";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import type { TimelineEvent } from "@/components/records/detail/timeline";
 import { toast } from "@/components/ui/toast";
@@ -101,6 +102,9 @@ export interface UseAttachments {
   events: readonly TimelineEvent[];
   loading: boolean;
   error: string | null;
+  hasMore: boolean;
+  loadingMore: boolean;
+  loadMore: () => void;
   uploading: UploadState[];
   upload: (files: File[]) => Promise<void>;
   attachLink: (url: string) => Promise<void>;
@@ -108,7 +112,7 @@ export interface UseAttachments {
   remove: (row: AttachmentRow) => Promise<void>;
 }
 
-export const ATTACHMENT_PARENTS: readonly string[] = ["Leads", "Contacts", "Accounts", "Deals"];
+const PAGE_SIZE = 20;
 
 export function useAttachments(
   parentModule: ModuleApiName,
@@ -118,23 +122,23 @@ export function useAttachments(
   const orgSlug = useOrgSlug();
   const queryClient = useQueryClient();
   const key = attachmentsKey(orgSlug, parentModule, parentId);
-  const query = useQuery({
+  // Pages load on demand (the card's "Show more"); never the whole list up front.
+  const query = useInfiniteQuery({
     queryKey: key,
-    enabled: options.enabled ?? true,
-    queryFn: async () => {
-      const out: WireAttachment[] = [];
-      for (let page = 1; ; page++) {
-        const body = (await apiFetch(
-          orgSlug,
-          `${attachmentsPath(parentModule, parentId)}?page=${page}&per_page=100`,
-        )) as { data?: WireAttachment[]; info?: { more_records?: boolean } } | null;
-        if (!body?.data) break;
-        out.push(...body.data);
-        if (!body.info?.more_records) break;
-      }
-      return out;
+    enabled: options.enabled ?? supportsAttachmentCard(parentModule),
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const body = (await apiFetch(
+        orgSlug,
+        `${attachmentsPath(parentModule, parentId)}?page=${pageParam}&per_page=${PAGE_SIZE}`,
+      )) as { data?: WireAttachment[]; info?: { more_records?: boolean } } | null;
+      return { items: body?.data ?? [], more: Boolean(body?.info?.more_records) };
     },
+    getNextPageParam: (last, all) => (last.more ? all.length + 1 : undefined),
   });
+  // Timeline "added" events derive from `loaded`, so they cover only the pages fetched so far
+  // (the first 20 until "Show more"), not the whole list.
+  const loaded = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
   const [uploading, setUploading] = useState<UploadState[]>([]);
   const deleted = useSyncExternalStore(
     subscribe,
@@ -237,9 +241,9 @@ export function useAttachments(
     [orgSlug, parentModule, parentId, refresh],
   );
 
-  const rows = useMemo(() => (query.data ?? []).map(toRow), [query.data]);
+  const rows = useMemo(() => loaded.map(toRow), [loaded]);
   const events = useMemo(() => {
-    const added = (query.data ?? []).map(
+    const added = loaded.map(
       (item): TimelineEvent => ({
         id: `attachment-${item.id}`,
         at: item.Created_Time,
@@ -252,13 +256,16 @@ export function useAttachments(
     );
     const mine = deleted.filter((d) => d.key === `${parentModule}:${parentId}`).map((d) => d.event);
     return [...added, ...mine];
-  }, [query.data, deleted, parentModule, parentId]);
+  }, [loaded, deleted, parentModule, parentId]);
 
   return {
     rows,
     events,
     loading: query.isLoading,
     error: query.isError ? "Could not load attachments." : null,
+    hasMore: Boolean(query.hasNextPage),
+    loadingMore: query.isFetchingNextPage,
+    loadMore: () => void query.fetchNextPage(),
     uploading,
     upload,
     attachLink,

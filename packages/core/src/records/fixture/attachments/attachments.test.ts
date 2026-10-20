@@ -1,9 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { ATTACHMENT_CARD_MODULES, ATTACHMENT_PARENT_MODULES } from "../../../attachments/modules";
 import { ForbiddenError, NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
 import type { OrgContext } from "../../../tenancy/types";
 import type { RecordData, RecordInput } from "../../contract";
-import { createFixtureAttachmentLifecycle, createFixtureRecordService } from "../index";
+import type { FixtureModuleStore } from "../hooks";
+import {
+  createFixtureAttachmentLifecycle,
+  createFixtureRecordService,
+  createFixtureRecycleBinService,
+} from "../index";
 import { fixtureModules, supportedModules } from "../registry";
 import { attachmentParentModules, attachmentsMetadata } from "./metadata";
 import { generateFixtureAttachments } from "./seed";
@@ -25,6 +31,10 @@ function make() {
     service: createFixtureRecordService(context),
     lifecycle: createFixtureAttachmentLifecycle(context),
     context,
+    purge: async () => {
+      const bin = createFixtureRecycleBinService(context);
+      await bin.purge((await bin.list()).entries.map((entry) => entry.id));
+    },
   };
 }
 const file = (module: string, id: string, extra: RecordInput = {}): RecordInput => ({
@@ -46,6 +56,17 @@ async function lead(service: ReturnType<typeof createFixtureRecordService>, name
 }
 
 describe("Attachments record contract", () => {
+  it("derives fixture parent validation from the shared API module definition", () => {
+    expect(attachmentParentModules).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(
+      attachmentsMetadata.fields.find((field) => field.apiName === "Parent_Id")?.lookup?.modules,
+    ).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(attachmentParentModules).not.toContain("Calls");
+    expect(ATTACHMENT_CARD_MODULES).toEqual(["Leads", "Contacts", "Accounts", "Deals"]);
+    expect(attachmentParentModules).toEqual(
+      expect.arrayContaining(["Tasks", "Events", "Campaigns", "Cases", "Solutions"]),
+    );
+  });
   it("registers evidenced metadata with empty seeds and hides internal fields", async () => {
     const { service } = make();
     expect(generateFixtureAttachments()).toEqual([]);
@@ -100,8 +121,13 @@ describe("Attachments record contract", () => {
     async (module) => {
       const { service } = make();
       const [view] = await service.listViews(module);
-      const parent = (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
-        .records[0];
+      const parent =
+        module === "Notes"
+          ? await service.create("Notes", {
+              Parent_Id: { module: "Leads", id: (await lead(service)).id },
+            })
+          : (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
+              .records[0];
       if (!parent) throw new Error("Missing fixture parent.");
       const record = await service.create("Attachments", link(module, parent.id));
       expect((await service.get("Attachments", record.id)).fields.Parent_Id).toMatchObject({
@@ -110,10 +136,122 @@ describe("Attachments record contract", () => {
       });
     },
   );
+  it("rejects attachments on Notes whose ultimate parent is a Call", async () => {
+    const { service } = make();
+    const view = requireValue((await service.listViews("Calls"))[0]);
+    const parent = requireValue(
+      (await service.list("Calls", { ...listQuery, viewId: view.id })).records[0],
+    );
+    const note = await service.create("Notes", {
+      Parent_Id: { module: "Calls", id: parent.id },
+    });
+    expect((await service.get("Notes", note.id)).id).toBe(note.id);
+    await expect(service.create("Attachments", link("Notes", note.id))).rejects.toMatchObject({
+      fieldErrors: { Parent_Id: ["Choose a supported ultimate parent record."] },
+    });
+    expect((await service.list("Attachments", listQuery)).records).toEqual([]);
+  });
+  it.each(["Tasks", "Events", "Campaigns", "Cases", "Solutions"])(
+    "publishes, reads and deletes %s files within their tenant",
+    async (module) => {
+      const { service, lifecycle, purge } = make();
+      const parent = await service.create(
+        module,
+        module === "Events"
+          ? {
+              Event_Title: "Synthetic",
+              Meeting_Venue__s: "In-office",
+              Start_DateTime: "2030-01-01T10:00:00Z",
+              End_DateTime: "2030-01-01T11:00:00Z",
+            }
+          : module === "Campaigns"
+            ? { Campaign_Name: "Synthetic" }
+            : module === "Solutions"
+              ? { Solution_Title: "Synthetic" }
+              : module === "Cases"
+                ? { Subject: "Synthetic", Status: "New", Case_Origin: "Phone" }
+                : { Subject: "Synthetic" },
+      );
+      const attachment = await service.create("Attachments", file(module, parent.id));
+      lifecycle.publish(attachment.id, published);
+      expect((await service.get("Attachments", attachment.id)).id).toBe(attachment.id);
+      const other = make();
+      await expect(other.service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      await expect(
+        other.service.create("Attachments", file(module, parent.id)),
+      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(other.service.delete("Attachments", [attachment.id])).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      const activityPeers = [];
+      for (const activity of ["Tasks", "Events", "Calls"]) {
+        const view = requireValue((await service.listViews(activity))[0]);
+        const rows = await service.list(activity, { ...listQuery, viewId: view.id });
+        activityPeers.push({
+          module: activity,
+          id: requireValue(rows.records.find((row) => activity !== module || row.id !== parent.id))
+            .id,
+        });
+      }
+      await service.delete(module, [parent.id]);
+      for (const peer of activityPeers)
+        expect((await service.get(peer.module, peer.id)).id).toBe(peer.id);
+      await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
+      expect(lifecycle.cleanupIntents()).toEqual([]);
+      await purge();
+      expect(lifecycle.cleanupIntents()).toEqual([
+        { attachmentId: attachment.id, storageKey: published.storageKey },
+      ]);
+    },
+  );
+  it.each(["Tasks", "Events", "Calls", "Campaigns"])(
+    "cascades %s notes without deleting other activities",
+    (module) => {
+      // Model pending Notes parent support at the hook boundary, without enabling its API.
+      const stores = new Map<string, FixtureModuleStore>();
+      const moduleStore = (name: string): FixtureModuleStore => {
+        let store = stores.get(name);
+        if (!store) {
+          store = { records: new Map(), nextId: 1n };
+          stores.set(name, store);
+        }
+        return store;
+      };
+      for (const activity of ["Tasks", "Events", "Calls"]) {
+        moduleStore(activity).records.set("retained", {
+          id: "retained",
+          fields: { Subject: "Synthetic" },
+        });
+      }
+      moduleStore("Notes").records.set("note", {
+        id: "note",
+        fields: { Parent_Id: { module, id: "deleted" } },
+      });
+      for (const [id, parentModule, parentId] of [
+        ["direct", module, "deleted"],
+        ["nested", "Notes", "note"],
+        ["retained", module, "retained"],
+      ] as const) {
+        moduleStore("Attachments").records.set(id, {
+          id,
+          fields: { Parent_Id: { module: parentModule, id: parentId }, $type: "link" },
+        });
+      }
+      const hook = fixtureModules[module]?.afterDelete;
+      expect(hook).toBeTypeOf("function");
+      hook?.(["deleted"], { registeredModules: Object.keys(fixtureModules), moduleStore });
+      expect(moduleStore("Notes").records.size).toBe(0);
+      expect([...moduleStore("Attachments").records.keys()]).toEqual(["retained"]);
+      for (const activity of ["Tasks", "Events", "Calls"])
+        expect(moduleStore(activity).records.has("retained")).toBe(true);
+    },
+  );
   it("rejects invalid modules, malformed and absent parents and mandatory fields", async () => {
     const { service } = make();
     const parent = await lead(service);
-    for (const module of ["Tasks", "Events", "Calls", "Attachments", "Unknown"]) {
+    for (const module of ["Calls", "Attachments", "Unknown"]) {
       await expect(service.create("Attachments", file(module, parent.id))).rejects.toBeInstanceOf(
         ValidationError,
       );
@@ -207,7 +345,7 @@ describe("Attachments record contract", () => {
     },
   );
   it("cascades direct and note attachments after full parent batch validation", async () => {
-    const { service, lifecycle } = make();
+    const { service, lifecycle, purge } = make();
     const parent = await lead(service);
     const other = await lead(service, "Other");
     const note = await service.create("Notes", { Parent_Id: { module: "Leads", id: parent.id } });
@@ -236,10 +374,12 @@ describe("Attachments record contract", () => {
     );
     expect(lifecycle.cleanupIntents()).toEqual([]);
     await service.delete("Leads", [parent.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
     await expect(service.get("Notes", note.id)).rejects.toBeInstanceOf(NotFoundError);
     expect(
       (await service.list("Attachments", listQuery)).records.map((record) => record.id),
     ).toEqual([retained.id]);
+    await purge();
     expect(lifecycle.cleanupIntents()).toEqual(
       expect.arrayContaining([
         { attachmentId: direct.id, storageKey: "opaque-key" },
@@ -253,11 +393,13 @@ describe("Attachments record contract", () => {
     expect(lifecycle.cleanupIntents()).toHaveLength(2);
   });
   it("keeps cleanup intents across store replacements and rolls back failed cascades", async () => {
-    const { service, lifecycle, context } = make();
+    const { service, lifecycle, context, purge } = make();
     const parent = await lead(service);
     const first = await service.create("Attachments", file("Leads", parent.id));
     lifecycle.publish(first.id, published);
     await service.delete("Attachments", [first.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await purge();
     const second = await service.create("Attachments", file("Leads", parent.id));
     lifecycle.publish(second.id, { ...published, storageKey: "second-key" });
     const expected = [{ attachmentId: first.id, storageKey: "opaque-key" }];
@@ -276,12 +418,14 @@ describe("Attachments record contract", () => {
     freshLifecycle.acknowledgeCleanup(first.id);
     expect(lifecycle.cleanupIntents()).toEqual([]);
     await service.delete("Leads", [parent.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await purge();
     expect(freshLifecycle.cleanupIntents()).toEqual([
       { attachmentId: second.id, storageKey: "second-key" },
     ]);
   });
   it("rolls back attachment deletion and cleanup when parent history cannot commit", async () => {
-    const { context, lifecycle } = make();
+    const { context, lifecycle, purge } = make();
     let rejectHistory = false;
     const service = createFixtureRecordService(context, {
       beforeHistoryAppend() {
@@ -298,6 +442,8 @@ describe("Attachments record contract", () => {
     expect(lifecycle.cleanupIntents()).toEqual([]);
     rejectHistory = false;
     await service.delete("Leads", [parent.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await purge();
     expect(lifecycle.cleanupIntents()).toEqual([
       { attachmentId: attachment.id, storageKey: published.storageKey },
     ]);
@@ -310,7 +456,7 @@ describe("Attachments record contract", () => {
   it.each(["Leads", "Contacts"])(
     "cascades campaign memberships and attachments together when deleting %s",
     async (module) => {
-      const { service, lifecycle } = make();
+      const { service, lifecycle, purge } = make();
       const parent = await service.create(module, {
         Last_Name: "Synthetic Member",
         ...(module === "Leads" ? { Company: "Synthetic Company" } : {}),
@@ -323,10 +469,12 @@ describe("Attachments record contract", () => {
       const attachment = await service.create("Attachments", file(module, parent.id));
       lifecycle.publish(attachment.id, published);
       await service.delete(module, [parent.id]);
+      expect(lifecycle.cleanupIntents()).toEqual([]);
       await expect(service.get("Campaign_Members", membership.id)).rejects.toBeInstanceOf(
         NotFoundError,
       );
       await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
+      await purge();
       expect(lifecycle.cleanupIntents()).toEqual([
         { attachmentId: attachment.id, storageKey: published.storageKey },
       ]);
@@ -334,34 +482,44 @@ describe("Attachments record contract", () => {
     },
   );
   it("removes note attachments on direct note deletion and file attachments on direct deletion", async () => {
-    const { service, lifecycle } = make();
+    const { service, lifecycle, purge } = make();
     const parent = await lead(service);
     const note = await service.create("Notes", { Parent_Id: { module: "Leads", id: parent.id } });
     const child = await service.create("Attachments", file("Notes", note.id));
     lifecycle.publish(child.id, published);
     await service.delete("Notes", [note.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
     await expect(service.get("Attachments", child.id)).rejects.toBeInstanceOf(NotFoundError);
     const direct = await service.create("Attachments", file("Leads", parent.id));
     lifecycle.publish(direct.id, published);
     await service.delete("Attachments", [direct.id]);
+    expect(lifecycle.cleanupIntents()).toEqual([]);
+    await purge();
     expect(lifecycle.cleanupIntents()).toHaveLength(2);
   });
-  it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+  it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"])(
     "cascades %s direct and note children",
     async (module) => {
-      const { service, lifecycle } = make();
+      const { service, lifecycle, purge } = make();
       const [view] = await service.listViews(module);
-      const parent = requireValue(
-        (await service.list(module, { ...listQuery, viewId: requireValue(view).id })).records[0],
-      );
+      const parent =
+        module === "Solutions"
+          ? await service.create(module, { Solution_Title: "Synthetic" })
+          : requireValue(
+              (
+                await service.list(module, { ...listQuery, viewId: requireValue(view).id })
+              ).records.find((row) => row.fields.Locked__s !== true),
+            );
       const note = await service.create("Notes", { Parent_Id: { module, id: parent.id } });
       const direct = await service.create("Attachments", file(module, parent.id));
       const nested = await service.create("Attachments", file("Notes", note.id));
       lifecycle.publish(direct.id, published);
       lifecycle.publish(nested.id, published);
       await service.delete(module, [parent.id]);
+      expect(lifecycle.cleanupIntents()).toEqual([]);
       await expect(service.get("Attachments", direct.id)).rejects.toBeInstanceOf(NotFoundError);
       await expect(service.get("Attachments", nested.id)).rejects.toBeInstanceOf(NotFoundError);
+      await purge();
       expect(lifecycle.cleanupIntents()).toHaveLength(2);
     },
   );
@@ -415,6 +573,8 @@ describe("Attachments record contract", () => {
     expect(() => second.lifecycle.publish(attachment.id, published)).toThrow(NotFoundError);
     expect((await second.service.list("Attachments", listQuery)).records).toEqual([]);
     await first.service.delete("Leads", [parent.id]);
+    expect(first.lifecycle.cleanupIntents()).toEqual([]);
+    await first.purge();
     expect(first.lifecycle.cleanupIntents()).toHaveLength(1);
     expect(second.lifecycle.cleanupIntents()).toEqual([]);
   });

@@ -10,10 +10,12 @@ import type {
 } from "@crm/core/records";
 import { lookupTargetModules } from "@crm/core/records";
 import { type ReactNode, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
@@ -31,7 +33,7 @@ import {
   resolveModuleScreenByApiName,
 } from "@/modules/registry";
 import { DateTimeInput } from "./datetime-input";
-import type { LookupPickerRule, NumberLimits } from "./form-model";
+import type { FormRules, LookupPickerRule, NumberLimits } from "./form-model";
 import { ParticipantsInput } from "./participants-input";
 import { SelectRecordDialog } from "./select-record-dialog";
 
@@ -57,6 +59,7 @@ export interface FieldInputProps {
   searchLabel?: string;
   currencyPrefix?: string;
   currencyInformation?: string;
+  currencyHelp?: NonNullable<FormRules["currencyHelp"]>[string];
   textPrefix?: string;
   /** Business range of a numeric entry; metadata carries no minimum or maximum. */
   numberLimits?: NumberLimits;
@@ -186,6 +189,7 @@ export function FieldInput({
   searchLabel,
   currencyPrefix,
   currencyInformation,
+  currencyHelp,
   textPrefix,
   numberLimits,
   lookupPicker,
@@ -239,6 +243,7 @@ export function FieldInput({
   const text = typeof value === "string" ? value : "";
   const number = typeof value === "number" ? value : Number.NaN;
   switch (field.dataType) {
+    case "autonumber":
     case "text":
     case "email":
     case "phone":
@@ -261,6 +266,13 @@ export function FieldInput({
           prefix={
             textPrefix ? (
               <span className="record-prefix pl-(--space-3)">{textPrefix}</span>
+            ) : undefined
+          }
+          endAction={
+            field.readOnly ? (
+              <span role="img" className="record-input-end" aria-label="Locked">
+                <Icons.lock className="record-input-end-icon" aria-hidden />
+              </span>
             ) : undefined
           }
           onChange={(next) => onChange(next === "" ? null : next)}
@@ -333,6 +345,34 @@ export function FieldInput({
               <span role="img" className="record-input-end" aria-label="Locked">
                 <Icons.lock className="record-input-end-icon" aria-hidden />
               </span>
+            ) : field.dataType === "currency" && currencyHelp ? (
+              <PopoverTrigger>
+                <Button
+                  slot={null}
+                  variant="ghost"
+                  className="record-input-end"
+                  aria-label={`${field.label} information`}
+                  isDisabled={disabled}
+                >
+                  <Icons.recordInfo className="record-input-end-icon" aria-hidden />
+                </Button>
+                <Popover
+                  title={`${field.label} information`}
+                  hideTitle
+                  placement="bottom end"
+                  className="max-w-xs text-md text-text"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute -top-1 right-4 size-2 rotate-45 border-l border-t border-border bg-surface"
+                  />
+                  <p>{currencyHelp.text}</p>
+                  <p>
+                    For example, <strong>{currencyHelp.expression}</strong> gives{" "}
+                    <strong>{currencyHelp.result}</strong>.
+                  </p>
+                </Popover>
+              </PopoverTrigger>
             ) : field.dataType === "currency" && currencyInformation ? (
               <span role="img" className="record-input-end" aria-label={currencyInformation}>
                 <Icons.recordInfo className="record-input-end-icon" aria-hidden />

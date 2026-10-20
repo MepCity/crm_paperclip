@@ -56,6 +56,7 @@ describe("Tasks activity foundation", () => {
       "Quotes",
       "Sales_Orders",
       "Vendors",
+      "Solutions",
     ]);
     const metadata = await make().getModule("Tasks");
     expect(

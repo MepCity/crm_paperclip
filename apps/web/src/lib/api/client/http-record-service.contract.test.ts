@@ -4,6 +4,7 @@ import type { OrgContext } from "@crm/core/records";
 import { describeCampaignMembershipContract } from "@crm/core/records/campaign-contract-suite";
 import {
   describeActivityReadContract,
+  describeNotesContract,
   describeRecordServiceContract,
 } from "@crm/core/records/contract-suite";
 import {
@@ -13,7 +14,10 @@ import {
   tasksRecordServiceContractModule,
 } from "@crm/core/records/contract-suite-module";
 import { describeDiscoveryContract } from "@crm/core/records/discovery-contract-suite";
-import { createFixtureRecordService } from "@crm/core/records/fixture";
+import {
+  createFixtureRecordService,
+  type FixtureRecordServiceOptions,
+} from "@crm/core/records/fixture";
 import { describeKanbanViewContract } from "@crm/core/records/kanban-contract-suite";
 import { describe, expect, it } from "vitest";
 import { decodeError, encodeError } from "@/lib/api/wire/errors";
@@ -92,7 +96,7 @@ async function operationApiFetch(
   throw decodeError(response.status, parsed);
 }
 
-function operationDeps(ctx: OrgContext, options?: { now?: () => Date }): OperationDeps {
+function operationDeps(ctx: OrgContext, options?: FixtureRecordServiceOptions): OperationDeps {
   return {
     records: createFixtureRecordService(ctx, options),
     members: async () => [
@@ -175,6 +179,7 @@ describe("Events HTTP participants and opaque reminders", () => {
     expect(metadata.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
       "Remind_At",
       "Participants",
+      "Tag",
       "Remind_Participants",
     ]);
     const arrays = {
@@ -247,7 +252,7 @@ describeKanbanViewContract("http", (ctx, options) => {
   });
 });
 
-const campaignHttpFactory = (ctx: OrgContext, options?: { now?: () => Date }) => {
+const campaignHttpFactory = (ctx: OrgContext, options?: FixtureRecordServiceOptions) => {
   const deps = operationDeps(ctx, options);
   return createHttpRecordService({
     orgSlug: ctx.orgSlug,
@@ -260,3 +265,11 @@ describeRecordServiceContract(
   campaignsRecordServiceContractModule,
 );
 describeCampaignMembershipContract("http", campaignHttpFactory);
+
+describeNotesContract("http", (ctx, options) => {
+  const deps = operationDeps(ctx, options);
+  return createHttpRecordService({
+    orgSlug: ctx.orgSlug,
+    fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
+  });
+});

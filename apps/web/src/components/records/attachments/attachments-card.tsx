@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
+import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 import { type AttachSource, AttachSourceMenu } from "./attach-source-menu";
 
 export type { AttachSource };
@@ -27,6 +28,10 @@ export interface AttachmentsCardProps {
   onFilesSelected: (files: File[]) => void;
   onDownload: (row: AttachmentRow) => void;
   onDelete: (row: AttachmentRow) => Promise<void> | void;
+  /** More pages exist on the server; shows the "Show more" control. */
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
   canEdit?: boolean;
   /** Rail jump target (AT-01). */
   targetId?: string;
@@ -47,6 +52,9 @@ export function AttachmentsCard({
   onFilesSelected,
   onDownload,
   onDelete,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
   canEdit = true,
   targetId = "attachments",
 }: AttachmentsCardProps) {
@@ -156,54 +164,75 @@ export function AttachmentsCard({
                   </td>
                 </tr>
               ))}
-              {rows.map((row) => (
-                <tr
-                  key={row.id}
-                  data-attachment-row={row.id}
-                  className="group border-b border-panel-border last:border-b-0"
-                >
-                  <td className="px-2 py-2">
-                    {row.type === "link" && row.linkUrl ? (
-                      <a
-                        href={row.linkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {row.fileName}
-                      </a>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onDownload(row)}
-                        className="text-primary hover:underline"
-                      >
-                        {row.fileName}
-                      </button>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 text-text">{row.attachedBy}</td>
-                  <td className="px-2 py-2 text-text">{row.createdTime}</td>
-                  <td className="px-2 py-2 text-text">
-                    {row.type === "link" ? "" : formatAttachmentSize(row.size)}
-                  </td>
-                  <td className="px-2 py-2 text-right">
-                    {canEdit ? (
-                      <Button
-                        variant="icon"
-                        size="compact"
-                        aria-label={`Delete ${row.fileName}`}
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                        onPress={() => setPendingDelete(row)}
-                      >
-                        <Icons.close aria-hidden className="size-3.5" />
-                      </Button>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const safeUrl =
+                  row.type === "link" && row.linkUrl ? safeAttachmentUrl(row.linkUrl) : null;
+                return (
+                  <tr
+                    key={row.id}
+                    data-attachment-row={row.id}
+                    className="group border-b border-panel-border last:border-b-0"
+                  >
+                    <td className="px-2 py-2">
+                      {row.type === "link" ? (
+                        safeUrl ? (
+                          <a
+                            href={safeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {row.fileName}
+                          </a>
+                        ) : (
+                          <span className="text-text">{row.fileName}</span>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onDownload(row)}
+                          className="text-primary hover:underline"
+                        >
+                          {row.fileName}
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-text">{row.attachedBy}</td>
+                    <td className="px-2 py-2 text-text">{row.createdTime}</td>
+                    <td className="px-2 py-2 text-text">
+                      {row.type === "link" ? "" : formatAttachmentSize(row.size)}
+                    </td>
+                    <td className="px-2 py-2 text-right">
+                      {canEdit ? (
+                        <Button
+                          variant="icon"
+                          size="compact"
+                          aria-label={`Delete ${row.fileName}`}
+                          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                          onPress={() => setPendingDelete(row)}
+                        >
+                          <Icons.close aria-hidden className="size-3.5" />
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+          {hasMore ? (
+            <div className="py-2 text-center">
+              <Button
+                variant="recordSecondary"
+                size="compact"
+                data-part="show-more"
+                isDisabled={loadingMore}
+                onPress={() => onLoadMore?.()}
+              >
+                {loadingMore ? "Loading…" : "Show more"}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
 

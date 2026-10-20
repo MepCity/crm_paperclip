@@ -1,3 +1,4 @@
+import type { ActivityFilterValue } from "@crm/core/records";
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
@@ -7,7 +8,6 @@ import {
   ACTIVITY_CHOICES,
   ACTIVITY_DUE_RANGES,
   ActivityFilterEditor,
-  type ActivityFilterValue,
 } from "./activity-filter-editor";
 
 afterEach(cleanup);

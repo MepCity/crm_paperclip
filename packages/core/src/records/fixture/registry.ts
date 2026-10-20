@@ -17,6 +17,9 @@ import { campaignsHooks } from "./campaigns/hooks";
 import { campaignsMetadata } from "./campaigns/metadata";
 import { fullName as campaignsFullName, generateFixtureCampaigns } from "./campaigns/seed";
 import { campaignsViews } from "./campaigns/views";
+import { casesMetadata } from "./cases/metadata";
+import { fullName as casesFullName, generateFixtureCases } from "./cases/seed";
+import { casesViews } from "./cases/views";
 import {
   contactRolesHooks,
   removeContactRolesFor,
@@ -42,6 +45,10 @@ import { notesHooks, removeNotesForParents, transferNotesToMaster } from "./note
 import { notesMetadata } from "./notes/metadata";
 import { generateFixtureNotes } from "./notes/seed";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
+import { solutionsMetadata } from "./solutions/metadata";
+import { generateFixtureSolutions, fullName as solutionsFullName } from "./solutions/seed";
+import { solutionsViews } from "./solutions/views";
+import { removeRecordTags } from "./tags";
 import { tasksHooks } from "./tasks/hooks";
 import { tasksMetadata } from "./tasks/metadata";
 import { generateFixtureTasks, fullName as tasksFullName } from "./tasks/seed";
@@ -49,6 +56,7 @@ import { tasksViews } from "./tasks/views";
 import { leadsViews } from "./views";
 
 export interface FixtureModuleBundle extends FixtureModuleHooks {
+  autoNumberField?: string;
   readOnly?: boolean;
   /** Related-list records remain available to CRUD, but not discovery surfaces. */
   childModule?: boolean;
@@ -108,7 +116,41 @@ function parentMergeHook(module: string): NonNullable<FixtureModuleHooks["transf
   };
 }
 
-export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
+const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
+  Solutions: {
+    autoNumberField: "Solution_Number",
+    afterDelete: parentDeleteHook("Solutions"),
+    transferMergedRecords: parentMergeHook("Solutions"),
+    metadata: solutionsMetadata,
+    views: solutionsViews,
+    displayNameField: "Solution_Title",
+    fullName: solutionsFullName,
+    generateSeed: generateFixtureSolutions,
+    managedFields: new Set(
+      [...contactsManaged].filter((field) => field !== "Full_Name").concat("Solution_Number"),
+    ),
+    searchFields: ["Solution_Title", "Solution_Number"],
+    initialNextId: 280000000000000000n,
+    createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
+  },
+
+  Cases: {
+    autoNumberField: "Case_Number",
+    afterDelete: parentDeleteHook("Cases"),
+    transferMergedRecords: parentMergeHook("Cases"),
+    metadata: casesMetadata,
+    views: casesViews,
+    displayNameField: "Subject",
+    fullName: casesFullName,
+    generateSeed: generateFixtureCases,
+    managedFields: new Set(
+      [...contactsManaged].filter((field) => field !== "Full_Name").concat("Case_Number"),
+    ),
+    searchFields: ["Subject", "Case_Number"],
+    initialNextId: 260000000000000000n,
+    createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
+  },
+
   Campaigns: {
     ...campaignsHooks,
     afterDelete: parentDeleteHook("Campaigns"),
@@ -227,6 +269,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Events: {
+    afterDelete: parentDeleteHook("Events"),
     ...eventsHooks,
     metadata: eventsMetadata,
     views: eventsViews,
@@ -239,6 +282,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Calls: {
+    afterDelete: parentDeleteHook("Calls"),
     ...callsHooks,
     metadata: callsMetadata,
     views: callsViews,
@@ -251,6 +295,7 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ CTI_Entry: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Tasks: {
+    afterDelete: parentDeleteHook("Tasks"),
     ...tasksHooks,
     metadata: tasksMetadata,
     views: tasksViews,
@@ -338,6 +383,32 @@ export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = {
     }),
   },
 };
+
+/** Tag support follows metadata, including modules added after this slice. */
+export const fixtureModules: Readonly<Record<string, FixtureModuleBundle>> = Object.fromEntries(
+  Object.entries(moduleBundles).map(([module, bundle]) => {
+    if (!bundle.metadata.fields.some((field) => field.apiName === "Tag")) return [module, bundle];
+    return [
+      module,
+      {
+        ...bundle,
+        metadata: {
+          ...bundle.metadata,
+          fields: bundle.metadata.fields.map((field) =>
+            field.apiName === "Tag" ? { ...field, acceptsJsonArray: true } : field,
+          ),
+        },
+        afterDelete(
+          ids: readonly string[],
+          ctx: Parameters<NonNullable<FixtureModuleHooks["afterDelete"]>>[1],
+        ) {
+          bundle.afterDelete?.(ids, ctx);
+          removeRecordTags(ctx.moduleStore(module), ids);
+        },
+      },
+    ];
+  }),
+);
 
 export const supportedModules = Object.keys(fixtureModules).filter(
   (name) => !fixtureModules[name]?.childModule,

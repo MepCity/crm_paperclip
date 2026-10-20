@@ -20,12 +20,13 @@ import {
 import { isCampaignInlineEditable } from "./campaigns-inline-edit";
 import { formatCampaignsLastUpdateLabel } from "./campaigns-last-update";
 import { campaignsRecordHeaderIdentity } from "./campaigns-record-header";
+import { campaignsRelatedListRail, campaignsRelatedLists } from "./campaigns-related-lists";
 import { CAMPAIGNS_LIST_CURRENCY_CODE, campaignsListPageConfig } from "./list-config";
 import { buildCampaignsFilterGroups } from "./list-filters";
 
 /**
- * Not registered in `registry.ts`. The more-options menu and the timeline are temporary
- * Accounts bindings; the record detail tasks replace them. No related-list rail yet.
+ * Registered in `registry.ts`. The more-options menu and the timeline are temporary
+ * Accounts bindings; the record detail tasks replace them. The rail is provisional (MEP-812).
  */
 export const campaignsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Campaigns",
@@ -45,7 +46,7 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
   detail: {
     header: campaignsRecordHeaderIdentity,
     hasPortrait: false,
-    recordNavigation: false,
+    recordNavigation: true,
     businessCard: buildCampaignsBusinessCardFields,
     sections: buildCampaignsDetailSections,
     inlineEditable: isCampaignInlineEditable,
@@ -54,12 +55,18 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
     moreOptions: buildAccountsRecordMoreMenuGroups,
     deleteTitle: CAMPAIGNS_DELETE_CONFIRM_TITLE,
     deleteMessage: CAMPAIGNS_DELETE_CONFIRM_MESSAGE,
+    relatedLists: campaignsRelatedLists,
+    relatedListRail: campaignsRelatedListRail,
     timeline: {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
       events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };

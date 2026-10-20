@@ -1,8 +1,16 @@
 import type { FieldValue, RecordData, RecordInput } from "../contract";
 
+import type { Tag } from "../tags";
+
 export interface FixtureModuleStore {
+  tags?: Map<string, Tag>;
+  tagLinks?: Map<string, Set<string>>;
+  /** Canonical rows partitioned out of active reads until restore or purge. */
+  deletedRecords?: Map<string, RecordData>;
+  deletedTagLinks?: Map<string, Set<string>>;
   records: Map<string, RecordData>;
   nextId: bigint;
+  nextAutoNumber?: bigint;
   attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 
@@ -19,6 +27,8 @@ export interface FixtureModuleHooks {
     previous: Readonly<Record<string, FieldValue>> | undefined,
     ctx: FixtureHookContext,
   ) => void;
+  /** Required fields that may stay empty for this record's field values. */
+  optionalFields?: (fields: Readonly<Record<string, FieldValue>>) => readonly string[];
   readRecord?: (record: RecordData, now: Date) => RecordData;
   afterWrite?: (
     record: RecordData,

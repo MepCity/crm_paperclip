@@ -520,3 +520,87 @@ it("serves child CRUD and criteria on existing generic endpoints", async () => {
     fields.find((field: { api_name: string }) => field.api_name === "Note_Title").mass_update,
   ).toBe(true);
 });
+
+it.each([
+  [
+    "Cases",
+    { Subject: "Wire case", Status: "New", Case_Origin: "Email" },
+    "Subject",
+    "Case_Number",
+    30,
+  ],
+  ["Solutions", { Solution_Title: "Wire solution" }, "Solution_Title", "Solution_Number", 20],
+] as const)(
+  "serves %s through the generic metadata and CRUD operations",
+  async (module, row, title, number, fieldCount) => {
+    const request = {
+      params: { module },
+      query: { cvid: `all-${module.toLowerCase()}` },
+      body: { data: [row] },
+    };
+    const fields = json(await operations.fields.run(deps, request)).body.fields;
+    expect(fields).toHaveLength(fieldCount);
+    expect(fields.find((field: { api_name: string }) => field.api_name === number)).toMatchObject({
+      data_type: "autonumber",
+      read_only: true,
+    });
+    const created = json(await operations.create.run(deps, request));
+    const id = created.body.data[0].details.id;
+    const recordRequest = { ...request, params: { module, recordId: id } };
+    const read = json(await operations.record.run(deps, recordRequest)).body.data[0];
+    expect(read).toMatchObject(row);
+    expect(read[number]).toMatch(/^\d+$/);
+    const filter = {
+      filters: encodeCriteria({
+        field: title,
+        comparator: "equal",
+        value: row[title as keyof typeof row] as string,
+      }),
+    };
+    expect(
+      json(await operations.bulk.run(deps, { ...request, body: filter })).body.data.map(
+        (item: { id: string }) => item.id,
+      ),
+    ).toEqual([id]);
+    expect(json(await operations.count.run(deps, { ...request, body: filter })).body.count).toBe(1);
+    await operations.update.run(deps, {
+      ...recordRequest,
+      body: { data: [{ [title]: "Updated wire record" }] },
+    });
+    expect(json(await operations.record.run(deps, recordRequest)).body.data[0][number]).toBe(
+      read[number],
+    );
+    await operations.delete.run(deps, recordRequest);
+    await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
+  },
+);
+
+it.each(["Tasks", "Events", "Calls", "Campaigns", "Cases", "Solutions"])(
+  "decodes Notes Parent_Id plus $se_module for %s and rejects mismatches",
+  async (module) => {
+    const view = (await deps.records.listViews(module)).find((view) => view.criteria === null);
+    if (!view) throw new Error("Missing view");
+    const parent = (await deps.records.list(module, { viewId: view.id, page: 1, perPage: 10 }))
+      .records[0];
+    if (!parent) throw new Error("Missing parent");
+    const request = {
+      params: { module: "Notes" },
+      query: {},
+      body: {
+        data: [{ Parent_Id: { id: parent.id }, $se_module: module, Note_Content: "Wire note" }],
+      },
+    };
+    const created = json(await operations.create.run(deps, request));
+    const note = await deps.records.get("Notes", created.body.data[0].details.id);
+    expect(note.fields.Parent_Id).toMatchObject({ module, id: parent.id });
+    for (const row of [
+      { Parent_Id: { id: parent.id }, $se_module: "Unknown" },
+      { Parent_Id: { id: parent.id, module: "Leads" }, $se_module: module },
+      { Parent_Id: { id: parent.id }, $se_module: null },
+    ]) {
+      await expect(
+        operations.create.run(deps, { ...request, body: { data: [row] } }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
+  },
+);

@@ -22,6 +22,8 @@ export type RecordCommand = {
   laterModule?: ModuleKey;
   /** Attached dropdown segment (e.g. Reschedule Call); label is its accessible name. */
   splitLabel?: string;
+  /** Rows the split segment opens as a menu; without them the segment is a plain button. */
+  splitMenu?: readonly { id: string; label: string; onAction: () => void }[];
 } & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
 export interface RecordMenuGroup {
   id: string;
@@ -44,7 +46,8 @@ export interface RecordHeaderProps {
   nextLabel: string;
   previousHref?: string;
   nextHref?: string;
-  addTags?: { label: string; laterModule: ModuleKey };
+  addTags?: { label: string; laterModule?: ModuleKey };
+  tagsContent?: import("react").ReactNode;
   showPortrait?: boolean;
   /** "inline" draws the portrait icon backgroundless at title height; default "tile". */
   portraitAppearance?: "tile" | "inline";
@@ -73,6 +76,7 @@ export function RecordHeader({
   previousHref,
   nextHref,
   addTags,
+  tagsContent,
   titleGlyph: TitleGlyph,
   titleHref,
   titleSuffix,
@@ -172,14 +176,15 @@ export function RecordHeader({
             </>
           ) : null}
         </h1>
-        {addTags ? (
-          <div className="mt-1 flex items-center gap-1.5">
-            <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
-            <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
-              {addTags.label}
-            </Button>
-          </div>
-        ) : null}
+        {tagsContent ??
+          (addTags ? (
+            <div className="mt-1 flex items-center gap-1.5">
+              <Icons.recordTag aria-hidden className="size-3.5 text-text-muted shrink-0" />
+              <Button variant="ghost" size="compact" laterModule={addTags.laterModule}>
+                {addTags.label}
+              </Button>
+            </div>
+          ) : null)}
       </div>
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
@@ -210,16 +215,44 @@ export function RecordHeader({
                     {command.label}
                   </Button>
                 )}
-                <Button
-                  variant={variant}
-                  size="actions"
-                  aria-label={command.splitLabel}
-                  isDisabled={command.isDisabled}
-                  laterModule={command.laterModule}
-                  className="rounded-l-none border-l border-l-white/40"
-                >
-                  <Icons.chevronDown aria-hidden className="h-4 w-4" />
-                </Button>
+                {command.splitMenu ? (
+                  <MenuTrigger>
+                    <Button
+                      variant={variant}
+                      size="actions"
+                      aria-label={command.splitLabel}
+                      isDisabled={command.isDisabled}
+                      className="rounded-l-none border-l border-l-white/40"
+                    >
+                      <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                    </Button>
+                    <Menu appearance="record" aria-label={command.splitLabel}>
+                      <MenuGroup>
+                        {command.splitMenu.map((item) => (
+                          <MenuItem
+                            key={item.id}
+                            id={item.id}
+                            appearance="record"
+                            onAction={item.onAction}
+                          >
+                            {item.label}
+                          </MenuItem>
+                        ))}
+                      </MenuGroup>
+                    </Menu>
+                  </MenuTrigger>
+                ) : (
+                  <Button
+                    variant={variant}
+                    size="actions"
+                    aria-label={command.splitLabel}
+                    isDisabled={command.isDisabled}
+                    laterModule={command.laterModule}
+                    className="rounded-l-none border-l border-l-white/40"
+                  >
+                    <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             );
           }

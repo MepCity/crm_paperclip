@@ -6,7 +6,9 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { CellValue } from "./cell-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   dataType: FieldDefinition["dataType"],
@@ -237,20 +239,31 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Campaigns" } })}
-      value={{ module: "Campaigns", id: "camp-1", name: "Big Campaign" }}
+      field={field("lookup", { lookup: { module: "Cases" } })}
+      value={{ module: "Cases", id: "case-1", name: "Big Case" }}
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Big Campaign" });
+  const casesLink = screen.getByRole("link", { name: "Big Case" });
+  expect(casesLink.getAttribute("href")).toBe("/tab/Cases/case-1");
+  expect(casesLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Documents" } })}
+      value={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Big Doc" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("M7");
+  expect(laterLink.getAttribute("data-later-module")).toBe("M9");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Campaigns" } })}
+      field={field("lookup", { lookup: { module: "Documents" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
@@ -323,3 +336,13 @@ test("numeric dates show date and time, or only the date on all-day rows", () =>
   );
   expect(screen.getByText("01.03.2026")).toBeTruthy();
 });
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show("lookup", { module, id: "record-1", name: "Support record" }, { lookup: { module } });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}

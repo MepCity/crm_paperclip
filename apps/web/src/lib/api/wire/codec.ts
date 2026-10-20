@@ -16,6 +16,7 @@ import type {
 } from "@crm/core/records";
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
+import { validateCampaignFilter } from "@crm/core/records/campaigns";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -151,7 +152,17 @@ export function encodeInput(
   return result;
 }
 export function decodeInput(row: unknown, metadata: ModuleMetadata): RecordInput {
-  const source = object(row, "data");
+  let source = object(row, "data");
+  if (metadata.apiName === "Notes" && Object.hasOwn(source, "$se_module")) {
+    const module = source.$se_module;
+    const parent = object(source.Parent_Id, "Parent_Id");
+    const field = metadata.fields.find((candidate) => candidate.apiName === "Parent_Id");
+    if (typeof module !== "string" || !field || !lookupTargetModules(field).includes(module))
+      invalid("$se_module");
+    if (parent.module !== undefined && parent.module !== module) invalid("Parent_Id");
+    source = { ...source, Parent_Id: { ...parent, module } };
+    delete source.$se_module;
+  }
   const result: Record<string, FieldValue> = Object.create(null);
   for (const [name, value] of Object.entries(source)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
@@ -692,4 +703,25 @@ export function decodeActivitySummaries(
       },
     ]),
   );
+}
+
+export function decodeCampaignFilter(
+  value: unknown,
+): import("@crm/core/records").CampaignFilterValue {
+  const wire = object(value, "campaignFilter");
+  if (Object.keys(wire).some((key) => !["campaign_ids", "member_statuses"].includes(key)))
+    invalid("campaignFilter");
+  const filter = {
+    campaignIds: wire.campaign_ids,
+    ...(wire.member_statuses === undefined ? {} : { memberStatuses: wire.member_statuses }),
+  };
+  validateCampaignFilter(filter);
+  return filter;
+}
+export function encodeCampaignFilter(value: import("@crm/core/records").CampaignFilterValue) {
+  validateCampaignFilter(value);
+  return {
+    campaign_ids: [...value.campaignIds],
+    ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
+  };
 }

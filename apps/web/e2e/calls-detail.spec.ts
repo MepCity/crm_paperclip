@@ -45,8 +45,16 @@ test.describe("Calls record detail", () => {
     await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
 
     // CD-05 & CD-05.1: Reschedule Call and Down arrow are present on scheduled calls
-    await expect(header.getByRole("button", { name: "Reschedule Call" })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Down arrow" })).toBeVisible();
+    await expect(
+      header
+        .getByRole("button", { name: "Reschedule Call" })
+        .or(header.getByRole("link", { name: "Reschedule Call" })),
+    ).toBeVisible();
+    await expect(
+      header
+        .getByRole("button", { name: "Down arrow" })
+        .or(header.getByRole("button", { name: "Reschedule options" })),
+    ).toBeVisible();
 
     // CD-06 absent: Header Edit button is suppressed (Edit is in More Options menu CD-07.1)
     const headerButtons = await header
@@ -56,10 +64,13 @@ test.describe("Calls record detail", () => {
       );
     expect(headerButtons).not.toContain("Edit");
 
-    // Command order: Reschedule Call, Down arrow, More Options, Previous Record, Next Record
+    // Command order: Reschedule Call, Down arrow / Reschedule options, More Options, Previous Record, Next Record
+    const splitLabel = headerButtons.includes("Reschedule options")
+      ? "Reschedule options"
+      : "Down arrow";
     const wanted = [
       "Reschedule Call",
-      "Down arrow",
+      splitLabel,
       "More Options",
       "Previous Record",
       "Next Record",
@@ -129,6 +140,20 @@ test.describe("Calls record detail", () => {
       "Print Preview",
       "Send Email",
     ]);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("More Options > Edit opens the edit route", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "More Options" })
+      .click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await expect(page).toHaveURL(/\/edit/);
     ignoreFailedResponses(pageErrors, [400]);
   });
 

@@ -2,9 +2,11 @@ import type { ModuleApiName } from "@crm/core/records";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
+  moduleDraftsPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordPath,
+  moduleTagsPath,
 } from "@/lib/crm-paths";
 import { leadsFilterGroups } from "./list-filters";
 
@@ -77,22 +79,32 @@ export const leadsListPageConfig: ModuleListScreenConfig = {
     { id: "mass-delete", label: "Mass Delete" },
     { id: "mass-update", label: "Mass Update" },
     { id: "mass-convert", label: "Mass Convert" },
-    { id: "tags", label: "Manage Tags", laterModule: "M11" },
+    { id: "tags", label: "Manage Tags" },
     { id: "assignment-rules", label: "Assignment Rules", laterModule: "M12" },
     { id: "drafts", label: "Drafts" },
     { id: "mass-email", label: "Mass Email", laterModule: "M10" },
     { id: "approve", label: "Approve Leads", laterModule: "P3" },
     { id: "deduplicate", label: "Deduplicate Leads" },
-    { id: "campaigns", label: "Add to Campaigns", laterModule: "M7" },
+    { id: "campaigns", label: "Add to Campaigns" },
     { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-    { id: "export", label: "Export Leads", laterModule: "M6" },
+    { id: "export", label: "Export Leads" },
     { id: "sheet", label: "Sheet view", laterModule: "P3" },
-    { id: "print", label: "Print View", laterModule: "M6", submenuIndicator: true },
+    {
+      id: "print",
+      label: "Print View",
+      submenuIndicator: true,
+      submenu: [
+        { id: "print-default", label: "Print Default view", laterModule: "M6" },
+        { id: "print-canvas", label: "Print Using Canvas", laterModule: "M6", accent: true },
+      ],
+    },
   ],
   paths: {
     defaultList: moduleListDefaultPath,
     customList: moduleListCustomPath,
     record: moduleRecordPath,
     create: moduleCreatePath,
+    tags: moduleTagsPath,
+    drafts: moduleDraftsPath,
   },
 };
