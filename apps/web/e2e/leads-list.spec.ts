@@ -1480,6 +1480,12 @@ test.describe("Leads list page", () => {
     expect(bulkResponse.ok()).toBe(true);
     expect(countResponse.ok()).toBe(true);
 
+    // CX-18: Apply must not leave the filter panel scrolled sideways.
+    const panelScroll = await panel
+      .locator(".filter-panel-content")
+      .evaluate((node) => node.scrollLeft);
+    expect(panelScroll).toBe(0);
+
     expect(lastBulkBody).toEqual(
       expect.objectContaining({
         campaign_filter: {
