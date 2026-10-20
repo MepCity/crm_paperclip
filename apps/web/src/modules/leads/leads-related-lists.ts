@@ -1,5 +1,6 @@
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListDefinition } from "../types";
@@ -81,6 +82,16 @@ export function createLeadsRelatedLists(
       upperControls: [...viewControls("closed")],
     },
     {
+      id: "attachments",
+      renderCard: attachmentsCard("Leads"),
+      title: "Attachments",
+      moduleKey: "M6",
+      order: 3,
+      targetId: "related-list-attachments",
+      upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+      emptyStateText: "No Attachment",
+    },
+    {
       id: "campaigns",
       renderBody: ({ record, recordPath }) =>
         record
@@ -89,7 +100,7 @@ export function createLeadsRelatedLists(
       title: "Campaigns",
       // The card is live; "M2" keeps the rail entry and controls unlocked.
       moduleKey: "M2",
-      order: 3,
+      order: 4,
       targetId: "related-list-campaigns",
       countBadge: badgeValue(badges.campaigns),
       railAction: {

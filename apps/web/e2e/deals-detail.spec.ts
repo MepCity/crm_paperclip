@@ -188,7 +188,7 @@ test.describe("Deals record detail", () => {
     const frame = page.locator("[data-record-frame]");
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
-    await expect(frame.getByText("No logs found")).toBeVisible();
+    await expect(frame.getByText("Note added: Note 4", { exact: true })).toBeVisible();
     await frame.getByRole("tab", { name: "Overview" }).click();
     const summary = page.locator("[data-deals-contact-person-summary]");
     await expect(summary).toBeVisible({ timeout: 15_000 });
