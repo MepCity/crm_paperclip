@@ -931,10 +931,11 @@ token:
 
 ### Contrast notes
 
-The related-card Attach action keeps the measured `--color-primary` text on
+The related-card Attach and Add Campaigns actions keep the measured `--color-primary` text on
 `--color-primary-subtle` (4.18:1, below the 4.5:1 AA text minimum), from
 `record-detail.md` › Related-list card › Card shell. Per ADR 0003 §8 this
-measured pair is retained and reported for the board decision.
+measured pair is retained and reported for the board decision. Add Campaigns
+is independently confirmed in Existing-capture button measurements.
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
 ratios below are computed from the token values with the WCAG relative-luminance formula.
