@@ -31,9 +31,16 @@ Without a global pnpm, prefix every command with `corepack`, for example `corepa
 ## First run
 
 1. `corepack pnpm dev`
-2. Open the printed address, then sign up.
-3. Create an organization.
+2. Open the printed address and sign in with username `admin` and password `admin`.
+3. The development organization opens directly; no sign-up or organization setup is needed.
 4. Open Settings, then Members, and invite someone. Copy the invitation link and share it yourself; the app does not send email.
+
+The temporary `admin / admin` login is seeded idempotently by `pnpm dev`, only outside
+production with a loopback `APP_URL` (localhost, 127.0.0.1 or IPv6 loopback). Sign-up
+still requires an email and a password of at least 10 characters. Production rejects
+the reserved development account, including its email alias `admin@mepcity.local`.
+This mechanism will be removed at project completion and before any real deployment;
+see [the removal checklist](docs/dev-login-removal.md) (MEP-963).
 
 ## Commands
 

@@ -101,3 +101,27 @@ for (const module of ["Leads", "Deals"] as const) {
     });
   });
 }
+
+for (const module of ["Leads", "Deals"] as const) {
+  test(`${module} Add New creates a Task linked to the parent and returns to it`, async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const parentId = await createParent(page, org.slug, module, "Add New Parent");
+    await openDetail(page, org.slug, module, parentId);
+
+    const open = page.locator("#related-list-open-activities");
+    await open.getByRole("button", { name: "More" }).click();
+    await page.getByRole("menuitem", { name: "Task" }).click();
+    await expect(page).toHaveURL(/\/create/);
+    await page.getByLabel("Subject").fill("Add New Task");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    await expect(page).toHaveURL(new RegExp(`${parentId}$`), { timeout: 15_000 });
+    const openTasks = page
+      .locator("#related-list-open-activities")
+      .getByRole("region", { name: "Open Tasks (1)" });
+    await expect(openTasks.getByRole("link", { name: "Add New Task" })).toBeVisible();
+  });
+}

@@ -1,4 +1,5 @@
 export { getSession, handleAuthRequest, requireUser, type Session, type SessionUser } from "./auth";
+export { isDevLoginEnabled } from "./auth/dev-login";
 export { getDb } from "./database";
 export { type Env, parseEnv } from "./env";
 export {

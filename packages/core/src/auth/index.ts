@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "../database";
 import { type Env, parseEnv } from "../env";
 import { UnauthenticatedError } from "../errors";
+import { DEV_ADMIN_EMAIL, isDevLoginEnabled } from "./dev-login";
 
 export type SessionUser = { id: string; email: string; name: string };
 export type Session = { user: SessionUser; sessionId: string; expiresAt: Date };
@@ -64,6 +65,17 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
     try {
       const body = (await request.json()) as Record<string, unknown>;
       if (typeof body.email === "string") body.email = body.email.trim().toLowerCase();
+      if (path.endsWith("/sign-in/email")) {
+        const devLogin = isDevLoginEnabled(process.env);
+        if (devLogin && body.email === "admin") body.email = DEV_ADMIN_EMAIL;
+        // Reject the reserved development account even if a local database is deployed.
+        if (!devLogin && body.email === DEV_ADMIN_EMAIL) {
+          return Response.json(
+            { code: "INVALID_EMAIL_OR_PASSWORD", message: "Invalid email or password." },
+            { status: 401 },
+          );
+        }
+      }
       request = new Request(request.url, {
         method: request.method,
         headers: request.headers,

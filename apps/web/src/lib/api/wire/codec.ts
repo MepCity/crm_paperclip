@@ -17,6 +17,7 @@ import type {
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import { validateCampaignFilter } from "@crm/core/records/campaigns";
+import { validateSystemFilters } from "@crm/core/records/system-filters";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -724,4 +725,55 @@ export function encodeCampaignFilter(value: import("@crm/core/records").Campaign
     campaign_ids: [...value.campaignIds],
     ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
   };
+}
+
+const systemFilterNames = {
+  locked: "locked",
+  record_action: "recordAction",
+  related_records_action: "relatedRecordsAction",
+  touched: "touched",
+  untouched: "untouched",
+} as const;
+export function decodeSystemFilters(
+  value: unknown,
+): import("@crm/core/records").SystemFiltersValue {
+  const body = object(value, "systemFilters.filters");
+  const decoded: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(body)) {
+    if (!Object.hasOwn(systemFilterNames, key)) invalid(`systemFilters.${key}`);
+    const name = systemFilterNames[key as keyof typeof systemFilterNames];
+    const entry = object(item, `systemFilters.${name}`);
+    const result: Record<string, unknown> = {};
+    for (const [field, content] of Object.entries(entry)) {
+      if (!["locked", "action", "module", "actor_ids", "period"].includes(field))
+        invalid(`systemFilters.${name}`);
+      result[field === "actor_ids" ? "actorIds" : field] = content;
+    }
+    decoded[name] = result;
+  }
+  validateSystemFilters(decoded);
+  return decoded;
+}
+export function encodeSystemFilters(
+  value: import("@crm/core/records").SystemFiltersValue,
+): import("./types").WireSystemFilters {
+  validateSystemFilters(value);
+  return Object.fromEntries(
+    Object.entries(systemFilterNames).flatMap(([wire, domain]) => {
+      const entry = value[domain];
+      return entry === undefined
+        ? []
+        : [
+            [
+              wire,
+              Object.fromEntries(
+                Object.entries(entry).map(([key, content]) => [
+                  key === "actorIds" ? "actor_ids" : key,
+                  content,
+                ]),
+              ),
+            ],
+          ];
+    }),
+  ) as import("./types").WireSystemFilters;
 }

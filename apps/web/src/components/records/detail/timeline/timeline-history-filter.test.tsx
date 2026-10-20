@@ -187,7 +187,7 @@ test("isDirty behavior: toggling checkboxes or time preset restores clean state 
   expect(applyButton.disabled).toBe(true);
 });
 
-test("users selector: choosing a user enables Apply and sends userId; choosing all sets userId null and disables Apply", async () => {
+test("users selector: choosing a user enables Apply and sends userId; choosing all can clear the applied user", async () => {
   const user = userEvent.setup();
   const { onApply } = renderFilterPanel();
   const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
@@ -211,7 +211,14 @@ test("users selector: choosing a user enables Apply and sends userId; choosing a
   await user.click(screen.getByRole("button", { name: "Users Sample User" }));
   await user.click(screen.getByRole("menuitem", { name: "All Users" }));
 
-  expect(applyButton.disabled).toBe(true);
+  expect(applyButton.disabled).toBe(false);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenLastCalledWith({
+    moduleIds: [],
+    userId: null,
+    time: "any",
+    sourceIds: [],
+  });
   expect(screen.getByRole("button", { name: "Users All Users" })).toBeTruthy();
 });
 
@@ -243,7 +250,7 @@ test("time selector: lists options in order, choosing Today updates trigger labe
   });
 });
 
-test("sources checkbox selector: selecting two sources applies both sourceIds; unchecking all disables Apply", async () => {
+test("sources checkbox selector: selecting two sources applies both sourceIds; unchecking all can clear applied sources", async () => {
   const user = userEvent.setup();
   const { onApply } = renderFilterPanel();
   const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
@@ -273,7 +280,14 @@ test("sources checkbox selector: selecting two sources applies both sourceIds; u
   await user.keyboard("{Escape}");
 
   expect(screen.getByRole("button", { name: "Sources All Sources" })).toBeTruthy();
-  expect(applyButton.disabled).toBe(true);
+  expect(applyButton.disabled).toBe(false);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenLastCalledWith({
+    moduleIds: [],
+    userId: null,
+    time: "any",
+    sourceIds: [],
+  });
 });
 
 test("modules trigger label: shows joined labels with two selected options, and modulesAllLabel with none", async () => {

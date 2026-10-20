@@ -8,6 +8,7 @@ import type { TimelineEvent } from "@/components/records/detail/timeline";
 import { toast } from "@/components/ui/toast";
 import { apiFetch, CRM_ORG_HEADER } from "@/lib/api/client/fetch";
 import { useOrgSlug } from "@/lib/api/client/provider";
+import { apiKeys } from "@/lib/api/client/query-keys";
 import type { AttachmentRow } from "./attachments-card";
 
 /** Provisional record selection budget (OQ-01, P1): 10 files / 100 MB combined (decimal MB). */
@@ -144,10 +145,12 @@ export function useAttachments(
     () => deletedEvents,
     () => deletedEvents,
   );
-  const refresh = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: key }),
-    [queryClient, key],
-  );
+  const refresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: key }),
+      queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) }),
+    ]);
+  }, [queryClient, key, orgSlug]);
 
   const upload = useCallback(
     async (files: File[]) => {
