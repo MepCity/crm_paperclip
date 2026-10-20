@@ -10,7 +10,7 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 
 ## Delivery model — module by module
 - We never copy the reference CRM all at once. Each module goes through research → spec → implementation → QA → lead approval (CTO for milestones) → board approval before the next module starts.
-- Final approval of regular issues belongs to the domain leads: **UI Lead** (screens, components, design tokens, frontend requests, screen specs) and **Platform Lead** (backend, data access, API contract, auth, test and build tooling). The CTO approves milestones, cross-domain contract changes and ADR work. Ask domain questions to the matching lead and architecture questions to the CTO.
+- Review depth follows the issue's **risk tier** (see "Engineering workflow"). Normal-tier issues get their final approval from the domain leads: **UI Lead** (screens, components, design tokens, frontend requests, screen specs) and **Platform Lead** (backend, data access, API contract, auth, test and build tooling). Low-tier issues end at the reviewer; high-tier issues add the CTO after the lead. The CTO also approves milestones, cross-domain contract changes and ADR work. Ask domain questions to the matching lead and architecture questions to the CTO.
 - Order: Leads (with the minimal app shell) → Contacts → Accounts → Deals + pipeline → Activities (tasks, meetings, calls) → notes, attachments, CSV → campaigns → cases and solutions → documents → email inbox and calendar → customization → automation → reports and analytics → home dashboard and work queue → visits and social. Every module ships with all of its sub-parts (list views, filters, record detail with related lists and timeline, forms, module flows).
 - The end goal is the whole reference system; we start with the core CRM above (phase 1) and grow step by step. Phase 2: products, price books, quotes, sales orders, purchase orders, invoices, vendors, forecasts. Phase 3: everything else (cadences, journey orchestration, approval queue, AI agent tabs and any remaining area). Each later phase starts only after board approval. Keep shared parts generic so later modules need no rework. The board may reorder.
 - Nobody merges into `main` by hand: after QA and the final approval the merge bot merges the branch into a clean copy of `main`, runs `pnpm verify`, and pushes `main`; on conflict or failure it reopens the issue to its engineer. If the Claude reviewers are unavailable (usage limit), work may continue on issue branches, but approvals and merges wait.
@@ -27,7 +27,13 @@ Internal CRM built by an agent team as an experiment: can we rebuild the **refer
 
 ## Engineering workflow
 - One Paperclip issue = one isolated git worktree/branch (`mep/MEP-<n>`). Keep changes small and focused.
-- Every change ships with tests. QA verifies, the domain lead (or the CTO) approves, the merge bot merges.
+- Every change ships with tests. QA verifies, the approvers of the issue's risk tier approve, the merge bot merges.
+- **Risk tiers.** Whoever opens an issue writes its tier in the description (`Tier: low`, `Tier: normal` or `Tier: high`) and sets the review stages to match:
+  - **Low** — one review stage, no lead approval; the reviewer's approval is final. Only when the diff touches nothing but one module's own folder (for example `apps/web/src/modules/<module>/`), test files, or docs, specs and `docs/parity-checklist.md`.
+  - **Normal** — review, then the domain lead's approval.
+  - **High** — review, the domain lead's approval, then the CTO's approval, and the cross-module smoke e2e passes on the branch merged with the current `main`. Scope: shared components used by several modules (list, form, record detail, app shell), the API contract, the data model and database, auth and permissions, merge and test tooling, ADRs.
+  - A reviewer or approver may raise the tier, never lower it: they add the missing stage and say why in a comment. No tier written means normal; when in doubt, choose high. The reviewer always runs on a different model family than the implementer, and the escalation rules stay as they are.
+  - Cross-module smoke e2e: `npx tsx scripts/e2e.ts e2e/smoke.spec.ts e2e/shell.spec.ts e2e/leads-detail.spec.ts e2e/contacts-detail.spec.ts e2e/accounts-detail.spec.ts e2e/deals-detail.spec.ts e2e/meetings-detail.spec.ts e2e/tasks-form.spec.ts e2e/campaigns-detail.spec.ts e2e/cases-detail.spec.ts` from the repository root; paste the pass/fail summary in the handoff.
 - Architecture decisions live in `docs/adr/`.
 - Never commit secrets. `.env*` files are git-ignored.
 

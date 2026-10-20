@@ -833,6 +833,17 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--color-activity-form-lookup` | `#aaaaaa` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
 | `--color-activity-form-switch` | `#c8cdd6` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
 | `--color-activity-form-switch-subdued` | `#dee1e6` | activities-form.md → Visual layout — Task form (measured); Repeat off track | from spec |
+| `--size-call-form-width` | `1150px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-left` | `202.5px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-width` | `531px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-height` | `34px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-row-gap` | `21px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-label-width` | `165px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-label-gap` | `19px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-required-width` | `3px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-border` | `#c5c4d3` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-focus` | `#5464f2` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-required` | `#ff5d5a` | activities-form.md → Visual layout — Call form (measured) | from spec |
 
 ### Measured values that carry no token
 

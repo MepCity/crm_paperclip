@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { ciTestSelection } from "../../scripts/e2e-ci-selection";
 
 // scripts/e2e.ts builds the app, starts a throwaway database and sets these variables.
 const port = Number(process.env.E2E_PORT ?? 0);
@@ -13,6 +14,7 @@ export default defineConfig({
     timeout: 30_000,
   },
   testDir: "./e2e",
+  ...ciTestSelection(process.env.MEP_E2E_CI_GROUP),
   fullyParallel: true,
   // Several agents share one machine; cap browsers per run. Override with MEP_TEST_WORKERS.
   workers: Number(process.env.MEP_TEST_WORKERS ?? 2),

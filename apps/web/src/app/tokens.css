@@ -856,4 +856,15 @@
   --color-activity-form-lookup: #aaaaaa;
   --color-activity-form-switch: #c8cdd6;
   --color-activity-form-switch-subdued: #dee1e6;
+  --size-call-form-width: 1150px;
+  --size-call-form-box-left: 202.5px;
+  --size-call-form-box-width: 531px;
+  --size-call-form-box-height: 34px;
+  --size-call-form-row-gap: 21px;
+  --size-call-form-label-width: 165px;
+  --size-call-form-label-gap: 19px;
+  --size-call-form-required-width: 3px;
+  --color-call-form-border: #c5c4d3;
+  --color-call-form-focus: #5464f2;
+  --color-call-form-required: #ff5d5a;
 }

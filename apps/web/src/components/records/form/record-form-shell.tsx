@@ -13,6 +13,7 @@ export interface RecordFormShellActionLabels {
 export interface RecordFormShellProps {
   title: string;
   variant?: "activity";
+  layout?: "call";
   formAriaLabel: string;
   actionLabels: RecordFormShellActionLabels;
   titleAccessory?: ReactNode;
@@ -28,6 +29,7 @@ export interface RecordFormShellProps {
 export function RecordFormShell({
   title,
   variant,
+  layout,
   formAriaLabel,
   actionLabels,
   titleAccessory,
@@ -40,7 +42,12 @@ export function RecordFormShell({
   onSubmit,
 }: RecordFormShellProps) {
   return (
-    <div className="record-form-shell" data-record-form-shell data-form-variant={variant}>
+    <div
+      className="record-form-shell"
+      data-record-form-shell
+      data-form-variant={variant}
+      data-form-layout={layout}
+    >
       <header className="record-form-strip" data-record-form-strip>
         <div className="record-form-strip__title-row">
           <h1 className="record-form-strip__title" data-record-form-title>
