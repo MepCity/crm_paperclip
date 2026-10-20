@@ -4,7 +4,20 @@ import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import { timeE2eStage } from "./e2e-timing";
 
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
+it("publishes stage timing in public Actions annotations", async () => {
+  vi.stubEnv("GITHUB_ACTIONS", "true");
+  vi.stubEnv("GITHUB_STEP_SUMMARY", "");
+  const log = vi.spyOn(console, "log").mockImplementation(() => {});
+  await timeE2eStage("next build", async () => 0);
+  expect(log).toHaveBeenCalledWith(
+    expect.stringMatching(/^::notice title=E2E stage timing::next build: \d+\.\d s$/),
+  );
+});
 
 it("preserves the stage result without a CI summary", async () => {
   vi.stubEnv("GITHUB_STEP_SUMMARY", "");

@@ -116,6 +116,11 @@ async function sectionContentTop(section: Locator) {
 
 test("create lead form layout matches measured geometry", async ({ page }) => {
   await page.goto("/dev/ui");
+  // Font loading can reflow earlier gallery sections between bounding-box reads.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  });
   const demo = page.getByRole("region", { name: "record form layout", exact: true });
   const shell = demo.locator("[data-record-form-shell]");
   const strip = shell.locator("[data-record-form-strip]");

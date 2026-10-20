@@ -9,6 +9,10 @@ export async function timeE2eStage<T>(label: string, work: () => Promise<T>): Pr
     const seconds = ((performance.now() - started) / 1000).toFixed(1);
     const line = `${label}: ${seconds} s`;
     console.log(`e2e: ${line}`);
+    // Step summary files are isolated per step; publish timing in this step too.
+    if (process.env.GITHUB_ACTIONS === "true") {
+      console.log(`::notice title=E2E stage timing::${line}`);
+    }
     if (process.env.GITHUB_STEP_SUMMARY) {
       await appendFile(process.env.GITHUB_STEP_SUMMARY, `- ${line}\n`);
     }
