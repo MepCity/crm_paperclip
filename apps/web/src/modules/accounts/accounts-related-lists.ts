@@ -4,6 +4,7 @@ import { AccountMemberAccountsCardBody } from "@/components/records/detail/accou
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -159,6 +160,7 @@ export function createAccountsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Accounts"),
       title: "Attachments",
       moduleKey: "M6",
       order: 3,

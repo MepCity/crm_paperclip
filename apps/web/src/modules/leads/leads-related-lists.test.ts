@@ -5,7 +5,14 @@ import { createLeadsRelatedLists } from "./leads-related-lists";
 describe("createLeadsRelatedLists", () => {
   it("defines notes, open-activities and closed-activities cards in reference order", () => {
     const lists = createLeadsRelatedLists();
-    expect(lists).toHaveLength(4);
+    expect(lists.map((card) => card.id)).toEqual([
+      "notes",
+      "open-activities",
+      "closed-activities",
+      "attachments",
+      "campaigns",
+    ]);
+    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4]);
 
     const [notes, openActivities, closedActivities] = lists;
     expect(notes).toBeDefined();
@@ -145,7 +152,7 @@ describe("createLeadsRelatedLists", () => {
 
   it("edge case: provides executable renderBody functions for each card", () => {
     const lists = createLeadsRelatedLists();
-    for (const card of lists) {
+    for (const card of lists.filter((c) => !c.renderCard)) {
       expect(typeof card.renderBody).toBe("function");
       if (!card.renderBody) continue;
 

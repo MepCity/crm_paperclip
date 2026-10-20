@@ -269,6 +269,7 @@ const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Events: {
+    afterDelete: parentDeleteHook("Events"),
     ...eventsHooks,
     metadata: eventsMetadata,
     views: eventsViews,
@@ -281,6 +282,7 @@ const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ Created_Time: stamp, Modified_Time: stamp }),
   },
   Calls: {
+    afterDelete: parentDeleteHook("Calls"),
     ...callsHooks,
     metadata: callsMetadata,
     views: callsViews,
@@ -293,6 +295,7 @@ const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
     createDefaults: (stamp) => ({ CTI_Entry: false, Created_Time: stamp, Modified_Time: stamp }),
   },
   Tasks: {
+    afterDelete: parentDeleteHook("Tasks"),
     ...tasksHooks,
     metadata: tasksMetadata,
     views: tasksViews,

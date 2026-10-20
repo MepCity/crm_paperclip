@@ -79,7 +79,8 @@ function isActivityCardRequest(request: CrmRequest): boolean {
     /^\/crm\/v[\d.]+\/settings\//.test(request.pathname) ||
     /^\/crm\/v[\d.]+\/(Tasks|Events|Calls|Campaign_Members|Campaigns)\b/.test(request.pathname) ||
     (request.method === "POST" &&
-      /^\/crm\/v[\d.]+\/Notes\/(bulk|actions\/count)$/.test(request.pathname))
+      /^\/crm\/v[\d.]+\/Notes\/(bulk|actions\/count)$/.test(request.pathname)) ||
+    /^\/crm\/v2\.2\/Leads\/[^/]+\/Attachments$/.test(request.pathname)
   );
 }
 
