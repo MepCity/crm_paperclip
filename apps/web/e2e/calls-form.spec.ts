@@ -21,7 +21,7 @@ async function openCreate(page: Page) {
   return org;
 }
 
-async function pickCallFrom(page: Page) {
+async function pickCallFrom(page: Page): Promise<string> {
   await page.getByRole("button", { name: "Open Call From/To lookup", exact: true }).click();
   const dialog = page.getByRole("dialog");
   const radio = dialog.getByRole("radio").first();
@@ -31,6 +31,7 @@ async function pickCallFrom(page: Page) {
   await dialog.getByRole("row", { name }).click();
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  return name;
 }
 
 test("Create Call paints the scheduling form with the Outbound and Scheduled defaults", async ({
@@ -112,7 +113,7 @@ test("Save and Create Follow-up Task saves the call and opens a prefilled Task f
     "placeholder",
     "DD.MM.YYYY",
   );
-  await pickCallFrom(page);
+  const who = await pickCallFrom(page);
   await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Intro call");
   await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
   await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
@@ -124,10 +125,14 @@ test("Save and Create Follow-up Task saves the call and opens a prefilled Task f
   await expect(page.getByRole("textbox", { name: "Subject", exact: true })).toHaveValue(
     "Follow-up: Intro call",
   );
+  await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(who);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
     timeout: 60_000,
   });
+  await expect(page.getByText(who).first()).toBeVisible();
+  await page.goto(moduleListDefaultPath(org.slug, CALLS_TAB));
+  await expect(page.getByText("Intro call").first()).toBeVisible();
 });
 
 test("Reschedule Call opens Edit with the start time focused", async ({ page }) => {
