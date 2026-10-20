@@ -137,7 +137,6 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const save = shell.getByRole("button", { name: "Save", exact: true });
   const descriptionInput = demo.locator("#demo-description");
   const stripTitle = shell.locator("[data-record-form-title]");
-  const portrait = shell.locator("[data-record-form-portrait]");
   const streetInput = demo.locator("#demo-street");
   const fieldGroup = shell.locator("[data-record-form-field-group]");
   const longLabel = demo.getByText("Very long synthetic field label for overflow", { exact: true });
@@ -167,8 +166,23 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   await expect(strip).toHaveCSS("border-bottom-color", "rgb(237, 240, 244)");
   await expect(card).toHaveCSS("border-top-left-radius", "8px");
   await expect(card).toHaveCSS("border-top-right-radius", "8px");
-  const cardBox = await card.boundingBox();
-  const titleBox = await sectionTitle.boundingBox();
+  // The gallery can scroll while other demos hydrate. Read relative geometry in
+  // one browser frame so viewport changes cannot stale the card's coordinates.
+  const [cardBox, titleBox, portraitBox, ownerBox] = await shell.evaluate((node) =>
+    ["[data-record-form-card]", "section-title", "[data-record-form-portrait]", "#demo-owner"].map(
+      (selector) => {
+        const element =
+          selector === "section-title"
+            ? Array.from(node.querySelectorAll("[data-record-form-section-title]")).find(
+                (title) => title.textContent === "Lead Information",
+              )
+            : node.querySelector(selector);
+        if (!element) return null;
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return { x, y, width, height };
+      },
+    ),
+  );
   expect(cardBox).not.toBeNull();
   expect(titleBox).not.toBeNull();
   expect(Math.abs((titleBox?.x ?? 0) - ((cardBox?.x ?? 0) + cardInset))).toBeLessThanOrEqual(1);
@@ -176,10 +190,8 @@ test("create lead form layout matches measured geometry", async ({ page }) => {
   const stripTitleBox = await stripTitle.boundingBox();
   expect(stripTitleBox).not.toBeNull();
   expect(Math.abs((stripTitleBox?.x ?? 0) - (cardBox?.x ?? 0))).toBeLessThanOrEqual(1);
-  const portraitBox = await portrait.boundingBox();
   expect(portraitBox).not.toBeNull();
   expect(Math.abs((portraitBox?.y ?? 0) - ((cardBox?.y ?? 0) + 63))).toBeLessThanOrEqual(1);
-  const ownerBox = await leftInput.boundingBox();
   expect(ownerBox).not.toBeNull();
   expect(Math.abs((ownerBox?.y ?? 0) - ((cardBox?.y ?? 0) + 205))).toBeLessThanOrEqual(1);
   expect(Math.abs((ownerBox?.y ?? 0) - ((portraitBox?.y ?? 0) + 48 + 94))).toBeLessThanOrEqual(1);
