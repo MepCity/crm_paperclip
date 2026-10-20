@@ -50,6 +50,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { openActivityCreate } from "@/modules/activity-add-new";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type {
   HeaderConfirmRequest,
@@ -58,6 +59,7 @@ import type {
 } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
+import { RecordCallProvider } from "./record-call-context";
 import { RelatedCardsContainer } from "./related-cards-container";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
@@ -338,7 +340,18 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <>
+    <RecordCallProvider
+      value={() =>
+        openActivityCreate(
+          orgSlug,
+          "Calls",
+          moduleApiName,
+          record,
+          (path) => router.push(path),
+          paths.record(orgSlug, definition.tab, recordId),
+        )
+      }
+    >
       {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField && StatusSection ? (
         <StatusSection
@@ -393,7 +406,7 @@ export function RecordDetailScreen({
           />
         ) : null}
       </InlineEditProvider>
-    </>
+    </RecordCallProvider>
   );
 
   const timeline = (

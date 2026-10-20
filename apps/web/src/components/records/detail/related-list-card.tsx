@@ -1,11 +1,18 @@
 "use client";
 
+import type { ModuleApiName, RecordData } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
+import {
+  ACTIVITY_ADD_NEW_ENTRIES,
+  type ActivityModule,
+  openActivityCreate,
+} from "@/modules/activity-add-new";
 import type {
   RelatedListBodyContext,
   RelatedListControlDefinition,
@@ -14,6 +21,35 @@ import type {
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
   context?: RelatedListBodyContext;
+}
+
+function ActivityAddNew({
+  label,
+  orgSlug,
+  module,
+  record,
+  returnTo,
+}: {
+  label: string;
+  orgSlug: string;
+  module: ModuleApiName;
+  record: RecordData;
+  returnTo: string;
+}) {
+  const router = useRouter();
+  const open = (activity: ActivityModule) =>
+    openActivityCreate(orgSlug, activity, module, record, (path) => router.push(path), returnTo);
+  return (
+    <SplitButton
+      label={label}
+      onPress={() => open("Tasks")}
+      items={ACTIVITY_ADD_NEW_ENTRIES.map((entry) => ({
+        id: `add-new-${entry.module}`,
+        label: entry.label,
+        onAction: () => open(entry.module),
+      }))}
+    />
+  );
 }
 
 export function RelatedListCard({ definition, context }: RelatedListCardProps) {
@@ -58,6 +94,24 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
     const laterMod = resolveLaterModule(ctrl.moduleKey);
     const moreLaterMod =
       ctrl.moreModuleKey !== undefined ? resolveLaterModule(ctrl.moreModuleKey) : laterMod;
+    if (
+      ctrl.type === "split-button" &&
+      ctrl.id === "add-new" &&
+      id === "open-activities" &&
+      context?.record &&
+      context.module
+    ) {
+      return (
+        <ActivityAddNew
+          key={ctrl.id}
+          label={ctrl.label}
+          orgSlug={context.orgSlug}
+          module={context.module}
+          record={context.record}
+          returnTo={context.recordPath(context.module, context.record.id)}
+        />
+      );
+    }
     if (ctrl.type === "split-button") {
       return (
         <SplitButton

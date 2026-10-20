@@ -34,6 +34,11 @@ export function ModuleFormClient({
   const moduleApiName = definition.apiName;
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
+  const [returnTo] = useState(() =>
+    recordId || cloneSourceId
+      ? undefined
+      : readRecordCreatePrefill(orgSlug, moduleApiName)?.returnTo,
+  );
   const [sessionPrefill, setSessionPrefill] = useState<Readonly<Record<string, FieldValue>> | null>(
     () => {
       if (recordId || cloneSourceId) return null;
@@ -85,6 +90,7 @@ export function ModuleFormClient({
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id, targetModule) => {
+              if (returnTo && !recordId && !cloneSourceId && !targetModule) return returnTo;
               if (targetModule) {
                 const targetDef = resolveModuleScreenByApiName(targetModule);
                 return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);

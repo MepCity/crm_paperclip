@@ -1142,3 +1142,14 @@ records, which cannot be created for research.
 
 Outside this gate: Product and other Phase 2 links, M10 email, M11
 customization and Phase 3 controls.
+
+## Module 5 correction (MEP-950): parent Add New and Contact Call
+
+- **Provisional (interim rule):** the Open Activities **Add New** control on Leads, Contacts,
+  Accounts and Deals detail opens a menu of Task, Meeting and Call (the primary press opens
+  Task). The reference menu rows were never observed. Each entry opens the module's create
+  form with the parent pre-filled (Leads/Contacts → Who; Accounts/Deals → What; a Contact
+  also fills its Account as What); Save returns to the parent detail.
+- Contact business-card and detail Phone **Call** controls open the Call create form with the
+  contact pre-filled (provisional; reference click never invoked). M8+ markers are untouched.
+- Evidence: `parent-activities-cards.spec.ts` (Lead, Deal), `activity-add-new.test.ts`.

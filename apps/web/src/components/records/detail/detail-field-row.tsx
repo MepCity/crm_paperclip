@@ -10,6 +10,7 @@ import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
 import { useInlineEdit } from "./inline-edit-context";
 import { InlineFieldEditor } from "./inline-field-editor";
+import { useRecordCall } from "./record-call-context";
 
 export interface DetailFieldRowProps {
   field: FieldDefinition;
@@ -38,6 +39,7 @@ export function DetailFieldRow({
   onEdit,
 }: DetailFieldRowProps) {
   const inline = useInlineEdit();
+  const openCall = useRecordCall();
   const rowId = useId();
   const editable = inline?.eligible(field) ?? false;
   const editing = editable && inline?.activeId === rowId;
@@ -172,7 +174,8 @@ export function DetailFieldRow({
                 variant="icon"
                 size="compact"
                 aria-label="Call"
-                laterModule="M5"
+                onPress={openCall ?? undefined}
+                laterModule={openCall ? undefined : "M5"}
                 className="ms-1.5 inline-flex shrink-0 size-4 text-text-muted hover:text-text items-center justify-center self-center"
               >
                 <Icons.phone aria-hidden className="size-3.5" />
