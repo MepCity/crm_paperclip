@@ -6,9 +6,9 @@ import { Form, SubmitButton } from "@/components/ui/form";
 import { TextField } from "@/components/ui/text-field";
 import type { ActionState } from "@/lib/action";
 import { signIn } from "@/lib/auth-client";
-import { authFailureState, currentPasswordError, emailError } from "./validation";
+import { authFailureState, currentPasswordError, signInEmailError } from "./validation";
 
-export function SignInForm({ next }: { next: string }) {
+export function SignInForm({ next, devLogin = false }: { next: string; devLogin?: boolean }) {
   const router = useRouter();
   const [actionState, setActionState] = useState<ActionState>({ status: "idle" });
 
@@ -35,11 +35,11 @@ export function SignInForm({ next }: { next: string }) {
     >
       <TextField
         name="email"
-        label="Email"
-        type="email"
+        label={devLogin ? "Email or username" : "Email"}
+        type={devLogin ? "text" : "email"}
         isRequired
-        autoComplete="email"
-        validate={emailError}
+        autoComplete="username"
+        validate={(value) => signInEmailError(value, devLogin)}
       />
       <TextField
         name="password"
