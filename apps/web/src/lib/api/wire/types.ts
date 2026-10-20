@@ -96,7 +96,24 @@ export type WireBulkResponse = {
 export type WireCountResponse = { count: number };
 export type WireRecordResponse = { data: readonly WireRecord[] };
 export type WireUsersResponse = { users: readonly WireUser[]; info: WirePageInfo };
+export interface WireSystemFilters {
+  locked?: { locked: boolean };
+  record_action?: {
+    action: import("@crm/core/records").RecordActionKind;
+    actor_ids?: readonly string[];
+    period: import("@crm/core/records").FilterPeriod;
+  };
+  related_records_action?: {
+    module: string;
+    action: import("@crm/core/records").RelatedActionKind;
+    actor_ids?: readonly string[];
+    period: import("@crm/core/records").FilterPeriod;
+  };
+  touched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
+  untouched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
+}
 export type WireRestrictions = {
+  system_filters?: WireSystemFilters;
   campaign_filter?: { campaign_ids: readonly string[]; member_statuses?: readonly string[] };
   filters?: WireCriteria;
   search?: string;

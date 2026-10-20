@@ -167,7 +167,23 @@ describe("recoverable fixture record deletion contract", () => {
     const history = await service.history.list("Leads", parent.id, { perPage: 100 });
     expect(
       history.events
-        .filter((event) => ["record_deleted", "record_restored"].includes(event.kind))
+        .filter(
+          (event) =>
+            event.subject.module === "Leads" &&
+            event.subject.recordId === parent.id &&
+            ["record_deleted", "record_restored"].includes(event.kind),
+        )
+        .map((event) => event.kind)
+        .sort(),
+    ).toEqual(["record_deleted", "record_restored"]);
+    expect(
+      history.events
+        .filter(
+          (event) =>
+            event.subject.module === "Tasks" &&
+            event.subject.recordId === task.id &&
+            ["record_deleted", "record_restored"].includes(event.kind),
+        )
         .map((event) => event.kind)
         .sort(),
     ).toEqual(["record_deleted", "record_restored"]);
