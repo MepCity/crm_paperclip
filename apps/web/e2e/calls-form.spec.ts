@@ -92,7 +92,7 @@ test("creates a scheduled call and opens its detail", async ({ page, pageErrors 
   const org = await openCreate(page);
   await pickCallFrom(page);
   await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Follow-up call");
-  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("2030-11-30");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
   await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/\\d+$`), {
@@ -103,6 +103,33 @@ test("creates a scheduled call and opens its detail", async ({ page, pageErrors 
   ignoreFailedResponses(pageErrors, [400]);
 });
 
+test("Save and Create Follow-up Task saves the call and opens a prefilled Task form", async ({
+  page,
+}) => {
+  const org = await openCreate(page);
+  await expect(page.getByRole("button", { name: "Save and New" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Call Start Time date" })).toHaveAttribute(
+    "placeholder",
+    "DD.MM.YYYY",
+  );
+  await pickCallFrom(page);
+  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Intro call");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
+  await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
+  await page.getByRole("button", { name: "Save and Create Follow-up Task", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/create`), {
+    timeout: 60_000,
+  });
+  await expect(page.getByRole("heading", { name: "Create Task" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Subject", exact: true })).toHaveValue(
+    "Follow-up: Intro call",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
+    timeout: 60_000,
+  });
+});
+
 test("Reschedule Call opens Edit with the start time focused", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -110,7 +137,7 @@ test("Reschedule Call opens Edit with the start time focused", async ({ page }) 
   await page.getByRole("link", { name: "Reschedule Call" }).click();
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Call Start Time date" })).toBeFocused();
-  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("2030-11-30");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/${SCHEDULED_CALL_ID}$`), {
     timeout: 60_000,
