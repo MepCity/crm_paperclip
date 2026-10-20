@@ -69,7 +69,7 @@ const caseFields: FieldDefinition[] = [
 
 const hookState = vi.hoisted(() => ({
   list: {
-    data: { records: [] as RecordData[], moreRecords: false },
+    data: { records: [] as RecordData[] } as { records: RecordData[]; moreRecords?: boolean },
     isLoading: false,
     isError: false,
   },
