@@ -1,6 +1,7 @@
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { exerciseSystemFilters } from "./support/system-filters";
 import { expect, test } from "./support/test";
 
 test("Solutions shell entry, views, columns and sorting", async ({ page }) => {
@@ -114,4 +115,12 @@ test("Solutions Actions menu and later-module controls stay inert", async ({ pag
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Solutions applies and clears all five system filters with matching list/count requests", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseSystemFilters(page, org.slug, "Solutions", 25);
 });
