@@ -352,6 +352,8 @@
 
   /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
   --color-detail-divider: #d6d6e3;
+  /* record-detail.md > Related-list card > Card shell: Attach x 1359.5–1438. */
+  --size-detail-attach-width: 78.5px;
   --size-detail-card-width: 906px;
   --size-detail-card-padding: 20px;
   --size-detail-business-label-width: 153.5px;

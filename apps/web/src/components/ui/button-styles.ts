@@ -1,4 +1,6 @@
 export const buttonStyles = {
+  /* record-detail.md > Related-list card > Card shell (Attach). */
+  relatedAction: "font-semibold rounded-md bg-primary-subtle text-primary border border-primary",
   recordPrimary:
     "font-semibold rounded-md bg-primary bg-linear-to-b from-(--color-primary-gradient-start) to-(--color-record-primary-end) text-primary-text data-disabled:opacity-50",
   recordSecondary:
@@ -29,6 +31,7 @@ export const buttonStyles = {
 };
 
 export const buttonSizes = {
+  relatedAction: "h-(--size-list-filter-button-height) text-sm px-3 py-0",
   record: "h-(--size-button-ellipsis-height) text-md px-3 py-0",
   compact: "p-0 text-md",
   selector: "p-0 text-base",
@@ -47,5 +50,5 @@ export const buttonSizes = {
   selectUserFooter:
     "box-border h-(--size-form-action-height) min-h-(--size-form-action-height) p-0 text-md font-semibold",
   sm: "text-sm px-3 py-1.5",
-  md: "text-base px-4 py-2",
+  md: "text-md px-4 py-2",
 };

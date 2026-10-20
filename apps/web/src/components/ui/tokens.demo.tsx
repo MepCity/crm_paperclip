@@ -606,6 +606,7 @@ const SIZE_GROUPS = [
       "--size-list-view-type-arrow-width",
       "--size-list-view-type-arrow-height",
       "--color-detail-divider",
+      "--size-detail-attach-width",
       "--size-detail-card-width",
       "--size-detail-card-padding",
       "--size-detail-business-label-width",
