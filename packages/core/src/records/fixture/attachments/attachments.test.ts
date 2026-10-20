@@ -121,8 +121,12 @@ describe("Attachments record contract", () => {
     async (module) => {
       const { service } = make();
       const [view] = await service.listViews(module);
-      const parent = (await service.list(module, { ...listQuery, viewId: requireValue(view).id }))
-        .records[0];
+      const parent =
+        module === "Notes"
+          ? await service.create("Notes", {
+              Parent_Id: { module: "Leads", id: (await lead(service)).id },
+            })
+          : (await service.list(module, { ...listQuery, viewId: requireValue(view).id })).records[0];
       if (!parent) throw new Error("Missing fixture parent.");
       const record = await service.create("Attachments", link(module, parent.id));
       expect((await service.get("Attachments", record.id)).fields.Parent_Id).toMatchObject({
@@ -131,6 +135,21 @@ describe("Attachments record contract", () => {
       });
     },
   );
+  it("rejects attachments on Notes whose ultimate parent is a Call", async () => {
+    const { service } = make();
+    const view = requireValue((await service.listViews("Calls"))[0]);
+    const parent = requireValue(
+      (await service.list("Calls", { ...listQuery, viewId: view.id })).records[0],
+    );
+    const note = await service.create("Notes", {
+      Parent_Id: { module: "Calls", id: parent.id },
+    });
+    expect((await service.get("Notes", note.id)).id).toBe(note.id);
+    await expect(service.create("Attachments", link("Notes", note.id))).rejects.toMatchObject({
+      fieldErrors: { Parent_Id: ["Choose a supported ultimate parent record."] },
+    });
+    expect((await service.list("Attachments", listQuery)).records).toEqual([]);
+  });
   it.each(["Tasks", "Events", "Campaigns", "Cases", "Solutions"])(
     "publishes, reads and deletes %s files within their tenant",
     async (module) => {
