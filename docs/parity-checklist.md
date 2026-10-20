@@ -992,7 +992,8 @@ was observed while opening the local detail page.
 
 QA 2/2: SL-01–SL-29, SL-32–SL-39, SL-41–SL-53 and the observed view and Actions
 menu rows were present. View selection, sort, a field filter, empty state and
-Actions menu interactions passed. The reference list is empty; the local
+Actions menu interactions passed. The local selection bar opened for one
+selected row and cleared. The reference list is empty; the local
 fixture contains records, and the empty state was reached with a field filter.
 The local list was compared beside `m8-solutions-list-base`,
 `m8-solutions-list-views` and `m8-solutions-list-actions`.
