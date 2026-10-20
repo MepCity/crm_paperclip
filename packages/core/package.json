@@ -10,6 +10,7 @@
     "./transfer/types": "./src/transfer/types.ts",
     "./testing": "./src/testing.ts",
     "./attachments": "./src/attachments/index.ts",
+    "./attachments/modules": "./src/attachments/modules.ts",
     "./records": "./src/records/index.ts",
     "./records/campaigns": "./src/records/campaigns.ts",
     "./records/note-html": "./src/records/note-html.ts",

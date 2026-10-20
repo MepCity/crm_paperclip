@@ -24,6 +24,12 @@ test.describe("Record notes card", () => {
     await expect(card.getByText("E2E note")).toBeVisible();
     await expect(card.getByTestId("note-composer")).toHaveCount(0);
 
+    await page.getByRole("tab", { name: "Timeline" }).click();
+    const history = page.locator("[data-timeline-history]");
+    await expect(history.getByText("Note added: E2E note")).toBeVisible();
+    await expect(history.getByText("First body")).toBeVisible();
+    await page.getByRole("tab", { name: "Overview" }).click();
+
     await card.getByText("E2E note").hover();
     await card.getByRole("button", { name: "Edit note" }).first().click();
     await card.getByLabel("Title").fill("E2E note edited");

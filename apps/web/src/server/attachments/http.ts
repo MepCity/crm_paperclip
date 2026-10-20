@@ -9,14 +9,17 @@ import {
   type SelectionKind,
   selectionBudget,
 } from "@crm/core/attachments";
+import { ATTACHMENT_PARENT_MODULES } from "@crm/core/attachments/modules";
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext, RecordData, RecordService } from "@crm/core/records";
 import type { createFixtureAttachmentLifecycle } from "@crm/core/records/fixture";
 import { encodeError } from "@/lib/api/wire/errors";
 import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 
-export const ATTACHMENT_PARENT_MODULES = ["Leads", "Contacts", "Accounts", "Deals", "Notes"];
 const PER_PAGE_DEFAULT = 20;
+const PER_PAGE_MAX = 200;
+/** Largest page size `records.list` accepts; a request window spans at most two of these. */
+const INTERNAL_PAGE = 100;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NO_STORE = { "Cache-Control": "no-store" };
 const MULTIPART_OVERHEAD = 64 * 1024;
@@ -137,34 +140,45 @@ async function list(deps: AttachmentDeps, params: AttachmentParams, url: URL): P
   const perPage = positive(url.searchParams.get("per_page"), PER_PAGE_DEFAULT);
   if (page === null) return invalid("page", "Send a positive page number.");
   if (perPage === null) return invalid("per_page", "Send a positive page size.");
+  if (perPage > PER_PAGE_MAX)
+    return invalid("per_page", `Send a page size of at most ${PER_PAGE_MAX}.`);
   const names = await deps.memberNames();
   const parent = { module: params.module, id: params.recordId };
-  const records: RecordData[] = [];
-  for (let next = 1; ; next++) {
+  // The requested window [start, end) is pushed into `records.list` (newest first), so a
+  // request costs at most ceil(perPage / 100) + 1 internal list calls, never a full scan.
+  // Not-ready (in-flight upload) rows cannot be expressed in the list filter, so they are
+  // dropped from the fetched window only: a page can come back a few rows short while an
+  // upload is publishing, and `more_records` is computed on the unfiltered store.
+  const start = (page - 1) * perPage;
+  const end = start + perPage;
+  const first = Math.floor(start / INTERNAL_PAGE) + 1;
+  const last = Math.floor((end - 1) / INTERNAL_PAGE) + 1;
+  const window: RecordData[] = [];
+  let more = false;
+  for (let next = first; next <= last; next++) {
     const result = await deps.records.list("Attachments", {
       viewId: "all-attachments",
       page: next,
-      perPage: 100,
+      perPage: INTERNAL_PAGE,
+      sort: { field: "Created_Time", order: "desc" },
       filters: { field: "Parent_Id", comparator: "equal", value: parent },
     });
-    records.push(...result.records);
+    const base = (next - 1) * INTERNAL_PAGE;
+    result.records.forEach((record, index) => {
+      if (base + index >= start && base + index < end) window.push(record);
+    });
+    // Rows past this internal page, or past the window inside it, mean another page exists.
+    more = result.moreRecords || base + result.records.length > end;
     if (!result.moreRecords) break;
   }
-  const rows = records
+  const items = window
     .filter((record) => deps.lifecycle.isReady(record.id))
-    .map((record) => row(record, names))
-    .sort((a, b) => String(b.Created_Time).localeCompare(String(a.Created_Time)));
-  const start = (page - 1) * perPage;
-  const items = rows.slice(start, start + perPage);
-  if (!items.length) return new Response(null, { status: 204, headers: NO_STORE });
+    .map((record) => row(record, names));
+  // A fully not-ready window with more rows behind it must still say so (200, empty data).
+  if (!items.length && !more) return new Response(null, { status: 204, headers: NO_STORE });
   return ok(200, {
     data: items,
-    info: {
-      page,
-      per_page: perPage,
-      count: items.length,
-      more_records: start + perPage < rows.length,
-    },
+    info: { page, per_page: perPage, count: items.length, more_records: more },
   });
 }
 

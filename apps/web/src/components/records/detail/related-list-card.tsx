@@ -38,6 +38,12 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
   } = definition;
 
   const [activeSubtab, setActiveSubtab] = useState(subtabs?.[0]?.id ?? "");
+  const customCard = definition.renderCard?.({
+    orgSlug: "",
+    recordPath: () => "#",
+    ...context,
+    definition,
+  });
   const customBody = definition.renderBody?.({
     orgSlug: "",
     recordPath: () => "#",
@@ -125,6 +131,8 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       </Button>
     );
   }
+
+  if (customCard != null) return <>{customCard}</>;
 
   return (
     <section

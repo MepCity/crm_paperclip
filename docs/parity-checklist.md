@@ -781,6 +781,36 @@ in place as a `laterModule="P3"` toggle (open question for the board); Save open
 Cancel creates nothing. The record's Participants Add opens the same picker and writes the
 list. Provider and the audit, check-in and tag fields are not drawn.
 
+
+### Notes in Timeline History — MEP-580
+
+| Inventory | Behaviour | Status |
+| --- | --- | --- |
+| 80 | "Note added" event per note, merged chronologically with other history events; Modules filter "Notes" keeps only note events | Done |
+| 81 | Long note body clamped with Show More / Show Less (inline) | Done |
+| 108 | "Add Note" + down indicator under a note event | Interim: non-interactive label (behaviour unobserved) — gate list |
+
+Open question: note edit/delete produce no separate Timeline event; a deleted note's event disappears. The applied history filter (Modules, Users, Time) now filters events client-side; Sources has no effect yet.
+
+
+### Attachments card on record detail — MEP-600
+
+| Inventory | Behaviour | Tests |
+| --- | --- | --- |
+| AT-01 | Attachments entry in the Related List rail scrolls the card (`related-list-attachments`) into view on Leads, Contacts, Accounts and Deals | `record-attachments.spec.ts` |
+| AT-02 – AT-06 | Attach button opens the source menu (Upload File, Documents inert, Other Cloud Drives, Link (URL)); chevron flips while open | `attachments-card.test.tsx`; `record-attachments.spec.ts` |
+| AT-07 – AT-09 | Attach From Link dialog attaches an http(s) URL; invalid URL keeps the dialog open | `attach-link-dialog.test.tsx`; `record-attachments.spec.ts` |
+| AT-10 – AT-21 | Other Cloud Drives dialog shows the disconnected state only; no provider is connected | `cloud-drives-dialog.test.tsx` |
+| AT-22 | Notes paperclip stays with the Notes card (not part of this issue) | — |
+
+Provisional rules: record selection budget 10 files / 100 MB combined, checked in the browser
+before any upload (toast "You can attach up to 10 files with a total size of 100 MB at a time.");
+files upload one by one under one `X-Upload-Batch`; 413 / 415 show "File size exceeds the limit."
+/ "This file type is not supported." in the row; download is a browser download through an
+authenticated request; delete asks for confirmation and is permanent; Timeline History shows
+"Attachment added: <name>" (from the stored row) and "Attachment deleted: <name>" (kept only for
+the browser session, attributed to "You", because a deleted row leaves no record); Documents is
+inert (M9); Leads card sits after Closed Activities (order 3, as on the other modules).
 ## Module 6 — CSV import and export
 
 Sources: `research/specs/csv-import-export.md` (CSV-01 – CSV-32), ADR 0005 §3. Entry points were
