@@ -74,3 +74,20 @@ test("Actions opens the measured operations in screen order", async () => {
   await user.click(screen.getByRole("menuitem", { name: "Delete" }));
   expect(onAction).toHaveBeenCalledTimes(1);
 });
+
+test("Tags carries the M6 marker on inventory lists until Tags is wired", () => {
+  const { rerender } = render(<SelectionBar laterInventory selectedCount={1} onClear={() => {}} />);
+  expect(screen.getByRole("button", { name: "Tags" }).closest("[data-later-module]")).toBeTruthy();
+
+  rerender(
+    <SelectionBar
+      laterInventory
+      tagsEnabled
+      selectedCount={1}
+      onClear={() => {}}
+      onTags={() => {}}
+    />,
+  );
+  const tags = screen.getByRole("button", { name: "Tags" });
+  expect(tags.hasAttribute("data-later-module") || tags.closest("[data-later-module]")).toBeFalsy();
+});

@@ -6,6 +6,7 @@ import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/me
 
 export interface SelectionBarProps {
   laterInventory?: boolean;
+  tagsEnabled?: boolean;
   selectedCount: number;
   onClear: () => void;
   /** The Actions menu operations. Items without a wired handler stay visible but inert. */
@@ -26,6 +27,7 @@ function selectionLabel(count: number): string {
 
 export function SelectionBar({
   laterInventory = false,
+  tagsEnabled = false,
   selectedCount,
   onClear,
   actions = [],
@@ -71,7 +73,7 @@ export function SelectionBar({
           variant="selection"
           size="listSelection"
           className="w-(--size-list-selection-tags-width)"
-          laterModule={laterInventory ? "M6" : undefined}
+          laterModule={laterInventory && !tagsEnabled ? "M6" : undefined}
           onPress={onTags}
         >
           Tags
