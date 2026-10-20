@@ -20,7 +20,7 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
-import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
+import { TimelineSurface } from "@/components/records/detail/timeline";
 import { useRecordNoteEvents } from "@/components/records/notes/use-record-note-events";
 import { supportsRecordPrint } from "@/components/records/print/print-modules";
 import { RecordTags } from "@/components/records/tags/record-tags";
@@ -50,6 +50,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { openActivityCreate } from "@/modules/activity-add-new";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type {
   HeaderConfirmRequest,
@@ -58,7 +59,9 @@ import type {
 } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
+import { RecordCallProvider } from "./record-call-context";
 import { RelatedCardsContainer } from "./related-cards-container";
+import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
@@ -318,6 +321,7 @@ export function RecordDetailScreen({
   }
 
   const moreMenuGroups = rules.moreOptions({
+    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
     ...(definition.merge
@@ -337,7 +341,18 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <>
+    <RecordCallProvider
+      value={() =>
+        openActivityCreate(
+          orgSlug,
+          "Calls",
+          moduleApiName,
+          record,
+          (path) => router.push(path),
+          paths.record(orgSlug, definition.tab, recordId),
+        )
+      }
+    >
       {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField && StatusSection ? (
         <StatusSection
@@ -392,22 +407,18 @@ export function RecordDetailScreen({
           />
         ) : null}
       </InlineEditProvider>
-    </>
+    </RecordCallProvider>
   );
 
   const timeline = (
     <TimelineSurface subtabs={rules.timeline.subtabs} activeSubtabId="history">
-      <TimelineHistory
+      <RecordTimelineHistory
+        key={`${moduleApiName}:${recordId}`}
+        module={moduleApiName}
+        recordId={recordId}
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={[
-          ...rules.timeline.events.map((event) => ({
-            ...event,
-            kind: rules.timeline.normalizeEventKind(event.kind),
-          })),
-          ...noteEvents,
-          ...attachmentEvents,
-        ]}
+        events={[...noteEvents, ...attachmentEvents]}
         format={DEFAULT_FORMAT}
         initialFilterExpanded={false}
         modulesLabel="Modules"

@@ -40,6 +40,13 @@ export const dealsFormRules: FormRules = {
   owner: "Owner",
   currency: "Amount",
   currencies: ["Amount", "Expected_Revenue"],
+  currencyHelp: {
+    Amount: {
+      text: "Enter an arithmetic expression to calculate the amount automatically.",
+      expression: "20 + 20",
+      result: "40",
+    },
+  },
   omitted: ["Connected_To__s"],
   omittedSections: ["Deal Image"],
   stageProbability: { stage: "Stage", probability: "Probability" },

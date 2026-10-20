@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
 import {
   ConflictError,
   ForbiddenError,
@@ -33,8 +34,10 @@ import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "..
 import { isJsonArray, isJsonObject } from "../json";
 import type { RecycleBinService } from "../recycle-bin";
 import { roundMoneyTwoDecimals } from "../rounding";
+import { matchesSystemFilters, validateSystemFilters } from "../system-filters";
 import type { TagService } from "../tags";
 import {
+  attachmentParent,
   attachmentUltimateParent,
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
@@ -53,10 +56,12 @@ import { fixtureHistoryStore } from "./history-store";
 import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
+import { notesParentModules } from "./notes/metadata";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { relatedFilterHistory } from "./system-filter-history";
 import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
@@ -146,6 +151,7 @@ export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
 ): RecordService & {
+  readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
   readonly history: RecordHistoryService;
   readonly tags: TagService;
   readonly recycleBin: RecycleBinService;
@@ -161,12 +167,16 @@ export function createFixtureRecordService(
           name,
           {
             records: new Map(
-              bundle.generateSeed(now).map((record) => [
+              bundle.generateSeed(now).map((record, index) => [
                 record.id,
                 {
                   ...record,
                   fields: {
                     ...record.fields,
+                    // Internal lock state is separate from exported module fields.
+                    ...(["Calls", "Events", "Campaigns"].includes(name)
+                      ? { Locked__s: index === 125 }
+                      : {}),
                     ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
                       ? { Owner: ctx.userId }
                       : {}),
@@ -267,18 +277,45 @@ export function createFixtureRecordService(
     if (!view) throw new NotFoundError("View not found.");
     return view;
   };
+  const noteParentVisible = (fields: RecordData["fields"]) => {
+    const parent = fields.Parent_Id;
+    return (
+      isJsonObject(parent) &&
+      typeof parent.module === "string" &&
+      typeof parent.id === "string" &&
+      Object.hasOwn(fixtureModules, parent.module) &&
+      moduleStore(parent.module).records.has(parent.id) &&
+      options?.canReadRecord?.(parent.module, parent.id) !== false
+    );
+  };
+  const assertNoteParentVisible = (module: string, fields: RecordData["fields"]) => {
+    if (module === "Notes" && !noteParentVisible(fields))
+      throw new NotFoundError("Record not found.");
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
+    assertNoteParentVisible(module, record.fields);
     return record;
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
     if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
+    // Some modules have no public lock field; their fixture lock remains server-only.
+    const publicRecord =
+      Object.hasOwn(record.fields, "Locked__s") &&
+      !bundle.metadata.fields.some((field) => field.apiName === "Locked__s")
+        ? {
+            ...record,
+            fields: Object.fromEntries(
+              Object.entries(record.fields).filter(([name]) => name !== "Locked__s"),
+            ),
+          }
+        : record;
     return resolveRecordReferences(
       bundle.metadata.fields.some((field) => field.apiName === "Tag")
-        ? projectTags(moduleStore(module), bundle.readRecord?.(record, now) ?? record)
-        : (bundle.readRecord?.(record, now) ?? record),
+        ? projectTags(moduleStore(module), bundle.readRecord?.(publicRecord, now) ?? publicRecord)
+        : (bundle.readRecord?.(publicRecord, now) ?? publicRecord),
       bundle.metadata.fields,
       referenceModules(),
     );
@@ -342,13 +379,36 @@ export function createFixtureRecordService(
     }
     return result;
   };
-  const matching = (
+  const matching = async (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+    query: Pick<
+      ListQuery,
+      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+    >,
     applyView = true,
     now = clock(),
   ) => {
     const bundle = bundleFor(module);
+    if (query.systemFilters !== undefined)
+      validateSystemFilters(query.systemFilters, {
+        module,
+        memberIds: options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds],
+        relatedModules: [
+          ...((notesParentModules as readonly string[]).includes(module) ? ["Notes"] : []),
+          ...(ATTACHMENT_PARENT_MODULES.includes(module) ? ["Attachments"] : []),
+          ...(activityParentModules.has(module) ? ["Tasks", "Events", "Calls"] : []),
+        ],
+      });
+    const systemFilters =
+      query.systemFilters && Object.keys(query.systemFilters).length
+        ? query.systemFilters
+        : undefined;
+    const systemEvents = systemFilters
+      ? [...state.history.values()].filter(
+          (event) =>
+            options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
+        )
+      : [];
     const view = applyView ? viewFor(module, query.viewId) : undefined;
     const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
     if (query.filters) validateCriteria(query.filters, fieldMap);
@@ -390,10 +450,16 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
+      .filter(
+        (record) =>
+          !systemFilters || matchesSystemFilters(module, record, systemFilters, systemEvents),
+      )
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
+          (!systemFilters || options?.canReadRecord?.(module, record.id) !== false) &&
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
@@ -416,15 +482,43 @@ export function createFixtureRecordService(
     hookCopies = new Set();
     try {
       const result = write();
-      const events = historyBatch(previous, state.modules, fixtureModules, operation, {
+      const commit = {
         sequence: state.sequence + 1,
         occurredAt: clock().toISOString(),
         actor: { id: ctx.userId, name: options?.actorName ?? ctx.userId },
-        source: options?.source ?? "manual",
-      });
+        source: options?.source ?? ("manual" as const),
+      };
+      const operationId = operation.operationId ?? randomUUID();
+      const events = historyBatch(
+        previous,
+        state.modules,
+        fixtureModules,
+        { ...operation, operationId },
+        commit,
+      );
+      const noteIds = new Set(
+        [...state.history.values()]
+          .filter((event) => event.kind === "note_added")
+          .map((event) => event.subject.recordId),
+      );
+      events.push(
+        ...relatedFilterHistory(previous, state.modules, events, commit, operationId).filter(
+          (event) => event.kind !== "note_added" || !noteIds.has(event.subject.recordId),
+        ),
+      );
       const nextHistory = new Map(state.history);
       if (events.length) options?.beforeHistoryAppend?.(copy(events));
       fixtureHistoryStore(nextHistory).appendBatch(events);
+      for (const [id, event] of nextHistory) {
+        if (event.kind !== "note_added") continue;
+        const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+        const parent = attachmentParent(note?.fields.Parent_Id);
+        if (
+          parent &&
+          (event.stream.module !== parent.module || event.stream.recordId !== parent.id)
+        )
+          nextHistory.set(id, { ...event, stream: { module: parent.module, recordId: parent.id } });
+      }
       state.history = nextHistory;
       if (events.length) state.sequence++;
       return result;
@@ -496,8 +590,8 @@ export function createFixtureRecordService(
         new Set(),
       );
       validateReferences(module, record.fields);
-      if (module === "Notes" || module === "Attachments")
-        attachmentUltimateParent(record.fields, hookContext);
+      assertNoteParentVisible(module, record.fields);
+      if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     },
   });
   const writeBatch = (
@@ -647,7 +741,7 @@ export function createFixtureRecordService(
     if (bundle.childModule) return [];
     return copy(
       duplicateGroups(
-        matching(module, { viewId: "" }, false),
+        await matching(module, { viewId: "" }, false),
         fields,
         bundle.metadata.fields,
         bundle.managedFields,
@@ -655,7 +749,17 @@ export function createFixtureRecordService(
     );
   };
 
+  const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   return {
+    attachmentLifecycle: {
+      ...attachmentLifecycle,
+      publish(id, data) {
+        return atomic(
+          { module: "Attachments", recordId: id, mechanism: "attachment_publish" },
+          () => attachmentLifecycle.publish(id, data),
+        );
+      },
+    },
     tags,
     recycleBin,
     history: fixtureHistoryReader(
@@ -673,6 +777,30 @@ export function createFixtureRecordService(
           (options?.canReadField?.(module, apiName) ?? true),
       },
       state.cursors,
+      (event) => {
+        if (event.kind === "note_added") {
+          const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+          if (!note || !noteParentVisible(note.fields)) return null;
+          return {
+            ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
+            typeof note.fields.Note_Title === "string"
+              ? { name: note.fields.Note_Title }
+              : {}),
+            payload: {
+              body:
+                options?.canReadField?.("Notes", "Note_Content") !== false
+                  ? String(note.fields.Note_Content ?? "")
+                  : "",
+            },
+          };
+        }
+        if (
+          ["attachment_added", "attachment_deleted"].includes(event.kind) &&
+          options?.canReadField?.("Attachments", "File_Name") !== false
+        )
+          return { name: event.subject.name ?? undefined, payload: null };
+        return { payload: null };
+      },
     ),
     merge,
     findDuplicateGroups,
@@ -755,7 +883,7 @@ export function createFixtureRecordService(
           throw new ValidationError({ fields: ["Choose known field API names."] });
         const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
         const rows = sortRecords(
-          matching(module, { viewId: "", filters: query.filters }, false).filter((record) =>
+          (await matching(module, { viewId: "", filters: query.filters }, false)).filter((record) =>
             matchesGlobalSearch(
               record,
               bundle.metadata.fields,
@@ -827,7 +955,7 @@ export function createFixtureRecordService(
       const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
       const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
       const now = clock();
-      const rows = sortRecords(matching(module, query, true, now), applied, fieldMap);
+      const rows = sortRecords(await matching(module, query, true, now), applied, fieldMap);
       const start = (query.page - 1) * query.perPage;
       const activities = query.includeActivitySummary ? linkedActivities(module, now) : undefined;
       const activitySummaries = Object.fromEntries(
@@ -858,7 +986,7 @@ export function createFixtureRecordService(
       });
     },
     async count(module, query) {
-      return matching(module, query).length;
+      return (await matching(module, query)).length;
     },
     async summarize(module, query) {
       const metadata = bundleFor(module).metadata;
@@ -871,7 +999,7 @@ export function createFixtureRecordService(
         (!sumField || !["currency", "integer", "double"].includes(sumField.dataType))
       )
         throw new ValidationError({ sum: ["Choose a known numeric field."] });
-      const rows = matching(module, query);
+      const rows = await matching(module, query);
       const values: (string | null)[] = (groupField.picklist ?? []).map(
         (option) => option.storedValue,
       );
@@ -924,6 +1052,7 @@ export function createFixtureRecordService(
         });
         if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
         bundle.applyRules?.(fields, normalized, undefined, hookContext);
+        assertNoteParentVisible(module, fields);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const record = { id, fields };
         assertUniqueFieldValues(
@@ -1024,18 +1153,11 @@ export function createFixtureRecordService(
 }
 
 /** Internal lifecycle access for the server-side blob adapter; never a wire API. */
-export function createFixtureAttachmentLifecycle(context: OrgContext) {
-  createFixtureRecordService(context);
-  const state = stores.get(context.orgId);
-  if (!state) throw new NotFoundError("Organization store not found.");
-  return fixtureAttachmentLifecycle({
-    registeredModules: Object.keys(fixtureModules),
-    moduleStore(module) {
-      const store = state.modules.get(module);
-      if (!store) throw new NotFoundError("Module not found.");
-      return store;
-    },
-  });
+export function createFixtureAttachmentLifecycle(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+) {
+  return createFixtureRecordService(context, options).attachmentLifecycle;
 }
 
 /** Read-only history facade sharing the tenant's atomic fixture state. */

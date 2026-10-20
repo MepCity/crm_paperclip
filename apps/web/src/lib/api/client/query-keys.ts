@@ -6,6 +6,7 @@ function root(orgSlug: string) {
 
 export const apiKeys = {
   root,
+  timelines: (orgSlug: string) => [...root(orgSlug), "timelines"] as const,
   homeCurrency: (orgSlug: string) => [...root(orgSlug), "homeCurrency"] as const,
   imports: (orgSlug: string) => [...root(orgSlug), "imports"] as const,
   importJob: (orgSlug: string, id: string) => [...root(orgSlug), "imports", id] as const,
@@ -25,7 +26,10 @@ export const apiKeys = {
   count: (
     orgSlug: string,
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+    query: Pick<
+      ListQuery,
+      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+    >,
   ) => [...apiKeys.module(orgSlug, module), "count", serializeCountQuery(query)] as const,
   summarize: (orgSlug: string, module: string, query: SummaryQuery) =>
     [...apiKeys.module(orgSlug, module), "summarize", serializeSummarizeQuery(query)] as const,
@@ -60,7 +64,10 @@ function serializeListQuery(query: ListQuery): string {
 }
 
 function serializeCountQuery(
-  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+  query: Pick<
+    ListQuery,
+    "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+  >,
 ): string {
   return JSON.stringify(query);
 }

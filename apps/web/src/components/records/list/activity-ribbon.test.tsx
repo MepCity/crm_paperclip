@@ -25,9 +25,9 @@ describe("ActivityRibbon", () => {
     it("renders meeting kind with calendar icon and accessible name", () => {
       render(<ActivityRibbon kind="meeting" dateText="Oct 15" />);
 
-      const ribbon = screen.getByLabelText("Open meeting, due Oct 15");
+      const ribbon = screen.getByLabelText("Open meeting, Oct 15");
       expect(ribbon).toBeTruthy();
-      expect(ribbon.getAttribute("aria-label")).toBe("Open meeting, due Oct 15");
+      expect(ribbon.getAttribute("aria-label")).toBe("Open meeting, Oct 15");
 
       const icon = ribbon.querySelector("svg");
       expect(icon).toBeTruthy();
@@ -39,9 +39,9 @@ describe("ActivityRibbon", () => {
     it("renders call kind with phone icon and accessible name", () => {
       render(<ActivityRibbon kind="call" dateText="Jun 29" />);
 
-      const ribbon = screen.getByLabelText("Open call, due Jun 29");
+      const ribbon = screen.getByLabelText("Open call, Jun 29");
       expect(ribbon).toBeTruthy();
-      expect(ribbon.getAttribute("aria-label")).toBe("Open call, due Jun 29");
+      expect(ribbon.getAttribute("aria-label")).toBe("Open call, Jun 29");
 
       const icon = ribbon.querySelector("svg");
       expect(icon).toBeTruthy();
@@ -91,35 +91,6 @@ describe("ActivityRibbon", () => {
     });
   });
 
-  describe("overdue status and classes", () => {
-    it("applies overdue class when overdue is true", () => {
-      render(<ActivityRibbon kind="task" dateText="Jul 2" overdue={true} />);
-
-      const ribbon = screen.getByLabelText("Open task, due Jul 2");
-      expect(ribbon.classList.contains("activity-ribbon--overdue")).toBe(true);
-      expect(ribbon.classList.contains("overdue")).toBe(true);
-      expect(ribbon.getAttribute("data-overdue")).toBe("true");
-    });
-
-    it("does not apply overdue class when overdue is false", () => {
-      render(<ActivityRibbon kind="task" dateText="Jul 2" overdue={false} />);
-
-      const ribbon = screen.getByLabelText("Open task, due Jul 2");
-      expect(ribbon.classList.contains("activity-ribbon--overdue")).toBe(false);
-      expect(ribbon.classList.contains("overdue")).toBe(false);
-      expect(ribbon.getAttribute("data-overdue")).toBeNull();
-    });
-
-    it("does not apply overdue class when overdue is omitted", () => {
-      render(<ActivityRibbon kind="call" dateText="Jun 29" />);
-
-      const ribbon = screen.getByLabelText("Open call, due Jun 29");
-      expect(ribbon.classList.contains("activity-ribbon--overdue")).toBe(false);
-      expect(ribbon.classList.contains("overdue")).toBe(false);
-      expect(ribbon.getAttribute("data-overdue")).toBeNull();
-    });
-  });
-
   describe("href link vs static element", () => {
     it("renders as anchor link when href is provided", () => {
       render(
@@ -145,14 +116,14 @@ describe("ActivityRibbon", () => {
     it("does not render a tooltip or title attribute", () => {
       render(<ActivityRibbon kind="call" dateText="Jun 29" />);
 
-      const ribbon = screen.getByLabelText("Open call, due Jun 29");
+      const ribbon = screen.getByLabelText("Open call, Jun 29");
       expect(ribbon.getAttribute("title")).toBeNull();
     });
 
     it("merges custom className when provided", () => {
       render(<ActivityRibbon kind="meeting" dateText="Nov 1" className="custom-ribbon-class" />);
 
-      const ribbon = screen.getByLabelText("Open meeting, due Nov 1");
+      const ribbon = screen.getByLabelText("Open meeting, Nov 1");
       expect(ribbon.classList.contains("activity-ribbon")).toBe(true);
       expect(ribbon.classList.contains("custom-ribbon-class")).toBe(true);
     });

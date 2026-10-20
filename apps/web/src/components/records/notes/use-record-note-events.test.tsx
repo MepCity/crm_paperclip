@@ -1,82 +1,91 @@
-import { cleanup, renderHook } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import type { ListQuery, RecordData } from "@crm/core/records";
+import { renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { describe, expect, it, vi } from "vitest";
+import type { ClientRecordService } from "@/lib/api/client/http-record-service";
+import { ApiProvider } from "@/lib/api/client/provider";
 import { useRecordNoteEvents } from "./use-record-note-events";
 
-const state = vi.hoisted(() => ({
-  modules: ["Leads", "Contacts", "Accounts", "Deals", "Campaigns", "Cases", "Solutions"],
-  loaded: true,
-  useViews: vi.fn(),
-  useRecordList: vi.fn(),
-}));
-
-vi.mock("@/lib/api/client/hooks", () => ({
-  useModule: () => ({
-    data: state.loaded
-      ? { fields: [{ apiName: "Parent_Id", lookup: { module: "Leads", modules: state.modules } }] }
-      : undefined,
-  }),
-  useViews: state.useViews,
-  useRecordList: state.useRecordList,
-  useUsers: () => ({ data: [{ userId: "user-1", name: "Test User" }] }),
-}));
-
-afterEach(() => {
-  cleanup();
-  vi.resetAllMocks();
-  state.loaded = true;
-  state.modules = ["Leads", "Contacts", "Accounts", "Deals", "Campaigns", "Cases", "Solutions"];
-});
-
-function mockCachedNotes() {
-  state.useViews.mockReturnValue({ data: [{ id: "notes-view", isDefault: true }] });
-  state.useRecordList.mockReturnValue({
-    data: {
-      records: [{ id: "note-1", fields: { Note_Title: "Follow up", Created_By: "user-1" } }],
-    },
-  });
-}
-
-it.each(["Tasks", "Events", "Calls"] as const)(
-  "does not request or project Notes for unsupported %s parents, even with cached data",
-  (module) => {
-    mockCachedNotes();
-    const { result } = renderHook(() => useRecordNoteEvents(module, "parent-1"));
-    expect(state.useViews).toHaveBeenCalledWith("Notes", { enabled: false });
-    expect(state.useRecordList).toHaveBeenCalledWith("Notes", expect.anything(), {
-      enabled: false,
-    });
-    expect(result.current).toEqual([]);
-  },
-);
-
-it("waits for Notes metadata before listing and projects notes for an accepted parent", () => {
-  mockCachedNotes();
-  state.loaded = false;
-  const { result, rerender } = renderHook(() => useRecordNoteEvents("Leads", "parent-1"));
-  expect(state.useRecordList).toHaveBeenLastCalledWith("Notes", expect.anything(), {
-    enabled: false,
-  });
-  expect(result.current).toEqual([]);
-  state.loaded = true;
-  rerender();
-  expect(state.useRecordList).toHaveBeenLastCalledWith(
-    "Notes",
-    expect.objectContaining({
-      filters: {
-        field: "Parent_Id",
-        comparator: "equal",
-        value: { module: "Leads", id: "parent-1" },
+describe("useRecordNoteEvents", () => {
+  it("pages through notes until moreRecords is false and returns all 250 note events", async () => {
+    const allNotes: RecordData[] = Array.from({ length: 250 }, (_, i) => ({
+      id: `note-${i + 1}`,
+      fields: {
+        Note_Title: `Note ${i + 1}`,
+        Note_Content: `<p>Content ${i + 1}</p>`,
+        Parent_Id: { module: "Leads", id: "lead-1" },
+        Created_By: { id: "u1", name: "Ada Lovelace" },
+        Created_Time: new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString(),
       },
-    }),
-    { enabled: true },
-  );
-  expect(result.current).toMatchObject([{ id: "note-note-1", actorName: "Test User" }]);
-});
+    }));
 
-it("uses metadata when another parent becomes supported", () => {
-  mockCachedNotes();
-  state.modules = [...state.modules, "Tasks"];
-  const { result } = renderHook(() => useRecordNoteEvents("Tasks", "parent-1"));
-  expect(state.useRecordList).toHaveBeenCalledWith("Notes", expect.anything(), { enabled: true });
-  expect(result.current).toHaveLength(1);
+    const listQueries: ListQuery[] = [];
+    const mockService = {
+      getModule: vi.fn(async () => ({
+        fields: [{ apiName: "Parent_Id", lookup: { module: "Leads", modules: ["Leads"] } }],
+      })),
+      list: vi.fn(async (_module: string, query: ListQuery) => {
+        listQueries.push(query);
+        const page = query.page ?? 1;
+        const perPage = query.perPage ?? 100;
+        const start = (page - 1) * perPage;
+        const records = allNotes.slice(start, start + perPage);
+        return {
+          records,
+          moreRecords: start + perPage < allNotes.length,
+        };
+      }),
+      listViewSummaries: vi.fn(async () => [
+        { id: "v-notes-default", name: "All Notes", isDefault: true, systemDefined: true },
+      ]),
+      listUsers: vi.fn(async () => [{ userId: "u1", name: "Ada Lovelace" }]),
+    } as unknown as ClientRecordService;
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <ApiProvider orgSlug="test-org" service={mockService}>
+        {children}
+      </ApiProvider>
+    );
+
+    const { result } = renderHook(() => useRecordNoteEvents("Leads", "lead-1"), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current).toHaveLength(250);
+    });
+
+    // Fetched in chunks of 100 (3 pages total)
+    expect(mockService.list).toHaveBeenCalledTimes(3);
+    expect(listQueries.map((q) => q.page)).toEqual([1, 2, 3]);
+
+    // First and last events
+    expect(result.current[0]?.title).toBe("Note added: Note 1");
+    expect(result.current[249]?.title).toBe("Note added: Note 250");
+    expect(result.current[0]?.actorName).toBe("Ada Lovelace");
+  });
+  it.each(["Tasks", "Events", "Calls"] as const)(
+    "does not request Notes for unsupported %s parents with cached views",
+    async (module) => {
+      const service = {
+        getModule: vi.fn(async () => ({
+          fields: [{ apiName: "Parent_Id", lookup: { module: "Leads", modules: ["Leads"] } }],
+        })),
+        list: vi.fn(async () => ({ records: [], moreRecords: false })),
+        listViewSummaries: vi.fn(async () => [{ id: "notes-view", isDefault: true }]),
+        listUsers: vi.fn(async () => []),
+      } as unknown as ClientRecordService;
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <ApiProvider orgSlug="test-org" service={service}>
+          {children}
+        </ApiProvider>
+      );
+      const { result, rerender } = renderHook(
+        ({ parent }) => useRecordNoteEvents(parent, "parent-1"),
+        { wrapper, initialProps: { parent: "Leads" as "Leads" | typeof module } },
+      );
+      await waitFor(() => expect(service.list).toHaveBeenCalledTimes(1));
+      rerender({ parent: module });
+      expect(result.current).toEqual([]);
+      expect(service.list).toHaveBeenCalledTimes(1);
+    },
+  );
 });

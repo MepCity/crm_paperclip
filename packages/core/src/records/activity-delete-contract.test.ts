@@ -129,7 +129,9 @@ describe.each(Object.entries(parentInputs))("%s activity deletion contract", (mo
             [field]: { module, id: parent.id },
             [activityModule === "Events" ? "Event_Title" : "Subject"]: "Synthetic locked activity",
           });
-          expect(child.fields.Locked__s).toBe(true);
+          await expect(service.delete(activityModule, [child.id])).rejects.toBeInstanceOf(
+            RecordLockedError,
+          );
           expect(activityState(activityModule, child, new Date("2026-10-14T12:00:00Z"))).toBe(
             closed ? "closed" : "open",
           );

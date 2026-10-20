@@ -203,6 +203,25 @@ export type CampaignFilterValue = {
   memberStatuses?: readonly string[];
 };
 
+export interface FilterPeriod {
+  from: string;
+  to: string;
+}
+export type RecordActionKind = "created" | "updated" | "converted" | "merged";
+export type RelatedActionKind = "added" | "updated" | "deleted";
+export interface SystemFiltersValue {
+  locked?: { locked: boolean };
+  recordAction?: { action: RecordActionKind; actorIds?: readonly string[]; period: FilterPeriod };
+  relatedRecordsAction?: {
+    module: string;
+    action: RelatedActionKind;
+    actorIds?: readonly string[];
+    period: FilterPeriod;
+  };
+  touched?: { actorIds?: readonly string[]; period: FilterPeriod };
+  untouched?: { actorIds?: readonly string[]; period: FilterPeriod };
+}
+
 export interface ListQuery {
   viewId: string;
   /** One-based page number. */
@@ -214,6 +233,7 @@ export interface ListQuery {
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;
+  systemFilters?: SystemFiltersValue;
   activityFilter?: ActivityFilterValue;
   campaignFilter?: CampaignFilterValue;
   includeActivitySummary?: boolean;
@@ -221,7 +241,7 @@ export interface ListQuery {
 
 export type SummaryQuery = Pick<
   ListQuery,
-  "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter"
+  "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
 > & {
   groupBy: string;
   sum?: string;
@@ -311,7 +331,10 @@ export interface RecordService {
   list(module: ModuleApiName, query: ListQuery): Promise<ListResult>;
   count(
     module: ModuleApiName,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+    query: Pick<
+      ListQuery,
+      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+    >,
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;

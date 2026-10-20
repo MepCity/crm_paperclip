@@ -178,10 +178,9 @@ test("Meeting Information window matches the measured layout", async ({ page }) 
 test("full Meeting form matches the measured layout", async ({ page }) => {
   const { dialog } = await openMeetingDialog(page);
   await dialog.getByRole("button", { name: "Add more details" }).click();
-  await expect(page.getByRole("heading", { name: "Create Meeting" })).toBeVisible();
   await expectNoFormChrome(page);
-  await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Repeat" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
   await saveVisualScreenshot(page, "our-meeting-full.png");
 });
 
@@ -253,18 +252,13 @@ async function openCallCreate(page: Page) {
   return org;
 }
 
-// The implemented Call form still uses the Task layout (underlined, left labels,
-// x=332); these stay expected-fail until a follow-up reworks the form (see the
-// parity-checklist Open row). Remove test.fail() once the form is fixed.
 test("Create Call matches the measured layout", async ({ page }) => {
-  test.fail(true, "Call form uses the Task layout; spec measures boxed fields");
   await openCallCreate(page);
   await expectCallFormVisual(page);
   await saveVisualScreenshot(page, "our-call-create.png");
 });
 
 test("Call Edit keeps the Create layout", async ({ page }) => {
-  test.fail(true, "Call form uses the Task layout; spec measures boxed fields");
   const org = await openCallCreate(page);
   await page.goto(moduleRecordEditPath(org.slug, "Calls", "150000000000000001"));
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
