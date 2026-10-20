@@ -5,6 +5,7 @@ import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { Link } from "@/components/ui/link";
 import { useOptionalOrgSlug } from "@/lib/api/client/provider";
 import { EMPTY_FIELD_DISPLAY, formatFieldValue, isFieldValueEmpty } from "../field-format";
+import { useNumericDates } from "./numeric-dates-context";
 
 export interface FieldValueViewProps {
   field: FieldDefinition;
@@ -25,6 +26,7 @@ export function FieldValueView({
   orgSlug,
 }: FieldValueViewProps) {
   const contextOrgSlug = useOptionalOrgSlug();
+  const numericDates = useNumericDates();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
 
   if (isFieldValueEmpty(field, value)) {
@@ -36,6 +38,7 @@ export function FieldValueView({
     multiline: field.dataType === "textarea",
     linkWebsite: true,
     orgSlug: effectiveOrgSlug,
+    numericDates,
   });
 
   if (rendered.kind === "empty") {
