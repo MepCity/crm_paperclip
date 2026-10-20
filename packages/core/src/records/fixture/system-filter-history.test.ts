@@ -111,6 +111,51 @@ describe("system filter related history", () => {
     });
     expect(page.records.map((r) => r.id)).toEqual([master.id]);
   });
+  it("projects live note content without storing bodies or hiding the existing timeline row", async () => {
+    const ctx = context();
+    const service = createFixtureRecordService(ctx, {
+      now: () => new Date(period.from),
+      beforeHistoryAppend: (events) => {
+        for (const event of events.filter((e) => e.kind === "note_added"))
+          expect(event.payload).toBeNull();
+      },
+    });
+    const parent = await service.create("Leads", { Last_Name: "Parent", Company: "Synthetic" });
+    const note = await service.create("Notes", {
+      Parent_Id: { module: "Leads", id: parent.id },
+      Note_Content: "Original note",
+      Note_Title: "Original title",
+    });
+    const first = (await service.history.list("Leads", parent.id, { perPage: 25 })).events.find(
+      (e) => e.kind === "note_added",
+    );
+    expect(first).toMatchObject({
+      subject: { name: "Original title" },
+      payload: { body: "Original note" },
+    });
+    await service.update("Notes", note.id, {
+      Note_Content: "Edited note",
+      Note_Title: "Edited title",
+    });
+    const next = (await service.history.list("Leads", parent.id, { perPage: 25 })).events.filter(
+      (e) => e.kind === "note_added",
+    );
+    expect(next).toHaveLength(1);
+    expect(next[0]).toMatchObject({
+      id: first?.id,
+      occurredAt: first?.occurredAt,
+      subject: { name: "Edited title" },
+      payload: { body: "Edited note" },
+    });
+    const hidden = createFixtureRecordService(ctx, {
+      canReadField: (module) => module !== "Notes",
+    });
+    expect(
+      (await hidden.history.list("Leads", parent.id, { perPage: 25 })).events.find(
+        (e) => e.kind === "note_added",
+      ),
+    ).toMatchObject({ payload: { body: "" } });
+  });
   it("treats an empty system filter as absent", async () => {
     const ctx = context();
     const service = createFixtureRecordService(ctx, { canReadRecord: () => false });

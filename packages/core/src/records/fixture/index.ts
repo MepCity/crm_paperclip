@@ -764,6 +764,30 @@ export function createFixtureRecordService(
           (options?.canReadField?.(module, apiName) ?? true),
       },
       state.cursors,
+      (event) => {
+        if (event.kind === "note_added") {
+          const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+          if (!note || !noteParentVisible(note.fields)) return null;
+          return {
+            ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
+            typeof note.fields.Note_Title === "string"
+              ? { name: note.fields.Note_Title }
+              : {}),
+            payload: {
+              body:
+                options?.canReadField?.("Notes", "Note_Content") !== false
+                  ? String(note.fields.Note_Content ?? "")
+                  : "",
+            },
+          };
+        }
+        if (
+          ["attachment_added", "attachment_deleted"].includes(event.kind) &&
+          options?.canReadField?.("Attachments", "File_Name") !== false
+        )
+          return { name: event.subject.name ?? undefined, payload: null };
+        return { payload: null };
+      },
     ),
     merge,
     findDuplicateGroups,

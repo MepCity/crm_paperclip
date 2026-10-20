@@ -20,12 +20,13 @@ export function relatedFilterHistory(
     id: string,
     kind: HistoryEventKind,
     original?: RecordHistoryEvent,
+    name?: string,
   ) => {
     events.push({
       id: randomUUID(),
       schemaVersion: 1,
       stream,
-      subject: { module, recordId: id },
+      subject: { module, recordId: id, ...(name ? { name } : {}) },
       kind,
       ...commit,
       operationId,
@@ -61,8 +62,11 @@ export function relatedFilterHistory(
         const wasReady = old?.fields.$state === "ready";
         const ready = next?.fields.$state === "ready";
         const parent = parentOf(next ?? old, next ? after : before);
-        if (parent && ready && !wasReady) append(parent, module, id, "attachment_added");
-        if (parent && wasReady && !next) append(parent, module, id, "attachment_deleted");
+        const name = String((next ?? old)?.fields.File_Name ?? "");
+        if (parent && ready && !wasReady)
+          append(parent, module, id, "attachment_added", undefined, name);
+        if (parent && wasReady && !next)
+          append(parent, module, id, "attachment_deleted", undefined, name);
       }
     }
   }
