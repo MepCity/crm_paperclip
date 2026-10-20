@@ -6,6 +6,7 @@ function root(orgSlug: string) {
 
 export const apiKeys = {
   root,
+  timelines: (orgSlug: string) => [...root(orgSlug), "timelines"] as const,
   homeCurrency: (orgSlug: string) => [...root(orgSlug), "homeCurrency"] as const,
   imports: (orgSlug: string) => [...root(orgSlug), "imports"] as const,
   importJob: (orgSlug: string, id: string) => [...root(orgSlug), "imports", id] as const,

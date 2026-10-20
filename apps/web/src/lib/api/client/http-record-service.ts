@@ -64,6 +64,12 @@ export type ViewSummary = Pick<ListView, "id" | "name" | "systemDefined" | "isDe
 export type ClientRecordService = RecordService & {
   listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]>;
   listUsers(): Promise<readonly OrgMember[]>;
+  /** Optional for in-memory screen fixtures; HTTP clients always supply this reader. */
+  listHistory?(
+    module: ModuleApiName,
+    recordId: RecordId,
+    query: RecordHistoryQuery,
+  ): Promise<RecordHistoryPage>;
 };
 
 export type HttpRecordService = ClientRecordService & {

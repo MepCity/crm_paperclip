@@ -140,6 +140,7 @@ export function invalidateModuleLists(
   module: ModuleApiName,
   recordId?: RecordId,
 ) {
+  void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
   void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: summarizeQueriesPrefix(orgSlug, module) });
@@ -174,6 +175,7 @@ export function useUpdateRecord(module: ModuleApiName) {
     onSuccess: async (record) => {
       await queryClient.cancelQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
       queryClient.setQueryData(apiKeys.record(orgSlug, module, record.id), record);
+      void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
       void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
       void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
     },
