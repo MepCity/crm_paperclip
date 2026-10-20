@@ -1,7 +1,15 @@
 import type { ModuleMetadata } from "../../contract";
 
 /** Confirmed parent modules; activity parents remain a research question. */
-export const notesParentModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+export const notesParentModules = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Campaigns",
+  "Cases",
+  "Solutions",
+] as const;
 
 /** Sanitized field export; se_module denotes a polymorphic lookup. */
 export const notesMetadataSource = {
@@ -33,7 +41,7 @@ export const notesMetadataSource = {
       required: false,
       readOnly: false,
       unique: false,
-      massUpdate: false,
+      massUpdate: true,
       views: {
         view: true,
         create: true,
@@ -158,7 +166,36 @@ export const notesMetadataSource = {
       maxLength: 18,
     },
   ],
-  layout: [],
+  layout: [
+    {
+      label: "Note Information",
+      columnCount: 1,
+      columns: [
+        [
+          "Owner",
+          "Note_Title",
+          "Note_Content",
+          "Parent_Id",
+          "Created_By",
+          "Modified_By",
+          "Created_Time",
+          "Modified_Time",
+          "id",
+        ],
+      ],
+      fields: [
+        "Owner",
+        "Note_Title",
+        "Note_Content",
+        "Parent_Id",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "id",
+      ],
+    },
+  ],
 } as const;
 
 export const notesMetadata: ModuleMetadata = {

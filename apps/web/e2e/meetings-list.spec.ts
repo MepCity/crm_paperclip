@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
@@ -38,10 +39,12 @@ test("Meetings shell entry, single tab, view menu with search, columns and sorti
   for (const name of ["Title", "From", "To", "Related To"]) {
     await expect(list.getByRole("columnheader", { name, exact: true })).toBeVisible();
   }
-  await expect(list.getByRole("link", { name: "Create Meeting" })).toHaveAttribute(
-    "href",
-    /\/tab\/Meetings\/create$/,
-  );
+  // MEP-509: Create Meeting opens the Meeting Information window instead of the create page.
+  await list.getByRole("button", { name: "Create Meeting", exact: true }).click();
+  const information = page.getByRole("dialog", { name: "Meeting Information" });
+  await expect(information).toBeVisible();
+  await information.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(information).toBeHidden();
 
   // ML-02: view menu
   await list.getByRole("button", { name: "Custom views" }).click();
@@ -130,14 +133,18 @@ test("Meetings filters, paging, record route and related record link", async ({ 
   await expect(page).toHaveURL(/page=2/);
 
   // ML-38: Title opens the meeting record route
-  await list.locator("tbody tr").first().getByRole("link").first().click();
+  await list
+    .locator("tbody tr")
+    .first()
+    .locator('td[data-part="column"]')
+    .first()
+    .getByRole("link")
+    .click();
   await expect(page).toHaveURL(/\/tab\/Meetings\/[^/?]+/);
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
 
-test("Meetings later-module controls stay inert and Actions lists the six rows", async ({
-  page,
-}) => {
+test("Meetings import and export open while later-module controls stay inert", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, "Meetings"));
@@ -145,9 +152,10 @@ test("Meetings later-module controls stay inert and Actions lists the six rows",
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // ML-11 (M6) and ML-30 (M11): nothing happens
+  // Import is available; View Settings remains a later-module control.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Import Meetings" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
@@ -163,6 +171,40 @@ test("Meetings later-module controls stay inert and Actions lists the six rows",
     "Print View",
   ]);
   await page.getByRole("menuitem", { name: "Export Meetings", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Export Meetings" })).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Meetings list measured evidence and row configuration", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(
+    `${moduleListDefaultPath(org.slug, "Meetings")}?sort_by=Event_Title&sort_order=asc`,
+  );
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  const row = list.locator("tbody tr").first();
+  await row.hover();
+  const edit = row.getByRole("link", { name: "Edit record" });
+  await expect(edit).toHaveAttribute("href", /\/edit$/);
+
+  const dates = row.locator("td[data-part=column]");
+  await expect(dates.nth(1)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
+  await expect(dates.nth(2)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
+  await expect(list.locator("tbody tr").nth(1).locator("td[data-part=column]").nth(1)).toHaveText(
+    /^\d{2}\.\d{2}\.\d{4} \d{1,2}:\d{2} (AM|PM)$/,
+  );
+  await expect(list.locator("[data-part=related-pictogram]").first()).toBeVisible();
+
+  if (process.env.MEP_LIST_EVIDENCE_DIR) {
+    await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "meetings-list.png") });
+  }
+
+  await edit.click();
+  await expect(page).toHaveURL(/\/tab\/Meetings\/[^/]+\/edit$/);
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Title", exact: true })).not.toHaveValue("");
 });

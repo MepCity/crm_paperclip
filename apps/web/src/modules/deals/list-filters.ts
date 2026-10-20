@@ -29,11 +29,6 @@ const initialFieldLabels = [
   "Contact Name",
 ];
 
-/** Module keys from inventory for Filter By Fields (DL-66). M2 and M3 are live modules. */
-const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {
-  "Campaign Source": "M7",
-};
-
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
@@ -41,6 +36,7 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   const fieldType = special ?? (field.dataType as FilterFieldType);
   return {
     fieldType,
+    ...(fieldType === "tag" ? { tagModule: "Deals" as const } : {}),
     ...(fieldType === "picklist"
       ? {
           options: field.picklist?.map((option) => ({
@@ -97,12 +93,10 @@ export function buildDealsFilterGroups(input: Input): readonly FilterGroup[] {
       items: [...initialFieldLabels, ...remaining].map((label, index) => {
         const field = labels.get(label);
         const definition = field ? editor(field, input) : undefined;
-        const laterModule = fieldModuleKeys[label];
         return {
           id: field?.apiName ?? `field-${index}`,
           label,
           ...(definition ? { editor: definition } : { disabled: true }),
-          ...(laterModule ? { laterModule } : {}),
         };
       }),
     },

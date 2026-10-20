@@ -3,7 +3,17 @@ import { moduleCreatePath } from "@/lib/crm-paths";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 
 function accountDisplayName(fields: RecordData["fields"]): string {
-  return typeof fields.Account_Name === "string" ? fields.Account_Name : "";
+  const val = fields.Account_Name;
+  if (typeof val === "string") return val;
+  if (
+    typeof val === "object" &&
+    val !== null &&
+    "name" in val &&
+    typeof (val as { name?: unknown }).name === "string"
+  ) {
+    return (val as { name: string }).name;
+  }
+  return "";
 }
 
 export function accountNameLookupFromRecord(
@@ -53,4 +63,19 @@ export function openDealCreateWithAccountName(
     },
   });
   navigate(moduleCreatePath(orgSlug, "Deals"));
+}
+
+/** Provisional rule (MEP-900): New Case from the Accounts card fills Account Name. */
+export function openCaseCreateWithAccountName(
+  orgSlug: string,
+  account: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Cases",
+    fields: {
+      Account_Name: accountNameLookupFromRecord(account.id, account.fields),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Cases"));
 }

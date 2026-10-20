@@ -53,7 +53,7 @@ describe("createDealsRelatedLists definition", () => {
       { id: "sales-orders", moduleKey: "P2" },
       { id: "contact-roles", moduleKey: "M2" },
       { id: "emails", moduleKey: "M10" },
-      { id: "cases", moduleKey: "M8" },
+      { id: "cases", moduleKey: "M4" },
       { id: "invoices", moduleKey: "P2" },
     ];
     expected.forEach((row, index) => {
@@ -74,6 +74,16 @@ describe("createDealsRelatedLists definition", () => {
     expect(
       createDealsRelatedLists().find((c) => c.id === "contact-roles")?.countBadge,
     ).toBeUndefined();
+  });
+
+  it("draws the Contact Roles rail badge only for positive counts", () => {
+    for (const count of [undefined, 0, 2]) {
+      expect(
+        createDealsRelatedLists({ badges: { contactRoles: count } }).find(
+          (card) => card.id === "contact-roles",
+        )?.countBadge,
+      ).toBe(count ? count : undefined);
+    }
   });
 
   it("omits activity rail badges when card holds zero records", () => {
@@ -134,8 +144,6 @@ describe("RelatedCardsContainer with Deals card set", () => {
   it("marks laterModule targets on non-working cards", async () => {
     const user = userEvent.setup();
     render(<RelatedCardsContainer relatedLists={dealsRelatedLists} />);
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    await user.click(within(notesSection).getByRole("button", { name: "Recent Last" }));
     const cadences = screen.getByRole("region", { name: "Cadences" });
     await user.click(within(cadences).getByRole("button", { name: "Enroll" }));
     const products = screen.getByRole("region", { name: "Products" });

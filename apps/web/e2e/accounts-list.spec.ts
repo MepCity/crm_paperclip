@@ -1,5 +1,5 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -59,6 +59,24 @@ test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
   await expect(page).toHaveURL(/sort_by=Account_Name/);
 });
 
+test("Accounts view menu: show custom views as Dropdown stays inert (AL-02.10)", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Accounts"));
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("[data-view-pill]")).toHaveText("All Accounts");
+  const url = page.url();
+  await list.getByRole("button", { name: "Custom views" }).click();
+  await page.getByRole("menuitem", { name: "Show custom views as Dropdown" }).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(0);
+  await expect(page).toHaveURL(url);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(list.locator("[data-view-pill]")).toHaveText("All Accounts");
+  await expect(list.getByRole("button", { name: "All Locked Accounts" })).toBeVisible();
+});
+
 test("Accounts filters, alphabet, paging and record route", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -103,10 +121,13 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // AL-13: Create Account arrow attached dropdown (M6)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  // AL-13: Create Account dropdown opens the CSV import wizard
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Accounts", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Accounts\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // AL-33: View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
@@ -149,15 +170,52 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
     "Print View",
   ]);
 
-  // Inert action items
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  // TAG-02 / PS-05: these entries now navigate instead of remaining inert.
+  for (const [label, path] of [
+    ["Manage Tags", moduleTagsPath],
+    ["Drafts", moduleDraftsPath],
+  ] as const) {
+    await page.getByRole("menuitem", { name: label, exact: true }).click();
+    await expect(page).toHaveURL(path(org.slug, "Accounts"));
+    await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    if (label === "Manage Tags") {
+      await expect(
+        page.locator("#main-content").getByText("Accounts", { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByRole("table", { name: "Tags table" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { name: "Criteria", exact: true })).toBeVisible();
+    }
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Accounts"));
+    await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+    await list.getByRole("button", { name: "Actions", exact: true }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+  }
 
   // Print View (AL-14.10)
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });
   await expect(print.locator("svg")).toBeVisible();
   await print.click();
+  const printMenu = page.getByRole("menu", { name: "Print View", exact: true });
+  await expect(printMenu.getByRole("menuitem")).toHaveText([
+    "Print Default view",
+    "Print Using Canvas",
+  ]);
+  for (const name of ["Print Using Canvas"]) {
+    const item = printMenu.getByRole("menuitem", { name, exact: true });
+    await expect(item).toHaveAttribute("data-later-module", "M6");
+    // Placeholder rows stay inert and leave the submenu open.
+    await item.click({ force: true });
+    await expect(printMenu).toBeVisible();
+    expect(page.url()).toBe(before);
+  }
+  await printMenu.getByRole("menuitem", { name: "Print Default view", exact: true }).focus();
+  await page.keyboard.press("Escape");
+  await expect(printMenu).toHaveCount(0);
+  await expect(print).toBeFocused();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 

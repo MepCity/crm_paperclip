@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
@@ -124,7 +125,7 @@ test("Tasks filters, paging, record route and related record link", async ({ pag
   await expect(page.locator("[data-record-frame]")).toBeVisible();
 });
 
-test("Tasks later-module controls stay inert and Actions lists the six rows", async ({ page }) => {
+test("Tasks import and export open while later-module controls stay inert", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, "Tasks"));
@@ -132,9 +133,10 @@ test("Tasks later-module controls stay inert and Actions lists the six rows", as
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // TL-13 (M6) and TL-33 (M11): nothing happens
+  // Import is available; View Settings remains a later-module control.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Import Tasks" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
@@ -150,6 +152,22 @@ test("Tasks later-module controls stay inert and Actions lists the six rows", as
     "Print View",
   ]);
   await page.getByRole("menuitem", { name: "Export Tasks", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Export Tasks" })).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Tasks list measured evidence and row configuration", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Tasks"));
+  const list = page.locator(".module-list-page");
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  await expect(list.locator("[data-part=related-pictogram]")).toHaveCount(0);
+
+  if (process.env.MEP_LIST_EVIDENCE_DIR) {
+    await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "tasks-list.png") });
+  }
 });

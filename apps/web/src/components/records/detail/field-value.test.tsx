@@ -7,7 +7,9 @@ import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   apiName: string,
@@ -173,17 +175,39 @@ test("lookup field links to registered Deals detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
-test("lookup field attaches laterModule to unregistered target link", () => {
+test("lookup field links to registered Campaigns detail page", () => {
   show(field("Campaign_Source", "lookup", { lookup: { module: "Campaigns" } }), {
     module: "Campaigns",
     id: "camp-123",
     name: "Acme Campaign",
   });
   const link = screen.getByRole("link", { name: "Acme Campaign" });
+  expect(link.getAttribute("href")).toBe("/tab/Campaigns/camp-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field links to registered Cases detail page", () => {
+  show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
+    module: "Cases",
+    id: "case-123",
+    name: "Acme Case",
+  });
+  const link = screen.getByRole("link", { name: "Acme Case" });
+  expect(link.getAttribute("href")).toBe("/tab/Cases/case-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field attaches laterModule to unregistered target link", () => {
+  show(field("Doc_Ref", "lookup", { lookup: { module: "Documents" } }), {
+    module: "Documents",
+    id: "doc-123",
+    name: "Acme Doc",
+  });
+  const link = screen.getByRole("link", { name: "Acme Doc" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("M7");
+  expect(link.getAttribute("data-later-module")).toBe("M9");
 });
 
 test("empty lookup field renders an em dash", () => {
@@ -198,3 +222,17 @@ test("empty lookup field renders an em dash", () => {
   });
   expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
 });
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show(field("Support_Ref", "lookup", { lookup: { module } }), {
+      module,
+      id: "record-1",
+      name: "Support record",
+    });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}

@@ -89,7 +89,7 @@ Interim boundaries and empty-value behavior:
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
 - Role/group membership, blocked email, fiscal periods, system filters and
-  related-module filters are not introduced. `multi_module_lookup` keeps only
+  related-module filters are not introduced except for the interim Campaign system filter. `multi_module_lookup` keeps only
   empty / not-empty panel predicates.
 
 
@@ -738,3 +738,116 @@ multi-activity badge precedence/date selection remain unobserved. The UTC bounda
 and task/meeting/call tie order require confirmation at the module board gate.
 
 Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent; child locks are ignored temporarily, merge and conversion do not cascade, and restore is out of scope.
+
+## Campaigns
+
+`Campaigns` publishes the 21 exported fields, two layout sections, Type/Status
+picklists and four saved views. Null view sorting uses the common default sort.
+The source table contains only sanitized field/layout/view structure. Tag keeps
+the common text policy; Connected_To__s keeps the common multi-module lookup
+shape. Expected_Response and Num_sent are stored bigint strings, not computed
+statistics. Parent_Campaign is a self lookup; list/count with Parent_Campaign
+equal to a campaign ID returns its immediate children. Interim cycle protection
+rejects self-parenting and descendant-parenting with ValidationError.
+
+`Campaign_Members` is a hidden child module, like Contact_Roles, available through
+the existing generic CRUD, list and count paths. Campaign is required and exactly
+one of Lead or Contact must be populated. Composite uniqueness uses the same
+lifecycle validation mechanism as Contact_Roles: a campaign/member pair cannot
+repeat, including on update. Campaign, Lead and Contact deletion removes its
+membership rows atomically. Filter Campaign plus nonempty Lead/Contact for the
+campaign's members, or filter Lead/Contact for the member's campaigns; each row
+contains Campaign, the member reference and Member_Status. Deals.Campaign_Source
+resolves Campaigns; filtering it returns campaign deals. Deleting a campaign
+uses the common dangling-reference read policy (null) for Deals and child
+campaigns, without deleting those records.
+
+Interim/open questions:
+
+- Member_Status has no default. Its single provisional constant lists Planned,
+  Invited, Sent, Received, Opened, Responded, Bounced and Opted Out; replace it
+  when membership research confirms the real options (MEP-755).
+- Confirm the provisional campaign ancestor-cycle validation against research.
+- Lead conversion is not implemented in this service. Transferring memberships
+  to the resulting Contact remains open; no conversion code is added here.
+- Unread Campaigns retains the exported Common_Status criterion although that
+  field is absent from public metadata, following existing saved-view policy.
+
+## Recycle Bin search queries
+
+`RecycleBinQuery.deletedByContains` matches a case-insensitive substring of the
+stored deletion actor. Existing `deletedBy` retains exact, case-sensitive equality;
+when both are supplied, both must match. An empty substring matches every visible
+actor. Search predicates combine with module/name filters before pagination and
+`total`; tenant and role visibility remain authoritative.
+
+`deletedOn: { date: "YYYY-MM-DD", time?: "HH:mm" }` matches an entire calendar day
+or, with a 24-hour time, one minute. Intervals include their start and exclude the
+next day/minute. Invalid calendar dates, malformed times and malformed query
+values raise the existing `ValidationError`, even for an empty bin.
+
+Open questions: `OrgContext` currently has no user/organization timezone, so this
+query uses UTC (including when a deletion instant originated in another offset).
+The timezone source and reference CRM day boundaries need confirmation. RB-17 and
+RB-19 establish only `contains` and `is`; other operators remain unobserved and
+are not added. Deletion actor display-name resolution is outside this query port.
+
+## Campaign system filter (interim)
+
+Leads and Contacts accept `campaignFilter: { campaignIds, memberStatuses? }` on
+list/count/summarize. Choose one to five distinct non-empty campaign IDs and,
+optionally, a non-empty subset of the shared interim `campaignMemberStatuses`
+export from `@crm/core/records/campaigns`. A record matches membership in any
+selected campaign, narrowed by the status of that same membership. This combines
+with saved-view criteria, field filters, search and activity filters using AND.
+Membership and campaign reads use the caller's tenant and ordinary visibility;
+unknown or inaccessible IDs produce no matches. Other modules and malformed
+filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
+`campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
+
+## Cases
+
+`Cases` publishes all 30 exported fields, layout sections/columns, five picklists
+and eight saved views. Null sorting uses the common default. Subject, Status and
+Case_Origin are required. The seed contains 60 synthetic cases (IDs from
+250000000000000000; create range 260000000000000000), covers all picklist values,
+locked/open/closed/escalated cases and today's view, and links seeded Accounts,
+Contacts and Deals. List/count filters on Account_Name, Related_To and Deal_Name
+provide related reads. Deleting a registered target uses the existing dangling
+lookup read policy (null); it does not delete the case. Solution is text: there
+is no Cases–Solutions relation. Comment fields retain their exported scalar types;
+no comment, closure or escalation workflow is added.
+
+## Solutions
+
+`Solutions` publishes all 20 exported fields, layout sections/columns, Status
+picklist and four saved views. Solution_Title is required. The seed contains 25
+synthetic solutions (IDs from 270000000000000000; create range
+280000000000000000), every status and both Published states. Published remains
+a stored boolean; no publishing workflow is added. Existing module seed counts
+are unchanged. Tasks, Events, Calls, Notes and Attachments accept both new modules
+as parents through their existing lookup/parent mechanisms.
+
+### Auto-number (interim)
+
+CTO's interim fixture decision enables a generic helper through the bundle's
+`autoNumberField`. Case_Number and Solution_Number remain read-only autonumber
+fields (length 25) and are managed. Each module has an independent nextAutoNumber
+counter alongside nextId. Seed records receive unprefixed decimal strings 1..N
+in Created_Time ascending order (ID breaks ties); create continues at N+1 inside
+the common atomic write. Rollback restores the counter. Deletion never reuses a
+number. Update/mass update/merge retain the master's number. Client numbers are
+rejected like other managed fields. Clone/import use the same create path and
+must omit managed fields. No separate clone/convert service exists here.
+
+Interim/open questions:
+
+- Confirm actual auto-number prefix/suffix/start when research supplies evidence;
+  the export has null for each, so the approved fallback starts at 1.
+- Product_Name points to unregistered Products (Phase 2). The existing shared
+  reference policy preserves its reference unchanged; existence/name validation
+  starts when that module is registered. No synthetic Products module is added.
+- Unread views preserve Common_Status although it is absent from exported fields,
+  following the existing shared saved-view policy.
+- Layout-required Question/Answer do not change Solutions' module-level required
+  fields; the record contract follows the exported system_mandatory flags.

@@ -236,3 +236,93 @@ across all branches and starts fresh for each decode; it allows nearly twenty
 full 500-leaf groups, well above current panel and saved-view criteria. These are local input bounds,
 not claims about observed reference CRM limits. Rejections retain the existing
 four-key error envelope with `details.fields.search` or `details.fields.filters`.
+
+## CSV import and export (Module 6)
+
+Bodies use the port types of `@crm/core` (`ImportPreview`, `ImportSettings`, `ImportJob`,
+`ExportRequest`, `ExportJob`) as plain camelCase JSON; the reference's request shapes are
+not imitated. Operations live in `wire/transfer.ts` (`transferOperations`).
+
+| Operation | Method and path | Body |
+| --- | --- | --- |
+| Import preview | `POST /crm/v2.2/{module}/actions/import_preview` | `multipart/form-data`: one `file`, optional `charset` (`UTF-8` default, `ISO-8859-1`) |
+| Run import | `POST /crm/v2.2/{module}/actions/import` | `{ uploadId, settings }` |
+| Run export | `POST /crm/v2.2/{module}/actions/export` | `{ viewId?, ids?, fields }` |
+| Sample CSV | `GET /crm/v2.2/{module}/actions/import_sample` | CSV download |
+| Import history | `GET /crm/v9/settings/imports` | list of `ImportJob` |
+| Import detail | `GET /crm/v9/settings/imports/{importId}` | `ImportJob` |
+| Undo import | `POST /crm/v9/settings/imports/{importId}/actions/undo` | `ImportJob` |
+| Export history | `GET /crm/v9/settings/exports` | list of `ExportJob` |
+| Export download | `GET /crm/v9/settings/exports/{exportId}/download` | CSV download |
+
+- The two CSV `GET` downloads also accept the organization as `?org=<slug>` when the
+  `X-CRM-ORG` header is absent (a link cannot send headers); every other route still needs the header.
+- `{module}` is `Leads`, `Contacts`, `Accounts` or `Deals`; anything else is `INVALID_DATA`.
+- The multipart body is cut off while streaming at 25 MB plus framing (`file_too_large`);
+  `Content-Length` is not trusted. Exactly one file field is accepted; other fields except
+  `charset` are rejected.
+- A job from another organization is `404`. A failed export (for example `export_too_large`)
+  is a `200` job with `status: "failed"` and `code`.
+- Downloads: `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`
+  (ASCII `filename` plus encoded `filename*`), `X-Content-Type-Options: nosniff`,
+  `Cache-Control: no-store`, UTF-8 BOM.
+- Error codes returned through the shared codec: `file_too_large`, `too_many_columns`,
+  `too_many_rows`, `malformed_csv`, `empty_file`, `no_header`, `duplicate_header`,
+  `bad_encoding`, `upload_expired`, `mapping_duplicate_field`, `mapping_missing_required`,
+  `mapping_system_field`, `match_field_required`, `invalid_match_field`,
+  `export_too_large`, `field_not_allowed`, `not_undoable`. Row codes appear inside jobs.
+- The service is one process-local instance (`getTransferService`); history is lost on restart.
+- Client: `createHttpTransferClient(orgSlug)` (`TransferClient`) and the `useTransferClient`,
+  `useImportHistory`, `useExportHistory` hooks.
+
+## Tags and Recycle Bin HTTP (Module 6, Interim)
+
+These are our transport choices under ADR 0007 §4, authorized by MEP-864;
+no claim of observed reference requests. All routes use ADR 0004 authentication,
+organization, Origin, no-store and four-key errors. Unknown extension query keys
+are ignored. Recognizable unsupported bin criteria (`criteria`, `filters`,
+`search`, `operator`) are rejected rather than treated as an unfiltered search.
+
+| Method | Path under `/crm/v2.2` | Input | Success |
+| --- | --- | --- | --- |
+| GET | `/settings/tags` | `module`, optional `name` case-insensitive substring, `page`, `per_page` | `tags[]`, `info` |
+| POST | `/settings/tags` | Query `module`; JSON `{name,color?}` | Singleton `tags[]` |
+| PUT | `/settings/tags/{tagId}` | Query `module`; JSON exactly one of `{name}` or `{color}` | Singleton `tags[]` |
+| DELETE | `/settings/tags/{tagId}` | Query `module` | ID success envelope, `tag deleted` |
+| POST | `/{module}/{recordId}/actions/add_tags` | JSON `{ids:[tagId,…]}` | Record ID success envelope, `tags added` |
+| POST | `/{module}/{recordId}/actions/remove_tags` | JSON `{ids:[tagId,…]}` | Record ID success envelope, `tags removed` |
+| GET | `/settings/recycle_bin` | Optional `module`, `name`, `deleted_by`, `deleted_by_contains`, `deleted_date`, `deleted_time`, `page`, `per_page` | `data[]`, `info` |
+| POST | `/settings/recycle_bin/actions/restore` | JSON `{ids:[entryId,…]}` | ID success envelope, `record restored` |
+| POST | `/settings/recycle_bin/actions/permanent_delete` | JSON `{ids:[entryId,…]}` | ID success envelope, `record permanently deleted` |
+| POST | `/settings/recycle_bin/actions/empty` | JSON `{scope:"organization",confirm:true}`; no search criteria | Success envelope with empty details, `recycle bin emptied` |
+
+Paging defaults to page 1 and 30 items. Values must be positive safe integers
+with a safe page-size product. Empty pages/collections return bodyless 204.
+`info` contains `page,per_page,count,more_records`; count is page length.
+Catalogue rows: `id,module,name,color,Created_By{id},Created_Time,Modified_By{id},Modified_Time`.
+Bin rows: `id,record_id,Name,Type,Deleted_By{id},Deleted_Time,expires_at`.
+Bin IDs select deletion manifests, never ordinary record IDs. Bin filters combine
+with AND: name contains, exact module, exact actor ID and/or actor-ID substring,
+and a UTC date or minute (`YYYY-MM-DD`, optional `HH:mm`). Display-name actor
+resolution is not synthesized. Filtering/visibility precedes paging in the service.
+
+ID selections require 1–500 nonblank strings. Exact body keys prevent accidental
+filter/selection confusion. Empty never infers whole-organization scope from
+empty IDs, and refuses recognized search keys in its query. Tag PUT accepts a
+single field because the approved service has separate atomic rename/recolor
+operations; combined edits must not partially commit. Core interim rules retain
+trim/NFC name normalization, 50-character names, module-local lowercase uniqueness,
+100 catalogue capacity, nullable RGB colors and module-write authorization.
+
+Errors: 400 `INVALID_DATA` for malformed JSON, values and criteria;
+400 `LIMIT_EXCEEDED` for invalid selection size or full catalogue;
+400 `DUPLICATE_DATA` if the service raises a conflict;
+401 `AUTHENTICATION_FAILURE`, 403 `NO_PERMISSION`, 404 `not_found`,
+500 `INTERNAL_ERROR` use the shared codec. Core validation messages are preserved.
+No DDL, scheduler, capability grants or alternative ordinary-delete route is added.
+
+Open questions remain A1 (observed transport and exact messages), T1 (final name
+rules), T3 (palette/defaults), T7 (capability mapping), R3 (own-record visibility,
+restore grants and administrator mapping), R6 (retention clock/timezone/expiry,
+races and cleanup). This transport delegates these policies to the approved
+fixture service and does not settle their reference parity.

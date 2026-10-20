@@ -147,9 +147,17 @@ test("required date reports the empty message before the format", () => {
   });
 });
 
-test("datetime keeps being skipped until its own form task", () => {
-  const fields = [field("Created_Time", "Created Time", "datetime", true)];
-  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
+test("a required datetime must be filled and a filled one must be a real timestamp", () => {
+  const fields = [field("Start_DateTime", "From", "datetime", true)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({
+    Start_DateTime: "From cannot be empty.",
+  });
+  expect(validateRecordForm(fields, { Start_DateTime: "nope" }, (f) => f.label)).toEqual({
+    Start_DateTime: "Please enter a valid From.",
+  });
+  expect(
+    validateRecordForm(fields, { Start_DateTime: "2026-10-14T09:00:00.000Z" }, (f) => f.label),
+  ).toEqual({});
 });
 
 test("required lookup fields require a populated reference", () => {
@@ -189,4 +197,27 @@ test("optional lookup fields accept null or populated references", () => {
       (f) => f.label,
     ),
   ).toEqual({});
+});
+
+test("required duration treats zero duration (00:00) as empty", () => {
+  const required = [field("Call_Duration", "Call Duration", "text", true)];
+  for (const zero of ["00:00", "0:00", "00:0", "000:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: zero }, (f) => f.label)).toEqual({
+      Call_Duration: "Call Duration cannot be empty.",
+    });
+  }
+  expect(validateRecordForm(required, { Call_Duration: null }, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  for (const valid of ["00:05", "01:00", "05:30", "120:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: valid }, (f) => f.label)).toEqual({});
+  }
+
+  const optional = [field("Call_Duration", "Call Duration", "text", false)];
+  for (const val of ["00:00", null, "05:30"]) {
+    expect(validateRecordForm(optional, { Call_Duration: val }, (f) => f.label)).toEqual({});
+  }
 });

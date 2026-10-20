@@ -35,7 +35,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByRole("dialog", { name: "Create Records" });
 }
 
-test("The registry holds Lead, Contact, Account, Deal, Task, Meeting and Call entries pointing at their create pages", () => {
+test("The registry holds CRM and activity entries pointing at their create pages", () => {
   expect(createRecordsNav.map((entry) => entry.label)).toEqual([
     "Lead",
     "Contact",
@@ -44,6 +44,9 @@ test("The registry holds Lead, Contact, Account, Deal, Task, Meeting and Call en
     "Task",
     "Meeting",
     "Call",
+    "Campaign",
+    "Case",
+    "Solution",
   ]);
   expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
   expect(createRecordsNav[1]?.path("example")).toBe("/crm/example/tab/Contacts/create");
@@ -52,6 +55,9 @@ test("The registry holds Lead, Contact, Account, Deal, Task, Meeting and Call en
   expect(createRecordsNav[4]?.path("example")).toBe("/crm/example/tab/Tasks/create");
   expect(createRecordsNav[5]?.path("example")).toBe("/crm/example/tab/Meetings/create");
   expect(createRecordsNav[6]?.path("example")).toBe("/crm/example/tab/Calls/create");
+  expect(createRecordsNav[7]?.path("example")).toBe("/crm/example/tab/Campaigns/create");
+  expect(createRecordsNav[8]?.path("example")).toBe("/crm/example/tab/Cases/create");
+  expect(createRecordsNav[9]?.path("example")).toBe("/crm/example/tab/Solutions/create");
 });
 
 test("The toolbar control is named Create Records and opens an empty search box", async () => {
@@ -97,7 +103,7 @@ test("The Lead row links to the Create Lead page", async () => {
   const dialog = await openMenu(user);
   const row = within(dialog).getByRole("link", { name: "Lead" });
   expect(row.getAttribute("href")).toBe("/crm/example/tab/Leads/create");
-  expect(within(dialog).getAllByRole("link")).toHaveLength(7);
+  expect(within(dialog).getAllByRole("link")).toHaveLength(10);
 });
 
 test("Choosing a row closes the menu", async () => {
@@ -117,7 +123,18 @@ test("The search box filters rows by label and leaves the list empty on no match
     within(dialog)
       .getAllByRole("link")
       .map((link) => link.textContent),
-  ).toEqual(["Lead", "Contact", "Account", "Deal", "Task", "Meeting", "Call"]);
+  ).toEqual([
+    "Lead",
+    "Contact",
+    "Account",
+    "Deal",
+    "Task",
+    "Meeting",
+    "Call",
+    "Campaign",
+    "Case",
+    "Solution",
+  ]);
   await user.type(search, "CON");
   expect(within(dialog).getByRole("link", { name: "Contact" })).toBeTruthy();
   expect(within(dialog).queryByRole("link", { name: "Lead" })).toBeNull();

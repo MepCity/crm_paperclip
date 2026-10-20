@@ -3,7 +3,9 @@ import { generateFixtureAccounts } from "../accounts/seed";
 import { generateFixtureContacts } from "../contacts/seed";
 import { generateFixtureDeals } from "../deals/seed";
 import { generateFixtureLeads } from "../seed";
-import { notesMetadata, notesParentModules } from "./metadata";
+import { notesMetadata } from "./metadata";
+
+const seedParentModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 const parentGenerators = {
   Leads: generateFixtureLeads,
@@ -17,10 +19,10 @@ export function generateFixtureNotes(
   seed = 68,
   now = new Date("2026-01-15T12:00:00.000Z"),
 ): RecordData[] {
-  return notesParentModules.map((module, index) => {
+  return seedParentModules.map((module, index) => {
     const parent = parentGenerators[module](seed, now)[0];
     if (!parent) throw new Error(`Missing fixture parent for ${module}.`);
-    const id = String(140000000000000000n + BigInt(index));
+    const id = String(180000000000000000n + BigInt(index));
     const fields: Record<string, FieldValue> = Object.fromEntries(
       notesMetadata.fields.map((field) => [field.apiName, null]),
     );

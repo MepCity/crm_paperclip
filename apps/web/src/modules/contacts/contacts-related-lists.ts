@@ -1,8 +1,11 @@
 import { createElement } from "react";
+import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
+import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
-import { RelatedNotesCardBody } from "@/components/records/detail/related-notes-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
@@ -11,10 +14,13 @@ export interface ContactsRelatedListHandlers {
   onNewReportingContact?: () => void;
   onAddReportingContact?: () => void;
   onDealsNew?: () => void;
+  onCasesNew?: () => void;
+  onAddCampaigns?: () => void;
 }
 
 export interface ContactsRelatedListBadges {
   deals?: number;
+  campaigns?: number;
   openActivities?: number;
   closedActivities?: number;
 }
@@ -68,8 +74,7 @@ export function createContactsRelatedLists(
   return [
     {
       id: "notes",
-      renderBody: ({ definition }) =>
-        createElement(RelatedNotesCardBody, { notesShowMore: definition.notesShowMore }),
+      renderBody: notesCardBody("Contacts"),
       title: "Notes",
       moduleKey: "M6",
       order: 1,
@@ -91,6 +96,7 @@ export function createContactsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Contacts"),
       title: "Attachments",
       moduleKey: "M6",
       order: 3,
@@ -244,27 +250,37 @@ export function createContactsRelatedLists(
     },
     {
       id: "cases",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedCasesCardBody, {
+              managerRecord: record,
+              filterField: "Related_To",
+              caseRecordPath: (id) => recordPath("Cases", id),
+            })
+          : undefined,
       title: "Cases",
-      moduleKey: "M8",
+      moduleKey: "M2",
       order: 10,
       targetId: "related-list-cases",
       railAction: {
         id: "cases-add",
         label: "Add",
-        moduleKey: "M8",
+        moduleKey: "M2",
+        onAction: handlers.onCasesNew,
       },
       upperControls: [
         {
           id: "assign-cases",
           label: "Assign",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
         },
         {
           id: "new-case",
           label: "New",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
+          onAction: handlers.onCasesNew,
         },
       ],
       emptyStateText: "No records found",
@@ -385,16 +401,28 @@ export function createContactsRelatedLists(
     },
     {
       id: "campaigns",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? campaignsCardBody("Contacts", record.id, (id) => recordPath("Campaigns", id))
+          : undefined,
       title: "Campaigns",
-      moduleKey: "M7",
+      // The card is live; "M2" keeps the rail entry and controls unlocked.
+      moduleKey: "M2",
+      countBadge:
+        badges.campaigns !== undefined && badges.campaigns > 0 ? badges.campaigns : undefined,
       order: 16,
       targetId: "related-list-campaigns",
+      railAction: {
+        id: "add-campaigns",
+        label: "Add Campaigns",
+        onAction: handlers.onAddCampaigns,
+      },
       upperControls: [
         {
           id: "add-campaigns",
           label: "Add Campaigns",
           type: "button",
-          moduleKey: "M7",
+          onAction: handlers.onAddCampaigns,
         },
       ],
       emptyStateText: "No records found",

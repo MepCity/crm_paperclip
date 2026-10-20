@@ -7,6 +7,7 @@ import type {
   ModuleMetadata,
   RecordData,
   RecordId,
+  RecordInput,
 } from "@crm/core/records";
 import type { ComponentType, ReactNode } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
@@ -87,6 +88,10 @@ export interface RelatedListBodyContext {
 }
 
 export interface RelatedListDefinition {
+  /** Replaces the whole card (header included); return null or undefined to use the generic card. */
+  renderCard?: (
+    context: RelatedListBodyContext & { definition: RelatedListDefinition },
+  ) => ReactNode;
   /** Return null or undefined to use the generic body; render hook-based bodies as elements. */
   renderBody?: (
     context: RelatedListBodyContext & { definition: RelatedListDefinition },
@@ -153,6 +158,14 @@ export type ModuleRecordDetailScreenProps = {
 };
 
 /** Only presentation rules absent from service metadata belong here. */
+/** A confirmation a header command opens; the screen draws the dialog and runs `onConfirm`. */
+export interface HeaderConfirmRequest {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+}
+
 export interface ModuleScreenDefinition {
   apiName: ModuleApiName;
   tab: string;
@@ -177,6 +190,12 @@ export interface ModuleScreenDefinition {
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
+    /** Edit-route `intent` query values a record action opens the form with. */
+    editIntents?: Readonly<
+      Record<string, { set?: Readonly<Record<string, FieldValue>>; focus?: string }>
+    >;
+    /** Footer group sits at the bottom right of the form (Cases). */
+    inventoryFooterEnd?: boolean;
     profileImageLaterModule?: ModuleKey;
     profileImageIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
     /**
@@ -203,11 +222,38 @@ export interface ModuleScreenDefinition {
       portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
       hasPortrait?: boolean;
       recordNavigation?: boolean;
+      /** Title drawn as a link (path built by the module) followed by a plain module suffix. */
+      titleSuffix?: string;
     };
+    /**
+     * Activities variant (MEP-591): no related-list rail or rail toggle, the update label in
+     * the tab row, and the relation panel to the right of the overview.
+     */
+    layout?: "activity";
+    /** Small static glyph before the title (activities variant). */
+    titleGlyph?: Icon;
+    /**
+     * Replaces the default header Edit command (and `headerCommands`) when set.
+     * `save` patches the record; `editHref` is the edit form path.
+     */
+    buildHeaderCommands?: (
+      record: RecordData,
+      actions: {
+        editHref: string;
+        save: (input: RecordInput) => Promise<void>;
+        navigate: (href: string) => void;
+        confirm: (request: HeaderConfirmRequest) => void;
+      },
+    ) => readonly RecordCommand[];
+    /** Extra card rendered between the business card and the details card. */
+    BetweenCards?: ComponentType<{ record: RecordData }>;
+    /** Right-hand panel of the activities variant (300 px, white). */
+    SidePanel?: ComponentType<{ record: RecordData; orgSlug: string }>;
     hasPortrait?: boolean;
+    portraitAppearance?: "tile" | "inline";
     recordNavigation?: boolean;
     portraitIcon?: ComponentType<import("react").SVGProps<SVGSVGElement>>;
-    addTags?: { label: string; laterModule: ModuleKey };
+    addTags?: { label: string; laterModule?: ModuleKey };
     headerCommands?: readonly RecordCommand[];
     businessCard: (module: ModuleMetadata, record: RecordData) => BusinessCardField[];
     sections: (module: ModuleMetadata, record: RecordData) => DetailSection[];
@@ -219,9 +265,11 @@ export interface ModuleScreenDefinition {
      */
     lastUpdatePlacement?: "tab-row";
     moreOptions: (handlers: {
+      onEdit?: () => void;
       onClone: () => void;
       onDelete: () => void;
       onFindMergeDuplicates?: () => void;
+      onPrintPreview?: () => void;
     }) => RecordMenuGroup[];
     deleteTitle: string;
     deleteMessage: string;

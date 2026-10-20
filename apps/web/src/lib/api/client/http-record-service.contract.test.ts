@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundError, ValidationError } from "@crm/core/errors";
 import type { OrgContext } from "@crm/core/records";
+import { describeCampaignMembershipContract } from "@crm/core/records/campaign-contract-suite";
 import {
   describeActivityReadContract,
   describeRecordServiceContract,
 } from "@crm/core/records/contract-suite";
 import {
+  campaignsRecordServiceContractModule,
   eventsRecordServiceContractModule,
   leadsRecordServiceContractModule,
   tasksRecordServiceContractModule,
@@ -173,6 +175,7 @@ describe("Events HTTP participants and opaque reminders", () => {
     expect(metadata.fields.filter((f) => f.acceptsJsonArray).map((f) => f.apiName)).toEqual([
       "Remind_At",
       "Participants",
+      "Tag",
       "Remind_Participants",
     ]);
     const arrays = {
@@ -244,3 +247,17 @@ describeKanbanViewContract("http", (ctx, options) => {
     fetch: (path, requestOptions) => operationApiFetch(deps, path, requestOptions),
   });
 });
+
+const campaignHttpFactory = (ctx: OrgContext, options?: { now?: () => Date }) => {
+  const deps = operationDeps(ctx, options);
+  return createHttpRecordService({
+    orgSlug: ctx.orgSlug,
+    fetch: (path, options) => operationApiFetch(deps, path, options),
+  });
+};
+describeRecordServiceContract(
+  "http Campaigns",
+  campaignHttpFactory,
+  campaignsRecordServiceContractModule,
+);
+describeCampaignMembershipContract("http", campaignHttpFactory);

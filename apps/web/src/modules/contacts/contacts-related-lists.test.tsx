@@ -23,13 +23,13 @@ describe("contactsRelatedLists definition", () => {
       { order: 7, id: "closed-activities", title: "Closed Activities", moduleKey: "M5" },
       { order: 8, id: "invited-meetings", title: "Invited Meetings", moduleKey: "M5" },
       { order: 9, id: "products", title: "Products", moduleKey: "P2" },
-      { order: 10, id: "cases", title: "Cases", moduleKey: "M8" },
+      { order: 10, id: "cases", title: "Cases", moduleKey: "M2" },
       { order: 11, id: "quotes", title: "Quotes", moduleKey: "P2" },
       { order: 12, id: "sales-orders", title: "Sales Orders", moduleKey: "P2" },
       { order: 13, id: "purchase-orders", title: "Purchase Orders", moduleKey: "P2" },
       { order: 14, id: "emails", title: "Emails", moduleKey: "M10" },
       { order: 15, id: "invoices", title: "Invoices", moduleKey: "P2" },
-      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M7" },
+      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M2" },
       { order: 17, id: "social", title: "Social", moduleKey: "M15" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
@@ -58,7 +58,8 @@ describe("contactsRelatedLists definition", () => {
     expect(reportingContacts?.moduleKey).toBe("M2");
 
     for (const card of contactsRelatedLists) {
-      if (card.id === "reporting-contacts") {
+      // The Campaigns card is live and borrows the live key so its controls stay unlocked.
+      if (card.id === "reporting-contacts" || card.id === "campaigns" || card.id === "cases") {
         expect(card.moduleKey).toBe("M2");
       } else {
         expect(card.moduleKey).not.toBe("M2");
@@ -176,10 +177,9 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const addProductsBtn = screen.getByRole("button", { name: "Add Products" });
     expect(addProductsBtn.getAttribute("data-later-module")).toBe("P2");
 
-    // D-70, D-71 Cases Assign & New (M8)
+    // MEP-900: the Cases card is live (no later-module marker on Assign / New)
     const casesSection = screen.getByRole("region", { name: "Cases" });
-    const casesAssign = casesSection.querySelector('button[data-later-module="M8"]');
-    expect(casesAssign?.textContent).toContain("Assign");
+    expect(casesSection.querySelector("[data-later-module]")).toBeNull();
 
     // D-79 Emails Compose Email (M10)
     const composeEmailBtn = screen.getByRole("button", { name: "Compose Email" });
@@ -204,14 +204,8 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const socialSection = screen.getByRole("region", { name: "Social" });
     expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
 
-    // Notes card (M6): Recent Last selector button and active-styled Add a note textarea
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    const recentLastBtn = within(notesSection).getByRole("button", { name: "Recent Last" });
-    expect(recentLastBtn.getAttribute("data-later-module")).toBe("M6");
-    const notesTextarea = within(notesSection).getByRole("textbox", { name: "Add a note" });
-    expect(notesTextarea.hasAttribute("disabled")).toBe(false);
-    expect(notesTextarea.getAttribute("data-later-module")).toBe("M6");
-    expect(notesTextarea.getAttribute("aria-disabled")).toBe("true");
+    // Notes card (M6): the body needs a record; the card itself is rendered
+    expect(screen.getByRole("region", { name: "Notes" })).toBeTruthy();
 
     // D-92 Voice of the Customer Enable feature (P3)
     const enableFeatureBtn = screen.getByRole("button", { name: "Enable feature" });
@@ -465,7 +459,7 @@ describe("RecordPageFrame with Contacts rail", () => {
       fireEvent.scroll(activeScroller);
     }
 
-    // 1. Scroll to Cases -> D-72 appears with laterModule M8
+    // 1. Scroll to Cases -> D-72 appears (live since MEP-900)
     scrollToCard("related-list-cases");
     expect(onSelect).toHaveBeenCalledWith("cases");
     const casesRow = within(rail)
@@ -473,7 +467,7 @@ describe("RecordPageFrame with Contacts rail", () => {
       .closest("div[class*='flex items-center']");
     const casesAddBtn = casesRow?.querySelector("button");
     expect(casesAddBtn).not.toBeNull();
-    expect(casesAddBtn?.getAttribute("data-later-module")).toBe("M8");
+    expect(casesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Notes row now has no button
     const notesRow = within(rail)

@@ -10,10 +10,12 @@ import type {
   RecordData,
   RecordService,
 } from "@crm/core/records";
-import { type CSSProperties, useEffect, useId, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { RecordChoice } from "@/components/ui/record-choice";
 import { TableRadio, TableRadioGroup } from "@/components/ui/table-radio";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
@@ -24,9 +26,13 @@ import {
 import { resolveModuleScreenByApiName } from "@/modules/registry";
 import "./select-record-dialog.css";
 
-export interface SelectRecordDialogProps {
+interface CommonSelectRecordDialogProps {
   module: ModuleApiName;
+  /** Modules the user can switch between inside the picker (shown only when more than one). */
+  modules?: readonly ModuleApiName[];
   title?: string;
+  /** Name column for modules whose screens are not registered yet. */
+  nameField?: string;
   searchLabel?: string;
   searchPlaceholder?: string;
   cancelLabel?: string;
@@ -43,10 +49,25 @@ export interface SelectRecordDialogProps {
   recordHref?: (id: string) => string;
   /** Owner id to display name, so `ownerlookup` columns such as Account Owner show a name. */
   ownerNames?: Readonly<Record<string, string>>;
-  onDone: (reference: ModuleRecordReference) => void;
+  beforeSearch?: ReactNode;
+  isSubmitting?: boolean;
   onCancel: () => void;
   recordService?: RecordService | ClientRecordService;
 }
+
+export type SelectRecordDialogProps = CommonSelectRecordDialogProps &
+  (
+    | {
+        selection?: "single";
+        selectedIds?: never;
+        onDone: (reference: ModuleRecordReference) => void;
+      }
+    | {
+        selection: "multiple";
+        selectedIds?: readonly string[];
+        onDone: (references: ModuleRecordReference[]) => void;
+      }
+  );
 
 interface ColumnInfo {
   key: string;
@@ -77,26 +98,36 @@ function cellText(
   return text;
 }
 
-export function SelectRecordDialog({
-  module,
-  title,
-  searchLabel,
-  searchPlaceholder,
-  cancelLabel = "Cancel",
-  doneLabel = "Done",
-  selectedId,
-  chrome = "interim",
-  recordHref,
-  ownerNames,
-  onDone,
-  onCancel,
-  recordService,
-}: SelectRecordDialogProps) {
-  const observed = chrome === "observed";
+export function SelectRecordDialog(props: SelectRecordDialogProps) {
+  const {
+    module: initialModule,
+    modules,
+    title,
+    nameField,
+    searchLabel,
+    searchPlaceholder,
+    cancelLabel = "Cancel",
+    doneLabel = "Done",
+    selectedId,
+    chrome = "interim",
+    recordHref,
+    ownerNames,
+    beforeSearch,
+    isSubmitting = false,
+    onCancel,
+    recordService,
+  } = props;
+  const multiple = props.selection === "multiple";
+  const observed = chrome === "observed" && !multiple;
+  const [selected, setSelected] = useState<Map<string, ModuleRecordReference>>(
+    () =>
+      new Map((props.selectedIds ?? []).map((id) => [id, { module: initialModule, id, name: id }])),
+  );
   const titleId = useId();
   const clientService = useOptionalClientRecordService();
   const service = recordService ?? clientService;
 
+  const [module, setModule] = useState<ModuleApiName>(initialModule);
   const [draftId, setDraftId] = useState<string>(selectedId ?? "");
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
@@ -183,8 +214,25 @@ export function SelectRecordDialog({
 
   // Determine columns
   const linkField =
+    nameField ??
     screenDef?.list.linkField ??
     (metadata?.fields.some((f) => f.apiName === "Full_Name") ? "Full_Name" : "Name");
+  useEffect(() => {
+    if (!multiple) return;
+    setSelected((previous) => {
+      let next = previous;
+      for (const record of records) {
+        const reference = previous.get(record.id);
+        if (!reference) continue;
+        const name = formatCellText(record.fields[linkField]) || record.id;
+        if (reference.name === name) continue;
+        if (next === previous) next = new Map(previous);
+        next.set(record.id, { module, id: record.id, name });
+      }
+      return next;
+    });
+  }, [multiple, records, linkField, module]);
+
   const fieldMap = new Map<string, FieldDefinition>(
     metadata?.fields.map((f) => [f.apiName, f]) ?? [],
   );
@@ -229,15 +277,197 @@ export function SelectRecordDialog({
   };
 
   const handleDone = () => {
-    if (!draftId) return;
-    onDone(referenceFor(draftId));
+    if (isSubmitting) return;
+    if (props.selection === "multiple") {
+      props.onDone(Array.from(selected.values()));
+    } else if (draftId) props.onDone(referenceFor(draftId));
   };
 
   /** The observed picker paints no footer action, so choosing a row applies and closes. */
   const choose = (id: string) => {
+    if (isSubmitting) return;
+    if (multiple) {
+      setSelected((previous) => {
+        const next = new Map(previous);
+        if (next.has(id)) next.delete(id);
+        else next.set(id, referenceFor(id));
+        return next;
+      });
+      return;
+    }
     setDraftId(id);
-    if (observed) onDone(referenceFor(id));
+    if (observed) props.onDone(referenceFor(id));
   };
+
+  const table = (
+    <table className="select-user-table">
+      <colgroup>
+        <col className="select-user-col-radio" />
+        <col className="select-record-col-name" />
+        {otherCols.map((col) => (
+          <col key={col.key} />
+        ))}
+        {observed ? <col className="select-record-col-filter" /> : null}
+      </colgroup>
+      <thead>
+        <tr className="select-user-header-band">
+          <th scope="col" className="select-user-th-radio">
+            {multiple ? (
+              <Checkbox
+                label="Select all on this page"
+                hideLabel
+                isDisabled={loading || isSubmitting || records.length === 0}
+                isSelected={records.length > 0 && records.every((r) => selected.has(r.id))}
+                isIndeterminate={
+                  records.some((r) => selected.has(r.id)) &&
+                  !records.every((r) => selected.has(r.id))
+                }
+                onChange={(checked) =>
+                  setSelected((previous) => {
+                    const next = new Map(previous);
+                    for (const record of records) {
+                      if (checked) next.set(record.id, referenceFor(record.id));
+                      else next.delete(record.id);
+                    }
+                    return next;
+                  })
+                }
+              />
+            ) : observed ? (
+              <Button
+                aria-label="Table columns"
+                variant="icon"
+                size="compact"
+                className="select-record-table-icon"
+              >
+                <Icons.tableChevronDown
+                  aria-hidden
+                  className="h-(--size-menu-icon) w-(--size-menu-icon)"
+                />
+              </Button>
+            ) : (
+              <span className="sr-only">Select</span>
+            )}
+          </th>
+          <th scope="col" className="select-user-th-name">
+            {observed ? (
+              <span className="select-record-th-label">
+                <span>{nameColLabel}</span>
+                <Button aria-label={`${nameColLabel} column options`} variant="icon" size="compact">
+                  <Icons.sort aria-hidden className="h-(--size-menu-icon) w-(--size-menu-icon)" />
+                </Button>
+              </span>
+            ) : (
+              nameColLabel
+            )}
+          </th>
+          {otherCols.map((col) => (
+            <th key={col.key} scope="col">
+              {observed ? (
+                <span className="select-record-th-label">
+                  <span>{col.label}</span>
+                  <Button aria-label={`${col.label} column options`} variant="icon" size="compact">
+                    <Icons.sort aria-hidden className="h-(--size-menu-icon) w-(--size-menu-icon)" />
+                  </Button>
+                </span>
+              ) : (
+                col.label
+              )}
+            </th>
+          ))}
+          {observed ? (
+            <th scope="col" className="select-record-th-filter">
+              <Button
+                aria-label="Filter"
+                variant="icon"
+                size="compact"
+                className="select-record-filter-icon"
+              >
+                <Icons.filter aria-hidden className="h-(--size-menu-icon) w-(--size-menu-icon)" />
+              </Button>
+            </th>
+          ) : null}
+        </tr>
+        <tr className="select-user-header-rule" aria-hidden>
+          <td colSpan={otherCols.length + (observed ? 3 : 2)} />
+        </tr>
+      </thead>
+      <tbody>
+        {rowCount === 0 && !loading && (
+          <tr>
+            <td colSpan={otherCols.length + 2} className="px-6 py-4 text-center text-text-muted">
+              No records found.
+            </td>
+          </tr>
+        )}
+        {records.flatMap((record, index) => {
+          const recordDisplayName = formatCellText(record.fields[linkField]) || record.id;
+          const dataRow = (
+            <tr
+              key={record.id}
+              className="cursor-pointer"
+              onClick={(event) => {
+                if (
+                  multiple &&
+                  event.target instanceof Element &&
+                  event.target.closest(".select-user-td-radio")
+                )
+                  return;
+                choose(record.id);
+              }}
+            >
+              <td className="select-user-td-radio">
+                {multiple ? (
+                  <Checkbox
+                    label={recordDisplayName}
+                    hideLabel
+                    isSelected={selected.has(record.id)}
+                    isDisabled={isSubmitting}
+                    onChange={() => choose(record.id)}
+                  />
+                ) : (
+                  <TableRadio value={record.id} aria-label={recordDisplayName} />
+                )}
+              </td>
+              <td className="select-user-td-name">
+                {observed && recordHref ? (
+                  <Link href={recordHref(record.id)}>{recordDisplayName}</Link>
+                ) : (
+                  recordDisplayName
+                )}
+              </td>
+              {otherCols.map((col) => (
+                <td key={col.key}>
+                  {cellText(record.fields[col.key], col.dataType, ownerNames)}
+                  {observed && col.dataType === "phone" && record.fields[col.key] ? (
+                    <Button
+                      aria-label="Phone"
+                      variant="icon"
+                      size="compact"
+                      laterModule="M5"
+                      className="select-record-phone-action"
+                    >
+                      <Icons.phone
+                        aria-hidden
+                        className="h-(--size-menu-icon) w-(--size-menu-icon)"
+                      />
+                    </Button>
+                  ) : null}
+                </td>
+              ))}
+            </tr>
+          );
+          if (index === records.length - 1) return [dataRow];
+          return [
+            dataRow,
+            <tr key={`${record.id}-divider`} className="select-user-row-divider" aria-hidden>
+              <td colSpan={otherCols.length + (observed ? 3 : 2)} />
+            </tr>,
+          ];
+        })}
+      </tbody>
+    </table>
+  );
 
   return (
     <TopAlignedModal
@@ -245,7 +475,11 @@ export function SelectRecordDialog({
       isDismissable={false}
       aria-labelledby={titleId}
       panelClassName={`select-user-modal-panel select-record-modal-panel${
-        observed ? " select-record-modal-panel--observed" : ""
+        observed
+          ? " select-record-modal-panel--observed"
+          : beforeSearch
+            ? " select-record-modal-panel--with-options"
+            : ""
       }`}
       panelStyle={panelStyle}
       onOpenChange={(open) => {
@@ -267,6 +501,27 @@ export function SelectRecordDialog({
         </Button>
       ) : null}
 
+      {modules && modules.length > 1 ? (
+        <div className="select-record-module-choice">
+          <RecordChoice
+            label="Module"
+            hideLabel
+            value={module}
+            onChange={(next) => {
+              setModule(next ?? initialModule);
+              setDraftId("");
+              setSelected(new Map());
+              setPage(1);
+            }}
+            options={modules.map((m) => ({
+              value: m,
+              label: resolveModuleScreenByApiName(m)?.pluralLabel ?? m,
+            }))}
+          />
+        </div>
+      ) : null}
+
+      {beforeSearch}
       <div className="select-user-search-row">
         <div className="select-user-search-field">
           <TextField
@@ -290,176 +545,35 @@ export function SelectRecordDialog({
           </Button>
         ) : (
           <div className="select-user-summary" aria-live="polite">
-            <span className="select-user-summary-label">Selected {singularLabel}:</span>
-            <div className="select-record-summary-icon" aria-hidden>
-              <Icons.recordLookup module={module} className="h-4 w-4" />
-            </div>
-            <span className="select-user-summary-name">{summaryName}</span>
+            {multiple ? (
+              <span>{selected.size} selected</span>
+            ) : (
+              <>
+                <span className="select-user-summary-label">Selected {singularLabel}:</span>
+                <div className="select-record-summary-icon" aria-hidden>
+                  <Icons.recordLookup module={module} className="h-4 w-4" />
+                </div>
+                <span className="select-user-summary-name">{summaryName}</span>
+              </>
+            )}
           </div>
         )}
       </div>
 
       <div className="select-user-table-wrap select-record-table-wrap">
         <div className="select-user-table-frame">
-          <TableRadioGroup
-            aria-label={dialogTitle}
-            value={draftId}
-            onChange={choose}
-            className="select-user-table-group"
-          >
-            <table className="select-user-table">
-              <colgroup>
-                <col className="select-user-col-radio" />
-                <col className="select-record-col-name" />
-                {otherCols.map((col) => (
-                  <col key={col.key} />
-                ))}
-                {observed ? <col className="select-record-col-filter" /> : null}
-              </colgroup>
-              <thead>
-                <tr className="select-user-header-band">
-                  <th scope="col" className="select-user-th-radio">
-                    {observed ? (
-                      <Button
-                        aria-label="Table columns"
-                        variant="icon"
-                        size="compact"
-                        className="select-record-table-icon"
-                      >
-                        <Icons.tableChevronDown
-                          aria-hidden
-                          className="h-(--size-menu-icon) w-(--size-menu-icon)"
-                        />
-                      </Button>
-                    ) : (
-                      <span className="sr-only">Select</span>
-                    )}
-                  </th>
-                  <th scope="col" className="select-user-th-name">
-                    {observed ? (
-                      <span className="select-record-th-label">
-                        <span>{nameColLabel}</span>
-                        <Button
-                          aria-label={`${nameColLabel} column options`}
-                          variant="icon"
-                          size="compact"
-                        >
-                          <Icons.sort
-                            aria-hidden
-                            className="h-(--size-menu-icon) w-(--size-menu-icon)"
-                          />
-                        </Button>
-                      </span>
-                    ) : (
-                      nameColLabel
-                    )}
-                  </th>
-                  {otherCols.map((col) => (
-                    <th key={col.key} scope="col">
-                      {observed ? (
-                        <span className="select-record-th-label">
-                          <span>{col.label}</span>
-                          <Button
-                            aria-label={`${col.label} column options`}
-                            variant="icon"
-                            size="compact"
-                          >
-                            <Icons.sort
-                              aria-hidden
-                              className="h-(--size-menu-icon) w-(--size-menu-icon)"
-                            />
-                          </Button>
-                        </span>
-                      ) : (
-                        col.label
-                      )}
-                    </th>
-                  ))}
-                  {observed ? (
-                    <th scope="col" className="select-record-th-filter">
-                      <Button
-                        aria-label="Filter"
-                        variant="icon"
-                        size="compact"
-                        className="select-record-filter-icon"
-                      >
-                        <Icons.filter
-                          aria-hidden
-                          className="h-(--size-menu-icon) w-(--size-menu-icon)"
-                        />
-                      </Button>
-                    </th>
-                  ) : null}
-                </tr>
-                <tr className="select-user-header-rule" aria-hidden>
-                  <td colSpan={otherCols.length + (observed ? 3 : 2)} />
-                </tr>
-              </thead>
-              <tbody>
-                {rowCount === 0 && !loading && (
-                  <tr>
-                    <td
-                      colSpan={otherCols.length + 2}
-                      className="px-6 py-4 text-center text-text-muted"
-                    >
-                      No records found.
-                    </td>
-                  </tr>
-                )}
-                {records.flatMap((record, index) => {
-                  const recordDisplayName = formatCellText(record.fields[linkField]) || record.id;
-                  const dataRow = (
-                    <tr
-                      key={record.id}
-                      className="cursor-pointer"
-                      onClick={() => choose(record.id)}
-                    >
-                      <td className="select-user-td-radio">
-                        <TableRadio value={record.id} aria-label={recordDisplayName} />
-                      </td>
-                      <td className="select-user-td-name">
-                        {observed && recordHref ? (
-                          <Link href={recordHref(record.id)}>{recordDisplayName}</Link>
-                        ) : (
-                          recordDisplayName
-                        )}
-                      </td>
-                      {otherCols.map((col) => (
-                        <td key={col.key}>
-                          {cellText(record.fields[col.key], col.dataType, ownerNames)}
-                          {observed && col.dataType === "phone" && record.fields[col.key] ? (
-                            <Button
-                              aria-label="Phone"
-                              variant="icon"
-                              size="compact"
-                              laterModule="M5"
-                              className="select-record-phone-action"
-                            >
-                              <Icons.phone
-                                aria-hidden
-                                className="h-(--size-menu-icon) w-(--size-menu-icon)"
-                              />
-                            </Button>
-                          ) : null}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                  if (index === records.length - 1) return [dataRow];
-                  return [
-                    dataRow,
-                    <tr
-                      key={`${record.id}-divider`}
-                      className="select-user-row-divider"
-                      aria-hidden
-                    >
-                      <td colSpan={otherCols.length + (observed ? 3 : 2)} />
-                    </tr>,
-                  ];
-                })}
-              </tbody>
-            </table>
-          </TableRadioGroup>
+          {multiple ? (
+            <div className="select-user-table-group">{table}</div>
+          ) : (
+            <TableRadioGroup
+              aria-label={dialogTitle}
+              value={draftId}
+              onChange={choose}
+              className="select-user-table-group"
+            >
+              {table}
+            </TableRadioGroup>
+          )}
         </div>
       </div>
 
@@ -523,6 +637,7 @@ export function SelectRecordDialog({
             variant="secondary"
             size="selectUserFooter"
             className="select-user-footer-action select-user-footer-action--cancel"
+            isDisabled={isSubmitting}
             onPress={onCancel}
           >
             {cancelLabel}
@@ -530,7 +645,9 @@ export function SelectRecordDialog({
           <Button
             size="selectUserFooter"
             className="select-user-footer-action select-user-footer-action--done"
-            isDisabled={!draftId || !selectionChanged}
+            isDisabled={
+              isSubmitting || (multiple ? selected.size === 0 : !draftId || !selectionChanged)
+            }
             onPress={handleDone}
           >
             {doneLabel}

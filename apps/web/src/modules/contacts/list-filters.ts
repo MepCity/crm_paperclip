@@ -8,7 +8,7 @@ import type { ModuleScreenDefinition } from "../types";
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
 const systemRows: readonly [string, ModuleKey?][] = [
   ["Activities"],
-  ["Campaigns", "M7"],
+  ["Campaigns"],
   ["Latest Email Status", "M10"],
   ["Locked"],
   ["Record Action"],
@@ -38,6 +38,7 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   const fieldType = special ?? (field.dataType as FilterFieldType);
   return {
     fieldType,
+    ...(fieldType === "tag" ? { tagModule: "Contacts" as const } : {}),
     ...(fieldType === "picklist"
       ? {
           options: field.picklist?.map((option) => ({
@@ -78,6 +79,13 @@ export function buildContactsFilterGroups(input: Input): readonly FilterGroup[] 
             id: "Activities",
             label,
             systemEditor: "activities" as const,
+          };
+        }
+        if (label === "Campaigns") {
+          return {
+            id: "Campaigns",
+            label,
+            systemEditor: "campaigns" as const,
           };
         }
         return {

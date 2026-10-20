@@ -17,6 +17,11 @@ import {
   useUsers,
 } from "@/lib/api/client/hooks";
 import { addressSubfieldApiNames } from "@/lib/records/composite-address";
+import {
+  allDayClearedTime,
+  dateTimePartsToIso,
+  isoToDateTimeParts,
+} from "@/lib/records/datetime-parts";
 import { buildCloneInput } from "./build-clone-input";
 import {
   AddressFieldGroups,
@@ -24,6 +29,7 @@ import {
   CopyAddressMenu,
   PrefixInput,
 } from "./composite-inputs";
+import { DurationInput } from "./duration-input";
 import { FieldInput, moduleSingularLabel, type OwnerOption } from "./field-input";
 import { FormErrorBanner } from "./form-error-banner";
 import { FormGrid } from "./form-grid";
@@ -48,7 +54,7 @@ import {
 import { FormRow, type FormRowColumn } from "./form-row";
 import { formSaveBannerMessage, formSaveFieldErrors } from "./form-save-error";
 import { FormSection } from "./form-section";
-import { validateRecordForm } from "./form-validation";
+import { validateRanges, validateRecordForm } from "./form-validation";
 import { RECORD_FORM_COPY } from "./record-form-copy";
 import {
   RecordFormClientScriptTab,
@@ -120,10 +126,13 @@ export interface RecordFormConfig {
   currencyPrefix?: string;
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
+  inventoryFooterEnd?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
   createPrefill?: Readonly<Record<string, FieldValue>>;
+  /** Edit opened from a record action: values set on top of the record, and the field focused. */
+  editIntent?: { set?: Readonly<Record<string, FieldValue>>; focus?: string };
 }
 
 export interface RecordFormScreenProps {
@@ -147,9 +156,16 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
   if (!metadata.data || !users.data || (needsRecord && !record.data))
     return <p role="status">Loading...</p>;
   const intent: FormIntent = props.cloneSourceId ? "clone" : props.recordId ? "edit" : "create";
+  const formKey =
+    intent !== "create"
+      ? (props.cloneSourceId ?? props.recordId ?? "edit")
+      : `create:${JSON.stringify(
+          Object.entries(props.config.createPrefill ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+        )}`;
+
   return (
     <LoadedRecordForm
-      key={props.cloneSourceId ?? props.recordId ?? "create"}
+      key={formKey}
       {...props}
       intent={intent}
       metadata={metadata.data}
@@ -177,13 +193,47 @@ function LoadedRecordForm({
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
     [config.rules, mode, metadata, sourceRecord],
   );
-  const sections = applySectionColumnOverrides(
-    buildFormModel(metadata, mode),
-    config.sectionColumnOverrides,
-    metadata,
-    mode,
+  const formMetadata = useMemo(() => {
+    const shown = rules.editShownFields;
+    if (mode !== "edit" || !shown?.length) return metadata;
+    return {
+      ...metadata,
+      fields: metadata.fields.map((field) =>
+        shown.includes(field.apiName) ? { ...field, views: { ...field.views, edit: true } } : field,
+      ),
+    };
+  }, [metadata, mode, rules.editShownFields]);
+  const baseSections = useMemo(
+    () =>
+      applySectionColumnOverrides(
+        buildFormModel(formMetadata, mode, rules, rules.readOnlyFields),
+        config.sectionColumnOverrides ?? rules.fallbackColumns,
+        formMetadata,
+        mode,
+        rules,
+        rules.readOnlyFields,
+      ),
+    [formMetadata, mode, config.sectionColumnOverrides, rules],
   );
-  const fields = formFields(metadata, sections, mode, rules);
+  const sections = useMemo(() => {
+    if (!rules.requiredFields?.length) return baseSections;
+    const requiredSet = new Set(rules.requiredFields);
+    return baseSections.map((section) => ({
+      ...section,
+      columns: section.columns.map((col) =>
+        col.map((field) => (requiredSet.has(field.apiName) ? { ...field, required: true } : field)),
+      ),
+    }));
+  }, [baseSections, rules.requiredFields]);
+  const fields = useMemo(() => {
+    const list = formFields(formMetadata, sections, mode, rules);
+    if (!rules.requiredFields?.length) return list;
+    const requiredSet = new Set(rules.requiredFields);
+    return list.map((field) =>
+      requiredSet.has(field.apiName) ? { ...field, required: true } : field,
+    );
+  }, [formMetadata, sections, mode, rules]);
+
   const byName = new Map(fields.map((field) => [field.apiName, field]));
   const ruleDefaults =
     typeof rules.defaultValues === "function" ? rules.defaultValues(metadata) : rules.defaultValues;
@@ -208,8 +258,16 @@ function LoadedRecordForm({
       : initialFormValues(fields, cloneSeed ?? config.createPrefill),
   );
   const [values, setValues] = useState(() =>
-    intent === "create" && !cloneSeed ? emptyValues() : baseline,
+    intent === "create" && !cloneSeed
+      ? emptyValues()
+      : intent === "edit" && config.editIntent?.set
+        ? { ...baseline, ...config.editIntent.set }
+        : baseline,
   );
+  const dynamic = rules.dynamic?.(values);
+  const isHidden = (apiName: string) => dynamic?.hidden?.includes(apiName) ?? false;
+  const isRequired = (field: FieldDefinition) =>
+    dynamic?.required?.[field.apiName] ?? field.required;
   const [lookupModules, setLookupModules] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
@@ -248,7 +306,11 @@ function LoadedRecordForm({
         });
       for (const field of sectionFields) {
         const parent = addressParentForField(field, addressRules, parents);
-        labels.set(field.apiName, parent ? addressLabel(field, parent) : field.label);
+        labels.set(
+          field.apiName,
+          rules.labelOverrides?.[field.apiName] ??
+            (parent ? addressLabel(field, parent) : field.label),
+        );
       }
     }
     return labels;
@@ -294,6 +356,21 @@ function LoadedRecordForm({
     return () => cancelAnimationFrame(frame);
   }, [errors, saving, rules]);
 
+  useEffect(() => {
+    if (intent !== "create") return;
+    const focusTarget = rules.initialFocus ?? rules.owner;
+    if (!focusTarget) return;
+    const frame = requestAnimationFrame(() => {
+      const row = rootRef.current?.querySelector<HTMLElement>(`[data-form-field="${focusTarget}"]`);
+      row
+        ?.querySelector<HTMLElement>(
+          "button:not(:disabled),input:not(:disabled),textarea:not(:disabled)",
+        )
+        ?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [intent, rules.initialFocus, rules.owner]);
+
   /** Fields a rule owner resets to null in the same change once its own value becomes empty. */
   const dependentClears: Readonly<Record<string, readonly string[]>> = useMemo(() => {
     const map: Record<string, readonly string[]> = {};
@@ -311,6 +388,17 @@ function LoadedRecordForm({
     for (const dependent of clears) writes[dependent] = null;
     const probability = stageProbabilityWrite(rules, metadata, name, value);
     if (probability) writes[probability.field] = probability.value;
+    const allDay = rules.allDay;
+    if (allDay && name === allDay.flag) {
+      const dayOnly = value === true;
+      allDay.fields.forEach((apiName, index) => {
+        const current = values[apiName];
+        if (typeof current !== "string") return;
+        const parts = isoToDateTimeParts(current, !dayOnly);
+        const time = dayOnly ? "" : allDayClearedTime(index === 0 ? 0 : 1);
+        writes[apiName] = dateTimePartsToIso({ date: parts.date, time }, dayOnly);
+      });
+    }
     setValues((previous) => ({ ...previous, ...writes }));
     setErrors((previous) => {
       const next = { ...previous };
@@ -319,6 +407,18 @@ function LoadedRecordForm({
     });
   }
 
+  const focusField = config.editIntent?.focus;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: focus once when the form first paints
+  useEffect(() => {
+    if (!focusField) return;
+    const frame = requestAnimationFrame(() => {
+      rootRef.current
+        ?.querySelector<HTMLElement>(`[data-form-field="${focusField}"] input`)
+        ?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   function closePicker() {
     setPickerOpen(false);
     requestAnimationFrame(() => pickerTrigger.current?.focus());
@@ -326,13 +426,21 @@ function LoadedRecordForm({
 
   function runClientValidation(): boolean {
     const messages = validateRecordForm(
-      fields,
+      fields
+        .filter((field) => !isHidden(field.apiName))
+        .map((field) => ({ ...field, required: isRequired(field) })),
       values,
       (field) => labelsByField.get(field.apiName) ?? field.label,
     );
-    if (Object.keys(messages).length === 0) return true;
+    const checked = validateRanges(
+      rules.ranges,
+      values,
+      messages,
+      (apiName) => labelsByField.get(apiName) ?? apiName,
+    );
+    if (Object.keys(checked).length === 0) return true;
     errorFocusPending.current = true;
-    setErrors(messages);
+    setErrors(checked);
     return false;
   }
 
@@ -355,7 +463,12 @@ function LoadedRecordForm({
     setErrors({});
     setBannerMessage(null);
     try {
-      const input = formPayload(fields, values, editing ? baseline : undefined);
+      const payload = formPayload(
+        fields.filter((field) => !isHidden(field.apiName)),
+        values,
+        editing ? baseline : undefined,
+      );
+      const input = payload;
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
@@ -383,9 +496,14 @@ function LoadedRecordForm({
 
   function row(field: FieldDefinition, column: FormRowColumn, parent?: FieldDefinition): ReactNode {
     const addressRules = addressRulesList(rules);
-    if (rules.omitted?.includes(field.apiName) || field.apiName === rules.prefix?.prefix)
+    if (
+      rules.omitted?.includes(field.apiName) ||
+      field.apiName === rules.prefix?.prefix ||
+      isHidden(field.apiName)
+    )
       return null;
-    const label = parent ? addressLabel(field, parent) : field.label;
+    const label =
+      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label);
     const id = `record-form-${field.apiName}`;
     if (field.dataType === "profileimage") {
       if (!config.profileImageLaterModule) {
@@ -511,6 +629,17 @@ function LoadedRecordForm({
           }}
         />
       );
+    } else if (rules.durationFields?.includes(field.apiName)) {
+      input = (
+        <DurationInput
+          id={id}
+          field={{ ...field, label }}
+          value={values[field.apiName] ?? null}
+          onChange={(next) => change(field.apiName, next)}
+          errorMessage={errors[field.apiName]}
+          disabled={saving || field.readOnly}
+        />
+      );
     } else {
       const stateRule = addressRules.find((rule) => rule.state === field.apiName);
       const countryRule = addressRules.find((rule) => rule.country === field.apiName);
@@ -557,13 +686,20 @@ function LoadedRecordForm({
               : undefined
           }
           lookupOwnerNames={ownerNames}
+          dateOnly={Boolean(
+            rules.allDay?.fields.includes(field.apiName) && values[rules.allDay.flag] === true,
+          )}
+          participantModules={rules.participantModules?.[field.apiName]}
+          laterModule={rules.laterModuleFields?.[field.apiName]}
           currencyPrefix={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? config.currencyPrefix
               : undefined
           }
           currencyInformation={
-            field.apiName === rules.currency ? RECORD_FORM_COPY.currencyInformation : undefined
+            field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
+              ? RECORD_FORM_COPY.currencyInformation
+              : undefined
           }
         />
       );
@@ -578,23 +714,28 @@ function LoadedRecordForm({
         <FormRow
           labelControl={
             labelLookup ? (
-              <RecordChoice
-                id={`${id}-module`}
-                label={`${label} module`}
-                hideLabel
-                value={lookupModule ?? null}
-                options={lookupTargets.map((module) => ({
-                  value: module,
-                  label: moduleSingularLabel(module),
-                }))}
-                searchable={lookupTargets.length > 2}
-                disabled={saving || field.readOnly}
-                onChange={(next) => {
-                  if (!next || next === lookupModule) return;
-                  setLookupModules((current) => ({ ...current, [field.apiName]: next }));
-                  change(field.apiName, null);
-                }}
-              />
+              <>
+                {rules.labelOverrides?.[field.apiName] ? (
+                  <span className="record-form-row__label-text">{label}</span>
+                ) : null}
+                <RecordChoice
+                  id={`${id}-module`}
+                  label={`${label} module`}
+                  hideLabel
+                  value={lookupModule ?? null}
+                  options={lookupTargets.map((module) => ({
+                    value: module,
+                    label: moduleSingularLabel(module),
+                  }))}
+                  searchable={lookupTargets.length > 2}
+                  disabled={saving || field.readOnly}
+                  onChange={(next) => {
+                    if (!next || next === lookupModule) return;
+                    setLookupModules((current) => ({ ...current, [field.apiName]: next }));
+                    change(field.apiName, null);
+                  }}
+                />
+              </>
             ) : undefined
           }
           label={
@@ -608,7 +749,7 @@ function LoadedRecordForm({
           }
           controlId={id}
           column={column}
-          required={field.required}
+          required={isRequired(field)}
         >
           {input}
         </FormRow>
@@ -623,6 +764,7 @@ function LoadedRecordForm({
       ) : null}
       <RecordFormShell
         variant={config.variant}
+        layout={config.variant === "activity" && config.module === "Calls" ? "call" : undefined}
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
@@ -643,6 +785,7 @@ function LoadedRecordForm({
       >
         {sections.map((section) => {
           if (rules.omittedSections?.includes(section.label)) return null;
+          if (dynamic?.hiddenSections?.includes(section.label)) return null;
           const columns = section.columns.map((column) =>
             column.filter((field) => byName.has(field.apiName)),
           );
@@ -748,7 +891,7 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter />
+          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog

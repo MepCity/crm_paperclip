@@ -7,6 +7,7 @@ import type {
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
+import { referenceModuleSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -96,7 +97,13 @@ export function buildMeetingsBusinessCardFields(
     // no boolean switch is painted"). We still include the row so the dash appears;
     // the boolean-key strikethrough rule is handled by the renderer. However the spec states
     // the dash is shown — meaning the field row IS shown, just the value reads as dash.
-    return [{ field, value: record.fields[name] ?? null }];
+    return [
+      {
+        field: { ...field, readOnly: true },
+        value: record.fields[name] ?? null,
+        suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
+      },
+    ];
   });
 }
 
@@ -134,6 +141,7 @@ export function buildMeetingsDetailSections(
                   : "right",
             field,
             value: record.fields[name] ?? null,
+            suffix: name === "What_Id" ? referenceModuleSuffix(record.fields[name]) : undefined,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
         }

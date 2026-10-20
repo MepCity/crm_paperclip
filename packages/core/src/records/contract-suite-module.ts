@@ -411,6 +411,7 @@ export const callsRecordServiceContractModule: RecordServiceContractModuleDefini
     Call_Type: "Outbound",
     Call_Start_Time: "2026-01-15T10:00:00.000Z",
     Call_Duration: "05:00",
+    Outgoing_Call_Status: "Completed",
     Subject: "Contract Call",
     ...extra,
   }),
@@ -441,4 +442,99 @@ export const callsRecordServiceContractModule: RecordServiceContractModuleDefini
       expectedName: "Sample 001 Contact 001",
     },
   },
+};
+
+export const campaignsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Campaigns",
+  singularLabel: "Campaign",
+  pluralLabel: "Campaigns",
+  expectedFieldCount: 21,
+  buildMinimalValidInput: (extra = {}) => ({
+    Campaign_Name: "Contract Campaign",
+    Description: "Contract marker",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Description",
+    sample: "Contract marker",
+    updated: "Updated marker",
+    tenantOther: "Other marker",
+  },
+  duplicatePermittedField: "Campaign_Name",
+  sortFields: ["Campaign_Name", "Start_Date"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Campaign_Name", 3],
+    ["Num_sent", 3],
+    ["Expected_Revenue", "3"],
+    ["Parent_Campaign", "campaign"],
+  ],
+  optional: {
+    date: { field: "Start_Date" },
+    lengthValidationField: "Campaign_Name",
+    massUpdateScenario: { field: "Status", value: "Active" },
+    massUpdateInvalidPicklist: { field: "Status", value: "Unknown" },
+    connectedLookup: {
+      field: "Connected_To__s",
+      linkedModuleApiName: "Contacts",
+      syntheticReferenceId: "synthetic-contact",
+      updatedReferenceId: "updated-contact",
+      contractLinkedReferenceId: "contract-linked-contact",
+    },
+  },
+};
+
+export const casesRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Cases",
+  singularLabel: "Case",
+  pluralLabel: "Cases",
+  expectedFieldCount: 30,
+  buildMinimalValidInput: (extra = {}) => ({
+    Subject: "Example case",
+    Status: "New",
+    Case_Origin: "Email",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Subject",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Add_Comment",
+  sortFields: ["Subject", "Status"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 1],
+    ["Locked__s", "true"],
+    ["No_of_comments", "one"],
+  ],
+};
+
+export const solutionsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Solutions",
+  singularLabel: "Solution",
+  pluralLabel: "Solutions",
+  expectedFieldCount: 20,
+  buildMinimalValidInput: (extra = {}) => ({
+    Solution_Title: "Example solution",
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Solution_Title",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Add_Comment",
+  sortFields: ["Solution_Title", "Status"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Solution_Title", 1],
+    ["Locked__s", "true"],
+    ["No_of_comments", "one"],
+  ],
 };

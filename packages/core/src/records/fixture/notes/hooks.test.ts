@@ -44,6 +44,16 @@ describe("Notes parent and content rules", () => {
     expect(() => apply(fields(module))).not.toThrow();
     expect(() => apply({ ...fields(module), Note_Title: null })).not.toThrow();
   });
+  it("accepts creating notes with a Campaigns parent record", () => {
+    expect(() => apply(fields("Campaigns"))).not.toThrow();
+    expect(() =>
+      apply({
+        Parent_Id: { module: "Campaigns", id: "parent" },
+        Note_Title: "Campaign strategy",
+        Note_Content: "Q1 Campaign roadmap note",
+      }),
+    ).not.toThrow();
+  });
   it.each(["Tasks", "Events", "Calls", "Notes", "Unknown"])("rejects %s parents", (module) => {
     expectFieldError(fields(module), "Parent_Id");
   });
@@ -100,5 +110,17 @@ describe("Notes parent removal", () => {
     removeNotesForParents("Leads", [], ctx);
     removeNotesForParents("Leads", ["parent"], { ...ctx, registeredModules: [] });
     expect(notes.size).toBe(2);
+  });
+});
+
+describe("notes content sanitising", () => {
+  it("cleans Note_Content on write and keeps formatting", () => {
+    const current = fields();
+    current.Note_Content =
+      '<p><b>a</b> <img src=x onerror=alert(1)><a href="https://e.com">l</a></p><script>x()</script>';
+    apply(current);
+    expect(current.Note_Content).toBe(
+      '<p><b>a</b> <a href="https://e.com" target="_blank" rel="noopener noreferrer">l</a></p>',
+    );
   });
 });

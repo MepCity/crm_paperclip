@@ -1,8 +1,17 @@
 import type { FieldValue, RecordData, RecordInput } from "../contract";
 
+import type { Tag } from "../tags";
+
 export interface FixtureModuleStore {
+  tags?: Map<string, Tag>;
+  tagLinks?: Map<string, Set<string>>;
+  /** Canonical rows partitioned out of active reads until restore or purge. */
+  deletedRecords?: Map<string, RecordData>;
+  deletedTagLinks?: Map<string, Set<string>>;
   records: Map<string, RecordData>;
   nextId: bigint;
+  nextAutoNumber?: bigint;
+  attachmentCleanupIntents?: { attachmentId: string; storageKey: string | null }[];
 }
 
 /** Internal fixture access shared by synchronous module lifecycle hooks. */
@@ -18,6 +27,8 @@ export interface FixtureModuleHooks {
     previous: Readonly<Record<string, FieldValue>> | undefined,
     ctx: FixtureHookContext,
   ) => void;
+  /** Required fields that may stay empty for this record's field values. */
+  optionalFields?: (fields: Readonly<Record<string, FieldValue>>) => readonly string[];
   readRecord?: (record: RecordData, now: Date) => RecordData;
   afterWrite?: (
     record: RecordData,
@@ -25,6 +36,12 @@ export interface FixtureModuleHooks {
     ctx: FixtureHookContext,
   ) => void;
   afterDelete?: (ids: readonly string[], ctx: FixtureHookContext) => void;
+  /** Transfer children on staged stores, before generic lookup reassignment. */
+  transferMergedRecords?: (
+    ids: readonly string[],
+    masterId: string,
+    ctx: FixtureHookContext,
+  ) => void;
   afterSeed?: (ctx: FixtureHookContext) => void;
   orderRows?: (rows: RecordData[]) => void;
   /** Delete these related rows when their parent is removed by a merge. */

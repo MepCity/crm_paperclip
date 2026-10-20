@@ -80,6 +80,7 @@ function editorForField(
       ...(user.email ? { detail: user.email } : {}),
     }));
   }
+  if (fieldType === "tag") editor.tagModule = "Leads";
   if (fieldType === "currency") {
     editor.currencyCode = currencyCode;
   }
@@ -93,6 +94,13 @@ function buildSystemDefinedItems() {
         id: "Activities",
         label,
         systemEditor: "activities" as const,
+      };
+    }
+    if (label === "Campaigns") {
+      return {
+        id: "Campaigns",
+        label,
+        systemEditor: "campaigns" as const,
       };
     }
     return {

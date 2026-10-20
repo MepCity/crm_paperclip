@@ -41,15 +41,21 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Verify active Accounts and Tasks checkboxes and later-module Products checkbox in filter panel
+  // Registered CRM and activity modules are active; Products remains a later module.
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
   await expect(accountsCheckbox).toBeChecked();
 
-  const tasksCheckbox = filterPanel.getByRole("checkbox", { name: "Tasks" });
-  await expect(tasksCheckbox).toBeVisible();
-  await expect(tasksCheckbox).toBeChecked();
-  await expect(tasksCheckbox).not.toHaveAttribute("data-later-module");
+  for (const name of ["Tasks", "Meetings", "Calls"]) {
+    const checkbox = filterPanel.getByRole("checkbox", { name, exact: true });
+    await expect(checkbox).toHaveCount(1);
+    await expect(checkbox).toBeChecked();
+    await expect(checkbox).not.toHaveAttribute("data-later-module");
+  }
+  await expect(filterPanel.getByRole("checkbox", { name: "Products" })).toHaveAttribute(
+    "data-later-module",
+    "P2",
+  );
 
   const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
   await expect(productsCheckbox).toBeVisible();
@@ -110,4 +116,74 @@ test("Tasks, Meetings and Calls module filters are enabled; later-module product
   const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
   await expect(productsCheckbox).toBeVisible();
   await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
+});
+
+test("Meetings module filter (S-31.6) is enabled and lists a matching meeting", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  // Meetings use the Events API endpoint; Event_Title is the searchable title field.
+  const response = await page.request.post("/crm/v2.2/Events", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: {
+      data: [
+        {
+          Event_Title: "Zephrysearch Meeting advanced",
+          Start_DateTime: "2026-06-01T10:00:00.000Z",
+          End_DateTime: "2026-06-01T11:00:00.000Z",
+          All_day: false,
+          Meeting_Venue__s: "In-office",
+        },
+      ],
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephrysearch`);
+  const meetingsCard = page.getByRole("region", { name: "Meetings search results" });
+  await expect(meetingsCard).toBeVisible();
+  await expect(
+    meetingsCard.getByRole("link", { name: "Zephrysearch Meeting advanced" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const meetingsCheckbox = filterPanel.getByRole("checkbox", { name: "Meetings" });
+  await expect(meetingsCheckbox).toBeVisible();
+  // S-31.6: Meetings is registered — no laterModule badge.
+  await expect(meetingsCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(meetingsCheckbox).toBeChecked();
+});
+
+test("Calls module filter (S-31.7) is enabled and lists a matching call", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const response = await page.request.post("/crm/v2.2/Calls", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: {
+      data: [
+        {
+          Subject: "Zephrysearch Call advanced",
+          Call_Type: "Outbound",
+          Call_Start_Time: "2026-06-01T10:00:00.000Z",
+          Call_Duration: "00:30",
+        },
+      ],
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/crm/${org.slug}/search?q=Zephrysearch`);
+  const callsCard = page.getByRole("region", { name: "Calls search results" });
+  await expect(callsCard).toBeVisible();
+  await expect(callsCard.getByRole("link", { name: "Zephrysearch Call advanced" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Filter" }).click();
+  const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
+  const callsCheckbox = filterPanel.getByRole("checkbox", { name: "Calls" });
+  await expect(callsCheckbox).toBeVisible();
+  // S-31.7: Calls is registered — no laterModule badge.
+  await expect(callsCheckbox).not.toHaveAttribute("data-later-module", /.+/);
+  await expect(callsCheckbox).toBeChecked();
 });

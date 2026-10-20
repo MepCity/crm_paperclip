@@ -1,5 +1,5 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -149,6 +149,25 @@ test("Deals filters, alphabet, paging and record route", async ({ page }) => {
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr").first()).toBeVisible();
 
+  // DL-66: Campaign Source field filter is live; filtering by campaign leaves matching deals.
+  const campaignSourceFilter = fieldFilters.getByRole("checkbox", {
+    name: "Campaign Source",
+    exact: true,
+  });
+  await campaignSourceFilter.scrollIntoViewIfNeeded();
+  await campaignSourceFilter.focus();
+  await page.keyboard.press("Space");
+  const campaignSourceValue = fieldFilters.getByRole("textbox", { name: "Campaign Source value" });
+  await campaignSourceValue.click();
+  await campaignSourceValue.fill("Campaign 001");
+  await campaignSourceValue.press("Tab");
+  await expect(apply).toBeEnabled();
+  await apply.click();
+  // Exactly 2 seeded deals match Campaign 001 (indices 0 and 3)
+  await expect(list.locator("tbody tr")).toHaveCount(2);
+  await list.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(list.locator("tbody tr").first()).toBeVisible();
+
   // Account Name cell opens the related account (M3). Contact Name stays a Contacts link (M2).
   const accountLink = list
     .locator("tbody tr")
@@ -194,10 +213,15 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // DL-13: Create Deal arrow attached dropdown (M6)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
-  expect(page.url()).toBe(before);
+  // DL-13: Create Deal dropdown opens the CSV import wizard
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Deals", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Deals\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Deals"));
+  // Restore the explicit table presentation for the selection checks below.
+  await page.goto(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
 
   // View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
@@ -217,11 +241,10 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
     .first();
   await expect(latestEmail).toBeVisible();
 
-  // DL-66: Campaign Source field filter (M7)
-  const campaignSource = list
-    .locator('[data-later-module="M7"]', { hasText: "Campaign Source" })
-    .first();
+  // DL-66: Campaign Source field filter is live (Campaigns, M7)
+  const campaignSource = list.getByRole("checkbox", { name: "Campaign Source" });
   await expect(campaignSource).toBeVisible();
+  await expect(list.locator('[data-later-module="M7"]')).toHaveCount(0);
 
   // DL-14: Actions menu (10 items in reference order)
   await list.getByRole("button", { name: "Actions", exact: true }).click();
@@ -238,10 +261,29 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
     "Print View",
   ]);
 
-  // Inert action items
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  // TAG-02 / PS-05: these entries now navigate instead of remaining inert.
+  for (const [label, path] of [
+    ["Manage Tags", moduleTagsPath],
+    ["Drafts", moduleDraftsPath],
+  ] as const) {
+    await page.getByRole("menuitem", { name: label, exact: true }).click();
+    await expect(page).toHaveURL(path(org.slug, "Deals"));
+    await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    if (label === "Manage Tags") {
+      await expect(page.locator("#main-content").getByText("Deals", { exact: true })).toBeVisible();
+      await expect(page.getByRole("table", { name: "Tags table" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { name: "Criteria", exact: true })).toBeVisible();
+    }
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Deals"));
+    // Back returns to the default list; selection checks require table presentation.
+    await page.goto(before);
+    await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+    await list.getByRole("button", { name: "Actions", exact: true }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+  }
 
   // Print View
   const print = page.getByRole("menuitem", { name: "Print View", exact: true });

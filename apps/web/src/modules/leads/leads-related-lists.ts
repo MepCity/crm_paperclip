@@ -1,10 +1,18 @@
+import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListDefinition } from "../types";
 
 export interface LeadsRelatedListBadges {
   openActivities?: number;
   closedActivities?: number;
+  campaigns?: number;
+}
+
+export interface LeadsRelatedListHandlers {
+  onAddCampaigns?: () => void;
 }
 
 function badgeValue(count: number | undefined): number | undefined {
@@ -38,8 +46,18 @@ function viewControls(suffix: "open" | "closed") {
 
 export function createLeadsRelatedLists(
   badges: LeadsRelatedListBadges = {},
+  handlers: LeadsRelatedListHandlers = {},
 ): readonly RelatedListDefinition[] {
   return [
+    {
+      id: "notes",
+      renderBody: notesCardBody("Leads"),
+      title: "Notes",
+      moduleKey: "M6",
+      order: 0,
+      targetId: "related-list-notes",
+      emptyStateText: "No records found",
+    },
     {
       id: "open-activities",
       renderBody: parentActivitiesBody("Leads", "open"),
@@ -62,6 +80,43 @@ export function createLeadsRelatedLists(
       targetId: "related-list-closed-activities",
       countBadge: badgeValue(badges.closedActivities),
       upperControls: [...viewControls("closed")],
+    },
+    {
+      id: "attachments",
+      renderCard: attachmentsCard("Leads"),
+      title: "Attachments",
+      moduleKey: "M6",
+      order: 3,
+      targetId: "related-list-attachments",
+      upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+      emptyStateText: "No Attachment",
+    },
+    {
+      id: "campaigns",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? campaignsCardBody("Leads", record.id, (id) => recordPath("Campaigns", id))
+          : undefined,
+      title: "Campaigns",
+      // The card is live; "M2" keeps the rail entry and controls unlocked.
+      moduleKey: "M2",
+      order: 4,
+      targetId: "related-list-campaigns",
+      countBadge: badgeValue(badges.campaigns),
+      railAction: {
+        id: "add-campaigns",
+        label: "Add Campaigns",
+        onAction: handlers.onAddCampaigns,
+      },
+      upperControls: [
+        {
+          id: "add-campaigns",
+          label: "Add Campaigns",
+          type: "button",
+          onAction: handlers.onAddCampaigns,
+        },
+      ],
+      emptyStateText: "No records found",
     },
   ];
 }

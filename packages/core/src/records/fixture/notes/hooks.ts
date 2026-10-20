@@ -1,5 +1,7 @@
 import { type FieldErrors, ValidationError } from "../../../errors";
 import type { FieldValue, ModuleRecordReference } from "../../contract";
+import { sanitizeNoteHtml } from "../../note-html";
+import { removeAttachmentsForParents } from "../attachments/hooks";
 import type { FixtureHookContext, FixtureModuleHooks } from "../hooks";
 import { notesParentModules } from "./metadata";
 
@@ -17,6 +19,7 @@ function parentReference(value: FieldValue | undefined): ModuleRecordReference |
 }
 
 export const notesHooks: FixtureModuleHooks = {
+  afterDelete: (ids, ctx) => removeAttachmentsForParents("Notes", ids, ctx),
   applyRules(fields, _input, previous, ctx) {
     const errors: FieldErrors = {};
     const parent = parentReference(fields.Parent_Id);
@@ -42,6 +45,10 @@ export const notesHooks: FixtureModuleHooks = {
         errors[field] = ["Value is too long."];
       }
     }
+    // Stored markup is cleaned by the same allowlist the editor and display use.
+    if (typeof fields.Note_Content === "string") {
+      fields.Note_Content = sanitizeNoteHtml(fields.Note_Content);
+    }
     if (Object.keys(errors).length) throw new ValidationError(errors);
   },
 };
@@ -57,6 +64,24 @@ export function removeNotesForParents(
   const notes = ctx.moduleStore("Notes").records;
   for (const [id, note] of notes) {
     const parent = parentReference(note.fields.Parent_Id);
-    if (parent?.module === parentModule && targets.has(parent.id)) notes.delete(id);
+    if (parent?.module === parentModule && targets.has(parent.id)) {
+      removeAttachmentsForParents("Notes", [id], ctx);
+      notes.delete(id);
+    }
+  }
+}
+
+/** Preserve child identities while moving notes from duplicate parents. */
+export function transferNotesToMaster(
+  module: string,
+  ids: readonly string[],
+  masterId: string,
+  ctx: FixtureHookContext,
+): void {
+  const notes = ctx.moduleStore("Notes").records;
+  for (const [id, note] of notes) {
+    const parent = parentReference(note.fields.Parent_Id);
+    if (parent?.module === module && ids.includes(parent.id))
+      notes.set(id, { id, fields: { ...note.fields, Parent_Id: { module, id: masterId } } });
   }
 }

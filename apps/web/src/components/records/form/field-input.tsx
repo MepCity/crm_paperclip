@@ -9,10 +9,10 @@ import type {
   RecordService,
 } from "@crm/core/records";
 import { lookupTargetModules } from "@crm/core/records";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
-import { laterModuleProps, useLaterModule } from "@/components/ui/later-module";
+import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { Switch } from "@/components/ui/switch";
@@ -24,12 +24,15 @@ import {
   DATE_MASK_PLACEHOLDER,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";
+import { REMINDER_OFFSETS, reminderOffsetOf, reminderValue } from "@/lib/records/reminder-options";
 import {
   isModuleRegistered,
   resolveModuleLaterKey,
   resolveModuleScreenByApiName,
 } from "@/modules/registry";
+import { DateTimeInput } from "./datetime-input";
 import type { LookupPickerRule, NumberLimits } from "./form-model";
+import { ParticipantsInput } from "./participants-input";
 import { SelectRecordDialog } from "./select-record-dialog";
 
 export interface OwnerOption {
@@ -69,6 +72,27 @@ export interface FieldInputProps {
   lookupRecordHref?: (id: string, module?: string) => string;
   /** Owner id to display name, forwarded to the record picker's owner columns. */
   lookupOwnerNames?: Readonly<Record<string, string>>;
+  /** All day: a `datetime` entry shows the day only. */
+  dateOnly?: boolean;
+  /** Modules a record-array participants field can pick from. */
+  participantModules?: readonly string[];
+  /** Draws a toggle in place but inert, for behaviour that belongs to a later module. */
+  laterModule?: ModuleKey;
+}
+
+function InertToggleFrame({
+  laterModule,
+  children,
+}: {
+  laterModule: ModuleKey;
+  children: ReactNode;
+}) {
+  const ref = useLaterModule<HTMLDivElement>(laterModule);
+  return (
+    <div ref={ref} aria-disabled="true" data-later-module={laterModule}>
+      {children}
+    </div>
+  );
 }
 
 /** `Sales_Orders` reads `Sales Order`; a registered module's own singular label wins. */
@@ -173,6 +197,9 @@ export function FieldInput({
   recordService,
   lookupRecordHref,
   lookupOwnerNames,
+  dateOnly,
+  participantModules,
+  laterModule,
 }: FieldInputProps) {
   const controlId = id ?? field.apiName;
   const common = {
@@ -212,6 +239,7 @@ export function FieldInput({
   const text = typeof value === "string" ? value : "";
   const number = typeof value === "number" ? value : Number.NaN;
   switch (field.dataType) {
+    case "autonumber":
     case "text":
     case "email":
     case "phone":
@@ -236,6 +264,13 @@ export function FieldInput({
               <span className="record-prefix pl-(--space-3)">{textPrefix}</span>
             ) : undefined
           }
+          endAction={
+            field.readOnly ? (
+              <span role="img" className="record-input-end" aria-label="Locked">
+                <Icons.lock className="record-input-end-icon" aria-hidden />
+              </span>
+            ) : undefined
+          }
           onChange={(next) => onChange(next === "" ? null : next)}
         />
       );
@@ -257,6 +292,18 @@ export function FieldInput({
     // text for it. The entry is drawn like the numeric ones — the same single-line frame — but what is
     // typed is never parsed; `form-validation` reports an entry that is not digits.
     case "bigint":
+      if (field.acceptsJsonArray && participantModules) {
+        return (
+          <ParticipantsInput
+            id={controlId}
+            label={field.label}
+            value={value}
+            onChange={onChange}
+            modules={participantModules}
+            disabled={common.isDisabled}
+          />
+        );
+      }
       return (
         <TextField
           {...common}
@@ -469,8 +516,8 @@ export function FieldInput({
       );
     }
     case "ALARM":
-    case "RRULE":
-      return (
+    case "RRULE": {
+      const toggle = (
         <Switch
           label={field.label}
           hideLabel={variant === "activity"}
@@ -481,8 +528,42 @@ export function FieldInput({
           onChange={(on) => onChange(on ? (TOGGLE_DEFAULTS[field.dataType] ?? null) : null)}
         />
       );
-    case "multi_module_lookup":
+      return laterModule ? (
+        <InertToggleFrame laterModule={laterModule}>{toggle}</InertToggleFrame>
+      ) : (
+        toggle
+      );
+    }
     case "datetime":
+      return (
+        <DateTimeInput
+          id={controlId}
+          label={field.label}
+          value={typeof value === "string" ? value : null}
+          onChange={onChange}
+          dateOnly={dateOnly}
+          required={field.required}
+          disabled={common.isDisabled}
+          errorMessage={errorMessage}
+        />
+      );
+    case "multireminder":
+      return (
+        <RecordChoice
+          id={controlId}
+          hideLabel={hideLabel}
+          label={field.label}
+          value={reminderOffsetOf(value)}
+          onChange={(next) => onChange(reminderValue(next))}
+          options={[
+            { value: null, label: "-None-" },
+            ...REMINDER_OFFSETS.map((offset) => ({ value: offset.id, label: offset.label })),
+          ]}
+          disabled={common.isDisabled}
+          inline={inline}
+        />
+      );
+    case "multi_module_lookup":
       return null;
   }
 }

@@ -7,6 +7,9 @@ function root(orgSlug: string) {
 export const apiKeys = {
   root,
   homeCurrency: (orgSlug: string) => [...root(orgSlug), "homeCurrency"] as const,
+  imports: (orgSlug: string) => [...root(orgSlug), "imports"] as const,
+  importJob: (orgSlug: string, id: string) => [...root(orgSlug), "imports", id] as const,
+  exports: (orgSlug: string) => [...root(orgSlug), "exports"] as const,
   users: (orgSlug: string) => [...root(orgSlug), "users"] as const,
   module: (orgSlug: string, module: string) => [...root(orgSlug), "module", module] as const,
   views: (orgSlug: string, module: string) =>
@@ -22,7 +25,7 @@ export const apiKeys = {
   count: (
     orgSlug: string,
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
   ) => [...apiKeys.module(orgSlug, module), "count", serializeCountQuery(query)] as const,
   summarize: (orgSlug: string, module: string, query: SummaryQuery) =>
     [...apiKeys.module(orgSlug, module), "summarize", serializeSummarizeQuery(query)] as const,
@@ -57,7 +60,7 @@ function serializeListQuery(query: ListQuery): string {
 }
 
 function serializeCountQuery(
-  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter">,
+  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
 ): string {
   return JSON.stringify(query);
 }

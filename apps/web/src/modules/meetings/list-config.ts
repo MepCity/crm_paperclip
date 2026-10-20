@@ -6,6 +6,7 @@ import {
   moduleRecordPath,
 } from "@/lib/crm-paths";
 import { meetingsFilterGroups } from "./list-filters";
+import { renderMeetingQuickCreate } from "./meeting-quick-create";
 
 export const MEETINGS_LIST_CURRENCY_CODE = "TRY";
 
@@ -60,10 +61,17 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
   pluralLabel: "Meetings",
   singularLabel: "Meeting",
   createLabel: "Create Meeting",
+  quickCreate: renderMeetingQuickCreate,
   filterTitle: "Filter Meetings by",
   filterGroups: meetingsFilterGroups,
   sortFieldLabels: MEETINGS_SORT_FIELD_LABELS,
   pinnedViews: ["All Meetings"],
+  listVariant: "activities",
+  actionsMenuWidth: 160,
+  rowEditLink: true,
+  rowTools: ["edit", "note"],
+  relatedToPictogram: true,
+  allDayField: "All_day",
   viewMenuSearch: true,
   viewTypeTileIds: MEETINGS_VIEW_TYPE_TILE_IDS,
   badgeColumn: false,
@@ -73,8 +81,8 @@ export const meetingsListPageConfig: ModuleListScreenConfig = {
       { id: "mass-delete", label: "Mass Delete" },
       { id: "mass-update", label: "Mass Update" },
       { id: "tags", label: "Manage Tags", laterModule: "M6" },
-      { id: "export", label: "Export Meetings", laterModule: "M6" },
-      { id: "print", label: "Print View", submenuIndicator: true },
+      { id: "export", label: "Export Meetings" },
+      { id: "print", label: "Print View", submenuIndicator: true, separatorBefore: true },
     ],
   },
   paths: {

@@ -1,7 +1,7 @@
 import type { ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
-import { taskRelatedToSuffix } from "@/modules/tasks/tasks-detail-sections";
+import { referenceModuleSuffix, taskRelatedToSuffix } from "@/modules/tasks/tasks-detail-sections";
 
 /** Field order for the Calls business card: Call For, Related To, Call Type, Call Status, Call Start Time. */
 export const CALLS_BUSINESS_CARD_FIELDS = [
@@ -30,6 +30,15 @@ export function callReferenceSuffix(
   });
 }
 
+/** Reference label for the Who_Id field on Calls. */
+function callField<T extends { apiName: string; label: string }>(field: T): T {
+  return field.apiName === "Who_Id" ? { ...field, label: "Call For" } : field;
+}
+
+function callSuffix(name: string, value: unknown): string | undefined {
+  return name === "Who_Id" || name === "What_Id" ? referenceModuleSuffix(value) : undefined;
+}
+
 /** Business card fields in metadata order, falling back to CALLS_BUSINESS_CARD_FIELDS. */
 export function buildCallsBusinessCardFields(
   module: ModuleMetadata,
@@ -40,7 +49,15 @@ export function buildCallsBusinessCardFields(
 
   return cardNames.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record) ? [{ field, value: record.fields[name] ?? null }] : [];
+    return field && visible(field, record)
+      ? [
+          {
+            field: callField(field),
+            value: record.fields[name] ?? null,
+            suffix: callSuffix(name, record.fields[name]),
+          },
+        ]
+      : [];
   });
 }
 
@@ -65,8 +82,9 @@ export function buildCallsDetailSections(
               : undefined;
         fields.push({
           column: "full",
-          field,
+          field: callField(field),
           value: record.fields[name] ?? null,
+          suffix: callSuffix(name, record.fields[name]),
           auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
         });
       }

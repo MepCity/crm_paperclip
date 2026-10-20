@@ -328,7 +328,7 @@ test("profile placeholder is noninteractive and unsupported types render nothing
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["multi_module_lookup", "datetime"] as const) {
+  for (const type of ["multi_module_lookup"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
@@ -507,10 +507,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Campaign_Source",
-    label: "Campaign Source",
+    apiName: "Doc_Ref",
+    label: "Doc Ref",
     dataType: "lookup",
-    lookup: { module: "Campaigns" },
+    lookup: { module: "Documents" },
     required: false,
     readOnly: false,
     unique: false,
@@ -522,19 +522,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Campaigns", id: "camp-1", name: "Big Campaign" }}
+      initial={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Campaign Source" }) as HTMLInputElement;
-  expect(input.value).toBe("Big Campaign");
+  const input = screen.getByRole("textbox", { name: "Doc Ref" }) as HTMLInputElement;
+  expect(input.value).toBe("Big Doc");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M7");
+  expect(input.getAttribute("data-later-module")).toBe("M9");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Campaign Source lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M7");
+  const btn = screen.getByRole("button", { name: "Open Doc Ref lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M9");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog

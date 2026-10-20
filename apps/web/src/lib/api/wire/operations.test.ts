@@ -459,3 +459,118 @@ describe("wire operations", () => {
     expect(() => operationPath(operations.view)).toThrow(ValidationError);
   });
 });
+
+it("serves child CRUD and criteria on existing generic endpoints", async () => {
+  const contact = await deps.records.create("Contacts", { Last_Name: "Synthetic Contact" });
+  const account = await deps.records.create("Accounts", { Account_Name: "Synthetic Account" });
+  const deal = await deps.records.create("Deals", {
+    Deal_Name: "Synthetic Deal",
+    Stage: "Qualification",
+    Closing_Date: "2026-10-30",
+    Account_Name: { module: "Accounts", id: account.id },
+  });
+  for (const [module, row, field, parentId, update] of [
+    [
+      "Notes",
+      { Parent_Id: { module: "Contacts", id: contact.id }, Note_Title: "Synthetic note" },
+      "Parent_Id",
+      contact.id,
+      { Note_Title: "Updated note" },
+    ],
+    [
+      "Contact_Roles",
+      { Deal: { id: deal.id }, Contact: { id: contact.id }, Contact_Role: "Purchasing" },
+      "Deal",
+      deal.id,
+      { Contact_Role: "Evaluator" },
+    ],
+  ] as const) {
+    const viewId = (await deps.records.listViews(module))[0]?.id;
+    if (!viewId) throw new Error("Missing child view");
+    const request = { params: { module }, query: { cvid: viewId }, body: { data: [row] } };
+    const created = json(await operations.create.run(deps, request));
+    const id = created.body.data[0].details.id;
+    expect(typeof id).toBe("string");
+    expect(
+      json(await operations.record.run(deps, { ...request, params: { module, recordId: id } })).body
+        .data[0],
+    ).toMatchObject(row);
+    const listed = json(
+      await operations.bulk.run(deps, {
+        ...request,
+        body: { filters: encodeCriteria({ field, comparator: "equal", value: parentId }) },
+      }),
+    );
+    expect(listed.body.data.map((item: { id: string }) => item.id)).toEqual([id]);
+    await operations.update.run(deps, {
+      ...request,
+      params: { module, recordId: id },
+      body: { data: [update] },
+    });
+    expect(
+      json(await operations.record.run(deps, { ...request, params: { module, recordId: id } })).body
+        .data[0],
+    ).toMatchObject(update);
+    await operations.delete.run(deps, { ...request, params: { module, recordId: id } });
+    await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
+  }
+  const fields = json(await operations.fields.run(deps, { params: { module: "Notes" }, query: {} }))
+    .body.fields;
+  expect(
+    fields.find((field: { api_name: string }) => field.api_name === "Note_Title").mass_update,
+  ).toBe(true);
+});
+
+it.each([
+  [
+    "Cases",
+    { Subject: "Wire case", Status: "New", Case_Origin: "Email" },
+    "Subject",
+    "Case_Number",
+    30,
+  ],
+  ["Solutions", { Solution_Title: "Wire solution" }, "Solution_Title", "Solution_Number", 20],
+] as const)(
+  "serves %s through the generic metadata and CRUD operations",
+  async (module, row, title, number, fieldCount) => {
+    const request = {
+      params: { module },
+      query: { cvid: `all-${module.toLowerCase()}` },
+      body: { data: [row] },
+    };
+    const fields = json(await operations.fields.run(deps, request)).body.fields;
+    expect(fields).toHaveLength(fieldCount);
+    expect(fields.find((field: { api_name: string }) => field.api_name === number)).toMatchObject({
+      data_type: "autonumber",
+      read_only: true,
+    });
+    const created = json(await operations.create.run(deps, request));
+    const id = created.body.data[0].details.id;
+    const recordRequest = { ...request, params: { module, recordId: id } };
+    const read = json(await operations.record.run(deps, recordRequest)).body.data[0];
+    expect(read).toMatchObject(row);
+    expect(read[number]).toMatch(/^\d+$/);
+    const filter = {
+      filters: encodeCriteria({
+        field: title,
+        comparator: "equal",
+        value: row[title as keyof typeof row] as string,
+      }),
+    };
+    expect(
+      json(await operations.bulk.run(deps, { ...request, body: filter })).body.data.map(
+        (item: { id: string }) => item.id,
+      ),
+    ).toEqual([id]);
+    expect(json(await operations.count.run(deps, { ...request, body: filter })).body.count).toBe(1);
+    await operations.update.run(deps, {
+      ...recordRequest,
+      body: { data: [{ [title]: "Updated wire record" }] },
+    });
+    expect(json(await operations.record.run(deps, recordRequest)).body.data[0][number]).toBe(
+      read[number],
+    );
+    await operations.delete.run(deps, recordRequest);
+    await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
+  },
+);

@@ -1,9 +1,14 @@
 "use client";
 
 import type { FieldValue } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { DedupConflictRoute } from "@/components/records/deduplicate/dedup-conflict-route";
 import { RecordDetailScreen } from "@/components/records/detail/record-detail-screen";
+import { DraftsPage } from "@/components/records/drafts/drafts-page";
 import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicates-screen";
+import { ListPrintScreen } from "@/components/records/print/list-print-screen";
+import { RecordPrintScreen } from "@/components/records/print/record-print-screen";
+import { ManageTagsClient } from "@/components/records/tags/manage-tags-client";
 import {
   moduleListDefaultPath,
   moduleRecordClonePath,
@@ -22,7 +27,11 @@ export type ModuleRouteKind =
   | "edit"
   | "clone"
   | "merge"
-  | "deduplicate";
+  | "deduplicate"
+  | "tags"
+  | "drafts"
+  | "print"
+  | "print-list";
 
 export function ModuleRouteClient({
   moduleTab,
@@ -43,8 +52,36 @@ export function ModuleRouteClient({
 }) {
   const definition = resolveModuleScreen(moduleTab);
   if (!definition) throw new Error("Unknown module screen.");
+  const router = useRouter();
+  if (kind === "tags") {
+    const listHref = moduleListDefaultPath(orgSlug, definition.tab);
+    return (
+      <ManageTagsClient
+        key={`${orgSlug}:${definition.apiName}`}
+        orgSlug={orgSlug}
+        module={definition.apiName}
+        moduleName={definition.pluralLabel}
+        onBack={() => router.push(listHref)}
+      />
+    );
+  }
+  if (kind === "drafts") {
+    const listHref = moduleListDefaultPath(orgSlug, definition.tab);
+    return <DraftsPage onBack={() => router.push(listHref)} />;
+  }
   if (kind === "list")
-    return <ModuleListClient definition={definition} orgSlug={orgSlug} viewId={viewId} />;
+    return (
+      <ModuleListClient
+        definition={definition}
+        orgSlug={orgSlug}
+        viewId={viewId}
+        currentUserId={currentUserId}
+      />
+    );
+  if (kind === "print-list")
+    return <ListPrintScreen orgSlug={orgSlug} viewId={viewId} definition={definition} />;
+  if (kind === "print" && recordId)
+    return <RecordPrintScreen orgSlug={orgSlug} recordId={recordId} definition={definition} />;
   if (kind === "deduplicate")
     return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
   if (kind === "merge" && recordId) {

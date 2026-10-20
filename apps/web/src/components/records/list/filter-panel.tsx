@@ -2,16 +2,19 @@
 
 import "./filter-panel.css";
 
-import type { ActivityFilterValue } from "@crm/core/records";
+import type { ActivityFilterValue, CampaignFilterValue } from "@crm/core/records";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ModuleKey } from "@/components/ui/later-module";
+import type { MultiSelectOption } from "@/components/ui/multi-select";
 import { TextField } from "@/components/ui/text-field";
 import { activityFilterToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { useModuleTags } from "@/lib/records/tags";
 import { ActivityFilterEditor } from "./activity-filter-editor";
+import { CampaignFilterEditor } from "./campaign-filter-editor";
 import {
   draftOperator,
   type FilterDraft,
@@ -26,7 +29,7 @@ export interface FilterItem {
   label: string;
   disabled?: boolean;
   editor?: FilterEditorDefinition;
-  systemEditor?: "activities";
+  systemEditor?: "activities" | "campaigns";
   laterModule?: ModuleKey;
 }
 
@@ -46,7 +49,13 @@ export interface FilterPanelProps {
   /** Applied values used to seed editors when the panel mounts. */
   initialFilters?: readonly AppliedFilter[];
   initialActivityFilter?: ActivityFilterValue | null;
-  onApply?: (filters: AppliedFilter[], activityFilter?: ActivityFilterValue | null) => void;
+  initialCampaignFilter?: CampaignFilterValue | null;
+  campaignOptions?: readonly MultiSelectOption[];
+  onApply?: (
+    filters: AppliedFilter[],
+    activityFilter?: ActivityFilterValue | null,
+    campaignFilter?: CampaignFilterValue | null,
+  ) => void;
   onClear?: () => void;
   /** Shown above the footer actions when a server-side filter validation fails. */
   applyErrorMessage?: string | null;
@@ -55,6 +64,11 @@ export interface FilterPanelProps {
 const DEFAULT_ACTIVITY_FILTER: ActivityFilterValue = {
   choice: "activity_due",
   range: "today_overdue",
+};
+
+const DEFAULT_CAMPAIGN_FILTER: CampaignFilterValue = {
+  campaignIds: [],
+  memberStatuses: undefined,
 };
 
 export function FilterPanel({
@@ -66,10 +80,31 @@ export function FilterPanel({
   onSelectionChange,
   initialFilters = [],
   initialActivityFilter = null,
+  initialCampaignFilter = null,
+  campaignOptions,
   onApply,
   onClear,
   applyErrorMessage,
 }: FilterPanelProps) {
+  const tagModule = groups
+    .flatMap((group) => group.items)
+    .find((item) => selectedIds.includes(item.id) && item.editor?.tagModule)?.editor?.tagModule;
+  const tags = useModuleTags(tagModule);
+  const resolvedGroups = groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) =>
+      item.editor?.tagModule
+        ? {
+            ...item,
+            editor: {
+              ...item.editor,
+              tagStatus: tags.status,
+              options: tags.tags.map((tag) => ({ id: tag.id, label: tag.name, color: tag.color })),
+            },
+          }
+        : item,
+    ),
+  }));
   const titleId = useId();
   const [drafts, setDrafts] = useState<Record<string, FilterDraft>>(() =>
     Object.fromEntries(initialFilters.map(({ itemId, ...draft }) => [itemId, draft])),
@@ -77,10 +112,17 @@ export function FilterPanel({
   const [activityDraft, setActivityDraft] = useState<ActivityFilterValue>(
     () => initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER,
   );
+  const [campaignDraft, setCampaignDraft] = useState<CampaignFilterValue>(
+    () => initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER,
+  );
 
   useEffect(() => {
     setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
   }, [initialActivityFilter]);
+
+  useEffect(() => {
+    setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
+  }, [initialCampaignFilter]);
 
   // External deselection (including page-level reset) must discard drafts too.
   useEffect(() => {
@@ -96,21 +138,34 @@ export function FilterPanel({
     item.id === "activities" ||
     (item.label === "Activities" && !item.laterModule && !item.disabled);
 
-  const selectedFieldItems = groups
+  const isCampaignItem = (item: FilterItem) =>
+    item.systemEditor === "campaigns" ||
+    item.id === "Campaigns" ||
+    item.id === "campaigns" ||
+    (item.label === "Campaigns" && !item.laterModule && !item.disabled);
+
+  const selectedFieldItems = resolvedGroups
     .flatMap((group) => group.items)
     .filter((item) => selectedIds.includes(item.id) && item.editor);
   const selectedActivityItem = groups
     .flatMap((group) => group.items)
     .find((item) => selectedIds.includes(item.id) && isActivityItem(item));
-  const hasSelectedItems = selectedFieldItems.length > 0 || Boolean(selectedActivityItem);
-  const completed = selectedFieldItems.every(
-    (item) =>
-      item.editor &&
-      isFilterComplete(item.editor, drafts[item.id] ?? initialFilterDraft(item.editor)),
-  );
+  const selectedCampaignItem = groups
+    .flatMap((group) => group.items)
+    .find((item) => selectedIds.includes(item.id) && isCampaignItem(item));
+  const hasSelectedItems =
+    selectedFieldItems.length > 0 || Boolean(selectedActivityItem) || Boolean(selectedCampaignItem);
+  const completed =
+    selectedFieldItems.every(
+      (item) =>
+        item.editor &&
+        isFilterComplete(item.editor, drafts[item.id] ?? initialFilterDraft(item.editor)),
+    ) &&
+    (!selectedCampaignItem ||
+      (campaignDraft.campaignIds.length >= 1 && campaignDraft.campaignIds.length <= 5));
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
-  const visibleGroups = groups
+  const visibleGroups = resolvedGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
@@ -179,6 +234,9 @@ export function FilterPanel({
                         if (!selected && isActivityItem(item)) {
                           setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
                         }
+                        if (!selected && isCampaignItem(item)) {
+                          setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
+                        }
                         onSelectionChange(
                           selected
                             ? [...selectedIds, item.id]
@@ -201,6 +259,14 @@ export function FilterPanel({
                         className="filter-editor"
                         value={activityDraft}
                         onChange={setActivityDraft}
+                      />
+                    )}
+                    {selectedIds.includes(item.id) && isCampaignItem(item) && (
+                      <CampaignFilterEditor
+                        className="filter-editor"
+                        value={campaignDraft}
+                        onChange={setCampaignDraft}
+                        campaignOptions={campaignOptions}
                       />
                     )}
                   </li>
@@ -246,7 +312,22 @@ export function FilterPanel({
                     if (control === "days") appliedFilter.daysUnit = draft.daysUnit ?? "days";
                     return [appliedFilter];
                   });
-                  if (selectedActivityItem) {
+                  const appliedCampaign: CampaignFilterValue | undefined = selectedCampaignItem
+                    ? {
+                        campaignIds: campaignDraft.campaignIds,
+                        ...(campaignDraft.memberStatuses && campaignDraft.memberStatuses.length > 0
+                          ? { memberStatuses: campaignDraft.memberStatuses }
+                          : {}),
+                      }
+                    : undefined;
+
+                  if (selectedCampaignItem) {
+                    onApply(
+                      applied,
+                      selectedActivityItem ? activityFilterToCriteria(activityDraft) : undefined,
+                      appliedCampaign,
+                    );
+                  } else if (selectedActivityItem) {
                     onApply(applied, activityFilterToCriteria(activityDraft));
                   } else {
                     onApply(applied);
@@ -262,6 +343,7 @@ export function FilterPanel({
               onPress={() => {
                 setDrafts({});
                 setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
+                setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
                 onSelectionChange([]);
                 onClear?.();
               }}
