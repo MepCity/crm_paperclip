@@ -726,7 +726,17 @@ full form, Call Create/Edit, and Activities lists/detail.
 | Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
 
 
-### Calls record detail — implemented; QA pending (MEP-508)
+### Meetings and Calls lists — done; QA MEP-939 (MEP-503, MEP-462, MEP-463, MEP-504, MEP-484)
+
+| Area | Result |
+| --- | --- |
+| Activities nav group, single All Meetings / All Calls tab, view menu, view-type tiles, Filter panel, Create button with chevron, Actions menu, default columns, paging, record open and back | ✓ Walked; matches the reference |
+| Row selection bar (Send Email, Tags, Mass Update, more) | ✓ Walked on Calls; text "1 Record Selected." starts flush against the sidebar edge (low; shared bar, Leads not re-checked) |
+| List activity ribbon on Leads, Contacts (and none on Accounts, Deals) | ✓ Walked; ribbon count matches the Open Activities card on the lead record |
+| Global search heading and rows for Meetings and Calls; advanced search | ✓ Headings filled (advanced search covered by `advanced-search.spec.ts`, not walked by hand) |
+| Meetings / Calls detail date format | ✗ Open: detail shows "Oct 19, 2026, 11:20 AM" while the list and the reference use `19.10.2026 11:20 AM` |
+
+### Calls record detail — done; QA MEP-939 (MEP-508)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -738,7 +748,7 @@ full form, Call Create/Edit, and Activities lists/detail.
 
 Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
 
-### Meetings record detail — implemented; QA pending (MEP-507)
+### Meetings record detail — done; QA MEP-939 (MEP-507)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
