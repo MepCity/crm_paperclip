@@ -983,6 +983,25 @@ Provisional rules: the populated table body is the Campaigns table (not observed
 - GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
 - GK-5 related-list rail and cards (Connected Records, Notes, Attachments; metadata order): implemented by provisional rule; QA pending (MEP-863).
 
+QA 2/2: GK-1–GK-5 passed on seeded local records. The reference account has no
+Solutions records, so detail layout and edit behaviour remain provisional rather
+than visually verified against a reference detail screen. No failed HTTP response
+was observed while opening the local detail page.
+
+### Solutions list
+
+QA 2/2: SL-01–SL-29, SL-32–SL-39, SL-41–SL-53 and the observed view and Actions
+menu rows were present. View selection, sort, a field filter, empty state and
+Actions menu interactions passed. The reference list is empty; the local
+fixture contains records, and the empty state was reached with a field filter.
+The local list was compared beside `m8-solutions-list-base`,
+`m8-solutions-list-views` and `m8-solutions-list-actions`.
+
+Defect: SL-30 (Product Name) and SL-31 (Solution Number) are disabled in the
+local filter panel, although the reference paints both as selectable field
+filters and the inventory assigns them to Module 8. This prevents those list
+filters from being used. The local QA screenshot is attached to MEP-902.
+
 ### Solutions create / edit form
 
 Implemented; QA pending (MEP-896).
@@ -1009,6 +1028,21 @@ Provisional rules (behaviour not observed in reference):
 
 Later-module controls: SF-01, SF-17, SF-18, SF-19 (M11 `laterModule`); SF-11, SF-12 (P2 `laterModule`).
 
+QA 2/2: SF-01–SF-19 and SF-08.1–SF-08.3 passed the functional walk, including
+required-field errors, locked Solution Number, Status options, Save, Save and
+New, Cancel and edit persistence. Visual comparison used `m8f-solutions-create`
+and `m8f-solutions-status`.
+
+Defect: the local Create form is confined to a narrow card, with Question and
+Answer ending well before the right edge and the form-view footer directly
+under the fields. The reference form spans the content area; its text fields
+are wider and its footer sits at the bottom of the page. The local QA screenshot
+is attached to MEP-902. This is a visible layout difference at normal zoom.
+
+Provisional: Edit reuses Create, required-field error wording and navigation
+follow Accounts, and the Solution Number is generated locally. The reference
+account has no record with which to observe these behaviours.
+
 
 ### Cases create / edit form
 
@@ -1023,3 +1057,14 @@ Later-module controls: SF-01, SF-17, SF-18, SF-19 (M11 `laterModule`); SF-11, SF
 | KX-01 – KX-16 | Accounts, Contacts and Deals detail: Cases card live (no later-module marker); filters Cases on `Account_Name` / `Related_To` / `Deal_Name`; empty card shows Assign and New and "No records found"; rail entry kept (Contacts rail plus included) | `related-cases-card-body.test.tsx`, `*-related-lists.test.tsx`, `accounts-detail.spec.ts`, `contacts-detail.spec.ts`, `deals-detail.spec.ts` |
 | Provisional | Filled card columns Subject (detail link), Case Number, Status, Priority, Case Owner; New opens the Cases form with the parent field (and Account Name when known) filled; Assign has no handler; no Cases ↔ Solutions link (CTO decision) | same |
 
+### Module 8 gate
+
+QA 2/2 found two Solutions defects: disabled SL-30/SL-31 field filters and the
+Create form layout/footer placement. The Solutions create → validation → save →
+detail → edit → list flow and Case `Solution` text → detail flow passed locally.
+Across Cases and Solutions list, create and detail screens, 133 visible
+`data-later-module` controls were clicked without navigation or dialogs.
+Cases list/detail, Accounts and Contacts lists, and the required Activities
+specs passed in the targeted end-to-end run. Solutions detail and Edit are
+provisional because the reference account has no Solutions records. CTO owns the
+Module 8 gate and any consolidated correction scope.
