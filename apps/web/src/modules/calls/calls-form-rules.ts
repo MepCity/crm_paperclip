@@ -43,18 +43,23 @@ export function buildCallsFormDefaults(metadata?: ModuleMetadata): Record<string
 /**
  * Interim rule: the form is in "record" mode (a call that already happened) when the type is
  * Inbound or Missed or the status is Completed. Scheduling mode paints Reminder; record mode
- * hides it and paints the outcome section; Call Duration shows for Inbound and Completed only.
+ * hides it and paints the outcome section; Call Duration shows for Inbound and Completed only (Missed + Completed included).
  */
 export function isCallRecordMode(values: Readonly<Record<string, FieldValue | undefined>>) {
   const type = values.Call_Type;
   return type === "Inbound" || type === "Missed" || values.Outgoing_Call_Status === "Completed";
 }
 
+/** Same matrix as the service hook: Inbound or Completed calls carry a required duration. */
+export function isCallDurationRequired(values: Readonly<Record<string, FieldValue | undefined>>) {
+  return values.Call_Type === "Inbound" || values.Outgoing_Call_Status === "Completed";
+}
+
 export function callsFormDynamicState(
   values: Readonly<Record<string, FieldValue | undefined>>,
 ): FormDynamicState {
   const record = isCallRecordMode(values);
-  const hasDuration = record && values.Call_Type !== "Missed";
+  const hasDuration = isCallDurationRequired(values);
   return {
     hidden: [
       ...(record ? ["Reminder"] : ["Call_Result", "Description"]),

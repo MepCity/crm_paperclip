@@ -42,7 +42,7 @@ test("Inbound and Completed switch to record mode with a required duration", () 
   }
 });
 
-test("Missed is record mode without a duration", () => {
+test("Missed + Scheduled is record mode without a duration", () => {
   const state = callsFormDynamicState({ Call_Type: "Missed", Outgoing_Call_Status: "Scheduled" });
   expect(state.hidden).toEqual(expect.arrayContaining(["Reminder", "Call_Duration"]));
   expect(state.required?.Call_Duration).toBe(false);
@@ -51,4 +51,16 @@ test("Missed is record mode without a duration", () => {
 test("record action intents open Edit on the start time or with Completed set", () => {
   expect(CALLS_EDIT_INTENTS.reschedule).toEqual({ focus: "Call_Start_Time" });
   expect(CALLS_EDIT_INTENTS.complete?.set).toEqual({ Outgoing_Call_Status: "Completed" });
+});
+
+test("duration state matches the service matrix for every type × status", () => {
+  for (const type of ["Outbound", "Inbound", "Missed"]) {
+    for (const status of ["Scheduled", "Completed", "Overdue", "Cancelled"]) {
+      const values = { Call_Type: type, Outgoing_Call_Status: status };
+      const required = type === "Inbound" || status === "Completed";
+      const state = callsFormDynamicState(values);
+      expect(state.hidden?.includes("Call_Duration")).toBe(!required);
+      expect(Boolean(state.required?.Call_Duration)).toBe(required);
+    }
+  }
 });
