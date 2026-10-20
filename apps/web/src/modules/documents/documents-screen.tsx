@@ -10,17 +10,26 @@ const DEFAULT_SORT: DocumentSort = { field: "modifiedAt", direction: "desc" };
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
-  year: "numeric",
   timeZone: "UTC",
 });
 
 /** Inert affordance: visible like the reference, but the flow behind it is write-only or unobserved. */
+function CirclePlus({ className = "size-5" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-full border border-accent-blue text-accent-blue ${className}`}
+    >
+      <Icons.plus className="size-3" />
+    </span>
+  );
+}
+
 function InertButton({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="inline-flex size-7 items-center justify-center rounded text-text-muted"
+      className="inline-flex min-h-7 min-w-7 items-center justify-center rounded text-text-muted"
       onClick={(event) => event.preventDefault()}
     >
       {children}
@@ -68,10 +77,13 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   ];
 
   return (
-    <div className="flex min-h-[calc(100vh-var(--size-topbar,3.5rem))] bg-surface" data-documents>
+    <div
+      className="flex min-h-[calc(100vh-var(--size-topbar,3.5rem))] gap-3 bg-bg p-3"
+      data-documents
+    >
       <aside
         aria-label="Folders"
-        className="flex w-56 shrink-0 flex-col border-r border-border px-3 py-3"
+        className="flex w-60 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
       >
         {myFolders.map((folder) => (
           <FolderRow
@@ -81,11 +93,14 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             onSelect={selectRoot}
           />
         ))}
-        <div className="mt-3 flex items-center justify-between px-2 text-sm font-semibold">
-          <span>Team Folders</span>
+        <div className="mt-3 flex items-center justify-between px-1 text-xs font-semibold uppercase text-accent-blue">
+          <span className="flex items-center gap-1">
+            <Icons.chevronDown className="size-3" aria-hidden="true" />
+            Team Folders
+          </span>
           {/* Folder creation is a write flow: visible, inert. */}
           <InertButton label="Add team folder">
-            <Icons.plus className="size-4" />
+            <CirclePlus />
           </InertButton>
         </div>
         {teamFolders.map((folder) => (
@@ -100,31 +115,36 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
         <button
           type="button"
           disabled
-          className="mt-auto px-2 py-1 text-left text-sm text-text-muted"
+          className="mt-auto flex items-center justify-between rounded border border-border px-2 py-2 text-left text-sm text-text-muted"
         >
-          External file service
+          Open external file service
+          <Icons.arrowLeft className="size-4 rotate-135" aria-hidden="true" />
         </button>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col rounded-lg border border-border bg-surface">
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
-            <InertButton label="Show ancestors">
-              <Icons.chevronLeft className="size-4" />
+            <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
+            {/* Collection step: ancestor behaviour unobserved, inert. */}
+            <InertButton label="Apps">
+              <span className="px-1 text-sm">Apps</span>
             </InertButton>
             {crumbs.map((crumb) => {
               const last = crumb.depth === crumbs.length - 1;
               return (
                 <span key={crumb.depth} className="flex items-center gap-1">
-                  {crumb.depth > 0 ? <span aria-hidden="true">/</span> : null}
+                  <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
                   {last ? (
-                    <span aria-current="page" className="font-semibold">
+                    <span aria-current="page" className="flex items-center gap-1 font-medium">
                       {crumb.label}
+                      {/* Current-folder menu: entries unobserved, inert. */}
+                      <Icons.chevronDown className="size-3" aria-hidden="true" />
                     </span>
                   ) : (
                     <button
                       type="button"
-                      className="text-accent-blue"
+                      className="text-text-muted"
                       onClick={() => setTrail(trail.slice(0, crumb.depth))}
                     >
                       {crumb.label}
@@ -156,15 +176,15 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
           </span>
           {/* Column configuration: unobserved, inert. */}
           <InertButton label="Columns">
-            <Icons.plus className="size-4" />
+            <CirclePlus />
           </InertButton>
         </div>
 
         <ul aria-label="Documents" className="flex-1">
           {items.map((row) => (
-            <li key={row.id} className="flex items-center border-b border-border px-4 py-2 text-sm">
+            <li key={row.id} className="flex items-center border-b border-border px-4 py-3 text-sm">
               <div className="flex flex-1 items-center gap-2">
-                <Icons.folder className="size-5 text-text-muted" aria-hidden="true" />
+                <Icons.folder className="size-7 text-success" aria-hidden="true" />
                 <div>
                   {row.kind === "folder" ? (
                     <button
@@ -181,8 +201,9 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                 </div>
               </div>
               <div className="w-64 text-xs">
-                <div>{dateFormat.format(new Date(row.modifiedAt))}</div>
-                <div className="text-text-muted">by {row.modifiedBy}</div>
+                <div className="text-text-muted">
+                  {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
+                </div>
               </div>
               <span className="size-7" aria-hidden="true" />
             </li>
@@ -192,14 +213,20 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
 
       <aside
         aria-label="Side strip"
-        className="flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border py-3"
+        className="flex w-16 shrink-0 flex-col items-center gap-4 rounded-lg border border-border bg-surface py-3 text-xs"
       >
         {/* Details pane and assistant: panel behaviour not observed, inert. */}
         <InertButton label="Details">
-          <Icons.info className="size-4" />
+          <span className="flex flex-col items-center gap-1">
+            <Icons.info className="size-4" />
+            <span className="text-xs">Details</span>
+          </span>
         </InertButton>
         <InertButton label="Assistant">
-          <Icons.sparkles className="size-4" />
+          <span className="flex flex-col items-center gap-1">
+            <Icons.sparkles className="size-4" />
+            <span className="text-xs">Assistant</span>
+          </span>
         </InertButton>
       </aside>
     </div>
