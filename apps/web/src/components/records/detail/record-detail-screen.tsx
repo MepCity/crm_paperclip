@@ -20,7 +20,7 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
-import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
+import { TimelineSurface } from "@/components/records/detail/timeline";
 import { useRecordNoteEvents } from "@/components/records/notes/use-record-note-events";
 import { supportsRecordPrint } from "@/components/records/print/print-modules";
 import { RecordTags } from "@/components/records/tags/record-tags";
@@ -59,6 +59,7 @@ import type {
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
 import { RelatedCardsContainer } from "./related-cards-container";
+import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
@@ -398,17 +399,13 @@ export function RecordDetailScreen({
 
   const timeline = (
     <TimelineSurface subtabs={rules.timeline.subtabs} activeSubtabId="history">
-      <TimelineHistory
+      <RecordTimelineHistory
+        key={`${moduleApiName}:${recordId}`}
+        module={moduleApiName}
+        recordId={recordId}
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={[
-          ...rules.timeline.events.map((event) => ({
-            ...event,
-            kind: rules.timeline.normalizeEventKind(event.kind),
-          })),
-          ...noteEvents,
-          ...attachmentEvents,
-        ]}
+        events={[...noteEvents, ...attachmentEvents]}
         format={DEFAULT_FORMAT}
         initialFilterExpanded={false}
         modulesLabel="Modules"
