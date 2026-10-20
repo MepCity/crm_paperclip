@@ -206,5 +206,63 @@ test("Activities lists and record detail do not render copied extra elements", a
   await expectNoFormChrome(page);
 });
 
-// Call Create / Call Edit are not covered yet: the Call form screens are not on `main`
-// (only the Calls list and record detail are). Add them with the Call form issue.
+// Call layout as measured in research/specs/activities-form.md ("Visual layout —
+// Call form"): boxed fields, right-aligned labels, wide selects, 3 px vertical
+// required bar. Create is measured; Edit is assumed equal (open question).
+async function expectCallFormVisual(page: Page) {
+  await expectNoFormChrome(page);
+  const row = page.locator('[data-form-field="Call_Type"] [data-record-form-row]');
+  const rowStyle = await row.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const label = el.querySelector("label") as HTMLElement;
+    return {
+      labelAlign: getComputedStyle(label).textAlign,
+      borders: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth],
+    };
+  });
+  // Full perimeter border (not Task's underline) and right-aligned label.
+  expect(rowStyle.labelAlign).toBe("right");
+  expect(rowStyle.borders.every((w) => w !== "0px")).toBe(true);
+  // Call Type select box: x=534.5, width 531 (±2).
+  const rect = await box(row);
+  near(rect.x, 534.5);
+  near(rect.width, 531);
+  // Required bar: 3 px wide vertical segment.
+  const bar = await row.evaluate((el) => {
+    const s = getComputedStyle(el, "::before");
+    return { width: s.width, height: s.height };
+  });
+  expect(bar.width).toBe("3px");
+  await expect(page.getByRole("heading", { name: "Call Information", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Purpose Of Outgoing Call", exact: true }),
+  ).toBeVisible();
+  // No Repeat field; Reminder is a dropdown, not a toggle.
+  await expect(page.getByRole("switch", { name: "Repeat" })).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: "Reminder" })).toHaveCount(0);
+  // Related To lookup shows its magnifier.
+  await expect(page.locator('[data-form-field="What_Id"] svg').first()).toBeVisible();
+}
+
+async function openCallCreate(page: Page) {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Calls"));
+  await page.getByRole("link", { name: "Create Call", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Create Call" })).toBeVisible();
+  return org;
+}
+
+test("Create Call matches the measured layout", async ({ page }) => {
+  await openCallCreate(page);
+  await expectCallFormVisual(page);
+  await saveVisualScreenshot(page, "our-call-create.png");
+});
+
+test("Call Edit keeps the Create layout", async ({ page }) => {
+  const org = await openCallCreate(page);
+  await page.goto(moduleRecordEditPath(org.slug, "Calls", "150000000000000001"));
+  await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
+  await expectCallFormVisual(page);
+  await saveVisualScreenshot(page, "our-call-edit.png");
+});

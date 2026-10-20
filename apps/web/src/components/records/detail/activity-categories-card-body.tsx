@@ -1,10 +1,9 @@
 "use client";
 
+import type { ActivityKind } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import "./activity-categories-card-body.css";
-
-export type ActivityKind = "task" | "meeting" | "call";
 
 export interface ParentActivityRow {
   id: string;

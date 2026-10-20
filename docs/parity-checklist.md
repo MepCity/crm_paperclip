@@ -707,7 +707,7 @@ Our screenshot is uploaded to the task as an attachment; the reference image nev
 repo or task (only its research workspace path is referenced). The result of each comparison (✓
 per verified row) is recorded below and in the review comments. `apps/web/e2e/activities-form-visual.spec.ts`
 guards the measured values and absence of copied chrome for Task Create/Edit, Meeting window and
-full form, and Activities lists/detail. Call Create/Edit join it once the Call form lands.
+full form, Call Create/Edit, and Activities lists/detail.
 
 #### Task and Meeting form screens — measured comparison result
 
@@ -722,10 +722,21 @@ full form, and Activities lists/detail. Call Create/Edit join it once the Call f
 | Meeting Information dialog: Modal & grid | Requirements 1–4: Centered 500 px modal at x=485; 418 px lines from x=515 to 933; labels left at x=515, values start at x=682; 50 px pitch | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Information dialog: Fields & controls | Requirements 5–11: Unboxed rows; 25 × 2 px red marker; All day 15 × 15 checkbox; Date and time on one line 10 px apart; Cancel and Save only (no Save and New) | ✓ Matched | `activities-form-visual.spec.ts`, `meeting-information-dialog.tsx` |
 | Meeting Full Form (Add more details) | Requirements 1–14: Expands to full form with Repeat and Description; no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts` |
+| Call Create & Edit: Geometry & chrome | Call spec requirements 1–14 (measured): boxed fields, right-aligned labels x≈515, 531 px field box at x=534.5, 3 px vertical required bar, wide Type/Status selects, no Client Script / Create Form Views, no Repeat, magnifier on Related To | ✓ Call-specific layout variant. Edit equals Create is an open question (Edit not observed in the reference) | `activities-form-visual.spec.ts` (measured Call layout, Create and Edit), `calls-form.spec.ts` |
 | Activities Lists & Detail: Copied chrome | MEP-590/591 blockers: No Related List rail (`[data-record-rail]`), no rail collapse toggle (`[data-record-rail-control]`), no copied form chrome | ✓ Matched | `activities-form-visual.spec.ts`, `tasks-detail.spec.ts` |
 
 
-### Calls record detail — implemented; QA pending (MEP-508)
+### Meetings and Calls lists — done; QA MEP-939 (MEP-503, MEP-462, MEP-463, MEP-504, MEP-484)
+
+| Area | Result |
+| --- | --- |
+| Activities nav group, single All Meetings / All Calls tab, view menu, view-type tiles, Filter panel, Create button with chevron, Actions menu, default columns, paging, record open and back | ✓ Walked; matches the reference |
+| Row selection bar (Send Email, Tags, Mass Update, more) | ✓ Walked on Calls; text "1 Record Selected." starts flush against the sidebar edge (low; shared bar, Leads not re-checked) |
+| List activity ribbon on Leads, Contacts (and none on Accounts, Deals) | ✓ Walked; ribbon count matches the Open Activities card on the lead record |
+| Global search heading and rows for Meetings and Calls; advanced search | ✓ Headings filled (advanced search covered by `advanced-search.spec.ts`, not walked by hand) |
+| Meetings / Calls detail date format | ✗ Open: detail shows "Oct 19, 2026, 11:20 AM" while the list and the reference use `19.10.2026 11:20 AM` |
+
+### Calls record detail — done; QA MEP-939 (MEP-508)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -737,7 +748,7 @@ full form, and Activities lists/detail. Call Create/Edit join it once the Call f
 
 Interim rules: Reschedule Call (CD-05) and Down arrow (CD-05.1) render without handlers only when `Outgoing_Call_Status` is one of `Scheduled`, `Overdue`, or `Cancelled`; the header Edit button is suppressed (Edit is located in More Options CD-07.1); Call For contact link (CD-02) and Related To (CD-39/CD-46) display their plural module suffix (`- Contacts`, `- Deals`, `- Accounts`); right panel renders single phone call action (TD-59 mobile absent) and Deal Summary displays "No Deals found" (CD-61); later-module controls (Add Tags CD-04 M6, Share CD-07.2 M11, Print Preview CD-07.4 M6, Send Email CD-07.5/CD-55/CD-57 M10, Conversations CD-52 M10, More Info CD-60 M2) draw in place and stay inert.
 
-### Meetings record detail — implemented; QA pending (MEP-507)
+### Meetings record detail — done; QA MEP-939 (MEP-507)
 
 | Area | Inventory | Evidence |
 | --- | --- | --- |
@@ -951,29 +962,46 @@ buttons and everything outside the print page.
 
 ## Module 8 — Cases and Solutions
 
-### Cases and Solutions lists
+### Cases list
 
-Implemented; QA pending (MEP-862).
+Closing QA 1/2 (MEP-901) compared the running list, view menu, Actions menu,
+filter panel and populated table with the saved empty-list captures. The
+populated table follows the approved provisional Campaigns pattern; the
+reference account had no Cases rows.
 
-| Inventory | Implementation | Verification |
+| Inventory | Closing QA result | Verification |
 | --- | --- | --- |
-| KL-45, KL-51 (SL-45, SL-51) | Cases and Solutions registered in registry.ts; shell entries and create-records rows live | `registry.test.ts`, `shell.test.tsx`, `create-records.test.tsx`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
-| KL-01, KL-02, KL-02.1 – KL-02.12 | Single All Cases tab; view menu with eight service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `cases-list.spec.ts` |
-| SL-01, SL-02, SL-02.1 – SL-02.8 | Single All Solutions tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `solutions-list.spec.ts` |
-| KL-03 – KL-13, KL-40 (SL-03 – SL-13, SL-40) | Filter, Sort, presentation icons, refresh and Create as in Campaigns; arrow is `laterModule` M6 | `cases-list.spec.ts`, `solutions-list.spec.ts` |
-| KL-14.1 – KL-14.11 | Eleven Actions rows in reference order; Sheet view and Approve Cases `laterModule` P3 | `cases-list.spec.ts` |
-| SL-14.1 – SL-14.9 | Nine Actions rows, no Mass Email or Approve; Sheet view `laterModule` P3 | `solutions-list.spec.ts` |
-| KL-15 – KL-39 (SL-15 – SL-39) | Filter panel groups from the module definition; View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `list-filters.test.ts`, `cases-list.spec.ts`, `solutions-list.spec.ts` |
+| KL-01, KL-02, KL-02.1–KL-02.9, KL-40 | Passed: All Cases tab, eight system views in reference order, active check mark and refresh control | Browser walkthrough; `cases-list.spec.ts` |
+| KL-02.10–KL-02.12 | **Visual defect:** M11 controls are inert as expected, but the menu is visibly narrower than the saved capture; the Dropdown row wraps and pushes the following controls downward | Browser walkthrough; `cases-list.spec.ts` |
+| KL-03–KL-12 | Toolbar order and four visible columns passed; Filter, Sort, Refresh and Create route worked. Alternate presentation modes were not established by the empty reference list | Browser walkthrough; `cases-list.spec.ts` |
+| KL-13 | **Defect:** Create chevron is marked `data-later-module="M6"` and opens nothing, although the Module 8 gate requires M1–M8 controls to work | Browser click; `cases-list.spec.ts` currently asserts inactivity |
+| KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
+| KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
+| KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
+| KL-41–KL-56 | Cases/Solutions routes and surrounding rail entries rendered; later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
+| Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
-Provisional rules: the populated table body is the Campaigns table (not observed in the reference).
+The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
+as M6 with `data-later-module`; these controls remain inert. This is a gate
+defect under the M8 threshold. The saved reference list is empty, so populated
+row, selection-bar and paging design remain provisional.
 
 ### Cases record detail
 
-- GK-1 route and page (accessible from list, search and direct URL; not-found handling): implemented by provisional rule; QA pending (MEP-863).
-- GK-2 header (Subject title, previous / next arrows, Edit, More Options; case-specific actions omitted): implemented by provisional rule; QA pending (MEP-863).
-- GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
-- GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
-- GK-5 related-list rail and cards (Connected Records, Notes, Attachments, Open Activities, Closed Activities, Emails; metadata order): implemented by provisional rule; QA pending (MEP-863).
+The reference account had no Cases record, so the entire detail layout remains
+provisional. Closing QA compared it with the running Accounts detail pattern.
+
+| Inventory | Closing QA result | Verification |
+| --- | --- | --- |
+| GK-1 | Passed: list and direct record routes open the detail | Browser create/list walkthrough; `cases-detail.spec.ts` |
+| GK-2 | Passed: Subject heading, navigation arrows, Edit and More Options | Browser walkthrough; `cases-detail.spec.ts` |
+| GK-3 | Passed: Overview sections and locked Case Number; Edit saves and updates the list | Browser create/edit walkthrough; `cases-detail.spec.ts`, `cases-form.spec.ts` |
+| GK-4 | Passed: Timeline opens and shows history/filter controls | Browser walkthrough; `cases-detail.spec.ts` |
+| GK-5 | Passed: rail and six cards render in the provisional order | Browser walkthrough; `cases-detail.spec.ts` |
+
+**Gate defect:** Notes/Attachments actions still carry M6 and activity actions
+still carry M5 `data-later-module` markers and remain inert on the Cases detail.
+M11/P3/M10 detail placeholders stayed inert when clicked.
 
 ### Solutions record detail
 
@@ -982,6 +1010,35 @@ Provisional rules: the populated table body is the Campaigns table (not observed
 - GK-3 Overview (sections and fields from layout, inline editing, read-only autonumber/comments): implemented by provisional rule; QA pending (MEP-863).
 - GK-4 Timeline (Campaigns Timeline): implemented by provisional rule; QA pending (MEP-863).
 - GK-5 related-list rail and cards (Connected Records, Notes, Attachments; metadata order): implemented by provisional rule; QA pending (MEP-863).
+
+QA 2/2: GK-1–GK-5 passed on seeded local records. The reference account has no
+Solutions records, so detail layout and edit behaviour remain provisional rather
+than visually verified against a reference detail screen. No failed HTTP response
+was observed while opening the local detail page.
+
+### Solutions list
+
+QA 2/2: SL-01–SL-29, SL-32–SL-39, SL-41–SL-53 and the observed view and Actions
+menu rows were present. View selection, sort, a field filter, empty state and
+Actions menu interactions passed. The local selection bar opened for one
+selected row and cleared. The reference list is empty; the local
+fixture contains records, and the empty state was reached with a field filter.
+The local list was compared beside `m8-solutions-list-base`,
+`m8-solutions-list-views` and `m8-solutions-list-actions`.
+
+Defect: SL-17–SL-21 (the five system filters), SL-30 (Product Name) and SL-31
+(Solution Number) are disabled in the local filter panel. The reference paints
+ordinary unchecked boxes for them. The inventory assigns them to Module 8.
+Disabling them prevents those list filters from being used. The local QA
+screenshot is attached to MEP-902.
+
+Defect: SL-14.4 (Manage Tags) is marked `data-later-module="M6"` and does not
+open the delivered Tags flow. SL-14.7 (Export Solutions) and the populated
+selection bar's Tags action also carry M6 markers. Module 6 falls inside the
+Module 8 live-control threshold; these controls need a working action rather
+than a later-module placeholder. SL-13's create-menu arrow is also an inert M6
+control, but its reference menu contents were not observed and remain an open
+question.
 
 ### Solutions create / edit form
 
@@ -1009,17 +1066,79 @@ Provisional rules (behaviour not observed in reference):
 
 Later-module controls: SF-01, SF-17, SF-18, SF-19 (M11 `laterModule`); SF-11, SF-12 (P2 `laterModule`).
 
+QA 2/2: SF-01–SF-19 and SF-08.1–SF-08.3 passed the functional walk, including
+required-field errors, locked Solution Number, Status options, Save, Save and
+New, Cancel and edit persistence. Visual comparison used `m8f-solutions-create`
+and `m8f-solutions-status`.
 
-### Cases create / edit form
+Defect: the local Create form is confined to a narrow card, with Question and
+Answer ending well before the right edge and the form-view footer directly
+under the fields. The reference form spans the content area; its text fields
+are wider and its footer sits at the bottom of the page. The local QA screenshot
+is attached to MEP-902. This is a visible layout difference at normal zoom.
 
-- KF-01 – KF-34 implemented (MEP-895). M11 controls (KF-01, KF-29, KF-30, KF-32) and Product Name (KF-07, KF-08, P2) are `laterModule`; the Product picker (KF-08.x) is not drawn.
-- Case Number (KF-05, KF-06) is locked, blank on create and filled on edit.
-- Provisional: edit form = create form filled; shared picklist adds a leading `-None-` to Status (KF-20.x list otherwise matches); no Email requirement for Case Origin = Email; Type / Case Reason options in metadata order.
+Provisional: Edit reuses Create, required-field error wording and navigation
+follow Accounts, and the Solution Number is generated locally. The reference
+account has no record with which to observe these behaviours.
 
-### Cases links in earlier modules (MEP-900)
 
-| ID | Behaviour | Tests |
+### Cases form
+
+Closing QA 1/2 compared the running Create form with the saved top, lower,
+picklist and lookup captures. Edit reuses Create by provisional rule.
+
+| Inventory | Closing QA result | Verification |
 | --- | --- | --- |
-| KX-01 – KX-16 | Accounts, Contacts and Deals detail: Cases card live (no later-module marker); filters Cases on `Account_Name` / `Related_To` / `Deal_Name`; empty card shows Assign and New and "No records found"; rail entry kept (Contacts rail plus included) | `related-cases-card-body.test.tsx`, `*-related-lists.test.tsx`, `accounts-detail.spec.ts`, `contacts-detail.spec.ts`, `deals-detail.spec.ts` |
-| Provisional | Filled card columns Subject (detail link), Case Number, Status, Priority, Case Owner; New opens the Cases form with the parent field (and Account Name when known) filled; Assign has no handler; no Cases ↔ Solutions link (CTO decision) | same |
+| KF-01–KF-04 | Passed: heading actions; Save, Save and New and Cancel work; M11 Edit Page Layout is inert | Browser walkthrough; `cases-form.spec.ts` |
+| KF-05–KF-08 | Passed: Case Number blank and locked on Create, filled and locked on Edit; P2 Product controls inert and picker omitted | Browser walkthrough; `cases-form.spec.ts` |
+| KF-09–KF-19 | Passed: fields in captured left/right order; Contact, Account and Deal lookups available | Browser walkthrough; `cases-form.spec.ts` |
+| KF-20–KF-22 and choices | Passed: Status, Origin and Priority choices in captured order except provisional leading `-None-` in Status | Browser walkthrough; `cases-form.spec.ts` |
+| KF-23–KF-28, KF-31, KF-33–KF-34 | Passed: required Subject error, Case Origin error, multiline fields and Solution text field | Browser walkthrough; `cases-form.spec.ts` |
+| KF-29–KF-30, KF-32 | Passed as inert M11 controls; lower footer and Client Script tab visible | Browser walkthrough; `cases-form.spec.ts` |
 
+Email remains optional when Case Origin is Email by provisional rule. The
+Create form's two-column layout and lower section visually match the captures
+at the same viewport proportions; exact edit behaviour was not observed in the
+reference account.
+
+### Cases links in earlier modules
+
+| ID | Closing QA result | Verification |
+| --- | --- | --- |
+| KX-01–KX-05 | Passed: Accounts rail and empty Cases card; New prefills Account Name, saved row appears and Subject opens detail | Browser walkthrough; `accounts-detail.spec.ts` |
+| KX-06–KX-11 | Passed: Contacts rail and empty Cases card; New prefills Related To and Account Name, saved row opens detail | Browser walkthrough; `contacts-detail.spec.ts` |
+| KX-12–KX-16 | Passed: Deals rail and empty Cases card; New prefills Deal Name and Account Name, saved row opens detail | Browser walkthrough; `deals-detail.spec.ts` |
+| Provisional | Filled card columns Subject, Case Number, Status, Priority and Case Owner; New prefills parent lookups; Assign has no handler | Browser walkthrough; `related-cases-card-body.test.tsx` |
+
+### Module 8 gate
+
+Closing QA 1/2 (MEP-901): `origin/main` was `523636e4` (2026-10-20
+04:48:03 +0300). Eleven required issues appeared as first-parent merge commits.
+MEP-843 entered `main` through the MEP-861 and MEP-862 branch merges; its service
+commit and merge commits are ancestors of `origin/main`, though no separate
+first-parent MEP-843 line exists. The running Cases list, form, detail and
+Accounts/Contacts/Deals card flows passed. Leads and Campaigns lists opened;
+surrounding parent-detail cards remained present. Cases defects: M5/M6 controls
+still marked `data-later-module` and inert on Cases screens; M8 Drafts and Print
+View have no visible result; the custom-view menu is visibly too narrow.
+
+Closing QA 2/2 (MEP-902) found three Solutions defect groups: disabled M8
+filters, inert M6 actions and the Create form layout/footer placement. The
+Solutions create → validation → save → detail → edit → list flow and Case
+`Solution` text → detail flow passed locally. Across Cases and Solutions list,
+create and detail screens, 133 visible `data-later-module` controls were
+clicked without navigation or dialogs. Cases list/detail, Accounts and
+Contacts lists, and the required Activities specs passed in the targeted
+end-to-end run. Solutions detail and Edit are provisional because the reference
+account has no Solutions records. CTO owns the Module 8 gate and any
+consolidated correction scope.
+
+Provisional/open: populated Cases table and selection bar; complete Cases and
+Solutions record details; Edit form equals Create; optional Email for Email
+origin; populated parent-card columns and New prefills; Assign without a
+handler; text-only Cases `Solution` field with no reciprocal Solutions card or
+lookup. Exact visual and behaviour parity of these surfaces awaits reference
+records, which cannot be created for research.
+
+Outside this gate: Product and other Phase 2 links, M10 email, M11
+customization and Phase 3 controls.

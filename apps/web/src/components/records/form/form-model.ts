@@ -234,6 +234,7 @@ export interface FormRules {
   countries?: readonly { field: string; state: string }[];
   currency?: string;
   currencies?: readonly string[];
+  currencyHelp?: Readonly<Record<string, { text: string; expression: string; result: string }>>;
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
   /** Fields the service hides in edit that the reference edit form still draws (read-only ones). */
