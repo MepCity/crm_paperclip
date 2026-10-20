@@ -60,11 +60,10 @@ Documents > My Folders exposes owned-record attachments and does not allow file
 or folder creation from Documents. The external file-service interface is a
 separate destination. (A — **To access the Documents tab**.)
 
-The record-generated tree is `Apps > reference CRM > module > record > Attachments`.
-Only the record owner sees it here; record sharing/higher hierarchy access does
-not grant access to that tree. Attachments cannot be added, edited or deleted
-there, and cannot be externally shared. Templates, upload-field files, note
-attachments and email attachments are excluded. (B — **To view the attachments
+Managed attachments follow `Apps > reference CRM > module > record > Attachments`.
+Only owners see them here, despite shared/hierarchy record access. No add/edit/
+delete/external share; templates, upload fields, notes and email attachments are
+excluded. (B — **To view the attachments
 of a record**.)
 
 Do not implement a personal create-folder flow in this Documents section.
@@ -72,21 +71,19 @@ General personal storage in the external service must not override this rule.
 
 ### Create, edit and associate team folders
 
-1. Documents > plus beside Team Folders > Create Team Folder.
-2. Enter Name; choose CRM users as Admins. With no Admin selected, the creator
-   becomes Admin. Choose users, roles or groups for Organizer, Editor, Commenter
-   and Viewer; submit Create. (B — **To create a team folder**.)
-3. To rename the team folder or change access: hover its entry > menu > Edit >
-   change values > Save. (B — **To edit a team folder**.)
-4. To associate an existing folder: plus > Associate Team Folder > select folders
-   > Associate. To unlink: folder menu > Remove > Remove Association > Confirm.
-   Unlinking leaves the source folder intact; Documents cannot delete the team
-   folder itself. (B — **To associate a team folder**, **To remove a team folder**.)
+1. Team Folders plus > Create Team Folder > Name > CRM-user Admins;
+   without a selection the creator becomes Admin. Assign Organizer/Editor/
+   Commenter/Viewer to users, roles or groups > Create.
+   (B — **To create a team folder**.)
+2. Folder menu > Edit > change name/access > Save.
+   (B — **To edit a team folder**.)
+3. Plus > Associate Team Folder > select > Associate. Folder menu > Remove >
+   Remove Association > Confirm only unlinks; source contents survive.
+   (B — **To associate a team folder**, **To remove a team folder**.)
 
-Create Team Folder, Associate Team Folder and Edit Team Folder are separate CRM
-profile capabilities; external-service permissions remain independent. A folder
-is invisible without access even to CRM administrators. (B — **Availability**,
-introductory **Note**.)
+Create/Associate/Edit Team Folder are separate CRM capabilities, independent of
+external-service permissions. Even CRM admins need folder access.
+(B — **Availability**, introductory **Note**.)
 
 **Unknown:** name constraints, duplicates, membership conflicts, last-admin
 removal validation, save errors and success wording (U1/U2).
@@ -193,13 +190,12 @@ Documents: select file > more > Check Out > confirm Check Out. After editing,
 select > more > Check In > version note > Check In. Discard Check Out has a
 separate confirmation. (C — **To check out and check in a file**.)
 
-Generic service: select > More actions > Properties > Versions. Upload new
-version > Choose a file > Upload New Version. Versions offer preview, download,
-restore as top version, save as new file, keep forever and delete. Restore as top
-does not overwrite the current version. Manual upload applies to non-native
-formats; built-in editor versions live in their editors. Private-folder version
-viewing needs Editor+, public-folder members can view versions. Organizer/Admin
-can delete/restore versions during retention. (I — **Versions**, **Restore
+Generic service: More actions > Properties > Versions > Upload new version >
+Choose a file > Upload New Version (non-native files). Built-in editor versions
+live in their editors. Preview/download, restore as top without overwriting,
+save as new, keep forever and delete are available. Private-folder version
+viewing requires Editor+; public-folder members can view. Organizer/Admin can
+delete/restore versions during retention. (I — **Versions**, **Restore
 versions**.)
 
 Team-folder files support versioning; record attachments in My Folders do not.
