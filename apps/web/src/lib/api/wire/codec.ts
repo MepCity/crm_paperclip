@@ -152,7 +152,17 @@ export function encodeInput(
   return result;
 }
 export function decodeInput(row: unknown, metadata: ModuleMetadata): RecordInput {
-  const source = object(row, "data");
+  let source = object(row, "data");
+  if (metadata.apiName === "Notes" && Object.hasOwn(source, "$se_module")) {
+    const module = source.$se_module;
+    const parent = object(source.Parent_Id, "Parent_Id");
+    const field = metadata.fields.find((candidate) => candidate.apiName === "Parent_Id");
+    if (typeof module !== "string" || !field || !lookupTargetModules(field).includes(module))
+      invalid("$se_module");
+    if (parent.module !== undefined && parent.module !== module) invalid("Parent_Id");
+    source = { ...source, Parent_Id: { ...parent, module } };
+    delete source.$se_module;
+  }
   const result: Record<string, FieldValue> = Object.create(null);
   for (const [name, value] of Object.entries(source)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);

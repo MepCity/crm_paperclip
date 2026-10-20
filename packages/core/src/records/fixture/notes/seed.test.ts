@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { generateFixtureAccounts } from "../accounts/seed";
+import { generateFixtureCalls } from "../calls/seed";
+import { generateFixtureCampaigns } from "../campaigns/seed";
+import { generateFixtureCases } from "../cases/seed";
 import { generateFixtureContacts } from "../contacts/seed";
 import { generateFixtureDeals } from "../deals/seed";
+import { generateFixtureEvents } from "../events/seed";
 import { generateFixtureLeads } from "../seed";
+import { generateFixtureSolutions } from "../solutions/seed";
+import { generateFixtureTasks } from "../tasks/seed";
 import { notesHooks } from "./hooks";
 import { notesMetadata, notesMetadataSource, notesParentModules } from "./metadata";
 import { generateFixtureNotes } from "./seed";
@@ -12,11 +18,17 @@ const generators = {
   Contacts: generateFixtureContacts,
   Accounts: generateFixtureAccounts,
   Deals: generateFixtureDeals,
+  Campaigns: generateFixtureCampaigns,
+  Cases: (_seed: number, now: Date) => generateFixtureCases(now),
+  Solutions: (_seed: number, now: Date) => generateFixtureSolutions(now),
+  Tasks: generateFixtureTasks,
+  Events: generateFixtureEvents,
+  Calls: generateFixtureCalls,
 };
-const seedModules = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+const seedModules = notesParentModules;
 
 describe("Notes metadata and seed", () => {
-  it("preserves Campaigns, Cases and Solutions as note parents after integration", () => {
+  it("supports all ten confirmed note parents", () => {
     expect(notesParentModules).toEqual([
       "Leads",
       "Contacts",
@@ -25,6 +37,9 @@ describe("Notes metadata and seed", () => {
       "Campaigns",
       "Cases",
       "Solutions",
+      "Tasks",
+      "Events",
+      "Calls",
     ]);
   });
   it("preserves evidenced fields and restricts the polymorphic parent", () => {
@@ -64,10 +79,14 @@ describe("Notes metadata and seed", () => {
     const notes = generateFixtureNotes(seed, now);
     expect(generateFixtureNotes(seed, now)).toEqual(notes);
     expect(new Set(notes.map((note) => note.id)).size).toBe(notes.length);
-    expect(notes).toHaveLength(4);
+    expect(notes).toHaveLength(16);
     for (const [index, module] of seedModules.entries()) {
       const parents = generators[module](seed, now);
-      const note = notes[index];
+      const moduleNotes = notes.filter(
+        (note) => (note.fields.Parent_Id as { module: string }).module === module,
+      );
+      expect(moduleNotes).toHaveLength(index < 4 ? 1 : 2);
+      const note = moduleNotes[0];
       expect(note?.fields.Parent_Id).toEqual({ module, id: parents[0]?.id });
       expect(note?.fields.id).toBe(note?.id);
       expect(Object.keys(note?.fields ?? {})).toEqual(
