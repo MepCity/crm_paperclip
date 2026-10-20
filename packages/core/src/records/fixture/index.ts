@@ -478,7 +478,8 @@ export function createFixtureRecordService(
         throw new ValidationError({ permission: ["You cannot restore this record."] });
       if (record.fields.Locked__s === true)
         throw new ValidationError({ Locked__s: ["The record is locked."] });
-      const writableFields = bundle.metadata.fields.filter(
+      // Restore honours the same per-record optional fields as create/update (e.g. planned calls).
+      const writableFields = relaxRequired(bundle, record.fields).filter(
         (field) =>
           !field.readOnly && !bundle.managedFields.has(field.apiName) && field.apiName !== "Tag",
       );
