@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Tasks shell entry, single tab, view menu with search, columns and sorting", async ({
   page,
@@ -170,4 +171,10 @@ test("Tasks list measured evidence and row configuration", async ({ page }) => {
   if (process.env.MEP_LIST_EVIDENCE_DIR) {
     await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "tasks-list.png") });
   }
+});
+
+test("Tasks applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Tasks");
 });

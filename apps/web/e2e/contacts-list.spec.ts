@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Contacts shell, views, sorting, filters, alphabet, paging and record route", async ({
   page,
@@ -244,4 +245,12 @@ test("applies Campaigns system filter to Contacts list and restores on Clear", a
 
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr")).toHaveCount(initialRowCount);
+});
+
+test("Contacts applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Contacts");
 });

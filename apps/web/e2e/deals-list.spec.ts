@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) => {
   await signUpNewUser(page);
@@ -338,4 +339,10 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
         .nth(1),
     ).not.toBeChecked();
   }
+});
+
+test("Deals applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Deals");
 });

@@ -3,6 +3,7 @@ import type { FilterEditorDefinition } from "@/components/records/list/filter-ed
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { type FilterFieldType, filterOperators } from "@/lib/records/filter-operators";
+import { systemFilterProps } from "../system-filter-props";
 import type { ModuleScreenDefinition } from "../types";
 
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
@@ -76,7 +77,9 @@ export function buildCallsFilterGroups(input: Input): readonly FilterGroup[] {
       items: systemRows.map(([label, laterModule], index) => ({
         id: `system-${index}`,
         label,
-        ...(laterModule ? { laterModule } : { disabled: true }),
+        ...(laterModule
+          ? { laterModule }
+          : (systemFilterProps(label, "Calls") ?? { disabled: true })),
       })),
     },
     {
