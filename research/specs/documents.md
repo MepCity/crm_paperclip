@@ -127,7 +127,7 @@ Products entries are not additional visible controls.
 | H36 | Bottom left, My Pins | Pins affordance; no pin action | S+C | H |
 | H37 | Beside pins, Chats | Chat affordance | S+C | H |
 | H38 | Beside chats, Contacts | Messaging contacts affordance | S+C | H |
-| H39 | Bottom utility strip, first unlabeled icon | Identity unverified; screenshot only | S | H |
+| H39 | Bottom utility strip, first unlabeled icon | Command-palette affordance: matching C entry has `data-zcqa="open_commands_palette"` and selector `#wmscsdiv`; never opened | S+C | H |
 | H40 | Bottom strip, megaphone | Announcements affordance | S+C | H |
 | H41 | Bottom strip, chart | Motivator affordance | S+C | H |
 | H42 | Bottom strip, note | Sticky Notes affordance | S+C | H |
@@ -138,9 +138,9 @@ Products entries are not additional visible controls.
 | H47 | Bottom far right, tray-like glyph | Identity unverified; do not infer action from glyph | S | H |
 
 Documents heading, breadcrumb separators, section labels, lock glyph, uploader
-byline and date/modifier are display content, not separate controls. No Channels,
-Threads or command-palette control is visible in this accepted screenshot; the
-previous draft's shell description must not be used to add those controls.
+byline and date/modifier are display content, not separate controls. No Channels or Threads control is established in this accepted screenshot.
+H39 is identified by its DOM attribute rather than its unlabeled glyph; this
+does not establish command-palette contents or opening behaviour.
 
 ## Actions, filters, views, sorting and search
 
@@ -200,6 +200,66 @@ base files. Screenshots, raw network data and customer values remain outside git
   with exit 1. Platform Lead reported the tool cleanup error fixed in MEP-926;
   no further capture or retry was performed in this continuation.
 
+## MEP-928 continuation: offline evidence and navigation prerequisite
+
+Status: partial research; live folder and preview capture awaits capture-tool
+support. No new capture or click was attempted in this continuation. Existing
+capture slugs above remain the only screen evidence; no new state or D18+ control
+is claimed. The execution workspace remains on the runtime-assigned branch.
+
+The accepted `m9-documents-main/controls.json` has 140 entries. Matching the
+bottom-strip coordinates to its screenshot resolves H39 through the exported
+`open_commands_palette` attribute. H47 has no matching exported identity.
+D6, D11 and D14 still lack embedded DOM attributes; do not identify them solely
+from glyphs or the service's documented capabilities.
+
+Offline inspection of the capture implementation shows that both its standard
+control export and extra-control collector query the main `document`; ARIA and
+page text are also taken from the top-level body. They do not enumerate frame
+bodies or shadow roots. The existing output therefore cannot establish whether
+the omitted listing uses a frame, a shadow root, or another DOM boundary. This
+is an extraction limitation, not proof of a particular embedding mechanism.
+
+Neither D4 nor D15 has a safe unique selector in the retained export. The only
+exported Documents scroll container, `#show div.zWDListUlInner`, occupies the
+folder pane and already produced a premature shell-only readiness result.
+Do not reuse it as listing readiness. No content-specific probe can currently
+be grounded in exported row attributes without guessing. A capture-tool owner
+must provide passive embedded DOM/control evidence, including labels, titles,
+context and unique selectors with explicit frame/root scope, before navigation.
+The existing write/persistence guards and capture-only access rule must stay
+unchanged. Do not use a separate browser connection to fill this evidence gap.
+
+D16 remains untouched: neither retained DOM evidence nor the documentation
+establishes its persistence. Do not toggle it to discover that behaviour. File
+preview remains conditional on finding an existing file and proving that its
+entry opens a read-only preview rather than download or editor navigation.
+An empty state must come from an existing reachable empty folder, never creation.
+
+### Reconciliation with documented flows
+
+Source: `documents-write-flows.md` (MEP-927); its linked public-documentation
+sources and U1–U13 remain authoritative for documented capabilities. The table
+maps evidence without promoting generic service behaviour to captured UI fact.
+
+| Baseline control / surface | Documentation relationship | Safe conclusion / unresolved gap |
+| --- | --- | --- |
+| D1, D4, D15 folder navigation | Personal managed-attachment roots and collaborative team roots are distinct | Root highlighting alone does not classify the visible child folder; contents, breadcrumbs and empty states await navigation |
+| D3 team-folder plus | Team-folder creation/association and CRM-profile gates | Write affordance only; creation dialog and lock meaning U2 remain unobserved |
+| D6–D8 breadcrumb | Hierarchical folder navigation | Ancestor/overflow behaviour and current-folder menu remain unobserved |
+| D9, D12–D13 sort | User-specific sorting; documented fields and directions | Descending modification indicator only; no header cycle or persistence test |
+| D10 filter | Generic file-type categories | Exact embedded menu and persistence remain unknown; no filter interaction |
+| D11 view utility | Thumbnail, List and Compact documented | Does not identify this glyph or authorize a view change (U10) |
+| D14 column-header plus | No verified mapping | Identity/options remain U10 |
+| D15 folder row / possible future file row | Existing-folder browsing versus format-dependent file preview | No file row in baseline; no upload, editor, download or preview was opened (U5) |
+| D16 Details strip | Generic Properties has General Info and optional activity/access statistics | Mapping, no-selection contents and persistence remain unproven (U11) |
+| Main list without selection | Upload, move, rename, versions, sharing and Trash are documented elsewhere | No selection toolbar or action menu is captured; documented roles/flows do not prove embedded control availability |
+| Documents versus record attachments | Managed record uploads differ from linked service files | No picker, linking/copying or lifecycle relationship is established by this screen (U12) |
+
+No literal validation, success, error or permission message is added by this
+mapping. Preview-limit conflicts, permission precedence, Trash retention and
+attachment identity remain with the owners listed in `documents-write-flows.md`.
+
 ## Open questions and proposed subsequent research
 
 CTO owns creating/sequencing the following research slices. These are coverage
@@ -215,7 +275,7 @@ gaps rather than implemented or verified product behaviour:
 3. Public-documentation study of upload, folder creation, permissions, sharing,
    moving, deletion, validation and success/error behaviour. No such workflow
    was tested or inferred from module API flags here.
-4. Resolve screenshot-only icon identities D6, D11, D14, H39 and H47 through safe
+4. Resolve remaining screenshot-only icon identities D6, D11, D14 and H47 through safe
    evidence, and reconcile embedded selectors. Never click an unknown icon to
    discover its meaning. Capture authorized UI states only after paint readiness.
 
