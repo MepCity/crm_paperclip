@@ -115,3 +115,33 @@ test("Solutions Actions menu and later-module controls stay inert", async ({ pag
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
 });
+
+test("Solutions Actions exports through the shared dialog", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Solutions"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Export Solutions", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Export Solutions", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Select view/ })).toContainText("All Solutions");
+  await expect(dialog.getByRole("radio", { name: "All fields", exact: true })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: "Choose fields", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("radio", { name: "Exclude fields", exact: true })).toBeVisible();
+  await expect(dialog.getByText("CSV", { exact: true })).toBeVisible();
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/crm/v2.2/Solutions/actions/export") &&
+      response.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Export", exact: true }).click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toMatchObject({ module: "Solutions", status: "completed" });
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
+  await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
+  await expect(page.getByRole("heading", { name: /404|not found/i })).toBeVisible();
+});

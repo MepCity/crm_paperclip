@@ -21,6 +21,7 @@ import type {
   TransferModule,
   TransferService,
 } from "./types";
+import { IMPORT_MODULES } from "./types";
 
 export const DEFAULT_TRANSFER_LIMITS: Readonly<TransferLimits> = {
   fileBytes: 25_000_000,
@@ -52,8 +53,13 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     if (mode !== "update") await deps.authorize(ctx, module, "create");
     if (mode !== "add") await deps.authorize(ctx, module, "update");
   };
+  const requireImportModule = (module: TransferModule) => {
+    if (!(IMPORT_MODULES as readonly string[]).includes(module))
+      throw new AppError("validation", "Import is not supported for this module.");
+  };
   return {
     async previewImport(ctx, module, file) {
+      requireImportModule(module);
       await actor(ctx);
       // A mode is not chosen yet: either import action allows a preview.
       try {
@@ -125,6 +131,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       });
     },
     async runImport(ctx, module, uploadId, settings) {
+      requireImportModule(module);
       const createdBy = await actor(ctx);
       await authorizeImport(ctx, module, settings.mode);
       const uploads = state(ctx).uploads;
@@ -253,6 +260,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       return { fileName: entry.job.fileName, body: entry.body };
     },
     async sampleCsv(ctx, module) {
+      requireImportModule(module);
       await actor(ctx);
       await deps.authorize(ctx, module, "read");
       const metadata = await deps.records(ctx).getModule(module);

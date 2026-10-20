@@ -196,6 +196,26 @@ describe("transfer routes", () => {
     }
   });
 
+  it.each(["Solutions", "Cases"])(
+    "%s exports and downloads without enabling import",
+    async (module) => {
+      const params = { module };
+      const exported = await call("runExport", a, { params, json: { fields: "all" } });
+      expect(exported.status).toBe(200);
+      const job = await exported.json();
+      expect(job).toMatchObject({ module, status: "completed" });
+      const file = await call("downloadExport", a, { params: { exportId: job.id } });
+      expect(file.status).toBe(200);
+      expect(file.headers.get("Content-Type")).toContain("text/csv");
+      expect(await file.text()).toContain(module === "Solutions" ? "Solution Title" : "Subject");
+      expect((await call("downloadExport", b, { params: { exportId: job.id } })).status).toBe(404);
+      expect(
+        (await call("previewImport", a, { params, body: upload("Subject\nExample") })).status,
+      ).toBe(400);
+      expect((await call("sampleCsv", a, { params })).status).toBe(400);
+    },
+  );
+
   it("exports, downloads with safe headers and keeps history per organization", async () => {
     const params = { module: "Leads" };
     const exported = await call("runExport", a, { params, json: { fields: "all" } });

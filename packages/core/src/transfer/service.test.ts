@@ -720,3 +720,58 @@ describe("activity transfers", () => {
     },
   );
 });
+
+describe.each(["Solutions", "Cases"] as const)("%s export-only transfer", (module) => {
+  it("exports selected metadata fields and records, history and tenant isolation", async () => {
+    const s = setup();
+    const field = module === "Solutions" ? "Solution_Title" : "Subject";
+    const record = await s.records.create(module, { [field]: "Synthetic export record" });
+    const job = await s.service.runExport(s.ctx, {
+      module,
+      ids: [record.id],
+      fields: { include: [field] },
+    });
+    expect(job).toMatchObject({
+      module,
+      status: "completed",
+      rowCount: 1,
+      scope: "Selected records",
+    });
+    const file = await s.service.downloadExport(s.ctx, job.id);
+    const csv = parseCsv(new TextEncoder().encode(file.body), {
+      charset: "UTF-8",
+      maxColumns: 500,
+      maxRows: 30000,
+    });
+    expect(csv.headers).toEqual([
+      "Record Id",
+      module === "Solutions" ? "Solution Title" : "Subject",
+    ]);
+    expect(csv.rows).toEqual([[record.id, "Synthetic export record"]]);
+    expect(await s.service.listExports(s.ctx)).toContainEqual(job);
+    await expect(
+      s.service.downloadExport({ ...s.ctx, orgId: randomUUID() }, job.id),
+    ).rejects.toMatchObject({ code: "not_found" });
+    const all = await s.service.runExport(s.ctx, { module, fields: "all" });
+    expect(all.status).toBe("completed");
+    expect(all.rowCount).toBeGreaterThanOrEqual(1);
+    expect(s.authorize).toHaveBeenCalledWith(s.ctx, module, "read");
+  });
+  it("keeps import preview, execution and samples unavailable", async () => {
+    const s = setup();
+    await expect(s.preview(module, ["Subject"], [["Example"]])).rejects.toMatchObject({
+      code: "validation",
+    });
+    await expect(
+      s.service.runImport(s.ctx, module, "missing", {
+        mode: "add",
+        ignoreEmptyOnUpdate: false,
+        mapping: [],
+        defaults: [],
+      }),
+    ).rejects.toMatchObject({ code: "validation" });
+    await expect(s.service.sampleCsv(s.ctx, module)).rejects.toMatchObject({
+      code: "validation",
+    });
+  });
+});
