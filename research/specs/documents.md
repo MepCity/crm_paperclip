@@ -1,10 +1,11 @@
 # Documents
 
-Status: main-screen research baseline for MEP-922, submitted for UI Lead review.
+Status: main-screen baseline approved for MEP-922; MEP-928 folder and iframe
+research submitted for UI Lead review.
 Platform Lead accepted the retained `m9-documents-main` screenshot and listing
 read in MEP-926 despite the ambiguous readiness selector. No new capture was
-needed. Folder/detail/empty-state behaviour remains explicitly unobserved and
-is proposed for subsequent research; this is not a complete module specification.
+needed. MEP-928 adds an observed existing-folder empty state below. File detail and
+preview remain unobserved; this is not a complete module specification.
 
 ## Purpose
 
@@ -82,11 +83,11 @@ Products entries are not additional visible controls.
 | D8 | Breadcrumb, current application-folder dropdown | Location/menu affordance; entries unknown | S | D |
 | D9 | Listing header right, opposing vertical arrows | Sort affordance; must not change persisted sort | S | D |
 | D10 | Beside D9, funnel | Filter affordance; opening and persistence unknown | S | D |
-| D11 | Beside D10, list-with-small-boxes icon | View/list configuration affordance; exact identity unverified, do not click | S | D |
+| D11 | Beside D10, list-with-small-boxes icon | List view control; iframe button has ARIA label `List`, child SVG `View`; never clicked | S + MEP-928 frame C | D |
 | D12 | Column header, Name | Name column; whether header sorts is unverified | S | D |
 | D13 | Column header, Last Modified and downward arrow | Current visible sort indication; click/cycle/persistence untested | S | D |
-| D14 | Far right of column header, circled plus | Column/configuration affordance inferred from position; exact action unknown, do not click | S | D |
-| D15 | First listing row, folder icon/name | Existing-folder navigation candidate; not opened | S | D |
+| D14 | Far right of column header, circled plus | Manage listing columns; iframe button ARIA label confirms identity; never clicked | S + MEP-928 frame C | D |
+| D15 | First listing row, folder icon/name | Existing folder link; opened read-only in MEP-928 and reached an empty folder | S + MEP-928 frame C | D |
 | D16 | Right strip top, Details | Information-pane affordance; panel persistence unknown, do not toggle | S | D |
 | D17 | Right strip below Details, assistant | Assistant affordance; behaviour unverified | S | D |
 | H1 | Top left, app selector | Application switching; current app label neutralized | S+C | H |
@@ -144,17 +145,17 @@ does not establish command-palette contents or opening behaviour.
 
 ## Actions, filters, views, sorting and search
 
-Only direct navigation to `/crm/<org>/tab/Documents` was observed. The accepted
+The baseline observed direct navigation to `/crm/<org>/tab/Documents`;
+MEP-928 additionally followed the existing folder link in the embedded list. The accepted
 state contains one folder and visibly indicates descending Last Modified sort;
 the recorded listing read returned 200. No sort interaction or tie-breaking
 rule was tested. Filter and configuration icons are visible, but their menus,
 values and persistence remain unknown. The shared module search and global
 record search must not be mistaken for a file-list search.
 
-No folder, file-detail, preview, Details pane or assistant control was opened.
-The embedded control export does not supply safe unique selectors for these
-entries, and panel toggles may persist preferences. New navigation needs its own
-paint gate and safety check in subsequent research. Upload, folder creation,
+One existing folder link was subsequently opened (MEP-928 evidence below).
+No file-detail, preview, Details pane or assistant control was opened. Panel
+toggles may persist preferences; D16 remains forbidden without evidence. Upload, folder creation,
 move, delete and share controls must never be clicked; their write-dependent
 behaviour remains an open question until public documentation is researched.
 
@@ -163,9 +164,9 @@ behaviour remains an open question until public documentation is researched.
 Opening Documents displays the folder-navigation pane and populated listing
 shown in the accepted capture. Personal-folder highlighting and the current
 application breadcrumb are recorded as seen, without assuming their semantic
-relationship. No empty folder, file selection, file detail, preview, permission
-error, validation message, success message or write-dependent failure is
-established. The blank continuation is a capture-timing artifact, not a product
+relationship. The baseline establishes no empty folder; MEP-928 below establishes one.
+No file selection, file detail, preview, permission error, validation message,
+success message or write-dependent failure is established. The blank continuation is a capture-timing artifact, not a product
 empty or error state. No fields were filled, file chooser opened, download or
 print triggered, nor record or preference intentionally changed.
 
@@ -200,10 +201,10 @@ base files. Screenshots, raw network data and customer values remain outside git
   with exit 1. Platform Lead reported the tool cleanup error fixed in MEP-926;
   no further capture or retry was performed in this continuation.
 
-## MEP-928 continuation: offline evidence and navigation prerequisite
+## MEP-928 initial continuation: historical extraction prerequisite
 
-Status: partial research; live folder and preview capture awaits capture-tool
-support. No new capture or click was attempted in this continuation. Existing
+Historical status before MEP-931/MEP-932 completed: live folder and preview
+capture awaited capture-tool support. No new capture or click was attempted in this continuation. Existing
 capture slugs above remain the only screen evidence; no new state or D18+ control
 is claimed. The execution workspace remains on the runtime-assigned branch.
 
@@ -260,26 +261,130 @@ No literal validation, success, error or permission message is added by this
 mapping. Preview-limit conflicts, permission precedence, Trash retention and
 attachment identity remain with the owners listed in `documents-write-flows.md`.
 
-## Open questions and proposed subsequent research
+## MEP-928 completed continuation: frame evidence and existing empty folder
 
-CTO owns creating/sequencing the following research slices. These are coverage
-gaps rather than implemented or verified product behaviour:
+Sources: `m9-documents-frames` and `m9-documents-folder`, captured on
+2026-10-20 outside the overnight restriction. Both captures completed with exit
+0 and contain all six base files. The initial prerequisite above is retained as
+history; MEP-931/MEP-932 supplied the approved frame collector and guards.
 
-1. Existing-folder navigation and an existing empty folder, if safely reachable.
-   Establish embedded selectors and a content-specific paint gate first; do not
-   substitute the folder-shell probe or create data to obtain an empty state.
-2. Existing-file detail/preview and supported types. There is no file row in the
-   accepted state; confirm a read-only entry and whether Details persists panel
-   visibility before any interaction. Include permission/error states only when
-   observable without a write.
-3. Public-documentation study of upload, folder creation, permissions, sharing,
-   moving, deletion, validation and success/error behaviour. No such workflow
-   was tested or inferred from module API flags here.
-4. Resolve remaining screenshot-only icon identities D6, D11, D14 and H47 through safe
-   evidence, and reconcile embedded selectors. Never click an unknown icon to
-   discover its meaning. Capture authorized UI states only after paint readiness.
+### Readiness and navigation evidence
 
-During the overnight MEP-539 priority window, no Documents capture may run.
+The click-free frame baseline exports 171 controls, including 31 entries in
+frame 6. The embedded list belongs to the main-document iframe
+`#pdfPreviewFrame`; this is observed frame ownership, not an inference from its
+name. Hidden utility frames are not additional Documents controls. The current
+folder row is an actual anchor with a folder destination, a visible name and a
+unique exported selector. Its literal name, path and identifier stay local.
+
+Before the sole click, the tool required that exact existing row's
+`data-automation-id` selector to be unique and visible inside
+`#pdfPreviewFrame`. This content-specific gate passed in 100 ms with no failed
+scripts. It did not use the folder-pane shell or merely the iframe container.
+The same frame-scoped anchor was clicked once; meta records `clicked`.
+After the configured wait, the final screenshot and frame ARIA agree on the
+new child breadcrumb and empty-state heading. The pre-click gate is not a
+post-navigation readiness assertion; the final rendered evidence establishes
+the empty state. The folder read returned 200, with no pending requests at the
+pre-click gate. No shell-only blank state is accepted as product evidence.
+
+### Existing-folder layout and flow
+
+The shell, selected Documents item, left folder pane and right utility strip
+remain visible. The breadcrumb gains one child: the former current application
+folder becomes an ancestor button and the opened folder becomes the trailing
+dropdown. The trailing menu was not opened. The main list area displays a
+centered empty illustration above the short heading `No items available.`.
+Recreate an original illustration; never copy its source asset.
+
+The Name / Last Modified header, column-management icon, selection control and
+row actions are absent in this empty state. Sort, Filter and List controls
+remain at the top right; Details and the assistant remain in the narrow right
+strip. No upload/create call to action, table row, pagination or editable field
+is visible. This is an existing empty folder, reached without creating data.
+The left personal-folder selection and team-folder entry do not change.
+
+No file exists in the observed root listing or opened child. Consequently no
+file detail, preview, format support or preview error can be claimed. No file
+was uploaded to manufacture evidence. D4 remains screenshot-only: even the new
+collector provides no distinct safe exported selector for the left team-folder
+entry, so it was not clicked. Do not infer that it has the same destination as
+the breadcrumb merely from matching visible text.
+
+### Numbered inventory extension
+
+Sources **F** = `m9-documents-frames` screenshot + frame controls/ARIA;
+**E** = `m9-documents-folder` screenshot + frame controls/ARIA. D1–D17 and
+H1–H47 retain their numbers. The shell controls H1–H47 and left-pane D1–D5
+remain as in the baseline; H47 remains screenshot-only and unclicked.
+
+| No. | Position / control | Observed state / behaviour | Source | Owner |
+| --- | --- | --- | --- | --- |
+| D18 | Populated list header, before Name | Select all button exposed by ARIA; not apparent in baseline screenshot, not clicked | F controls/ARIA | D |
+| D19 | Populated folder row, far right | More actions button exposed by ARIA; no menu opened | F controls/ARIA | D |
+| D20 | Empty-folder breadcrumb, between application collection and current child | Former current application-folder ancestor button; no return click tested | E | D |
+| D21 | Empty-folder breadcrumb, trailing child and arrow | Opened folder's current-location dropdown, contents unknown | E | D |
+
+D6–D8 remain breadcrumb controls in F; E retains D6/D7 and replaces the
+baseline current-location D8 with D20/D21. D9–D11 and D16–D17 remain in both
+captures. D12–D15 and D18–D19 are present only in F, absent in E. Folder glyphs,
+breadcrumb separators and the empty illustration/heading are display content,
+not extra controls. This state accounting includes every visible shell, pane,
+listing and utility control without recounting duplicate SVG wrappers.
+
+### Icon reconciliation and documented-flow mapping
+
+- D11: button ARIA label `List`, `data-automation-id="list-button"`, child SVG
+  ARIA label `View`. This confirms a view control and current label, without
+  opening its menu or verifying the documented alternative views (U10).
+- D14: button ARIA label `Manage listing columns`, id `listing_columns`,
+  `aria-haspopup=true`. Column management identity is confirmed; menu contents
+  and persistence stay unobserved (U10). It is absent in the empty state.
+- D6: the leading glyph exports only generic SVG label `items` and a generated
+  id. No useful action name or semantic title is supplied. Its screenshot
+  position does not prove overflow/ancestor behaviour. Do not click it.
+- H39 remains confirmed by `open_commands_palette`; H47 has no matching useful
+  DOM identity in either new capture. The zero-height live-chat complementary
+  node does not prove the identity of the visible far-right glyph.
+- D16: `Details`, id `key_infopanel`, and `show-info-button` establish the
+  information-pane affordance. They do not establish whether visibility is
+  persisted. It was not toggled; U11 remains open.
+- The documented hierarchy now has an observed existing-folder transition and
+  empty-state counterpart. Permission meaning of the lock, team-root semantics,
+  role precedence, and all write flows remain with `documents-write-flows.md`.
+  The absence of a file keeps U5 preview mapping unresolved.
+
+### Capture safety audit
+
+| Capture | Actions | Blocked requests | Other safety evidence |
+| --- | --- | --- | --- |
+| `m9-documents-frames` | None; passive frame baseline | 3 POSTs: reminder, notification status, telemetry | No chooser, download, print, popup or opening permission |
+| `m9-documents-folder` | One existing-folder anchor click | 4 POSTs: reminder, notification status, two telemetry | No chooser, download, print, popup or opening permission; no skipped click |
+
+The request guard blocked these background writes. No blocked request was a
+folder mutation or preference change; no successful write is evidenced. No
+sort, filter, view, column, disclosure, Details or other preference control was
+clicked. Raw captures, paths, account identifiers and customer values remain
+only in the local research workspace. Client initialization diagnostics are
+retained; they are not invented application error states.
+
+## Open questions and subsequent research boundaries
+
+1. D4 safe navigation and team-root contents: no distinct exported control
+   selector; not clicked. UI Lead/CTO should decide whether further bounded
+   passive tool evidence is needed before implementation of that surface.
+2. File detail/preview (U5): no existing file in the safely reachable root/child.
+   No preview is observable here; do not create/upload a fixture in the reference.
+3. Details persistence and exact properties mapping (U11): unproven; never toggle
+   it as an experiment. Keep documented properties separate from captured UI.
+4. D6 and H47 identity remain unresolved because their exported DOM carries no
+   useful semantic label. No unknown-icon click or tooltip hover was used.
+5. Write-dependent states, permission errors and preview-type conflicts retain
+   the explicit owners and open questions in `documents-write-flows.md`.
+
+These are recorded evidence limits, not claims that those capabilities are
+absent. No further reference write is authorized. During the overnight MEP-539
+priority window, no Documents capture may run.
 
 ## Proposed parity-checklist entries
 
@@ -288,7 +393,7 @@ marked complete by this slice.
 
 - Documents metadata availability and explicit missing field/layout exports.
 - Main-screen folder pane, breadcrumb, populated listing and 64-control inventory.
-- Existing-folder navigation and empty-folder presentation (pending research).
+- Existing-folder link and verified existing empty-folder presentation (MEP-928).
 - Existing-file detail/preview and utility-strip behaviour (pending research).
 - Documented file/folder write flows, permissions and unobservable state gaps
-  (pending documentation research).
+  (`documents-write-flows.md`; unresolved questions remain explicit).
