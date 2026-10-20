@@ -408,3 +408,40 @@ remains valid. Further captures stopped because access is intermittent after
 the bounded recovery attempts; no browser/profile, lock or guard repair was
 attempted. Stage badge activation, Assign, both Contact Roles dialogs and natural
 many-card overflow remain open. Raw captures stay in the local research workspace.
+
+### Low-load click observation — Amount help (MEP-539)
+
+Capture `m539-amount-click-low-load-oct20` completes the previously unobserved
+click state. The one-minute load was 3.11 before launch, within the board's
+less-than-10 condition. This was the only capture attempt in this nightly window.
+The native create form passed the explicit readiness gate after a 15-second
+wait; no static script load failed.
+
+Clicking the previously exported selector
+`#Crm_Potentials_AMOUNT div.cxBoxRightIcon` opens a white explanatory popover
+beneath the Amount field, with a small upward pointer aligned to the information
+icon. The rounded panel has a subtle border/shadow and extends left from the
+icon across the space above Closing Date and Stage. It explains that the Amount
+input can evaluate an arithmetic expression automatically, using addition of
+two twenties producing forty as its example. The expression and result in the
+example are bold. This is help text evidence only: calculation was not exercised
+and no value was entered.
+
+`step-1.png` and its accessibility snapshot establish the open popover.
+`step-2.png`, its snapshot and the final screenshot establish that Escape hides
+the help without leaving the Create form. No close button is visible within
+the help panel. Outside-click dismissal and repeated-click toggling were not
+tested. This click result supplements, rather than replaces, the earlier
+captured hover that showed no explanation.
+
+Metadata records one completed click and one completed Escape, 234 exported
+controls, 51 API calls and eight blocked background requests (reminder ×1,
+notification status ×1, telemetry ×6). Existing client initialization diagnostics
+remain; they did not prevent the painted form or help observation. No form was
+submitted, no field filled, and no record or preference operation was attempted.
+All step/final images, accessibility snapshots, controls and metadata were
+checked together. Raw evidence remains in the local research workspace.
+
+Remaining issue scope: advanced-search Stage chip activation, Account Deals
+Assign opening, both Contact Roles initial dialogs, and natural many-card
+column overflow. No further capture was made in this nightly window.
