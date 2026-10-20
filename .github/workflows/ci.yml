@@ -58,7 +58,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       # This project selects only *.int.test.ts; the native SysV IPC test is excluded.
       - name: Integration tests
-        run: pnpm exec vitest run --project integration
+        run: pnpm exec vitest run --project integration --reporter=default --reporter=json --outputFile=integration-results.json
+      - name: Record integration test counts
+        if: always() && !cancelled()
+        run: pnpm exec tsx scripts/integration-summary.ts integration-results.json
 
   e2e:
     name: e2e (${{ matrix.shard }}/4)
@@ -100,7 +103,7 @@ jobs:
       - name: Install process cleanup tool
         run: sudo apt-get update && sudo apt-get install -y lsof
       - name: Browser tests
-        run: pnpm test:e2e --shard=${{ matrix.shard }}/4 --reporter=list,html,json
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/4 --reporter=list,github,html,json
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
