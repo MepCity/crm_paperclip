@@ -3,6 +3,8 @@ import type { FieldValue, ModuleApiName } from "@crm/core/records";
 export type RecordCreatePrefill = {
   module: ModuleApiName;
   fields: Readonly<Record<string, FieldValue>>;
+  /** Where Save returns to instead of the new record (e.g. the parent detail). */
+  returnTo?: string;
 };
 
 const STORAGE_PREFIX = "mep:record-create-prefill:";
