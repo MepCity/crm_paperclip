@@ -721,7 +721,10 @@
 [data-form-layout="solutions"] .record-form-section:first-child {
   margin-bottom: 17px;
 }
-[data-form-layout="solutions"] [data-record-form-section-layout="single"] > [data-form-field] + [data-form-field] {
+[data-form-layout="solutions"]
+  [data-record-form-section-layout="single"]
+  > [data-form-field]
+  + [data-form-field] {
   margin-top: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
 }
 [data-form-layout="solutions"] .record-form-inventory-footer {
