@@ -64,6 +64,9 @@ import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
 
+// Activity modules whose lists show numeric dates; their details match.
+const NUMERIC_DATE_MODULES = new Set(["Events", "Calls", "Tasks"]);
+
 export type RecordDetailPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
@@ -340,7 +343,7 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <NumericDatesProvider value={moduleApiName === "Events" || moduleApiName === "Calls"}>
+    <NumericDatesProvider value={NUMERIC_DATE_MODULES.has(moduleApiName)}>
       {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
       {statusField && StatusSection ? (
         <StatusSection
