@@ -361,6 +361,12 @@ test.describe("Contacts record detail", () => {
     await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(/.+/);
     await expect(page.locator("[data-form-field=What_Id] input")).toHaveValue(/.+/);
 
+    await page.goBack();
+    await expect(businessCallButton).toBeVisible();
+    await businessCallButton.click();
+    await expect(page).toHaveURL(/\/calls\/create/i);
+    await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(/.+/);
+
     ignoreFailedResponses(pageErrors, [400]);
   });
 
