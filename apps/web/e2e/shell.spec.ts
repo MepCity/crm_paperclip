@@ -66,6 +66,20 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   await expect(page).toHaveURL(/\/sign-in\?next=/);
 });
 
+test("Solutions and Cases open as ungrouped rows with exactly one current row", async ({
+  page,
+}) => {
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  for (const name of ["Solutions", "Cases"]) {
+    await nav.getByRole("link", { name, exact: true }).click();
+    await expect(nav.getByRole("link", { name, exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
+  }
+});
+
 test("the organization menu switches between two memberships and offers creation", async ({
   page,
 }) => {
