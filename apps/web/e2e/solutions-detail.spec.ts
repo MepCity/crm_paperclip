@@ -88,3 +88,24 @@ test.describe("Solutions record detail (provisional rules, MEP-863)", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 });
+
+test("Attachments: attach a link, reload and show its Timeline event", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await openFirstSolution(page, org.slug);
+  const card = page.locator("#related-list-attachments");
+  await expect(card.getByText("No Attachment")).toBeVisible();
+  await card.getByRole("button", { name: "Attach", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Link (URL)" }).click();
+  await page.getByRole("textbox").fill("https://example.com/support-guide");
+  await page.getByRole("button", { name: "Attach", exact: true }).last().click();
+  await expect(card.getByRole("link", { name: "https://example.com/support-guide" })).toBeVisible();
+  await page.reload();
+  await expect(card.getByRole("link", { name: "https://example.com/support-guide" })).toBeVisible();
+  await page.getByRole("tab", { name: "Timeline", exact: true }).click();
+  await expect(
+    page
+      .locator("[data-timeline-history]")
+      .getByText("Attachment added: https://example.com/support-guide"),
+  ).toBeVisible();
+});
