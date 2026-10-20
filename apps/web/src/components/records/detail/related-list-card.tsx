@@ -99,7 +99,8 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       ctrl.id === "add-new" &&
       id === "open-activities" &&
       context?.record &&
-      context.module
+      context.module &&
+      ["Leads", "Contacts", "Accounts", "Deals"].includes(context.module)
     ) {
       return (
         <ActivityAddNew
