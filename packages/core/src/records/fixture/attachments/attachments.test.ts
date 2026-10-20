@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { ATTACHMENT_CARD_MODULES, ATTACHMENT_PARENT_MODULES } from "../../../attachments/modules";
 import { ForbiddenError, NotFoundError, RecordLockedError, ValidationError } from "../../../errors";
 import type { OrgContext } from "../../../tenancy/types";
 import type { RecordData, RecordInput } from "../../contract";
+import type { FixtureModuleStore } from "../hooks";
 import {
   createFixtureAttachmentLifecycle,
   createFixtureRecordService,
@@ -54,6 +56,17 @@ async function lead(service: ReturnType<typeof createFixtureRecordService>, name
 }
 
 describe("Attachments record contract", () => {
+  it("derives fixture parent validation from the shared API module definition", () => {
+    expect(attachmentParentModules).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(
+      attachmentsMetadata.fields.find((field) => field.apiName === "Parent_Id")?.lookup?.modules,
+    ).toBe(ATTACHMENT_PARENT_MODULES);
+    expect(attachmentParentModules).not.toContain("Calls");
+    expect(ATTACHMENT_CARD_MODULES).toEqual(["Leads", "Contacts", "Accounts", "Deals"]);
+    expect(attachmentParentModules).toEqual(
+      expect.arrayContaining(["Tasks", "Events", "Campaigns", "Cases", "Solutions"]),
+    );
+  });
   it("registers evidenced metadata with empty seeds and hides internal fields", async () => {
     const { service } = make();
     expect(generateFixtureAttachments()).toEqual([]);
@@ -118,10 +131,107 @@ describe("Attachments record contract", () => {
       });
     },
   );
+  it.each(["Tasks", "Events", "Campaigns", "Cases", "Solutions"])(
+    "publishes, reads and deletes %s files within their tenant",
+    async (module) => {
+      const { service, lifecycle, purge } = make();
+      const parent = await service.create(
+        module,
+        module === "Events"
+          ? {
+              Event_Title: "Synthetic",
+              Meeting_Venue__s: "In-office",
+              Start_DateTime: "2030-01-01T10:00:00Z",
+              End_DateTime: "2030-01-01T11:00:00Z",
+            }
+          : module === "Campaigns"
+            ? { Campaign_Name: "Synthetic" }
+            : module === "Solutions"
+              ? { Solution_Title: "Synthetic" }
+              : module === "Cases"
+                ? { Subject: "Synthetic", Status: "New", Case_Origin: "Phone" }
+                : { Subject: "Synthetic" },
+      );
+      const attachment = await service.create("Attachments", file(module, parent.id));
+      lifecycle.publish(attachment.id, published);
+      expect((await service.get("Attachments", attachment.id)).id).toBe(attachment.id);
+      const other = make();
+      await expect(other.service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      await expect(
+        other.service.create("Attachments", file(module, parent.id)),
+      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(other.service.delete("Attachments", [attachment.id])).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+      const activityPeers = [];
+      for (const activity of ["Tasks", "Events", "Calls"]) {
+        const view = requireValue((await service.listViews(activity))[0]);
+        const rows = await service.list(activity, { ...listQuery, viewId: view.id });
+        activityPeers.push({
+          module: activity,
+          id: requireValue(rows.records.find((row) => activity !== module || row.id !== parent.id))
+            .id,
+        });
+      }
+      await service.delete(module, [parent.id]);
+      for (const peer of activityPeers)
+        expect((await service.get(peer.module, peer.id)).id).toBe(peer.id);
+      await expect(service.get("Attachments", attachment.id)).rejects.toBeInstanceOf(NotFoundError);
+      expect(lifecycle.cleanupIntents()).toEqual([]);
+      await purge();
+      expect(lifecycle.cleanupIntents()).toEqual([
+        { attachmentId: attachment.id, storageKey: published.storageKey },
+      ]);
+    },
+  );
+  it.each(["Tasks", "Events", "Calls", "Campaigns"])(
+    "cascades %s notes without deleting other activities",
+    (module) => {
+      // Model pending Notes parent support at the hook boundary, without enabling its API.
+      const stores = new Map<string, FixtureModuleStore>();
+      const moduleStore = (name: string): FixtureModuleStore => {
+        let store = stores.get(name);
+        if (!store) {
+          store = { records: new Map(), nextId: 1n };
+          stores.set(name, store);
+        }
+        return store;
+      };
+      for (const activity of ["Tasks", "Events", "Calls"]) {
+        moduleStore(activity).records.set("retained", {
+          id: "retained",
+          fields: { Subject: "Synthetic" },
+        });
+      }
+      moduleStore("Notes").records.set("note", {
+        id: "note",
+        fields: { Parent_Id: { module, id: "deleted" } },
+      });
+      for (const [id, parentModule, parentId] of [
+        ["direct", module, "deleted"],
+        ["nested", "Notes", "note"],
+        ["retained", module, "retained"],
+      ] as const) {
+        moduleStore("Attachments").records.set(id, {
+          id,
+          fields: { Parent_Id: { module: parentModule, id: parentId }, $type: "link" },
+        });
+      }
+      const hook = fixtureModules[module]?.afterDelete;
+      expect(hook).toBeTypeOf("function");
+      hook?.(["deleted"], { registeredModules: Object.keys(fixtureModules), moduleStore });
+      expect(moduleStore("Notes").records.size).toBe(0);
+      expect([...moduleStore("Attachments").records.keys()]).toEqual(["retained"]);
+      for (const activity of ["Tasks", "Events", "Calls"])
+        expect(moduleStore(activity).records.has("retained")).toBe(true);
+    },
+  );
   it("rejects invalid modules, malformed and absent parents and mandatory fields", async () => {
     const { service } = make();
     const parent = await lead(service);
-    for (const module of ["Tasks", "Events", "Calls", "Attachments", "Unknown"]) {
+    for (const module of ["Calls", "Attachments", "Unknown"]) {
       await expect(service.create("Attachments", file(module, parent.id))).rejects.toBeInstanceOf(
         ValidationError,
       );
@@ -367,14 +477,19 @@ describe("Attachments record contract", () => {
     await purge();
     expect(lifecycle.cleanupIntents()).toHaveLength(2);
   });
-  it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+  it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"])(
     "cascades %s direct and note children",
     async (module) => {
       const { service, lifecycle, purge } = make();
       const [view] = await service.listViews(module);
-      const parent = requireValue(
-        (await service.list(module, { ...listQuery, viewId: requireValue(view).id })).records[0],
-      );
+      const parent =
+        module === "Solutions"
+          ? await service.create(module, { Solution_Title: "Synthetic" })
+          : requireValue(
+              (
+                await service.list(module, { ...listQuery, viewId: requireValue(view).id })
+              ).records.find((row) => row.fields.Locked__s !== true),
+            );
       const note = await service.create("Notes", { Parent_Id: { module, id: parent.id } });
       const direct = await service.create("Attachments", file(module, parent.id));
       const nested = await service.create("Attachments", file("Notes", note.id));

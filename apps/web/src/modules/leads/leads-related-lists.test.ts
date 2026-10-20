@@ -5,7 +5,14 @@ import { createLeadsRelatedLists } from "./leads-related-lists";
 describe("createLeadsRelatedLists", () => {
   it("defines notes, open-activities and closed-activities cards in reference order", () => {
     const lists = createLeadsRelatedLists();
-    expect(lists).toHaveLength(3);
+    expect(lists.map((card) => card.id)).toEqual([
+      "notes",
+      "open-activities",
+      "closed-activities",
+      "attachments",
+      "campaigns",
+    ]);
+    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4]);
 
     const [notes, openActivities, closedActivities] = lists;
     expect(notes).toBeDefined();
@@ -31,6 +38,19 @@ describe("createLeadsRelatedLists", () => {
     expect(closedActivities.title).toBe("Closed Activities");
     expect(closedActivities.moduleKey).toBe("M5");
     expect(closedActivities.targetId).toBe("related-list-closed-activities");
+  });
+
+  it("adds a live Campaigns card wired to Add Campaigns", () => {
+    const onAddCampaigns = () => {};
+    const campaigns = createLeadsRelatedLists({ campaigns: 2 }, { onAddCampaigns }).find(
+      (list) => list.id === "campaigns",
+    );
+    expect(campaigns?.title).toBe("Campaigns");
+    expect(campaigns?.moduleKey).not.toBe("M7");
+    expect(campaigns?.countBadge).toBe(2);
+    expect(campaigns?.upperControls?.[0]?.label).toBe("Add Campaigns");
+    expect(campaigns?.upperControls?.[0]?.onAction).toBe(onAddCampaigns);
+    expect(campaigns?.railAction?.onAction).toBe(onAddCampaigns);
   });
 
   it("configures upper controls for open-activities and closed-activities as defined", () => {
@@ -132,7 +152,7 @@ describe("createLeadsRelatedLists", () => {
 
   it("edge case: provides executable renderBody functions for each card", () => {
     const lists = createLeadsRelatedLists();
-    for (const card of lists) {
+    for (const card of lists.filter((c) => !c.renderCard)) {
       expect(typeof card.renderBody).toBe("function");
       if (!card.renderBody) continue;
 

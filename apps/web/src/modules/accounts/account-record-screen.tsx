@@ -13,6 +13,7 @@ import { moduleRecordPath } from "@/lib/crm-paths";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import {
   openAccountCreateWithParentAccount,
+  openCaseCreateWithAccountName,
   openContactCreateWithAccountName,
   openDealCreateWithAccountName,
 } from "./accounts-record-create";
@@ -74,6 +75,8 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
             openContactCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
           onMemberAccountNew: () =>
             openAccountCreateWithParentAccount(props.orgSlug, record, (path) => router.push(path)),
+          onCasesNew: () =>
+            openCaseCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
           onDealsNew: () =>
             openDealCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
         },

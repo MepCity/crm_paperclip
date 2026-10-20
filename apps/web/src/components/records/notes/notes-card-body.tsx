@@ -26,7 +26,16 @@ import { NoteList, type NoteListItem } from "./note-list";
 import type { NoteSortOrder } from "./note-sort";
 
 const PAGE_SIZE = 100;
-const NAME_FIELDS = ["Full_Name", "Account_Name", "Deal_Name", "Last_Name", "Company"];
+const NAME_FIELDS = [
+  "Full_Name",
+  "Account_Name",
+  "Deal_Name",
+  "Campaign_Name",
+  "Subject",
+  "Solution_Title",
+  "Last_Name",
+  "Company",
+];
 
 export interface NotesCardBodyProps {
   parentModule: ModuleApiName;

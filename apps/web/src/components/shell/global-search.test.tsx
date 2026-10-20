@@ -68,7 +68,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   search.mockResolvedValue(groups);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 async function open(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Search records" }));
   return screen.findByRole("dialog", { name: "Search records" });
@@ -288,12 +291,12 @@ test("keeps at most five visible results per group and ignores a late previous q
 test("omits secondary line for modules without search field config", async () => {
   search.mockResolvedValueOnce([
     {
-      module: "Cases",
+      module: "Vendors",
       total: 1,
       records: [
         {
-          id: "case-1",
-          fields: { Subject: "Future Case", Email: "hidden@example.test" },
+          id: "vendor-1",
+          fields: { Vendor_Name: "Future Vendor", Email: "hidden@example.test" },
         },
       ],
     },
@@ -302,8 +305,8 @@ test("omits secondary line for modules without search field config", async () =>
   mount();
   await open(user);
   await user.type(screen.getByRole("textbox", { name: "Search records" }), "Future");
-  const link = await screen.findByRole("link", { name: "case-1" });
-  expect(link.textContent).toBe("case-1");
+  const link = await screen.findByRole("link", { name: "vendor-1" });
+  expect(link.textContent).toBe("vendor-1");
 });
 
 test("search errors use the shared error notice", async () => {
@@ -316,3 +319,25 @@ test("search errors use the shared error notice", async () => {
     "The page could not be loaded. Please try again.",
   );
 });
+
+for (const [module, titleField] of [
+  ["Cases", "Subject"],
+  ["Solutions", "Solution_Title"],
+] as const) {
+  test(`${module} search uses the registered title and detail route`, async () => {
+    search.mockResolvedValueOnce([
+      {
+        module,
+        total: 1,
+        records: [{ id: "support-1", fields: { [titleField]: "Support title" } }],
+      },
+    ]);
+    const user = userEvent.setup();
+    mount();
+    await open(user);
+    await user.type(screen.getByRole("textbox", { name: "Search records" }), "Support");
+    const link = await screen.findByRole("link", { name: "Support title" });
+    expect(link.getAttribute("href")).toContain(`/tab/${module}/support-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}

@@ -1,7 +1,9 @@
 import { createElement } from "react";
 import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
+import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -22,7 +24,12 @@ export type DealsRelatedListBadges = {
   closedActivities?: number;
 };
 
+export type DealsRelatedListHandlers = {
+  onCasesNew?: () => void;
+};
+
 export type CreateDealsRelatedListsOptions = {
+  handlers?: DealsRelatedListHandlers;
   badges?: DealsRelatedListBadges;
 };
 
@@ -65,7 +72,7 @@ function activityCount(
 export function createDealsRelatedLists(
   options: CreateDealsRelatedListsOptions = {},
 ): readonly RelatedListDefinition[] {
-  const { badges = {} } = options;
+  const { badges = {}, handlers = {} } = options;
   const stageHistoryBadge = badgeValue(badges.stageHistory);
   const openActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
     {
@@ -129,6 +136,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Deals"),
       title: "Attachments",
       moduleKey: "M6",
       order: 3,
@@ -405,8 +413,16 @@ export function createDealsRelatedLists(
     },
     {
       id: "cases",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedCasesCardBody, {
+              managerRecord: record,
+              filterField: "Deal_Name",
+              caseRecordPath: (id) => recordPath("Cases", id),
+            })
+          : undefined,
       title: "Cases",
-      moduleKey: "M8",
+      moduleKey: "M4",
       order: 14,
       targetId: "related-list-cases",
       upperControls: [
@@ -414,13 +430,14 @@ export function createDealsRelatedLists(
           id: "assign-cases",
           label: "Assign",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M4",
         },
         {
           id: "new-case",
           label: "New",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M4",
+          onAction: handlers.onCasesNew,
         },
       ],
       emptyStateText: "No records found",

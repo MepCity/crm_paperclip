@@ -239,6 +239,7 @@ export function FieldInput({
   const text = typeof value === "string" ? value : "";
   const number = typeof value === "number" ? value : Number.NaN;
   switch (field.dataType) {
+    case "autonumber":
     case "text":
     case "email":
     case "phone":
@@ -261,6 +262,13 @@ export function FieldInput({
           prefix={
             textPrefix ? (
               <span className="record-prefix pl-(--space-3)">{textPrefix}</span>
+            ) : undefined
+          }
+          endAction={
+            field.readOnly ? (
+              <span role="img" className="record-input-end" aria-label="Locked">
+                <Icons.lock className="record-input-end-icon" aria-hidden />
+              </span>
             ) : undefined
           }
           onChange={(next) => onChange(next === "" ? null : next)}

@@ -21,6 +21,9 @@ describe("useRecordNoteEvents", () => {
 
     const listQueries: ListQuery[] = [];
     const mockService = {
+      getModule: vi.fn(async () => ({
+        fields: [{ apiName: "Parent_Id", lookup: { module: "Leads", modules: ["Leads"] } }],
+      })),
       list: vi.fn(async (_module: string, query: ListQuery) => {
         listQueries.push(query);
         const page = query.page ?? 1;
@@ -59,4 +62,30 @@ describe("useRecordNoteEvents", () => {
     expect(result.current[249]?.title).toBe("Note added: Note 250");
     expect(result.current[0]?.actorName).toBe("Ada Lovelace");
   });
+  it.each(["Tasks", "Events", "Calls"] as const)(
+    "does not request Notes for unsupported %s parents with cached views",
+    async (module) => {
+      const service = {
+        getModule: vi.fn(async () => ({
+          fields: [{ apiName: "Parent_Id", lookup: { module: "Leads", modules: ["Leads"] } }],
+        })),
+        list: vi.fn(async () => ({ records: [], moreRecords: false })),
+        listViewSummaries: vi.fn(async () => [{ id: "notes-view", isDefault: true }]),
+        listUsers: vi.fn(async () => []),
+      } as unknown as ClientRecordService;
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <ApiProvider orgSlug="test-org" service={service}>
+          {children}
+        </ApiProvider>
+      );
+      const { result, rerender } = renderHook(
+        ({ parent }) => useRecordNoteEvents(parent, "parent-1"),
+        { wrapper, initialProps: { parent: "Leads" as "Leads" | typeof module } },
+      );
+      await waitFor(() => expect(service.list).toHaveBeenCalledTimes(1));
+      rerender({ parent: module });
+      expect(result.current).toEqual([]);
+      expect(service.list).toHaveBeenCalledTimes(1);
+    },
+  );
 });

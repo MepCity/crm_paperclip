@@ -67,3 +67,52 @@ test("renders custom module name and usage counter props", () => {
   expect(screen.getByText("Contacts")).toBeTruthy();
   expect(screen.getByText("Tags used : 12 / 200")).toBeTruthy();
 });
+
+test("lists tags and supports interim create, rename and confirmed deletion", async () => {
+  const tag = {
+    id: "one",
+    module: "Leads",
+    name: "Example",
+    color: null,
+    createdBy: "actor",
+    modifiedBy: "actor",
+    createdAt: "2026-10-17T10:00:00Z",
+    modifiedAt: "2026-10-17T10:00:00Z",
+  };
+  const onSave = vi.fn(async () => true);
+  const onDelete = vi.fn(async () => true);
+  const { user } = setup({ tags: [tag], onSave, onDelete });
+  expect(screen.getByText("Tags used : 1 / 100")).toBeTruthy();
+  expect(screen.getByText("Example")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "New Tag" }));
+  await user.type(screen.getByRole("textbox", { name: "Tag Name" }), "Second");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(onSave).toHaveBeenCalledWith("Second", undefined);
+  await user.click(screen.getByRole("button", { name: "Rename tag Example" }));
+  const input = screen.getByRole("textbox", { name: "Tag Name" });
+  await user.clear(input);
+  await user.type(input, "Renamed");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(onSave).toHaveBeenCalledWith("Renamed", "one");
+  await user.click(screen.getByRole("button", { name: "Delete tag Example" }));
+  expect(onDelete).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  expect(onDelete).toHaveBeenCalledWith("one");
+});
+
+test("hides mutations without management permission and reports load errors", () => {
+  setup({ canManage: false, error: "Permission denied" });
+  expect(screen.queryByRole("button", { name: "New Tag" })).toBeNull();
+  expect(screen.getByRole("alert").textContent).toBe("Permission denied");
+});
+
+test("rejects blank and overlength names; cancellation does not save", async () => {
+  const onSave = vi.fn();
+  const { user } = setup({ onSave });
+  await user.click(screen.getByRole("button", { name: "New Tag" }));
+  expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
+  await user.type(screen.getByRole("textbox", { name: "Tag Name" }), "x".repeat(51));
+  expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(onSave).not.toHaveBeenCalled();
+});
