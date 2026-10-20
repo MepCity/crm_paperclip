@@ -696,6 +696,7 @@ function LoadedRecordForm({
               ? config.currencyPrefix
               : undefined
           }
+          currencyHelp={rules.currencyHelp?.[field.apiName]}
           currencyInformation={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? RECORD_FORM_COPY.currencyInformation
