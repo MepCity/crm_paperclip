@@ -174,3 +174,17 @@ test("sign up can be completed from the keyboard", async ({ page }) => {
   await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
 });
+
+test("production rejects temporary local credentials and keeps email-only sign in", async ({
+  page,
+}) => {
+  await page.goto("/sign-in");
+  await expect(page.getByText("Local development: admin / admin")).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Email" })).toHaveAttribute("type", "email");
+  for (const email of ["admin", "admin@mepcity.local"]) {
+    const response = await page.request.post("/api/auth/sign-in/email", {
+      data: { email, password: "admin" },
+    });
+    expect(response.ok()).toBe(false);
+  }
+});
