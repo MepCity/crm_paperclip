@@ -345,7 +345,7 @@ test.describe("Contacts record detail", () => {
     await expect(businessPhoneRow).toContainText("100-001");
     const businessCallButton = businessPhoneRow.getByRole("button", { name: "Call" });
     await expect(businessCallButton).toBeVisible();
-    await expect(businessCallButton).toHaveAttribute("data-later-module", "M5");
+    await expect(businessCallButton).not.toHaveAttribute("data-later-module", /.+/);
 
     // Details card Contact Information Phone call icon
     const detailsSection = page.locator('[data-detail-section="Contact Information"]');
@@ -353,12 +353,13 @@ test.describe("Contacts record detail", () => {
     await expect(detailsPhoneRow).toContainText("100-001");
     const detailsCallButton = detailsPhoneRow.getByRole("button", { name: "Call" });
     await expect(detailsCallButton).toBeVisible();
-    await expect(detailsCallButton).toHaveAttribute("data-later-module", "M5");
+    await expect(detailsCallButton).not.toHaveAttribute("data-later-module", /.+/);
 
-    // Clicking call button stays inert
-    const beforeUrl = page.url();
-    await detailsCallButton.click({ force: true });
-    expect(page.url()).toBe(beforeUrl);
+    // Clicking the call button opens the Call create form with the contact pre-filled
+    await detailsCallButton.click();
+    await expect(page).toHaveURL(/\/calls\/create/i);
+    await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(/.+/);
+    await expect(page.locator("[data-form-field=What_Id] input")).toHaveValue(/.+/);
 
     ignoreFailedResponses(pageErrors, [400]);
   });
