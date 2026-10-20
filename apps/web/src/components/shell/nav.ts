@@ -57,8 +57,26 @@ export interface NavConfig {
   sections: readonly NavSection[];
 }
 
-/** Reference order of the ungrouped rows; modules not listed follow in registry order. */
-const flatNavOrder: readonly string[] = ["solutions", "cases"];
+/**
+ * Full reference order of the ungrouped rows (cases.md KL-41–KL-51, solutions.md SL-41–SL-51).
+ * A module joins by setting `navigation.group: "flat"` with one of these ids; unlisted ids follow.
+ */
+export const flatNavOrder: readonly string[] = [
+  "price-books",
+  "products",
+  "quotes",
+  "invoices",
+  "sales-orders",
+  "solutions",
+  "social",
+  "forecasts",
+  "purchase-orders",
+  "vendors",
+  "salesinbox",
+  "cases",
+  "my-jobs",
+  "services",
+];
 
 function moduleNavLinks(group: "sales" | "activities" | "flat"): NavLink[] {
   return getModuleScreens()

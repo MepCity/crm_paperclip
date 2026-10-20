@@ -70,3 +70,15 @@ test("tab key moves focus through links in document order", async () => {
   await user.tab();
   expect(document.activeElement).not.toBe(links[0]);
 });
+
+test.each(["solutions", "cases"])("highlights exactly one row on the %s route", (id) => {
+  const link = shellNav.sections[0]?.links?.find((l) => l.id === id);
+  if (!link) {
+    throw new Error(`no ${id} link`);
+  }
+  navigation.path = link.href("acme");
+  render(<Navigation orgSlug="acme" />);
+  const current = screen.getAllByRole("link").filter((a) => a.getAttribute("aria-current"));
+  expect(current).toHaveLength(1);
+  expect(current[0]?.textContent).toBe(link.label);
+});

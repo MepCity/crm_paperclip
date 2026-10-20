@@ -3,6 +3,7 @@ import { Icons } from "@/components/ui/icon";
 import { getModuleScreens } from "@/modules/registry";
 import {
   createRecordsNav,
+  flatNavOrder,
   isNavLinkActive,
   type NavLink,
   navLinkIconClassName,
@@ -119,6 +120,18 @@ describe("shellNav", () => {
       "campaigns",
     ]);
     expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "cases"]);
+  });
+
+  it("lists the full reference order of ungrouped rows with Solutions before Cases", () => {
+    expect(flatNavOrder.indexOf("solutions")).toBeLessThan(flatNavOrder.indexOf("cases"));
+    expect(flatNavOrder.slice(0, 5)).toEqual([
+      "price-books",
+      "products",
+      "quotes",
+      "invoices",
+      "sales-orders",
+    ]);
+    expect(flatNavOrder.slice(-3)).toEqual(["cases", "my-jobs", "services"]);
   });
 
   it("gives every module row its own glyph", () => {
