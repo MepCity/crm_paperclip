@@ -736,8 +736,16 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
 | `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
 | `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
-| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
-| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-column-selector-width` | `117px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-width` | `150px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-height` | `34px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-width` | `218px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-gap` | `19.5px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-strip-height` | `61px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-top` | `37px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-right` | `44px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-bottom` | `78px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-footer-gap` | `17px` | record-detail.md › Existing-capture button measurements › Scroll To Top disc bottom to strip separator | from spec |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
 | `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |

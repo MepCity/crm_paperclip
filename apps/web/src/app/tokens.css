@@ -750,8 +750,17 @@
   --size-record-menu-inset-inline: 5.75px;
   --size-record-menu-text-inset: 10.25px;
   /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
-  --size-record-scroll-top: 36px;
-  --size-record-scroll-offset: 16px;
+  /* record-detail.md > Existing-capture button measurements */
+  --size-record-column-selector-width: 117px;
+  --size-record-page-selector-width: 150px;
+  --size-record-page-selector-height: 34px;
+  --size-record-page-action-width: 218px;
+  --size-record-page-action-gap: 19.5px;
+  --size-record-page-strip-height: 61px;
+  --size-record-scroll-top: 37px;
+  --size-record-scroll-right: 44px;
+  --size-record-scroll-bottom: 78px;
+  --size-record-scroll-footer-gap: 17px;
   --size-record-demo-height: 560px;
   /* record-detail.md: status ribbon and picklist panels. */
   --color-status-current: #eeeffc;
