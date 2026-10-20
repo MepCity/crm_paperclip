@@ -206,26 +206,41 @@ test("Activities lists and record detail do not render copied extra elements", a
   await expectNoFormChrome(page);
 });
 
+// Call layout as measured in research/specs/activities-form.md ("Visual layout —
+// Call form"): boxed fields, right-aligned labels, wide selects, 3 px vertical
+// required bar. Create is measured; Edit is assumed equal (open question).
 async function expectCallFormVisual(page: Page) {
   await expectNoFormChrome(page);
-  // Form column: x=332, width 548, labels left, border only below (as the Task form).
   const row = page.locator('[data-form-field="Call_Type"] [data-record-form-row]');
+  const rowStyle = await row.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const label = el.querySelector("label") as HTMLElement;
+    return {
+      labelAlign: getComputedStyle(label).textAlign,
+      borders: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth],
+    };
+  });
+  // Full perimeter border (not Task's underline) and right-aligned label.
+  expect(rowStyle.labelAlign).toBe("right");
+  expect(rowStyle.borders.every((w) => w !== "0px")).toBe(true);
+  // Call Type select box: x=534.5, width 531 (±2).
   const rect = await box(row);
-  near(rect.x, 332);
-  near(rect.width, 548);
-  expect(await row.locator("label").evaluate((el) => getComputedStyle(el).textAlign)).toBe("left");
-  // Required marker: 25 × 2 px segment under the Call Type label.
-  const marker = await page
-    .locator('[data-form-field="Call_Type"] [data-record-form-row]')
-    .evaluate((el) => {
-      const s = getComputedStyle(el, "::after");
-      return { width: s.width, height: s.height };
-    });
-  expect(marker).toEqual({ width: "25px", height: "2px" });
+  near(rect.x, 534.5);
+  near(rect.width, 531);
+  // Required bar: 3 px wide vertical segment.
+  const bar = await row.evaluate((el) => {
+    const s = getComputedStyle(el, "::before");
+    return { width: s.width, height: s.height };
+  });
+  expect(bar.width).toBe("3px");
   await expect(page.getByRole("heading", { name: "Call Information", exact: true })).toBeVisible();
-  // Toggles carry no text beside them; Repeat is not part of the Call form.
+  await expect(
+    page.getByRole("heading", { name: "Purpose Of Outgoing Call", exact: true }),
+  ).toBeVisible();
+  // No Repeat field; Reminder is a dropdown, not a toggle.
   await expect(page.getByRole("switch", { name: "Repeat" })).toHaveCount(0);
-  // The Related To lookup shows its magnifier.
+  await expect(page.getByRole("switch", { name: "Reminder" })).toHaveCount(0);
+  // Related To lookup shows its magnifier.
   await expect(page.locator('[data-form-field="What_Id"] svg').first()).toBeVisible();
 }
 
@@ -238,13 +253,18 @@ async function openCallCreate(page: Page) {
   return org;
 }
 
+// The implemented Call form still uses the Task layout (underlined, left labels,
+// x=332); these stay expected-fail until a follow-up reworks the form (see the
+// parity-checklist Open row). Remove test.fail() once the form is fixed.
 test("Create Call matches the measured layout", async ({ page }) => {
+  test.fail(true, "Call form uses the Task layout; spec measures boxed fields");
   await openCallCreate(page);
   await expectCallFormVisual(page);
   await saveVisualScreenshot(page, "our-call-create.png");
 });
 
 test("Call Edit keeps the Create layout", async ({ page }) => {
+  test.fail(true, "Call form uses the Task layout; spec measures boxed fields");
   const org = await openCallCreate(page);
   await page.goto(moduleRecordEditPath(org.slug, "Calls", "150000000000000001"));
   await expect(page.getByRole("heading", { name: "Edit Call" })).toBeVisible();
