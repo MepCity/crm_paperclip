@@ -30,7 +30,7 @@ test("list config names the link column, labels and Actions rows for Solutions",
   expect(rows).not.toContain("Approve Solutions");
 
   const exportItem = solutionsListPageConfig.inventory?.actions.find((a) => a.id === "export");
-  expect(exportItem?.laterModule).toBe("M6");
+  expect(exportItem?.laterModule).toBeUndefined();
   const clientScript = solutionsListPageConfig.inventory?.actions.find(
     (a) => a.id === "client-script",
   );

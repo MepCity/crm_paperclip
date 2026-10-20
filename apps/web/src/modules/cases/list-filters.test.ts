@@ -72,11 +72,11 @@ test("Cases field rows follow KL-24 - KL-31 then DOM-only catalogue, then alphab
   expect(items.find((i) => i.id === "Tag")?.editor?.fieldType).toBe("tag");
   expect(items.find((i) => i.id === "Status")?.editor?.fieldType).toBe("picklist");
 
-  // Product Name has laterModule="P2" and no text-match editor
+  // Product Name is a Products (P2) lookup: it filters by text match
   const productItem = items.find((i) => i.id === "Product_Name");
-  expect(productItem?.laterModule).toBe("P2");
-  expect(productItem?.editor).toBeUndefined();
-  expect(productItem?.disabled).toBe(true);
+  expect(productItem?.laterModule).toBeUndefined();
+  expect(productItem?.editor?.fieldType).toBe("lookup");
+  expect(productItem?.disabled).toBeUndefined();
 });
 
 test("Cases Filter By Related Modules has Calls, Emails, Meetings, Notes, Tasks with laterModule", () => {

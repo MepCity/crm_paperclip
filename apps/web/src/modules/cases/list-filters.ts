@@ -44,9 +44,7 @@ const initialFieldLabels = [
   "Type",
 ];
 
-const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {
-  "Product Name": "P2",
-};
+const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {};
 
 const relatedModuleRows: readonly [string, ModuleKey][] = [
   ["Calls", "M5"],
@@ -57,14 +55,13 @@ const relatedModuleRows: readonly [string, ModuleKey][] = [
 ];
 
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
-  if (field.apiName === "Product_Name") {
-    // Unregistered target Products (P2): no text-match editor, drawn with laterModule="P2"
-    return undefined;
-  }
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
-  if (!special && !(field.dataType in filterOperators)) return undefined;
-  const fieldType = special ?? (field.dataType as FilterFieldType);
+  if (!special && field.dataType !== "autonumber" && !(field.dataType in filterOperators))
+    return undefined;
+  // Product Name targets Products (P2, unregistered): lookups match by text; autonumbers match as text.
+  const fieldType =
+    special ?? (field.dataType === "autonumber" ? "text" : (field.dataType as FilterFieldType));
   return {
     fieldType,
     ...(fieldType === "picklist"
