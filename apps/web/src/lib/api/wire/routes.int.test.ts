@@ -151,6 +151,36 @@ describe("operation routes", () => {
     a = await createTestOrganization();
     b = await createTestOrganization();
   });
+  it.each([operations.bulk, operations.count, operations.summarize])(
+    "validates system filters through authenticated $path",
+    async (op) => {
+      const query = { group_by: "Lead_Status" };
+      for (const system_filters of [
+        { unknown: {} },
+        { locked: { locked: "true" } },
+        {
+          touched: {
+            actor_ids: ["foreign-user"],
+            period: { from: "2026-10-01T00:00:00Z", to: "2026-10-02T00:00:00Z" },
+          },
+        },
+        { record_action: { action: "created", period: { from: "invalid", to: "invalid" } } },
+      ]) {
+        const response = await call(op, a, { query, body: { system_filters } });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          code: "INVALID_DATA",
+          details: { fields: expect.any(Object) },
+        });
+      }
+      const response = await call(op, a, {
+        query,
+        body: { system_filters: { locked: { locked: false } } },
+      });
+      expect([200, 204]).toContain(response.status);
+    },
+  );
+
   it("preserves requested activity summaries and validates filters on authenticated routes", async () => {
     const service = getRecordService(a.ctx);
     const lead = await service.create("Leads", {

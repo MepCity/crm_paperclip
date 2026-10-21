@@ -18,6 +18,7 @@ import type {
   RelatedListControlDefinition,
   RelatedListDefinition,
 } from "@/modules/types";
+import { ACTIVITY_PARENT_MODULES } from "./record-call-context";
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
   context?: RelatedListBodyContext;
@@ -100,7 +101,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       id === "open-activities" &&
       context?.record &&
       context.module &&
-      ["Leads", "Contacts", "Accounts", "Deals"].includes(context.module)
+      ACTIVITY_PARENT_MODULES.includes(context.module)
     ) {
       return (
         <ActivityAddNew

@@ -62,7 +62,15 @@ describe("Attachments record contract", () => {
       attachmentsMetadata.fields.find((field) => field.apiName === "Parent_Id")?.lookup?.modules,
     ).toBe(ATTACHMENT_PARENT_MODULES);
     expect(attachmentParentModules).not.toContain("Calls");
-    expect(ATTACHMENT_CARD_MODULES).toEqual(["Leads", "Contacts", "Accounts", "Deals"]);
+    expect(ATTACHMENT_CARD_MODULES).toEqual([
+      "Leads",
+      "Contacts",
+      "Accounts",
+      "Deals",
+      "Campaigns",
+      "Cases",
+      "Solutions",
+    ]);
     expect(attachmentParentModules).toEqual(
       expect.arrayContaining(["Tasks", "Events", "Campaigns", "Cases", "Solutions"]),
     );
