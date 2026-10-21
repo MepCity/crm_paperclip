@@ -1,8 +1,10 @@
 # Email on record detail — partial research
 
-Status: partial; Contact address received and click-free base captured. Research
-stopped on a new Contact pageerror; MEP-1023 owns offline safe-continuation
-review. MEP-1020/1021 resolved only the earlier Lead stop. The existing Lead
+Status: partial; Contact base and the single authorized retry both failed the
+diagnostic gate. MEP-1023 authorized that retry; it is now exhausted. CTO
+decision interaction `55016c58-04b1-4b96-accf-987d39cbfa1f` is pending.
+No further capture or click is authorized by this partial spec.
+MEP-1020/1021 resolved only the earlier Lead stop. The existing Lead
 retry remains accepted; no new Lead capture is authorized or needed.
 Issue: MEP-1012 / M10-R3. Research date: 2026-10-21.
 
@@ -303,12 +305,20 @@ undefined (reading 'setMethods')` pageerror. The new message is absent from
 the accepted Lead retry and its named earlier baseline. Historical accepted
 Contact meta files (`m2d-detail-main`, `m2d2-card-cases`,
 `m2d2-detail-timeline`) omit diagnostics entirely; that omission does not prove
-the new message was present or absent. No failed JavaScript GET is recorded.
+the new message was present or absent. Platform Lead identified a diagnostics-aware
+accepted Contact capture, `m7-campaign-links-contact-detail` (87 API entries),
+with `sortable`, `XMLHttpRequest` and `path` pageerrors. Existing local meta
+was checked; `setMethods` is not among those baseline messages. No failed JavaScript GET is recorded.
 77 API entries exceed half of the earlier Contact detail's 80; 530 raw controls
 exceed 50 and the rendered record has account links. These facts do not waive
 the diagnostic failure. MEP-1020's continuation condition requires DUR for a
-new pageerror. No five-minute retry or click is attempted; MEP-1023 asks
-Platform Lead to determine the safe continuation from existing files only.
+new pageerror. The initial DUR made no retry or click. MEP-1023 then concluded that this
+first Contact probe retains its own one-retry allowance under rule 10; no plan
+change or CTO exception is needed. The retry must use the same record, no clicks,
+`--wait 25000`, at least five minutes after first meta. It is allowed only the
+three sent path/count bounds and seven blocked paths listed below. Its API
+threshold is 44, with only the named Contact baseline errors allowed. A new
+error or request deviation stops again; no third Contact capture is permitted.
 
 Shared shell and header rows ER-01–ER-36 apply, with the Contact module active
 and Back belonging to M2. Raw ordinal mappings are unchanged for those rows;
@@ -474,8 +484,130 @@ Seven tool-blocked entries, each occurring once: `/crm/<org>/ActivityReminder.do
 `/murphy/<id>/ingest/infoLogs`. None reached the reference CRM; none was
 retried. No user action, manual request replay, mail-service call or successful
 record mutation is observed. This first Contact capture defines the module's
-path/count set; no subsequent capture exists to compare against it. The stop
-is the new diagnostic, not an alleged new Contact request versus Lead paths.
+path/count set. The single authorized retry below preserves that entire set.
+The stop is the new diagnostic, not an alleged new Contact request versus Lead paths.
+
+### Contact single retry delta — m10r3-contact-detail-retry-base (failed gate)
+
+This existing capture was made at 2026-10-21 20:15:05 UTC, after the first
+Contact meta at 20:09:19 UTC: more than five minutes apart, the same
+board-selected record, `--wait 25000`, zero clicks. No new reference access
+was made for this offline reconciliation. The full retry screenshot was
+inspected: Send Email, Emails rail entry and Overview/Timeline remain visible;
+Overview is selected. Emails/Drafts contents and timeline email rows remain
+outside the evidence. No message was opened.
+
+| # / inherited row | Retry difference | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- |
+| RC-06 | Organize Contacts Details control absent; heading remains | seen (m10r3-contact-detail-retry-base) | M11 | D-09 |
+| RC-26 | Attachments plus absent; shaded rail selection absent | seen (m10r3-contact-detail-retry-base) | M6 | new |
+| Other ER/RC rows | Same resting controls; no activation verified | seen (m10r3-contact-detail-retry-base) | Shared / M2 / M10 | inherited mappings above |
+
+`setMethods` and `sortable` are absent from the retry's pageerrors. The retry
+contains `XMLHttpRequest` and the new `Cannot read properties of undefined
+(reading '_sortableParentData')`. The latter is absent from the accepted
+Contact baseline `m7-campaign-links-contact-detail`. No failed JavaScript GET
+is recorded. Controls **537** and API entries **77** pass the numeric
+thresholds, but do not waive this new diagnostic. The gate fails again;
+there is no third capture or click. R3 remains incomplete pending the CTO
+interaction above; no plan exception or inherited-evidence closure is assumed.
+
+All three sent POST paths, counts and statuses match the Contact base exactly.
+All seven blocked paths also match, each once; order alone differs. These
+blocked requests were generated by the authorized page load and refused by
+the tool; none was manually replayed. No sent count increase, new non-GET path
+or successful user record mutation is observed.
+
+Retry inventory: **80** structural rows (36 shared plus 44 Contact rows,
+including one screenshot-only icon), **133** mapped raw entries, **404**
+excluded. Offscreen action-wrapper differences and a zero-area modal remain
+excluded; DOM existence does not establish painted email contents. The table
+below maps every retained row; the final complement accounts for all remaining
+raw ordinals exactly once. Ordinals are evidence references, never selectors.
+
+| Inventory / exclusion | Retry controls.json ordinals |
+| --- | --- |
+| ER-01 | 2, 3, 4 |
+| ER-02 | 11 |
+| ER-03 | 12, 14 |
+| ER-04 | 15, 17 |
+| ER-05 | 18, 20 |
+| ER-06 | 21, 23 |
+| ER-07 | 24, 26 |
+| ER-08 | 27, 29 |
+| ER-09 | 30, 31, 32 |
+| ER-10 | 34 |
+| ER-11 | 35, 36 |
+| ER-12 | 37 |
+| ER-13 | 39, 40 |
+| ER-14 | 41, 42 |
+| ER-15 | 43, 44 |
+| ER-16 | 45, 46 |
+| ER-17 | 47, 48 |
+| ER-18 | 49, 50 |
+| ER-19 | 51 |
+| ER-20 | 53, 54 |
+| ER-21 | 55, 56 |
+| ER-22 | 57, 58 |
+| ER-23 | 59 |
+| ER-24 | 61, 62 |
+| ER-25 | 64, 65 |
+| ER-26 | 86 |
+| ER-27 | 87 |
+| ER-28 | 89 |
+| ER-29 | 90 |
+| ER-30 | 91 |
+| ER-31 | 94 |
+| ER-32 | 97 |
+| ER-33 | 100, 101 |
+| ER-34 | 104, 105, 106, 107 |
+| ER-35 | 109, 110 |
+| ER-36 | 112, 113 |
+| RC-01 | 115, 116, 117 |
+| RC-02 | 119 |
+| RC-03 | 121, 122 |
+| RC-04 | 123, 124 |
+| RC-05 | 125, 126 |
+| RC-07 | 129, 130 |
+| RC-08 | 132, 133 |
+| RC-09 | 135, 136 |
+| RC-10 | 138, 139 |
+| RC-11 | 141, 142 |
+| RC-12 | 144, 145 |
+| RC-13 | 147, 148 |
+| RC-14 | 150, 151 |
+| RC-15 | 153, 154 |
+| RC-16 | 156, 157 |
+| RC-17 | 159, 160 |
+| RC-18 | 162, 163 |
+| RC-19 | 165, 166 |
+| RC-20 | 168, 169 |
+| RC-21 | 171, 172 |
+| RC-22 | 174, 175 |
+| RC-23 | 177, 178 |
+| RC-24 | 180, 181 |
+| RC-25 | 183, 184 |
+| RC-27 | 186 |
+| RC-28 | 188 |
+| RC-29 | 190 |
+| RC-30 | 191 |
+| RC-31 | 508 |
+| RC-32 | 226, 227 |
+| RC-33 | 240, 241 |
+| RC-34 | 509 |
+| RC-35 | 497 |
+| RC-36 | 498 |
+| RC-37 | 499 |
+| RC-38 | 500 |
+| RC-39 | 501 |
+| RC-40 | 502 |
+| RC-41 | 503 |
+| RC-42 | 504 |
+| RC-43 | 505 |
+| RC-44 | 506 |
+| RC-45 | 507 |
+| RC-46 | screenshot only |
+| Excluded: offscreen, hidden, zero-area, structural wrapper or plain field content | 1, 5, 6, 7, 8, 9, 10, 13, 16, 19, 22, 25, 28, 33, 38, 52, 60, 63, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 88, 92, 93, 95, 96, 98, 99, 102, 103, 108, 111, 114, 118, 120, 127, 128, 131, 134, 137, 140, 143, 146, 149, 152, 155, 158, 161, 164, 167, 170, 173, 176, 179, 182, 185, 187, 189, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537 |
 
 ### Offline click-candidate review (no proposed or executed clicks)
 
@@ -644,9 +776,11 @@ sandbox, night test or reference write is authorized by this spec.
 5. Which email events appear in Timeline, with what grouping, ordering and
    permission rules? No message was opened or created to obtain an example.
 
-6. New Contact diagnostic: Platform Lead reviews MEP-1023 offline and determines
-   whether any plan-compliant continuation exists. No retry/click before that
-   decision. R3 is incomplete and R4 stays gated.
+6. MEP-1023 resolved the first Contact stop by authorizing one retry. That
+   retry failed on new `_sortableParentData`; no third capture/click. CTO
+   interaction `55016c58-04b1-4b96-accf-987d39cbfa1f` awaits a decision on
+   safe closure boundaries or a separately approved plan/tooling change.
+   Questions 3–5 remain open; R3 is incomplete and R4 stays gated.
 
 ## Capture refs
 
@@ -663,7 +797,12 @@ sandbox, night test or reference write is authorized by this spec.
   only; diagnostics absent, no new reference access.
 - `m10r3-contact-detail-base`: click-free, `--wait 25000`, 2026-10-21
   20:09:19 UTC; 530 controls / 77 API entries; provisional Contact delta,
-  gate fails on new setMethods pageerror. No retry or click.
+  gate fails on new setMethods pageerror. The one authorized retry follows.
+- `m10r3-contact-detail-retry-base`: existing click-free retry, `--wait 25000`,
+  2026-10-21 20:15:05 UTC; 537 controls / 77 API entries; gate fails on new
+  `_sortableParentData`. No third capture or click.
+- `m7-campaign-links-contact-detail`: existing diagnostics-aware Contact
+  baseline, 87 API entries, sortable/XMLHttpRequest/path errors; offline only.
 
 ## Verification
 
@@ -675,6 +814,8 @@ changed; application tests and biome/typecheck are unnecessary for this task.
 completed UI Lead handoff. Each Lead capture reconciles 462 raw controls to
 86 structural rows (132 raw entries mapped), with 330 excluded raw entries.
 Contact reconciles 530 raw controls to 82 structural rows (135 raw entries
-mapped), with 395 excluded; its diagnostic gate is not accepted.
+mapped), with 395 excluded. Contact retry reconciles 537 raw controls to
+80 structural rows (133 raw entries mapped), with 404 excluded. Neither
+Contact diagnostic gate is accepted.
 No implementation/CI parity claim is made. The main merge includes unrelated
 checklist updates; this issue authors no checklist edit.
