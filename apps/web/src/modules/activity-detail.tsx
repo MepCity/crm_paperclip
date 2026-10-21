@@ -94,7 +94,9 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
       const field = fieldsByName.get(apiName);
       const value = row.fields[apiName];
       if (!field || value === undefined) return null;
-      const formatted = formatFieldValue(field, value, {}, DEFAULT_FORMAT);
+      const formatted = formatFieldValue(field, value, {}, DEFAULT_FORMAT, {
+        numericDates: true,
+      });
       return formatted.kind === "text" || formatted.kind === "multiline" ? formatted.text : null;
     };
     return (dealList.data?.records ?? []).map((row) => ({
@@ -112,8 +114,17 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
     personRef?.id ?? "",
     (module, id) => moduleRecordPath(orgSlug, tabOf(module), id),
   );
-  const countOf = (kind: "task" | "meeting" | "call") =>
-    activities.open.find((category) => category.kind === kind)?.count ?? 0;
+  const groupOf = (kind: "task" | "meeting" | "call") => {
+    const category = activities.open.find((c) => c.kind === kind);
+    return {
+      count: category?.count ?? 0,
+      items: (category?.rows ?? []).map((row) => ({
+        id: row.id,
+        label: row.subject,
+        path: row.href,
+      })),
+    };
+  };
   return (
     <ActivityRelationPanel
       persons={persons}
@@ -121,9 +132,9 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
       onSelectPerson={setSelected}
       deals={deals}
       openActivities={{
-        tasks: { count: countOf("task") },
-        meetings: { count: countOf("meeting") },
-        calls: { count: countOf("call") },
+        tasks: groupOf("task"),
+        meetings: groupOf("meeting"),
+        calls: groupOf("call"),
       }}
       contactRecordPath={(id) =>
         moduleRecordPath(orgSlug, tabOf(personRef?.module ?? "Contacts"), id)

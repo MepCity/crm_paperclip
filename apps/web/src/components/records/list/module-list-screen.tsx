@@ -11,8 +11,9 @@ import type {
   ModuleMetadata,
   RecordData,
   SortSpec,
+  SystemFiltersValue,
 } from "@crm/core/records";
-import { TRANSFER_MODULES } from "@crm/core/transfer/types";
+import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
@@ -39,6 +40,7 @@ import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { SelectionBar } from "./selection-bar";
+import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
 import {
   useDeleteRecords,
@@ -245,6 +247,10 @@ function ModuleListScreenLoaded({
   const [appliedCampaignFilter, setAppliedCampaignFilter] = useState<CampaignFilterValue | null>(
     null,
   );
+  const [appliedSystemFilters, setAppliedSystemFilters] = useState<SystemFiltersValue | null>(null);
+  const [appliedSystemDrafts, setAppliedSystemDrafts] = useState<Record<string, SystemFilterDraft>>(
+    {},
+  );
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
@@ -288,6 +294,8 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
     setAppliedCampaignFilter(null);
+    setAppliedSystemFilters(null);
+    setAppliedSystemDrafts({});
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -313,11 +321,13 @@ function ModuleListScreenLoaded({
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
+      ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
       ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
     appliedCampaignFilter,
+    appliedSystemFilters,
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
@@ -333,8 +343,9 @@ function ModuleListScreenLoaded({
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
+      ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
     }),
-    [appliedActivityFilter, appliedCampaignFilter, listCriteria, viewId],
+    [appliedActivityFilter, appliedCampaignFilter, appliedSystemFilters, listCriteria, viewId],
   );
 
   const list = useRecordList(
@@ -380,7 +391,8 @@ function ModuleListScreenLoaded({
     const messages =
       error.fieldErrors.filters ??
       error.fieldErrors.activityFilter ??
-      error.fieldErrors.campaignFilter;
+      error.fieldErrors.campaignFilter ??
+      Object.entries(error.fieldErrors).find(([key]) => key.startsWith("systemFilters."))?.[1];
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
 
@@ -517,6 +529,8 @@ function ModuleListScreenLoaded({
     applied: AppliedFilter[],
     activityFilter?: ActivityFilterValue | null,
     campaignFilter?: CampaignFilterValue | null,
+    systemFilters?: SystemFiltersValue | null,
+    systemDrafts?: Record<string, SystemFilterDraft>,
   ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
@@ -529,6 +543,8 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setAppliedActivityFilter(activityFilter ?? null);
     setAppliedCampaignFilter(campaignFilter ?? null);
+    setAppliedSystemFilters(systemFilters ?? null);
+    setAppliedSystemDrafts(systemDrafts ?? {});
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -540,6 +556,8 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
     setAppliedCampaignFilter(null);
+    setAppliedSystemFilters(null);
+    setAppliedSystemDrafts({});
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -553,7 +571,8 @@ function ModuleListScreenLoaded({
       next.length === 0 &&
       (appliedCriteria !== undefined ||
         appliedActivityFilter !== null ||
-        appliedCampaignFilter !== null)
+        appliedCampaignFilter !== null ||
+        appliedSystemFilters !== null)
     ) {
       clearPanelFilters();
     }
@@ -563,7 +582,8 @@ function ModuleListScreenLoaded({
     if (
       appliedCriteria === undefined &&
       appliedActivityFilter === null &&
-      appliedCampaignFilter === null
+      appliedCampaignFilter === null &&
+      appliedSystemFilters === null
     ) {
       clearPanelFilters();
     }
@@ -732,7 +752,8 @@ function ModuleListScreenLoaded({
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
-  const createItems: readonly MenuAction[] | undefined = transferModule
+  const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
+  const createItems: readonly MenuAction[] | undefined = importEnabled
     ? [
         {
           id: "import",
@@ -822,6 +843,7 @@ function ModuleListScreenLoaded({
           onFilterChange={(open) => {
             const activeIds = appliedFilters.map((filter) => filter.itemId);
             if (appliedActivityFilter) activeIds.push("Activities");
+            activeIds.push(...Object.keys(appliedSystemDrafts));
             setFilterSelection(activeIds);
             setFilterOpen(open);
           }}
@@ -853,7 +875,7 @@ function ModuleListScreenLoaded({
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
-            moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
+            moreLaterModule: config.inventory && !importEnabled ? "M6" : undefined,
           }}
         />
       )}
@@ -949,6 +971,8 @@ function ModuleListScreenLoaded({
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
             initialCampaignFilter={appliedCampaignFilter}
+            initialSystemDrafts={appliedSystemDrafts}
+            userOptions={users.data?.map((user) => ({ id: user.userId, label: user.name }))}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}

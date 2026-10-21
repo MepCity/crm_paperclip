@@ -190,6 +190,8 @@ export interface ModuleScreenDefinition {
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
+    /** Inventory footer sits on the bottom edge of the form view. */
+    inventoryFooterPinned?: boolean;
     /** Edit-route `intent` query values a record action opens the form with. */
     editIntents?: Readonly<
       Record<string, { set?: Readonly<Record<string, FieldValue>>; focus?: string }>

@@ -1,3 +1,4 @@
+import { isDevLoginEnabled } from "@crm/core";
 import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { Link } from "@/components/ui/link";
@@ -15,7 +16,10 @@ export default async function SignInPage({
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold text-text">Sign in</h2>
-      <SignInForm next={next} />
+      <SignInForm next={next} devLogin={isDevLoginEnabled(process.env)} />
+      {isDevLoginEnabled(process.env) && (
+        <p className="text-sm text-text-muted">Local development: admin / admin</p>
+      )}
       <p className="text-sm text-text-muted">
         No account yet?{" "}
         <Link href={hrefWithNext("/sign-up", next)} className="underline">

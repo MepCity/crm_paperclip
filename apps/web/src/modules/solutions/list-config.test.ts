@@ -29,8 +29,10 @@ test("list config names the link column, labels and Actions rows for Solutions",
   expect(rows).not.toContain("Mass Email");
   expect(rows).not.toContain("Approve Solutions");
 
+  const manageTags = solutionsListPageConfig.inventory?.actions.find((a) => a.id === "tags");
+  expect(manageTags?.laterModule).toBeUndefined();
   const exportItem = solutionsListPageConfig.inventory?.actions.find((a) => a.id === "export");
-  expect(exportItem?.laterModule).toBe("M6");
+  expect(exportItem).toEqual({ id: "export", label: "Export Solutions" });
   const clientScript = solutionsListPageConfig.inventory?.actions.find(
     (a) => a.id === "client-script",
   );
