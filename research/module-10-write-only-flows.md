@@ -174,6 +174,39 @@ Open questions
 2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
 
+## R6 calendar settings prerequisite and write gaps
+
+R6 (MEP-1015), click-free capture `m10r6-booking-base`, observed an internal
+booking-administration prerequisite: organization business hours are not
+configured. The dialog offers Configure Business Hours and Cancel; neither was
+clicked. The public booking page was never opened. Both the base and the single
+permitted retry failed the strict paint gate. The retry also increased refused
+telemetry POST count from 1 to 2, invoking the stop rule. CEO decision MEP-1043
+closed the blocker with documentation-only completion and explicit access gaps;
+no further R6 capture or configuration is authorized. See [calendar-settings.md](specs/calendar-settings.md).
+
+- W10: provider connection, synchronization direction and conflict/deletion
+  rules remain unknown. No connection or sync was initiated.
+- Working-hours configuration is a persisted organization setting. Do not
+  configure it to reveal the booking list. The hours editor, validation and
+  post-save state remain unobserved.
+- Calendar-wide default reminder changes and meeting-provider setup persist
+  preferences or connections. No values were changed; Events reminder fields
+  do not establish calendar-wide defaults.
+- Booking-page create/edit/publish and public reservation submission are writes.
+  None was attempted. The internal list is obscured by the prerequisite; its
+  columns and empty/error states remain unknown.
+- R6 documentation completion: calendar-settings.md records dated D1–D5 public
+  source locators, offline navigation audit and documented/not-observed rows.
+  Personal hours, organization business hours, reminders, booking categories and
+  CalDAV capabilities are documented. Provider options, full list structure,
+  defaults and exact error states remain access gaps.
+- Implementation uses the observed prerequisite plus documented behaviour and
+  existing Module 1–9 components, per MEP-1043. The Module 10 gate summary must
+  list the remaining gaps from calendar-settings.md. Documentation does not
+  authorize changing hours, reminders, activation, connections or synchronization.
+  No separate follow-up issue or additional live R6 probe is required.
+
 ## 9. R7 template list observation limits (MEP-1017)
 
 The click-free templates list capture shows New Template, a template-name link,
