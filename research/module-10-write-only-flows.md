@@ -173,3 +173,27 @@ Open questions
 1. Help page paths for W1, W3-W10, W12, W14, W15, W18 are still not resolved; the W1 attachment and W15 quota figures were not re-verified on the pages themselves.
 2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
+
+## 9. R5 settings observation and write-only follow-up
+
+R5 (MEP-1014), 2026-10-22: a click-free email-settings entry shows the
+Compose Settings form, but the base and single five-minute retry both fail the paint gate. CEO
+decision MEP-1051 owns the next step. See
+[email-settings.md](specs/email-settings.md). No field, toggle or tab was clicked.
+This is no evidence of successful settings loading, signature absence or a
+particular mailbox connection state.
+
+| Flow | Resting evidence | Still unobserved; never test in the reference CRM |
+| --- | --- | --- |
+| Compose preferences | Font-family/font-size and sender/reply-to closed selectors; sample preview | Save timing, option lists, validation, cross-editor persistence, success/error feedback |
+| Signature management | Add New Signature entry; signature model-processing error | Create/edit/delete, editor, association to sender, insertion defaults and resulting preview |
+| Mailbox configuration (W7/W8) | Email subtab link only | Connect, disconnect, reconfigure, authorization, sync and connection results |
+| Tracking (W12) and sharing (W19) | Email Intelligence and Email Sharing navigation labels only | Tracking switches, consent, saved sharing and downstream effects |
+| Inbound/outbound processing and forwarding | Email Parser / BCC Dropbox navigation labels only | Rule creation, forwarding targets, disclaimers, automatic processing and notifications |
+| Deliverability / unsubscribe (W14/W15) | Email Deliverability / Unsubscribe Link navigation labels only | Saved configuration, verification, limits, unsubscribe generation and recipient effects |
+
+Use public documentation for these write behaviours and record its limits;
+this entry makes no new documentation verdict. A runtime failure is not a
+reason to connect a mailbox, change preferences, retry a blocked write or
+open an editor. Remaining read-only research requires a paint-gate decision
+before another capture series.
