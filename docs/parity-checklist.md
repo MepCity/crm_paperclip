@@ -907,11 +907,9 @@ list/form/detail routes, 105 visible M8-and-later controls were clicked with
 no navigation, dialog or menu change. QA 1/2 reported 63 passing e2e tests
 on its earlier main snapshot.
 
-**Gate result:** the module is implemented and its direct list/form/detail
-routes work, but the parent-detail creation flow and the Meeting form
-container still diverge visibly from the reference. The gate is not clear
-for approval until the CTO reviews the findings below. No reference record
-was changed during this QA; only saved captures were inspected.
+**Gate result:** the module is implemented; the closing-QA gaps were fixed
+and merged into `main`. The gate is ready for board review. No reference
+record was changed during this QA; only saved captures were inspected.
 
 **Provisional rules and open questions (not defects):**
 
@@ -926,24 +924,29 @@ was changed during this QA; only saved captures were inspected.
   detail remain under the MEP-517 observation limit. Deal Summary currency
   and amount format remains an open question from QA 1/2. Reference Call
   Edit layout and save effects were not safely observable.
+- Code-review MEP-941 finding 4 — deleting one of two parents removes the
+  activity (cascade kept per `activities-flows.md`).
 
 **Out of scope for this gate:** reference-side writes, imports/exports and
 Notes/Attachments/CSV workflows, email/calendar/invitations, and hover-only
 behaviour without a saved capture. Drawn M8-and-later controls are expected
 to stay inert.
 
-**Known gaps for CTO disposition:**
+**Closing-QA fixes (merged):**
 
-1. MEP-947 covers Meetings/Calls detail dates; Tasks detail Due Date still
-   uses an English month name instead of `dd.MM.yyyy`.
-2. Open Activities “Add New” is disabled with an M5 marker on parent record
-   detail, blocking new Task/Meeting/Call creation from that parent. Contact
-   Phone “Call” actions also retain inert M5 markers.
-3. Meeting Information opens too low in the viewport; Add more details leaves
-   the modal for a full page, whereas the captured reference keeps the modal
-   and scrolls its body to lower fields.
-4. Fixed in MEP-952: Call Create offers “Save and Create Follow-up Task”
-   (provisional interim rule) and Call Start Time uses `DD.MM.YYYY`.
+- MEP-947 — Meetings, Calls and Tasks record detail dates use the list format
+  `dd.MM.yyyy` (closing-QA gap 1).
+- MEP-950 — parent Open Activities “Add New” and Contact phone “Call” work
+  (closing-QA gap 2).
+- MEP-951 — Meeting Information modal position is corrected and “Add more
+  details” stays inside the modal (closing-QA gap 3).
+- MEP-952 — Call Create offers “Save and Create Follow-up Task” (provisional
+  interim rule) and Call Start Time uses `DD.MM.YYYY` (closing-QA gap 4).
+- MEP-948 — Call detail More → Edit opens Edit (code review MEP-941).
+- MEP-971 — Calls form Missed + Completed duration rule is aligned with the
+  service (code review MEP-942).
+- MEP-972 — parent activity cards load all pages, with corrected panel rows
+  and open/closed time boundary (code review MEP-942).
 
 ## Module 6 — CSV import and export
 
