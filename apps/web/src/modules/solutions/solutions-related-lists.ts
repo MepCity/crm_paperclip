@@ -1,3 +1,4 @@
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import type { RelatedListDefinition, RelatedListRailChromeDefinition } from "../types";
 
@@ -35,11 +36,12 @@ export const solutionsRelatedLists: readonly RelatedListDefinition[] = [
   },
   {
     id: "attachments",
+    renderCard: attachmentsCard("Solutions"),
     title: "Attachments",
-    moduleKey: "M6",
+    moduleKey: "M8",
     order: 3,
     targetId: "related-list-attachments",
-    upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+    upperControls: [{ id: "attach", label: "Attach", type: "split-button" }],
     emptyStateText: "No Attachment",
   },
 ];
