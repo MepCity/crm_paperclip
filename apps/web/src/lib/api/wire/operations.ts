@@ -4,6 +4,7 @@ import {
   decodeCampaignFilter,
   decodeCriteria,
   decodeInput,
+  decodeRelatedModules,
   decodeSystemFilters,
   encodeActivitySummaries,
   encodeCurrency,
@@ -80,6 +81,7 @@ async function restrictions(
     | "activityFilter"
     | "campaignFilter"
     | "systemFilters"
+    | "relatedModules"
     | "includeActivitySummary"
   >
 > {
@@ -98,6 +100,9 @@ async function restrictions(
     ...(body.system_filters === undefined
       ? {}
       : { systemFilters: decodeSystemFilters(body.system_filters) }),
+    ...(body.related_modules === undefined
+      ? {}
+      : { relatedModules: decodeRelatedModules(body.related_modules) }),
     ...(body.campaign_filter === undefined
       ? {}
       : { campaignFilter: decodeCampaignFilter(body.campaign_filter) }),

@@ -29,10 +29,16 @@ import type {
   RecordData,
   RecordInput,
   RecordService,
+  RelatedModuleFilter,
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
 import type { RecycleBinService } from "../recycle-bin";
+import {
+  relatedFilterModules,
+  relatedFilterParentModules,
+  validateRelatedModules,
+} from "../related-module-filters";
 import { roundMoneyTwoDecimals } from "../rounding";
 import { matchesSystemFilters, validateSystemFilters } from "../system-filters";
 import type { TagService } from "../tags";
@@ -379,11 +385,53 @@ export function createFixtureRecordService(
     }
     return result;
   };
+  /** Builds a per-parent predicate for `relatedModules` conditions (EXISTS / NOT EXISTS). */
+  const relatedModuleMatcher = async (module: string, rows: readonly RelatedModuleFilter[]) => {
+    validateRelatedModules(rows);
+    if (!relatedFilterParentModules.has(module))
+      throw new ValidationError({ relatedModules: ["Choose a parent record module."] });
+    const now = clock();
+    const runtimeCtx = { userId: ctx.userId, now };
+    const linked = rows.map((row) => {
+      const target = relatedFilterModules[row.module];
+      if (!Object.hasOwn(fixtureModules, target.module))
+        throw new ValidationError({ relatedModules: ["Choose a valid related module."] });
+      const childFields = new Map(
+        bundleFor(target.module).metadata.fields.map((field) => [field.apiName, field]),
+      );
+      for (const criterion of row.criteria) validateCriteria(criterion, childFields);
+      const parents = new Set<string>();
+      for (const child of moduleStore(target.module).records.values()) {
+        if (options?.canReadRecord?.(target.module, child.id) === false) continue;
+        const parentIds =
+          target.kind === "note"
+            ? noteParentVisible(child.fields) &&
+              isJsonObject(child.fields.Parent_Id) &&
+              child.fields.Parent_Id.module === module
+              ? [String(child.fields.Parent_Id.id)]
+              : []
+            : activityParentIds(module, child);
+        if (!parentIds.length) continue;
+        const resolved = resolveRead(target.module, child, now);
+        if (!row.criteria.every((c) => matches(resolved, c, runtimeCtx, childFields))) continue;
+        for (const id of parentIds) parents.add(id);
+      }
+      return { presence: row.presence, parents };
+    });
+    return (id: string) =>
+      linked.every(({ presence, parents }) => (presence === "with") === parents.has(id));
+  };
   const matching = async (
     module: string,
     query: Pick<
       ListQuery,
-      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+      | "viewId"
+      | "filters"
+      | "search"
+      | "activityFilter"
+      | "campaignFilter"
+      | "systemFilters"
+      | "relatedModules"
     >,
     applyView = true,
     now = clock(),
@@ -445,6 +493,9 @@ export function createFixtureRecordService(
           campaignMembers.add(parent.id);
       }
     }
+    const relatedRows = query.relatedModules?.length
+      ? await relatedModuleMatcher(module, query.relatedModules)
+      : undefined;
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
     const storedRows = [...moduleStore(module).records.values()];
@@ -459,10 +510,12 @@ export function createFixtureRecordService(
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
-          (!systemFilters || options?.canReadRecord?.(module, record.id) !== false) &&
+          ((!systemFilters && !relatedRows) ||
+            options?.canReadRecord?.(module, record.id) !== false) &&
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
+          (!relatedRows || relatedRows(record.id)) &&
           (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),

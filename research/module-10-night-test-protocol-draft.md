@@ -30,6 +30,19 @@
 6. No write at all until the rule 2 exception is added to AGENTS.md as a
    written board decision (section 10).
 
+### 0.1 Board answers on ADR 0009, 2026-10-21 (Q12 to Q14)
+
+7. **Window and action list (Q12):** after the read-only research R1 to R10
+   is done, the CTO proposes the date window and the final action list; the
+   board approves them. No agent picks a window.
+8. **Notifications (Q13):** a notification or mail that reaches only the
+   board's own user or test address is accepted without asking. Anything
+   that could reach any other user, customer, lead or contact stops the
+   action, and the board is asked.
+9. **Permanent traces (Q14):** undeletable audit-log, change-history and
+   analytics traces are accepted as long as they are only logs or counters
+   and no message goes to anyone.
+
 ## 1. Order of preference (board's preference)
 
 1. **Prepare everything first and narrow the write needs.** Finish the read-only
@@ -128,12 +141,12 @@ everything else in AGENTS.md rule 2 refers to "the reference CRM".
 | --- | --- | --- |
 | Test records | Created records remain in lists, counts, searches | Delete each one, then purge from the recycle bin in the same window; a human confirms the empty recycle bin |
 | Recycle bin | Deleted records sit there until purged; purge is a further write | Included in the approved action list; recorded as an action |
-| Audit trail / change history | Create, update, delete and send events are recorded and cannot be removed | **Board decides: accepted or not.** If not accepted, the night test cannot run on the live system |
-| Notifications | The owner, followers, team members and managers may receive in-app or mail notices | Not accepted for anyone registered other than possibly the board's own user (board question). The 4.2 check lists every notice type; an action that could notify someone else is not run |
+| Audit trail / change history | Create, update, delete and send events are recorded and cannot be removed | Accepted (board, Q14): logs and counters only; record what was added |
+| Notifications | The owner, followers, team members and managers may receive in-app or mail notices | Accepted only when it reaches the board's own user or test address (board, Q13). The 4.2 check lists every notice type; an action that could notify anyone else is not run and the board is asked |
 | Workflow rules / assignment rules | May fire on creation or update of the test record (assign owner, send mail, create task, field update) | See 4.2: any rule that could fire stops that action |
 | Timeline entries | A sent mail or a meeting adds timeline rows on the test record only | Gone with the test record; if the record had been linked to a real record, it would persist; therefore never link |
 | Email sync side effects | A connected mailbox may sync and auto-create or match records, or pull mail into the timeline of real contacts | Connect only a fresh board-owned test mailbox; disconnect at the end; record what sync created; the sync window must be known first |
-| Reports and dashboards | Counts, email analytics counters (`Sent`, `Tracked`, `Opened`, `Replied`, `Received`) and activity tallies change by the number of test actions | Note counts before and after; accepted or not is a board decision; cannot be reverted |
+| Reports and dashboards | Counts, email analytics counters (`Sent`, `Tracked`, `Opened`, `Replied`, `Received`) and activity tallies change by the number of test actions | Accepted as counters (board, Q14); note counts before and after; cannot be reverted |
 | Mail provider side | The internal test mailbox keeps the received mail; the sender account's sent log shows it | Board owns the mailbox; delete there |
 | Tracking | Opens and clicks recorded when the board opens a tracked test mail | Send with tracking off if the option exists; otherwise accepted |
 | Quotas | Daily send limits consumed | Count against the daily quota; trivial for a handful of mails |
@@ -171,8 +184,9 @@ The check is therefore a mandatory read-only step before any write
 
 ### 4.3 Items outside our control
 
-- Other users receiving a notification about the test records: warn them or
-  restrict to a time when nobody works; accepted risk, to be written down.
+- Other users receiving a notification about the test records: **not an
+  accepted risk** (board, Q13). If the 4.2 check cannot rule it out, the
+  action does not run and the board is asked.
 - Vendor-side logs.
 - Metrics that survive deletion (count of records ever created, API calls).
 
@@ -216,7 +230,7 @@ mailbox and the sync window known.
 
 | Item | Proposal |
 | --- | --- |
-| Window | Set by the board in the decision: date, start, end, local time zone. Outside it nothing runs. |
+| Window | Proposed by the CTO after R1 to R10, approved by the board (Q12): date, start, end, local time zone. Outside it nothing runs. |
 | Variant 1: board watches live | The board sits at the shared browser, sees each action, and says go before each numbered action; any surprise stops the run at once. Safest; costs the board's night. |
 | Variant 2: board does not watch | A pre-approved list runs unattended with the abort conditions below; evidence is reviewed in the morning. Higher risk; allowed only if all of the following hold: no external recipient is possible, rules proven non-firing, and every action is read-back-verified before the next. |
 | Run length | Short; maximum number of actions equals the list; one agent only. |
@@ -230,7 +244,8 @@ and tell the board, when:
   appears (a request count above the expectation);
 - a recipient other than the board's test address is shown or prefilled;
 - any notification, invitation or mail to a person registered in the
-  reference CRM is shown, queued or reported;
+  reference CRM other than the board's own user is shown, queued or
+  reported;
 - a prompt asks to confirm something affecting existing records, users,
   settings or mailbox permissions;
 - a rule or notification can be seen to fire on a real person;

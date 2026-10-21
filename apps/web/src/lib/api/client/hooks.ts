@@ -112,7 +112,13 @@ export function useRecordCount(
   module: ModuleApiName,
   query: Pick<
     ListQuery,
-    "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+    | "viewId"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "relatedModules"
   >,
 ) {
   const orgSlug = useOrgSlug();

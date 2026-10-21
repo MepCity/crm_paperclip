@@ -76,6 +76,7 @@ describe("constants and paths", () => {
       "Contacts",
       "Accounts",
       "Deals",
+      "Campaigns",
       "Tasks",
       "Events",
       "Calls",
