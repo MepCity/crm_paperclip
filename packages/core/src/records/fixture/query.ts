@@ -59,7 +59,7 @@ const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, 
 // A stored lookup reference (even with no resolvable name, e.g. an unregistered
 // Products target saved by id only) counts as present for emptiness checks.
 function isLookupRef(
-  fields: Map<string, { dataType: string }>,
+  fields: ReadonlyMap<string, { dataType: string }>,
   field: string,
   raw: unknown,
 ): boolean {
