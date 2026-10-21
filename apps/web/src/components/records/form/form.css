@@ -727,3 +727,17 @@
 [data-form-layout="call"] [data-form-field] + [data-form-field] {
   margin-top: var(--size-call-form-row-gap);
 }
+
+/* activities-form.md → Visual layout — Call form (measured) rows 1 and 10: white title band, Start Time geometry. */
+.record-form-shell[data-form-layout="call"] .record-form-strip {
+  background-color: var(--color-surface);
+}
+[data-form-layout="call"] .record-form-datetime {
+  gap: 9px;
+}
+[data-form-layout="call"] .record-form-datetime > :first-child {
+  width: 210px;
+}
+[data-form-layout="call"] .record-form-datetime > :nth-child(2) {
+  width: 76px;
+}
